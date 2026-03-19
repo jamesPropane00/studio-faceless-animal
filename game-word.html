@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Word Drop — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:     #070010;
+      --purple: #7c3aed;
+      --bright: #a78bfa;
+      --gold:   #d4af37;
+      --green:  #4ade80;
+      --red:    #f87171;
+      --text:   #f0eeff;
+      --sub:    rgba(240,238,255,0.55);
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .g-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(0,0,0,0.4);
+      flex-shrink: 0;
+    }
+    .g-nav-logo { font-size: 0.78rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bright); text-decoration: none; }
+    .g-nav-logo span { color: var(--gold); }
+    .g-nav-back { font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.35); text-decoration: none; letter-spacing: 0.04em; }
+    .g-nav-back:hover { color: var(--bright); }
+    .g-free-tag { font-size: 0.6rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green); background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.25); border-radius: 20px; padding: 0.2rem 0.6rem; }
+
+    .g-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 1rem;
+      gap: 1.5rem;
+    }
+
+    /* ── Screens ── */
+    .g-screen { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.85rem; max-width: 400px; width: 100%; }
+    .g-eyebrow { font-size: 0.64rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--bright); }
+    .g-title { font-size: 2.8rem; font-weight: 900; line-height: 1; }
+    .g-title em { color: var(--bright); font-style: normal; }
+    .g-sub { font-size: 0.9rem; color: var(--sub); line-height: 1.7; }
+    .g-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0.9rem 2.25rem;
+      border-radius: 10px;
+      font-size: 0.9rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+      cursor: pointer; border: none; font-family: inherit;
+      transition: transform 0.08s; text-decoration: none;
+    }
+    .g-btn:active { transform: scale(0.95); }
+    .g-btn--primary { background: var(--purple); color: #fff; }
+    .g-btn--primary:hover { background: var(--bright); }
+    .g-btn--ghost { background: rgba(255,255,255,0.07); color: var(--text); border: 1px solid rgba(255,255,255,0.12); }
+
+    /* ── HUD ── */
+    .g-hud {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 400px;
+    }
+    .g-hud-item { text-align: center; }
+    .g-hud-label { font-size: 0.56rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.3); display: block; }
+    .g-hud-value { font-size: 1.1rem; font-weight: 900; color: var(--text); }
+
+    /* ── Timer bar ── */
+    .g-timer-track {
+      width: 100%;
+      max-width: 400px;
+      height: 5px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    #timer-bar {
+      height: 100%;
+      background: var(--bright);
+      border-radius: 3px;
+      transition: width 0.1s linear, background 0.3s;
+    }
+
+    /* ── Scrambled word ── */
+    .g-scramble {
+      font-size: clamp(2rem, 10vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      text-align: center;
+      line-height: 1.1;
+    }
+    .g-hint { font-size: 0.78rem; color: rgba(255,255,255,0.3); letter-spacing: 0.04em; }
+
+    /* ── Answer choices ── */
+    .g-choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 400px;
+    }
+    .g-choice {
+      padding: 0.85rem 0.75rem;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.12s, border-color 0.12s, transform 0.08s;
+      text-align: center;
+    }
+    .g-choice:hover:not(:disabled) { background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.4); }
+    .g-choice:active:not(:disabled) { transform: scale(0.96); }
+    .g-choice--correct { background: rgba(74,222,128,0.18) !important; border-color: var(--green) !important; color: var(--green) !important; }
+    .g-choice--wrong   { background: rgba(248,113,113,0.15) !important; border-color: var(--red) !important; color: var(--red) !important; }
+
+    /* ── Feedback ── */
+    #g-feedback {
+      font-size: 1rem;
+      font-weight: 800;
+      min-height: 1.5rem;
+      text-align: center;
+    }
+
+    /* ── Results ── */
+    .g-score-big { font-size: 4rem; font-weight: 900; color: var(--bright); line-height: 1; }
+    .g-score-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.3); }
+  </style>
+</head>
+<body>
+
+  <nav class="g-nav" role="banner">
+    <a href="games.html" class="g-nav-back">← Games</a>
+    <span class="g-free-tag">Free to Play</span>
+    <a href="index.html" class="g-nav-logo">FA <span>Studios</span></a>
+  </nav>
+
+  <div class="g-wrap" id="g-wrap">
+
+    <!-- START -->
+    <div class="g-screen" id="screen-start">
+      <p class="g-eyebrow">Free Game · No Login</p>
+      <h1 class="g-title">Word<br /><em>Drop.</em></h1>
+      <p class="g-sub">Hip-hop and music words — scrambled. Pick the right answer before the timer runs out. 10 rounds. All culture.</p>
+      <button class="g-btn g-btn--primary" id="btn-start">Start →</button>
+      <a href="games.html" class="g-btn g-btn--ghost">← Back</a>
+    </div>
+
+    <!-- GAME UI (hidden until started) -->
+    <div id="game-ui" style="display:none;width:100%;max-width:400px;display:none;flex-direction:column;align-items:center;gap:1.25rem;">
+
+      <div class="g-hud" role="status" aria-live="polite">
+        <div class="g-hud-item">
+          <span class="g-hud-label">Round</span>
+          <span class="g-hud-value" id="hud-round">1 / 10</span>
+        </div>
+        <div class="g-hud-item">
+          <span class="g-hud-label">Score</span>
+          <span class="g-hud-value" id="hud-score" style="color:var(--bright);">0</span>
+        </div>
+        <div class="g-hud-item">
+          <span class="g-hud-label">Streak</span>
+          <span class="g-hud-value" id="hud-streak" style="color:var(--gold);">0</span>
+        </div>
+      </div>
+
+      <div class="g-timer-track" aria-hidden="true">
+        <div id="timer-bar" style="width:100%;"></div>
+      </div>
+
+      <p class="g-hint" id="g-hint">Unscramble the word:</p>
+      <p class="g-scramble" id="g-scramble" aria-label="Scrambled word">—</p>
+
+      <div class="g-choices" id="g-choices" role="group" aria-label="Answer choices"></div>
+
+      <p id="g-feedback" aria-live="polite"></p>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="g-screen" id="screen-over" style="display:none;"></div>
+
+  </div>
+
+  <script>
+    (function () {
+      var WORDS = [
+        { word: 'FREESTYLE', hint: 'Improvised rap' },
+        { word: 'BEATBOX',   hint: 'Vocal percussion' },
+        { word: 'CYPHER',    hint: 'Rap circle' },
+        { word: 'SAMPLE',    hint: 'Borrowed sound' },
+        { word: 'HOOK',      hint: 'Catchy chorus' },
+        { word: 'FLOW',      hint: 'Rap cadence' },
+        { word: 'PLUG',      hint: 'The connect' },
+        { word: 'BARS',      hint: 'Rap lyrics' },
+        { word: 'REMIX',     hint: 'New version' },
+        { word: 'DROP',      hint: 'Beat hits hard' },
+        { word: 'VERSE',     hint: 'Rap stanza' },
+        { word: 'SPIT',      hint: 'To rap' },
+        { word: 'GRIND',     hint: 'Hustle hard' },
+        { word: 'WAVE',      hint: 'Cultural trend' },
+        { word: 'CLOUT',     hint: 'Social influence' },
+        { word: 'SAUCE',     hint: 'Style / charm' },
+        { word: 'SLAP',      hint: 'Sounds great' },
+        { word: 'DRILL',     hint: 'Chicago rap style' },
+        { word: 'TRAP',      hint: 'Genre from the south' },
+        { word: 'VIBE',      hint: 'The feeling' }
+      ];
+
+      var ROUNDS   = 10;
+      var TIME_PER = 10;
+      var score = 0, streak = 0, round = 0;
+      var timerInterval = null;
+      var timeLeft = TIME_PER;
+      var answered = false;
+      var shuffledWords = [];
+
+      function shuffle(arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+      }
+
+      function scramble(word) {
+        var letters = word.split('');
+        var tries = 0;
+        do {
+          letters = shuffle(letters);
+          tries++;
+        } while (letters.join('') === word && tries < 20);
+        return letters.join('');
+      }
+
+      function getDecoys(correct, pool) {
+        var others = pool.filter(function(w) { return w.word !== correct; });
+        var picks = shuffle(others).slice(0, 3);
+        return picks.map(function(w) { return w.word; });
+      }
+
+      var screenStart = document.getElementById('screen-start');
+      var screenOver  = document.getElementById('screen-over');
+      var gameUI      = document.getElementById('game-ui');
+      var hudRound    = document.getElementById('hud-round');
+      var hudScore    = document.getElementById('hud-score');
+      var hudStreak   = document.getElementById('hud-streak');
+      var timerBar    = document.getElementById('timer-bar');
+      var scrambleEl  = document.getElementById('g-scramble');
+      var hintEl      = document.getElementById('g-hint');
+      var choicesEl   = document.getElementById('g-choices');
+      var feedbackEl  = document.getElementById('g-feedback');
+
+      function startGame() {
+        score = 0; streak = 0; round = 0;
+        shuffledWords = shuffle(WORDS).slice(0, ROUNDS);
+        screenStart.style.display = 'none';
+        screenOver.style.display  = 'none';
+        gameUI.style.display      = 'flex';
+        nextRound();
+      }
+
+      function nextRound() {
+        if (round >= ROUNDS) { showGameOver(); return; }
+        answered = false;
+        feedbackEl.textContent = '';
+        timeLeft = TIME_PER;
+        timerBar.style.width = '100%';
+        timerBar.style.background = 'var(--bright)';
+
+        var entry = shuffledWords[round];
+        var sc    = scramble(entry.word);
+        scrambleEl.textContent = sc;
+        hintEl.textContent     = 'Hint: ' + entry.hint;
+        hudRound.textContent   = (round + 1) + ' / ' + ROUNDS;
+        hudScore.textContent   = score;
+        hudStreak.textContent  = streak;
+
+        var decoys  = getDecoys(entry.word, WORDS);
+        var options = shuffle([entry.word].concat(decoys));
+
+        choicesEl.innerHTML = '';
+        options.forEach(function(opt) {
+          var btn = document.createElement('button');
+          btn.className = 'g-choice';
+          btn.textContent = opt;
+          btn.addEventListener('click', function() { onAnswer(opt, entry.word, btn); });
+          choicesEl.appendChild(btn);
+        });
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(function() {
+          timeLeft -= 0.1;
+          var pct = Math.max(0, timeLeft / TIME_PER * 100);
+          timerBar.style.width = pct + '%';
+          if (timeLeft <= 3) timerBar.style.background = 'var(--red)';
+          else if (timeLeft <= 5) timerBar.style.background = 'var(--gold)';
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            if (!answered) { onAnswer('__timeout__', entry.word, null); }
+          }
+        }, 100);
+      }
+
+      function onAnswer(chosen, correct, btn) {
+        if (answered) return;
+        answered = true;
+        clearInterval(timerInterval);
+
+        var btns = choicesEl.querySelectorAll('.g-choice');
+        btns.forEach(function(b) { b.disabled = true; });
+
+        if (chosen === correct) {
+          if (btn) btn.classList.add('g-choice--correct');
+          var bonus = Math.round(timeLeft / TIME_PER * 10) + (streak >= 3 ? 5 : 0);
+          score  += bonus;
+          streak += 1;
+          feedbackEl.style.color = '#4ade80';
+          feedbackEl.textContent = streak >= 3 ? '🔥 Streak x' + streak + ' (+' + bonus + ')' : '✓ Correct! +' + bonus;
+        } else {
+          if (btn) btn.classList.add('g-choice--wrong');
+          btns.forEach(function(b) { if (b.textContent === correct) b.classList.add('g-choice--correct'); });
+          streak = 0;
+          feedbackEl.style.color = '#f87171';
+          feedbackEl.textContent = chosen === '__timeout__' ? '⏱ Time up! It was: ' + correct : '✗ Wrong! It was: ' + correct;
+        }
+
+        hudScore.textContent  = score;
+        hudStreak.textContent = streak;
+        round++;
+        setTimeout(nextRound, 1300);
+      }
+
+      function showGameOver() {
+        gameUI.style.display = 'none';
+        var grade = score >= 90 ? '🔥 Culture Lord' : score >= 60 ? '⚡ In the Know' : score >= 30 ? '👍 Getting There' : '📚 Study Up';
+        screenOver.innerHTML =
+          '<p class="g-eyebrow">Word Drop · Result</p>' +
+          '<h2 class="g-title" style="font-size:1.75rem;">' + grade + '</h2>' +
+          '<div><p class="g-score-label">Final Score</p><p class="g-score-big">' + score + '</p></div>' +
+          '<button class="g-btn g-btn--primary" id="btn-replay">Play Again →</button>' +
+          '<a href="games.html" class="g-btn g-btn--ghost">← All Games</a>' +
+          '<div style="padding:1rem;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:10px;max-width:300px;text-align:center;">' +
+          '<p style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-bottom:0.4rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:800;">Want more games?</p>' +
+          '<p style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-bottom:0.75rem;line-height:1.6;">Beat Tap and the full game library unlock with a platform membership.</p>' +
+          '<a href="pricing.html" class="g-btn g-btn--primary" style="padding:0.65rem 1.5rem;font-size:0.8rem;width:100%;">Buy Now →</a>' +
+          '</div>';
+        screenOver.style.display = 'flex';
+        document.getElementById('btn-replay') && document.getElementById('btn-replay').addEventListener('click', startGame);
+      }
+
+      document.getElementById('btn-start').addEventListener('click', startGame);
+    }());
+  </script>
+</body>
+</html>

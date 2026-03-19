@@ -1,0 +1,28 @@
+# Cloudflare Pages _redirects
+# Docs: https://developers.cloudflare.com/pages/configuration/redirects/
+#
+# Usage:
+#   - Attach facelessanimalstudios.com as your primary custom domain
+#   - Attach djfacelessanimal.com as a second custom domain on the same project
+#   - Cloudflare Pages will apply these rules automatically at the edge
+#
+# Format: <source> <destination> <status>
+# 200 = rewrite (SPA-style, URL stays the same)
+# 301 = permanent redirect
+
+# ── DYNAMIC PAGE ROUTES (SPA rewrite — URL preserved) ──────────────
+# These serve the correct template HTML while keeping the clean URL.
+# The page-renderer.js script reads the slug from window.location.pathname
+# and fetches data from Supabase to hydrate the page.
+
+/artist/*    /templates/artist.html    200
+/creator/*   /templates/creator.html   200
+/business/*  /templates/business.html  200
+
+# ── DOMAIN ALIASES ─────────────────────────────────────────────────
+# djfacelessanimal.com → DJ Faceless Animal artist page
+https://djfacelessanimal.com/*      https://facelessanimalstudios.com/artist/djfacelessanimal  301
+https://www.djfacelessanimal.com/*  https://facelessanimalstudios.com/artist/djfacelessanimal  301
+
+# www → apex
+https://www.facelessanimalstudios.com/*  https://facelessanimalstudios.com/:splat  301

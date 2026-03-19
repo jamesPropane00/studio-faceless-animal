@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Start building your presence on Faceless Animal Studios. Free pages go live instantly. Paid plans build in 3–5 days. Fill out the intake form." />
+  <title>Get Started — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="games.html">Games</a></li>
+          <li><a href="music.html">Music</a></li>
+          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="games.html">Games</a>
+    <a href="music.html">Music</a>
+    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="about.html">About</a>
+  </div>
+
+  <main>
+
+    <!-- ============================================================
+         HERO
+    ============================================================ -->
+    <section class="page-hero page-hero--left" aria-label="Get started hero">
+      <div class="page-hero-glow" aria-hidden="true"></div>
+      <div class="container">
+        <p class="page-hero-eyebrow">
+          <span class="eyebrow-dot" aria-hidden="true"></span>
+          Faceless Animal Studios · Let's Build
+        </p>
+        <h1 class="page-hero-title" style="text-align:left;">Fill This Out.<br /><em>We Handle the Rest.</em></h1>
+        <p class="page-hero-sub" style="margin-left:0;text-align:left;">
+          Pick your plan and fill out the form. Free pages go live instantly — no waiting. Page packages (Starter $30, Pro $55, Premium $105) are all-in via Stripe. Or skip the page entirely and subscribe to Platform Access for $5/month — games, apps, DMs, and radio. Either way, you're in the network from day one.
+        </p>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         PROCESS STEPS
+    ============================================================ -->
+    <section class="section section-alt" aria-label="Process overview">
+      <div class="container" style="max-width:760px;">
+
+        <div class="intake-steps" role="list" aria-label="Signup steps">
+
+          <div class="intake-step intake-step--active" role="listitem">
+            <div class="intake-step-num" aria-label="Step 1">1</div>
+            <p class="intake-step-label">Choose Plan</p>
+            <p class="intake-step-sub">Free or paid</p>
+          </div>
+
+          <div class="intake-step" role="listitem">
+            <div class="intake-step-num" aria-label="Step 2">2</div>
+            <p class="intake-step-label">Submit Info</p>
+            <p class="intake-step-sub">Fill out the form</p>
+          </div>
+
+          <div class="intake-step" role="listitem">
+            <div class="intake-step-num" aria-label="Step 3">3</div>
+            <p class="intake-step-label">Page Goes Live</p>
+            <p class="intake-step-sub">Live instantly</p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         PATH CHOOSER
+    ============================================================ -->
+    <section class="section" id="choose" aria-labelledby="paths-heading">
+      <div class="container">
+
+        <div class="section-header text-center">
+          <p class="section-label">Step 1 · Choose Your Path</p>
+          <h2 id="paths-heading">How Do You<br /><em>Want to Start?</em></h2>
+          <p class="section-sub">Free gets you in the network immediately. Paid plans unlock more design, media, and custom domain options. Pick your path and fill out the form — we handle the rest.</p>
+        </div>
+
+        <div class="start-paths">
+
+          <a href="?plan=free" class="start-path start-path--featured" aria-label="Start with the free plan">
+            <span class="start-path-badge">Free Forever · No Card</span>
+            <p class="start-path-title">Free Presence</p>
+            <p class="start-path-sub">Your name, bio, photo, and up to 8 links. Hosted at facelessanimalstudios.com/yourname. No credit card. No expiration. "Powered by Faceless Animal" badge included.</p>
+            <p class="start-path-price">$0</p>
+            <ul class="check-list" style="margin-bottom:1.5rem;">
+              <li>Hosted at /yourname — forever</li>
+              <li>Profile image, bio, and links</li>
+              <li>Creator Network listing</li>
+              <li>Mobile-first layout</li>
+            </ul>
+            <span class="btn btn-primary" aria-hidden="true">Start Free →</span>
+          </a>
+
+          <a href="paid.html" class="start-path" aria-label="Start with a paid plan">
+            <span class="start-path-badge" style="background:var(--bg-4);color:var(--text-2);border-color:var(--border);">Starter $30 · Pro $55 · Premium $105</span>
+            <p class="start-path-title">Paid Plans</p>
+            <p class="start-path-sub">Enhanced design, unlimited links, custom domain (Pro+), music player, video sections, and more. Page packages are all-in via Stripe — setup and platform access bundled into one payment. Content and URL carry forward if you upgrade.</p>
+            <p class="start-path-price" style="color:var(--text-2);">$30 – $105</p>
+            <ul class="check-list" style="margin-bottom:1.5rem;">
+              <li>Everything in Free, plus…</li>
+              <li>Enhanced visual design</li>
+              <li>Custom domain (Pro & Premium)</li>
+              <li>Music, video, contact form (Pro+)</li>
+              <li>No "Powered by" badge</li>
+            </ul>
+            <span class="btn btn-ghost" aria-hidden="true">Go to Paid Intake →</span>
+          </a>
+
+          <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" target="_blank" rel="noopener noreferrer" class="start-path" aria-label="Subscribe to Platform Access for $5/month" style="border-color:rgba(139,92,246,0.35);background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(139,92,246,0.02));">
+            <span class="start-path-badge" style="background:rgba(139,92,246,0.15);color:var(--purple-bright);border-color:rgba(139,92,246,0.35);">Monthly Membership · No Page Required</span>
+            <p class="start-path-title" style="color:var(--purple-bright);">Platform Access</p>
+            <p class="start-path-sub">Just want in the platform? No page needed. $5/month gets you inside the studio — games, apps, private messaging, member radio access, 2 original track submissions/month to Station 1, and the full network. Already have a free page? This activates it.</p>
+            <p class="start-path-price" style="color:var(--purple-bright);">$5<span style="font-size:1rem;font-weight:600;color:var(--text-2);">/month</span></p>
+            <ul class="check-list" style="margin-bottom:1.5rem;">
+              <li>Studio games &amp; apps</li>
+              <li>Private member DMs</li>
+              <li>Full radio access</li>
+              <li>Member network &amp; features</li>
+              <li>Activates your free page</li>
+            </ul>
+            <span class="btn btn-outline-purple" aria-hidden="true">Subscribe via Stripe →</span>
+          </a>
+
+        </div>
+
+        <p style="text-align:center;font-size:0.82rem;color:var(--text-3);">
+          Not sure which plan?
+          <a href="pricing.html" style="color:var(--gold-dim);text-decoration:underline;text-underline-offset:3px;">Compare plans →</a>
+        </p>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         FREE SIGNUP FORM
+         ════════════════════════════════════════════════════════════
+         Hidden by default. Revealed by JS when ?plan=free is present.
+         Writes to: profiles, pages, submissions (Supabase)
+         JS handler: assets/js/free-signup.js
+         ════════════════════════════════════════════════════════════ -->
+    <section class="section section-alt" id="free-signup-form" aria-labelledby="signup-heading" hidden>
+      <div class="container" style="max-width:720px;">
+
+        <!-- ── FORM PANEL (hidden after submit) ─────────────────── -->
+        <div id="fas-signup-panel">
+
+          <div class="section-header text-center">
+            <p class="section-label">Free Starter Presence · $0</p>
+            <h2 id="signup-heading">Fill This Out.<br /><em>Your Page Is Next.</em></h2>
+            <p class="section-sub">No credit card. No approval waiting period. Submit below — your free presence page goes live instantly. You're in the network from day one.</p>
+          </div>
+
+          <form
+            id="fas-free-signup-form"
+            novalidate
+            autocomplete="on"
+          >
+
+            <!-- ── IDENTITY ──────────────────────────────────────── -->
+            <fieldset class="intake-fieldset">
+              <legend class="intake-legend">Your Identity</legend>
+              <div class="intake-fields">
+
+                <div class="intake-grid-2">
+                  <div class="form-group">
+                    <label class="form-label" for="fs_display_name">
+                      Display Name <span class="form-required" aria-hidden="true">*</span>
+                    </label>
+                    <input
+                      class="form-input"
+                      type="text"
+                      id="fs_display_name"
+                      name="display_name"
+                      placeholder="DJ Faceless Animal"
+                      required
+                      autocomplete="name"
+                      maxlength="80"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="fs_username">
+                      Username / Page Handle <span class="form-required" aria-hidden="true">*</span>
+                    </label>
+                    <div style="position:relative;">
+                      <span style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);font-size:0.72rem;color:var(--text-3);pointer-events:none;white-space:nowrap;">fas.com/</span>
+                      <input
+                        class="form-input"
+                        type="text"
+                        id="fs_username"
+                        name="username"
+                        placeholder="yourname"
+                        required
+                        autocomplete="off"
+                        minlength="3"
+                        maxlength="40"
+                        pattern="[a-z0-9_\-]+"
+                        aria-describedby="fs-username-hint"
+                        style="padding-left:5rem;"
+                      />
+                    </div>
+                    <p class="form-optional" id="fs-username-hint" style="font-size:0.7rem;color:var(--text-3);margin-top:0.3rem;">
+                      Preview: facelessanimalstudios.com/<strong id="username-url-preview" style="color:var(--text-2);">yourname</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="fs_email">
+                    Email Address <span class="form-required" aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    class="form-input"
+                    type="email"
+                    id="fs_email"
+                    name="email"
+                    placeholder="you@example.com"
+                    required
+                    autocomplete="email"
+                  />
+                  <p class="form-optional" style="font-size:0.7rem;color:var(--text-3);margin-top:0.3rem;">Used for page-ready notifications only. Not shared.</p>
+                </div>
+
+                <div class="intake-grid-2">
+                  <div class="form-group">
+                    <label class="form-label" for="fs_password">
+                      Password <span class="form-required" aria-hidden="true">*</span>
+                    </label>
+                    <div style="position:relative;">
+                      <input
+                        class="form-input"
+                        type="password"
+                        id="fs_password"
+                        name="password"
+                        placeholder="At least 8 characters"
+                        required
+                        autocomplete="new-password"
+                        minlength="8"
+                        maxlength="128"
+                        aria-describedby="fs-password-hint"
+                        style="padding-right:2.8rem;"
+                      />
+                      <button type="button" class="fs-pw-toggle" data-target="fs_password" aria-label="Show or hide password" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-3);cursor:pointer;font-size:0.85rem;padding:0.2rem;">👁</button>
+                    </div>
+                    <p class="form-optional" id="fs-password-hint" style="font-size:0.7rem;color:var(--text-3);margin-top:0.3rem;">Min 8 characters — locks your account to you.</p>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="fs_confirm_password">
+                      Confirm Password <span class="form-required" aria-hidden="true">*</span>
+                    </label>
+                    <div style="position:relative;">
+                      <input
+                        class="form-input"
+                        type="password"
+                        id="fs_confirm_password"
+                        name="confirm_password"
+                        placeholder="Re-enter password"
+                        required
+                        autocomplete="new-password"
+                        maxlength="128"
+                        style="padding-right:2.8rem;"
+                      />
+                      <button type="button" class="fs-pw-toggle" data-target="fs_confirm_password" aria-label="Show or hide password" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-3);cursor:pointer;font-size:0.85rem;padding:0.2rem;">👁</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <p class="form-label" id="fs-category-label">
+                    Creator Type <span class="form-required" aria-hidden="true">*</span>
+                  </p>
+                  <div class="category-chip-group" role="radiogroup" aria-labelledby="fs-category-label">
+                    <label class="category-chip">
+                      <input type="radio" name="category" value="dj" required />
+                      <span class="category-chip-label">DJ</span>
+                    </label>
+                    <label class="category-chip">
+                      <input type="radio" name="category" value="artist" />
+                      <span class="category-chip-label">Artist</span>
+                    </label>
+                    <label class="category-chip">
+                      <input type="radio" name="category" value="producer" />
+                      <span class="category-chip-label">Producer</span>
+                    </label>
+                    <label class="category-chip">
+                      <input type="radio" name="category" value="gamer" />
+                      <span class="category-chip-label">Gamer</span>
+                    </label>
+                    <label class="category-chip">
+                      <input type="radio" name="category" value="visual_artist" />
+                      <span class="category-chip-label">Visual Artist</span>
+                    </label>
+                    <label class="category-chip">
+                      <input type="radio" name="category" value="photographer" />
+                      <span class="category-chip-label">Photographer</span>
+                    </label>
+                    <label class="category-chip">
+                      <input type="radio" name="category" value="business" />
+                      <span class="category-chip-label">Business</span>
+                    </label>
+                    <label class="category-chip">
+                      <input type="radio" name="category" value="writer" />
+                      <span class="category-chip-label">Writer</span>
+                    </label>
+                    <label class="category-chip">
+                      <input type="radio" name="category" value="collective" />
+                      <span class="category-chip-label">Collective</span>
+                    </label>
+                    <label class="category-chip">
+                      <input type="radio" name="category" value="other" />
+                      <span class="category-chip-label">Other</span>
+                    </label>
+                  </div>
+                </div>
+
+              </div>
+            </fieldset>
+
+
+            <!-- ── ABOUT ─────────────────────────────────────────── -->
+            <fieldset class="intake-fieldset">
+              <legend class="intake-legend">About You</legend>
+              <div class="intake-fields">
+
+                <div class="form-group">
+                  <label class="form-label" for="fs_bio">
+                    Short Bio <span class="form-required" aria-hidden="true">*</span>
+                  </label>
+                  <textarea
+                    class="form-textarea"
+                    id="fs_bio"
+                    name="bio"
+                    rows="4"
+                    maxlength="500"
+                    required
+                    placeholder="Describe yourself, your music, your project, or your brand. 1–3 sentences is perfect — this goes on your page."
+                  ></textarea>
+                  <p class="form-optional" style="font-size:0.7rem;color:var(--text-3);margin-top:0.35rem;">Max 500 characters. You can refine this any time before your page goes live.</p>
+                </div>
+
+              </div>
+            </fieldset>
+
+
+            <!-- ── PROFILE IMAGE ─────────────────────────────────── -->
+            <fieldset class="intake-fieldset">
+              <legend class="intake-legend">Profile Image <span class="form-optional" style="font-weight:500;">(optional)</span></legend>
+              <div class="intake-fields">
+
+                <div class="img-tabs" role="tablist" aria-label="Image input method">
+                  <button type="button" class="img-tab-btn is-active" role="tab" data-tab="url" aria-selected="true">Paste URL</button>
+                  <button type="button" class="img-tab-btn" role="tab" data-tab="file" aria-selected="false">Upload File</button>
+                </div>
+
+                <div id="img-pane-url">
+                  <div class="form-group">
+                    <label class="form-label" for="fs_avatar_url">Image URL</label>
+                    <input
+                      class="form-input"
+                      type="url"
+                      id="fs_avatar_url"
+                      name="avatar_url_text"
+                      placeholder="https://example.com/your-photo.jpg"
+                      autocomplete="off"
+                      inputmode="url"
+                    />
+                    <p class="form-optional" style="font-size:0.7rem;color:var(--text-3);margin-top:0.3rem;">Paste a direct image link from any platform. Square recommended.</p>
+                  </div>
+                </div>
+
+                <div id="img-pane-file" hidden>
+                  <div class="form-group">
+                    <div class="file-upload-zone" role="button" tabindex="0" aria-label="Upload profile image">
+                      <input
+                        type="file"
+                        name="profile_image"
+                        id="fs_profile_image"
+                        accept="image/png,image/jpeg,image/webp"
+                        aria-label="Choose profile image file"
+                      />
+                      <span class="file-upload-icon" aria-hidden="true">🖼</span>
+                      <p class="file-upload-text">Drop your photo here or click to browse</p>
+                      <p class="file-upload-hint">PNG, JPG, or WebP · Square recommended · 500×500px minimum</p>
+                    </div>
+                  </div>
+                </div>
+
+                <p class="form-note">No image yet? Email it to <strong style="color:var(--text-2);">djfacelessanimal@gmail.com</strong> after submitting. We'll add it before your page goes live.</p>
+
+              </div>
+            </fieldset>
+
+
+            <!-- ── LINKS ─────────────────────────────────────────── -->
+            <fieldset class="intake-fieldset">
+              <legend class="intake-legend">Your Links <span class="form-optional" style="font-weight:500;">(add what you have)</span></legend>
+              <div class="intake-fields">
+
+                <p class="form-note">Paste your full URLs. All fields optional. These become your link buttons on your page.</p>
+
+                <div class="intake-link-rows" role="group" aria-label="Platform links">
+
+                  <div class="intake-link-row">
+                    <span class="intake-link-label" aria-hidden="true">Spotify</span>
+                    <input
+                      class="intake-link-input"
+                      type="url"
+                      name="link_spotify"
+                      id="fs_link_spotify"
+                      placeholder="https://open.spotify.com/artist/..."
+                      autocomplete="off"
+                      inputmode="url"
+                      aria-label="Spotify URL"
+                    />
+                  </div>
+
+                  <div class="intake-link-row">
+                    <span class="intake-link-label" aria-hidden="true">YouTube</span>
+                    <input
+                      class="intake-link-input"
+                      type="url"
+                      name="link_youtube"
+                      id="fs_link_youtube"
+                      placeholder="https://youtube.com/channel/..."
+                      autocomplete="off"
+                      inputmode="url"
+                      aria-label="YouTube URL"
+                    />
+                  </div>
+
+                  <div class="intake-link-row">
+                    <span class="intake-link-label" aria-hidden="true">Instagram</span>
+                    <input
+                      class="intake-link-input"
+                      type="url"
+                      name="link_instagram"
+                      id="fs_link_instagram"
+                      placeholder="https://instagram.com/yourhandle"
+                      autocomplete="off"
+                      inputmode="url"
+                      aria-label="Instagram URL"
+                    />
+                  </div>
+
+                  <div class="intake-link-row">
+                    <span class="intake-link-label" aria-hidden="true">TikTok</span>
+                    <input
+                      class="intake-link-input"
+                      type="url"
+                      name="link_tiktok"
+                      id="fs_link_tiktok"
+                      placeholder="https://tiktok.com/@yourhandle"
+                      autocomplete="off"
+                      inputmode="url"
+                      aria-label="TikTok URL"
+                    />
+                  </div>
+
+                  <div class="intake-link-row">
+                    <span class="intake-link-label" aria-hidden="true">SoundCloud</span>
+                    <input
+                      class="intake-link-input"
+                      type="url"
+                      name="link_soundcloud"
+                      id="fs_link_soundcloud"
+                      placeholder="https://soundcloud.com/yourname"
+                      autocomplete="off"
+                      inputmode="url"
+                      aria-label="SoundCloud URL"
+                    />
+                  </div>
+
+                  <div class="intake-link-row">
+                    <span class="intake-link-label" aria-hidden="true">Website</span>
+                    <input
+                      class="intake-link-input"
+                      type="url"
+                      name="link_website"
+                      id="fs_link_website"
+                      placeholder="https://yourwebsite.com"
+                      autocomplete="off"
+                      inputmode="url"
+                      aria-label="Personal website URL"
+                    />
+                  </div>
+
+                  <div class="intake-link-row">
+                    <span class="intake-link-label" aria-hidden="true">Other</span>
+                    <input
+                      class="intake-link-input"
+                      type="url"
+                      name="link_other"
+                      id="fs_link_other"
+                      placeholder="Bandcamp, Twitch, Discord, Patreon, etc."
+                      autocomplete="off"
+                      inputmode="url"
+                      aria-label="Other link URL"
+                    />
+                  </div>
+
+                </div>
+
+              </div>
+            </fieldset>
+
+
+            <!-- ── PAGE STYLE ─────────────────────────────────────── -->
+            <fieldset class="intake-fieldset">
+              <legend class="intake-legend">Page Style</legend>
+              <div class="intake-fields">
+
+                <p class="form-note">Pick the layout for your free presence page. All styles use the same dark, mobile-first design system.</p>
+
+                <div class="template-select-grid" role="radiogroup" aria-label="Page template selection">
+
+                  <label class="template-select-card">
+                    <input type="radio" name="template_name" value="dark-minimal" checked />
+                    <div class="template-card-preview">
+                      <div class="template-card-preview-dot"></div>
+                      <div class="template-card-preview-bar"></div>
+                      <div class="template-card-preview-bar template-card-preview-bar--short"></div>
+                    </div>
+                    <div class="template-card-body">
+                      <p class="template-card-name">Dark Minimal</p>
+                      <p class="template-card-desc">Clean. Centered. Text-forward.</p>
+                    </div>
+                  </label>
+
+                  <label class="template-select-card">
+                    <input type="radio" name="template_name" value="bold-statement" />
+                    <div class="template-card-preview" style="justify-content:flex-start;padding:0.9rem;">
+                      <div class="template-card-preview-bar" style="height:10px;margin-bottom:4px;"></div>
+                      <div class="template-card-preview-bar template-card-preview-bar--xshort" style="height:7px;"></div>
+                      <div class="template-card-preview-links" style="margin-top:6px;">
+                        <div class="template-card-preview-link"></div>
+                        <div class="template-card-preview-link"></div>
+                      </div>
+                    </div>
+                    <div class="template-card-body">
+                      <p class="template-card-name">Bold Statement</p>
+                      <p class="template-card-desc">Large type. Left-aligned. Impact.</p>
+                    </div>
+                  </label>
+
+                  <label class="template-select-card">
+                    <input type="radio" name="template_name" value="link-hub" />
+                    <div class="template-card-preview">
+                      <div class="template-card-preview-links">
+                        <div class="template-card-preview-link" style="height:9px;border-radius:4px;"></div>
+                        <div class="template-card-preview-link" style="height:9px;border-radius:4px;"></div>
+                        <div class="template-card-preview-link" style="height:9px;border-radius:4px;width:80%;"></div>
+                      </div>
+                    </div>
+                    <div class="template-card-body">
+                      <p class="template-card-name">Link Hub</p>
+                      <p class="template-card-desc">Links first. Bio below. Clean stack.</p>
+                    </div>
+                  </label>
+
+                </div>
+
+              </div>
+            </fieldset>
+
+
+            <!-- ── SUBMIT ─────────────────────────────────────────── -->
+            <div style="margin-top:2rem;">
+
+              <button
+                type="submit"
+                id="fas-free-submit"
+                class="btn btn-primary"
+                style="width:100%;justify-content:center;font-size:1rem;padding:0.9rem 2rem;display:flex;cursor:pointer;border:none;"
+                disabled
+                aria-disabled="true"
+              >
+                Claim My Free Page →
+              </button>
+
+              <p class="form-note" style="text-align:center;margin-top:0.85rem;">
+                No credit card. No approval queue. Your page goes live instantly.
+                <br />Upgrading later keeps your URL and content — nothing resets.
+              </p>
+
+            </div>
+
+          </form>
+
+        </div><!-- end #fas-signup-panel -->
+
+
+        <!-- ── SUCCESS STATE (shown after submit) ────────────────── -->
+        <div id="fas-signup-success" class="free-signup-success" hidden>
+
+          <div class="success-icon-wrap" aria-hidden="true">✦</div>
+
+          <p class="success-label">Page Is Live</p>
+          <h2 class="success-headline">
+            You're In,<br /><span class="success-display-name">Creator.</span>
+          </h2>
+          <p class="success-handle">@username</p>
+
+          <div class="success-url-row">
+            <span class="success-url-label">Your page is live at</span>
+            <span class="success-page-url">facelessanimalstudios.com/yourname</span>
+          </div>
+
+          <p class="success-redirect-note" style="font-size:0.82rem;color:var(--gold-dim);margin-top:0.75rem;letter-spacing:0.02em;">
+            Taking you there in 2…
+          </p>
+
+          <p class="success-static-note" hidden>
+            We're currently in preview mode — your form data wasn't saved to the database yet. We'll follow up at the email you provided within 1–2 business days to complete your page setup.
+          </p>
+
+          <ul class="success-steps" aria-label="What you get">
+            <li>
+              <span class="success-step-num">01</span>
+              <span>Your page is live now — view it at your URL above. It's already listed in the Faceless Animal Studios network.</span>
+            </li>
+            <li>
+              <span class="success-step-num">02</span>
+              <span>Want to add a profile photo? Email it to <strong>djfacelessanimal@gmail.com</strong> and we'll get it added.</span>
+            </li>
+            <li>
+              <span class="success-step-num">03</span>
+              <span>Ready to upgrade? Your URL stays the same, your content carries over — one Stripe payment handles the rest.</span>
+            </li>
+          </ul>
+
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+            <a href="network.html" class="btn btn-ghost">Explore the Network →</a>
+            <a href="pricing.html" class="btn btn-ghost">See Upgrade Plans</a>
+          </div>
+
+        </div><!-- end #fas-signup-success -->
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         STEP 3 — WHAT HAPPENS NEXT
+    ============================================================ -->
+    <section class="section" aria-labelledby="next-heading">
+      <div class="container" style="max-width:760px;">
+
+        <div class="section-header text-center">
+          <p class="section-label">Step 3 · After You Submit</p>
+          <h2 id="next-heading">What Happens<br /><em>Next.</em></h2>
+        </div>
+
+        <div class="join-steps">
+
+          <div class="join-step">
+            <p class="join-step-num">01</p>
+            <p class="join-step-title">Your Page Goes Live Instantly</p>
+            <p class="join-step-desc">Free plan pages go live the moment you submit. You'll be redirected to your live URL right away — no waiting, no approval queue. Your spot on the Creator Network is active immediately.</p>
+          </div>
+
+          <div class="join-step">
+            <p class="join-step-num">02</p>
+            <p class="join-step-title">Add Your Photo</p>
+            <p class="join-step-desc">Don't have an image URL? Just email your photo to <strong>djfacelessanimal@gmail.com</strong> with your handle and we'll get it added. Square images work best.</p>
+          </div>
+
+          <div class="join-step">
+            <p class="join-step-num">03</p>
+            <p class="join-step-title">Upgrade When You're Ready</p>
+            <p class="join-step-desc">Your URL stays the same and your content carries over. One Stripe payment upgrades your page to Starter ($30), Pro ($55), or Premium ($105) — nothing resets.</p>
+          </div>
+
+        </div>
+
+        <div style="text-align:center;margin-top:1rem;">
+          <a href="faq.html" class="btn btn-ghost">Got questions? See the FAQ →</a>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         DIRECT CONTACT CTA
+    ============================================================ -->
+    <section class="section section-alt" aria-labelledby="contact-cta-heading">
+      <div class="container" style="max-width:640px;text-align:center;">
+        <p class="section-label">Skip the Form</p>
+        <h2 id="contact-cta-heading" style="font-size:clamp(1.5rem,3.5vw,2.4rem);font-weight:800;letter-spacing:-0.04em;margin-bottom:1rem;">
+          Reach Out<br /><em>Directly.</em>
+        </h2>
+        <p style="font-size:0.9rem;color:var(--text-2);line-height:1.9;margin-bottom:2rem;">
+          Prefer to just send an email? That works too. Include your name, handle, which plan you want, your bio, and your links. We'll take it from there.
+        </p>
+        <a
+          href="mailto:djfacelessanimal@gmail.com?subject=FAS%20Platform%20Intake&body=Name%2FHandle%3A%0APlan%3A%0ABio%3A%0ALinks%3A"
+          class="btn btn-primary btn-lg"
+        >
+          Email djfacelessanimal@gmail.com →
+        </a>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         PAID PLANS — BUY NOW STRIP
+    ============================================================ -->
+    <section class="section section-alt" id="buy-plans" aria-label="Buy a paid plan">
+      <div class="container">
+        <div style="text-align:center;margin-bottom:2rem;">
+          <p class="section-label">Ready to Go Paid?</p>
+          <h2 style="font-size:clamp(1.6rem,3.5vw,2.2rem);font-weight:900;letter-spacing:-0.04em;line-height:1.1;margin-bottom:0.75rem;">One Payment.<br /><em>Built &amp; Launched.</em></h2>
+          <p style="font-size:0.88rem;color:var(--text-2);max-width:520px;margin:0 auto;">All paid plans are a single Stripe payment — setup fee and platform access bundled in. No separate monthly to start. Pay once, page goes live within 3–5 days.</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;max-width:760px;margin:0 auto 1.5rem;">
+
+          <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.25rem;display:flex;flex-direction:column;gap:0.6rem;">
+            <p style="font-size:0.6rem;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-3);margin:0;">Starter</p>
+            <p style="font-size:1.8rem;font-weight:900;letter-spacing:-0.04em;color:var(--text);margin:0;">$30</p>
+            <p style="font-size:0.78rem;color:var(--text-2);line-height:1.6;margin:0;flex:1;">Enhanced design, unlimited links, no "Powered by" badge. All-in.</p>
+            <a href="https://buy.stripe.com/4gM00jbRRfUGfeo7XK3ZK02" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-align:center;justify-content:center;font-size:0.82rem;margin-top:auto;">Buy Starter — $30 →</a>
+          </div>
+
+          <div style="background:linear-gradient(135deg,rgba(201,169,110,0.09),rgba(201,169,110,0.02));border:1px solid rgba(201,169,110,0.3);border-radius:14px;padding:1.25rem;display:flex;flex-direction:column;gap:0.6rem;position:relative;">
+            <span style="position:absolute;top:-0.6rem;left:1rem;background:var(--gold);color:#090909;font-size:0.55rem;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:0.18rem 0.65rem;border-radius:999px;">Most Popular</span>
+            <p style="font-size:0.6rem;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold-dim);margin:0;">Pro</p>
+            <p style="font-size:1.8rem;font-weight:900;letter-spacing:-0.04em;color:var(--gold-bright);margin:0;">$55</p>
+            <p style="font-size:0.78rem;color:var(--text-2);line-height:1.6;margin:0;flex:1;">Custom domain, music player, video section, press bio, contact form.</p>
+            <a href="https://buy.stripe.com/6oU3cv8FF0ZM1nyfqc3ZK03" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-align:center;justify-content:center;font-size:0.82rem;background:var(--gold);color:#090909;margin-top:auto;">Buy Pro — $55 →</a>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.25rem;display:flex;flex-direction:column;gap:0.6rem;">
+            <p style="font-size:0.6rem;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-3);margin:0;">Premium</p>
+            <p style="font-size:1.8rem;font-weight:900;letter-spacing:-0.04em;color:var(--text);margin:0;">$105</p>
+            <p style="font-size:0.78rem;color:var(--text-2);line-height:1.6;margin:0;flex:1;">Fully custom build, multi-section layout, deep branding, revisions included.</p>
+            <a href="https://buy.stripe.com/5kQ7sL3ll7oa2rC0vi3ZK04" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-align:center;justify-content:center;font-size:0.82rem;margin-top:auto;">Buy Premium — $105 →</a>
+          </div>
+
+          <div style="background:linear-gradient(135deg,rgba(139,92,246,0.10),rgba(139,92,246,0.03));border:1px solid rgba(139,92,246,0.35);border-radius:14px;padding:1.25rem;display:flex;flex-direction:column;gap:0.6rem;position:relative;">
+            <span style="position:absolute;top:-0.55rem;left:1rem;background:var(--purple);color:#fff;font-size:0.52rem;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;padding:0.16rem 0.6rem;border-radius:999px;white-space:nowrap;">Membership</span>
+            <p style="font-size:0.6rem;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--purple-bright);margin:0;">Platform Access</p>
+            <p style="font-size:1.8rem;font-weight:900;letter-spacing:-0.04em;color:var(--purple-bright);margin:0;">$5<span style="font-size:0.95rem;font-weight:600;color:var(--text-2);">/mo</span></p>
+            <p style="font-size:0.78rem;color:var(--text-2);line-height:1.6;margin:0;flex:1;">Games, apps, member DMs, full radio access, and 2 original track submissions/month to Station 1. Already got a free page? This activates it.</p>
+            <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" target="_blank" rel="noopener noreferrer" class="btn btn-outline-purple" style="text-align:center;justify-content:center;font-size:0.82rem;margin-top:auto;">Subscribe — $5/mo →</a>
+          </div>
+
+        </div>
+        <p style="text-align:center;font-size:0.72rem;color:var(--text-3);">
+          Prefer Cash App? Send to <a href="https://cash.app/$Jamespropane00" target="_blank" rel="noopener noreferrer" style="color:var(--gold-dim);text-decoration:underline;">$Jamespropane00</a> — note your plan + your email so we can reach out ·
+          <a href="pricing.html" style="color:var(--gold-dim);text-decoration:underline;">Full plan comparison →</a>
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="about.html">About</a>
+          <a href="network.html">Network</a>
+          <a href="services.html">Services</a>
+          <a href="music.html">Music</a>
+          <a href="store.html">Supply</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="drops.html">Drops</a>
+          <a href="faq.html">FAQ</a>
+          <a href="artists/djfacelessanimal.html">DJ Faceless</a>
+          <a href="start.html">Get Started Free</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/script.js"></script>
+  <script src="assets/js/radio-widget.js" defer></script>
+
+  <!-- Optional Supabase override — auto-generated by server.js in dev.
+       supabase-client.js already has fallback credentials embedded, so
+       Supabase is always active even when this file is absent. -->
+  <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
+  <script src="assets/js/env.js" onerror="void 0"></script>
+
+  <!-- PLAN DETECTION — reveals signup form when ?plan=free is present -->
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search)
+      if (params.get('plan') === 'free') {
+        var chooser    = document.getElementById('choose')
+        var formSection = document.getElementById('free-signup-form')
+        if (chooser)     chooser.hidden = true
+        if (formSection) {
+          formSection.hidden = false
+          formSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }
+    })()
+  </script>
+
+  <!-- Password show/hide toggles -->
+  <script>
+    document.querySelectorAll('.fs-pw-toggle').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var target = document.getElementById(this.dataset.target)
+        if (target) {
+          target.type = target.type === 'password' ? 'text' : 'password'
+          this.textContent = target.type === 'password' ? '👁' : '🙈'
+        }
+      })
+    })
+  </script>
+
+  <!-- FREE SIGNUP HANDLER — writes to profiles, pages, submissions, member_accounts in Supabase -->
+  <script type="module" src="assets/js/free-signup.js"></script>
+
+</body>
+</html>

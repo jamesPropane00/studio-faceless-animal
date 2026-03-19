@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Faceless Animal Studios — Member Dashboard. Your platform hub." />
+  <title>Dashboard — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+  <style>
+    /* ── Dashboard shell ── */
+    .dash-wrap { min-height: 100dvh; padding: 2rem 0 8rem; background: var(--bg); }
+    .dash-container { max-width: 760px; margin: 0 auto; padding: 0 1.25rem; }
+
+    /* ── Gate ── */
+    .dash-gate { min-height: 60dvh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 3rem 1.5rem; }
+    .dash-gate-card { max-width: 380px; }
+    .dash-gate-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .dash-gate-title { font-size: 1.6rem; font-weight: 900; margin: 0 0 0.6rem; }
+    .dash-gate-sub { font-size: 0.88rem; color: var(--text-2); line-height: 1.7; margin: 0 0 1.5rem; }
+
+    /* ── Header ── */
+    .dash-header {
+      display: flex; align-items: center; gap: 1rem;
+      margin-bottom: 1.5rem; padding-top: 1rem;
+    }
+    .dash-avatar {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: rgba(139,92,246,0.18); border: 2px solid rgba(139,92,246,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; font-weight: 900; color: var(--purple-bright);
+      flex-shrink: 0; overflow: hidden; position: relative;
+    }
+    .dash-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; position: absolute; inset: 0; }
+    .dash-identity { flex: 1; min-width: 0; }
+    .dash-display-name { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.025em; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dash-username { font-size: 0.78rem; color: var(--purple-bright); font-weight: 700; margin-top: 0.1rem; }
+    .dash-vibe-pill {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.18rem 0.55rem; border-radius: 20px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.7rem; color: var(--text-2); margin-top: 0.2rem;
+      max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .dash-plan-badge {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.25rem 0.65rem; border-radius: 20px;
+      font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+      flex-shrink: 0; align-self: flex-start;
+    }
+    .dash-plan-badge--free    { background: rgba(255,255,255,0.06); color: var(--text-3); border: 1px solid rgba(255,255,255,0.1); }
+    .dash-plan-badge--active  { background: rgba(139,92,246,0.15); color: var(--purple-bright); border: 1px solid rgba(139,92,246,0.3); }
+    .dash-plan-badge--paid    { background: rgba(212,175,55,0.12); color: var(--gold-bright); border: 1px solid rgba(212,175,55,0.3); }
+
+    /* ── Tabs ── */
+    .dash-tabs {
+      display: flex; gap: 0.25rem; overflow-x: auto; scrollbar-width: none;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      margin-bottom: 1.75rem; padding-bottom: 0;
+    }
+    .dash-tabs::-webkit-scrollbar { display: none; }
+    .dash-tab-btn {
+      padding: 0.55rem 1rem; border-radius: 8px 8px 0 0;
+      background: none; border: none; border-bottom: 2px solid transparent;
+      color: var(--text-3); font-family: var(--font-body);
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; cursor: pointer; white-space: nowrap;
+      transition: color 0.18s, border-color 0.18s;
+    }
+    .dash-tab-btn:hover { color: var(--text-2); }
+    .dash-tab-btn--active { color: var(--purple-bright); border-bottom-color: var(--purple-bright); }
+    .dash-tab-panel { display: none; }
+    .dash-tab-panel--active { display: block; }
+
+    /* ── Cards + sections ── */
+    .dash-section { margin-bottom: 1.75rem; }
+    .dash-section-title {
+      font-size: 0.63rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text-3); margin-bottom: 0.75rem;
+      padding-bottom: 0.45rem; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .dash-card {
+      background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px; padding: 1.15rem;
+    }
+    .dash-card + .dash-card { margin-top: 0.75rem; }
+    .dash-card--purple { border-color: rgba(139,92,246,0.22); }
+    .dash-card--gold   { border-color: rgba(212,175,55,0.22); }
+
+    /* ── Status rows ── */
+    .dash-status-row {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 0.5rem;
+    }
+    .dash-status-row + .dash-status-row { margin-top: 0.55rem; }
+    .dash-status-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
+    .dash-status-val { font-size: 0.8rem; font-weight: 700; color: var(--text-2); }
+    .dash-status-val--live    { color: #22c55e; }
+    .dash-status-val--draft   { color: var(--gold-bright); }
+    .dash-status-val--paused  { color: var(--text-3); }
+    .dash-status-val--none    { color: var(--text-3); }
+    .dash-status-val--active  { color: var(--purple-bright); }
+    .dash-status-val--free    { color: var(--text-3); }
+
+    /* ── Feature list ── */
+    .dash-features-grid {
+      display: grid; grid-template-columns: 1fr; gap: 0;
+    }
+    .dash-feat-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.8rem;
+    }
+    .dash-feat-row:last-child { border-bottom: none; }
+    .dash-feat-name { color: var(--text-2); display: flex; align-items: center; gap: 0.45rem; }
+    .dash-feat-val { font-size: 0.72rem; font-weight: 700; }
+    .dash-feat-val--on   { color: #22c55e; }
+    .dash-feat-val--off  { color: var(--text-3); }
+    .dash-feat-val--paid { color: var(--gold-bright); }
+
+    /* ── Quick links ── */
+    .dash-links-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+    @media (max-width: 360px) { .dash-links-grid { grid-template-columns: repeat(2, 1fr); } }
+    .dash-link-card {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0.3rem; padding: 0.9rem 0.6rem;
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px; text-decoration: none; transition: border-color 0.2s, background 0.2s;
+      text-align: center;
+    }
+    .dash-link-card:hover { border-color: rgba(139,92,246,0.35); background: rgba(139,92,246,0.06); }
+    .dash-link-card--locked { opacity: 0.6; cursor: pointer; }
+    .dash-link-card--locked:hover { border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.04); }
+    .dash-link-icon { font-size: 1.3rem; }
+    .dash-link-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-2); }
+    .dash-link-lock { font-size: 0.6rem; color: var(--gold-bright, #fbbf24); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+
+    /* ── Messages preview ── */
+    .dash-msg-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .dash-msg-item {
+      display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem;
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px; text-decoration: none; transition: border-color 0.18s;
+    }
+    .dash-msg-item:hover { border-color: rgba(139,92,246,0.3); }
+    .dash-msg-av { width: 34px; height: 34px; border-radius: 50%; background: rgba(139,92,246,0.14); border: 1px solid rgba(139,92,246,0.28); display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 900; color: var(--purple-bright); flex-shrink: 0; }
+    .dash-msg-body { flex: 1; min-width: 0; }
+    .dash-msg-name { font-size: 0.8rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dash-msg-preview { font-size: 0.72rem; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 0.08rem; }
+    .dash-msg-meta { font-size: 0.68rem; color: var(--text-3); flex-shrink: 0; text-align: right; }
+    .dash-msg-unread { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--purple); color: #fff; font-size: 0.62rem; font-weight: 900; }
+
+    /* ── Upgrade CTA ── */
+    .dash-upgrade-banner { background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(212,175,55,0.06)); border: 1px solid rgba(139,92,246,0.25); border-radius: 14px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.65rem; }
+    .dash-upgrade-title { font-size: 0.95rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+    .dash-upgrade-sub { font-size: 0.8rem; color: var(--text-2); line-height: 1.65; }
+    .dash-upgrade-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+    /* ── Edit Profile form ── */
+    .dash-form-grid { display: grid; gap: 1rem; }
+    .dash-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    @media (max-width: 480px) { .dash-form-row { grid-template-columns: 1fr; } }
+    .dash-field { display: flex; flex-direction: column; gap: 0.35rem; }
+    .dash-field label { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+    .dash-field input, .dash-field textarea, .dash-field select {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; color: var(--text); font-family: var(--font-body);
+      font-size: 0.88rem; padding: 0.6rem 0.85rem; outline: none;
+      transition: border-color 0.15s; width: 100%; box-sizing: border-box;
+    }
+    .dash-field input::placeholder, .dash-field textarea::placeholder { color: var(--text-3); }
+    .dash-field input:focus, .dash-field textarea:focus, .dash-field select:focus { border-color: rgba(139,92,246,0.5); }
+    .dash-field textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+    .dash-field-note { font-size: 0.68rem; color: var(--text-3); line-height: 1.5; }
+
+    /* Vibe row */
+    .dash-vibe-row { display: flex; gap: 0.5rem; align-items: center; }
+    .dash-vibe-emoji { width: 42px; flex-shrink: 0; text-align: center; font-size: 1.2rem; padding: 0.6rem 0; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; }
+    .dash-vibe-input { flex: 1; }
+
+    /* Social links */
+    .dash-social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    @media (max-width: 480px) { .dash-social-grid { grid-template-columns: 1fr; } }
+    .dash-social-item { display: flex; align-items: center; gap: 0.45rem; }
+    .dash-social-icon { font-size: 1rem; width: 22px; text-align: center; flex-shrink: 0; }
+    .dash-social-input { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-family: var(--font-body); font-size: 0.8rem; padding: 0.5rem 0.7rem; outline: none; transition: border-color 0.15s; box-sizing: border-box; }
+    .dash-social-input::placeholder { color: var(--text-3); }
+    .dash-social-input:focus { border-color: rgba(139,92,246,0.45); }
+
+    /* Save feedback */
+    .dash-save-note { font-size: 0.75rem; height: 1.2em; transition: opacity 0.4s; }
+    .dash-save-note--ok  { color: #22c55e; }
+    .dash-save-note--err { color: #f87171; }
+
+    /* ── Highlights (Instagram-inspired) ── */
+    .dash-highlights-list { display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1rem; }
+    .dash-hl-item {
+      display: flex; align-items: center; gap: 0.65rem;
+      background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px; padding: 0.75rem 0.9rem;
+    }
+    .dash-hl-emoji { font-size: 1.3rem; width: 28px; text-align: center; flex-shrink: 0; }
+    .dash-hl-info { flex: 1; min-width: 0; }
+    .dash-hl-label { font-size: 0.82rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dash-hl-url { font-size: 0.7rem; color: var(--purple-bright); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 0.1rem; }
+    .dash-hl-remove { background: none; border: none; color: var(--text-3); font-size: 1.1rem; cursor: pointer; padding: 0.15rem 0.3rem; transition: color 0.15s; flex-shrink: 0; }
+    .dash-hl-remove:hover { color: #f87171; }
+    .dash-hl-empty { font-size: 0.82rem; color: var(--text-3); text-align: center; padding: 1.25rem; }
+
+    /* Add highlight form */
+    .dash-hl-add-form { display: grid; gap: 0.55rem; }
+    .dash-hl-add-row { display: grid; grid-template-columns: 56px 1fr; gap: 0.5rem; }
+    .dash-hl-emoji-input { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-family: var(--font-body); font-size: 1.1rem; padding: 0.5rem; text-align: center; outline: none; transition: border-color 0.15s; }
+    .dash-hl-emoji-input:focus { border-color: rgba(139,92,246,0.45); }
+    .dash-hl-text-input { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-family: var(--font-body); font-size: 0.85rem; padding: 0.5rem 0.75rem; outline: none; transition: border-color 0.15s; box-sizing: border-box; width: 100%; }
+    .dash-hl-text-input::placeholder { color: var(--text-3); }
+    .dash-hl-text-input:focus { border-color: rgba(139,92,246,0.45); }
+
+    /* Highlights preview cards (display-only, shown below) */
+    .dash-hl-preview-row { display: flex; gap: 0.6rem; overflow-x: auto; scrollbar-width: none; padding: 0.25rem 0; }
+    .dash-hl-preview-row::-webkit-scrollbar { display: none; }
+    .dash-hl-card {
+      display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+      min-width: 80px; padding: 0.75rem 0.5rem;
+      background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px; text-decoration: none; cursor: pointer;
+      transition: border-color 0.18s, background 0.18s; flex-shrink: 0;
+    }
+    .dash-hl-card:hover { border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.05); }
+    .dash-hl-card-emoji { font-size: 1.5rem; }
+    .dash-hl-card-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.03em; color: var(--text-2); text-align: center; max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ── Tracks ── */
+    .track-dropzone {
+      border: 2px dashed rgba(139,92,246,0.3); border-radius: 12px;
+      padding: 1.5rem 1rem; text-align: center; cursor: pointer;
+      transition: border-color 0.18s, background 0.18s;
+    }
+    .track-dropzone:hover, .track-dropzone.drag-over {
+      border-color: rgba(139,92,246,0.7); background: rgba(139,92,246,0.05);
+    }
+    .track-dropzone-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .track-dropzone-text { font-size: 0.88rem; font-weight: 700; color: var(--text); margin: 0 0 0.25rem; }
+    .track-dropzone-sub { font-size: 0.72rem; color: var(--text-3); margin: 0; }
+
+    .track-card {
+      background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 0.65rem;
+    }
+    .track-card-header { display: flex; align-items: flex-start; gap: 0.65rem; margin-bottom: 0.65rem; }
+    .track-card-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 0.1rem; }
+    .track-card-meta { flex: 1; min-width: 0; }
+    .track-card-title { font-size: 0.88rem; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .track-card-desc { font-size: 0.72rem; color: var(--text-3); margin-top: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .track-card-sub { font-size: 0.67rem; color: var(--text-3); margin-top: 0.2rem; }
+    .track-card-delete { background: none; border: none; color: var(--text-3); font-size: 1rem; cursor: pointer; padding: 0.2rem 0.35rem; flex-shrink: 0; transition: color 0.15s; }
+    .track-card-delete:hover { color: #f87171; }
+    .track-audio { width: 100%; height: 36px; border-radius: 8px; outline: none; }
+
+    /* ── Post to Board (Facebook-inspired) ── */
+    .dash-board-post-area {
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 0.85rem;
+      font-family: var(--font-body); font-size: 0.9rem;
+      color: var(--text); outline: none; width: 100%; box-sizing: border-box;
+      resize: vertical; min-height: 100px; line-height: 1.55;
+      transition: border-color 0.15s;
+    }
+    .dash-board-post-area::placeholder { color: var(--text-3); }
+    .dash-board-post-area:focus { border-color: rgba(139,92,246,0.4); }
+    .dash-board-cat-select {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; color: var(--text); font-family: var(--font-body);
+      font-size: 0.82rem; padding: 0.5rem 0.75rem; outline: none;
+      transition: border-color 0.15s; cursor: pointer;
+    }
+    .dash-board-cat-select:focus { border-color: rgba(139,92,246,0.45); }
+    .dash-board-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+    .dash-board-char-count { font-size: 0.68rem; color: var(--text-3); }
+    .dash-board-submit-row { display: flex; gap: 0.5rem; align-items: center; }
+
+    /* ── Logout ── */
+    .dash-logout { text-align: center; margin-top: 2rem; }
+    .dash-logout a { font-size: 0.72rem; color: var(--text-3); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .dash-logout a:hover { color: var(--text-2); }
+
+    /* ── Misc ── */
+    .dash-loading { font-size: 0.8rem; color: var(--text-3); text-align: center; padding: 0.85rem 0; }
+    .dash-divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 1rem 0; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="games.html">Games</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="games.html">Games</a>
+    <a href="music.html">Music</a>
+    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="about.html">About</a>
+  </div>
+
+  <div class="dash-wrap">
+
+    <!-- Gate: not signed in -->
+    <div class="dash-gate" id="dash-gate">
+      <div class="dash-gate-card">
+        <div class="dash-gate-icon">🔒</div>
+        <h1 class="dash-gate-title">Members Area</h1>
+        <p class="dash-gate-sub">Sign in with your platform handle to access your dashboard, messages, and member features.</p>
+        <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+          <a href="login.html?redirect=dashboard.html" class="btn btn-primary">Sign In →</a>
+          <a href="login.html?tab=create&redirect=dashboard.html" class="btn btn-ghost">Create Account</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard: signed in -->
+    <div class="dash-container" id="dash-main" style="display:none;">
+
+      <!-- Header -->
+      <div class="dash-header">
+        <div class="dash-avatar" id="dash-avatar"><span id="dash-avatar-initial">?</span></div>
+        <div class="dash-identity" style="flex:1;min-width:0;">
+          <p class="dash-display-name" id="dash-display">Loading…</p>
+          <p class="dash-username" id="dash-username">@…</p>
+          <p class="dash-vibe-pill" id="dash-vibe-pill" style="display:none;"></p>
+        </div>
+        <span class="dash-plan-badge dash-plan-badge--free" id="dash-plan-badge">Free</span>
+      </div>
+
+      <!-- Tabs -->
+      <div class="dash-tabs" role="tablist">
+        <button class="dash-tab-btn dash-tab-btn--active" data-tab="overview"    role="tab" aria-selected="true">Overview</button>
+        <button class="dash-tab-btn"                       data-tab="profile"     role="tab" aria-selected="false">Edit Profile</button>
+        <button class="dash-tab-btn"                       data-tab="highlights"  role="tab" aria-selected="false">Highlights</button>
+        <button class="dash-tab-btn"                       data-tab="tracks"      role="tab" aria-selected="false">Tracks</button>
+        <button class="dash-tab-btn"                       data-tab="post"        role="tab" aria-selected="false">Post</button>
+      </div>
+
+      <!-- ══ TAB: OVERVIEW ══════════════════════════════════════ -->
+      <div class="dash-tab-panel dash-tab-panel--active" id="tab-overview">
+
+        <!-- Account overview -->
+        <div class="dash-section">
+          <p class="dash-section-title">Account</p>
+          <div class="dash-card dash-card--purple">
+            <div class="dash-status-row"><span class="dash-status-label">Membership</span><span class="dash-status-val" id="dash-membership-val">Free</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Plan Tier</span><span class="dash-status-val" id="dash-plan-val">Free</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Page Status</span><span class="dash-status-val dash-status-val--none" id="dash-page-status">No Page Yet</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Member Since</span><span class="dash-status-val" id="dash-since">—</span></div>
+            <div id="dash-page-link-row" style="display:none;margin-top:0.85rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.06);">
+              <a id="dash-page-link" href="#" class="btn btn-ghost btn-sm" style="font-size:0.72rem;">View My Page →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature access -->
+        <div class="dash-section">
+          <p class="dash-section-title">What You Have Access To</p>
+          <div class="dash-card">
+            <div class="dash-features-grid">
+              <div class="dash-feat-row">
+                <span class="dash-feat-name">📄 Hosted creator page (/yourname)</span>
+                <span class="dash-feat-val dash-feat-val--on">Included</span>
+              </div>
+              <div class="dash-feat-row">
+                <span class="dash-feat-name">📻 Radio + live chat</span>
+                <span class="dash-feat-val dash-feat-val--on">Open</span>
+              </div>
+              <div class="dash-feat-row">
+                <span class="dash-feat-name">💬 Private messaging (text)</span>
+                <span class="dash-feat-val dash-feat-val--on">Included</span>
+              </div>
+              <div class="dash-feat-row">
+                <span class="dash-feat-name">📎 DM file attachments</span>
+                <span class="dash-feat-val" id="feat-attachments" style="color:var(--text-3);">Active Members Only</span>
+              </div>
+              <div class="dash-feat-row">
+                <span class="dash-feat-name">🌐 Network board listing</span>
+                <span class="dash-feat-val dash-feat-val--on">Included</span>
+              </div>
+              <div class="dash-feat-row">
+                <span class="dash-feat-name">🎮 Studio games</span>
+                <span class="dash-feat-val" id="feat-games" style="color:var(--text-3);">Active Members Only</span>
+              </div>
+              <div class="dash-feat-row">
+                <span class="dash-feat-name">📱 Studio apps &amp; tools</span>
+                <span class="dash-feat-val" id="feat-apps" style="color:var(--text-3);">Active Members Only</span>
+              </div>
+              <div class="dash-feat-row">
+                <span class="dash-feat-name">🔥 Member drops &amp; early access</span>
+                <span class="dash-feat-val" id="feat-drops" style="color:var(--text-3);">Active Members Only</span>
+              </div>
+              <div class="dash-feat-row">
+                <span class="dash-feat-name">⭐ Profile page upgrades</span>
+                <span class="dash-feat-val" id="feat-page" style="color:var(--text-3);">Starter / Pro / Premium</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick access -->
+        <div class="dash-section">
+          <p class="dash-section-title">Quick Access</p>
+          <div class="dash-links-grid">
+            <button class="dash-link-card" id="qa-edit-profile" style="cursor:pointer;background:rgba(139,92,246,0.06);border-color:rgba(139,92,246,0.25);">
+              <span class="dash-link-icon">✏️</span><span class="dash-link-label">Edit Profile</span>
+            </button>
+            <a href="#" id="qa-my-page" class="dash-link-card" style="display:none;">
+              <span class="dash-link-icon">🪪</span><span class="dash-link-label">My Page</span>
+            </a>
+            <a href="radio.html" class="dash-link-card"><span class="dash-link-icon">📻</span><span class="dash-link-label">Radio</span></a>
+            <a href="messages.html" class="dash-link-card"><span class="dash-link-icon">💬</span><span class="dash-link-label">Messages</span></a>
+            <a href="messages.html" class="dash-link-card" id="qa-attachments"><span class="dash-link-icon">📎</span><span class="dash-link-label">Attachments</span></a>
+            <a href="network.html" class="dash-link-card"><span class="dash-link-icon">🌐</span><span class="dash-link-label">Network</span></a>
+            <a href="games.html" class="dash-link-card" id="qa-games"><span class="dash-link-icon">🎮</span><span class="dash-link-label">Games</span></a>
+            <a href="apps.html" class="dash-link-card" id="qa-apps"><span class="dash-link-icon">📱</span><span class="dash-link-label">Apps</span></a>
+            <a href="drops.html" class="dash-link-card" id="qa-drops"><span class="dash-link-icon">🔥</span><span class="dash-link-label">Drops</span></a>
+          </div>
+        </div>
+
+        <!-- Messages preview -->
+        <div class="dash-section">
+          <p class="dash-section-title">Recent Messages</p>
+          <div id="dash-msg-preview">
+            <div class="dash-loading" id="dash-msg-loading">Loading…</div>
+            <div class="dash-msg-list" id="dash-msg-list" style="display:none;"></div>
+            <div id="dash-msg-empty" style="display:none;">
+              <div class="dash-card" style="text-align:center;padding:1.25rem;">
+                <p style="font-size:0.82rem;color:var(--text-3);margin-bottom:0.75rem;">No messages yet.</p>
+                <a href="messages.html" class="btn btn-ghost btn-sm">Open Messages →</a>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:0.65rem;">
+            <a href="messages.html" class="btn btn-ghost btn-sm" style="font-size:0.72rem;">View All Messages →</a>
+          </div>
+        </div>
+
+        <!-- Upgrade CTA -->
+        <div class="dash-section" id="dash-upgrade-section">
+          <p class="dash-section-title">Unlock More</p>
+          <div class="dash-upgrade-banner">
+            <p class="dash-upgrade-title">Go Active — $5/Month</p>
+            <p class="dash-upgrade-sub">Unlock studio games, apps, member drops, DM file sharing, and full platform access. Or go all-in with a full page package: Starter $30 · Pro $55 · Premium $105 — built-out page included with everything.</p>
+            <div class="dash-upgrade-actions">
+              <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Get Active — $5/mo →</a>
+              <a href="pricing.html" class="btn btn-ghost btn-sm">All Plans</a>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end tab-overview -->
+
+      <!-- ══ TAB: EDIT PROFILE ═══════════════════════════════════ -->
+      <div class="dash-tab-panel" id="tab-profile">
+
+        <!-- Vibe Status (Snapchat-inspired) -->
+        <div class="dash-section">
+          <p class="dash-section-title">Vibe Status</p>
+          <div class="dash-card">
+            <p style="font-size:0.78rem;color:var(--text-3);margin-bottom:0.85rem;line-height:1.55;">Set a quick status — shows on your profile. Resets after 24 hours.</p>
+            <div class="dash-vibe-row">
+              <div class="dash-vibe-emoji" id="dash-vibe-emoji-btn" title="Pick emoji">😶</div>
+              <input type="text" class="dash-vibe-input dash-social-input" id="dash-vibe-text" placeholder="What's your vibe right now…" maxlength="60" />
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;">
+              <button class="btn btn-ghost btn-sm" id="dash-vibe-save" style="font-size:0.72rem;">Set Vibe</button>
+              <button class="btn btn-ghost btn-sm" id="dash-vibe-clear" style="font-size:0.72rem;color:var(--text-3);">Clear</button>
+              <span class="dash-save-note" id="vibe-save-note" style="line-height:2.2;"></span>
+            </div>
+            <!-- Quick emoji picks -->
+            <div style="display:flex;gap:0.5rem;margin-top:0.65rem;flex-wrap:wrap;">
+              <span style="font-size:0.65rem;color:var(--text-3);align-self:center;">Quick:</span>
+              <span class="dash-vibe-emoji" style="width:auto;padding:0.3rem 0.5rem;font-size:1rem;cursor:pointer;" data-emoji="🔥">🔥</span>
+              <span class="dash-vibe-emoji" style="width:auto;padding:0.3rem 0.5rem;font-size:1rem;cursor:pointer;" data-emoji="🎧">🎧</span>
+              <span class="dash-vibe-emoji" style="width:auto;padding:0.3rem 0.5rem;font-size:1rem;cursor:pointer;" data-emoji="💤">💤</span>
+              <span class="dash-vibe-emoji" style="width:auto;padding:0.3rem 0.5rem;font-size:1rem;cursor:pointer;" data-emoji="🎮">🎮</span>
+              <span class="dash-vibe-emoji" style="width:auto;padding:0.3rem 0.5rem;font-size:1rem;cursor:pointer;" data-emoji="🌃">🌃</span>
+              <span class="dash-vibe-emoji" style="width:auto;padding:0.3rem 0.5rem;font-size:1rem;cursor:pointer;" data-emoji="🎵">🎵</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile info -->
+        <div class="dash-section">
+          <p class="dash-section-title">Profile Info</p>
+          <div class="dash-card dash-card--purple">
+            <div class="dash-form-grid">
+
+              <div class="dash-form-row">
+                <div class="dash-field">
+                  <label for="edit-display-name">Display Name</label>
+                  <input type="text" id="edit-display-name" placeholder="Your name or artist handle" maxlength="60" />
+                </div>
+                <div class="dash-field">
+                  <label>Username</label>
+                  <input type="text" id="edit-username-display" disabled style="opacity:0.5;cursor:not-allowed;" />
+                  <span class="dash-field-note">Username cannot be changed.</span>
+                </div>
+              </div>
+
+              <div class="dash-field">
+                <label for="edit-bio">Bio</label>
+                <textarea id="edit-bio" placeholder="Short bio — who you are, what you do…" maxlength="300"></textarea>
+              </div>
+
+              <div class="dash-form-row">
+                <div class="dash-field">
+                  <label for="edit-city">City</label>
+                  <input type="text" id="edit-city" placeholder="Providence" maxlength="60" />
+                </div>
+                <div class="dash-field">
+                  <label for="edit-state">State</label>
+                  <input type="text" id="edit-state" placeholder="RI" maxlength="4" />
+                </div>
+              </div>
+
+              <div class="dash-field">
+                <label for="edit-avatar-url">Avatar Image URL</label>
+                <input type="url" id="edit-avatar-url" placeholder="https://…" />
+                <span class="dash-field-note">Paste a direct image link or upload to Imgur/etc first.</span>
+              </div>
+
+              <div class="dash-field">
+                <label for="edit-cover-url">Cover / Banner URL</label>
+                <input type="url" id="edit-cover-url" placeholder="https://… (optional)" />
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Social links -->
+        <div class="dash-section">
+          <p class="dash-section-title">Social Links</p>
+          <div class="dash-card">
+            <div class="dash-social-grid">
+              <div class="dash-social-item"><span class="dash-social-icon">📸</span><input type="url" class="dash-social-input" id="social-instagram" placeholder="Instagram URL" /></div>
+              <div class="dash-social-item"><span class="dash-social-icon">👻</span><input type="url" class="dash-social-input" id="social-snapchat" placeholder="Snapchat URL or @" /></div>
+              <div class="dash-social-item"><span class="dash-social-icon">🎵</span><input type="url" class="dash-social-input" id="social-tiktok" placeholder="TikTok URL" /></div>
+              <div class="dash-social-item"><span class="dash-social-icon">🐦</span><input type="url" class="dash-social-input" id="social-twitter" placeholder="Twitter / X URL" /></div>
+              <div class="dash-social-item"><span class="dash-social-icon">📺</span><input type="url" class="dash-social-input" id="social-youtube" placeholder="YouTube URL" /></div>
+              <div class="dash-social-item"><span class="dash-social-icon">☁️</span><input type="url" class="dash-social-input" id="social-soundcloud" placeholder="SoundCloud URL" /></div>
+              <div class="dash-social-item"><span class="dash-social-icon">💚</span><input type="url" class="dash-social-input" id="social-spotify" placeholder="Spotify URL" /></div>
+              <div class="dash-social-item"><span class="dash-social-icon">🌐</span><input type="url" class="dash-social-input" id="social-website" placeholder="Your website" /></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Save -->
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;">
+          <button class="btn btn-primary" id="dash-profile-save">Save Profile</button>
+          <span class="dash-save-note" id="profile-save-note"></span>
+        </div>
+
+      </div><!-- end tab-profile -->
+
+      <!-- ══ TAB: HIGHLIGHTS ════════════════════════════════════ -->
+      <div class="dash-tab-panel" id="tab-highlights">
+
+        <div class="dash-section">
+          <p class="dash-section-title">Pinned Highlights</p>
+          <p style="font-size:0.8rem;color:var(--text-3);margin-bottom:1rem;line-height:1.6;">Pin your best links — tracks, videos, socials, anything. Shows as a visual row on your profile. Max 5.</p>
+
+          <!-- Preview strip -->
+          <div class="dash-hl-preview-row" id="dash-hl-preview-row" style="display:none;margin-bottom:1rem;"></div>
+
+          <!-- Current highlights list -->
+          <div class="dash-card" style="margin-bottom:1rem;">
+            <div class="dash-highlights-list" id="dash-hl-list">
+              <p class="dash-hl-empty" id="dash-hl-empty">No highlights yet. Add your first one below.</p>
+            </div>
+          </div>
+
+          <!-- Add highlight form -->
+          <div class="dash-card dash-card--purple">
+            <p style="font-size:0.68rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:0.75rem;">Add Highlight</p>
+            <div class="dash-hl-add-form">
+              <div class="dash-hl-add-row">
+                <input type="text" class="dash-hl-emoji-input" id="hl-add-emoji" placeholder="🔥" maxlength="2" />
+                <input type="text" class="dash-hl-text-input" id="hl-add-label" placeholder="Label (e.g. Latest Track)" maxlength="40" />
+              </div>
+              <input type="url" class="dash-hl-text-input" id="hl-add-url" placeholder="https://…" style="width:100%;" />
+              <div style="display:flex;align-items:center;gap:0.75rem;">
+                <button class="btn btn-ghost btn-sm" id="hl-add-btn">Add →</button>
+                <span class="dash-save-note" id="hl-add-note"></span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Save -->
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;">
+          <button class="btn btn-primary" id="dash-hl-save">Save Highlights</button>
+          <span class="dash-save-note" id="hl-save-note"></span>
+        </div>
+
+      </div><!-- end tab-highlights -->
+
+      <!-- ══ TAB: TRACKS ═════════════════════════════════════════ -->
+      <div class="dash-tab-panel" id="tab-tracks">
+
+        <!-- Gate — shown to free members -->
+        <div class="dash-section" id="tracks-gate" style="display:none;">
+          <div class="dash-card" style="text-align:center;padding:2rem 1.25rem;">
+            <div style="font-size:2.5rem;margin-bottom:0.75rem;">🎵</div>
+            <p style="font-size:1rem;font-weight:900;color:var(--text);margin:0 0 0.5rem;">Music Upload</p>
+            <p style="font-size:0.82rem;color:var(--text-2);line-height:1.65;margin:0 0 1.25rem;">Upload your tracks and host them directly on the platform. MP3, WAV, FLAC and more — up to 30MB per file. Requires an active plan.</p>
+            <a href="pricing.html" class="btn btn-primary btn-sm">Get Access →</a>
+          </div>
+        </div>
+
+        <!-- Upload section — shown to paid members -->
+        <div id="tracks-upload-section" style="display:none;">
+
+          <div class="dash-section">
+            <p class="dash-section-title">Upload a Track</p>
+            <div class="dash-card">
+
+              <!-- Drop zone -->
+              <div id="track-dropzone" class="track-dropzone">
+                <div class="track-dropzone-icon">🎵</div>
+                <p class="track-dropzone-text">Drop your file here or click to browse</p>
+                <p class="track-dropzone-sub">MP3 · WAV · FLAC · OGG · M4A · AAC — max 30MB</p>
+                <input type="file" id="track-file-input" accept="audio/*,.mp3,.wav,.flac,.ogg,.m4a,.aiff,.aac" style="display:none;" />
+              </div>
+
+              <!-- Selected file preview -->
+              <div id="track-file-selected" style="display:none;margin-top:0.75rem;background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:0.65rem 0.85rem;">
+                <div style="display:flex;align-items:center;gap:0.6rem;">
+                  <span style="font-size:1.2rem;">🎵</span>
+                  <span id="track-file-name" style="flex:1;font-size:0.82rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+                  <span id="track-file-size" style="font-size:0.7rem;color:var(--text-3);flex-shrink:0;"></span>
+                  <button id="track-file-clear" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:0.85rem;flex-shrink:0;padding:0.1rem 0.25rem;" title="Remove file">✕</button>
+                </div>
+              </div>
+
+              <!-- Title -->
+              <div class="dash-field" style="margin-top:0.85rem;">
+                <label for="track-title-input">Track Title <span style="color:#f87171;">*</span></label>
+                <input type="text" id="track-title-input" class="dash-social-input" placeholder="Enter a title for this track…" maxlength="100" />
+              </div>
+
+              <!-- Description -->
+              <div class="dash-field" style="margin-top:0.5rem;">
+                <label for="track-desc-input">Description <span style="font-size:0.72rem;color:var(--text-3);">optional</span></label>
+                <input type="text" id="track-desc-input" class="dash-social-input" placeholder="e.g. produced by DJFA · unreleased" maxlength="200" />
+              </div>
+
+              <!-- Upload button + note -->
+              <div style="display:flex;align-items:center;gap:0.75rem;margin-top:1rem;flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm" id="track-upload-btn" disabled>Upload Track</button>
+                <span class="dash-save-note" id="track-upload-note"></span>
+              </div>
+
+              <!-- Progress bar -->
+              <div id="track-progress-wrap" style="display:none;margin-top:0.85rem;">
+                <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;">
+                  <div id="track-progress-bar" style="height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);width:0%;transition:width 0.25s;"></div>
+                </div>
+                <p id="track-progress-label" style="font-size:0.7rem;color:var(--text-3);margin:0.3rem 0 0;"></p>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Track list -->
+          <div class="dash-section">
+            <p class="dash-section-title" style="display:flex;align-items:center;gap:0.5rem;">
+              Your Tracks
+              <span id="tracks-count" style="font-size:0.7rem;color:var(--text-3);font-weight:400;"></span>
+            </p>
+            <div id="tracks-list">
+              <p id="tracks-empty" style="font-size:0.82rem;color:var(--text-3);padding:0.5rem 0;">No tracks uploaded yet. Upload your first track above.</p>
+            </div>
+          </div>
+
+        </div><!-- end tracks-upload-section -->
+
+      </div><!-- end tab-tracks -->
+
+      <!-- ══ TAB: POST TO BOARD ══════════════════════════════════ -->
+      <div class="dash-tab-panel" id="tab-post">
+
+        <div class="dash-section">
+          <p class="dash-section-title">Post to Creator Board</p>
+          <p style="font-size:0.8rem;color:var(--text-3);margin-bottom:1rem;line-height:1.6;">Share an update with the network. Posts go live after review — usually same day.</p>
+          <div class="dash-card dash-card--purple">
+            <textarea class="dash-board-post-area" id="board-post-text" placeholder="Drop something with the crew — a release, collab call, event, or what you're working on…" maxlength="500"></textarea>
+            <div class="dash-board-actions">
+              <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap;">
+                <select class="dash-board-cat-select" id="board-post-cat">
+                  <option value="update">General Update</option>
+                  <option value="release">Release</option>
+                  <option value="collab">Looking to Collab</option>
+                  <option value="announcement">Announcement</option>
+                  <option value="question">Question</option>
+                </select>
+                <span class="dash-board-char-count" id="board-char-count">0 / 500</span>
+              </div>
+              <div class="dash-board-submit-row">
+                <button class="btn btn-primary btn-sm" id="board-post-btn">Post →</button>
+                <span class="dash-save-note" id="board-post-note"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-section">
+          <p class="dash-section-title">Your Recent Posts</p>
+          <div id="board-my-posts-wrap">
+            <div class="dash-loading" id="board-posts-loading">Loading…</div>
+            <div id="board-my-posts-list" style="display:none;"></div>
+            <div id="board-posts-empty" style="display:none;">
+              <div class="dash-card" style="text-align:center;padding:1.25rem;">
+                <p style="font-size:0.82rem;color:var(--text-3);">No posts yet. Write your first one above.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end tab-post -->
+
+      <!-- Sign out -->
+      <div class="dash-logout">
+        <a href="#" id="dash-logout">Sign out</a>
+      </div>
+
+    </div><!-- end .dash-container -->
+  </div>
+
+  <!-- Upgrade required modal (shown when free member clicks a paid feature link) -->
+  <div id="dash-upgrade-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:1.5rem;" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title">
+    <div style="background:var(--bg-2,#111);border:1px solid rgba(139,92,246,0.3);border-radius:16px;padding:1.75rem;width:100%;max-width:400px;">
+      <p style="font-size:0.65rem;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--purple-bright,#a78bfa);margin:0 0 0.4rem;">Access Plan Required</p>
+      <h2 id="upgrade-modal-feature" style="font-size:1.1rem;font-weight:800;margin:0 0 0.6rem;color:var(--text,#fff);"></h2>
+      <p style="font-size:0.84rem;color:var(--text-2,#aaa);line-height:1.65;margin:0 0 1.25rem;">This feature is available on the <strong>Access plan</strong> ($5/month) and above. Upgrade to unlock studio games, apps, drops, and more.</p>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+        <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="btn btn-primary btn-sm" target="_blank" rel="noopener">Get Access — $5/mo →</a>
+        <a href="pricing.html" class="btn btn-ghost btn-sm">See All Plans</a>
+        <button class="btn btn-ghost btn-sm" id="dash-upgrade-modal-close" style="margin-left:auto;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/script.js"></script>
+  <script src="assets/js/access-gate.js"></script>
+  <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
+  <script src="assets/js/env.js" onerror="void 0"></script>
+  <script src="assets/js/radio-widget.js" defer></script>
+
+  <!-- Pre-paint plan: runs synchronously before the ES module loads so the
+       plan badge and overview card never flash "Free" for paid members. -->
+  <script>
+  ;(function () {
+    var PLAN_ORDER   = ['free', 'starter', 'pro', 'premium']
+    var PLAN_ALIASES = { access: 'starter' }
+    var PLAN_LABELS  = { free: 'Free', starter: 'Starter', pro: 'Pro', premium: 'Premium' }
+    var STATUS_LABELS = { free: 'Free', active: 'Active', paused: 'Paused', cancelled: 'Cancelled' }
+
+    try {
+      var sess = JSON.parse(localStorage.getItem('fas_user') || 'null')
+      if (!sess || !sess.username) return
+
+      var rawPlan = (sess.plan || 'free').toLowerCase()
+      var plan    = PLAN_ALIASES[rawPlan] || rawPlan
+      if (!PLAN_ORDER.includes(plan)) plan = 'free'
+      var label   = PLAN_LABELS[plan] || plan.charAt(0).toUpperCase() + plan.slice(1)
+
+      var rawStatus = (sess.status || (plan === 'free' ? 'free' : 'active')).toLowerCase()
+      var statusLabel = STATUS_LABELS[rawStatus] || rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1)
+
+      // Only pre-paint if user has a paid plan — free defaults are already in the HTML
+      if (plan === 'free') return
+
+      var badge = document.getElementById('dash-plan-badge')
+      if (badge) {
+        badge.textContent = label
+        badge.className   = 'dash-plan-badge dash-plan-badge--paid'
+      }
+      var pv = document.getElementById('dash-plan-val')
+      if (pv) pv.textContent = label
+      var mv = document.getElementById('dash-membership-val')
+      if (mv) { mv.textContent = statusLabel; mv.className = 'dash-status-val dash-status-val--' + rawStatus }
+
+      // Hide upgrade section immediately for pro/premium
+      if (plan === 'pro' || plan === 'premium') {
+        var upg = document.getElementById('dash-upgrade-section')
+        if (upg) upg.style.display = 'none'
+      }
+    } catch (_) {}
+  }())
+  </script>
+
+  <script type="module">
+    import { supabase, SUPABASE_READY } from './assets/js/supabase-client.js'
+    import { getSession, getMember, syncMember, updateMember, touchActive, clearSession, getPlanMeta, getStatusMeta, getPublicProfile } from './assets/js/member-db.js'
+    import { loadThreads, formatDMTime, DM_READY } from './assets/js/dm.js'
+
+    // ── Auth gate ──────────────────────────────────────────────
+    const gate    = document.getElementById('dash-gate')
+    const main    = document.getElementById('dash-main')
+    const session = getSession()
+
+    if (!session || !session.username) {
+      gate.style.display = ''
+      main.style.display = 'none'
+    } else {
+      gate.style.display = 'none'
+      main.style.display = ''
+      init(session)
+    }
+
+    // ── Tab switching ──────────────────────────────────────────
+    function switchTab(target) {
+      document.querySelectorAll('.dash-tab-btn').forEach(b => {
+        b.classList.toggle('dash-tab-btn--active', b.dataset.tab === target)
+        b.setAttribute('aria-selected', b.dataset.tab === target ? 'true' : 'false')
+      })
+      document.querySelectorAll('.dash-tab-panel').forEach(p => {
+        p.classList.toggle('dash-tab-panel--active', p.id === 'tab-' + target)
+      })
+    }
+
+    document.querySelectorAll('.dash-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab))
+    })
+
+    // ── Quick action: Edit Profile ─────────────────────────────
+    document.getElementById('qa-edit-profile')?.addEventListener('click', () => {
+      switchTab('profile')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+
+    // ── Paid feature link gating ───────────────────────────────
+    // When a free member clicks Games, Apps, or Drops, intercept
+    // and show an upgrade prompt instead of navigating.
+    const upgradeModal   = document.getElementById('dash-upgrade-modal')
+    const upgradeFeature = document.getElementById('upgrade-modal-feature')
+    const upgradeClose   = document.getElementById('dash-upgrade-modal-close')
+    function showUpgradeModal(featureName) {
+      if (upgradeFeature) upgradeFeature.textContent = featureName + ' requires an Access plan'
+      if (upgradeModal)   upgradeModal.style.display = 'flex'
+    }
+
+    function closeUpgradeModal() {
+      if (upgradeModal) upgradeModal.style.display = 'none'
+    }
+
+    upgradeClose?.addEventListener('click', closeUpgradeModal)
+    upgradeModal?.addEventListener('click', e => {
+      if (e.target === upgradeModal) closeUpgradeModal()
+    })
+
+    const GATED_LINKS = [
+      { id: 'qa-games',       label: 'Studio Games' },
+      { id: 'qa-apps',        label: 'Studio Apps' },
+      { id: 'qa-drops',       label: 'Member Drops' },
+      { id: 'qa-attachments', label: 'DM File Attachments' },
+    ]
+
+    function applyGatedLinkState() {
+      const hasPaid = FAS.isPaidMember()
+      GATED_LINKS.forEach(({ id, label }) => {
+        let el = document.getElementById(id)
+        if (!el) return
+
+        if (hasPaid) {
+          // Unlock: if element was previously locked, replace it (cloneNode clears click handlers)
+          if (el.dataset.fasLocked) {
+            const fresh = el.cloneNode(true)
+            fresh.removeAttribute('data-fas-locked')
+            fresh.classList.remove('dash-link-card--locked')
+            const lockSpan = fresh.querySelector('.dash-link-lock')
+            if (lockSpan) lockSpan.remove()
+            el.replaceWith(fresh)
+          }
+        } else {
+          // Lock: only add once (guarded by data-fas-locked)
+          if (!el.dataset.fasLocked) {
+            el.dataset.fasLocked = '1'
+            el.classList.add('dash-link-card--locked')
+            if (!el.querySelector('.dash-link-lock')) {
+              const lock = document.createElement('span')
+              lock.className = 'dash-link-lock'
+              lock.textContent = 'Upgrade'
+              el.appendChild(lock)
+            }
+            el.addEventListener('click', e => {
+              e.preventDefault()
+              showUpgradeModal(label)
+            })
+          }
+        }
+      })
+    }
+
+    // Run immediately (session is already loaded above)
+    applyGatedLinkState()
+
+    // ── State ──────────────────────────────────────────────────
+    let myUsername  = ''
+    let memberData  = null
+    let highlights  = []
+
+    // ── Init ───────────────────────────────────────────────────
+    async function init(sess) {
+      myUsername = sess.username.toLowerCase()
+
+      // Populate header immediately from localStorage — null-guarded to prevent
+      // a missing element from killing the whole async init chain
+      const av = document.getElementById('dash-avatar-initial')
+      if (av) av.textContent = (sess.display || sess.username).charAt(0).toUpperCase()
+      const dn = document.getElementById('dash-display')
+      if (dn) dn.textContent = sess.display || sess.username
+      const un = document.getElementById('dash-username')
+      if (un) un.textContent = '@' + myUsername
+      const eu = document.getElementById('edit-username-display')
+      if (eu) eu.value = myUsername
+      // dash-since is left as "—" until applyMemberData() sets it from m.created_at (DB source of truth)
+
+      touchActive(myUsername)
+
+      // Apply session plan data immediately so UI is never blank / stuck on "Free"
+      if (sess.plan && sess.plan !== 'free') {
+        applyMemberData({ plan_type: sess.plan, member_status: sess.status || 'active' })
+      }
+
+      // Load fresh data from Supabase (overrides session data with authoritative values)
+      const member = await getMember(myUsername)
+
+      // Plan reconciliation helper — always use the higher of (session, Supabase).
+      // signIn() confirmed the user's plan at login; if Supabase returns a lower
+      // value (stale row, missing column, or RLS gap) we keep the login-time plan.
+      const PLAN_TIERS = { free: 0, access: 1, starter: 1, pro: 2, premium: 3 }
+      function planRank(p) { return PLAN_TIERS[(p || 'free').toLowerCase()] ?? 0 }
+      const sessionPlan = (sess.plan || 'free').toLowerCase()
+
+      if (member) {
+        memberData = member
+
+        // If DB returned a lower-rank plan than the session, keep session plan
+        const rawDbPlan = (member.plan_type || 'free').toLowerCase()
+        if (planRank(sessionPlan) > planRank(rawDbPlan)) {
+          member.plan_type = sessionPlan
+        }
+
+        applyMemberData(member)
+
+        // ── Write authoritative plan back to localStorage so gated pages see it ──
+        try {
+          const stored = JSON.parse(localStorage.getItem('fas_user') || '{}')
+          const authPlan = member.plan_type || 'free'
+          if (stored.plan !== authPlan) {
+            stored.plan = authPlan
+            localStorage.setItem('fas_user', JSON.stringify(stored))
+            applyGatedLinkState()
+          }
+        } catch(_) {}
+      } else {
+        await syncMember(myUsername, sess.display, sess.email)
+        // Fall back to session plan rather than always showing "Free"
+        if (sess.plan && sess.plan !== 'free') {
+          applyMemberData({ plan_type: sess.plan, member_status: sess.status || 'active' })
+        } else {
+          applyFreeDefaults()
+        }
+      }
+
+      // Also try to load public profile data to pre-fill edit form
+      const pub = await getPublicProfile(myUsername)
+      if (pub) preFillPublicProfile(pub)
+
+      loadMessagesPreview(myUsername)
+      loadMyBoardPosts(myUsername)
+      initTrackTab(sess)
+    }
+
+    // ── Apply member data to Overview ─────────────────────────
+    function applyMemberData(m) {
+      const plan   = m.plan_type     || 'free'
+      const status = m.member_status || 'free'
+      const planMeta   = getPlanMeta(plan)
+      const statusMeta = getStatusMeta(status)
+
+      // Header badge — null-guarded so a missing element never kills the whole function
+      const badge = document.getElementById('dash-plan-badge')
+      if (badge) {
+        badge.textContent = planMeta.label
+        badge.className   = 'dash-plan-badge'
+        if (plan === 'free') badge.classList.add('dash-plan-badge--free')
+        else if (['starter','pro','premium'].includes(plan)) badge.classList.add('dash-plan-badge--paid')
+        else badge.classList.add('dash-plan-badge--active')
+      }
+
+      // Vibe pill — null-guarded
+      const vibe = m.vibe || ''
+      const vibeExpires = m.vibe_expires_at ? new Date(m.vibe_expires_at) : null
+      const vibeActive = vibe && (!vibeExpires || vibeExpires > new Date())
+      const vibePill = document.getElementById('dash-vibe-pill')
+      if (vibeActive && vibePill) {
+        vibePill.textContent = vibe
+        vibePill.style.display = ''
+      }
+
+      // Account overview — null-guarded
+      const memVal = document.getElementById('dash-membership-val')
+      if (memVal) {
+        memVal.textContent = statusMeta.label
+        memVal.className   = 'dash-status-val dash-status-val--' + status
+      }
+      const planVal = document.getElementById('dash-plan-val')
+      if (planVal) planVal.textContent = planMeta.label
+
+      const ps = m.page_status || 'none'
+      const psEl = document.getElementById('dash-page-status')
+      if (psEl) {
+        psEl.textContent = ps === 'none' ? 'No Page Yet' : ps.charAt(0).toUpperCase() + ps.slice(1)
+        psEl.className   = 'dash-status-val dash-status-val--' + ps
+      }
+
+      // Member Since — use authoritative created_at from DB if available
+      if (m.created_at) {
+        const sc = document.getElementById('dash-since')
+        if (sc) sc.textContent = new Date(m.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      }
+
+      if (m.page_slug && ps === 'live') {
+        const row  = document.getElementById('dash-page-link-row')
+        const link = document.getElementById('dash-page-link')
+        if (row)  row.style.display = ''
+        if (link) { link.href = '/creator/' + m.page_slug; link.textContent = '/' + m.page_slug + ' →' }
+        // Also update "My Page" quick-action card
+        const qaMy = document.getElementById('qa-my-page')
+        if (qaMy) { qaMy.href = '/creator/' + m.page_slug; qaMy.style.display = '' }
+      }
+
+      // Feature access
+      const isActive = !['free','none'].includes(plan) || status === 'active'
+      if (isActive) unlockFeatures()
+
+      // Hide upgrade for premium/pro members
+      if (['pro','premium'].includes(plan)) {
+        const upg = document.getElementById('dash-upgrade-section')
+        if (upg) upg.style.display = 'none'
+      }
+
+      // Pre-fill edit form from member_accounts
+      preFillEditForm(m)
+
+      // Load highlights
+      highlights = m.highlights_json || []
+      renderHighlights()
+
+      // Pre-fill vibe
+      if (vibeActive) {
+        const vt = document.getElementById('dash-vibe-text')
+        if (vt) vt.value = vibe
+      }
+    }
+
+    function applyFreeDefaults() {
+      const mv = document.getElementById('dash-membership-val')
+      if (mv) mv.textContent = 'Free'
+      const pv = document.getElementById('dash-plan-val')
+      if (pv) pv.textContent = 'Free'
+    }
+
+    function unlockFeatures() {
+      const ids = ['feat-games','feat-apps','feat-drops','feat-attachments']
+      ids.forEach(id => {
+        const el = document.getElementById(id)
+        if (el) { el.textContent = 'Unlocked ✓'; el.style.color = '#22c55e'; }
+      })
+    }
+
+    // ── Pre-fill edit form from member_accounts ───────────────
+    function preFillEditForm(m) {
+      set('edit-display-name', m.display_name || '')
+      set('edit-bio',          m.bio || '')
+      set('edit-city',         m.city || '')
+      set('edit-state',        m.state_abbr || '')
+      set('edit-avatar-url',   '') // handled from profiles
+      set('edit-cover-url',    m.cover_url || '')
+
+      const sl = m.social_links || {}
+      set('social-instagram', sl.instagram || '')
+      set('social-snapchat',  sl.snapchat  || '')
+      set('social-tiktok',    sl.tiktok    || '')
+      set('social-twitter',   sl.twitter   || '')
+      set('social-youtube',   sl.youtube   || '')
+      set('social-soundcloud',sl.soundcloud|| '')
+      set('social-spotify',   sl.spotify   || '')
+      set('social-website',   sl.website   || '')
+    }
+
+    // ── Pre-fill avatar/bio from profiles table ───────────────
+    function preFillPublicProfile(pub) {
+      set('edit-avatar-url',  pub.avatar_url  || '')
+      if (!document.getElementById('edit-bio').value)
+        set('edit-bio',         pub.bio         || '')
+      if (!document.getElementById('edit-display-name').value)
+        set('edit-display-name', pub.display_name || '')
+
+      // Show "View My Page" row and update link with category-aware route prefix.
+      // This handles new free signups where member_accounts.page_slug may not
+      // yet be populated but the profile/page rows were just created.
+      const row  = document.getElementById('dash-page-link-row')
+      const link = document.getElementById('dash-page-link')
+      if (link && pub.slug) {
+        const cat    = pub.category || ''
+        const biz    = ['business', 'collective'].includes(cat)
+        const dj     = ['dj', 'producer', 'artist'].includes(cat)
+        const prefix = biz ? '/business/' : dj ? '/artist/' : '/creator/'
+        link.href        = prefix + pub.slug
+        link.textContent = '/' + pub.slug + ' →'
+        // Always show the row when we have a valid profile slug
+        if (row) row.style.display = ''
+        // Keep page status label in sync
+        const psEl = document.getElementById('dash-page-status')
+        if (psEl && psEl.textContent === 'No Page Yet') {
+          psEl.textContent = 'Live'
+          psEl.className   = 'dash-status-val dash-status-val--live'
+        }
+        // Update "My Page" quick-action card
+        const qaMy = document.getElementById('qa-my-page')
+        if (qaMy) {
+          qaMy.href = prefix + pub.slug
+          qaMy.style.display = ''
+        }
+      }
+    }
+
+    function set(id, val) {
+      const el = document.getElementById(id)
+      if (el) el.value = val
+    }
+
+    // ── VIBE STATUS (Snapchat-inspired) ───────────────────────
+    // Quick emoji picker
+    document.querySelectorAll('[data-emoji]').forEach(el => {
+      el.addEventListener('click', () => {
+        document.getElementById('dash-vibe-emoji-btn').textContent = el.dataset.emoji
+        document.getElementById('dash-vibe-text').focus()
+      })
+    })
+
+    document.getElementById('dash-vibe-save')?.addEventListener('click', async () => {
+      const emojiEl = document.getElementById('dash-vibe-emoji-btn')
+      const textEl  = document.getElementById('dash-vibe-text')
+      const noteEl  = document.getElementById('vibe-save-note')
+      const emoji   = emojiEl.textContent.trim() === '😶' ? '' : emojiEl.textContent.trim()
+      const text    = textEl.value.trim()
+      const vibe    = (emoji ? emoji + ' ' : '') + text
+
+      if (!vibe) {
+        showNote(noteEl, 'Enter a vibe first.', false); return
+      }
+
+      const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      const res = await updateMember(myUsername, { vibe, vibe_expires_at: expires })
+      if (res) {
+        showNote(noteEl, 'Vibe set ✓', true)
+        const pill = document.getElementById('dash-vibe-pill')
+        pill.textContent = vibe
+        pill.style.display = ''
+      } else {
+        showNote(noteEl, 'Could not save. Try again.', false)
+      }
+    })
+
+    document.getElementById('dash-vibe-clear')?.addEventListener('click', async () => {
+      const noteEl = document.getElementById('vibe-save-note')
+      await updateMember(myUsername, { vibe: null, vibe_expires_at: null })
+      document.getElementById('dash-vibe-text').value = ''
+      document.getElementById('dash-vibe-emoji-btn').textContent = '😶'
+      document.getElementById('dash-vibe-pill').style.display = 'none'
+      showNote(noteEl, 'Cleared', true)
+    })
+
+    // ── PROFILE SAVE ──────────────────────────────────────────
+    document.getElementById('dash-profile-save')?.addEventListener('click', async () => {
+      const noteEl = document.getElementById('profile-save-note')
+      const saveBtn = document.getElementById('dash-profile-save')
+      const display = document.getElementById('edit-display-name').value.trim()
+      if (!display) { showNote(noteEl, 'Display name is required.', false); return }
+
+      // Loading state
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…' }
+
+      const fields = {
+        display_name: display,
+        bio:          document.getElementById('edit-bio').value.trim() || null,
+        city:         document.getElementById('edit-city').value.trim() || null,
+        state_abbr:   document.getElementById('edit-state').value.trim().toUpperCase() || null,
+        cover_url:    document.getElementById('edit-cover-url').value.trim() || null,
+        social_links: {
+          instagram:  document.getElementById('social-instagram').value.trim() || null,
+          snapchat:   document.getElementById('social-snapchat').value.trim() || null,
+          tiktok:     document.getElementById('social-tiktok').value.trim() || null,
+          twitter:    document.getElementById('social-twitter').value.trim() || null,
+          youtube:    document.getElementById('social-youtube').value.trim() || null,
+          soundcloud: document.getElementById('social-soundcloud').value.trim() || null,
+          spotify:    document.getElementById('social-spotify').value.trim() || null,
+          website:    document.getElementById('social-website').value.trim() || null,
+        }
+      }
+
+      // Write to member_accounts
+      const res = await updateMember(myUsername, fields)
+      if (!res) {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Profile' }
+        showNote(noteEl, 'Save failed. Try again.', false)
+        return
+      }
+
+      // Also try to update profiles table (for public page sync)
+      const avatarUrl = document.getElementById('edit-avatar-url').value.trim() || null
+      if (SUPABASE_READY && supabase) {
+        const profileUpdate = {
+          display_name: display,
+          bio:          fields.bio,
+          city:         fields.city,
+          state:        fields.state_abbr,
+        }
+        if (avatarUrl) profileUpdate.avatar_url = avatarUrl
+        // Build links_json as flat object { platform: url }
+        const linksObj = {}
+        const linkKeys = ['spotify','soundcloud','youtube','instagram','tiktok','twitter','website']
+        linkKeys.forEach(key => {
+          const url = fields.social_links[key]
+          if (url) linksObj[key] = url
+        })
+        profileUpdate.links_json = linksObj
+
+        const { error: profileErr } = await supabase.from('profiles').update(profileUpdate).eq('username', myUsername)
+        if (profileErr) {
+          console.warn('[FAS] dashboard: profiles update warning:', profileErr.message)
+          // Non-fatal: member_accounts was saved, show partial success note
+          if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Profile' }
+          showNote(noteEl, 'Profile saved (note: public page sync may be delayed)', true)
+          // Update local session display
+          try {
+            const sess = JSON.parse(localStorage.getItem('fas_user') || '{}')
+            sess.display = display
+            localStorage.setItem('fas_user', JSON.stringify(sess))
+          } catch(e) {}
+          document.getElementById('dash-display').textContent = display
+          document.getElementById('dash-avatar-initial').textContent = display.charAt(0).toUpperCase()
+          return
+        }
+      }
+
+      // Update localStorage display name
+      try {
+        const sess = JSON.parse(localStorage.getItem('fas_user') || '{}')
+        sess.display = display
+        localStorage.setItem('fas_user', JSON.stringify(sess))
+      } catch(e) {}
+
+      // Update header display
+      document.getElementById('dash-display').textContent = display
+      document.getElementById('dash-avatar-initial').textContent = display.charAt(0).toUpperCase()
+
+      // Update avatar preview if URL given
+      if (avatarUrl) {
+        const av = document.getElementById('dash-avatar')
+        let img = av.querySelector('img')
+        if (!img) {
+          img = document.createElement('img')
+          img.alt = display
+          av.appendChild(img)
+        }
+        img.src = avatarUrl
+      }
+
+      // Restore save button
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Profile' }
+      showNote(noteEl, 'Saved ✓ — profile updated', true)
+    })
+
+    // ── HIGHLIGHTS (Instagram-inspired) ───────────────────────
+    function renderHighlights() {
+      const list    = document.getElementById('dash-hl-list')
+      const emptyEl = document.getElementById('dash-hl-empty')
+      const preview = document.getElementById('dash-hl-preview-row')
+
+      // Remove old items
+      Array.from(list.querySelectorAll('.dash-hl-item')).forEach(e => e.remove())
+      preview.innerHTML = ''
+
+      if (!highlights.length) {
+        emptyEl.style.display = ''
+        preview.style.display = 'none'
+        return
+      }
+      emptyEl.style.display = 'none'
+      preview.style.display = ''
+
+      highlights.forEach((hl, idx) => {
+        // List item
+        const item = document.createElement('div')
+        item.className = 'dash-hl-item'
+        item.innerHTML = `
+          <span class="dash-hl-emoji">${escHtml(hl.emoji || '🔗')}</span>
+          <div class="dash-hl-info">
+            <p class="dash-hl-label">${escHtml(hl.label)}</p>
+            <p class="dash-hl-url">${escHtml(hl.url)}</p>
+          </div>
+          <button class="dash-hl-remove" data-idx="${idx}" title="Remove">×</button>`
+        item.querySelector('.dash-hl-remove').addEventListener('click', () => {
+          highlights.splice(idx, 1)
+          renderHighlights()
+        })
+        list.appendChild(item)
+
+        // Preview card
+        const card = document.createElement('a')
+        card.className = 'dash-hl-card'
+        card.href = hl.url
+        card.target = '_blank'
+        card.rel = 'noopener'
+        card.innerHTML = `<span class="dash-hl-card-emoji">${escHtml(hl.emoji || '🔗')}</span><span class="dash-hl-card-label">${escHtml(hl.label)}</span>`
+        preview.appendChild(card)
+      })
+    }
+
+    document.getElementById('hl-add-btn')?.addEventListener('click', () => {
+      const noteEl = document.getElementById('hl-add-note')
+      const emoji  = (document.getElementById('hl-add-emoji').value.trim() || '🔗').slice(0, 2)
+      const label  = document.getElementById('hl-add-label').value.trim()
+      const url    = document.getElementById('hl-add-url').value.trim()
+
+      if (!label) { showNote(noteEl, 'Enter a label.', false); return }
+      if (!url || !/^https?:\/\//i.test(url)) { showNote(noteEl, 'Enter a valid https:// URL.', false); return }
+      if (highlights.length >= 5) { showNote(noteEl, 'Max 5 highlights.', false); return }
+
+      highlights.push({ emoji, label, url })
+      renderHighlights()
+      document.getElementById('hl-add-emoji').value = ''
+      document.getElementById('hl-add-label').value = ''
+      document.getElementById('hl-add-url').value   = ''
+      showNote(noteEl, 'Added ✓', true)
+    })
+
+    document.getElementById('dash-hl-save')?.addEventListener('click', async () => {
+      const noteEl = document.getElementById('hl-save-note')
+      const res = await updateMember(myUsername, { highlights_json: highlights })
+      if (res) {
+        showNote(noteEl, 'Highlights saved ✓', true)
+      } else {
+        showNote(noteEl, 'Save failed. Try again.', false)
+      }
+    })
+
+    // ── BOARD POST (Facebook-inspired) ────────────────────────
+    const postTextEl  = document.getElementById('board-post-text')
+    const charCountEl = document.getElementById('board-char-count')
+    postTextEl?.addEventListener('input', () => {
+      charCountEl.textContent = postTextEl.value.length + ' / 500'
+    })
+
+    document.getElementById('board-post-btn')?.addEventListener('click', async () => {
+      const noteEl  = document.getElementById('board-post-note')
+      const text    = postTextEl.value.trim()
+      const cat     = document.getElementById('board-post-cat').value
+
+      if (!text || text.length < 5) { showNote(noteEl, 'Write at least 5 characters.', false); return }
+      if (text.length > 500) { showNote(noteEl, 'Too long — max 500 characters.', false); return }
+
+      if (!SUPABASE_READY || !supabase) { showNote(noteEl, 'Offline — cannot post right now.', false); return }
+
+      // Look up profile_id from profiles table
+      let profileId = null
+      const { data: profileRow } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', myUsername)
+        .single()
+      if (profileRow) profileId = profileRow.id
+
+      if (!profileId) {
+        showNote(noteEl, 'You need a creator page to post to the board. Get one free at /start.html', false)
+        return
+      }
+
+      const { error } = await supabase
+        .from('board_posts')
+        .insert({
+          profile_id:        profileId,
+          username:          myUsername,
+          post_text:         text,
+          category:          cat,
+          is_approved:       false,
+          visibility_status: 'pending',
+        })
+
+      if (error) {
+        console.error('[FAS] board post error:', error.message)
+        showNote(noteEl, 'Post failed. Try again.', false)
+      } else {
+        postTextEl.value = ''
+        charCountEl.textContent = '0 / 500'
+        showNote(noteEl, 'Posted ✓ — visible after review (same day)', true)
+        loadMyBoardPosts(myUsername)
+      }
+    })
+
+    async function loadMyBoardPosts(username) {
+      const loadingEl = document.getElementById('board-posts-loading')
+      const listEl    = document.getElementById('board-my-posts-list')
+      const emptyEl   = document.getElementById('board-posts-empty')
+      if (!SUPABASE_READY || !supabase) {
+        if (loadingEl) loadingEl.textContent = 'Unavailable offline.'
+        return
+      }
+
+      const { data } = await supabase
+        .from('board_posts')
+        .select('post_text, category, created_at, visibility_status')
+        .eq('username', username)
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (loadingEl) loadingEl.style.display = 'none'
+
+      if (!data || !data.length) {
+        if (emptyEl) emptyEl.style.display = ''
+        return
+      }
+
+      if (listEl) {
+        listEl.style.display = ''
+        listEl.innerHTML = data.map(p => {
+          const status = p.visibility_status === 'visible' ? '✓ Live' : (p.visibility_status === 'pending' ? '⏳ Pending' : p.visibility_status)
+          return `
+            <div class="dash-card" style="margin-bottom:0.6rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+                <span style="font-size:0.65rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);">${escHtml(p.category || 'update')}</span>
+                <span style="font-size:0.65rem;color:var(--text-3);">${status} · ${formatDMTime(p.created_at)}</span>
+              </div>
+              <p style="font-size:0.82rem;color:var(--text-2);line-height:1.55;">${escHtml(p.post_text)}</p>
+            </div>`
+        }).join('')
+      }
+    }
+
+    // ── Track Upload Tab ──────────────────────────────────────
+    //
+    //  Tracks are stored in member_accounts.tracks_json (JSONB array).
+    //  Each entry: { id, title, description, url, path, size, uploaded_at }
+    //  Max 10 tracks per member. Files live in creator-media/{user}/tracks/.
+    //  Upload proxied through /api/music/upload (server uses service_role).
+
+    const TRACK_MAX_MB   = 30
+    const TRACK_MAX_B    = TRACK_MAX_MB * 1024 * 1024
+    const TRACK_MAX_CNT  = 10
+    const TRACK_ALLOWED  = new Set([
+      'audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/wav', 'audio/x-wav',
+      'audio/flac', 'audio/mp4', 'audio/x-m4a', 'audio/aiff', 'audio/x-aiff',
+      'audio/aac', 'audio/webm',
+    ])
+
+    let trackList    = []   // current saved tracks
+    let pendingTrack = null // File object pending upload
+
+    function trackFileSize(bytes) {
+      if (!bytes) return ''
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB'
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+    }
+
+    function trackNote(msg, ok = true) {
+      const el = document.getElementById('track-upload-note')
+      if (!el) return
+      el.textContent = msg
+      el.className   = 'dash-save-note ' + (ok ? '' : 'dash-save-note--err')
+      if (ok && msg) setTimeout(() => { if (el.textContent === msg) el.textContent = '' }, 4000)
+    }
+
+    function renderTracks() {
+      const list  = document.getElementById('tracks-list')
+      const empty = document.getElementById('tracks-empty')
+      const count = document.getElementById('tracks-count')
+      if (!list) return
+      if (count) count.textContent = trackList.length ? `(${trackList.length}/${TRACK_MAX_CNT})` : ''
+      if (!trackList.length) {
+        if (empty) empty.style.display = ''
+        list.querySelectorAll('.track-card').forEach(c => c.remove())
+        return
+      }
+      if (empty) empty.style.display = 'none'
+      list.querySelectorAll('.track-card').forEach(c => c.remove())
+      trackList.forEach((tr, idx) => {
+        const card = document.createElement('div')
+        card.className = 'track-card'
+        card.dataset.idx = idx
+        const uploadedDate = tr.uploaded_at
+          ? new Date(tr.uploaded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          : ''
+        card.innerHTML = `
+          <div class="track-card-header">
+            <div class="track-card-icon">🎵</div>
+            <div class="track-card-meta">
+              <div class="track-card-title">${tr.title.replace(/</g,'&lt;')}</div>
+              ${tr.description ? `<div class="track-card-desc">${tr.description.replace(/</g,'&lt;')}</div>` : ''}
+              <div class="track-card-sub">${trackFileSize(tr.size)}${uploadedDate ? ' · ' + uploadedDate : ''}</div>
+            </div>
+            <button class="track-card-delete" data-idx="${idx}" title="Delete track">🗑</button>
+          </div>
+          <audio class="track-audio" controls preload="none" src="${tr.url}"></audio>
+        `
+        list.appendChild(card)
+      })
+      // Attach delete handlers
+      list.querySelectorAll('.track-card-delete').forEach(btn => {
+        btn.addEventListener('click', () => deleteTrack(parseInt(btn.dataset.idx, 10)))
+      })
+    }
+
+    function setTrackFile(file) {
+      if (!file) {
+        pendingTrack = null
+        const sel = document.getElementById('track-file-selected')
+        if (sel) sel.style.display = 'none'
+        const btn = document.getElementById('track-upload-btn')
+        if (btn) btn.disabled = true
+        return
+      }
+      if (!TRACK_ALLOWED.has(file.type)) {
+        alert('File type not supported. Use MP3, WAV, FLAC, OGG, M4A, or AAC.')
+        return
+      }
+      if (file.size > TRACK_MAX_B) {
+        alert(`File is too large (${trackFileSize(file.size)}). Max ${TRACK_MAX_MB}MB.`)
+        return
+      }
+      pendingTrack = file
+      const sel  = document.getElementById('track-file-selected')
+      const name = document.getElementById('track-file-name')
+      const size = document.getElementById('track-file-size')
+      if (sel)  sel.style.display  = ''
+      if (name) name.textContent   = file.name
+      if (size) size.textContent   = trackFileSize(file.size)
+      const btn = document.getElementById('track-upload-btn')
+      if (btn) btn.disabled = false
+    }
+
+    async function uploadTrack() {
+      if (!pendingTrack) return
+      const titleEl = document.getElementById('track-title-input')
+      const descEl  = document.getElementById('track-desc-input')
+      const title   = (titleEl?.value || '').trim()
+      if (!title) { trackNote('Track title is required.', false); titleEl?.focus(); return }
+      if (trackList.length >= TRACK_MAX_CNT) {
+        trackNote(`Max ${TRACK_MAX_CNT} tracks. Delete one first.`, false); return
+      }
+
+      const sess = getSession()
+      if (!sess?.ph) { trackNote('Session expired — sign in again.', false); return }
+
+      // Encode file as base64 in chunks to avoid stack overflow
+      let base64
+      try {
+        const bytes = new Uint8Array(await pendingTrack.arrayBuffer())
+        let binary = ''
+        const CHUNK = 8192
+        for (let i = 0; i < bytes.length; i += CHUNK) binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK))
+        base64 = btoa(binary)
+      } catch {
+        trackNote('Could not read file. Try again.', false); return
+      }
+
+      // Show progress UI
+      const btn     = document.getElementById('track-upload-btn')
+      const wrap    = document.getElementById('track-progress-wrap')
+      const bar     = document.getElementById('track-progress-bar')
+      const label   = document.getElementById('track-progress-label')
+      if (btn)   { btn.disabled = true; btn.textContent = 'Uploading…' }
+      if (wrap)  wrap.style.display = ''
+      if (bar)   bar.style.width = '15%'
+      if (label) label.textContent = 'Sending to server…'
+
+      let result
+      try {
+        // Animate progress bar while waiting
+        let pct = 15
+        const ticker = setInterval(() => {
+          pct = Math.min(pct + 8, 85)
+          if (bar) bar.style.width = pct + '%'
+        }, 600)
+
+        const res = await fetch('/api/music/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username:    sess.username,
+            ph:          sess.ph,
+            file_b64:    base64,
+            file_type:   pendingTrack.type,
+            file_name:   pendingTrack.name,
+            file_size:   pendingTrack.size,
+            title,
+            description: descEl?.value?.trim() || '',
+          }),
+        })
+        clearInterval(ticker)
+        result = await res.json()
+        if (!res.ok) throw new Error(result.error || 'Upload failed.')
+      } catch (e) {
+        if (bar)   bar.style.width = '100%'; bar && (bar.style.background = '#ef4444')
+        if (label) label.textContent = ''
+        trackNote(e.message || 'Upload failed. Check your connection.', false)
+        if (btn)   { btn.disabled = false; btn.textContent = 'Upload Track' }
+        return
+      }
+
+      // Finish progress
+      if (bar)   { bar.style.width = '100%'; bar.style.background = '#22c55e' }
+      if (label) label.textContent = 'Upload complete!'
+
+      // Server updated _index.json in Storage — just add new track to local list
+      trackList = [result, ...trackList].slice(0, TRACK_MAX_CNT)
+      renderTracks()
+
+      // Reset form
+      setTimeout(() => {
+        setTrackFile(null)
+        if (titleEl) titleEl.value = ''
+        if (descEl)  descEl.value  = ''
+        if (wrap)    wrap.style.display = 'none'
+        if (bar)     { bar.style.width = '0%'; bar.style.background = 'linear-gradient(90deg,#7c3aed,#a78bfa)' }
+        if (btn)     { btn.disabled = false; btn.textContent = 'Upload Track' }
+        trackNote('Track uploaded!', true)
+        const fileInput = document.getElementById('track-file-input')
+        if (fileInput) fileInput.value = ''
+      }, 1200)
+    }
+
+    async function deleteTrack(idx) {
+      const tr = trackList[idx]
+      if (!tr) return
+      if (!confirm(`Delete "${tr.title}"? This cannot be undone.`)) return
+
+      const sess = getSession()
+      if (!sess?.ph) { alert('Session expired — sign in again.'); return }
+
+      // Delete from Supabase Storage + update _index.json via server
+      try {
+        const res = await fetch('/api/music/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: sess.username, ph: sess.ph, path: tr.path }),
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          trackNote(err.error || 'Delete failed.', false)
+          return
+        }
+      } catch {
+        trackNote('Delete failed. Check your connection.', false)
+        return
+      }
+
+      // Server updated _index.json — update local list
+      trackList.splice(idx, 1)
+      renderTracks()
+      trackNote('Track deleted.', true)
+    }
+
+    function initTrackTab(sess) {
+      const isPaid = FAS.isPaidMember()
+
+      // Show/hide gate vs upload section
+      const gate = document.getElementById('tracks-gate')
+      const sec  = document.getElementById('tracks-upload-section')
+      if (isPaid) {
+        if (gate) gate.style.display = 'none'
+        if (sec)  sec.style.display  = ''
+      } else {
+        if (gate) gate.style.display = ''
+        if (sec)  sec.style.display  = 'none'
+        return
+      }
+
+      // Load saved tracks from public _index.json in Storage (no DB column needed)
+      const supaConf = window.__FAS_CONFIG || {}
+      const supaUrl  = supaConf.SUPABASE_URL || ''
+      if (supaUrl) {
+        const indexUrl = `${supaUrl}/storage/v1/object/public/creator-media/${myUsername}/tracks/_index.json`
+        fetch(indexUrl, { cache: 'no-store' })
+          .then(r => r.ok ? r.json() : [])
+          .then(data => {
+            if (Array.isArray(data) && data.length) { trackList = data; renderTracks() }
+          })
+          .catch(() => { /* first time — no index yet */ })
+      }
+
+      // Drop zone click → open file picker
+      const dropzone  = document.getElementById('track-dropzone')
+      const fileInput = document.getElementById('track-file-input')
+      dropzone?.addEventListener('click', () => fileInput?.click())
+      fileInput?.addEventListener('change', e => {
+        const file = e.target.files?.[0]
+        if (file) setTrackFile(file)
+      })
+
+      // Drag-and-drop on the drop zone
+      dropzone?.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over') })
+      dropzone?.addEventListener('dragleave', ()  => dropzone.classList.remove('drag-over'))
+      dropzone?.addEventListener('drop', e => {
+        e.preventDefault()
+        dropzone.classList.remove('drag-over')
+        const file = e.dataTransfer.files?.[0]
+        if (file) setTrackFile(file)
+      })
+
+      // Clear file
+      document.getElementById('track-file-clear')?.addEventListener('click', () => {
+        setTrackFile(null)
+        const fi = document.getElementById('track-file-input')
+        if (fi) fi.value = ''
+      })
+
+      // Upload button
+      document.getElementById('track-upload-btn')?.addEventListener('click', uploadTrack)
+
+      // Enable upload button when title is typed (if a file is already selected)
+      document.getElementById('track-title-input')?.addEventListener('input', () => {
+        const btn = document.getElementById('track-upload-btn')
+        if (btn) btn.disabled = !pendingTrack || !document.getElementById('track-title-input').value.trim()
+      })
+    }
+
+    // ── Messages preview ──────────────────────────────────────
+    async function loadMessagesPreview(username) {
+      const loading = document.getElementById('dash-msg-loading')
+      const list    = document.getElementById('dash-msg-list')
+      const empty   = document.getElementById('dash-msg-empty')
+
+      if (!DM_READY) {
+        if (loading) loading.textContent = 'Messages unavailable offline.'
+        return
+      }
+
+      const threads = await loadThreads(username)
+      if (loading) loading.style.display = 'none'
+
+      if (!threads.length) {
+        if (empty) empty.style.display = ''
+        return
+      }
+
+      if (list) {
+        list.style.display = ''
+        threads.slice(0, 3).forEach(t => {
+          const initials = t.username.slice(0, 2).toUpperCase()
+          const el = document.createElement('a')
+          el.href = `messages.html?with=${encodeURIComponent(t.username)}`
+          el.className = 'dash-msg-item'
+          el.innerHTML = `
+            <div class="dash-msg-av">${initials}</div>
+            <div class="dash-msg-body">
+              <p class="dash-msg-name">@${escHtml(t.username)}</p>
+              <p class="dash-msg-preview">${escHtml(t.last_message ? t.last_message.slice(0,60) : '…')}</p>
+            </div>
+            <div class="dash-msg-meta">
+              <p>${formatDMTime(t.last_ts)}</p>
+              ${t.unread > 0 ? `<span class="dash-msg-unread">${t.unread}</span>` : ''}
+            </div>`
+          list.appendChild(el)
+        })
+      }
+    }
+
+    // ── Sign out ───────────────────────────────────────────────
+    document.getElementById('dash-logout')?.addEventListener('click', e => {
+      e.preventDefault()
+      clearSession()
+      window.location.href = 'login.html?switch=1'
+    })
+
+    // ── Utilities ──────────────────────────────────────────────
+    function showNote(el, msg, ok) {
+      if (!el) return
+      el.textContent = msg
+      el.className   = 'dash-save-note dash-save-note--' + (ok ? 'ok' : 'err')
+      setTimeout(() => { if (el) el.textContent = '' }, 4000)
+    }
+
+    function escHtml(str) {
+      if (str == null) return ''
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+  </script>
+</body>
+</html>

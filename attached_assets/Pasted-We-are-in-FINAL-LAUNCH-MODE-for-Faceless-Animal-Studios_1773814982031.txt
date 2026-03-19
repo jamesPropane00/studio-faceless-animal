@@ -1,0 +1,219 @@
+We are in FINAL LAUNCH MODE for Faceless Animal Studios.
+
+The platform is already built:
+- vanilla HTML/CSS/JS frontend
+- Node.js backend
+- Supabase (Postgres, storage, custom auth)
+- Stripe integrated
+- free signup working
+- pages go live instantly
+- creator board exists
+- DJ Faceless Animal Radio exists
+
+DO NOT add new features.
+DO NOT redesign anything major.
+
+Your job is to LOCK THIS PLATFORM DOWN and make it PUBLIC-READY.
+
+==================================================
+PRIMARY GOAL
+==================================================
+
+The platform must feel:
+- real
+- stable
+- usable
+- not broken
+
+Users must be able to:
+- sign up
+- log in
+- see their page
+- edit their profile
+- interact at a basic level
+
+==================================================
+PART 1 — PASSWORD SYSTEM (CRITICAL)
+==================================================
+
+Finish and verify:
+
+verify_member_password RPC
+
+Requirements:
+- confirm it works with live Supabase
+- confirm login flow uses it correctly
+- confirm no login loops
+- confirm failed login shows proper message (not silent fail)
+
+Test:
+- correct password → success
+- wrong password → denied
+
+If broken → fix immediately
+
+==================================================
+PART 2 — SIGNUP + PAGE CREATION
+==================================================
+
+Audit and confirm:
+
+- free signup works on mobile + desktop
+- member_accounts row is created correctly
+- password is set via set_member_password
+- creator page is created immediately
+- page is accessible via username slug
+
+No:
+- loops
+- blank pages
+- missing data
+
+==================================================
+PART 3 — USER DASHBOARD (REAL + CLEAN)
+==================================================
+
+Dashboard must show:
+
+- username
+- plan_type (free / paid)
+- membership status
+- quick actions:
+  - edit profile
+  - view page
+
+Fix:
+- any missing data
+- any broken rendering
+- any confusing UI
+
+==================================================
+PART 4 — PROFILE EDITING → PUBLIC PAGE LINK
+==================================================
+
+This MUST work perfectly:
+
+User edits:
+- bio
+- display name
+
+Then:
+→ public page updates automatically
+
+No duplicates
+No stale data
+
+==================================================
+PART 5 — DMS (MINIMUM BUT REAL)
+==================================================
+
+We need working DMs, not perfection.
+
+Must support:
+- sending text message
+- receiving message
+- viewing thread
+
+Free users:
+- text only
+
+Paid users:
+- file upload ONLY if already stable
+- otherwise hide file button completely
+
+Fix:
+- any broken send
+- any UI issues
+- any missing messages
+
+==================================================
+PART 6 — CHAT + RADIO (DO NOT BREAK)
+==================================================
+
+DJ Faceless Animal Radio stays:
+
+- visible
+- functional
+- not blocking UI
+
+Chat gate:
+- free users → limited
+- paid users → full
+
+If anything is unstable:
+→ stabilize, don’t expand
+
+==================================================
+PART 7 — REMOVE DEAD ENDS (IMPORTANT)
+==================================================
+
+Scan entire platform and fix:
+
+- buttons that do nothing
+- links that loop
+- pages that don’t load
+
+Replace with:
+“Coming Soon”
+or disable cleanly
+
+NO fake functionality
+
+==================================================
+PART 8 — UI CLEANUP (FAST)
+==================================================
+
+Do NOT redesign.
+
+Just:
+- fix mobile spacing
+- fix text readability
+- fix button alignment
+- remove clutter
+
+Make it feel:
+- intentional
+- usable
+- not broken
+
+==================================================
+PART 9 — FINAL TEST FLOW
+==================================================
+
+Simulate a real user:
+
+1. Sign up
+2. Log in
+3. Land on dashboard
+4. Edit profile
+5. View public page
+6. Send DM
+7. Navigate site
+
+Everything must work without confusion.
+
+==================================================
+PART 10 — OUTPUT
+==================================================
+
+After completing:
+
+1. list everything fixed
+2. list anything disabled temporarily
+3. confirm:
+   - signup works
+   - login works
+   - profile works
+   - page works
+   - DMs work
+
+FINAL RULE:
+
+If a user can:
+- sign up
+- see themselves live on the platform
+- interact even slightly
+
+→ THE PLATFORM IS READY TO LAUNCH
+
+DO NOT HOLD BACK LAUNCH FOR PERFECTION

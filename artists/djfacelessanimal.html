@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DJ Faceless Animal — Blends. Pressure. Presence. Underground DJ and producer based in Providence, Rhode Island. Part of Faceless Animal Studios." />
+  <title>DJ Faceless Animal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body
+  class="artist-page"
+  data-page-type="artist"
+  data-creator-id="djfacelessanimal"
+  data-supabase-table="page_data"
+  data-static="true"
+>
+
+  <!--
+    ═══════════════════════════════════════════════════════════════
+    [SUPABASE CONNECT] — Dynamic page data
+    ═══════════════════════════════════════════════════════════════
+    This page is currently static HTML. When Supabase is connected,
+    page content will be pulled from the `page_data` table and
+    rendered via a JS template or inline fetch. The static HTML
+    here serves as the permanent fallback.
+
+    DB lookup on load:
+      supabase.from('page_data')
+        .select('*')
+        .eq('username', 'djfacelessanimal')
+        .single()
+
+    Fields used on this page and their page_data column:
+      display_name      → .ap-hero-heading (h1)
+      tagline           → .ap-hero-sub
+      hero_sub          → .ap-hero-sub--dim
+      bio_paragraphs    → about section paragraphs (JSONB array)
+      quick_info        → check-list items (JSONB array)
+      stats             → stat-strip values (JSONB [{value, label}])
+      links             → .platform-row list (JSONB [{platform, url, label}])
+      works             → release/mix cards (JSONB [{type, title, desc}])
+      accent_color      → CSS var(--gold) override if customized
+      plan_tier         → controls powered-by bar visibility
+
+    Profile / avatar image:
+      supabase.storage.from('profile-images')
+        .getPublicUrl('djfacelessanimal/{filename}')
+
+    Creator profile (board card + network listing):
+      supabase.from('creator_profiles')
+        .select('*')
+        .eq('username', 'djfacelessanimal')
+        .single()
+
+    Template alternative:
+      Instead of fetching inline, redirect to:
+        templates/creator.html?slug=djfacelessanimal
+      page-renderer.js handles all field-filling from page_data.
+    ═══════════════════════════════════════════════════════════════
+  -->
+
+  <!-- =============================================
+       NAVIGATION
+  ============================================= -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="#hero" class="navbar-logo">
+          DJ <span>Faceless Animal</span>
+        </a>
+        <ul class="navbar-links" role="list">
+          <li><a href="#music">Music</a></li>
+          <li><a href="#videos">Videos</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#links">Links</a></li>
+          <li><a href="../network.html">Network</a></li>
+          <li><a href="../index.html" class="nav-cta">← Studio</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="#music">Music</a>
+    <a href="#videos">Videos</a>
+    <a href="#about">About</a>
+    <a href="#links">Links</a>
+    <a href="../network.html">Network</a>
+    <a href="../index.html">← Studio</a>
+  </div>
+
+  <main>
+
+    <!-- =============================================
+         HERO
+    ============================================= -->
+    <section class="ap-hero" id="hero" aria-label="Artist hero">
+      <div class="ap-hero-glow" aria-hidden="true"></div>
+      <div class="ap-hero-grain" aria-hidden="true"></div>
+
+      <div class="container ap-hero-inner">
+        <div class="ap-hero-content">
+          <div class="ap-hero-eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            Faceless Animal Studios · Providence, RI
+          </div>
+
+          <h1 class="ap-hero-heading">
+            DJ<br />
+            <em>Faceless</em><br />
+            Animal
+          </h1>
+
+          <p class="ap-hero-sub">Blends. Pressure. Presence.</p>
+          <p class="ap-hero-sub ap-hero-sub--dim">Moving smart. Building everything. Waiting on no one.</p>
+          <p class="ap-hero-location">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12" aria-hidden="true" style="flex-shrink:0;opacity:0.65"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            Providence, Rhode Island
+          </p>
+
+          <div class="ap-hero-actions">
+            <a href="#music" class="btn btn-primary btn-lg">Listen Now</a>
+            <a href="../index.html" class="btn btn-ghost btn-lg">Back to Studio</a>
+          </div>
+
+          <div class="ap-hero-tags" aria-label="Genre tags">
+            <span class="tag">Electronic</span>
+            <span class="tag">Underground</span>
+            <span class="tag">DJ / Producer</span>
+            <span class="tag">Rhode Island</span>
+          </div>
+
+          <!-- Social quick-links: disabled links show at reduced opacity until real URLs are available -->
+          <div class="ap-hero-socials" aria-label="Follow on social">
+            <a href="https://open.spotify.com/artist/0pO4yejvRakRu8CzXlRwan?si=yUUVT_jnSsaaQQ5ZEWjY5g" target="_blank" rel="noopener" class="social-btn social-btn--spotify">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+              Spotify
+            </a>
+            <a href="https://youtube.com/channel/UCwIlRTdYZUnQ5-KsLHGNIRg?si=yGEYnYj6mN_qCTHh" target="_blank" rel="noopener" class="social-btn social-btn--youtube">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+              YouTube
+            </a>
+            <!-- Instagram link: coming soon — replace href with real URL when ready -->
+            <a href="javascript:void(0)" class="social-btn social-btn--instagram creator-link--soon" aria-disabled="true" tabindex="-1" title="Instagram — coming soon" style="opacity:0.4;">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+              Instagram
+            </a>
+            <!-- TikTok link: coming soon — replace href with real URL when ready -->
+            <a href="javascript:void(0)" class="social-btn social-btn--tiktok creator-link--soon" aria-disabled="true" tabindex="-1" title="TikTok — coming soon" style="opacity:0.4;">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+              TikTok
+            </a>
+          </div>
+        </div>
+
+        <div class="ap-hero-visual">
+          <!--
+            SWAP: When your press photo is ready, replace this entire .ph-cover div with:
+            <img src="../assets/images/djfacelessanimal-press.jpg"
+                 alt="DJ Faceless Animal"
+                 class="artist-cover-img" />
+          -->
+          <div class="ph-cover">
+            <div class="ap-hero-disc" aria-hidden="true">
+              <div class="disc-ring disc-ring--1"></div>
+              <div class="disc-ring disc-ring--2"></div>
+              <div class="disc-ring disc-ring--3"></div>
+              <div class="disc-center">🎧</div>
+            </div>
+            <div class="ph-cover-label" aria-hidden="true">
+              <span>Press Photo</span>
+              <span class="ph-cover-hint">Add image here</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ap-hero-marquee" aria-hidden="true">
+        <div class="marquee-track">
+          <span>Blends</span><span class="marquee-dot">·</span>
+          <span>Pressure</span><span class="marquee-dot">·</span>
+          <span>Presence</span><span class="marquee-dot">·</span>
+          <span>Underground</span><span class="marquee-dot">·</span>
+          <span>Rhode Island</span><span class="marquee-dot">·</span>
+          <span>Blends</span><span class="marquee-dot">·</span>
+          <span>Pressure</span><span class="marquee-dot">·</span>
+          <span>Presence</span><span class="marquee-dot">·</span>
+          <span>Underground</span><span class="marquee-dot">·</span>
+          <span>Rhode Island</span><span class="marquee-dot">·</span>
+          <span>Blends</span><span class="marquee-dot">·</span>
+          <span>Pressure</span><span class="marquee-dot">·</span>
+          <span>Presence</span><span class="marquee-dot">·</span>
+          <span>Underground</span><span class="marquee-dot">·</span>
+          <span>Rhode Island</span><span class="marquee-dot">·</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================
+         MUSIC
+    ============================================= -->
+    <section class="section section-alt" id="music" aria-labelledby="music-heading">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-label">Music</p>
+          <h2 id="music-heading">The Sound</h2>
+          <p class="section-sub">Tracks, blends, and drops from the underground.</p>
+        </div>
+
+        <!-- Spotify embed zone -->
+        <div class="spotify-zone">
+          <!--
+            SWAP: When ready, delete this entire .sp-embed div and replace with:
+            <iframe src="https://open.spotify.com/embed/artist/0pO4yejvRakRu8CzXlRwan"
+                    width="100%" height="152" frameborder="0"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"></iframe>
+          -->
+          <div class="sp-embed" aria-label="Spotify embed placeholder">
+            <div class="sp-embed-player">
+              <div class="sp-embed-art" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24" aria-hidden="true"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+              </div>
+              <div class="sp-embed-meta">
+                <span class="sp-embed-track">Add track / playlist name here</span>
+                <span class="sp-embed-artist">DJ Faceless Animal</span>
+                <div class="sp-embed-bar" aria-hidden="true">
+                  <div class="sp-embed-progress"></div>
+                </div>
+              </div>
+              <div class="sp-embed-controls" aria-hidden="true">
+                <span class="sp-embed-play">▶</span>
+              </div>
+            </div>
+            <div class="sp-embed-footer">
+              <span class="ph-note">Spotify Embed · Paste iframe when ready</span>
+              <a href="https://open.spotify.com/artist/0pO4yejvRakRu8CzXlRwan?si=yUUVT_jnSsaaQQ5ZEWjY5g" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Open on Spotify ↗</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Music type feature cards -->
+        <div class="music-type-grid">
+
+          <article class="music-type-card">
+            <div class="music-type-icon" aria-hidden="true">⟲</div>
+            <span class="music-type-label">Series 01</span>
+            <h3>The Blends</h3>
+            <p>Multi-genre blends engineered for continuous listening. No jarring cuts. No filler. Just momentum from start to finish.</p>
+            <a href="#links" class="card-link">Stream →</a>
+          </article>
+
+          <article class="music-type-card music-type-card--featured">
+            <div class="music-type-icon" aria-hidden="true">◉</div>
+            <span class="music-type-label">Series 02</span>
+            <h3>Original Drops</h3>
+            <p>Original productions and sound design built from the ground up. Textured, raw, and built to move crowds in tight spaces.</p>
+            <a href="#links" class="card-link">Listen →</a>
+          </article>
+
+          <article class="music-type-card">
+            <div class="music-type-icon" aria-hidden="true">↯</div>
+            <span class="music-type-label">Series 03</span>
+            <h3>Remix Work</h3>
+            <p>Taking what's already good and making it hit different. Club-ready edits and reimagined cuts for underground floors.</p>
+            <a href="#links" class="card-link">Explore →</a>
+          </article>
+
+        </div>
+
+        <!-- Track list -->
+        <div class="track-list-header">
+          <p class="section-label">Latest Tracks</p>
+        </div>
+        <div class="track-list">
+          <div class="track-item">
+            <span class="track-num">01</span>
+            <div class="track-info">
+              <strong>Dark Matter (Original Mix)</strong>
+              <span>Original · 6:14</span>
+            </div>
+            <span class="track-type">Original</span>
+          </div>
+          <div class="track-item">
+            <span class="track-num">02</span>
+            <div class="track-info">
+              <strong>Animal Instinct (Extended Blend)</strong>
+              <span>Blend · 9:23</span>
+            </div>
+            <span class="track-type">Blend</span>
+          </div>
+          <div class="track-item">
+            <span class="track-num">03</span>
+            <div class="track-info">
+              <strong>Underground Pressure</strong>
+              <span>Original · 8:01</span>
+            </div>
+            <span class="track-type">Original</span>
+          </div>
+          <div class="track-item">
+            <span class="track-num">04</span>
+            <div class="track-info">
+              <strong>Lost in the Maze</strong>
+              <span>Blend · 7:38</span>
+            </div>
+            <span class="track-type">Blend</span>
+          </div>
+          <div class="track-item">
+            <span class="track-num">05</span>
+            <div class="track-info">
+              <strong>Faceless Ritual</strong>
+              <span>Remix · 5:52</span>
+            </div>
+            <span class="track-type">Remix</span>
+          </div>
+          <div class="track-item">
+            <span class="track-num">06</span>
+            <div class="track-info">
+              <strong>Shadows &amp; Frequencies</strong>
+              <span>Original · 6:44</span>
+            </div>
+            <span class="track-type">Original</span>
+          </div>
+        </div>
+        <div class="text-center mt-4">
+          <a href="https://open.spotify.com/artist/0pO4yejvRakRu8CzXlRwan?si=yUUVT_jnSsaaQQ5ZEWjY5g" target="_blank" rel="noopener" class="btn btn-outline">Stream on Spotify</a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =============================================
+         VIDEOS
+    ============================================= -->
+    <section class="section" id="videos" aria-labelledby="videos-heading">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-label">Visual</p>
+          <h2 id="videos-heading">Sets &amp; Sessions</h2>
+          <p class="section-sub">Live footage, mixes, and studio content.</p>
+        </div>
+        <div class="video-grid">
+
+          <article class="video-card">
+            <div class="video-thumb">
+              <span class="video-play-btn" aria-hidden="true">▶</span>
+              <span class="video-duration">1:32:00</span>
+            </div>
+            <div class="video-card-body">
+              <span class="video-badge">Live Set</span>
+              <strong>The Bunker Vol. 3</strong>
+              <p>Warehouse set recorded live. 90 minutes of uncut underground pressure, no edits.</p>
+              <a href="https://youtube.com/channel/UCwIlRTdYZUnQ5-KsLHGNIRg?si=yGEYnYj6mN_qCTHh" target="_blank" rel="noopener" class="card-link">Watch on YouTube →</a>
+            </div>
+          </article>
+
+          <article class="video-card">
+            <div class="video-thumb">
+              <span class="video-play-btn" aria-hidden="true">▶</span>
+              <span class="video-duration">24:17</span>
+            </div>
+            <div class="video-card-body">
+              <span class="video-badge">Studio</span>
+              <strong>Dark Matter — Session Footage</strong>
+              <p>Behind the scenes on the original mix. Production process and arrangement breakdown, unfiltered.</p>
+              <a href="https://youtube.com/channel/UCwIlRTdYZUnQ5-KsLHGNIRg?si=yGEYnYj6mN_qCTHh" target="_blank" rel="noopener" class="card-link">Watch on YouTube →</a>
+            </div>
+          </article>
+
+          <article class="video-card">
+            <div class="video-thumb">
+              <span class="video-play-btn" aria-hidden="true">▶</span>
+              <span class="video-duration">47:38</span>
+            </div>
+            <div class="video-card-body">
+              <span class="video-badge">Rooftop Session</span>
+              <strong>FAS Rooftop — Sunrise</strong>
+              <p>Sunrise set at Faceless Animal Studios HQ. Intimate and raw. No crowd, just the city waking up.</p>
+              <a href="https://youtube.com/channel/UCwIlRTdYZUnQ5-KsLHGNIRg?si=yGEYnYj6mN_qCTHh" target="_blank" rel="noopener" class="card-link">Watch on YouTube →</a>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- YouTube embed zone -->
+        <div class="youtube-zone">
+          <!--
+            SWAP: When ready, delete this entire .yt-embed div and replace with:
+            <iframe src="https://www.youtube.com/embed/VIDEO_ID"
+                    width="100%" height="400" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+          -->
+          <div class="yt-embed" aria-label="YouTube embed placeholder">
+            <div class="yt-embed-screen" aria-hidden="true">
+              <div class="yt-embed-play">▶</div>
+              <div class="yt-embed-title">Your Latest Video Title</div>
+            </div>
+            <div class="yt-embed-footer">
+              <span class="ph-note">YouTube Embed · Paste iframe when ready</span>
+              <a href="https://youtube.com/channel/UCwIlRTdYZUnQ5-KsLHGNIRg?si=yGEYnYj6mN_qCTHh" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Open Channel ↗</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =============================================
+         ABOUT
+    ============================================= -->
+    <section class="section section-alt" id="about" aria-labelledby="about-heading">
+      <div class="container">
+        <div class="about-content">
+
+          <div class="about-stat-box">
+            <div class="about-stat">
+              <strong>8+</strong>
+              <span>Years Active</span>
+            </div>
+            <div class="about-stat">
+              <strong>150+</strong>
+              <span>Sets Played</span>
+            </div>
+            <div class="about-stat">
+              <strong>30+</strong>
+              <span>Releases</span>
+            </div>
+            <div class="about-stat">
+              <strong>RI</strong>
+              <span>Based</span>
+            </div>
+          </div>
+
+          <div class="about-text">
+            <p class="section-label">About</p>
+            <h2 id="about-heading">Built in Rhode Island.<br /><em>Built for the Underground.</em></h2>
+
+            <p>
+              DJ Faceless Animal is an underground DJ, producer, and platform builder out of Providence, Rhode Island. The name is intentional — the music speaks before the person does. No hype. No industry politics. Just the work.
+            </p>
+            <p>
+              Over eight years of active sets, original production, and deep-catalog blends across electronic, hip-hop, and underground club genres. The sound isn't tied to one lane because the culture doesn't move in one lane.
+            </p>
+            <p>
+              Faceless Animal Studios started as a music project and grew into something bigger — a full creative platform covering pages, games, commerce, and an open creator network. Everything built independently. No label. No investors. No waiting for someone else to open the door.
+            </p>
+            <p>
+              The studio's ethos is simple: creators deserve infrastructure that actually works. Music, digital presence, and commerce that functions in the real world — not just looks good in a pitch deck.
+            </p>
+            <p class="about-quote">
+              "Stay faceless. Stay moving. Build everything."
+            </p>
+            <p class="about-closing">No gatekeepers. No industry co-sign needed. Just execution.</p>
+            <div class="mt-3" style="display:flex;gap:1rem;flex-wrap:wrap;">
+              <a href="mailto:djfacelessanimal@gmail.com?subject=Booking%20Inquiry%20—%20DJ%20Faceless%20Animal" class="btn btn-primary">Book DJ Faceless Animal</a>
+              <a href="https://open.spotify.com/artist/0pO4yejvRakRu8CzXlRwan?si=yUUVT_jnSsaaQQ5ZEWjY5g" target="_blank" rel="noopener" class="btn btn-ghost">Stream the Music</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================
+         LINKS / PLATFORMS
+    ============================================= -->
+    <section class="section" id="links" aria-labelledby="links-heading">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-label">Platforms</p>
+          <h2 id="links-heading">Find the Music</h2>
+          <p class="section-sub">Stream, follow, and connect everywhere DJ Faceless Animal lives.</p>
+        </div>
+
+        <div class="platform-list">
+
+          <a href="https://open.spotify.com/artist/0pO4yejvRakRu8CzXlRwan?si=yUUVT_jnSsaaQQ5ZEWjY5g" target="_blank" rel="noopener" class="platform-row" aria-label="Spotify — Stream original tracks">
+            <div class="platform-icon platform-icon--spotify" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="22" height="22">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+              </svg>
+            </div>
+            <div class="platform-info">
+              <strong>Spotify</strong>
+              <span>Stream original tracks and releases</span>
+            </div>
+            <span class="platform-arrow" aria-hidden="true">→</span>
+          </a>
+
+          <a href="https://youtube.com/channel/UCwIlRTdYZUnQ5-KsLHGNIRg?si=yGEYnYj6mN_qCTHh" target="_blank" rel="noopener" class="platform-row" aria-label="YouTube — Watch live sets and videos">
+            <div class="platform-icon platform-icon--youtube" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="22" height="22">
+                <path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/>
+              </svg>
+            </div>
+            <div class="platform-info">
+              <strong>YouTube</strong>
+              <span>Live sets, mixes, and studio footage</span>
+            </div>
+            <span class="platform-arrow" aria-hidden="true">→</span>
+          </a>
+
+          <a href="javascript:void(0)" class="platform-row creator-link--soon" aria-disabled="true" tabindex="-1" title="Instagram — coming soon" style="opacity:0.45;">
+            <div class="platform-icon platform-icon--instagram" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="22" height="22">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+              </svg>
+            </div>
+            <div class="platform-info">
+              <strong>Instagram</strong>
+              <span>Follow the journey — coming soon</span>
+            </div>
+            <span class="platform-arrow" aria-hidden="true" style="opacity:0.3;">→</span>
+          </a>
+
+          <a href="javascript:void(0)" class="platform-row creator-link--soon" aria-disabled="true" tabindex="-1" title="TikTok — coming soon" style="opacity:0.45;">
+            <div class="platform-icon platform-icon--tiktok" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="22" height="22">
+                <path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+              </svg>
+            </div>
+            <div class="platform-info">
+              <strong>TikTok</strong>
+              <span>Clips, behind-the-scenes — coming soon</span>
+            </div>
+            <span class="platform-arrow" aria-hidden="true" style="opacity:0.3;">→</span>
+          </a>
+
+          <a href="mailto:djfacelessanimal@gmail.com" class="platform-row platform-row--cta" aria-label="Email — Booking and business inquiries">
+            <div class="platform-icon platform-icon--email" aria-hidden="true">✉</div>
+            <div class="platform-info">
+              <strong>Booking &amp; Inquiries</strong>
+              <span>djfacelessanimal@gmail.com</span>
+            </div>
+            <span class="platform-arrow" aria-hidden="true">→</span>
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================
+         PROOF STRIP — "This page is the proof"
+    ============================================= -->
+    <section class="section ap-proof-strip" aria-labelledby="ap-proof-heading">
+      <div class="container">
+        <div class="ap-proof-inner">
+
+          <div>
+            <p class="ap-proof-eyebrow">Faceless Animal Studios · Flagship Page</p>
+            <h2 class="ap-proof-heading" id="ap-proof-heading">
+              What You're Looking At<br /><em>Is the Proof.</em>
+            </h2>
+            <p class="ap-proof-body">
+              Every section on this page — the animated hero, the marquee, the rotating disc, the track list, the Spotify embed zone, the video cards, the platform link rows, the stat box — is built by the studio. This is not a template from a drag-and-drop builder. This is a real custom page, built by hand, for a real artist. And it's exactly what you can have.
+            </p>
+          </div>
+
+          <div>
+            <p style="font-size:0.7rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-3);margin-bottom:1.1rem;">What this page demonstrates</p>
+            <div class="ap-proof-features">
+              <span class="ap-proof-feat">Full-screen animated hero</span>
+              <span class="ap-proof-feat">Genre + identity tags</span>
+              <span class="ap-proof-feat">Scrolling marquee strip</span>
+              <span class="ap-proof-feat">Rotating disc visual</span>
+              <span class="ap-proof-feat">Social button row</span>
+              <span class="ap-proof-feat">Spotify embed zone</span>
+              <span class="ap-proof-feat">3-type music card grid</span>
+              <span class="ap-proof-feat">6-track numbered list</span>
+              <span class="ap-proof-feat">3-card video section</span>
+              <span class="ap-proof-feat">YouTube embed zone</span>
+              <span class="ap-proof-feat">Stat box (years, sets, releases)</span>
+              <span class="ap-proof-feat">Identity-driven About copy</span>
+              <span class="ap-proof-feat">Platform link rows (5 platforms)</span>
+              <span class="ap-proof-feat">Booking CTA + email</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =============================================
+         NEED A PAGE LIKE THIS?
+    ============================================= -->
+    <section class="ap-offer-section" aria-labelledby="ap-offer-heading">
+      <div class="container">
+        <div class="ap-offer-inner">
+
+          <!-- Left: editorial header -->
+          <div>
+            <p class="ap-offer-header-label">Faceless Animal Studios · Creator Pages</p>
+            <h2 class="ap-offer-heading" id="ap-offer-heading">
+              Need a Page<br /><em>Like This?</em>
+            </h2>
+            <p class="ap-offer-sub">
+              This is a real page built for a real artist. You can have one too — built around your identity, your sound, your category. Free to start. No subscriptions. Your content, your URL, your space.
+            </p>
+
+            <div class="ap-offer-pillars" aria-label="What you get">
+              <div class="ap-offer-pillar">
+                <span class="ap-offer-pillar-dot" aria-hidden="true">◎</span>
+                <span><strong style="color:var(--text);">Identity</strong> — a page built around who you actually are, not a generic template</span>
+              </div>
+              <div class="ap-offer-pillar">
+                <span class="ap-offer-pillar-dot" aria-hidden="true">◉</span>
+                <span><strong style="color:var(--text);">Visibility</strong> — live in 3–5 days, mobile-first, listed in the Creator Network</span>
+              </div>
+              <div class="ap-offer-pillar">
+                <span class="ap-offer-pillar-dot" aria-hidden="true">◈</span>
+                <span><strong style="color:var(--text);">No subscriptions</strong> — paid plans are one-time setup fees, free plan costs nothing ever</span>
+              </div>
+              <div class="ap-offer-pillar">
+                <span class="ap-offer-pillar-dot" aria-hidden="true">◇</span>
+                <span><strong style="color:var(--text);">Upgrade anytime</strong> — your URL and content carry forward at every tier</span>
+              </div>
+            </div>
+
+            <div class="ap-offer-actions">
+              <a href="../start.html" class="btn btn-primary btn-lg">Get My Page →</a>
+              <a href="../pricing.html" class="btn btn-ghost btn-lg">See All Plans</a>
+            </div>
+          </div>
+
+          <!-- Right: 4-plan offer cards -->
+          <div>
+            <p style="font-size:0.7rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-3);margin-bottom:1rem;">Choose your plan</p>
+
+            <div class="ap-offer-cards" role="list" aria-label="Available plans">
+
+              <a href="../free.html" class="ap-offer-card" role="listitem" aria-label="Free Presence — $0, forever">
+                <span class="ap-offer-card-num" aria-hidden="true">00</span>
+                <div class="ap-offer-card-body">
+                  <strong>Free Presence</strong>
+                  <p>Name, bio, photo, up to 8 links · /yourname URL · Network listing</p>
+                </div>
+                <span class="ap-offer-card-price">$0</span>
+                <span class="ap-offer-card-arrow" aria-hidden="true">→</span>
+              </a>
+
+              <a href="../paid.html?plan=starter" class="ap-offer-card" role="listitem" aria-label="Starter Page — $29 one-time">
+                <span class="ap-offer-card-num" aria-hidden="true">01</span>
+                <div class="ap-offer-card-body">
+                  <strong>Starter Page</strong>
+                  <p>Enhanced design · No "Powered by" badge · Unlimited links</p>
+                </div>
+                <span class="ap-offer-card-price">$29</span>
+                <span class="ap-offer-card-arrow" aria-hidden="true">→</span>
+              </a>
+
+              <a href="../paid.html?plan=pro" class="ap-offer-card ap-offer-card--featured" role="listitem" aria-label="Pro Page — $79 one-time, most popular">
+                <span class="ap-offer-card-num" aria-hidden="true">02</span>
+                <div class="ap-offer-card-body">
+                  <strong>Pro Page</strong>
+                  <p>Custom domain · Music player · Video embeds · Contact form</p>
+                </div>
+                <span class="ap-offer-card-price">$79</span>
+                <span class="ap-offer-card-arrow" aria-hidden="true">→</span>
+              </a>
+
+              <a href="../paid.html?plan=premium" class="ap-offer-card" role="listitem" aria-label="Premium Custom — $199 one-time, fully custom like this page">
+                <span class="ap-offer-card-num" aria-hidden="true">03</span>
+                <div class="ap-offer-card-body">
+                  <strong>Premium Custom</strong>
+                  <p>Fully custom build like this page · Revisions included · Priority queue</p>
+                </div>
+                <span class="ap-offer-card-price">$199</span>
+                <span class="ap-offer-card-arrow" aria-hidden="true">→</span>
+              </a>
+
+            </div>
+
+            <p style="font-size:0.72rem;color:var(--text-3);margin-top:1rem;line-height:1.7;">All paid plans are <strong style="color:var(--text-2);">one-time setup fees</strong> — no monthly charges, no subscriptions. Your page stays live as long as the platform runs.</p>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =============================================
+         STUDIO RETURN CTA
+    ============================================= -->
+    <section class="section ap-return-strip" aria-label="Back to studio">
+      <div class="container">
+        <p class="ap-return-title">Faceless Animal Studios</p>
+        <p class="ap-return-sub">Music. Games. Pages. Supply. Network. All coming from the same place.</p>
+        <div class="ap-return-actions">
+          <a href="../start.html" class="btn btn-primary btn-lg">Get My Page →</a>
+          <a href="../index.html" class="btn btn-ghost btn-lg">← Back to Studio</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =============================================
+       FOOTER
+  ============================================= -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="../about.html">About</a>
+          <a href="../network.html">Network</a>
+          <a href="../store.html">Supply</a>
+          <a href="../pricing.html">Pricing</a>
+          <a href="../drops.html">Drops</a>
+          <a href="../faq.html">FAQ</a>
+          <a href="../artists/djfacelessanimal.html">DJ Faceless</a>
+          <a href="../start.html">Get Started Free</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

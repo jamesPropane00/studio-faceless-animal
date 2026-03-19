@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Faceless Animal Studios — Platform Apps. Tools built for creators, artists, and businesses on the network." />
+  <title>Apps — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="games.html">Games</a></li>
+          <li><a href="music.html">Music</a></li>
+          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="games.html">Games</a>
+    <a href="music.html">Music</a>
+    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="about.html">About</a>
+  </div>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="page-hero" aria-label="Apps hero">
+      <div class="page-hero-glow" aria-hidden="true"></div>
+      <div class="container">
+        <p class="page-hero-eyebrow">
+          <span class="eyebrow-dot" aria-hidden="true"></span>
+          Faceless Animal Studios · Platform Tools
+        </p>
+        <h1 class="page-hero-title">Tools Built<br /><em>For Creators.</em></h1>
+        <p class="page-hero-sub">Web apps built inside the ecosystem. Organized. Intentional. Built for the culture.</p>
+        <div class="page-hero-actions">
+          <a href="start.html" class="btn btn-primary btn-lg">Get Access →</a>
+          <a href="games.html" class="btn btn-ghost btn-lg">See Games</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Access tiers -->
+    <section class="section section-alt" aria-labelledby="apps-access-heading">
+      <div class="container">
+
+        <div class="section-header text-center">
+          <p class="section-label">Access Levels</p>
+          <h2 id="apps-access-heading">Know What<br /><em>You Can Use.</em></h2>
+        </div>
+
+        <div class="access-tier-row">
+          <div class="access-tier-card">
+            <div class="access-tier-icon" aria-hidden="true">🔓</div>
+            <p class="access-tier-label access-tier-label--free">Free Preview</p>
+            <p class="access-tier-desc">Some tools have public previews. No login needed to explore what's available.</p>
+          </div>
+          <div class="access-tier-card" style="border-color:rgba(139,92,246,0.25);">
+            <div class="access-tier-icon" aria-hidden="true">⚙️</div>
+            <p class="access-tier-label access-tier-label--member">Members Only</p>
+            <p class="access-tier-desc">Active $5/month members unlock the full tool suite as apps launch.</p>
+          </div>
+          <div class="access-tier-card" style="border-color:rgba(212,175,55,0.2);">
+            <div class="access-tier-icon" aria-hidden="true">🔐</div>
+            <p class="access-tier-label access-tier-label--paid">Paid Access</p>
+            <p class="access-tier-desc">Advanced tools with higher production value, locked to paid tiers.</p>
+          </div>
+        </div>
+
+        <!-- Apps grid -->
+        <div class="section-header" style="margin-top:2.5rem;">
+          <p class="section-label">The Tools</p>
+          <h2>Platform<br /><em>Apps.</em></h2>
+        </div>
+
+        <div class="app-grid" role="list">
+
+          <!-- Link Builder — Free Preview -->
+          <article class="app-card" role="listitem" aria-label="Link Builder — Free Preview">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#0a1a0a,#0a2a0a);font-size:2.5rem;">🔗</div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title">Link Builder</h3>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--beta"><span class="status-tag-dot" aria-hidden="true"></span>Beta</span>
+                  <span class="access-tag access-tag--free">Free Preview</span>
+                </div>
+              </div>
+              <p class="game-card-desc">Build your creator link page — one URL for all your socials, music, bookings, and platform presence. Set up in minutes.</p>
+              <div class="game-card-footer">
+                <a href="start.html" class="btn btn-primary" style="font-size:0.78rem;">Try Free →</a>
+                <span style="font-size:0.7rem;color:var(--text-3);">No login required</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Tracklist Tool — Members Only -->
+          <article class="app-card gated-card" role="listitem" aria-label="Tracklist Tool — Members Only">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#1a0a2e,#2a0a3e);font-size:2.5rem;">📋</div>
+            <div id="tracklist-gate" class="gated-overlay">
+              <span class="gated-overlay-icon" aria-hidden="true">🔒</span>
+              <p class="gated-overlay-title">Access Plan Required</p>
+              <p class="gated-overlay-sub">$5/month — cancel any time.</p>
+              <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="btn btn-primary" style="font-size:0.78rem;margin-top:0.25rem;" target="_blank" rel="noopener">Get Access →</a>
+            </div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title">Tracklist Tool</h3>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--soon">Coming Soon</span>
+                  <span class="access-tag access-tag--member">Members Only</span>
+                </div>
+              </div>
+              <p class="game-card-desc">Organize your setlists, tracklists, and mix notes in one clean interface. Built for DJs and producers who move fast and need their catalog organized.</p>
+              <div class="game-card-footer">
+                <span class="btn btn-ghost" style="font-size:0.78rem;opacity:0.5;cursor:not-allowed;" aria-disabled="true">Launching Soon</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Bio Writer — Paid Access -->
+          <article class="app-card gated-card" role="listitem" aria-label="Bio Writer — Paid Access">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#1a1200,#2e2200);font-size:2.5rem;">✍️</div>
+            <div id="bio-gate" class="gated-overlay">
+              <span class="gated-overlay-icon" aria-hidden="true">🔒</span>
+              <p class="gated-overlay-title">Access Plan Required</p>
+              <p class="gated-overlay-sub">$5/month — cancel any time.</p>
+              <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="btn btn-primary" style="font-size:0.78rem;margin-top:0.25rem;" target="_blank" rel="noopener">Get Access →</a>
+            </div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title">Bio Writer</h3>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--dev"><span class="status-tag-dot" aria-hidden="true"></span>In Dev</span>
+                  <span class="access-tag access-tag--paid">Paid Access</span>
+                </div>
+              </div>
+              <p class="game-card-desc">Generate a polished artist or creator bio in minutes. Input your story, genre, and vibe — the tool writes it in your voice. No templates.</p>
+              <div class="game-card-footer">
+                <span class="btn btn-ghost" style="font-size:0.78rem;opacity:0.5;cursor:not-allowed;" aria-disabled="true">In Development</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Press Kit Builder — Paid Access -->
+          <article class="app-card gated-card" role="listitem" aria-label="Press Kit Builder — Paid Access">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#0a0a1e,#1a0a2a);font-size:2.5rem;">📁</div>
+            <div id="presskit-gate" class="gated-overlay">
+              <span class="gated-overlay-icon" aria-hidden="true">🔒</span>
+              <p class="gated-overlay-title">Access Plan Required</p>
+              <p class="gated-overlay-sub">$5/month — cancel any time.</p>
+              <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="btn btn-primary" style="font-size:0.78rem;margin-top:0.25rem;" target="_blank" rel="noopener">Get Access →</a>
+            </div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title">Press Kit Builder</h3>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--soon">Coming Soon</span>
+                  <span class="access-tag access-tag--paid">Paid Access</span>
+                </div>
+              </div>
+              <p class="game-card-desc">Generate a professional press kit — bio, links, photos, and contact info — in a clean downloadable format. Built for booking, PR, and placement.</p>
+              <div class="game-card-footer">
+                <span class="btn btn-ghost" style="font-size:0.78rem;opacity:0.5;cursor:not-allowed;" aria-disabled="true">Coming Soon</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Audio Timestamp Tool — Coming Soon -->
+          <article class="app-card" role="listitem" aria-label="Audio Timestamp — Coming Soon">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#001a1a,#003030);font-size:2.5rem;">⏱</div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title">Audio Timestamp</h3>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--soon">Coming Soon</span>
+                  <span class="access-tag access-tag--member">Members Only</span>
+                </div>
+              </div>
+              <p class="game-card-desc">Drop timestamps into your mixes, create a shareable track list with exact timecodes. Built for DJs who want to make their content easier to navigate.</p>
+              <div class="game-card-footer">
+                <span class="btn btn-ghost" style="font-size:0.78rem;opacity:0.5;cursor:not-allowed;" aria-disabled="true">Coming Soon</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Open slot -->
+          <article class="app-card" role="listitem" style="border-style:dashed;border-color:rgba(139,92,246,0.2);background:rgba(139,92,246,0.025);">
+            <div class="game-card-thumb" aria-hidden="true" style="background:rgba(139,92,246,0.06);font-size:2rem;">+</div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title" style="color:var(--purple-bright);">More Coming</h3>
+                <span class="status-tag status-tag--soon">Planned</span>
+              </div>
+              <p class="game-card-desc" style="color:var(--text-3);">The tool suite expands with the platform. Members get first access to every new app that launches.</p>
+              <div class="game-card-footer">
+                <a href="start.html" class="btn btn-primary" style="font-size:0.78rem;">Join the Platform →</a>
+              </div>
+            </div>
+          </article>
+
+        </div>
+
+        <div style="text-align:center;margin-top:3rem;">
+          <p style="font-size:0.84rem;color:var(--text-2);margin-bottom:1.25rem;">The app suite grows with the platform. Access members get every new tool at launch.</p>
+          <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="btn btn-primary btn-lg" target="_blank" rel="noopener">Get Access — $5/month →</a>
+          <a href="pricing.html" class="btn btn-ghost btn-lg" style="margin-left:1rem;">See All Plans</a>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="about.html">About</a>
+          <a href="network.html">Network</a>
+          <a href="directory.html">Directory</a>
+          <a href="games.html">Games</a>
+          <a href="apps.html">Apps</a>
+          <a href="music.html">Music</a>
+          <a href="radio.html">Radio</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="start.html">Get Started Free</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/script.js"></script>
+  <script src="assets/js/access-gate.js"></script>
+  <script src="assets/js/radio-widget.js" defer></script>
+  <script>
+    (function () {
+      var hasAccess = FAS.isPaidMember();
+      var memberGates = ['tracklist-gate', 'bio-gate', 'presskit-gate'];
+      memberGates.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (hasAccess && el) el.style.display = 'none';
+      });
+    }());
+  </script>
+</body>
+</html>

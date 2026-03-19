@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submission Received — Faceless Animal Studios</title>
+  <meta name="description" content="Your intake form has been received. We'll be in touch within 1–2 business days." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="games.html">Games</a></li>
+          <li><a href="music.html">Music</a></li>
+          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="games.html">Games</a>
+    <a href="music.html">Music</a>
+    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="about.html">About</a>
+  </div>
+
+
+  <!-- ============================================================
+       HERO — CONFIRMATION
+  ============================================================ -->
+  <section class="ty-hero" aria-labelledby="ty-title">
+    <div class="container" style="max-width:640px;">
+
+      <div class="ty-check" aria-hidden="true" role="img">✓</div>
+      <p class="ty-eyebrow">Submission Received</p>
+      <h1 id="ty-title" class="ty-title">
+        You're In the Queue,<br /><span id="ty-name-display" style="color:var(--gold);"></span>
+      </h1>
+      <p class="ty-sub" id="ty-sub-text">
+        Your intake form hit our inbox. We'll review your info and reach out with next steps within 1–2 business days.
+      </p>
+
+      <!-- 3-step status rail -->
+      <div class="ty-rail" role="list" aria-label="Page build status">
+
+        <div class="ty-rail-step ty-rail-step--complete" role="listitem">
+          <div class="ty-rail-dot" aria-label="Complete">✓</div>
+          <div class="ty-rail-label">Received</div>
+          <div class="ty-rail-sub">Submission logged<br />Confirmation sent</div>
+        </div>
+
+        <div class="ty-rail-connector ty-rail-connector--complete" aria-hidden="true"></div>
+
+        <div class="ty-rail-step ty-rail-step--active" role="listitem">
+          <div class="ty-rail-dot" aria-label="In progress">2</div>
+          <div class="ty-rail-label">Page Being Built</div>
+          <div class="ty-rail-sub" id="ty-timeline-sub">Est. 3–5 business days<br />We'll send a preview link</div>
+        </div>
+
+        <div class="ty-rail-connector" aria-hidden="true"></div>
+
+        <div class="ty-rail-step ty-rail-step--pending" role="listitem">
+          <div class="ty-rail-dot" aria-label="Pending">3</div>
+          <div class="ty-rail-label">Page Goes Live</div>
+          <div class="ty-rail-sub">Listed on the network<br />Your URL goes public</div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       CONTENT — URL + WHAT'S NEXT
+  ============================================================ -->
+  <section class="section" aria-labelledby="ty-next-heading" style="padding-top:0;">
+    <div class="container" style="max-width:640px;">
+
+      <!--
+        PREVIEW MODE NOTICE
+        ════════════════════════════════════════════════════════════════
+        [SUPABASE CONNECT] — Remove this block when backend is live.
+        When connected, submissions will be saved to intake_submissions
+        and this page will be the real post-submit destination.
+        In live mode, send a confirmation email via Supabase Edge Function
+        or Resend.com to data.email with the intake summary.
+        ════════════════════════════════════════════════════════════════
+      -->
+      <div class="ty-preview-notice" role="alert" aria-live="polite" id="ty-preview-notice">
+        <p class="ty-preview-notice-title">Preview Mode — No Data Was Saved</p>
+        <p class="ty-preview-notice-body">
+          The form you submitted is currently a static preview. <strong>No data was recorded.</strong>
+          To officially get your page started, email
+          <strong><a href="mailto:djfacelessanimal@gmail.com" style="color:var(--gold-dim);">djfacelessanimal@gmail.com</a></strong>
+          with your name, username, and the plan you selected. We'll handle the rest.
+        </p>
+      </div>
+
+      <!-- Your URL box -->
+      <div class="ty-url-box" aria-label="Your future page URL">
+        <span class="ty-url-label">Your URL</span>
+        <span class="ty-url-value" id="ty-url-display">facelessanimalstudios.com/yourname</span>
+        <span class="ty-url-status" id="ty-url-status">Pending</span>
+      </div>
+
+      <!-- Plan summary line -->
+      <p style="font-size:0.78rem;color:var(--text-3);margin-bottom:2.5rem;line-height:1.75;">
+        <span id="ty-plan-line">Plan selected and on file.</span>
+        Questions? Email us at
+        <a href="mailto:djfacelessanimal@gmail.com" style="color:var(--gold-dim);font-weight:600;">djfacelessanimal@gmail.com</a>.
+      </p>
+
+      <!-- Next steps list -->
+      <h2 id="ty-next-heading" style="font-size:0.62rem;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-3);margin-bottom:0;">What Happens Next</h2>
+      <ol class="ty-next-steps" role="list" style="padding:0;margin:0 0 3rem;list-style:none;">
+
+        <li class="ty-next-step">
+          <div class="ty-next-num">01</div>
+          <div class="ty-next-body">
+            <strong>We review your intake info</strong>
+            <p>Within 1 business day, someone from Faceless Animal Studios reviews your submission and confirms your username and plan tier.</p>
+          </div>
+        </li>
+
+        <li class="ty-next-step">
+          <div class="ty-next-num">02</div>
+          <div class="ty-next-body">
+            <strong>Your page gets built</strong>
+            <p>We build your page from your intake data — bio, links, style, everything you submitted. This takes 2–4 business days for free tier, 1–3 for paid.</p>
+          </div>
+        </li>
+
+        <li class="ty-next-step">
+          <div class="ty-next-num">03</div>
+          <div class="ty-next-body">
+            <strong>You get a preview link</strong>
+            <p>Before anything goes public, we send you a staging link so you can review the page and approve or request changes.</p>
+          </div>
+        </li>
+
+        <li class="ty-next-step">
+          <div class="ty-next-num">04</div>
+          <div class="ty-next-body">
+            <strong>Your page goes live and you're on the board</strong>
+            <p>Once you approve, your page is published at your URL and your creator card appears on the <a href="network.html" style="color:var(--gold-dim);font-weight:600;">network board</a>.</p>
+          </div>
+        </li>
+
+      </ol>
+
+      <!-- While you wait -->
+      <div style="background:var(--bg-3);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:2rem 2.25rem;margin-bottom:2.5rem;">
+        <p style="font-size:0.62rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-3);margin-bottom:1rem;">While You Wait</p>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.75rem;">
+          <li style="display:flex;align-items:baseline;gap:0.75rem;">
+            <span style="color:var(--gold-dim);font-size:0.7rem;">→</span>
+            <span style="font-size:0.85rem;color:var(--text-2);">See who's already on the <a href="network.html" style="color:var(--text);font-weight:600;text-decoration:underline;text-underline-offset:3px;">network board</a></span>
+          </li>
+          <li style="display:flex;align-items:baseline;gap:0.75rem;">
+            <span style="color:var(--gold-dim);font-size:0.7rem;">→</span>
+            <span style="font-size:0.85rem;color:var(--text-2);">Browse a <a href="artists/samplecreator.html" style="color:var(--text);font-weight:600;text-decoration:underline;text-underline-offset:3px;">free-tier example page</a> to see what you'll get</span>
+          </li>
+          <li style="display:flex;align-items:baseline;gap:0.75rem;">
+            <span style="color:var(--gold-dim);font-size:0.7rem;">→</span>
+            <span style="font-size:0.85rem;color:var(--text-2);">Listen to the <a href="artists/djfacelessanimal.html" style="color:var(--text);font-weight:600;text-decoration:underline;text-underline-offset:3px;">DJ Faceless Animal page</a> to see what pro looks like</span>
+          </li>
+          <li style="display:flex;align-items:baseline;gap:0.75rem;">
+            <span style="color:var(--gold-dim);font-size:0.7rem;">→</span>
+            <span style="font-size:0.85rem;color:var(--text-2);">Check out <a href="store.html" style="color:var(--text);font-weight:600;text-decoration:underline;text-underline-offset:3px;">Faceless Supply</a> while you're here</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Platform Access — shown for paid plans only via inline script -->
+      <div id="ty-platform-access" style="display:none;background:rgba(167,139,250,0.05);border:1.5px solid rgba(167,139,250,0.18);border-radius:var(--r-xl);padding:1.75rem 2rem;margin-bottom:2.5rem;" role="note">
+        <p style="font-size:0.6rem;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:rgba(167,139,250,0.65);margin-bottom:0.65rem;">Platform Access · $5/month</p>
+        <p style="font-size:0.92rem;font-weight:700;color:var(--text);margin-bottom:0.5rem;">One more thing — set up your subscription.</p>
+        <p style="font-size:0.84rem;color:var(--text-2);line-height:1.85;margin-bottom:1.25rem;">All paid pages require $5/month platform access to stay active and listed on the network. You can subscribe now or wait until your page is ready — we'll send you the link again when it's live either way.</p>
+        <a
+          href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-primary"
+          style="font-size:0.85rem;"
+        >Start Platform Access — $5/month →</a>
+      </div>
+
+      <!-- Return CTA -->
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <a href="network.html" class="btn btn-primary">View the Network →</a>
+        <a href="index.html" class="btn btn-ghost">← Back to Home</a>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- FOOTER -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="index.html" class="footer-logo">Faceless Animal <span>Studios</span></a>
+          <p class="footer-tagline">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-nav" aria-label="Footer navigation">
+          <ul role="list">
+            <li><a href="network.html">Network</a></li>
+            <li><a href="start.html">Get Started</a></li>
+            <li><a href="free.html">Free Page</a></li>
+            <li><a href="services.html">Services</a></li>
+          <li><a href="music.html">Music</a></li>
+          </ul>
+        </nav>
+        <div class="footer-contact">
+          <a href="mailto:djfacelessanimal@gmail.com">djfacelessanimal@gmail.com</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 Faceless Animal Studios. All rights reserved. &nbsp;·&nbsp; <a href="admin/index.html" style="color:var(--text-3);text-decoration:none;font-size:inherit;opacity:0.6;" tabindex="-1">Studio Admin</a></p>
+      </div>
+    </div>
+  </footer>
+
+
+  <!--
+    PERSONALIZATION SCRIPT
+    Reads URL params: ?name=&plan=&username=
+    Fills in dynamic elements without any framework.
+    In live mode this data comes from the confirmed submission record.
+    [SUPABASE CONNECT] — When backend is connected, fetch the real
+    intake_submissions row by a token passed in the URL instead.
+  -->
+  <script>
+    (function() {
+      const params = new URLSearchParams(window.location.search)
+      const name     = params.get('name')     || ''
+      const plan     = params.get('plan')     || ''
+      const username = params.get('username') || ''
+
+      // --- Personalize name display ---
+      const nameDisplay = document.getElementById('ty-name-display')
+      if (name && nameDisplay) {
+        nameDisplay.textContent = name + '.'
+      } else if (nameDisplay) {
+        nameDisplay.textContent = 'Your page is on the way.'
+        nameDisplay.style.fontSize = '0.65em'
+        nameDisplay.style.color = 'var(--text-2)'
+      }
+
+      // --- URL box ---
+      const urlDisplay = document.getElementById('ty-url-display')
+      if (urlDisplay) {
+        const slug = username
+          ? username.toLowerCase().replace(/[^a-z0-9_-]/g, '')
+          : 'yourname'
+        urlDisplay.textContent = 'facelessanimalstudios.com/' + slug
+      }
+
+      // --- Plan line ---
+      const planLine = document.getElementById('ty-plan-line')
+      const planKey = plan.toLowerCase()
+      if (planLine && plan) {
+        const planLabels = {
+          free:    'Free plan — your page ships in 3–5 business days.',
+          starter: 'Starter plan ($30 all-in — setup + platform access via Stripe) — page ships in 2–3 business days.',
+          pro:     'Pro plan ($55 all-in — setup + platform access via Stripe) — page ships in 1–2 business days.',
+          premium: 'Premium plan ($105 all-in — setup + platform access via Stripe) — priority build, ships in 1 business day.'
+        }
+        planLine.textContent = planLabels[planKey] || 'Plan selected and on file.'
+      }
+
+      // --- All plans bundle platform access — no separate subscription block needed ---
+
+      // --- Hide preview notice if submission was real (future use) ---
+      // [SUPABASE CONNECT] — when live, hide #ty-preview-notice if
+      // ?token= is present and validates against a real submission row.
+      // const token = params.get('token')
+      // if (token) { document.getElementById('ty-preview-notice').style.display = 'none' }
+    })()
+  </script>
+
+  <script src="assets/js/env.js" onerror="void 0"></script>
+  <script src="assets/js/radio-widget.js" defer></script>
+</body>
+</html>

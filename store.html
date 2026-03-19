@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Faceless Supply — the store arm of Faceless Animal Studios. Studio merch, thrifted streetwear, retro gaming and tech, and digital drops. Culture, identity, and nostalgia in one place." />
+  <title>Faceless Supply — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="games.html">Games</a></li>
+          <li><a href="music.html">Music</a></li>
+          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="games.html">Games</a>
+    <a href="music.html">Music</a>
+    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="about.html">About</a>
+  </div>
+
+  <main>
+
+    <!-- Under Construction Banner -->
+    <div style="background:rgba(251,191,36,0.08);border-bottom:1px solid rgba(251,191,36,0.25);padding:0.75rem 1.25rem;text-align:center;" role="alert">
+      <p style="font-size:0.78rem;font-weight:700;color:#fbbf24;letter-spacing:0.04em;margin:0;">
+        🚧 <strong>Store checkout is under construction.</strong> Browse the supply market — to purchase, email <a href="mailto:djfacelessanimal@gmail.com" style="color:#fbbf24;text-decoration:underline;">djfacelessanimal@gmail.com</a> or send payment via <a href="https://cash.app/$Jamespropane00" target="_blank" rel="noopener noreferrer" style="color:#fbbf24;text-decoration:underline;">Cash App $Jamespropane00</a>.
+      </p>
+    </div>
+
+    <!-- ============================================================
+         HERO
+    ============================================================ -->
+    <section class="page-hero" aria-label="Faceless Supply hero">
+      <div class="page-hero-glow" aria-hidden="true"></div>
+      <div class="container">
+        <p class="page-hero-eyebrow">
+          <span class="eyebrow-dot" aria-hidden="true"></span>
+          Faceless Supply · The Market
+        </p>
+        <h1 class="page-hero-title">Culture.<br />Gear. <em>Identity.</em></h1>
+        <p class="page-hero-sub">This isn't merch for the sake of merch. Every category in the supply market connects to the same energy as the music, the games, and the platform. Studio-branded, thrifted, retro, and digital — all moving through the same hands.</p>
+        <div class="page-hero-actions">
+          <a href="#categories" class="btn btn-primary btn-lg">Shop the Collection</a>
+          <a href="drops.html" class="btn btn-ghost btn-lg">View Drops →</a>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         SUPPLY MANIFESTO STRIP
+    ============================================================ -->
+    <section class="section" aria-label="Supply manifesto">
+      <div class="container">
+        <div class="supply-manifesto">
+          <span class="supply-manifesto-label" aria-hidden="true">Faceless Supply</span>
+          <div class="supply-manifesto-lines">
+            <p class="supply-manifesto-line">Not a storefront. <em>A market.</em></p>
+            <p class="supply-manifesto-line">Not merch for fans. <strong>Gear for people who move different.</strong></p>
+            <p class="supply-manifesto-line">Music. Gaming. Streetwear. Digital. <em>All one ecosystem.</em></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         CATEGORY CARDS
+    ============================================================ -->
+    <section class="section section-alt" id="categories" aria-labelledby="cats-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <p class="section-label">The Market</p>
+          <h2 id="cats-heading">Four Categories.<br /><em>One Source.</em></h2>
+          <p class="section-sub">Studio merch. Thrift finds. Retro hardware. Digital releases. Everything moves through the same studio — nothing here is accidental.</p>
+        </div>
+
+        <div class="supply-cats" role="list">
+
+          <article class="supply-cat" id="merch" role="listitem">
+            <div class="supply-cat-visual supply-cat-visual--merch" aria-hidden="true">
+              <span class="supply-cat-icon-text">FAS</span>
+            </div>
+            <div class="supply-cat-body">
+              <p class="supply-cat-label">Studio Merch</p>
+              <h3 class="supply-cat-name">Branded<br />Drops</h3>
+              <p class="supply-cat-desc">Hoodies. Tees. Hats. Accessories. Carrying the Faceless Animal identity — designed in-house and dropped in limited runs. Each piece is a statement about where the studio stands.</p>
+              <a href="#shop-merch" class="btn btn-supply">Shop Merch</a>
+            </div>
+          </article>
+
+          <article class="supply-cat" id="streetwear" role="listitem">
+            <div class="supply-cat-visual supply-cat-visual--thrift" aria-hidden="true">
+              <span class="supply-cat-icon-text">VTG</span>
+            </div>
+            <div class="supply-cat-body">
+              <p class="supply-cat-label">Thrifted Streetwear</p>
+              <h3 class="supply-cat-name">Curated<br />Pieces</h3>
+              <p class="supply-cat-desc">Secondhand, baggy, urban, vintage-inspired — cleaned up and selected with intent, not bulk-filled. 90s and early 2000s energy. Every piece individually chosen before it hits the market.</p>
+              <a href="#shop-thrift" class="btn btn-supply">Explore the Market</a>
+            </div>
+          </article>
+
+          <article class="supply-cat" id="retro" role="listitem">
+            <div class="supply-cat-visual supply-cat-visual--tech" aria-hidden="true">
+              <span class="supply-cat-icon-text">PWR</span>
+            </div>
+            <div class="supply-cat-body">
+              <p class="supply-cat-label">Retro Gaming &amp; Tech</p>
+              <h3 class="supply-cat-name">Old Gear.<br />Real Energy.</h3>
+              <p class="supply-cat-desc">Tested consoles, vintage electronics, collectible hardware. The kind of things that still work and still mean something. PS2s, Game Boys, iPods, CRT adapters — this is the stuff DJ Faceless grew up on.</p>
+              <a href="#shop-tech" class="btn btn-supply">Shop Tech</a>
+            </div>
+          </article>
+
+          <article class="supply-cat" id="digital" role="listitem">
+            <div class="supply-cat-visual supply-cat-visual--drops" aria-hidden="true">
+              <span class="supply-cat-icon-text">DRP</span>
+            </div>
+            <div class="supply-cat-body">
+              <p class="supply-cat-label">Digital Drops</p>
+              <h3 class="supply-cat-name">Sound &amp;<br />Assets.</h3>
+              <p class="supply-cat-desc">Sample packs, mixes, game content, creator tools, and digital art — all built inside the studio and dropped directly. No middleman, no waiting. Instant access to what comes out of this ecosystem.</p>
+              <a href="drops.html" class="btn btn-supply">View Drops</a>
+            </div>
+          </article>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         STUDIO MERCH
+    ============================================================ -->
+    <section class="section" id="shop-merch" aria-labelledby="merch-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <p class="section-label">Studio Merch</p>
+          <h2 id="merch-heading">Wear the<br /><em>Studio.</em></h2>
+          <p class="section-sub">Limited-run drops. In-house design. The Faceless Animal identity in wearable form. Inquire to purchase — contact via email or cash app for availability.</p>
+        </div>
+
+        <div class="supply-section-ident" aria-hidden="true">
+          <div class="supply-section-ident-line"></div>
+          <span class="supply-section-ident-text">FAS · Studio Merch</span>
+          <div class="supply-section-ident-line"></div>
+        </div>
+
+        <div class="supply-products" role="list">
+
+          <article class="product-card" role="listitem">
+            <div class="product-img product-img--hoodie" aria-label="FAS Logo Hoodie — black and gold">
+              <span class="product-img-glyph" aria-hidden="true">FAS</span>
+              <span class="product-badge product-badge--merch">Studio Merch</span>
+            </div>
+            <div class="product-body">
+              <p class="product-name">FAS Logo Hoodie</p>
+              <p class="product-detail">Heavyweight pullover · Black / Gold · Available S–3XL · Limited run</p>
+              <p class="product-price">$65</p>
+              <a href="mailto:djfacelessanimal@gmail.com?subject=FAS%20Store%20Inquiry&body=Item%3A%0AMessage%3A" class="btn btn-product">Inquire to Purchase</a>
+            </div>
+          </article>
+
+          <article class="product-card" role="listitem">
+            <div class="product-img product-img--tee" aria-label="Studio Tee — black">
+              <span class="product-img-glyph" aria-hidden="true">FAS</span>
+              <span class="product-badge product-badge--merch">Studio Merch</span>
+            </div>
+            <div class="product-body">
+              <p class="product-name">Studio Tee</p>
+              <p class="product-detail">Relaxed fit · Heavyweight 100% cotton · Black · S–2XL</p>
+              <p class="product-price">$35</p>
+              <a href="mailto:djfacelessanimal@gmail.com?subject=FAS%20Store%20Inquiry&body=Item%3A%0AMessage%3A" class="btn btn-product">Inquire to Purchase</a>
+            </div>
+          </article>
+
+          <article class="product-card" role="listitem">
+            <div class="product-img product-img--hoodie" aria-label="FAS Snapback — black and gold">
+              <span class="product-img-glyph" aria-hidden="true">CAP</span>
+              <span class="product-badge product-badge--merch">Studio Merch</span>
+            </div>
+            <div class="product-body">
+              <p class="product-name">FAS Snapback</p>
+              <p class="product-detail">Structured 6-panel · Black / Gold embroidery · One size</p>
+              <p class="product-price">$30</p>
+              <a href="mailto:djfacelessanimal@gmail.com?subject=FAS%20Store%20Inquiry&body=Item%3A%0AMessage%3A" class="btn btn-product">Inquire to Purchase</a>
+            </div>
+          </article>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         THRIFTED STREETWEAR
+    ============================================================ -->
+    <section class="section section-alt" id="shop-thrift" aria-labelledby="thrift-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <p class="section-label">Thrifted Streetwear</p>
+          <h2 id="thrift-heading">Found.<br /><em>Kept.</em></h2>
+          <p class="section-sub">Every piece is individually sourced — no bulk buying, no filler. 90s and early 2000s silhouettes, cleaned, and ready. Baggy by design, intentional by default.</p>
+        </div>
+
+        <div class="supply-editorial" role="note">
+          <p class="supply-editorial-eyebrow">The Approach</p>
+          <p class="supply-editorial-body">The thrift category isn't resale for profit — it's curation. The same energy that goes into selecting tracks for a DJ set goes into selecting pieces for the market. If it doesn't fit the aesthetic, it doesn't go on the rack. Urban. Baggy. Vintage. Things that look like they came from somewhere, because they did.</p>
+        </div>
+
+        <div class="supply-section-ident" aria-hidden="true">
+          <div class="supply-section-ident-line"></div>
+          <span class="supply-section-ident-text">Thrifted · Individually Sourced · Selected</span>
+          <div class="supply-section-ident-line"></div>
+        </div>
+
+        <div class="supply-products" role="list">
+
+          <article class="product-card" role="listitem">
+            <div class="product-img product-img--jacket" aria-label="Vintage 90s windbreaker">
+              <span class="product-img-glyph" aria-hidden="true">VTG</span>
+              <span class="product-badge product-badge--thrift">Thrifted</span>
+            </div>
+            <div class="product-body">
+              <p class="product-name">90s Colorblock Windbreaker</p>
+              <p class="product-detail">Pull-over · Size L · Nylon shell · Orange / Black / White · One available</p>
+              <p class="product-price">$48</p>
+              <a href="mailto:djfacelessanimal@gmail.com?subject=FAS%20Store%20Inquiry&body=Item%3A%0AMessage%3A" class="btn btn-product">Inquire to Purchase</a>
+            </div>
+          </article>
+
+          <article class="product-card" role="listitem">
+            <div class="product-img product-img--jacket" aria-label="Baggy cargo pants">
+              <span class="product-img-glyph" aria-hidden="true">CGO</span>
+              <span class="product-badge product-badge--thrift">Thrifted</span>
+            </div>
+            <div class="product-body">
+              <p class="product-name">Baggy Cargo Pants</p>
+              <p class="product-detail">Wide leg · Olive / Army green · Tagged 34×32 · Washed · No distress</p>
+              <p class="product-price">$36</p>
+              <a href="mailto:djfacelessanimal@gmail.com?subject=FAS%20Store%20Inquiry&body=Item%3A%0AMessage%3A" class="btn btn-product">Inquire to Purchase</a>
+            </div>
+          </article>
+
+          <article class="product-card" role="listitem">
+            <div class="product-img product-img--jacket" aria-label="2000s track jacket">
+              <span class="product-img-glyph" aria-hidden="true">TRK</span>
+              <span class="product-badge product-badge--thrift">Thrifted</span>
+            </div>
+            <div class="product-body">
+              <p class="product-name">Early 2000s Track Jacket</p>
+              <p class="product-detail">Full zip · Polyester · Black / Silver stripe · Size M-L · Logo intact</p>
+              <p class="product-price">$42</p>
+              <a href="mailto:djfacelessanimal@gmail.com?subject=FAS%20Store%20Inquiry&body=Item%3A%0AMessage%3A" class="btn btn-product">Inquire to Purchase</a>
+            </div>
+          </article>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         RETRO GAMING & TECH
+    ============================================================ -->
+    <section class="section" id="shop-tech" aria-labelledby="tech-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <p class="section-label">Retro Gaming &amp; Tech</p>
+          <h2 id="tech-heading">Old Gear.<br /><em>Still Works.</em></h2>
+          <p class="section-sub">Tested. Cleaned. Real. The consoles, handhelds, and electronics that shaped a generation — sold by someone who actually uses them, not someone flipping boxes.</p>
+        </div>
+
+        <div class="supply-editorial" role="note">
+          <p class="supply-editorial-eyebrow">Why Retro</p>
+          <p class="supply-editorial-body">DJ Faceless Animal grew up on PS2s and Game Boys and iPod Classics before the streaming era swallowed everything whole. The retro tech category exists because this hardware still has a sound, still has a feel, and still matters to the right people. Every unit in the market is tested before it's listed. No dead pixels, no broken triggers, no dry-rotted joysticks sold as "good condition."</p>
+        </div>
+
+        <div class="supply-section-ident" aria-hidden="true">
+          <div class="supply-section-ident-line"></div>
+          <span class="supply-section-ident-text">Tested · Cleaned · Ready to Use</span>
+          <div class="supply-section-ident-line"></div>
+        </div>
+
+        <div class="supply-products" role="list">
+
+          <article class="product-card" role="listitem">
+            <div class="product-img product-img--console" aria-label="PS2 Slim bundle">
+              <span class="product-img-glyph" aria-hidden="true">PS2</span>
+              <span class="product-badge product-badge--tech">Retro Tech</span>
+            </div>
+            <div class="product-body">
+              <p class="product-name">PS2 Slim Bundle</p>
+              <p class="product-detail">Console + 2 controllers + AV cables + 5 games · Fully tested · Black</p>
+              <p class="product-price">$120</p>
+              <a href="mailto:djfacelessanimal@gmail.com?subject=FAS%20Store%20Inquiry&body=Item%3A%0AMessage%3A" class="btn btn-product">Inquire to Purchase</a>
+            </div>
+          </article>
+
+          <article class="product-card" role="listitem">
+            <div class="product-img product-img--electronics" aria-label="iPod Classic 5th gen">
+              <span class="product-img-glyph" aria-hidden="true">iPod</span>
+              <span class="product-badge product-badge--tech">Retro Tech</span>
+            </div>
+            <div class="product-body">
+              <p class="product-name">iPod Classic 5th Gen</p>
+              <p class="product-detail">30GB · New battery installed · Black · With charging cable · Tested</p>
+              <p class="product-price">$95</p>
+              <a href="mailto:djfacelessanimal@gmail.com?subject=FAS%20Store%20Inquiry&body=Item%3A%0AMessage%3A" class="btn btn-product">Inquire to Purchase</a>
+            </div>
+          </article>
+
+          <article class="product-card" role="listitem">
+            <div class="product-img product-img--electronics" aria-label="Game Boy Advance SP">
+              <span class="product-img-glyph" aria-hidden="true">GBA</span>
+              <span class="product-badge product-badge--tech">Retro Tech</span>
+            </div>
+            <div class="product-body">
+              <p class="product-name">Game Boy Advance SP</p>
+              <p class="product-detail">AGS-001 · Graphite · Includes charger + 3 cartridges · Screen tested</p>
+              <p class="product-price">$75</p>
+              <a href="mailto:djfacelessanimal@gmail.com?subject=FAS%20Store%20Inquiry&body=Item%3A%0AMessage%3A" class="btn btn-product">Inquire to Purchase</a>
+            </div>
+          </article>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         DIGITAL DROPS BANNER
+    ============================================================ -->
+    <section class="section section-alt" id="shop-digital" aria-labelledby="digital-heading">
+      <div class="container">
+
+        <div class="supply-digital-banner">
+          <div class="supply-digital-banner-inner">
+
+            <div>
+              <p class="supply-digital-label">Digital Drops · Instant Access</p>
+              <h2 id="digital-heading" class="supply-digital-title">Sound. Assets.<br /><em style="color:#a06ae0;">Built Inside.</em></h2>
+              <p class="supply-digital-desc">Sample packs, full mixes, creator tools, game content — everything built inside the Faceless Animal Studios ecosystem and dropped directly. No label cut, no distributor margin. Straight from the source to your hard drive.</p>
+            </div>
+
+            <div>
+              <ul class="supply-digital-list" aria-label="Digital drop categories">
+                <li>Underground sample packs &amp; drum loops</li>
+                <li>DJ Faceless Animal mixes &amp; original tracks</li>
+                <li>Stages of Mazes — exclusive game content</li>
+                <li>Creator page templates &amp; platform tools</li>
+                <li>Early access drops for platform members</li>
+                <li>Limited edition audio &amp; visual releases</li>
+              </ul>
+              <a href="drops.html" class="btn btn-supply btn-supply-digital">Browse All Drops →</a>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Digital product cards -->
+        <div class="supply-section-ident" aria-hidden="true">
+          <div class="supply-section-ident-line"></div>
+          <span class="supply-section-ident-text">Digital · Instant Download</span>
+          <div class="supply-section-ident-line"></div>
+        </div>
+
+        <div class="supply-products" role="list">
+
+          <article class="product-card" role="listitem">
+            <div class="product-img product-img--digital" aria-label="Sample Pack Vol. 1">
+              <span class="product-img-glyph" aria-hidden="true">808</span>
+              <span class="product-badge product-badge--digital">Digital</span>
+            </div>
+            <div class="product-body">
+              <p class="product-name">Sample Pack Vol. 1</p>
+              <p class="product-detail">Underground 808s · Atmospheric loops · Filtered vinyl textures · 120+ files · WAV</p>
+              <p class="product-price">$12</p>
+              <a href="drops.html" class="btn btn-product">View in Drops</a>
+            </div>
+          </article>
+
+          <article class="product-card" role="listitem">
+            <div class="product-img product-img--digital" aria-label="Underground Sessions Mix">
+              <span class="product-img-glyph" aria-hidden="true">MIX</span>
+              <span class="product-badge product-badge--digital">Digital</span>
+            </div>
+            <div class="product-body">
+              <p class="product-name">Underground Sessions — Vol. 1</p>
+              <p class="product-detail">DJ Faceless Animal · 60-min continuous mix · Dark electronic · FLAC + MP3</p>
+              <p class="product-price">$8</p>
+              <a href="drops.html" class="btn btn-product">View in Drops</a>
+            </div>
+          </article>
+
+          <article class="product-card" role="listitem">
+            <div class="product-img product-img--digital" aria-label="Creator Template Pack">
+              <span class="product-img-glyph" aria-hidden="true">TPL</span>
+              <span class="product-badge product-badge--digital">Digital</span>
+            </div>
+            <div class="product-body">
+              <p class="product-name">Creator Template Pack</p>
+              <p class="product-detail">Platform-ready presence page assets · Link graphics · Bio templates · PNG + SVG</p>
+              <p class="product-price">$15</p>
+              <a href="drops.html" class="btn btn-product">View in Drops</a>
+            </div>
+          </article>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         CULTURE / TAG CLOUD / CLOSING CTA
+    ============================================================ -->
+    <section class="section" aria-labelledby="culture-heading">
+      <div class="container">
+
+        <div class="supply-culture">
+
+          <div>
+            <p class="supply-culture-eyebrow">What This Is</p>
+            <h2 id="culture-heading" class="supply-culture-line">
+              For people who care about <em>where things come from.</em><br />
+              Who know what <strong>nostalgia feels like in their hands.</strong><br />
+              Who still think <em>physical and digital</em> can coexist.
+            </h2>
+          </div>
+
+          <div class="supply-culture-ctas">
+            <a href="mailto:djfacelessanimal@gmail.com?subject=FAS%20Store%20Inquiry&body=Item%3A%0AMessage%3A" class="btn btn-primary">Shop the Market</a>
+            <a href="drops.html" class="btn btn-ghost">Digital Drops →</a>
+            <a href="about.html" class="btn btn-outline">About the Studio</a>
+          </div>
+
+        </div>
+
+        <!-- Tag cloud -->
+        <div class="supply-tag-cloud" aria-label="Supply keywords" style="margin-top:3.5rem;padding-top:2.5rem;border-top:1px solid var(--border-2);">
+          <span class="supply-tag">Studio Merch</span>
+          <span class="supply-tag supply-tag--dim">Retro Tech</span>
+          <span class="supply-tag">Thrifted Fits</span>
+          <span class="supply-tag supply-tag--dim">Digital Drops</span>
+          <span class="supply-tag">Limited Runs</span>
+          <span class="supply-tag supply-tag--dim">Sample Packs</span>
+          <span class="supply-tag">Game Systems</span>
+          <span class="supply-tag supply-tag--dim">Streetwear</span>
+          <span class="supply-tag">Nostalgia</span>
+          <span class="supply-tag supply-tag--dim">Underground</span>
+          <span class="supply-tag">Faceless Animal</span>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="about.html">About</a>
+          <a href="network.html">Network</a>
+          <a href="services.html">Services</a>
+          <a href="music.html">Music</a>
+          <a href="store.html">Supply</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="drops.html">Drops</a>
+          <a href="faq.html">FAQ</a>
+          <a href="artists/djfacelessanimal.html">DJ Faceless</a>
+          <a href="start.html">Get Started Free</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/script.js"></script>
+  <script src="assets/js/radio-widget.js" defer></script>
+</body>
+</html>

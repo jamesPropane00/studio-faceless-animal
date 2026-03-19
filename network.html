@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="The Faceless Animal Studios Creator Network — artists, DJs, producers, gamers, visual creators, and businesses on the platform. Join the board and build your presence." />
+  <title>The Network — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="games.html">Games</a></li>
+          <li><a href="music.html">Music</a></li>
+          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="games.html">Games</a>
+    <a href="music.html">Music</a>
+    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="about.html">About</a>
+  </div>
+
+  <main>
+
+    <!-- ============================================================
+         HERO
+    ============================================================ -->
+    <section class="page-hero" aria-label="Creator Network hero">
+      <div class="page-hero-glow" aria-hidden="true"></div>
+      <div class="container">
+        <p class="page-hero-eyebrow">
+          <span class="eyebrow-dot" aria-hidden="true"></span>
+          Creator Network · Faceless Animal Studios
+        </p>
+        <h1 class="page-hero-title">The Board<br /><em>Is Open.</em></h1>
+        <p class="page-hero-sub">Real creators, artists, DJs, producers, gamers, and businesses on one platform. This is what it looks like to have a real presence inside an ecosystem — and your page can be here too. Start free.</p>
+        <div class="page-hero-actions">
+          <a href="start.html" class="btn btn-primary btn-lg">Join the Network</a>
+          <a href="start.html?plan=free" class="btn btn-ghost btn-lg">Start Free →</a>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         STAT STRIP
+    ============================================================ -->
+    <section class="section section-alt" aria-label="Network stats">
+      <div class="container">
+        <div class="stat-strip" role="list">
+          <div class="stat-item" role="listitem">
+            <p class="stat-value">$0</p>
+            <p class="stat-label">To Get Listed</p>
+          </div>
+          <div class="stat-item" role="listitem">
+            <p class="stat-value" id="stat-member-count">—</p>
+            <p class="stat-label">Members</p>
+          </div>
+          <div class="stat-item" role="listitem">
+            <p class="stat-value">3–5</p>
+            <p class="stat-label">Days to Launch</p>
+          </div>
+          <div class="stat-item" role="listitem">
+            <p class="stat-value">1</p>
+            <p class="stat-label">Platform · FAS</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         FEATURED CREATORS
+         ════════════════════════════════════════════════════════════
+         [SUPABASE CONNECT] — featured creator records
+         Source: creator_profiles WHERE featured = true
+         ORDER BY sort_order ASC LIMIT 2
+
+         When dynamic: replace static <article> content with JS-rendered
+         template using data from creator_profiles table.
+         Recommended query:
+           supabase.from('creator_profiles')
+             .select('*')
+             .eq('featured', true)
+             .order('sort_order')
+         ════════════════════════════════════════════════════════════ -->
+    <section class="section" id="featured" aria-labelledby="featured-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <p class="section-label">Platform Founders</p>
+          <h2 id="featured-heading">Featured<br /><em>Creators.</em></h2>
+          <p class="section-sub">The platform was built around these creators first. Everything else in the network grew from the same roots.</p>
+        </div>
+
+        <!--
+          [SUPABASE CONNECT] — board-feed.js targets #featured-creator-strip and replaces
+          the static articles below with data-driven content from CREATORS where featured === true.
+          Static articles remain as the server-rendered fallback.
+        -->
+        <div
+          id="featured-creator-strip"
+          data-supabase-table="creator_profiles"
+          data-supabase-filter="featured=true"
+          data-static="true"
+        >
+
+          <article class="featured-creator" aria-label="DJ Faceless Animal" data-creator-id="djfacelessanimal" data-static="true">
+            <div class="featured-creator-avatar" aria-hidden="true">DJ</div>
+            <div>
+              <p class="featured-creator-badge">Platform Founder · DJ · Producer</p>
+              <p class="featured-creator-name">DJ Faceless Animal</p>
+              <p class="featured-creator-handle">@djfacelessanimal · Providence, Rhode Island</p>
+              <p class="featured-creator-bio">Underground DJ and producer out of Providence. Blending raw electronic, hip-hop, and experimental sounds since before the algorithm cared. Founder of Faceless Animal Studios. The platform exists because the right tools weren't available — so he built them.</p>
+            </div>
+            <a href="artists/djfacelessanimal.html" class="btn btn-primary" style="white-space:nowrap;align-self:center;">View Page →</a>
+          </article>
+
+          <article class="featured-creator" aria-label="Stages of Mazes" data-creator-id="stagesofmazes" data-static="true" style="background:linear-gradient(135deg,rgba(40,130,200,0.05) 0%,var(--bg-3) 60%);border-color:rgba(40,130,200,0.2);">
+            <div class="featured-creator-avatar" style="background:linear-gradient(135deg,rgba(40,130,200,0.18),rgba(40,130,200,0.05));border-color:rgba(40,130,200,0.35);color:#5aabdc;" aria-hidden="true">SoM</div>
+            <div>
+              <p class="featured-creator-badge" style="color:#5aabdc;">Platform Game · Puzzle · Studio-Built</p>
+              <p class="featured-creator-name">Stages of Mazes</p>
+              <p class="featured-creator-handle">@stagesofmazes · Faceless Animal Studios</p>
+              <p class="featured-creator-bio">Labyrinthine puzzle platformer built entirely inside the studio ecosystem. Navigate worlds constructed from the inside out — levels that feel like they were designed by someone who's been lost in the right way. Full release coming from the studio.</p>
+            </div>
+            <a href="#" class="btn btn-ghost" style="white-space:nowrap;align-self:center;opacity:0.5;pointer-events:none;" aria-disabled="true">Coming Soon</a>
+          </article>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         THE BOARD — 6 CREATOR CARDS
+         ════════════════════════════════════════════════════════════
+         [SUPABASE CONNECT] — creator board data
+         Source: creator_profiles WHERE page_status = 'active'
+         ORDER BY featured DESC, sort_order ASC
+
+         When dynamic: JS fetches creator_profiles rows and renders
+         board-card HTML for each. Replace static cards below with
+         a #creator-board-container div that JS populates.
+
+         Recommended query:
+           supabase.from('creator_profiles')
+             .select('username, display_name, creator_type, location,
+                      tagline, avatar_initials, avatar_color, plan_tier,
+                      page_url, page_status, status_quote, featured')
+             .eq('page_status', 'active')
+             .order('featured', { ascending: false })
+             .order('sort_order')
+
+         Network member count (stat strip above):
+           supabase.from('creator_profiles')
+             .select('id', { count: 'exact' })
+             .eq('page_status', 'active')
+         ════════════════════════════════════════════════════════════ -->
+    <section class="section section-alt" id="board" aria-labelledby="board-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <p class="section-label">The Creator Board</p>
+          <h2 id="board-heading">On the<br /><em>Platform.</em></h2>
+          <p class="section-sub">Every card below is a real or reserved presence on the Faceless Animal Studios platform. This is what the network looks like from inside.</p>
+        </div>
+
+        <!-- Guest banner — board-feed.js shows this for non-members only; dismissed per session -->
+        <div id="fas-guest-banner" hidden role="alert" aria-label="Guest visitor notice">
+          <span class="guest-banner-text">You're browsing as a guest —</span>
+          <a href="start.html?plan=free" class="guest-banner-cta">Claim your free page →</a>
+          <button id="fas-guest-banner-dismiss" class="guest-banner-dismiss" aria-label="Dismiss banner">✕</button>
+        </div>
+
+        <!-- Live status bar -->
+        <div class="network-status-bar" role="status" aria-live="polite">
+          <span class="network-status-dot" aria-hidden="true"></span>
+          <p class="network-status-text"><strong>Network is live</strong> — accepting new members across all creator categories. Start free, upgrade when ready. <a href="radio.html" style="color:var(--purple-bright);font-weight:700;white-space:nowrap;">Radio active →</a></p>
+          <span class="network-status-count">Open · Unlimited</span>
+        </div>
+
+        <!--
+          Creator board — static cards while Supabase is not yet connected.
+          data-supabase-table: where card data comes from
+          data-static: set to false when JS takes over rendering
+          [SUPABASE CONNECT]: when live, JS empties this div and re-renders
+          from creator_profiles rows using a board-card template function.
+        -->
+        <div
+          class="creator-board"
+          id="creator-board-container"
+          role="list"
+          data-supabase-table="creator_profiles"
+          data-static="true"
+        >
+
+          <!-- Card 1 — DJ Faceless Animal — [SUPABASE]: creator_profiles.username = 'djfacelessanimal' -->
+          <article class="board-card" role="listitem" aria-label="Creator: DJ Faceless Animal" data-creator-id="djfacelessanimal" data-static="true">
+            <div class="board-card-head">
+              <div class="board-card-avatar creator-avatar--gold" style="border-color:rgba(201,169,110,0.35);color:var(--gold);background:linear-gradient(135deg,rgba(201,169,110,0.18),rgba(201,169,110,0.06));" aria-hidden="true">DJ</div>
+              <div class="board-card-meta">
+                <p class="board-card-handle">@djfacelessanimal</p>
+                <p class="board-card-location">Providence, RI</p>
+              </div>
+            </div>
+            <span class="creator-tag creator-tag--dj">DJ · Producer</span>
+            <p class="board-card-status">"Blends. Pressure. Presence. Underground sounds built for people who don't need the spotlight explained to them."</p>
+            <div class="board-card-footer">
+              <span class="creator-tag creator-tag--dj" style="margin-bottom:0;">Pro Page</span>
+              <a href="artists/djfacelessanimal.html" class="board-card-link">View Page →</a>
+            </div>
+          </article>
+
+          <!-- Card 2 — Stages of Mazes — [SUPABASE]: creator_profiles.username = 'stagesofmazes' -->
+          <article class="board-card" role="listitem" aria-label="Creator: Stages of Mazes" data-creator-id="stagesofmazes" data-static="true">
+            <div class="board-card-head">
+              <div class="board-card-avatar" style="background:linear-gradient(135deg,rgba(40,130,200,0.18),rgba(40,130,200,0.06));border-color:rgba(40,130,200,0.35);color:#5aabdc;" aria-hidden="true">SoM</div>
+              <div class="board-card-meta">
+                <p class="board-card-handle">@stagesofmazes</p>
+                <p class="board-card-location">Faceless Animal Studios</p>
+              </div>
+            </div>
+            <span class="creator-tag creator-tag--game-dev">Game Dev</span>
+            <p class="board-card-status">"Navigate worlds built from the inside out. Labyrinthine puzzle platformer — coming from the studio. In development."</p>
+            <div class="board-card-footer">
+              <span class="creator-tag creator-tag--gamer" style="margin-bottom:0;">In Development</span>
+              <span class="board-card-link board-card-link--dim">Coming Soon</span>
+            </div>
+          </article>
+
+          <!-- Card 3 — KOLD Visual — [SUPABASE]: creator_profiles.username = 'koldvisual' -->
+          <article class="board-card" role="listitem" aria-label="Creator: KOLD Visual" data-creator-id="koldvisual" data-static="true">
+            <div class="board-card-head">
+              <div class="board-card-avatar" style="background:linear-gradient(135deg,rgba(200,60,60,0.18),rgba(200,60,60,0.06));border-color:rgba(200,60,60,0.35);color:#e07070;" aria-hidden="true">KV</div>
+              <div class="board-card-meta">
+                <p class="board-card-handle">@koldvisual</p>
+                <p class="board-card-location">Providence, RI</p>
+              </div>
+            </div>
+            <span class="creator-tag creator-tag--visual">Visual Artist</span>
+            <p class="board-card-status">"Motion graphics, brand identity, and visual direction for underground artists and independent labels. The work speaks before the name does."</p>
+            <div class="board-card-footer">
+              <span class="creator-tag creator-tag--visual" style="margin-bottom:0;">Starter Page</span>
+              <a href="/creator/samplecreator" class="board-card-link">View Page →</a>
+            </div>
+          </article>
+
+          <!-- Card 4 — Recluse Beatz — [SUPABASE]: creator_profiles.username = 'reclusebeatz' -->
+          <article class="board-card" role="listitem" aria-label="Creator: Recluse Beatz" data-creator-id="reclusebeatz" data-static="true">
+            <div class="board-card-head">
+              <div class="board-card-avatar" style="background:linear-gradient(135deg,rgba(140,60,200,0.18),rgba(140,60,200,0.06));border-color:rgba(140,60,200,0.35);color:#a06ae0;" aria-hidden="true">RB</div>
+              <div class="board-card-meta">
+                <p class="board-card-handle">@reclusebeatz</p>
+                <p class="board-card-location">New England</p>
+              </div>
+            </div>
+            <span class="creator-tag creator-tag--producer">Producer</span>
+            <p class="board-card-status">"Lo-fi beats and underground sample flips. Making since 2019. Sample packs drop monthly on the platform — heavy on texture, easy on the drums."</p>
+            <div class="board-card-footer">
+              <span class="creator-tag creator-tag--producer" style="margin-bottom:0;">Free Tier</span>
+              <a href="/creator/samplecreator" class="board-card-link">View Page →</a>
+            </div>
+          </article>
+
+          <!-- Card 5 — Eastside Cuts — [SUPABASE]: creator_profiles.username = 'eastsidecuts' -->
+          <article class="board-card" role="listitem" aria-label="Creator: Eastside Cuts" data-creator-id="eastsidecuts" data-static="true">
+            <div class="board-card-head">
+              <div class="board-card-avatar" style="background:linear-gradient(135deg,rgba(40,160,130,0.18),rgba(40,160,130,0.06));border-color:rgba(40,160,130,0.35);color:#6abfa8;" aria-hidden="true">EC</div>
+              <div class="board-card-meta">
+                <p class="board-card-handle">@eastsidecuts</p>
+                <p class="board-card-location">East Providence, RI</p>
+              </div>
+            </div>
+            <span class="creator-tag creator-tag--business">Business</span>
+            <p class="board-card-status">"Barbershop on the east side. Fades, tapers, lineups, designs. Walk-ins welcome — book online if you want your spot guaranteed. Open 7 days."</p>
+            <div class="board-card-footer">
+              <span class="creator-tag creator-tag--business" style="margin-bottom:0;">Starter Page</span>
+              <a href="/business/samplebusiness" class="board-card-link">View Page →</a>
+            </div>
+          </article>
+
+          <!-- Card 6 — Open spot — [SUPABASE]: rendered dynamically as CTA when board has open slots -->
+          <article class="board-card board-card--open" role="listitem" aria-label="Open creator spot" data-creator-id="open-slot" data-static="true">
+            <div class="board-card-head">
+              <div class="board-card-avatar" style="background:rgba(255,255,255,0.02);border-color:var(--border-2);color:var(--text-3);font-size:1.2rem;border-style:dashed;" aria-hidden="true">?</div>
+              <div class="board-card-meta">
+                <p class="board-card-handle" style="color:var(--text-3);">@yourname</p>
+                <p class="board-card-location">Anywhere</p>
+              </div>
+            </div>
+            <span class="creator-tag creator-tag--open">Your Category</span>
+            <p class="board-card-status" style="color:var(--text-3);">"This spot is open. Artists. DJs. Producers. Gamers. Businesses. Collectives. Photographers. Writers. Anyone who creates and wants a real home for it."</p>
+            <div class="board-card-footer">
+              <span class="creator-tag creator-tag--open" style="margin-bottom:0;">Free to Join</span>
+              <a href="start.html" class="board-card-link">Claim Spot →</a>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- Network growth note -->
+        <div class="network-growth-note" role="note">
+          <span class="network-growth-icon" aria-hidden="true">🌱</span>
+          <div class="network-growth-body">
+            <strong>This network is in its early stage — and that's intentional.</strong> The platform launched in Providence, Rhode Island and is growing outward from there. Early members build the culture of what this network becomes. There are no follower counts, no algorithm, no competition for visibility. Every creator on the board has a real URL, a real page, and a real listing. That's the whole point.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         BOARD POSTS FEED
+         ════════════════════════════════════════════════════════════
+         Live posts from approved creators.
+         board-feed.js populates #board-posts-container from
+         board_posts WHERE is_approved=true AND visibility_status='visible'
+         joined with profiles for display_name, avatar_url, category.
+         Empty state is shown if no approved posts exist yet.
+    ============================================================ -->
+    <section class="section" id="posts-feed" aria-labelledby="posts-feed-heading">
+      <div class="container" style="max-width:860px;">
+
+        <div class="section-header">
+          <p class="section-label">Creator Posts</p>
+          <h2 id="posts-feed-heading">What's<br /><em>Happening.</em></h2>
+          <p class="section-sub">Updates, releases, collabs, and announcements from creators on the platform — approved and posted to the board.</p>
+        </div>
+
+        <!--
+          board-feed.js targets this container.
+          Static empty state is the starting point — JS replaces it with live posts.
+        -->
+        <div id="board-posts-container" role="feed" aria-label="Creator board posts" aria-live="polite">
+          <div class="post-empty-state">
+            <p class="post-empty-icon" aria-hidden="true">📭</p>
+            <p class="post-empty-title">No posts yet.</p>
+            <p class="post-empty-sub">The board opens up once posts get approved. Check back soon.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         POST TO THE BOARD FORM
+         ════════════════════════════════════════════════════════════
+         Creators already on the platform can submit a short post.
+         board-feed.js handles:
+           1. Username lookup → profile_id via profiles SELECT
+           2. Insert into board_posts with is_approved=false, visibility='pending'
+           3. Success / error feedback below the form
+         Posts go live after studio review.
+    ============================================================ -->
+    <section class="section section-alt" id="post-form-section" aria-labelledby="post-form-heading">
+      <div class="container" style="max-width:640px;">
+
+        <!-- board-feed.js shows this for members; hides for non-members -->
+        <div id="board-post-form-wrap">
+
+          <div class="section-header text-center">
+            <p class="section-label">Post to the Board</p>
+            <h2 id="post-form-heading">Drop a<br /><em>Post.</em></h2>
+            <p class="section-sub">Already on the platform? Drop a quick post — a release, an update, a collab request, or just a note. We review everything before it goes live.</p>
+          </div>
+
+          <form id="fas-board-post-form" class="board-post-form" novalidate aria-label="Submit a board post">
+
+            <!-- Username -->
+            <div class="bpf-field">
+              <label class="bpf-label" for="post-username-input">Your @username <span class="bpf-required" aria-hidden="true">*</span></label>
+              <div class="bpf-input-wrap bpf-input-prefix">
+                <span class="bpf-prefix" aria-hidden="true">@</span>
+                <input
+                  type="text"
+                  id="post-username-input"
+                  name="username"
+                  class="bpf-input"
+                  placeholder="yourhandle"
+                  autocomplete="off"
+                  spellcheck="false"
+                  required
+                  aria-required="true"
+                  aria-describedby="post-username-hint"
+                />
+              </div>
+              <p class="bpf-hint" id="post-username-hint">Must match your existing username on the platform.</p>
+            </div>
+
+            <!-- Category -->
+            <div class="bpf-field">
+              <label class="bpf-label" for="post-category-select">Post type</label>
+              <select id="post-category-select" name="category" class="bpf-select">
+                <option value="">— Select a type —</option>
+                <option value="release">Release</option>
+                <option value="update">Update</option>
+                <option value="collab">Collab</option>
+                <option value="announcement">Announcement</option>
+                <option value="question">Question</option>
+              </select>
+            </div>
+
+            <!-- Post text -->
+            <div class="bpf-field">
+              <label class="bpf-label" for="post-text-input">Your post <span class="bpf-required" aria-hidden="true">*</span></label>
+              <textarea
+                id="post-text-input"
+                name="post_text"
+                class="bpf-textarea"
+                placeholder="What's going on? Drop a release, an update, a collab ask, or anything worth the board seeing."
+                rows="4"
+                maxlength="500"
+                required
+                aria-required="true"
+                aria-describedby="post-char-count"
+              ></textarea>
+              <p class="bpf-char-row">
+                <span id="post-char-count" class="post-char-count">0 / 500</span>
+              </p>
+            </div>
+
+            <!-- Feedback -->
+            <div id="post-form-feedback" class="post-form-feedback" hidden aria-live="polite"></div>
+
+            <!-- Submit -->
+            <button type="submit" id="post-form-submit" class="btn btn-primary" style="width:100%;">
+              Submit Post
+            </button>
+
+            <p class="bpf-note">All posts are reviewed before they appear on the board. Spam, harassment, or off-topic content won't be approved.</p>
+
+          </form>
+
+        </div>
+
+        <!-- board-feed.js shows this gate for non-members in place of the form above -->
+        <div id="board-post-gate-block" hidden aria-label="Members-only post form gate">
+          <div class="board-post-gate">
+            <p class="section-label">Members Only</p>
+            <h2 class="board-gate-title">The Board Is Live.<br /><em>Join Free to Post.</em></h2>
+            <p class="board-gate-sub">Platform members can drop updates, releases, and collabs directly to the board. Joining is free — no credit card, no approval wait. Your page goes live instantly.</p>
+            <a href="start.html?plan=free" class="btn btn-primary btn-lg">Claim My Free Page →</a>
+            <p class="board-gate-note">Already a member? <a href="login.html" class="board-gate-login-link">Log in →</a></p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         HOW TO JOIN
+    ============================================================ -->
+    <section class="section" id="how-to-join" aria-labelledby="join-heading">
+      <div class="container">
+
+        <div class="section-header text-center">
+          <p class="section-label">How to Join</p>
+          <h2 id="join-heading">Three Steps<br /><em>to the Board.</em></h2>
+          <p class="section-sub">No gatekeeping. No application process. Fill out the form, send your content, and your page goes live.</p>
+        </div>
+
+        <div class="join-steps">
+
+          <div class="join-step">
+            <p class="join-step-num">01</p>
+            <p class="join-step-title">Pick Your Plan</p>
+            <p class="join-step-desc">Start at $0 with a free presence page — or go straight to Starter ($30), Pro ($55), or Premium ($105). All plans put you on the board. Paid plans unlock a custom domain, media sections, and enhanced design — setup and platform access bundled, no separate charge.</p>
+          </div>
+
+          <div class="join-step">
+            <p class="join-step-num">02</p>
+            <p class="join-step-title">Submit Your Info</p>
+            <p class="join-step-desc">Fill out the intake form with your name, handle, bio, links, and a profile image. For paid plans with media sections, we'll follow up for anything else we need. We handle the build — you handle the content.</p>
+          </div>
+
+          <div class="join-step">
+            <p class="join-step-num">03</p>
+            <p class="join-step-title">Your Page Goes Live</p>
+            <p class="join-step-desc">Within 3–5 business days your page is built, published, and listed on the Creator Board. You get your URL — facelessanimalstudios.com/yourname — and you're inside the ecosystem from day one.</p>
+          </div>
+
+        </div>
+
+        <div style="text-align:center;">
+          <a href="start.html" class="btn btn-primary btn-lg">Start Building →</a>
+          <a href="free.html" class="btn btn-ghost btn-lg" style="margin-left:1rem;">Learn About Free →</a>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         WHO BELONGS
+    ============================================================ -->
+    <section class="section section-alt" aria-labelledby="who-heading">
+      <div class="container" style="max-width:860px;">
+
+        <div class="section-header text-center">
+          <p class="section-label">Who Belongs Here</p>
+          <h2 id="who-heading">If You Create<br /><em>Something.</em></h2>
+        </div>
+
+        <div class="pillar-grid" style="grid-template-columns:repeat(3,1fr);">
+          <div class="pillar-card">
+            <span class="pillar-icon" aria-hidden="true">🎧</span>
+            <p class="pillar-name">DJs &amp; Producers</p>
+            <p class="pillar-desc">Spotify, SoundCloud, mixes, packs, booking — all in one place. Look official from day one with a real platform-hosted page.</p>
+          </div>
+          <div class="pillar-card">
+            <span class="pillar-icon" aria-hidden="true">🎮</span>
+            <p class="pillar-name">Gamers &amp; Developers</p>
+            <p class="pillar-desc">Twitch, YouTube, Discord, itch.io, or your own game — one link that holds all of it together.</p>
+          </div>
+          <div class="pillar-card">
+            <span class="pillar-icon" aria-hidden="true">📸</span>
+            <p class="pillar-name">Visual Creators</p>
+            <p class="pillar-desc">Photographers, motion designers, brand artists. A clean presence page pointing to your portfolio and social profiles.</p>
+          </div>
+          <div class="pillar-card">
+            <span class="pillar-icon" aria-hidden="true">🏢</span>
+            <p class="pillar-name">Businesses &amp; Brands</p>
+            <p class="pillar-desc">Independent shops, studios, creative services. A platform presence that costs nothing to start and grows with you.</p>
+          </div>
+          <div class="pillar-card">
+            <span class="pillar-icon" aria-hidden="true">✍️</span>
+            <p class="pillar-name">Writers &amp; Podcasters</p>
+            <p class="pillar-desc">Substack, Spotify podcasts, YouTube channels, personal sites. One bio page that holds your whole catalog.</p>
+          </div>
+          <div class="pillar-card">
+            <span class="pillar-icon" aria-hidden="true">🔗</span>
+            <p class="pillar-name">Crews &amp; Collectives</p>
+            <p class="pillar-desc">Groups, labels, collectives, and movements. Build a shared presence under your name inside the network.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         JOIN CTA
+    ============================================================ -->
+    <section class="section" aria-labelledby="network-cta-heading">
+      <div class="container" style="max-width:700px;">
+        <div class="vision-strip" style="text-align:left;">
+          <p style="font-size:0.62rem;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-3);margin-bottom:1.75rem;">Faceless Animal Studios · Creator Network</p>
+          <h2 id="network-cta-heading" style="font-size:clamp(1.8rem,4vw,3rem);font-weight:800;letter-spacing:-0.045em;line-height:1.08;color:var(--text);margin-bottom:1.25rem;">
+            Claim Your<br /><em style="color:var(--gold);">Spot on the Board.</em>
+          </h2>
+          <p style="font-size:0.96rem;color:var(--text-2);line-height:1.9;margin-bottom:1rem;">
+            The network is early. That means the people who join now define what it becomes. There's no algorithm pushing one creator above another. No follower count visible on the board. Just real pages, real presence, real URLs.
+          </p>
+          <p style="font-size:0.96rem;color:var(--text-2);line-height:1.9;margin-bottom:2.5rem;">
+            Start free. The board is open and your spot doesn't cost anything to hold.
+          </p>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+            <a href="start.html" class="btn btn-primary btn-lg">Join the Network →</a>
+            <a href="pricing.html" class="btn btn-ghost btn-lg">See All Plans</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="about.html">About</a>
+          <a href="network.html">Network</a>
+          <a href="services.html">Services</a>
+          <a href="music.html">Music</a>
+          <a href="store.html">Supply</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="drops.html">Drops</a>
+          <a href="faq.html">FAQ</a>
+          <a href="artists/djfacelessanimal.html">DJ Faceless</a>
+          <a href="start.html">Get Started Free</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved. &nbsp;·&nbsp; <a href="admin/index.html" style="color:var(--text-3);text-decoration:none;font-size:inherit;opacity:0.6;" tabindex="-1">Studio Admin</a></p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/script.js"></script>
+  <script src="assets/js/radio-widget.js" defer></script>
+
+  <!-- Supabase env config — auto-generated by server.js from SUPABASE_URL + SUPABASE_ANON_KEY env vars.
+       Sets window.__FAS_CONFIG before any module scripts load. Safe if file is missing (onerror). -->
+  <script>window.__FAS_CONFIG = window.__FAS_CONFIG || { supabaseUrl: '', supabaseAnonKey: '', ready: false }</script>
+  <script src="assets/js/env.js" onerror="void 0"></script>
+
+  <!-- BOARD FEED RENDERER — board-feed.js fetches creator profiles and posts from Supabase. -->
+  <script type="module" src="assets/js/board-feed.js"></script>
+</body>
+</html>

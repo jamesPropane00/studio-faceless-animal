@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Blackout Cuts — Premium barbershop in Providence, Rhode Island. Clean fades, beard work, and lineup. Walk-ins welcome Tuesday through Saturday." />
+  <title>Blackout Cuts — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body class="artist-page"
+  data-page-type="business"
+  data-creator-id="blackoutcuts"
+  data-supabase-table="page_data"
+  data-static="true"
+>
+
+  <!--
+    ═══════════════════════════════════════════════════════════════
+    [SUPABASE CONNECT] — Dynamic page data
+    ═══════════════════════════════════════════════════════════════
+    This page is currently static HTML. When Supabase is connected,
+    page content will be pulled from the `page_data` table and
+    rendered via a JS template. Static HTML will be the fallback.
+
+    DB lookup on load:
+      supabase.from('page_data')
+        .select('*')
+        .eq('username', 'blackoutcuts')
+        .single()
+
+    Fields used on this page and their page_data column:
+      display_name      → navbar logo + h1.ap-hero-heading
+      tagline           → p.ap-hero-sub
+      hero_sub          → p.ap-hero-sub--dim
+      bio_paragraphs    → about section paragraphs (JSONB array)
+      quick_info        → check-list items (JSONB array)
+      stats             → stat-strip values (JSONB [{value, label}])
+      services          → menu-list rows (JSONB [{num, name, price, desc, addon}])
+      hours             → biz-hours-list rows (JSONB [{day, time, closed}])
+      contact           → phone, email, address (JSONB object)
+      links             → platform-row list (JSONB [{platform, url, label}])
+      accent_color      → CSS variable override (#4abfa0 for this page)
+      plan_tier         → controls powered-by bar visibility
+
+    Profile image / logo:
+      supabase.storage.from('profile-images')
+        .getPublicUrl('blackoutcuts/{filename}')
+    ═══════════════════════════════════════════════════════════════
+  -->
+
+  <!-- ============================================================
+       NAV — business name in logo slot
+  ============================================================ -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="#hero" class="navbar-logo">Blackout <span>Cuts</span></a>
+        <ul class="navbar-links" role="list">
+          <li><a href="#about">About</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="../network.html">Network</a></li>
+          <li><a href="../index.html" class="nav-cta">← Studio</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="#about">About</a>
+    <a href="#services">Services</a>
+    <a href="#contact">Contact</a>
+    <a href="../network.html">Network</a>
+    <a href="../index.html">← Studio</a>
+  </div>
+
+  <main>
+
+    <!-- Sample page notice -->
+    <div class="container" style="padding-top:calc(var(--nav-h) + 1.25rem);padding-bottom:0;">
+      <div class="sample-notice">
+        <strong style="color:var(--text-2);">Sample Business Page</strong> — This is what a local business looks like on the Faceless Animal Studios platform. Real layout, full services menu, contact and hours built in. <a href="../start.html" style="color:var(--gold);font-weight:700;">Get your own page free →</a>
+      </div>
+    </div>
+
+
+    <!-- ============================================================
+         HERO
+    ============================================================ -->
+    <section class="ap-hero" id="hero" aria-label="Blackout Cuts hero">
+      <div class="ap-hero-glow" aria-hidden="true" style="background:radial-gradient(ellipse at 35% 50%, rgba(40,160,130,0.06) 0%, transparent 65%);"></div>
+      <div class="ap-hero-grain" aria-hidden="true"></div>
+
+      <div class="container ap-hero-inner">
+        <div class="ap-hero-content">
+
+          <div class="ap-hero-eyebrow" style="color:rgba(74,191,160,0.9);">
+            <span class="biz-status-dot" aria-hidden="true"></span>
+            Walk-ins Welcome · Tue–Sat
+          </div>
+
+          <h1 class="ap-hero-heading">
+            Blackout<br />
+            <em style="color:#4abfa0;">Cuts</em>
+          </h1>
+
+          <p class="ap-hero-sub">Sharp fades. Clean lines. No appointment needed.</p>
+          <p class="ap-hero-sub ap-hero-sub--dim">A premium barbershop in Providence, Rhode Island. High, mid, and low fades, beard work, lineups, and add-ons — all in one chair by barbers who take the work seriously.</p>
+
+          <p class="ap-hero-location">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12" aria-hidden="true" style="flex-shrink:0;opacity:0.65"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            247 Westminster St · Providence, Rhode Island
+          </p>
+
+          <div class="ap-hero-actions">
+            <a href="tel:+14015550137" class="btn btn-primary btn-lg" style="background:linear-gradient(135deg,#1a6b58,#4abfa0);border:none;">Call to Book</a>
+            <a href="#services" class="btn btn-ghost btn-lg">See Services &amp; Prices</a>
+          </div>
+
+          <div class="ap-hero-tags" aria-label="Business type tags">
+            <span class="tag">Barbershop</span>
+            <span class="tag">Fades &amp; Lineups</span>
+            <span class="tag">Beard Work</span>
+            <span class="tag">Walk-Ins</span>
+            <span class="tag">Providence, RI</span>
+          </div>
+
+          <!-- Social links in hero -->
+          <div class="ap-hero-socials" aria-label="Follow on social">
+            <a href="javascript:void(0)" class="social-btn social-btn--instagram creator-link--soon" aria-disabled="true" tabindex="-1" title="Instagram — coming soon" style="opacity:0.4;">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+              @blackoutcuts_pvd
+            </a>
+          </div>
+
+        </div>
+
+        <!-- Monogram visual block -->
+        <div class="ap-hero-visual" aria-hidden="true">
+          <div class="biz-hero-monogram" aria-label="Blackout Cuts logo placeholder">BC</div>
+        </div>
+      </div>
+
+      <!-- Marquee strip -->
+      <div class="ap-hero-marquee" aria-hidden="true">
+        <div class="marquee-track">
+          <span>Sharp Fades</span><span class="marquee-dot">·</span>
+          <span>Clean Lines</span><span class="marquee-dot">·</span>
+          <span>Beard Work</span><span class="marquee-dot">·</span>
+          <span>Walk-Ins Welcome</span><span class="marquee-dot">·</span>
+          <span>Providence RI</span><span class="marquee-dot">·</span>
+          <span>Blackout Cuts</span><span class="marquee-dot">·</span>
+          <span>Sharp Fades</span><span class="marquee-dot">·</span>
+          <span>Clean Lines</span><span class="marquee-dot">·</span>
+          <span>Beard Work</span><span class="marquee-dot">·</span>
+          <span>Walk-Ins Welcome</span><span class="marquee-dot">·</span>
+          <span>Providence RI</span><span class="marquee-dot">·</span>
+          <span>Blackout Cuts</span><span class="marquee-dot">·</span>
+          <span>Sharp Fades</span><span class="marquee-dot">·</span>
+          <span>Clean Lines</span><span class="marquee-dot">·</span>
+          <span>Beard Work</span><span class="marquee-dot">·</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         ABOUT
+    ============================================================ -->
+    <section class="section section-alt" id="about" aria-labelledby="biz-about">
+      <div class="container">
+        <div class="ap-bio">
+
+          <div class="ap-bio-text">
+            <p class="section-label">About</p>
+            <h2 id="biz-about">Five Years.<br /><em>One Standard.</em></h2>
+
+            <p>
+              Blackout Cuts opened in 2021 on Westminster Street in Providence's Federal Hill neighborhood. We run a tight shop — two chairs, one standard. Every cut leaves the same way: clean fade, sharp lines, no complaints.
+            </p>
+            <p>
+              We do high, mid, and low fades tailored to your head shape. Beard shaping from full sculpts to light edge work. Hot towel finishes. Kids cuts for 12 and under. We don't rush it and we don't cut corners. If your lineup isn't straight, it isn't done.
+            </p>
+            <p>
+              Walk-ins are welcome Tuesday through Saturday. Call ahead on Saturdays — those seats go fast. No appointment required, but we keep a text waitlist if you want to hold your spot before you walk in.
+            </p>
+
+            <div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;">
+              <a href="tel:+14015550137" class="btn btn-primary" style="background:linear-gradient(135deg,#1a6b58,#4abfa0);border:none;">Call (401) 555-0137</a>
+              <a href="#services" class="btn btn-ghost">View Full Menu</a>
+            </div>
+          </div>
+
+          <div>
+            <!-- Quick info panel -->
+            <div style="background:var(--bg-3);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:1.75rem 2rem;margin-bottom:1.5rem;">
+              <p class="section-label" style="margin-bottom:1.1rem;">Shop Info</p>
+              <ul class="check-list">
+                <li>Premium barbershop — fades, beards, lineups</li>
+                <li>247 Westminster St · Federal Hill · Providence, RI</li>
+                <li>Open Tue–Fri 10am–7pm · Sat 9am–5pm</li>
+                <li>Walk-ins welcome — text waitlist available</li>
+                <li>Licensed barbers · Clean tools · Dark energy</li>
+              </ul>
+            </div>
+
+            <!-- Stat strip -->
+            <div class="stat-strip" style="grid-template-columns:repeat(3,1fr);">
+              <div class="stat-item">
+                <p class="stat-value" style="color:#4abfa0;">5</p>
+                <p class="stat-label">Yrs Open</p>
+              </div>
+              <div class="stat-item">
+                <p class="stat-value" style="color:#4abfa0;">1.2k+</p>
+                <p class="stat-label">Clients</p>
+              </div>
+              <div class="stat-item">
+                <p class="stat-value" style="color:#4abfa0;">2</p>
+                <p class="stat-label">Chairs</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         SERVICES — price menu format
+    ============================================================ -->
+    <section class="section" id="services" aria-labelledby="services-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <p class="section-label" style="color:#4abfa0;">Services &amp; Pricing</p>
+          <h2 id="services-heading">What We<br /><em>Offer.</em></h2>
+          <p class="section-sub">All services listed with current pricing. No hidden fees. Prices may vary for specialty work — ask at the chair.</p>
+        </div>
+
+        <!-- Menu list -->
+        <div class="menu-list" role="list" aria-label="Services and pricing">
+
+          <div class="menu-row" role="listitem">
+            <span class="menu-row-num" aria-hidden="true">01</span>
+            <div class="menu-row-body">
+              <h3>Classic Fade</h3>
+              <p>High, mid, or low — tailored to your head shape and preferences. Tight taper with a clean lineup included. The standard. What most clients come in for every 2–3 weeks.</p>
+            </div>
+            <div style="text-align:right;">
+              <p class="menu-row-price">$25</p>
+            </div>
+          </div>
+
+          <div class="menu-row" role="listitem">
+            <span class="menu-row-num" aria-hidden="true">02</span>
+            <div class="menu-row-body">
+              <h3>Beard Shape-Up</h3>
+              <p>Full edge work around the jawline, cheek line, and neck. Can be done as a hard line or blended into the skin. Includes a light oil finish. Stand-alone or added to any cut.</p>
+            </div>
+            <div style="text-align:right;">
+              <p class="menu-row-price">$15</p>
+            </div>
+          </div>
+
+          <div class="menu-row" role="listitem">
+            <span class="menu-row-num" aria-hidden="true">03</span>
+            <div class="menu-row-body">
+              <h3>Full Service — Cut + Beard</h3>
+              <p>A clean fade and a full beard shape-up in one chair. The complete. Hairline, temples, and neck lined up. Beard trimmed, shaped, and edged. Leave looking sharp from every angle.</p>
+            </div>
+            <div style="text-align:right;">
+              <p class="menu-row-price">$35</p>
+            </div>
+          </div>
+
+          <div class="menu-row" role="listitem">
+            <span class="menu-row-num" aria-hidden="true">04</span>
+            <div class="menu-row-body">
+              <h3>Kids Cut <span style="font-size:0.78rem;font-weight:600;color:var(--text-3);">(12 &amp; under)</span></h3>
+              <p>Calm, patient, and clean. Fades, tapers, and simple cuts for kids who sit still — and those who don't. Same clean results, same standard.</p>
+            </div>
+            <div style="text-align:right;">
+              <p class="menu-row-price">$20</p>
+            </div>
+          </div>
+
+          <div class="menu-row" role="listitem">
+            <span class="menu-row-num" aria-hidden="true">05</span>
+            <div class="menu-row-body">
+              <h3>Lineup Only</h3>
+              <p>Just the edge work. Hairline, temples, and neck. In and out. Perfect for keeping a fresh cut looking fresh between full appointments. Fast, precise, no drama.</p>
+            </div>
+            <div style="text-align:right;">
+              <p class="menu-row-price">$10</p>
+            </div>
+          </div>
+
+          <div class="menu-row" role="listitem">
+            <span class="menu-row-num" aria-hidden="true">06</span>
+            <div class="menu-row-body">
+              <h3>Hot Towel Treatment</h3>
+              <p>Add-on to any service. A hot towel finish to open pores, loosen the skin, and leave you clean. Reduces irritation after a close shave or beard trim. Worth the extra $12.</p>
+              <span class="menu-row-addon">Add-on</span>
+            </div>
+            <div style="text-align:right;">
+              <p class="menu-row-price" style="margin-top:0;">+$12</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Services footer note -->
+        <p style="font-size:0.75rem;color:var(--text-3);margin-top:1.25rem;line-height:1.8;">
+          All prices are current as of 2026. Cash preferred — card accepted. Tips are always appreciated. Specialty styles or color work may be quoted separately — ask in advance.
+        </p>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         CONTACT — 2-col: links + hours panel
+    ============================================================ -->
+    <section class="section section-alt" id="contact" aria-labelledby="biz-contact">
+      <div class="container">
+
+        <div class="section-header">
+          <p class="section-label">Find Us</p>
+          <h2 id="biz-contact">Hours, Location<br /><em>&amp; Contact.</em></h2>
+          <p class="section-sub">Walk-ins welcome Tuesday through Saturday. Call ahead on Saturdays to hold your spot.</p>
+        </div>
+
+        <div class="biz-contact-grid">
+
+          <!-- Left: platform link rows -->
+          <div>
+            <div class="platform-list" role="list" aria-label="Contact options">
+
+              <a href="tel:+14015550137" class="platform-row" role="listitem" aria-label="Call Blackout Cuts — (401) 555-0137">
+                <div class="platform-icon platform-icon--phone" aria-hidden="true">✆</div>
+                <div class="platform-info">
+                  <strong>Call or Text</strong>
+                  <span>(401) 555-0137 — call to book, text for waitlist</span>
+                </div>
+                <span class="platform-arrow" aria-hidden="true">→</span>
+              </a>
+
+              <a href="mailto:blackoutcuts@example.com?subject=Inquiry%20—%20Blackout%20Cuts" class="platform-row" role="listitem" aria-label="Email Blackout Cuts">
+                <div class="platform-icon platform-icon--email" aria-hidden="true">✉</div>
+                <div class="platform-info">
+                  <strong>Email</strong>
+                  <span>blackoutcuts@example.com — general inquiries and group bookings</span>
+                </div>
+                <span class="platform-arrow" aria-hidden="true">→</span>
+              </a>
+
+              <a href="javascript:void(0)" class="platform-row creator-link--soon" role="listitem" aria-disabled="true" tabindex="-1" title="Instagram — coming soon" style="opacity:0.45;">
+                <div class="platform-icon platform-icon--instagram" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+                </div>
+                <div class="platform-info">
+                  <strong>Instagram</strong>
+                  <span>@blackoutcuts_pvd — coming soon</span>
+                </div>
+                <span class="platform-arrow" aria-hidden="true" style="opacity:0.3;">→</span>
+              </a>
+
+              <div class="platform-row" role="listitem" aria-label="Address — 247 Westminster Street, Providence RI" style="cursor:default;">
+                <div class="platform-icon" aria-hidden="true" style="color:#4abfa0;font-size:1.1rem;">📍</div>
+                <div class="platform-info">
+                  <strong>Location</strong>
+                  <span>247 Westminster St · Federal Hill · Providence, RI 02903</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Right: hours panel -->
+          <div>
+            <div class="biz-hours-panel" role="region" aria-labelledby="hours-heading">
+              <div class="biz-hours-header">
+                <span class="biz-hours-header-title" id="hours-heading">Hours of Operation</span>
+                <span class="biz-hours-today">Tue–Sat Open</span>
+              </div>
+              <div class="biz-hours-list" role="list">
+                <div class="biz-hours-row biz-hours-row--closed" role="listitem">
+                  <span class="biz-hours-day">Sunday</span>
+                  <span class="biz-hours-time">Closed</span>
+                </div>
+                <div class="biz-hours-row biz-hours-row--closed" role="listitem">
+                  <span class="biz-hours-day">Monday</span>
+                  <span class="biz-hours-time">Closed</span>
+                </div>
+                <div class="biz-hours-row" role="listitem">
+                  <span class="biz-hours-day">Tuesday</span>
+                  <span class="biz-hours-time">10:00 am – 7:00 pm</span>
+                </div>
+                <div class="biz-hours-row" role="listitem">
+                  <span class="biz-hours-day">Wednesday</span>
+                  <span class="biz-hours-time">10:00 am – 7:00 pm</span>
+                </div>
+                <div class="biz-hours-row" role="listitem">
+                  <span class="biz-hours-day">Thursday</span>
+                  <span class="biz-hours-time">10:00 am – 7:00 pm</span>
+                </div>
+                <div class="biz-hours-row" role="listitem">
+                  <span class="biz-hours-day">Friday</span>
+                  <span class="biz-hours-time">10:00 am – 7:00 pm</span>
+                </div>
+                <div class="biz-hours-row" role="listitem">
+                  <span class="biz-hours-day">Saturday</span>
+                  <span class="biz-hours-time">9:00 am – 5:00 pm</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- CTA strip — the sales moment -->
+        <div class="biz-cta-strip">
+          <div class="biz-cta-strip-text">
+            <strong>This is a Starter Page.</strong>
+            <p>Blackout Cuts has a platform page with a full services menu, hours, contact info, and social links — live in under a week. Your business can have the same thing.</p>
+          </div>
+          <div style="display:flex;gap:0.85rem;flex-wrap:wrap;flex-shrink:0;">
+            <a href="../start.html" class="btn btn-primary">Get My Business a Page →</a>
+            <a href="../pricing.html" class="btn btn-ghost">Compare Plans</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- Powered by bar (Starter plan — no badge, but showing it for demo context) -->
+  <div class="powered-by-bar" role="contentinfo" aria-label="Platform attribution">
+    <div class="container">
+      <div class="powered-by-inner">
+        <span class="powered-by-dot" aria-hidden="true"></span>
+        Built on
+        <a href="../index.html" class="powered-by-link">Faceless Animal Studios</a>
+        <span class="powered-by-dot" aria-hidden="true"></span>
+        Starter Plan — <a href="../pricing.html" class="powered-by-link">upgrade to remove this bar</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upgrade prompt -->
+  <div class="sc-upgrade-prompt">
+    <div class="container">
+      <p class="sc-upgrade-prompt-title">This is a Starter Page — $29, one time.</p>
+      <p class="sc-upgrade-prompt-sub">
+        Everything you see on this page — services menu, hours panel, social links, contact section — is included in the Starter plan.<br />
+        Upgrade to Pro or Premium to add a custom domain, contact form, and a fully custom build.
+      </p>
+      <div class="sc-upgrade-prompt-actions">
+        <a href="../start.html" class="btn btn-primary">Get My Business a Page →</a>
+        <a href="../pricing.html" class="btn btn-ghost">See All Plans</a>
+      </div>
+    </div>
+  </div>
+
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="../about.html">About</a>
+          <a href="../network.html">Network</a>
+          <a href="../store.html">Supply</a>
+          <a href="../pricing.html">Pricing</a>
+          <a href="../drops.html">Drops</a>
+          <a href="../faq.html">FAQ</a>
+          <a href="../artists/djfacelessanimal.html">DJ Faceless</a>
+          <a href="../start.html">Get Started Free</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

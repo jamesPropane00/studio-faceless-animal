@@ -1,0 +1,242 @@
+Upgrade the Faceless Animal Studios platform so it has a real user data model, a real member dashboard, private messaging, and a multi-station DJ Faceless Animal Radio system.
+
+IMPORTANT:
+- Keep the Faceless Animal Studios identity strong
+- Keep the site mobile-first
+- Keep all current flows intact unless improving them
+- Do NOT remove the existing main radio section
+- Do NOT overbuild random features that are not part of the platform
+- Build this as a real platform layer, not just a visual shell
+
+=======================================
+PART 1 — REAL USER DATABASE / PLATFORM USERS
+=======================================
+
+Make sure the platform uses a real user data structure with Supabase-backed user records.
+
+Users should have a real record that can support:
+- username
+- display name
+- email
+- avatar
+- bio
+- category
+- city/state
+- plan type
+- membership status
+- page slug
+- profile/page status
+- created_at
+- last active if useful
+- upgrade requested plan if useful
+- any existing profile/page relationships already built
+
+Use or improve the existing Supabase structure if it already exists.
+Do NOT create duplicate user systems if one is already present.
+Keep it clean and connected to the existing platform.
+
+=======================================
+PART 2 — REAL USER DASHBOARD
+=======================================
+
+Build a real user dashboard experience.
+
+The dashboard should show:
+- user display name / username
+- their membership status clearly:
+  - Free
+  - Active Member
+  - Starter
+  - Pro
+  - Premium
+- whether their page is live, draft, paused, or under review
+- their page/package status
+- quick link to their public page
+- quick link to upgrade
+- quick link to message other users
+- quick link to the creator network / board
+- quick link to the radio
+
+Also add useful dashboard sections like:
+- account overview
+- profile details
+- page details
+- plan details
+- upgrade CTA
+- messages / inbox preview
+- recent activity or platform status if useful
+
+Make this feel like a real member area, not a generic admin panel.
+Keep it mobile friendly and clean.
+
+=======================================
+PART 3 — MEMBERSHIP STATUS
+=======================================
+
+Make membership status easy to understand.
+
+Clearly show:
+- Free users
+- Paid/active members
+- package tier
+- whether access is active or inactive
+
+Use clean labels and visual tags.
+The dashboard should explain what their current membership gives them.
+
+If useful, add:
+"What your membership includes"
+
+Keep this aligned with Faceless Platform Access:
+- hosted creator page or artist page
+- platform username / slug
+- access to studio web games
+- access to studio web apps/tools
+- creator network visibility
+- future features and drops
+- page/package upgrade path
+
+=======================================
+PART 4 — PRIVATE MESSAGING
+=======================================
+
+Add real private messaging between users.
+
+Requirements:
+- user can message another user privately
+- mobile-friendly messaging UI
+- inbox / thread list
+- conversation view
+- message input
+- send button
+
+Keep it simple:
+- one-to-one messages only for now
+- do not overbuild a giant social network
+- use Supabase-backed message records if possible
+- if some messaging structure already exists, improve it instead of replacing it
+
+Make it feel smooth and usable.
+
+=======================================
+PART 5 — RADIO: MULTI-STATION SUPPORT
+=======================================
+
+Upgrade DJ Faceless Animal Radio so it supports multiple stations with simple station buttons or station tabs.
+
+Keep the main radio section and floating radio access intact.
+
+Add station buttons like:
+- Station 1
+- Station 2
+- Station 3
+
+Use these sources:
+
+Station 1:
+https://open.spotify.com/artist/0pO4yejvRakRu8CzXlRwan?si=x2Yh6F9GRQGcBuhrdnGqPA
+
+Station 2:
+https://youtube.com/playlist?list=PLuaOk7bBVKJTqt9w6hS_MxjeQHGURWaBN&si=WPqshXWPbbmgYVpO
+
+Station 3:
+Create a clean placeholder state for now because the third link has not been provided yet.
+Label it:
+- Station 3
+- Coming Soon
+- or another clean placeholder name
+
+Requirements:
+- users can switch stations easily
+- station switching should feel smooth on mobile
+- station buttons should be simple and clear
+- preserve the boombox / radio identity
+- keep it light and not cluttered
+
+If possible:
+- Station 1 can open or embed the Spotify artist/profile cleanly
+- Station 2 can use the YouTube playlist
+- Station 3 should show a good staged placeholder until a real link is added
+
+=======================================
+PART 6 — RADIO CHAT + ROOMS
+=======================================
+
+Keep the radio chat system and room system in place.
+
+Base room:
+DJ Faceless Animal Radio
+
+Make sure:
+- chat still works
+- rooms still work or stay staged cleanly
+- users can still access the main live room
+- the multi-station system does not break the chat
+
+If useful, let station switching update the radio header while keeping the main chat/room area stable.
+
+=======================================
+PART 7 — GATED ACCESS / PLATFORM LOGIC
+=======================================
+
+Keep the platform logic clear:
+- public users can browse
+- signed-in users can access dashboard and messaging
+- paid/active members can access gated features like games/apps where appropriate
+
+Do NOT accidentally make paid game/app access public.
+
+If useful, add clear labels:
+- Public
+- Members Only
+- Paid Access Required
+- Coming Soon
+
+=======================================
+PART 8 — MOBILE-FIRST UX
+=======================================
+
+Everything must be 100% mobile friendly and smooth.
+
+Focus on:
+- dashboard readability on phones
+- message UI that works on mobile
+- station buttons easy to tap
+- radio compact and not overwhelming
+- no broken layouts
+- smooth scrolling
+- good spacing
+
+Goal:
+This should feel like a real platform people can use all day on their phone.
+
+=======================================
+PART 9 — STABILITY / DO NOT BREAK
+=======================================
+
+Do NOT break:
+- signup flow
+- free plan creation
+- paid intake
+- Stripe payment flow
+- Supabase auth
+- admin dashboard
+- existing public pages
+- existing board/network functionality
+
+Improve and connect things cleanly.
+
+=======================================
+PART 10 — FINAL GOAL
+=======================================
+
+The platform should now feel like a real member ecosystem:
+- real user database
+- real user dashboard
+- clear membership status
+- private messaging
+- multi-station radio
+- creator/community energy
+- mobile-first usability
+
+It should feel like a real platform people can belong to, not just a static website.

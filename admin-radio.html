@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Station 1 Admin · Faceless Animal Studios</title>
+<link rel="stylesheet" href="assets/style.css" />
+<style>
+  /* ── Layout ── */
+  .ar-wrap { max-width: 680px; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+
+  /* ── Cards ── */
+  .ar-card {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 18px;
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .ar-card-title {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin: 0 0 1.4rem;
+  }
+
+  /* ── Form fields ── */
+  .ar-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 1rem; }
+  .ar-label {
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-3);
+  }
+  .ar-input {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 9px;
+    padding: 0.7rem 1rem;
+    font-size: 0.88rem; color: var(--text);
+    font-family: var(--font-body); outline: none;
+    transition: border-color 0.15s;
+  }
+  .ar-input:focus { border-color: rgba(139,92,246,0.55); background: rgba(139,92,246,0.04); }
+
+  /* ── File drop zone ── */
+  .ar-drop {
+    border: 1.5px dashed rgba(139,92,246,0.35);
+    border-radius: 12px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .ar-drop:hover, .ar-drop.drag-over {
+    border-color: rgba(139,92,246,0.7);
+    background: rgba(139,92,246,0.05);
+  }
+  .ar-drop input[type="file"] {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; cursor: pointer;
+  }
+  .ar-drop-icon { font-size: 1.75rem; margin-bottom: 0.5rem; }
+  .ar-drop-text { font-size: 0.82rem; color: var(--text-2); line-height: 1.6; }
+  .ar-drop-hint { font-size: 0.7rem; color: var(--text-3); margin-top: 0.25rem; }
+  .ar-file-chosen {
+    margin-top: 0.75rem;
+    display: none;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(139,92,246,0.08);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 8px;
+    padding: 0.55rem 0.85rem;
+  }
+  .ar-file-chosen-name { font-size: 0.8rem; color: var(--purple-bright); font-weight: 600; flex: 1; }
+  .ar-file-chosen-size { font-size: 0.7rem; color: var(--text-3); }
+
+  /* ── Progress bar ── */
+  .ar-progress {
+    margin-top: 0.85rem; display: none;
+    flex-direction: column; gap: 0.35rem;
+  }
+  .ar-progress-label { font-size: 0.75rem; color: var(--text-2); }
+  .ar-progress-track {
+    height: 4px; background: rgba(255,255,255,0.07);
+    border-radius: 2px; overflow: hidden;
+  }
+  .ar-progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--purple), var(--purple-bright));
+    border-radius: 2px;
+    transition: width 0.25s ease;
+  }
+
+  /* ── Feedback ── */
+  .ar-err { font-size: 0.78rem; color: #f87171; display: none; margin-top: 0.5rem; }
+  .ar-ok  {
+    font-size: 0.82rem; color: #4ade80; display: none; margin-top: 0.75rem;
+    background: rgba(74,222,128,0.07); border: 1px solid rgba(74,222,128,0.18);
+    border-radius: 8px; padding: 0.65rem 0.9rem; line-height: 1.5;
+  }
+
+  /* ── Track list ── */
+  .ar-tracks { display: flex; flex-direction: column; gap: 0.5rem; }
+  .ar-track {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr auto auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 1rem;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 11px;
+    transition: border-color 0.15s;
+  }
+  .ar-track:hover { border-color: rgba(255,255,255,0.13); }
+  .ar-track-num  { font-size: 0.68rem; color: var(--text-3); text-align: right; font-weight: 700; }
+  .ar-track-info { min-width: 0; }
+  .ar-track-name { font-size: 0.85rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ar-track-date { font-size: 0.68rem; color: var(--text-3); margin-top: 0.15rem; }
+  .ar-track-play {
+    background: none; border: 1px solid rgba(255,255,255,0.12); color: var(--text-2);
+    width: 2rem; height: 2rem; border-radius: 50%; cursor: pointer; font-size: 0.7rem;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .ar-track-play:hover { border-color: rgba(139,92,246,0.6); color: var(--purple-bright); }
+  .ar-track-play.playing { border-color: var(--purple-bright); color: var(--purple-bright); }
+  .ar-track-del {
+    background: none; border: 1px solid rgba(248,113,113,0.22); color: rgba(248,113,113,0.7);
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em;
+    padding: 0.28rem 0.6rem; border-radius: 6px; cursor: pointer; flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .ar-track-del:hover { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.5); color: #f87171; }
+  .ar-no-tracks { font-size: 0.83rem; color: var(--text-3); text-align: center; padding: 2rem 0; margin: 0; }
+
+  /* ── Mini audio player ── */
+  #ar-mini-player {
+    position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%);
+    background: rgba(15,12,24,0.95); border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 14px; padding: 0.75rem 1.25rem;
+    display: none; align-items: center; gap: 1rem;
+    backdrop-filter: blur(16px); z-index: 900;
+    min-width: 280px; max-width: 420px; width: calc(100% - 2.5rem);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  #ar-mini-player.visible { display: flex; }
+  .ar-mp-title { flex: 1; font-size: 0.78rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ar-mp-btn {
+    background: none; border: none; color: var(--purple-bright); cursor: pointer;
+    font-size: 1.1rem; padding: 0; line-height: 1; flex-shrink: 0;
+  }
+  .ar-mp-close {
+    background: none; border: none; color: var(--text-3); cursor: pointer;
+    font-size: 0.9rem; padding: 0; line-height: 1; flex-shrink: 0;
+  }
+
+  /* ── Gate ── */
+  .ar-gate { text-align: center; padding: 5rem 1rem; }
+  .ar-gate h2 { font-size: 1.5rem; font-weight: 900; margin-bottom: 0.6rem; }
+  .ar-gate p  { font-size: 0.88rem; color: var(--text-2); margin-bottom: 1.5rem; }
+
+  /* ── Header ── */
+  .ar-header { margin-bottom: 2.25rem; }
+  .ar-header-eyebrow { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--purple-bright); margin-bottom: 0.4rem; }
+  .ar-header-title   { font-size: 2.1rem; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 0.4rem; }
+  .ar-header-sub     { font-size: 0.85rem; color: var(--text-2); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Main navigation">
+  <a href="index.html" class="nav-logo">Faceless Animal Studios</a>
+  <div class="nav-links">
+    <a href="radio.html">Radio</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="login.html" class="nav-cta">Sign In / Sign Up</a>
+  </div>
+</nav>
+
+<div class="ar-wrap">
+
+  <!-- Access gate (non-admin users) -->
+  <div id="ar-gate" class="ar-gate" style="display:none;">
+    <p style="font-size:2rem;margin-bottom:1rem;">&#x1F512;</p>
+    <h2>Admin Only</h2>
+    <p>Sign in as <strong>jamesPropane00</strong> to access this page.</p>
+    <a href="login.html" class="btn btn-outline-purple">Sign In →</a>
+  </div>
+
+  <!-- Admin UI -->
+  <div id="ar-main" style="display:none;">
+
+    <div class="ar-header">
+      <p class="ar-header-eyebrow">Admin · Radio Manager</p>
+      <h1 class="ar-header-title">Track Manager</h1>
+      <p class="ar-header-sub">Upload tracks to any channel — they go live the moment the upload finishes.</p>
+    </div>
+
+    <!-- Channel selector -->
+    <div class="ar-card" style="padding:1.1rem 1.4rem;">
+      <p class="ar-card-title" style="margin-bottom:0.75rem;">Active Channel</p>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;" id="ar-channel-bar">
+        <button class="btn btn-outline-purple ar-ch-btn ar-ch-btn--active" data-ch="1" style="font-size:0.78rem;padding:6px 14px;">Station 1 · Original</button>
+        <button class="btn btn-ghost ar-ch-btn" data-ch="4" style="font-size:0.78rem;padding:6px 14px;">Station 4 · Blends</button>
+        <button class="btn btn-ghost ar-ch-btn" data-ch="5" style="font-size:0.78rem;padding:6px 14px;">Station 5 · Archives</button>
+      </div>
+    </div>
+
+    <!-- Upload card -->
+    <div class="ar-card">
+      <p class="ar-card-title">Add a Track — <span id="ar-upload-ch-label">Station 1 · Original</span></p>
+
+      <form id="ar-form" onsubmit="return arSubmit(event);" autocomplete="off">
+
+        <div class="ar-field">
+          <label class="ar-label" for="ar-title">Track Title <span style="color:#f87171;">*</span></label>
+          <input class="ar-input" id="ar-title" type="text" required maxlength="100" placeholder="Name of the track" />
+        </div>
+
+        <div class="ar-field">
+          <label class="ar-label">Audio File <span style="color:#f87171;">*</span></label>
+          <div class="ar-drop" id="ar-drop" onclick="document.getElementById('ar-file').click()">
+            <input type="file" id="ar-file" accept=".mp3,.ogg,.wav,.flac,.m4a,.aac,audio/*" required tabindex="-1" />
+            <div class="ar-drop-icon">&#x1F3B5;</div>
+            <p class="ar-drop-text">Click to choose a file, or drag and drop here</p>
+            <p class="ar-drop-hint">MP3 · WAV · OGG · FLAC · M4A · AAC &nbsp;·&nbsp; max 50 MB</p>
+          </div>
+          <div class="ar-file-chosen" id="ar-file-chosen">
+            <span>&#x2713;</span>
+            <span class="ar-file-chosen-name" id="ar-file-name"></span>
+            <span class="ar-file-chosen-size" id="ar-file-size"></span>
+          </div>
+        </div>
+
+        <div class="ar-progress" id="ar-progress">
+          <span class="ar-progress-label" id="ar-progress-label">Preparing…</span>
+          <div class="ar-progress-track"><div class="ar-progress-fill" id="ar-progress-fill"></div></div>
+        </div>
+
+        <p class="ar-err" id="ar-err"></p>
+        <p class="ar-ok"  id="ar-ok"></p>
+
+        <div style="margin-top:1.25rem;">
+          <button type="submit" id="ar-btn" class="btn btn-outline-purple">Upload Track →</button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Track list card -->
+    <div class="ar-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem;">
+        <p class="ar-card-title" style="margin:0;"><span id="ar-rotation-label">Station 1 · Original</span> Rotation</p>
+        <span id="ar-count" style="font-size:0.7rem;color:var(--text-3);"></span>
+      </div>
+      <div class="ar-tracks" id="ar-tracks">
+        <p class="ar-no-tracks">Loading…</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Mini preview player -->
+<div id="ar-mini-player">
+  <button class="ar-mp-btn" id="ar-mp-btn" aria-label="Play/Pause">&#x25B6;</button>
+  <span class="ar-mp-title" id="ar-mp-title">No track loaded</span>
+  <button class="ar-mp-close" id="ar-mp-close" aria-label="Close player">&#x2715;</button>
+</div>
+<audio id="ar-audio"></audio>
+
+<script>
+(function() {
+
+  /* ── Auth check ── */
+  var sess = null;
+  try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
+  var me = sess ? (sess.username || '').toLowerCase().replace(/[^a-z0-9_]/g, '') : '';
+  var ph = sess ? (sess.ph || '') : '';
+
+  var RADIO_ADMINS = ['jamespropane00', 'arianamnm'];
+  if (!sess || !RADIO_ADMINS.includes(me)) {
+    document.getElementById('ar-gate').style.display = '';
+    return;
+  }
+  document.getElementById('ar-main').style.display = '';
+
+  /* ── Channel state ── */
+  var activeChannel = '1';
+  var CHANNEL_LABELS = { '1': 'Station 1 · Original', '4': 'Station 4 · Blends', '5': 'Station 5 · Archives' };
+
+  function setChannel(ch) {
+    if (!CHANNEL_LABELS[ch]) return;
+    activeChannel = ch;
+    var label = CHANNEL_LABELS[ch];
+    // Update pills
+    document.querySelectorAll('.ar-ch-btn').forEach(function(b) {
+      var on = b.dataset.ch === ch;
+      b.classList.toggle('ar-ch-btn--active', on);
+      b.classList.toggle('btn-outline-purple', on);
+      b.classList.toggle('btn-ghost', !on);
+    });
+    // Update form and list labels
+    var ul = document.getElementById('ar-upload-ch-label');
+    if (ul) ul.textContent = label;
+    var rl = document.getElementById('ar-rotation-label');
+    if (rl) rl.textContent = label;
+    // Reload track list
+    loadTracks();
+  }
+
+  document.querySelectorAll('.ar-ch-btn').forEach(function(b) {
+    b.addEventListener('click', function() { setChannel(b.dataset.ch); });
+  });
+
+  loadTracks();
+
+  /* ── File picker ── */
+  var fileInput  = document.getElementById('ar-file');
+  var dropZone   = document.getElementById('ar-drop');
+  var fileChosen = document.getElementById('ar-file-chosen');
+  var fileName   = document.getElementById('ar-file-name');
+  var fileSize   = document.getElementById('ar-file-size');
+
+  fileInput.addEventListener('change', function() { showChosenFile(this.files[0]); });
+
+  dropZone.addEventListener('dragover',  function(e) { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', function()  { dropZone.classList.remove('drag-over'); });
+  dropZone.addEventListener('drop',      function(e) {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    var f = e.dataTransfer.files[0];
+    if (f) {
+      fileInput.files = e.dataTransfer.files;
+      showChosenFile(f);
+    }
+  });
+
+  function showChosenFile(f) {
+    if (!f) return;
+    var mb = (f.size / 1024 / 1024).toFixed(1);
+    fileName.textContent = f.name;
+    fileSize.textContent = mb + ' MB';
+    fileChosen.style.display = 'flex';
+    document.getElementById('ar-err').style.display = 'none';
+    document.getElementById('ar-ok').style.display  = 'none';
+  }
+
+  /* ── Upload ── */
+  window.arSubmit = function(e) {
+    e.preventDefault();
+
+    var title  = document.getElementById('ar-title').value.trim();
+    var file   = fileInput.files[0];
+    var errEl  = document.getElementById('ar-err');
+    var okEl   = document.getElementById('ar-ok');
+    var prog   = document.getElementById('ar-progress');
+    var pLabel = document.getElementById('ar-progress-label');
+    var pFill  = document.getElementById('ar-progress-fill');
+    var btn    = document.getElementById('ar-btn');
+
+    errEl.style.display = 'none';
+    okEl.style.display  = 'none';
+
+    if (!title) { showErr('Track title is required.'); return false; }
+    if (!file)  { showErr('Please choose an audio file.'); return false; }
+    if (file.size > 50 * 1024 * 1024) { showErr('File is too large — max is 50 MB.'); return false; }
+
+    function showErr(msg) { errEl.textContent = msg; errEl.style.display = ''; }
+
+    btn.disabled = true;
+    btn.textContent = 'Uploading…';
+    prog.style.display = 'flex';
+    pLabel.textContent = 'Reading file…';
+    pFill.style.width  = '8%';
+
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      pFill.style.width  = '35%';
+      pLabel.textContent = 'Sending to server…';
+
+      var b64 = ev.target.result.split(',')[1];
+
+      fetch('/api/radio/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username:  me,
+          ph:        ph,
+          title:     title,
+          file_b64:  b64,
+          file_type: file.type || 'audio/mpeg',
+          file_name: file.name,
+          channel:   activeChannel,
+        }),
+      })
+      .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+      .then(function(res) {
+        pFill.style.width = '100%';
+        pLabel.textContent = res.ok ? 'Done.' : 'Failed.';
+        setTimeout(function() { prog.style.display = 'none'; pFill.style.width = '0%'; }, 700);
+
+        btn.disabled = false;
+        btn.textContent = 'Upload Track →';
+
+        if (!res.ok) {
+          showErr(res.data.error || 'Upload failed. Try again.');
+          return;
+        }
+
+        okEl.textContent = '\u2713 "' + title + '" is now live on ' + (CHANNEL_LABELS[activeChannel] || 'Channel ' + activeChannel) + '.';
+        okEl.style.display = '';
+        document.getElementById('ar-form').reset();
+        fileChosen.style.display = 'none';
+        loadTracks();
+      })
+      .catch(function() {
+        prog.style.display = 'none';
+        btn.disabled = false;
+        btn.textContent = 'Upload Track →';
+        showErr('Network error — check your connection and try again.');
+      });
+    };
+
+    reader.onerror = function() {
+      prog.style.display = 'none';
+      btn.disabled = false;
+      btn.textContent = 'Upload Track →';
+      showErr('Could not read the file. Try again.');
+    };
+
+    reader.readAsDataURL(file);
+    return false;
+  };
+
+  /* ── Track list ── */
+  function loadTracks() {
+    fetch('/api/radio/tracks?channel=' + activeChannel)
+      .then(function(r) { return r.json(); })
+      .then(function(d) { renderTracks(d.tracks || []); })
+      .catch(function() { renderTracks([]); });
+  }
+
+  function renderTracks(tracks) {
+    var list  = document.getElementById('ar-tracks');
+    var count = document.getElementById('ar-count');
+    count.textContent = tracks.length + (tracks.length === 1 ? ' track' : ' tracks');
+
+    if (!tracks.length) {
+      list.innerHTML = '<p class="ar-no-tracks">No tracks yet — upload your first one above.</p>';
+      return;
+    }
+
+    list.innerHTML = '';
+    tracks.forEach(function(t, i) {
+      var item = document.createElement('div');
+      item.className = 'ar-track';
+
+      var dateStr = '';
+      if (t.uploadedAt) {
+        var d = new Date(t.uploadedAt);
+        dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+
+      item.innerHTML =
+        '<span class="ar-track-num">' + (i + 1) + '</span>' +
+        '<div class="ar-track-info">' +
+          '<div class="ar-track-name">' + escHtml(t.title) + '</div>' +
+          (dateStr ? '<div class="ar-track-date">Added ' + dateStr + '</div>' : '') +
+        '</div>' +
+        '<button class="ar-track-play" data-src="' + escHtml(t.src) + '" data-title="' + escHtml(t.title) + '" aria-label="Preview">&#x25B6;</button>' +
+        '<button class="ar-track-del" data-id="' + escHtml(t.id) + '" data-title="' + escHtml(t.title) + '">Remove</button>';
+
+      item.querySelector('.ar-track-play').addEventListener('click', function() {
+        previewTrack(this.dataset.src, this.dataset.title, this);
+      });
+      item.querySelector('.ar-track-del').addEventListener('click', function() {
+        var title = this.dataset.title;
+        var id    = this.dataset.id;
+        var chName = CHANNEL_LABELS[activeChannel] || 'Channel ' + activeChannel;
+        if (!confirm('Remove "' + title + '" from ' + chName + '?\n\nThis deletes the file and cannot be undone.')) return;
+        removeTrack(id, item);
+      });
+
+      list.appendChild(item);
+    });
+  }
+
+  function escHtml(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Delete ── */
+  function removeTrack(id, itemEl) {
+    itemEl.style.opacity = '0.35';
+    fetch('/api/radio/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: me, ph: ph, id: id, channel: activeChannel }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) {
+        loadTracks();
+        if (currentSrc && currentSrc.includes(id)) stopPlayer();
+      } else {
+        itemEl.style.opacity = '1';
+        alert(d.error || 'Could not remove track.');
+      }
+    })
+    .catch(function() {
+      itemEl.style.opacity = '1';
+      alert('Network error. Try again.');
+    });
+  }
+
+  /* ── Mini preview player ── */
+  var audio      = document.getElementById('ar-audio');
+  var player     = document.getElementById('ar-mini-player');
+  var mpBtn      = document.getElementById('ar-mp-btn');
+  var mpTitle    = document.getElementById('ar-mp-title');
+  var mpClose    = document.getElementById('ar-mp-close');
+  var currentSrc = null;
+  var currentBtn = null;
+
+  function previewTrack(src, title, btn) {
+    if (currentBtn && currentBtn !== btn) {
+      currentBtn.classList.remove('playing');
+      currentBtn.innerHTML = '&#x25B6;';
+    }
+    if (currentSrc === src && !audio.paused) {
+      audio.pause();
+      btn.classList.remove('playing');
+      btn.innerHTML = '&#x25B6;';
+      mpBtn.innerHTML = '&#x25B6;';
+      return;
+    }
+    if (currentSrc !== src) {
+      audio.src = src;
+      currentSrc = src;
+      mpTitle.textContent = title;
+    }
+    audio.play().catch(function() {});
+    btn.classList.add('playing');
+    btn.innerHTML = '&#x23F8;';
+    currentBtn = btn;
+    player.classList.add('visible');
+  }
+
+  function stopPlayer() {
+    audio.pause();
+    audio.src = '';
+    currentSrc = null;
+    if (currentBtn) { currentBtn.classList.remove('playing'); currentBtn.innerHTML = '&#x25B6;'; currentBtn = null; }
+    player.classList.remove('visible');
+    mpBtn.innerHTML = '&#x25B6;';
+  }
+
+  audio.addEventListener('play',  function() { mpBtn.innerHTML = '&#x23F8;'; });
+  audio.addEventListener('pause', function() { mpBtn.innerHTML = '&#x25B6;'; if (currentBtn) { currentBtn.classList.remove('playing'); currentBtn.innerHTML = '&#x25B6;'; } });
+  audio.addEventListener('ended', function() { stopPlayer(); });
+
+  mpBtn.addEventListener('click', function() {
+    if (audio.paused) audio.play().catch(function() {});
+    else audio.pause();
+  });
+  mpClose.addEventListener('click', stopPlayer);
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DJ Faceless Animal — raw hip-hop, drill, and underground sound. Custom blends, mixes, beats, and audio work. Based in Providence, RI." />
+  <title>Music — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+  <style>
+    .music-offer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-top: 2.5rem;
+    }
+    .music-offer-item {
+      padding: 1.5rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      transition: border-color 0.2s;
+    }
+    .music-offer-item:hover { border-color: rgba(212,175,55,0.25); }
+    .music-offer-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.65rem;
+      display: block;
+    }
+    .music-offer-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+      letter-spacing: 0.01em;
+    }
+    .music-offer-desc {
+      font-size: 0.84rem;
+      color: var(--text-2);
+      line-height: 1.75;
+    }
+    .music-embed-placeholder {
+      background: rgba(255,255,255,0.025);
+      border: 1px dashed rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      margin-top: 2.5rem;
+    }
+    .music-stat-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      margin-top: 2.5rem;
+    }
+    .music-stat {
+      flex: 1;
+      min-width: 140px;
+    }
+    .music-stat-num {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--gold-bright);
+      line-height: 1;
+      margin-bottom: 0.3rem;
+      font-style: italic;
+    }
+    .music-stat-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="games.html">Games</a></li>
+          <li><a href="music.html" aria-current="page">Music</a></li>
+          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="games.html">Games</a>
+    <a href="music.html" aria-current="page">Music</a>
+    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="about.html">About</a>
+  </div>
+
+  <main>
+
+    <!-- ============================================================
+         HERO
+    ============================================================ -->
+    <section class="page-hero" aria-label="Music hero" style="padding-bottom:5rem;">
+      <div class="page-hero-glow" aria-hidden="true"></div>
+      <img class="mascot-music-img" src="assets/mascot.png" alt="" role="presentation" aria-hidden="true" />
+      <div class="container">
+        <p class="page-hero-eyebrow">
+          <span class="eyebrow-dot" aria-hidden="true"></span>
+          Faceless Animal Studios · Providence, Rhode Island
+        </p>
+        <h1 class="page-hero-title">DJ Faceless<br /><em>Animal.</em></h1>
+        <p class="page-hero-sub">
+          Raw sound. Real blends. No filter.
+        </p>
+        <div class="page-hero-actions">
+          <a href="#music-contact" class="btn btn-primary btn-lg">Work With Me →</a>
+          <a href="artists/djfacelessanimal.html" class="btn btn-ghost btn-lg">My Artist Page</a>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         ABOUT
+    ============================================================ -->
+    <section class="section section-alt" id="about" aria-labelledby="about-heading">
+      <div class="container" style="max-width:860px;">
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:3rem;align-items:center;">
+
+          <div>
+            <p class="section-label">The Sound</p>
+            <h2 id="about-heading" style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:900;line-height:1.1;margin-bottom:1.25rem;">
+              Underground.<br /><em>Built for atmosphere.</em>
+            </h2>
+            <p style="font-size:0.95rem;color:var(--text-2);line-height:1.85;margin-bottom:1rem;">
+              DJ Faceless Animal blends raw hip-hop, drill, and underground sound into high-energy mixes built for real listeners. Every track is designed for atmosphere, focus, and pressure.
+            </p>
+            <p style="font-size:0.95rem;color:var(--text-2);line-height:1.85;">
+              Not a hobbyist. Not a playlist curator. This is production work — from custom blends to original beats to full audio direction for music projects.
+            </p>
+
+            <div class="music-stat-row">
+              <div class="music-stat">
+                <p class="music-stat-num">Hip-Hop</p>
+                <p class="music-stat-label">Core Genre</p>
+              </div>
+              <div class="music-stat">
+                <p class="music-stat-num">Drill</p>
+                <p class="music-stat-label">Heavy Rotation</p>
+              </div>
+              <div class="music-stat">
+                <p class="music-stat-num">PVD</p>
+                <p class="music-stat-label">Providence, RI</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:2rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
+            <p style="font-size:0.62rem;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-3);margin-bottom:1.25rem;">What This Is</p>
+            <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0.85rem;">
+              <li style="display:flex;gap:0.75rem;align-items:flex-start;">
+                <span style="color:var(--gold-dim);font-weight:800;flex-shrink:0;margin-top:0.1em;">→</span>
+                <span style="font-size:0.9rem;color:var(--text-2);line-height:1.6;">Real blends — not auto-mixed playlists</span>
+              </li>
+              <li style="display:flex;gap:0.75rem;align-items:flex-start;">
+                <span style="color:var(--gold-dim);font-weight:800;flex-shrink:0;margin-top:0.1em;">→</span>
+                <span style="font-size:0.9rem;color:var(--text-2);line-height:1.6;">Built for pressure, atmosphere, and movement</span>
+              </li>
+              <li style="display:flex;gap:0.75rem;align-items:flex-start;">
+                <span style="color:var(--gold-dim);font-weight:800;flex-shrink:0;margin-top:0.1em;">→</span>
+                <span style="font-size:0.9rem;color:var(--text-2);line-height:1.6;">Original production alongside DJ work</span>
+              </li>
+              <li style="display:flex;gap:0.75rem;align-items:flex-start;">
+                <span style="color:var(--gold-dim);font-weight:800;flex-shrink:0;margin-top:0.1em;">→</span>
+                <span style="font-size:0.9rem;color:var(--text-2);line-height:1.6;">Available for custom projects, collabs, and bookings</span>
+              </li>
+              <li style="display:flex;gap:0.75rem;align-items:flex-start;">
+                <span style="color:var(--gold-dim);font-weight:800;flex-shrink:0;margin-top:0.1em;">→</span>
+                <span style="font-size:0.9rem;color:var(--text-2);line-height:1.6;">Underground-rooted, no filter, no compromise</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         WHAT I OFFER
+    ============================================================ -->
+    <section class="section" id="what-i-offer" aria-labelledby="offer-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <p class="section-label">What I Do</p>
+          <h2 id="offer-heading">Available<br /><em>For Hire.</em></h2>
+          <p class="section-sub">Custom music work, audio production, and creative collaboration. If you need it done right, this is where to start.</p>
+        </div>
+
+        <div class="music-offer-grid">
+
+          <article class="music-offer-item">
+            <span class="music-offer-icon" aria-hidden="true">⊕</span>
+            <p class="music-offer-title">Custom DJ Blends</p>
+            <p class="music-offer-desc">Built for a specific mood, event, or release. Tells a story through the mix — not just a tracklist stitched together.</p>
+          </article>
+
+          <article class="music-offer-item">
+            <span class="music-offer-icon" aria-hidden="true">♪</span>
+            <p class="music-offer-title">Mixes for Artists</p>
+            <p class="music-offer-desc">Got a project dropping? Need a promo mix that sounds like your era? I can build around your catalog or your sound direction.</p>
+          </article>
+
+          <article class="music-offer-item">
+            <span class="music-offer-icon" aria-hidden="true">⬡</span>
+            <p class="music-offer-title">Audio Edits</p>
+            <p class="music-offer-desc">Cuts, transitions, clean edits — whatever the track needs. Delivered clean and ready to use.</p>
+          </article>
+
+          <article class="music-offer-item">
+            <span class="music-offer-icon" aria-hidden="true">◈</span>
+            <p class="music-offer-title">Background Music for Content</p>
+            <p class="music-offer-desc">YouTube videos, vlogs, social media, brand content. Audio that sets the atmosphere without competing with your message.</p>
+          </article>
+
+          <article class="music-offer-item">
+            <span class="music-offer-icon" aria-hidden="true">◉</span>
+            <p class="music-offer-title">Creative Collaboration</p>
+            <p class="music-offer-desc">Joint projects, featured work, production partnerships. Open to working with artists, producers, and creators at any level.</p>
+          </article>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         DJ FACELESS ANIMAL RADIO — upgraded
+    ============================================================ -->
+    <section class="section rs-section" id="radio" aria-labelledby="rs-heading">
+      <div class="container rs-container">
+
+        <!-- Station Top Bar -->
+        <div class="rs-topbar">
+          <div class="rs-topbar-left">
+            <span class="on-air-badge" role="status">
+              <span class="on-air-dot" aria-hidden="true"></span>
+              On Air
+            </span>
+            <span class="rs-topbar-title">DJ Faceless Animal Radio</span>
+            <span class="eq-bars rs-topbar-eq" aria-hidden="true">
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+            </span>
+          </div>
+          <span class="rs-listener-count" aria-live="polite">
+            <span class="rs-listener-dot" aria-hidden="true">◉</span>
+            <span id="rs-listener-num">24</span> listening
+          </span>
+        </div>
+
+        <h2 id="rs-heading" class="rs-section-heading">The Station<br /><em>Is Live.</em></h2>
+        <p class="rs-section-sub">Tap in. Leave it running. Move with the mix. &nbsp;<a href="radio.html" style="color:var(--purple-bright);font-weight:700;font-size:0.85em;white-space:nowrap;">Full Radio Experience →</a></p>
+
+        <!-- Main grid: player left · chat right -->
+        <div class="rs-main-grid">
+
+          <!-- ====== PLAYER PANEL ====== -->
+          <div class="rs-player-panel">
+
+            <!-- Boombox header row -->
+            <div class="rs-player-card">
+              <div class="rs-boombox-row">
+                <img
+                  src="assets/boombox.png"
+                  class="rs-boombox-thumb"
+                  alt="DJ Faceless Animal Radio"
+                  loading="lazy"
+                />
+                <div class="rs-station-identity">
+                  <p class="rs-station-name">DJ Faceless Animal Radio</p>
+                  <p class="rs-station-tagline">Underground hip-hop · Drill · Real blends · No filter</p>
+                </div>
+              </div>
+
+              <!-- Embedded YouTube playlist -->
+              <div class="rs-embed-ratio" role="region" aria-label="DJ Faceless Animal Radio — music player">
+                <iframe
+                  id="rs-yt-player"
+                  src="https://www.youtube.com/embed/videoseries?list=PLuaOk7bBVKJSckyZeRXFsar3x_2zRkDKe&rel=0&modestbranding=1"
+                  title="DJ Faceless Animal Radio — Live Playlist"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen
+                  loading="lazy"
+                ></iframe>
+              </div>
+
+              <!-- Volume visual row -->
+              <div class="rs-vol-row" role="group" aria-label="Volume hint">
+                <span class="rs-vol-icon" aria-hidden="true">🔊</span>
+                <div class="rs-vol-track" aria-hidden="true">
+                  <div class="rs-vol-fill" id="rs-vol-fill" style="width:72%"></div>
+                  <div class="rs-vol-thumb" id="rs-vol-thumb" style="left:72%"></div>
+                </div>
+                <span class="rs-vol-label">Vol</span>
+                <span class="rs-vol-tip">Use player controls to adjust</span>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ====== CHAT PANEL ====== -->
+          <div class="rs-chat-panel">
+
+            <!-- Room selector header -->
+            <div class="rs-rooms-bar">
+              <div class="rs-rooms-scroll" role="tablist" aria-label="Chat rooms">
+
+                <button class="rs-room-tab rs-room-tab--active" role="tab" aria-selected="true"
+                  data-room="radio" data-count="24">
+                  <span class="rs-room-tab-name">Radio</span>
+                  <span class="rs-room-tab-count">24</span>
+                </button>
+
+                <button class="rs-room-tab" role="tab" aria-selected="false"
+                  data-room="underground" data-count="8">
+                  <span class="rs-room-tab-name">Mix Room</span>
+                  <span class="rs-room-tab-count">8</span>
+                </button>
+
+                <button class="rs-room-tab" role="tab" aria-selected="false"
+                  data-room="gaming" data-count="12">
+                  <span class="rs-room-tab-name">Gaming</span>
+                  <span class="rs-room-tab-count">12</span>
+                </button>
+
+                <button class="rs-room-tab" role="tab" aria-selected="false"
+                  data-room="latenight" data-count="5">
+                  <span class="rs-room-tab-name">Late Night</span>
+                  <span class="rs-room-tab-count">5</span>
+                </button>
+
+              </div>
+              <button class="rs-create-room-btn" id="rs-create-room-btn" aria-label="Create a new room">
+                + Room
+              </button>
+            </div>
+
+            <!-- Active room indicator -->
+            <div class="rs-active-room-bar">
+              <span class="on-air-dot rs-active-dot" aria-hidden="true"></span>
+              <span class="rs-active-room-name" id="rs-active-room-name">DJ Faceless Animal Radio</span>
+              <span class="rs-active-room-count">
+                <span id="rs-active-count">24</span> in the room
+              </span>
+            </div>
+
+            <!-- Chat feed -->
+            <div class="rs-chat-feed" id="rs-chat-feed" role="log" aria-label="Live chat" aria-live="polite">
+
+              <div class="rs-msg">
+                <div class="rs-avatar" aria-hidden="true">FA</div>
+                <div class="rs-msg-body">
+                  <span class="rs-handle">FacelessFanz1</span>
+                  <p class="rs-msg-text">Yo this track go hard 🔥</p>
+                </div>
+              </div>
+
+              <div class="rs-msg">
+                <div class="rs-avatar" aria-hidden="true">LS</div>
+                <div class="rs-msg-body">
+                  <span class="rs-handle">LoverOfSoundz</span>
+                  <p class="rs-msg-text">This mix is fire — Faceless never misses</p>
+                </div>
+              </div>
+
+              <div class="rs-msg">
+                <div class="rs-avatar" aria-hidden="true">MI</div>
+                <div class="rs-msg-body">
+                  <span class="rs-handle">mfiniterlames</span>
+                  <p class="rs-msg-text">Tracklist looking sick, can't wait for the uploads 🎧</p>
+                </div>
+              </div>
+
+              <div class="rs-msg">
+                <div class="rs-avatar" aria-hidden="true">NG</div>
+                <div class="rs-msg-body">
+                  <span class="rs-handle">NightGroover</span>
+                  <p class="rs-msg-text">When's the next drop? Need this in my rotation</p>
+                </div>
+              </div>
+
+              <div class="rs-msg rs-msg--system">
+                <p>Room is open. Move with the mix.</p>
+              </div>
+
+            </div>
+
+            <!-- Chat input -->
+            <div class="rs-input-bar" role="group" aria-label="Send a message">
+              <input
+                type="text"
+                class="rs-input"
+                id="rs-chat-input"
+                placeholder="Move with the mix…"
+                maxlength="300"
+                autocomplete="off"
+                aria-label="Chat message"
+              />
+              <button class="rs-send-btn" id="rs-send-btn" aria-label="Send">→</button>
+            </div>
+
+            <p class="rs-phase-note">Phase 1 · Live backend launching soon · <a href="start.html">Get early access</a></p>
+
+          </div>
+        </div>
+
+        <!-- Future direction strip -->
+        <div class="rs-future-strip" role="note">
+          <span class="rs-future-icon" aria-hidden="true">◈</span>
+          <p>Eventually creators will upload tracks, rooms will vote, and the top songs of the week will rise to the front. <strong>The station grows with the platform.</strong></p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Create Room Modal (Phase 1 shell) -->
+    <div class="rs-modal-overlay" id="rs-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="rs-modal-title">
+      <div class="rs-modal">
+        <div class="rs-modal-header">
+          <p class="rs-modal-eyebrow">Coming Soon</p>
+          <h3 id="rs-modal-title">Create Your Room</h3>
+          <button class="rs-modal-close" id="rs-modal-close" aria-label="Close modal">✕</button>
+        </div>
+        <div class="rs-modal-body">
+          <p>Room creation is part of the live platform rollout. Join the platform early and get notified when rooms open for members.</p>
+          <div class="rs-modal-room-preview">
+            <div class="rs-modal-room-card">Underground Mix Room</div>
+            <div class="rs-modal-room-card">Gaming Vibes Room</div>
+            <div class="rs-modal-room-card">Late Night Room</div>
+            <div class="rs-modal-room-card rs-modal-room-card--yours">Your Room →</div>
+          </div>
+          <a href="start.html" class="btn btn-primary" style="width:100%;text-align:center;margin-top:1.25rem;">Get My Page — Join Early</a>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ============================================================
+         MUSIC CONTACT FORM
+    ============================================================ -->
+    <section class="section" id="music-contact" aria-labelledby="mc-heading">
+      <div class="container" style="max-width:640px;">
+
+        <div class="section-header text-center">
+          <p class="section-label">Get In Touch</p>
+          <h2 id="mc-heading">Let's Work<br /><em>On Something.</em></h2>
+          <p class="section-sub">Custom mix, collab, booking, audio project — drop the details below. I'll get back within 1–2 business days.</p>
+        </div>
+
+        <div class="inquiry-wrapper" style="margin-top:2.5rem;">
+
+          <form
+            id="music-form"
+            novalidate
+            aria-label="Music inquiry form"
+          >
+            <input type="hidden" name="page" value="music" />
+
+            <div class="form-group">
+              <label class="form-label" for="mc-name">Your name <span class="form-required" aria-hidden="true">*</span></label>
+              <input class="form-input" type="text" id="mc-name" name="name" placeholder="Artist name or your name" required autocomplete="name" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mc-email">Email <span class="form-required" aria-hidden="true">*</span></label>
+              <input class="form-input" type="email" id="mc-email" name="email" placeholder="you@example.com" required autocomplete="email" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mc-type">What do you need? <span class="form-required" aria-hidden="true">*</span></label>
+              <select class="form-select" id="mc-type" name="request_type" required>
+                <option value="" disabled selected>Select one</option>
+                <option value="Custom DJ Blend">Custom DJ Blend</option>
+                <option value="Mix for My Project">Mix for My Project</option>
+                <option value="Audio Edit">Audio Edit</option>
+                <option value="Background Music for Content">Background Music for Content</option>
+                <option value="Creative Collaboration">Creative Collaboration</option>
+                <option value="Event / Show Booking">Event / Show Booking</option>
+                <option value="Something Else">Something Else</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mc-details">Tell me about it <span class="form-required" aria-hidden="true">*</span></label>
+              <textarea class="form-textarea" id="mc-details" name="details" rows="5" placeholder="What's the project, what's the vibe, what do you need and when?" required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="mc-ig">Instagram / social <span class="form-optional">(optional)</span></label>
+              <input class="form-input" type="text" id="mc-ig" name="social" placeholder="@yourhandle" autocomplete="off" />
+            </div>
+
+            <p class="form-error" id="mc-error" role="alert" aria-live="assertive"></p>
+
+            <button type="submit" class="btn btn-primary form-submit" id="mc-submit" style="width:100%;justify-content:center;">
+              <span class="form-submit-label">Send Inquiry →</span>
+              <span class="form-submit-sending" aria-hidden="true">Sending…</span>
+            </button>
+
+          </form>
+
+          <div class="inquiry-thankyou" id="mc-thankyou" role="status" aria-live="polite" style="display:none;">
+            <div class="thankyou-icon" aria-hidden="true">✓</div>
+            <h3>Got it.</h3>
+            <p>I'll review and reach back within 1–2 business days at the email you provided.</p>
+            <a href="artists/djfacelessanimal.html" class="btn btn-ghost">My Artist Page</a>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+  </main>
+
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="about.html">About</a>
+          <a href="network.html">Network</a>
+          <a href="services.html">Services</a>
+          <a href="music.html">Music</a>
+          <a href="store.html">Supply</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="drops.html">Drops</a>
+          <a href="faq.html">FAQ</a>
+          <a href="artists/djfacelessanimal.html">DJ Faceless</a>
+          <a href="start.html">Get Started Free</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved. &nbsp;·&nbsp; <a href="admin/index.html" style="color:var(--text-3);text-decoration:none;font-size:inherit;opacity:0.6;" tabindex="-1">Studio Admin</a></p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/script.js"></script>
+  <script src="assets/js/radio-widget.js" defer></script>
+  <script>
+    (function () {
+      'use strict';
+
+      function initMusicForm() {
+        var form     = document.getElementById('music-form');
+        var thankyou = document.getElementById('mc-thankyou');
+        var errorEl  = document.getElementById('mc-error');
+        var submitBtn = document.getElementById('mc-submit');
+        if (!form || !thankyou || !errorEl || !submitBtn) return;
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          if (!form.reportValidity()) return;
+
+          errorEl.textContent = '';
+          submitBtn.disabled = true;
+          submitBtn.classList.add('sending');
+
+          var data = {
+            name:         document.getElementById('mc-name').value,
+            email:        document.getElementById('mc-email').value,
+            request_type: document.getElementById('mc-type').value,
+            details:      document.getElementById('mc-details').value,
+            social:       document.getElementById('mc-ig').value,
+            page:         'music'
+          };
+
+          fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          })
+            .then(function (res) { return res.json(); })
+            .then(function (json) {
+              if (json.ok) {
+                form.style.display     = 'none';
+                thankyou.style.display = 'flex';
+                thankyou.classList.add('visible');
+              } else {
+                errorEl.textContent = json.error ||
+                  'Something went wrong. Email djfacelessanimal@gmail.com directly.';
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('sending');
+              }
+            })
+            .catch(function () {
+              errorEl.textContent =
+                'Could not send. Email djfacelessanimal@gmail.com directly.';
+              submitBtn.disabled = false;
+              submitBtn.classList.remove('sending');
+            });
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMusicForm);
+      } else {
+        initMusicForm();
+      }
+
+      /* ---- Radio Station UI (modal only — chat handled by radio-chat.js module) ---- */
+      function initRadioStation() {
+        var activeNameEl  = document.getElementById('rs-active-room-name');
+
+        /* Room name label sync on tab click */
+        var roomNames = {
+          radio:       'DJ Faceless Animal Radio',
+          underground: 'Underground Mix Room',
+          gaming:      'Gaming Vibes Room',
+          latenight:   'Late Night Room'
+        };
+        document.querySelectorAll('.rs-room-tab').forEach(function(t) {
+          t.addEventListener('click', function() {
+            var id = t.dataset.room;
+            if (activeNameEl && roomNames[id]) activeNameEl.textContent = roomNames[id];
+          });
+        });
+
+        /* ---- Modal ---- */
+        var modalOverlay = document.getElementById('rs-modal');
+        var openBtn      = document.getElementById('rs-create-room-btn');
+        var closeBtn     = document.getElementById('rs-modal-close');
+
+        function openModal() {
+          if (!modalOverlay) return;
+          modalOverlay.setAttribute('aria-hidden', 'false');
+          modalOverlay.classList.add('rs-modal--open');
+          if (closeBtn) closeBtn.focus();
+        }
+        function closeModal() {
+          if (!modalOverlay) return;
+          modalOverlay.setAttribute('aria-hidden', 'true');
+          modalOverlay.classList.remove('rs-modal--open');
+          if (openBtn) openBtn.focus();
+        }
+
+        if (openBtn) openBtn.addEventListener('click', openModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (modalOverlay) {
+          modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) closeModal();
+          });
+          document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modalOverlay.classList.contains('rs-modal--open')) closeModal();
+          });
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initRadioStation);
+      } else {
+        initRadioStation();
+      }
+    }());
+  </script>
+
+  <!-- ── Radio Chat Module (Supabase Realtime + simulation fallback) ── -->
+  <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
+  <script src="assets/js/env.js" onerror="void 0"></script>
+  <script type="module">
+    import { initRadioChat } from './assets/js/radio-chat.js'
+
+    function getSession() {
+      try { return JSON.parse(localStorage.getItem('fas_user') || 'null') } catch(e) { return null }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      initRadioChat({
+        feedEl:        document.getElementById('rs-chat-feed'),
+        inputEl:       document.getElementById('rs-chat-input'),
+        sendBtnEl:     document.getElementById('rs-send-btn'),
+        tabEls:        document.querySelectorAll('.rs-room-tab'),
+        activeCountEl: document.getElementById('rs-active-count'),
+        listenerNumEl: document.getElementById('rs-listener-num'),
+        pillNumEl:     null,
+        initialRoom:   'radio',
+        getSession:    getSession,
+        cssPrefix:     'rs',
+      })
+    })
+  </script>
+</body>
+</html>

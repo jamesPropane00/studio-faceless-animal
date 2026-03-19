@@ -1,0 +1,150 @@
+Update the Faceless Animal Studios site to clearly explain what the monthly membership includes, and add a phase-one DJ Faceless Animal Radio live chat section with a mini boombox player concept.
+
+IMPORTANT BRAND DIRECTION:
+- Keep Faceless Animal Studios as a creative ecosystem, not just a page service
+- Keep DJ Faceless Animal energy strong throughout
+- The site should feel like a growing platform for music, games, apps, creator identity, and culture
+- Keep the tone premium, underground, urban, and movement-driven
+- Do NOT make this feel like a generic hosting site or corporate SaaS page
+
+PART 1 — MONTHLY MEMBERSHIP COPY
+
+Rename or strengthen the monthly offering as:
+Faceless Platform Access — $5/month
+
+Make it clear this is not just web hosting.
+
+Explain that the monthly includes:
+- hosted creator page or artist page
+- platform username / slug
+- page stays active on the platform
+- access to studio web games
+- access to studio web apps/tools
+- creator network visibility
+- future member-only features and drops
+- ability to upgrade page/package later
+- access to platform growth as new features launch
+
+Add this positioning clearly:
+This is platform access, not just hosting.
+
+Use strong, clean copy that feels:
+- premium
+- underground
+- creative
+- ecosystem-driven
+- direct but not overly salesy
+
+Add or update a section on the homepage and pricing page called:
+What Your Monthly Gets You
+
+Make the value obvious in under 10 seconds.
+
+Also reinforce this structure clearly:
+- Faceless Platform Access = required monthly membership
+- Starter / Pro / Premium Page Packages = one-time package level
+- Custom Design Add-On = optional service add-on
+- Cash App = manual fallback only
+- Stripe = primary automated payment method
+
+PART 2 — DJ FACELESS ANIMAL RADIO (LIVE CHAT)
+
+Add a new section or feature block for:
+DJ Faceless Animal Radio (Live Chat)
+
+This is phase one only.
+Do NOT build a full real-time chat backend unless infrastructure is already ready.
+For now, create the best phase-one version with:
+- a mini boombox UI
+- a YouTube playlist embed or clear placeholder area for a playlist player
+- a live chat styled panel or room shell
+- sample or placeholder live-room energy if needed
+- strong branding that this is the radio room / community listening space
+
+Tone for the section:
+A live room for sound, reactions, and underground energy. This is the early version of a bigger system.
+
+Also add subtle future-direction copy:
+Eventually creators will be able to upload tracks, the room will vote, and the top songs of the week will rise to the front.
+
+PART 3 — BOOMBOX IMAGE INTEGRATION
+
+I am adding a custom boombox image asset for this feature.
+Use that image as the visual centerpiece of the DJ Faceless Animal Radio section.
+
+Requirements:
+- assume the image will be added as a PNG asset
+- make the layout mobile-friendly first
+- optimize the boombox placement for mobile
+- if useful, place it fixed near the bottom on mobile or inside a featured section depending on layout
+- create clean styling for the image so it feels integrated into the site and not pasted in randomly
+- preserve aspect ratio
+- keep tap/click areas practical on phones
+- make the radio section feel alive without making it too heavy or cluttered
+
+If possible, prepare the code so the boombox image can be dropped in easily by replacing a single image path.
+
+PART 4 — WHAT TO ADD FROM THE LATEST PLATFORM DIRECTION
+
+Also fold in these ideas cleanly wherever appropriate:
+
+1. Membership framing
+Make the monthly feel like membership to the ecosystem, not just a utility fee.
+
+2. Platform identity
+Reinforce that Faceless Animal Studios includes:
+- music
+- games
+- web apps
+- creator pages
+- network/community
+- store/drops
+- future radio features
+
+3. Payment clarity
+Make it obvious that:
+- Platform Access keeps users active on the platform
+- packages control how built-out the page is
+- add-ons are optional service upgrades
+
+4. Culture feel
+The radio section should feel like part of the culture and platform, not just an embed.
+This should feel like something creators want to be part of.
+
+5. Mobile-first execution
+The radio feature and membership copy must read clearly and look good on mobile before desktop.
+
+PART 5 — OPTIONAL UI DETAILS IF IT FITS CLEANLY
+
+If it improves the design without overcomplicating anything, add:
+- a small “On Air” badge
+- subtle equalizer or waveform accents
+- a “Live Chat” label
+- a compact station intro
+- a note like “tap in with the station”
+
+But do not turn it into a bloated widget.
+
+PART 6 — TECHNICAL RULES
+
+- keep everything stable
+- do not break existing flows
+- keep mobile-friendly
+- do not expose Stripe keys
+- do not add unavailable payment methods
+- keep Cash App as the manual fallback only
+- if real live chat is not ready, create a clean staged version that can later connect to backend logic
+- do not overbuild unnecessary backend for the radio feature yet
+- preserve Supabase-backed systems already in place
+
+FINAL GOAL
+
+The site should now feel like:
+- a real creative ecosystem
+- a membership-based platform
+- a cultural network
+- a place for music, games, apps, pages, and future radio/community growth
+
+The monthly should feel like platform membership.
+The radio should feel like an early but exciting feature inside the larger world of Faceless Animal Studios.
+The whole result should feel premium, underground, urban, and alive.

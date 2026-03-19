@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="description" content="Beat Tap — Platform game for Faceless Animal Studios members." />
+  <title>Beat Tap — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0a0010; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
+
+    /* ── Game HUD ── */
+    .game-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(139,92,246,0.2);
+      z-index: 100;
+    }
+    .game-nav-logo {
+      font-size: 0.8rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--purple-bright, #a78bfa);
+      text-decoration: none;
+    }
+    .game-nav-logo span { color: var(--gold, #d4af37); }
+    .game-hud {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .hud-item {
+      text-align: center;
+    }
+    .hud-label {
+      font-size: 0.56rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      display: block;
+    }
+    .hud-value {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+    }
+    .hud-value--score { color: #a78bfa; }
+    .hud-value--timer { color: #4ade80; }
+    .hud-value--timer.hud-low { color: #f87171; animation: pulse-red 0.5s ease-in-out infinite; }
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .game-back-link {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.4);
+      text-decoration: none;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .game-back-link:hover { color: #a78bfa; }
+
+    /* ── Game canvas ── */
+    #game-canvas {
+      display: block;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      touch-action: none;
+    }
+
+    /* ── Gate overlay ── */
+    #game-gate {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 2rem;
+      text-align: center;
+      z-index: 200;
+    }
+    .gate-icon { font-size: 3rem; }
+    .gate-title { font-size: 1.75rem; font-weight: 900; color: #fff; }
+    .gate-sub { font-size: 0.9rem; color: rgba(255,255,255,0.6); max-width: 340px; line-height: 1.7; }
+    .gate-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem; }
+
+    /* ── Start / Game Over screens ── */
+    #game-screen {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 2rem;
+      text-align: center;
+      z-index: 150;
+    }
+    .screen-eyebrow {
+      font-size: 0.66rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #a78bfa;
+    }
+    .screen-title { font-size: 2.5rem; font-weight: 900; color: #fff; line-height: 1.1; }
+    .screen-title em { color: #a78bfa; font-style: normal; }
+    .screen-sub { font-size: 0.9rem; color: rgba(255,255,255,0.55); max-width: 320px; line-height: 1.7; }
+    .screen-score {
+      font-size: 3rem;
+      font-weight: 900;
+      color: #a78bfa;
+      line-height: 1;
+    }
+    .screen-score-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+
+    /* Buttons */
+    .game-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.85rem 2rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      transition: transform 0.1s;
+    }
+    .game-btn:active { transform: scale(0.96); }
+    .game-btn--primary { background: #7c3aed; color: #fff; }
+    .game-btn--primary:hover { background: #8b5cf6; }
+    .game-btn--ghost { background: rgba(255,255,255,0.08); color: #fff; text-decoration: none; }
+    .game-btn--ghost:hover { background: rgba(255,255,255,0.14); }
+
+    .game-hint {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Gate (non-members) -->
+  <div id="game-gate">
+    <div class="gate-icon" aria-hidden="true">🔒</div>
+    <h1 class="gate-title">Members Only</h1>
+    <p class="gate-sub">Beat Tap is available to active Faceless Animal Studios platform members. Get the Access plan to unlock all games and apps.</p>
+    <div class="gate-actions">
+      <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="game-btn game-btn--primary" target="_blank" rel="noopener">Get Access — $5/mo →</a>
+      <a href="games.html" class="game-btn game-btn--ghost">← Back to Games</a>
+    </div>
+    <p class="game-hint">Already a member? <a href="login.html?redirect=game-beat.html" style="color:#a78bfa;font-size:inherit;font-family:inherit;text-transform:uppercase;letter-spacing:inherit;">Sign In →</a></p>
+  </div>
+
+  <!-- Canvas -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Nav HUD -->
+  <div class="game-nav" id="game-nav" style="display:none;" role="banner">
+    <a href="games.html" class="game-back-link">← Games</a>
+    <div class="game-hud">
+      <div class="hud-item">
+        <span class="hud-label">Score</span>
+        <span class="hud-value hud-value--score" id="hud-score" aria-live="polite">0</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Time</span>
+        <span class="hud-value hud-value--timer" id="hud-timer" aria-live="polite">60</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Streak</span>
+        <span class="hud-value" id="hud-streak" style="color:#fbbf24;">0</span>
+      </div>
+    </div>
+    <a href="index.html" class="game-nav-logo">FA <span>Studios</span></a>
+  </div>
+
+  <!-- Start screen -->
+  <div id="game-screen">
+    <p class="screen-eyebrow">Platform Game — Members Only</p>
+    <h1 class="screen-title">Beat<br /><em>Tap.</em></h1>
+    <p class="screen-sub">Circles appear. Tap them before they fade. Move fast. Build your streak. 60 seconds.</p>
+    <button class="game-btn game-btn--primary" id="start-btn">Play →</button>
+    <p class="game-hint">Tap or click the circles</p>
+  </div>
+
+  <script src="assets/script.js"></script>
+  <script src="assets/js/access-gate.js"></script>
+  <script>
+    (function () {
+
+      /* ── Gate logic ── */
+      var gate = document.getElementById('game-gate');
+      var nav  = document.getElementById('game-nav');
+
+      function unlockGame() {
+        if (gate) gate.style.display = 'none';
+        if (nav)  nav.style.display = '';
+      }
+
+      /* Use shared FAS.isPaidMember() (loaded via access-gate.js) */
+      if (FAS.isPaidMember()) {
+        unlockGame();
+      }
+
+      /* ── Canvas setup ── */
+      var canvas  = document.getElementById('game-canvas');
+      var ctx     = canvas.getContext('2d');
+      var screen  = document.getElementById('game-screen');
+      var startBtn = document.getElementById('start-btn');
+      var hudScore = document.getElementById('hud-score');
+      var hudTimer = document.getElementById('hud-timer');
+      var hudStreak = document.getElementById('hud-streak');
+
+      function resize() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      /* ── Game state ── */
+      var score   = 0;
+      var streak  = 0;
+      var timeLeft = 60;
+      var circles = [];
+      var running = false;
+      var timerInterval = null;
+      var spawnInterval = null;
+      var animId = null;
+      var NAVBAR_H = 56;
+
+      var COLORS = [
+        { fill: 'rgba(124,58,237,0.85)',  ring: '#a78bfa' },
+        { fill: 'rgba(212,175,55,0.8)',   ring: '#fbbf24' },
+        { fill: 'rgba(239,68,68,0.8)',    ring: '#f87171' },
+        { fill: 'rgba(16,185,129,0.75)',  ring: '#34d399' },
+        { fill: 'rgba(59,130,246,0.8)',   ring: '#60a5fa' }
+      ];
+
+      function spawnCircle() {
+        var R = Math.min(canvas.width, canvas.height) * 0.08;
+        R = Math.max(32, Math.min(R, 58));
+        var margin = R + 10;
+        var x = margin + Math.random() * (canvas.width  - 2 * margin);
+        var y = NAVBAR_H + margin + Math.random() * (canvas.height - NAVBAR_H - 2 * margin);
+        var color = COLORS[Math.floor(Math.random() * COLORS.length)];
+        var life = Math.max(1800, 2800 - score * 8);
+        circles.push({ x: x, y: y, r: R, color: color, born: performance.now(), life: life, hit: false, dead: false });
+      }
+
+      function updateScore(delta, hit) {
+        score = Math.max(0, score + delta);
+        if (hit) { streak++; } else { streak = 0; }
+        if (hudScore) hudScore.textContent = score;
+        if (hudStreak) hudStreak.textContent = streak;
+      }
+
+      function draw(now) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        /* Background gradient */
+        var bg = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        bg.addColorStop(0, '#060010');
+        bg.addColorStop(1, '#0a0020');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        var alive = [];
+        circles.forEach(function(c) {
+          var age  = now - c.born;
+          var frac = Math.min(age / c.life, 1);
+
+          if (c.hit) {
+            /* Burst animation */
+            var scale = 1 + (age - c.hitAt) * 0.006;
+            var alpha = Math.max(0, 1 - (age - c.hitAt) * 0.006);
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = c.color.ring;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.r * scale, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+            if (age - c.hitAt < 300) alive.push(c);
+            return;
+          }
+
+          if (frac >= 1) { return; } /* Expired, miss */
+
+          var alpha = 1 - frac;
+
+          /* Ring track */
+          ctx.save();
+          ctx.globalAlpha = 0.18;
+          ctx.strokeStyle = c.color.ring;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+
+          /* Countdown ring */
+          var startAngle = -Math.PI / 2;
+          var endAngle   = startAngle + Math.PI * 2 * (1 - frac);
+          ctx.save();
+          ctx.globalAlpha = 0.9;
+          ctx.strokeStyle = c.color.ring;
+          ctx.lineWidth = 3;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.r, startAngle, endAngle);
+          ctx.stroke();
+          ctx.restore();
+
+          /* Fill circle */
+          ctx.save();
+          ctx.globalAlpha = alpha * 0.85;
+          var grd = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r);
+          grd.addColorStop(0, c.color.fill.replace('0.85', '0.95').replace('0.8', '0.95').replace('0.75', '0.92'));
+          grd.addColorStop(1, c.color.fill);
+          ctx.fillStyle = grd;
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.r - 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          /* Pulse inner dot */
+          var pulse = 0.4 + 0.3 * Math.sin(now * 0.006);
+          ctx.save();
+          ctx.globalAlpha = alpha * pulse;
+          ctx.fillStyle = '#fff';
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.r * 0.18, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          alive.push(c);
+        });
+
+        circles = alive;
+
+        if (running) animId = requestAnimationFrame(draw);
+      }
+
+      function hitTest(px, py) {
+        var now = performance.now();
+        for (var i = circles.length - 1; i >= 0; i--) {
+          var c = circles[i];
+          if (c.hit) continue;
+          var frac = (now - c.born) / c.life;
+          if (frac >= 1) continue;
+          var dx = px - c.x, dy = py - c.y;
+          if (dx * dx + dy * dy <= c.r * c.r) {
+            c.hit   = true;
+            c.hitAt = now - c.born;
+            c.born  = now;
+            var bonus = streak >= 5 ? 20 : 10;
+            updateScore(bonus, true);
+            return true;
+          }
+        }
+        updateScore(-2, false);
+        return false;
+      }
+
+      function onTap(e) {
+        if (!running) return;
+        e.preventDefault();
+        var rect = canvas.getBoundingClientRect();
+        var touches = e.changedTouches || [{ clientX: e.clientX, clientY: e.clientY }];
+        Array.prototype.forEach.call(touches, function(t) {
+          hitTest(t.clientX - rect.left, t.clientY - rect.top);
+        });
+      }
+
+      canvas.addEventListener('click',     onTap, { passive: false });
+      canvas.addEventListener('touchend',  onTap, { passive: false });
+
+      function showGameOver() {
+        running = false;
+        clearInterval(timerInterval);
+        clearInterval(spawnInterval);
+        cancelAnimationFrame(animId);
+
+        if (screen) {
+          screen.innerHTML =
+            '<p class="screen-eyebrow">Game Over</p>' +
+            '<div style="margin:0.5rem 0;"><p class="screen-score-label">Your Score</p><p class="screen-score">' + score + '</p></div>' +
+            '<p class="screen-sub">Streak: ' + streak + ' · Time up. Move with the mix.</p>' +
+            '<button class="game-btn game-btn--primary" id="replay-btn">Play Again →</button>' +
+            '<a href="games.html" class="game-btn game-btn--ghost">← Back to Games</a>';
+          screen.style.display = '';
+          var replayBtn = document.getElementById('replay-btn');
+          if (replayBtn) replayBtn.addEventListener('click', startGame);
+        }
+      }
+
+      function startGame() {
+        score    = 0;
+        streak   = 0;
+        timeLeft = 60;
+        circles  = [];
+        running  = true;
+        if (hudScore)  hudScore.textContent  = '0';
+        if (hudTimer)  { hudTimer.textContent = '60'; hudTimer.classList.remove('hud-low'); }
+        if (hudStreak) hudStreak.textContent  = '0';
+        if (screen)    screen.style.display   = 'none';
+
+        clearInterval(timerInterval);
+        clearInterval(spawnInterval);
+        cancelAnimationFrame(animId);
+
+        var spawnDelay = 1400;
+        spawnInterval = setInterval(function() {
+          if (!running) return;
+          spawnCircle();
+          spawnDelay = Math.max(700, spawnDelay - 12);
+        }, spawnDelay);
+
+        timerInterval = setInterval(function() {
+          timeLeft--;
+          if (hudTimer) {
+            hudTimer.textContent = timeLeft;
+            if (timeLeft <= 10) hudTimer.classList.add('hud-low');
+          }
+          if (timeLeft <= 0) showGameOver();
+        }, 1000);
+
+        spawnCircle();
+        spawnCircle();
+        animId = requestAnimationFrame(draw);
+      }
+
+      if (startBtn) startBtn.addEventListener('click', startGame);
+
+    }());
+  </script>
+</body>
+</html>

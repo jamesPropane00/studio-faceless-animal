@@ -1,0 +1,8 @@
+{
+  "name": "faceless-animal-studios",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @workspace/studio run dev"
+  }
+}

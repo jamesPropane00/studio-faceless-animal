@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Faceless Animal Studios — Platform Games. Free games for everyone, member games for subscribers." />
+  <title>Games — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+  <style>
+    .upsell-banner {
+      background: linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(109,40,217,0.08) 100%);
+      border: 1px solid rgba(139,92,246,0.4);
+      border-radius: 18px;
+      padding: 2.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin: 2.5rem 0;
+    }
+    .upsell-icon { font-size: 2.5rem; flex-shrink: 0; }
+    .upsell-body { flex: 1; min-width: 220px; }
+    .upsell-eyebrow {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--purple-bright);
+      margin: 0 0 0.4rem;
+    }
+    .upsell-title { font-size: 1.35rem; font-weight: 900; color: var(--text); margin: 0 0 0.5rem; }
+    .upsell-desc  { font-size: 0.84rem; color: var(--text-2); line-height: 1.7; margin: 0 0 1rem; }
+    .upsell-perks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .upsell-perk {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-2);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 0.25rem 0.7rem;
+    }
+    .upsell-perk-check { color: #4ade80; }
+    .upsell-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .upsell-price-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--purple);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      flex-shrink: 0;
+      min-width: 100px;
+      text-align: center;
+    }
+    .upsell-price-amount { font-size: 1.75rem; font-weight: 900; color: #fff; line-height: 1; }
+    .upsell-price-period { font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+
+    .free-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(74,222,128,0.15);
+      border: 1px solid rgba(74,222,128,0.3);
+      color: #4ade80;
+      font-size: 0.62rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
+    }
+
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 2.5rem 0 2rem;
+    }
+    .section-divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+    .section-divider-label {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="games.html" aria-current="page">Games</a></li>
+          <li><a href="music.html">Music</a></li>
+          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="games.html" aria-current="page">Games</a>
+    <a href="music.html">Music</a>
+    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="about.html">About</a>
+  </div>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="page-hero" aria-label="Games hero">
+      <div class="page-hero-glow" aria-hidden="true"></div>
+      <div class="container">
+        <p class="page-hero-eyebrow">
+          <span class="eyebrow-dot" aria-hidden="true"></span>
+          Faceless Animal Studios · Platform Games
+        </p>
+        <h1 class="page-hero-title">Play Free.<br /><em>Unlock More.</em></h1>
+        <p class="page-hero-sub">Jump in with no account. Add the $5/month Access plan and unlock the full game library — Beat Tap, Block Dash, and every new drop.</p>
+        <div class="page-hero-actions">
+          <a href="#free-games" class="btn btn-primary btn-lg">Play Free →</a>
+          <a href="#member-games" class="btn btn-ghost btn-lg">$5/mo Games Access</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="free-games" aria-labelledby="free-games-heading">
+      <div class="container">
+
+        <!-- FREE GAMES -->
+        <div class="section-header">
+          <p class="section-label">No Account Needed</p>
+          <h2 id="free-games-heading">Free<br /><em>Games.</em></h2>
+          <p class="section-sub">Jump straight in. These games are open to everyone on the platform — no login, no payment, no barrier.</p>
+        </div>
+
+        <div class="game-grid" role="list">
+
+          <!-- Quick Tap — Free -->
+          <article class="game-card game-card--live" role="listitem" aria-label="Quick Tap — Free to Play">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#0a1a0a,#0a3a0a);">
+              ⚡
+            </div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title">Quick Tap</h3>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Live Now</span>
+                  <span class="free-badge">✓ Free</span>
+                </div>
+              </div>
+              <p class="game-card-desc">How fast are you? A target appears — tap it the instant you see it. 5 rounds, fastest average wins. No signup needed.</p>
+              <div class="game-card-footer">
+                <a href="game-quick.html" class="btn btn-primary" style="font-size:0.78rem;">Play Free →</a>
+                <span style="font-size:0.7rem;color:var(--text-3);">Mobile + Desktop</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Word Drop — Free -->
+          <article class="game-card game-card--live" role="listitem" aria-label="Word Drop — Free to Play">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#1a0a0a,#3a1a0a);">
+              🔤
+            </div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title">Word Drop</h3>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Live Now</span>
+                  <span class="free-badge">✓ Free</span>
+                </div>
+              </div>
+              <p class="game-card-desc">Hip-hop and music words — scrambled. Unscramble them before the clock runs out. 10 rounds. All culture, no filler.</p>
+              <div class="game-card-footer">
+                <a href="game-word.html" class="btn btn-primary" style="font-size:0.78rem;">Play Free →</a>
+                <span style="font-size:0.7rem;color:var(--text-3);">Mobile + Desktop</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Number Rush — Free -->
+          <article class="game-card game-card--live" role="listitem" aria-label="Number Rush — Free to Play">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#001a1a,#003030);">
+              🔢
+            </div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title">Number Rush</h3>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Live Now</span>
+                  <span class="free-badge">✓ Free</span>
+                </div>
+              </div>
+              <p class="game-card-desc">Click numbers in order as fast as possible. Sounds easy — gets chaotic fast. Brain speed test disguised as a game.</p>
+              <div class="game-card-footer">
+                <a href="game-rush.html" class="btn btn-primary" style="font-size:0.78rem;">Play Free →</a>
+                <span style="font-size:0.7rem;color:var(--text-3);">Mobile + Desktop</span>
+              </div>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- UPSELL BANNER — shown only to guests / free accounts -->
+        <div class="upsell-banner" id="member-games" role="complementary" aria-label="Access plan upsell">
+          <div class="upsell-icon" aria-hidden="true">🎮</div>
+          <div class="upsell-body">
+            <p class="upsell-eyebrow">Access Plan — $5 / month</p>
+            <h2 class="upsell-title">Unlock the full game library.</h2>
+            <p class="upsell-desc">Five bucks a month opens every game on the platform — Beat Tap now, Block Dash when it drops, and every new release from here on out. Cancel any time.</p>
+            <div class="upsell-perks">
+              <span class="upsell-perk"><span class="upsell-perk-check">✓</span> Beat Tap — live now</span>
+              <span class="upsell-perk"><span class="upsell-perk-check">✓</span> Block Dash — coming soon</span>
+              <span class="upsell-perk"><span class="upsell-perk-check">✓</span> Sound Drop &amp; Night Crawler</span>
+              <span class="upsell-perk"><span class="upsell-perk-check">✓</span> Every new game at launch</span>
+              <span class="upsell-perk"><span class="upsell-perk-check">✓</span> Cancel any time</span>
+            </div>
+            <div class="upsell-actions">
+              <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="btn btn-primary" target="_blank" rel="noopener">Get Access — $5/mo →</a>
+              <a href="pricing.html" class="btn btn-ghost">See All Plans</a>
+            </div>
+          </div>
+          <div class="upsell-price-pill" aria-label="$5 per month">
+            <span class="upsell-price-amount">$5</span>
+            <span class="upsell-price-period">/ month</span>
+          </div>
+        </div>
+
+        <!-- GATED GAMES — unlocked for Access plan and above -->
+        <div class="section-divider" aria-hidden="true">
+          <div class="section-divider-line"></div>
+          <span class="section-divider-label">Access Plan Required Below</span>
+          <div class="section-divider-line"></div>
+        </div>
+
+        <div class="game-grid" role="list">
+
+          <!-- Beat Tap — Access Required — live -->
+          <article class="game-card game-card--live gated-card" role="listitem" aria-label="Beat Tap — Access Required">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#1a0a2e,#2d0a4e);">
+              🥁
+            </div>
+            <div id="beat-tap-gate" class="gated-overlay" aria-label="Access plan required">
+              <span class="gated-overlay-icon" aria-hidden="true">🔒</span>
+              <p class="gated-overlay-title">Access Plan Required</p>
+              <p class="gated-overlay-sub">$5/month — cancel any time.</p>
+              <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="btn btn-primary" style="font-size:0.78rem;margin-top:0.25rem;" target="_blank" rel="noopener">Get Access →</a>
+            </div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title">Beat Tap</h3>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Live Now</span>
+                  <span class="access-tag access-tag--member">Access Plan</span>
+                </div>
+              </div>
+              <p class="game-card-desc">Tap the beat circles before they disappear. Rhythm-based. Fast. Underground energy. Mobile-first — made for one-handed play.</p>
+              <div class="game-card-footer">
+                <a href="game-beat.html" class="btn btn-primary" style="font-size:0.78rem;" id="beat-tap-link">Play Now →</a>
+                <span style="font-size:0.7rem;color:var(--text-3);">Mobile + Desktop</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Block Dash — Access Required — In Dev -->
+          <article class="game-card gated-card" role="listitem" aria-label="Block Dash — Access Required">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#0a1a2e,#0a2e1a);">
+              🏃
+            </div>
+            <div class="gated-overlay" aria-label="Access plan required — in development">
+              <span class="gated-overlay-icon" aria-hidden="true">🔒</span>
+              <p class="gated-overlay-title">Access Plan Required</p>
+              <p class="gated-overlay-sub">Launching soon. Lock in $5/mo now.</p>
+              <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="btn btn-primary" style="font-size:0.78rem;margin-top:0.25rem;" target="_blank" rel="noopener">Get Access →</a>
+            </div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title">Block Dash</h3>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--dev"><span class="status-tag-dot" aria-hidden="true"></span>In Dev</span>
+                  <span class="access-tag access-tag--member">Access Plan</span>
+                </div>
+              </div>
+              <p class="game-card-desc">Dodge. Dash. Survive. A side-scroller built for platform members with increasing difficulty and platform-branded obstacles.</p>
+              <div class="game-card-footer">
+                <span class="btn btn-ghost" style="font-size:0.78rem;opacity:0.5;cursor:not-allowed;" aria-disabled="true">In Development</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Sound Drop — Access Required -->
+          <article class="game-card gated-card" role="listitem" aria-label="Sound Drop — Access Required">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#1a1a0a,#2e2a0a);">
+              🎵
+            </div>
+            <div class="gated-overlay" aria-label="Access plan required">
+              <span class="gated-overlay-icon" aria-hidden="true">🔒</span>
+              <p class="gated-overlay-title">Access Plan Required</p>
+              <p class="gated-overlay-sub">$5/month unlocks this and every game.</p>
+              <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="btn btn-primary" style="font-size:0.78rem;margin-top:0.25rem;" target="_blank" rel="noopener">Get Access →</a>
+            </div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title">Sound Drop</h3>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--soon">Coming Soon</span>
+                  <span class="access-tag access-tag--member">Access Plan</span>
+                </div>
+              </div>
+              <p class="game-card-desc">Drop sounds into a live beat sequence. Build a track. Share your creation. Part game, part music tool. Built for the culture.</p>
+              <div class="game-card-footer">
+                <span class="btn btn-ghost" style="font-size:0.78rem;opacity:0.5;cursor:not-allowed;" aria-disabled="true">Coming Soon</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Night Crawler — Access Required -->
+          <article class="game-card gated-card" role="listitem" aria-label="Night Crawler — Access Required">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#0a0a1a,#1a0a1a);">
+              🌙
+            </div>
+            <div class="gated-overlay" aria-label="Access plan required">
+              <span class="gated-overlay-icon" aria-hidden="true">🔒</span>
+              <p class="gated-overlay-title">Access Plan Required</p>
+              <p class="gated-overlay-sub">$5/month unlocks this and every game.</p>
+              <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="btn btn-primary" style="font-size:0.78rem;margin-top:0.25rem;" target="_blank" rel="noopener">Get Access →</a>
+            </div>
+            <div class="game-card-body">
+              <div class="game-card-top">
+                <h3 class="game-card-title">Night Crawler</h3>
+                <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+                  <span class="status-tag status-tag--soon">Coming Soon</span>
+                  <span class="access-tag access-tag--member">Access Plan</span>
+                </div>
+              </div>
+              <p class="game-card-desc">Navigate the underground city at night. Atmosphere-first. Dark. Platform exclusive. Built for late-night energy and extended sessions.</p>
+              <div class="game-card-footer">
+                <span class="btn btn-ghost" style="font-size:0.78rem;opacity:0.5;cursor:not-allowed;" aria-disabled="true">Coming Soon</span>
+              </div>
+            </div>
+          </article>
+
+        </div>
+
+        <div style="text-align:center;margin-top:3rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.05);">
+          <p style="font-size:0.84rem;color:var(--text-2);margin-bottom:1.25rem;">The game library grows with the platform. Access members get every new drop automatically.</p>
+          <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="btn btn-primary btn-lg" target="_blank" rel="noopener">Get Access — $5/month →</a>
+          <a href="apps.html" class="btn btn-ghost btn-lg" style="margin-left:1rem;">See Apps</a>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="about.html">About</a>
+          <a href="network.html">Network</a>
+          <a href="directory.html">Directory</a>
+          <a href="games.html">Games</a>
+          <a href="apps.html">Apps</a>
+          <a href="music.html">Music</a>
+          <a href="radio.html">Radio</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="start.html">Get Started Free</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/script.js"></script>
+  <script src="assets/js/access-gate.js"></script>
+  <script src="assets/js/radio-widget.js" defer></script>
+  <script>
+    /* ── Games gating — runs after script.js sets body classes ── */
+    (function () {
+      function applyGate() {
+        /* Use FAS.isPaidMember() — reads fas_user, handles all paid plan slugs */
+        var hasAccess = FAS.isPaidMember();
+
+        /* --- Beat Tap (the only live gated game) --- */
+        var gate = document.getElementById('beat-tap-gate');
+        var link = document.getElementById('beat-tap-link');
+
+        if (hasAccess) {
+          /* Unlock: hide overlay, show play button */
+          if (gate) gate.style.display = 'none';
+          if (link) { link.href = 'game-beat.html'; link.style.display = ''; }
+
+          /* Hide upsell banner for paying members */
+          var upsell = document.getElementById('member-games');
+          if (upsell) upsell.style.display = 'none';
+        } else {
+          /* Locked: keep overlay, hide play button */
+          if (link) link.style.display = 'none';
+        }
+      }
+
+      /* Run after DOM + script.js are ready */
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyGate);
+      } else {
+        applyGate();
+      }
+    }());
+  </script>
+</body>
+</html>

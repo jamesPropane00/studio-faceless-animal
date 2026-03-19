@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="KOLD Visual — Street photographer and digital artist based in Providence, Rhode Island. Dark, high-contrast visual work across urban environments. Part of the Faceless Animal Studios platform." />
+  <title>KOLD Visual — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body class="artist-page"
+  data-page-type="creator"
+  data-creator-id="koldvisual"
+  data-supabase-table="page_data"
+  data-static="true"
+>
+
+  <!--
+    ═══════════════════════════════════════════════════════════════
+    [SUPABASE CONNECT] — Dynamic page data
+    ═══════════════════════════════════════════════════════════════
+    This page is currently static HTML. When Supabase is connected,
+    page content will be pulled from the `page_data` table and
+    rendered via a JS template. Static HTML will be the fallback.
+
+    DB lookup on load:
+      supabase.from('page_data')
+        .select('*')
+        .eq('username', 'koldvisual')
+        .single()
+
+    Fields used on this page and their page_data column:
+      display_name      → h1.ap-hero-heading
+      tagline           → p.ap-hero-sub
+      hero_sub          → p.ap-hero-sub--dim
+      bio_paragraphs    → about section paragraphs (JSONB array)
+      quick_info        → check-list items (JSONB array)
+      stats             → stat-strip values (JSONB [{value, label}])
+      links             → platform-row list (JSONB [{platform, url, label}])
+      works             → sc-work-card grid (JSONB [{type, title, desc}])
+      accent_color      → CSS variable override
+      plan_tier         → controls powered-by bar visibility
+
+    Profile image:
+      supabase.storage.from('profile-images')
+        .getPublicUrl('koldvisual/{filename}')
+    ═══════════════════════════════════════════════════════════════
+  -->
+
+  <!-- ============================================================
+       NAV — shows creator's own name in logo
+  ============================================================ -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="#hero" class="navbar-logo">KOLD <span>Visual</span></a>
+        <ul class="navbar-links" role="list">
+          <li><a href="#about">About</a></li>
+          <li><a href="#work">Work</a></li>
+          <li><a href="#links">Links</a></li>
+          <li><a href="../network.html">Network</a></li>
+          <li><a href="../index.html" class="nav-cta">← Studio</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="#about">About</a>
+    <a href="#work">Work</a>
+    <a href="#links">Links</a>
+    <a href="../network.html">Network</a>
+    <a href="../index.html">← Studio</a>
+  </div>
+
+  <main>
+
+    <!-- Sample page notice — explains context to potential customers -->
+    <div class="container" style="padding-top:calc(var(--nav-h) + 1.25rem);padding-bottom:0;">
+      <div class="sample-notice">
+        <strong style="color:var(--text-2);">Sample Creator Page</strong> — This is what a Free Presence page looks like on the Faceless Animal Studios platform. Real layout, real content — placeholder media until yours is uploaded. <a href="../start.html" style="color:var(--gold);font-weight:700;">Get your own page free →</a>
+      </div>
+    </div>
+
+
+    <!-- ============================================================
+         HERO
+    ============================================================ -->
+    <section class="ap-hero" id="hero" aria-label="KOLD Visual hero">
+      <div class="ap-hero-glow" aria-hidden="true" style="background:radial-gradient(ellipse at 35% 50%, rgba(180,60,40,0.07) 0%, transparent 65%);"></div>
+      <div class="ap-hero-grain" aria-hidden="true"></div>
+
+      <div class="container ap-hero-inner">
+        <div class="ap-hero-content">
+
+          <div class="ap-hero-eyebrow" style="color:rgba(220,100,80,0.85);">
+            <span class="eyebrow-dot" aria-hidden="true" style="background:#dc6450;box-shadow:0 0 6px rgba(220,100,80,0.5);"></span>
+            Faceless Animal Studios · Providence, RI
+          </div>
+
+          <h1 class="ap-hero-heading">
+            KOLD<br />
+            <em style="color:#dc6450;">Visual</em>
+          </h1>
+
+          <p class="ap-hero-sub">Dark frames. Urban pressure. Still images that move.</p>
+          <p class="ap-hero-sub ap-hero-sub--dim">Street photographer and digital artist working in high-contrast black &amp; white and color-graded urban environments.</p>
+
+          <p class="ap-hero-location">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12" aria-hidden="true" style="flex-shrink:0;opacity:0.65"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            Providence, Rhode Island
+          </p>
+
+          <div class="ap-hero-actions">
+            <a href="#work" class="btn btn-primary btn-lg" style="background:linear-gradient(135deg,#a02818,#dc6450);border:none;">View My Work</a>
+            <a href="#links" class="btn btn-ghost btn-lg">Follow Me</a>
+          </div>
+
+          <div class="ap-hero-tags" aria-label="Creator type tags">
+            <span class="tag">Visual Artist</span>
+            <span class="tag">Photographer</span>
+            <span class="tag">Digital Art</span>
+            <span class="tag">Rhode Island</span>
+          </div>
+
+          <!-- Platform links in hero -->
+          <div class="ap-hero-socials" aria-label="Follow on social">
+            <a href="javascript:void(0)" class="social-btn social-btn--instagram creator-link--soon" aria-disabled="true" tabindex="-1" title="Instagram — coming soon" style="opacity:0.4;">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+              Instagram
+            </a>
+            <a href="javascript:void(0)" class="social-btn social-btn--tiktok creator-link--soon" aria-disabled="true" tabindex="-1" title="TikTok — coming soon" style="opacity:0.4;">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+              TikTok
+            </a>
+            <a href="javascript:void(0)" class="social-btn creator-link--soon" aria-disabled="true" tabindex="-1" title="Behance — coming soon" style="background:rgba(30,100,220,0.1);border-color:rgba(30,100,220,0.2);color:rgba(80,140,255,0.8);opacity:0.4;">
+              Be
+            </a>
+          </div>
+
+        </div>
+
+        <!-- Profile image placeholder — right side of hero -->
+        <div class="ap-hero-visual" aria-hidden="true">
+          <div class="sc-hero-avatar" aria-label="Profile photo placeholder">KV</div>
+        </div>
+      </div>
+
+      <!-- Marquee strip -->
+      <div class="ap-hero-marquee" aria-hidden="true">
+        <div class="marquee-track">
+          <span>Dark Frames</span><span class="marquee-dot">·</span>
+          <span>Urban Pressure</span><span class="marquee-dot">·</span>
+          <span>Still Images</span><span class="marquee-dot">·</span>
+          <span>Providence</span><span class="marquee-dot">·</span>
+          <span>KOLD Visual</span><span class="marquee-dot">·</span>
+          <span>Dark Frames</span><span class="marquee-dot">·</span>
+          <span>Urban Pressure</span><span class="marquee-dot">·</span>
+          <span>Still Images</span><span class="marquee-dot">·</span>
+          <span>Providence</span><span class="marquee-dot">·</span>
+          <span>KOLD Visual</span><span class="marquee-dot">·</span>
+          <span>Dark Frames</span><span class="marquee-dot">·</span>
+          <span>Urban Pressure</span><span class="marquee-dot">·</span>
+          <span>Still Images</span><span class="marquee-dot">·</span>
+          <span>Providence</span><span class="marquee-dot">·</span>
+          <span>KOLD Visual</span><span class="marquee-dot">·</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         ABOUT
+    ============================================================ -->
+    <section class="section section-alt" id="about" aria-labelledby="about-heading">
+      <div class="container">
+        <div class="ap-bio">
+
+          <div class="ap-bio-text">
+            <p class="section-label">About</p>
+            <h2 id="about-heading">Three Years Shooting<br /><em>What Other People Walk Past.</em></h2>
+
+            <p>
+              KOLD Visual is the street photography and digital art project of a Providence-based visual artist who started shooting on a second-hand Canon in 2022 and hasn't put the camera down since. The work is dark, intentional, and shot mostly at night — alleys, intersections, storefronts, faces that don't know they're being watched.
+            </p>
+            <p>
+              The visual identity is high-contrast monochrome with occasional color-graded series. No filters. No presets. Everything processed in-house with a consistent look that builds across series. The goal is work that feels like a record — something that shows the city at a specific moment in time.
+            </p>
+            <p>
+              Currently building out a print series and accepting commission work for editorial, event, and brand photography. All inquiries through email or DM.
+            </p>
+
+            <div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;">
+              <a href="mailto:koldvisual@example.com?subject=Commission%20Inquiry" class="btn btn-primary" style="background:linear-gradient(135deg,#a02818,#dc6450);border:none;">Commission Work</a>
+              <a href="#links" class="btn btn-ghost">Find Me Online</a>
+            </div>
+          </div>
+
+          <div>
+            <!-- Quick info panel -->
+            <div style="background:var(--bg-3);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:1.75rem 2rem;margin-bottom:1.5rem;">
+              <p class="section-label" style="margin-bottom:1.1rem;">Quick Info</p>
+              <ul class="check-list">
+                <li>Street photography — urban, night, candid</li>
+                <li>Digital art — dark abstract, color theory</li>
+                <li>Providence, Rhode Island · Available remotely</li>
+                <li>3+ years active, 50+ published works</li>
+                <li>Currently: print series + commission queue open</li>
+              </ul>
+            </div>
+
+            <!-- Stat strip -->
+            <div class="stat-strip" style="grid-template-columns:repeat(3,1fr);">
+              <div class="stat-item">
+                <p class="stat-value" style="color:#dc6450;">3+</p>
+                <p class="stat-label">Years Active</p>
+              </div>
+              <div class="stat-item">
+                <p class="stat-value" style="color:#dc6450;">50+</p>
+                <p class="stat-label">Published Works</p>
+              </div>
+              <div class="stat-item">
+                <p class="stat-value" style="color:#dc6450;">RI</p>
+                <p class="stat-label">Based</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         WORK / MEDIA
+    ============================================================ -->
+    <section class="section" id="work" aria-labelledby="work-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <p class="section-label" style="color:#dc6450;">Work</p>
+          <h2 id="work-heading">What I've<br /><em>Shot.</em></h2>
+          <p class="section-sub">Three ongoing series — street photography, digital art, and editorial work. Add your own images and descriptions once your page is built.</p>
+        </div>
+
+        <!-- 3-card work grid -->
+        <div class="sc-work-grid" role="list">
+
+          <article class="sc-work-card" role="listitem">
+            <div class="sc-work-img sc-work-img--photo">
+              <span class="sc-work-img-badge sc-work-img-badge--photo">Photo Series</span>
+              <span class="sc-work-img-label" aria-hidden="true">01</span>
+              <span class="sc-work-img-ph">Image placeholder</span>
+            </div>
+            <div class="sc-work-body">
+              <p class="sc-work-series">Series 01 · Street</p>
+              <p class="sc-work-title">Providence After Midnight</p>
+              <p class="sc-work-desc">Ongoing street photography series shot between 11pm and 4am across Providence's industrial corridors and downtown blocks. High-contrast monochrome.</p>
+            </div>
+          </article>
+
+          <article class="sc-work-card" role="listitem">
+            <div class="sc-work-img sc-work-img--digital">
+              <span class="sc-work-img-badge sc-work-img-badge--digital">Digital Art</span>
+              <span class="sc-work-img-label" aria-hidden="true">02</span>
+              <span class="sc-work-img-ph">Image placeholder</span>
+            </div>
+            <div class="sc-work-body">
+              <p class="sc-work-series">Series 02 · Digital</p>
+              <p class="sc-work-title">Noise Floor</p>
+              <p class="sc-work-desc">Abstract digital compositions built from degraded street photography — grain, blur, and color theory applied to source images until they become something new.</p>
+            </div>
+          </article>
+
+          <article class="sc-work-card" role="listitem">
+            <div class="sc-work-img sc-work-img--editorial">
+              <span class="sc-work-img-badge sc-work-img-badge--editorial">Editorial</span>
+              <span class="sc-work-img-label" aria-hidden="true">03</span>
+              <span class="sc-work-img-ph">Image placeholder</span>
+            </div>
+            <div class="sc-work-body">
+              <p class="sc-work-series">Series 03 · Editorial</p>
+              <p class="sc-work-title">Portrait Work — Open Commissions</p>
+              <p class="sc-work-desc">Environmental portrait and event photography. Available for artist press photos, brand shoots, and cultural events. Reach out to discuss.</p>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- Featured media embed placeholder (Spotify/YouTube style zone) -->
+        <div style="margin-top:2.5rem;">
+          <p class="section-label" style="margin-bottom:1rem;">Featured Content</p>
+          <div class="sc-media-placeholder" aria-label="Featured content placeholder">
+            <span class="sc-media-ph-icon" aria-hidden="true">🖼</span>
+            <p class="sc-media-ph-text">
+              <strong style="color:var(--text-2);display:block;margin-bottom:0.3rem;">Your featured content goes here</strong>
+              An embedded gallery, video reel, Behance project link, or a pinned image — whatever best represents your work. Added when your page is built.
+            </p>
+            <p class="sc-media-ph-note">Content embed · Added on page delivery</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         LINKS / PLATFORMS
+    ============================================================ -->
+    <section class="section section-alt" id="links" aria-labelledby="links-heading">
+      <div class="container" style="max-width:640px;">
+
+        <div class="section-header text-center">
+          <p class="section-label">Platforms</p>
+          <h2 id="links-heading">Find the Work<br /><em>Everywhere.</em></h2>
+          <p class="section-sub">Follow, commission, or just watch the work build. All links updated when your page is live.</p>
+        </div>
+
+        <div class="platform-list" role="list">
+
+          <a href="javascript:void(0)" class="platform-row creator-link--soon" role="listitem" aria-disabled="true" tabindex="-1" title="Instagram — coming soon" style="opacity:0.45;">
+            <div class="platform-icon platform-icon--instagram" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+            </div>
+            <div class="platform-info">
+              <strong>Instagram</strong>
+              <span>Main portfolio — coming soon</span>
+            </div>
+            <span class="platform-arrow" aria-hidden="true" style="opacity:0.3;">→</span>
+          </a>
+
+          <a href="javascript:void(0)" class="platform-row creator-link--soon" role="listitem" aria-disabled="true" tabindex="-1" title="Behance — coming soon" style="opacity:0.45;">
+            <div class="platform-icon" aria-hidden="true" style="color:#1769ff;font-size:0.9rem;font-weight:900;letter-spacing:-0.04em;font-style:italic;">Be</div>
+            <div class="platform-info">
+              <strong>Behance</strong>
+              <span>Full project breakdowns — coming soon</span>
+            </div>
+            <span class="platform-arrow" aria-hidden="true" style="opacity:0.3;">→</span>
+          </a>
+
+          <a href="javascript:void(0)" class="platform-row creator-link--soon" role="listitem" aria-disabled="true" tabindex="-1" title="VSCO — coming soon" style="opacity:0.45;">
+            <div class="platform-icon" aria-hidden="true" style="color:var(--text-2);font-size:0.75rem;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;">VSCO</div>
+            <div class="platform-info">
+              <strong>VSCO</strong>
+              <span>Raw, unfiltered feed — coming soon</span>
+            </div>
+            <span class="platform-arrow" aria-hidden="true" style="opacity:0.3;">→</span>
+          </a>
+
+          <a href="javascript:void(0)" class="platform-row creator-link--soon" role="listitem" aria-disabled="true" tabindex="-1" title="TikTok — coming soon" style="opacity:0.45;">
+            <div class="platform-icon platform-icon--tiktok" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+            </div>
+            <div class="platform-info">
+              <strong>TikTok</strong>
+              <span>Process videos, street shoots — coming soon</span>
+            </div>
+            <span class="platform-arrow" aria-hidden="true" style="opacity:0.3;">→</span>
+          </a>
+
+          <a href="mailto:koldvisual@example.com?subject=Commission%20Inquiry" class="platform-row platform-row--cta" role="listitem" aria-label="Email — Commission and booking inquiries">
+            <div class="platform-icon platform-icon--email" aria-hidden="true">✉</div>
+            <div class="platform-info">
+              <strong>Commission &amp; Booking Inquiries</strong>
+              <span>koldvisual@example.com — editorial, events, brand work</span>
+            </div>
+            <span class="platform-arrow" aria-hidden="true">→</span>
+          </a>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ============================================================
+       POWERED BY BAR — Free tier badge (authentic to free plan)
+  ============================================================ -->
+  <div class="powered-by-bar" role="contentinfo" aria-label="Platform attribution">
+    <div class="container">
+      <div class="powered-by-inner">
+        <span class="powered-by-dot" aria-hidden="true"></span>
+        Powered by
+        <a href="../index.html" class="powered-by-link">Faceless Animal Studios</a>
+        <span class="powered-by-dot" aria-hidden="true"></span>
+        facelessanimalstudios.com/koldvisual
+      </div>
+    </div>
+  </div>
+
+  <!-- Upgrade prompt — shows the sales angle below the badge -->
+  <div class="sc-upgrade-prompt">
+    <div class="container">
+      <p class="sc-upgrade-prompt-title">This is a Free Presence page.</p>
+      <p class="sc-upgrade-prompt-sub">
+        The "Powered by Faceless Animal" bar above is the only difference between Free and paid.<br />
+        Upgrade to a Starter, Pro, or Premium plan to remove it — and unlock more sections.
+      </p>
+      <div class="sc-upgrade-prompt-actions">
+        <a href="../start.html" class="btn btn-primary">Get My Own Page →</a>
+        <a href="../pricing.html" class="btn btn-ghost">Compare Plans</a>
+      </div>
+    </div>
+  </div>
+
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="../about.html">About</a>
+          <a href="../network.html">Network</a>
+          <a href="../store.html">Supply</a>
+          <a href="../pricing.html">Pricing</a>
+          <a href="../drops.html">Drops</a>
+          <a href="../faq.html">FAQ</a>
+          <a href="../artists/djfacelessanimal.html">DJ Faceless</a>
+          <a href="../start.html">Get Started Free</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>
