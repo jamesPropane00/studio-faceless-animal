@@ -507,7 +507,7 @@
     .then(function(d) {
       if (d.ok) {
         loadTracks();
-        if (currentSrc && currentSrc.includes(id)) stopPlayer();
+        if (currentSrc) stopPlayer();
       } else {
         itemEl.style.opacity = '1';
         alert(d.error || 'Could not remove track.');
