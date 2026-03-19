@@ -19,8 +19,8 @@
   'use strict';
 
   /* ── Skip on radio.html (full player handles itself there) ── */
-  var path = window.location.pathname;
-  if (path === '/radio.html' || path.endsWith('/radio.html')) return;
+  // var path = window.location.pathname;
+  // if (path === '/radio.html' || path.endsWith('/radio.html')) return;
 
   /* ── Read Supabase config (set by env.js) ──────────────────── */
   var cfg      = (window.__FAS_CONFIG) || {};
