@@ -156,14 +156,7 @@ function handleRequest(req, res) {
       })
       return
     }
-    if (urlPath === '/api/radio/community-quota') {
-      if (req.method !== 'GET') { sendJSON(res, 405, { error: 'Method not allowed.' }); return }
-      handleCommunityQuota(req, res).catch(err => {
-        console.error('[FAS:community:quota] Unhandled error:', err.message)
-        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
-      })
-      return
-    }
+
 
     sendJSON(res, 404, { error: 'Not found.' })
     return
@@ -525,24 +518,9 @@ async function handleRadioDelete(req, res) {
 //  Files are saved to assets/audio/community/ and appended to tracks.json.
 
 const COMMUNITY_AUDIO_DIR      = path.join(AUDIO_DIR, 'community')
-const COMMUNITY_UPLOADS_JSON   = path.join(AUDIO_DIR, 'community-uploads.json')
-const COMMUNITY_MAX_PER_MONTH  = 2
 const COMMUNITY_MAX_FILE_MB    = 30
 const COMMUNITY_MAX_FILE_B     = COMMUNITY_MAX_FILE_MB * 1024 * 1024
 const COMMUNITY_PAID_PLANS     = new Set(['access', 'starter', 'pro', 'premium'])
-
-function readCommunityUploads() {
-  try { return JSON.parse(fs.readFileSync(COMMUNITY_UPLOADS_JSON, 'utf8')) } catch { return [] }
-}
-function writeCommunityUploads(arr) {
-  if (!fs.existsSync(COMMUNITY_AUDIO_DIR)) fs.mkdirSync(COMMUNITY_AUDIO_DIR, { recursive: true })
-  fs.writeFileSync(COMMUNITY_UPLOADS_JSON, JSON.stringify(arr, null, 2), 'utf8')
-}
-function countUserMonthUploads(username, uploads) {
-  const now  = new Date()
-  const ym   = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0')
-  return uploads.filter(u => u.username === username && String(u.uploadedAt || '').startsWith(ym)).length
-}
 
 /** POST /api/radio/community-upload — paid members, max 2/month, goes to Station 1 */
 async function handleCommunityUpload(req, res) {
@@ -591,14 +569,7 @@ async function handleCommunityUpload(req, res) {
   } catch {}
   if (!planOk) return sendJSON(res, 403, { error: 'Active paid membership required to upload tracks to Station 1.' })
 
-  // 2/month limit
-  const uploads    = readCommunityUploads()
-  const monthCount = countUserMonthUploads(u, uploads)
-  if (monthCount >= COMMUNITY_MAX_PER_MONTH) {
-    return sendJSON(res, 429, {
-      error: `You've used both of your ${COMMUNITY_MAX_PER_MONTH} uploads for this month. Check back next month.`,
-    })
-  }
+  // TODO: 2/month limit via Supabase quota tracking (coming later)
 
   let fileBuffer
   try { fileBuffer = Buffer.from(file_b64, 'base64') } catch {
@@ -640,10 +611,6 @@ async function handleCommunityUpload(req, res) {
     console.error('[FAS:community:upload] tracks.json write error:', e.message)
   }
 
-  // Record in community-uploads.json for quota tracking
-  uploads.push({ username: u, trackId: fileName, uploadedAt: new Date().toISOString() })
-  try { writeCommunityUploads(uploads) } catch {}
-
   console.log('[FAS:community:upload]', u, 'uploaded:', fileName,
     `(${fileBuffer.length} bytes, month ${monthCount + 1}/${COMMUNITY_MAX_PER_MONTH})`)
 
@@ -653,17 +620,6 @@ async function handleCommunityUpload(req, res) {
     monthCount: monthCount + 1,
     remaining:  Math.max(0, COMMUNITY_MAX_PER_MONTH - monthCount - 1),
   })
-}
-
-/** GET /api/radio/community-quota?username=X — returns upload quota for current month */
-async function handleCommunityQuota(req, res) {
-  const qs       = new URL(req.url, 'http://localhost').searchParams
-  const username = (qs.get('username') || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
-  if (!username) return sendJSON(res, 400, { error: 'Missing username.' })
-  const uploads    = readCommunityUploads()
-  const used       = countUserMonthUploads(username, uploads)
-  const remaining  = Math.max(0, COMMUNITY_MAX_PER_MONTH - used)
-  sendJSON(res, 200, { used, remaining, limit: COMMUNITY_MAX_PER_MONTH })
 }
 
 // ── DM FILE UPLOAD HANDLER ───────────────────────────────────────────

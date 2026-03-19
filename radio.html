@@ -1192,30 +1192,7 @@
           if (si)  si.style.display = 'none';
         }
       } else {
-        // Load quota for logged-in member
-        var username = sess.username || sess.display || '';
-        if (username) {
-          fetch('/api/radio/community-quota?username=' + encodeURIComponent(username))
-            .then(function(r){ return r.json(); })
-            .then(function(d) {
-              var badge = document.getElementById('rp-quota-badge');
-              if (!badge) return;
-              badge.style.display = '';
-              if (d.remaining === 0) {
-                badge.textContent = '0 uploads left this month';
-                badge.style.background = 'rgba(248,113,113,0.12)';
-                badge.style.borderColor = 'rgba(248,113,113,0.3)';
-                badge.style.color = '#f87171';
-                var btn = document.getElementById('rp-sub-btn');
-                if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed'; }
-                var errEl = document.getElementById('rp-sub-error');
-                if (errEl) { errEl.textContent = "You've used both uploads for this month. Check back next month."; errEl.style.display = ''; }
-              } else {
-                badge.textContent = d.remaining + ' of ' + d.limit + ' uploads left';
-              }
-            })
-            .catch(function(){});
-        }
+        // TODO: Load quota from Supabase quota tracking (coming later)
       }
     })();
 
@@ -1343,13 +1320,14 @@
         file_type: rpPendingFile.type,
         file_name: rpPendingFile.name,
         title:     title,
+        station:   '1',
       });
 
       rpSetProgress(70, 'Saving…');
 
       var resp, data;
       try {
-        resp = await fetch('/api/radio/community-upload', {
+        resp = await fetch('/api/radio/upload', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    payload,
