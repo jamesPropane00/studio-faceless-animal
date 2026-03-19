@@ -51,6 +51,9 @@
   var activeStation = ss('station') || '1';
   var volume        = parseInt(ss('volume') || '80', 10);
   var muted         = ss('muted') === '1';
+  var trackIndex    = parseInt(ss('track_index') || '0', 10);
+  var currentTime   = parseFloat(ss('current_time') || '0');
+  var isPlaying     = ss('is_playing') === '1';
   var playing       = false;           // live state — can't persist across pages cleanly
   var activeTab     = 'radio';
 
@@ -128,8 +131,15 @@
     document.body.appendChild(audioEl);
     audioEl.addEventListener('ended',  function() { audioSkip(1, true); });
     audioEl.addEventListener('error',  function() { audioSkip(1, true); });
-    audioEl.addEventListener('play',   function() { playing = true;  setPlayIcon(true);  updateNowPlayingAudio(); });
-    audioEl.addEventListener('pause',  function() { playing = false; setPlayIcon(false); });
+    audioEl.addEventListener('play',   function() { playing = true;  setPlayIcon(true);  updateNowPlayingAudio(); ss('is_playing', '1'); });
+    audioEl.addEventListener('pause',  function() { playing = false; setPlayIcon(false); ss('is_playing', '0'); });
+    audioEl.addEventListener('timeupdate', function() {
+      var now = Date.now();
+      if (!window.rwLastSaveTime || now - window.rwLastSaveTime > 5000) {
+        ss('current_time', audioEl.currentTime);
+        window.rwLastSaveTime = now;
+      }
+    });
   }
 
   function loadAudioTrack(idx, autoplay) {
@@ -142,7 +152,18 @@
     }
     idx = ((idx % tracks.length) + tracks.length) % tracks.length;
     audioTrackIdx = idx;
+    ss('track_index', idx);
     audioEl.src = tracks[idx].src;
+    audioEl.addEventListener('loadedmetadata', function() {
+      var savedTime = parseFloat(ss('current_time') || '0');
+      if (savedTime > 0 && savedTime < audioEl.duration) {
+        audioEl.currentTime = savedTime;
+      }
+      var savedPlaying = ss('is_playing') === '1';
+      if (savedPlaying) {
+        audioEl.play().catch(function() {});
+      }
+    }, { once: true });
     setNowPlayingText(tracks[idx].title || ('Track ' + (idx + 1)));
     if (autoplay) { audioEl.play().catch(function() {}); }
   }
@@ -612,6 +633,12 @@
       .then(function(data) {
         if (Array.isArray(data.tracks) && data.tracks.length) {
           STATIONS['1'].tracks = data.tracks;
+          if (STATIONS['1'].tracks.length > 0) {
+            var savedIdx = parseInt(ss('track_index') || '0', 10);
+            if (savedIdx >= 0 && savedIdx < STATIONS['1'].tracks.length) {
+              loadAudioTrack(savedIdx, false);
+            }
+          }
         }
       })
       .catch(function() { /* no tracks yet */ });
