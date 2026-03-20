@@ -1883,59 +1883,8 @@
       }
 
       async function upvoteTrack(trackId, username) {
-        console.log('[radio] upvoteTrack: START', trackId, username);
-        if (!trackId || !username) {
-          console.log('[radio] upvoteTrack requires trackId and username');
-          return;
-        }
-
-        try {
-          var mod = await import('./assets/js/supabase-config.js');
-          var supabase = mod.supabase;
-          var SUPABASE_READY = mod.SUPABASE_READY;
-          console.log('[radio] upvoteTrack: supabase ready?', SUPABASE_READY, !!supabase);
-          if (!SUPABASE_READY || !supabase) {
-            console.log('[radio] upvoteTrack: Supabase not ready');
-            return;
-          }
-
-          // Insert vote
-          var vote = await supabase.from('radio_track_votes').insert({ track_id: trackId, username: username });
-          console.log('[radio] upvoteTrack: vote insert result', vote);
-          if (vote.error) {
-            if (String(vote.error.message || '').toLowerCase().includes('duplicate') || String(vote.error.code).includes('23505')) {
-              console.log('[radio] upvoteTrack: duplicate vote, skipping update');
-              return;
-            }
-            console.log('[radio] upvoteTrack insert error', vote.error);
-            return;
-          }
-
-          // Increment upvotes
-          var trackRecord = await supabase.from('radio_tracks').select('upvotes').eq('id', trackId).single();
-          if (trackRecord.error) {
-            console.log('[radio] upvoteTrack fetch track error', trackRecord.error);
-            return;
-          }
-          var newUpvotes = ((trackRecord.data && trackRecord.data.upvotes) || 0) + 1;
-          var updateResult = await supabase.from('radio_tracks').update({ upvotes: newUpvotes }).eq('id', trackId);
-          if (updateResult.error) {
-            console.log('[radio] upvoteTrack update error', updateResult.error);
-            return;
-          }
-
-          if (window.tracks && Array.isArray(window.tracks)) {
-            var match = window.tracks.find(function(t) { return t.id === trackId; });
-            if (match) match.upvotes = newUpvotes;
-          }
-          if (AUDIO_TRACKS && Array.isArray(AUDIO_TRACKS)) {
-            var match2 = AUDIO_TRACKS.find(function(t) { return t.id === trackId; });
-            if (match2) match2.upvotes = newUpvotes;
-          }
-
-        } catch (err) {
-          console.log('[radio] upvoteTrack failed', err);
-        }
+        // Voting temporarily disabled for stability
+        return;
       }
 
       async function handleTrackVote(idx) {
