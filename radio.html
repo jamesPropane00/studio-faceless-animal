@@ -2023,7 +2023,9 @@
               id: t.id,
               title: t.title || t.name || 'Unknown Track',
               artist: typeof t.artist !== 'undefined' ? t.artist : '',
-              src: t.src || t.audio_url || '',
+              src: t.storage_path
+                ? `https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/${t.storage_path}`
+                : (t.src || ''),
               play_count: t.play_count || 0,
               upvotes: t.upvotes || 0,
             };
