@@ -1953,48 +1953,58 @@
         }
 
         var track = AUDIO_TRACKS[idx];
-        var sess = null;
-        try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
-        console.log('[radio] handleTrackVote: session read', sess);
+        try {
+          var mod = await import('./assets/js/supabase-config.js');
+          var supabase = mod.supabase;
+          var SUPABASE_READY = mod.SUPABASE_READY;
+          console.log('[radio] upvoteTrack: supabase ready?', SUPABASE_READY, !!supabase);
+          if (!SUPABASE_READY || !supabase) {
+            console.log('[radio] upvoteTrack: Supabase not ready');
+            return;
+          }
 
-        if (!sess || !sess.username) {
-          console.log('[radio] handleTrackVote: not logged in');
-          alert('Sign in to upvote tracks.');
-          return;
-        }
+          // Check if vote exists
+          var existingVote = await supabase.from('radio_track_votes')
+            .select('id')
+            .eq('track_id', trackId)
+            .eq('username', username)
+            .single();
+          if (existingVote.data && existingVote.data.id) {
+            // Delete vote
+            var del = await supabase.from('radio_track_votes')
+              .delete()
+              .eq('id', existingVote.data.id);
+            console.log('[radio] upvoteTrack: vote deleted', del);
+            // Decrement upvotes
+            var trackRecord = await supabase.from('radio_tracks').select('upvotes').eq('id', trackId).single();
+            if (trackRecord.error) {
+              console.log('[radio] upvoteTrack fetch track error', trackRecord.error);
+              return;
+            }
+            var newUpvotes = Math.max(((trackRecord.data && trackRecord.data.upvotes) || 1) - 1, 0);
+            var updateResult = await supabase.from('radio_tracks').update({ upvotes: newUpvotes }).eq('id', trackId);
+            console.log('[radio] upvoteTrack: upvotes decremented', updateResult);
+            return;
+          }
 
-        if (!track.id) {
-          console.log('[radio] handleTrackVote: no track id');
-          return;
-        }
-
-        console.log('[radio] handleTrackVote: track.id present', track.id);
-        console.log('[radio] handleTrackVote: about to call upvoteTrack');
-        await upvoteTrack(track.id, sess.username);
-        console.log('[radio] handleTrackVote: upvoteTrack completed');
-
-        buildTrackList();
-        buildTopTracks();
-      }
-
-      function buildTopTracks() {
-        var container = document.getElementById('rp-top-tracks-list');
-        if (!container || !AUDIO_TRACKS || !AUDIO_TRACKS.length) return;
-
-        var sorted = AUDIO_TRACKS.slice()
-          .map(function(t) {
-            var score = (t.upvotes || 0) * 4 + (t.play_count || 0);
-            return { track: t, score: score };
-          })
-          .sort(function(a, b) {
-            if (b.score !== a.score) return b.score - a.score;
-            return 0;
-          })
-          .slice(0, 10);
-
-        if (!sorted.length) {
-          container.innerHTML = '<p style="font-size:0.8rem;color:var(--text-3);text-align:center;margin:0;">No tracks yet.</p>';
-          return;
+          // Insert vote
+          var vote = await supabase.from('radio_track_votes').insert({ track_id: trackId, username: username });
+          console.log('[radio] upvoteTrack: vote insert result', vote);
+          if (vote.error) {
+            console.log('[radio] upvoteTrack insert error', vote.error);
+            return;
+          }
+          // Increment upvotes
+          var trackRecord = await supabase.from('radio_tracks').select('upvotes').eq('id', trackId).single();
+          if (trackRecord.error) {
+            console.log('[radio] upvoteTrack fetch track error', trackRecord.error);
+            return;
+          }
+          var newUpvotes = ((trackRecord.data && trackRecord.data.upvotes) || 0) + 1;
+          var updateResult = await supabase.from('radio_tracks').update({ upvotes: newUpvotes }).eq('id', trackId);
+          console.log('[radio] upvoteTrack: upvotes incremented', updateResult);
+        } catch (err) {
+          console.log('[radio] upvoteTrack failed', err);
         }
 
         container.innerHTML = '';
