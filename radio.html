@@ -1965,22 +1965,39 @@
         } catch (err) {
           console.log('[radio] upvoteTrack failed', err);
         }
+      }
+
+      function buildTopTracks() {
+        var container = document.getElementById('rp-top-tracks-list');
+        if (!container) return;
+
+        var sorted = (Array.isArray(AUDIO_TRACKS) ? AUDIO_TRACKS.slice() : [])
+          .map(function(track) {
+            var upvotes = Number(track && track.upvotes) || 0;
+            var playCount = Number(track && track.play_count) || 0;
+            return {
+              track: track || {},
+              score: (upvotes * 4) + playCount,
+            };
+          })
+          .sort(function(a, b) { return b.score - a.score; })
+          .slice(0, 10);
+
+        if (!sorted.length) {
+          container.innerHTML = '<p style="font-size:0.8rem;color:var(--text-3);text-align:center;margin:0;">Top tracks will appear here soon.</p>';
+          return;
+        }
 
         container.innerHTML = '';
         sorted.forEach(function(item, rank) {
-          var t = item.track;
           var div = document.createElement('div');
           div.className = 'rp-top-track-item';
           div.innerHTML =
             '<div class="rp-top-track-rank">#' + (rank + 1) + '</div>' +
-            '<div class="rp-top-track-info">' + escHtml(t.title || 'Track') + '</div>' +
+            '<div class="rp-top-track-info">' + escHtml(item.track.title || 'Track') + '</div>' +
             '<div class="rp-top-track-score">' +
               '<span>⭐ <span class="rp-top-track-score-val">' + item.score + '</span></span>' +
             '</div>';
-          div.addEventListener('click', function() {
-            var idx = AUDIO_TRACKS.indexOf(t);
-            if (idx !== -1) loadAudioTrack(idx, true);
-          });
           container.appendChild(div);
         });
       }
@@ -2009,7 +2026,7 @@
           audioTrackIdx = 0;
           if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
           buildTrackList();
-          // buildTopTracks();
+          buildTopTracks();
           if (cb) cb();
           return;
         } catch (err) {
@@ -2021,10 +2038,10 @@
               audioTrackIdx = 0;
               if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
               buildTrackList();
-              // buildTopTracks();
+              buildTopTracks();
               if (cb) cb();
             })
-            .catch(function() { AUDIO_TRACKS = []; buildTrackList(); /* buildTopTracks(); */ if (cb) cb(); });
+            .catch(function() { AUDIO_TRACKS = []; buildTrackList(); buildTopTracks(); if (cb) cb(); });
         }
       }
 
@@ -2162,7 +2179,7 @@
       }
 
       buildTrackList();
-      // buildTopTracks();
+  buildTopTracks();
 
       /* ── Station switching ── */
       var stationBtns    = document.querySelectorAll('.rp-station-btn');
