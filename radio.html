@@ -2184,12 +2184,11 @@
       var AUDIO_STATIONS = { '1': true, '4': true, '5': true };
 
       function switchStation(id) {
-          console.log('[radio] switchStation: id', id, typeof id);
-          console.log('[radio] loadChannelTracks: ch', ch, typeof ch);
-          console.log('[radio] loadTracks: ch', ch, typeof ch);
+        id = String(id);
         if (id === activeStation) return;
         var prev = activeStation;
         activeStation = id;
+        if (AUDIO_STATIONS[id]) activeChannel = id;
 
         // Pause previous audio
         if (AUDIO_STATIONS[prev] && audioEl) { audioEl.pause(); setPlayIcon(false); }
@@ -2199,10 +2198,14 @@
 
         // Update buttons
         stationBtns.forEach(function(b) {
-          var on = b.dataset.station === id;
-          b.classList.toggle('rp-station-btn--active', on);
-          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          b.classList.remove('rp-station-btn--active');
+          b.setAttribute('aria-pressed', 'false');
         });
+        var currentBtn = document.querySelector('.rp-station-btn[data-station="' + id + '"]');
+        if (currentBtn) {
+          currentBtn.classList.add('rp-station-btn--active');
+          currentBtn.setAttribute('aria-pressed', 'true');
+        }
 
         // Show/hide player areas
         // Stations 1, 4, 5 all use rp-station-1 (native audio); 2, 3, tv have their own sections
@@ -2223,8 +2226,7 @@
         if (nowPlayingEl) nowPlayingEl.textContent    = stationLabels[id] || '';
 
         // Load tracks when switching to an upload channel
-        if (AUDIO_STATIONS[id] && String(id) !== String(activeChannel)) {
-          activeChannel = String(id);
+        if (AUDIO_STATIONS[id]) {
           loadChannelTracks(activeChannel);
         }
       }
