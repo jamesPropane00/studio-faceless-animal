@@ -1812,7 +1812,7 @@
       var activeChannel  = '1';  // tracks which upload-channel is loaded (1, 4, or 5)
       var lastPlayCountedTrackId = null;
 
-      async function loadTracks() {
+      async function loadTracks(ch) {
         if (window.tracks && Array.isArray(window.tracks) && window.tracks.length) {
           return window.tracks;
         }
@@ -1831,6 +1831,7 @@
           var res = await supabase
             .from('radio_tracks')
             .select('id,title,src,play_count,upvotes')
+            .eq('channel', ch)
             .order('play_count', { ascending: false });
 
           if (res.error) {
@@ -2017,7 +2018,7 @@
 
       async function loadChannelTracks(ch, cb) {
         try {
-          var fetchedTracks = await loadTracks();
+          var fetchedTracks = await loadTracks(ch);
           AUDIO_TRACKS = (Array.isArray(fetchedTracks) ? fetchedTracks : []).map(function(t) {
             return {
               id: t.id,
