@@ -1691,18 +1691,166 @@
       /* ── Audio player — channel-aware track loader ── */
       var AUDIO_TRACKS   = [];
       var activeChannel  = '1';  // tracks which upload-channel is loaded (1, 4, or 5)
+      var lastPlayCountedTrackId = null;
 
-      function loadChannelTracks(ch, cb) {
-        fetch('/api/radio/tracks?channel=' + ch)
-          .then(function(r) { return r.json(); })
-          .then(function(data) {
-            AUDIO_TRACKS = Array.isArray(data.tracks) ? data.tracks : [];
-            audioTrackIdx = 0;
-            if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
-            buildTrackList();
-            if (cb) cb();
-          })
-          .catch(function() { AUDIO_TRACKS = []; buildTrackList(); if (cb) cb(); });
+      async function loadTracks() {
+        if (window.tracks && Array.isArray(window.tracks) && window.tracks.length) {
+          return window.tracks;
+        }
+
+        try {
+          var mod = await import('./assets/js/supabase-config.js');
+          var supabase = mod.supabase;
+          var SUPABASE_READY = mod.SUPABASE_READY;
+
+          if (!SUPABASE_READY || !supabase) {
+            console.log('[radio] loadTracks: Supabase not ready');
+            window.tracks = [];
+            return window.tracks;
+          }
+
+          var res = await supabase
+            .from('radio_tracks')
+            .select('id,title,artist,src,play_count,upvotes')
+            .order('play_count', { ascending: false });
+
+          if (res.error) {
+            console.log('[radio] loadTracks supersabre error', res.error);
+            window.tracks = [];
+            return window.tracks;
+          }
+
+          window.tracks = Array.isArray(res.data) ? res.data : [];
+          return window.tracks;
+        } catch (err) {
+          console.log('[radio] loadTracks failed', err);
+          window.tracks = [];
+          return window.tracks;
+        }
+      }
+
+      async function incrementPlayCount(trackId) {
+        if (!trackId) return;
+
+        try {
+          var mod = await import('./assets/js/supabase-config.js');
+          var supabase = mod.supabase;
+          var SUPABASE_READY = mod.SUPABASE_READY;
+          if (!SUPABASE_READY || !supabase) {
+            console.log('[radio] incrementPlayCount: Supabase not ready');
+            return;
+          }
+
+          // Try RPC first
+          var rpcResult = await supabase.rpc('increment_play', { row_id: trackId });
+          if (rpcResult.error) {
+            console.log('[radio] incrementPlayCount rpc error (falling back)', rpcResult.error);
+            // fallback: read + update
+            var existing = await supabase.from('radio_tracks').select('play_count').eq('id', trackId).single();
+            if (existing.error || !existing.data) {
+              console.log('[radio] incrementPlayCount lookup error', existing.error);
+              return;
+            }
+            var next = (existing.data.play_count || 0) + 1;
+            var upd = await supabase.from('radio_tracks').update({ play_count: next }).eq('id', trackId);
+            if (upd.error) console.log('[radio] incrementPlayCount update error', upd.error);
+            return;
+          }
+
+          return rpcResult;
+        } catch (err) {
+          console.log('[radio] incrementPlayCount failed', err);
+        }
+      }
+
+      async function upvoteTrack(trackId, username) {
+        if (!trackId || !username) {
+          console.log('[radio] upvoteTrack requires trackId and username');
+          return;
+        }
+
+        try {
+          var mod = await import('./assets/js/supabase-config.js');
+          var supabase = mod.supabase;
+          var SUPABASE_READY = mod.SUPABASE_READY;
+          if (!SUPABASE_READY || !supabase) {
+            console.log('[radio] upvoteTrack: Supabase not ready');
+            return;
+          }
+
+          var vote = await supabase.from('radio_track_votes').insert({ track_id: trackId, username: username });
+          if (vote.error) {
+            if (String(vote.error.message || '').toLowerCase().includes('duplicate') || String(vote.error.code).includes('23505')) {
+              return;
+            }
+            console.log('[radio] upvoteTrack insert error', vote.error);
+            return;
+          }
+
+          var trackRecord = await supabase.from('radio_tracks').select('upvotes').eq('id', trackId).single();
+          if (trackRecord.error) {
+            console.log('[radio] upvoteTrack fetch track error', trackRecord.error);
+            return;
+          }
+
+          var newUpvotes = ((trackRecord.data && trackRecord.data.upvotes) || 0) + 1;
+          var updateResult = await supabase.from('radio_tracks').update({ upvotes: newUpvotes }).eq('id', trackId);
+          if (updateResult.error) {
+            console.log('[radio] upvoteTrack update error', updateResult.error);
+            return;
+          }
+
+          if (window.tracks && Array.isArray(window.tracks)) {
+            var match = window.tracks.find(function(t) { return t.id === trackId; });
+            if (match) match.upvotes = newUpvotes;
+          }
+          if (AUDIO_TRACKS && Array.isArray(AUDIO_TRACKS)) {
+            var match2 = AUDIO_TRACKS.find(function(t) { return t.id === trackId; });
+            if (match2) match2.upvotes = newUpvotes;
+          }
+
+        } catch (err) {
+          console.log('[radio] upvoteTrack failed', err);
+        }
+      }
+
+      async function loadChannelTracks(ch, cb) {
+        try {
+          var fetchedTracks = await loadTracks();
+          AUDIO_TRACKS = (Array.isArray(fetchedTracks) ? fetchedTracks : []).map(function(t) {
+            return {
+              id: t.id,
+              title: t.title || t.name || 'Unknown Track',
+              artist: t.artist || '',
+              src: t.src || t.audio_url || '',
+              play_count: t.play_count || 0,
+              upvotes: t.upvotes || 0,
+            };
+          });
+
+          if (!AUDIO_TRACKS.length) {
+            // fallback to original endpoint for backwards compatibility
+            throw new Error('No tracks from Supabase');
+          }
+
+          audioTrackIdx = 0;
+          if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
+          buildTrackList();
+          if (cb) cb();
+          return;
+        } catch (err) {
+          console.log('[radio] loadChannelTracks supabase fallback', err);
+          fetch('/api/radio/tracks?channel=' + ch)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              AUDIO_TRACKS = Array.isArray(data.tracks) ? data.tracks : [];
+              audioTrackIdx = 0;
+              if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
+              buildTrackList();
+              if (cb) cb();
+            })
+            .catch(function() { AUDIO_TRACKS = []; buildTrackList(); if (cb) cb(); });
+        }
       }
 
       loadChannelTracks('1');
@@ -1782,7 +1930,14 @@
       }
 
       if (audioEl) {
-        audioEl.addEventListener('play',    function() { setPlayIcon(true); });
+        audioEl.addEventListener('play',    function() {
+          setPlayIcon(true);
+          var track = AUDIO_TRACKS[audioTrackIdx];
+          if (track && track.id && track.id !== lastPlayCountedTrackId) {
+            incrementPlayCount(track.id).catch(function() {});
+            lastPlayCountedTrackId = track.id;
+          }
+        });
         audioEl.addEventListener('pause',   function() { setPlayIcon(false); });
         audioEl.addEventListener('ended',   function() { loadAudioTrack(audioTrackIdx + 1, true); });
         audioEl.addEventListener('error',   function() { loadAudioTrack(audioTrackIdx + 1, true); });

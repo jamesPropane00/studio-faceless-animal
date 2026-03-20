@@ -27,7 +27,7 @@ async function onRequestGet(context) {
     : "1";
 
   const res = await fetch(
-    `${supabaseUrl}/rest/v1/radio_tracks?select=id,title,src,uploaded_at,channel&is_active=eq.true&channel=eq.${channel}&order=uploaded_at.desc`,
+    `${supabaseUrl}/rest/v1/radio_tracks?select=id,title,src,uploaded_at,channel,play_count,upvotes&is_active=eq.true&channel=eq.${channel}&order=uploaded_at.desc`,
     { headers: sbHeaders(serviceKey) }
   );
 
@@ -43,6 +43,8 @@ async function onRequestGet(context) {
     src: r.src,
     uploadedAt: r.uploaded_at,
     channel: r.channel,
+    play_count: r.play_count || 0,
+    upvotes: r.upvotes || 0,
   }));
 
   return json({ tracks, channel }, 200);
