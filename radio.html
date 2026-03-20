@@ -2215,6 +2215,9 @@
       var AUDIO_STATIONS = { '1': true, '4': true, '5': true };
 
       function switchStation(id) {
+          console.log('[radio] switchStation: id', id, typeof id);
+          console.log('[radio] loadChannelTracks: ch', ch, typeof ch);
+          console.log('[radio] loadTracks: ch', ch, typeof ch);
         if (id === activeStation) return;
         var prev = activeStation;
         activeStation = id;
