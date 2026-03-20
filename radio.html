@@ -2081,13 +2081,14 @@
             '</div>';
 
           item.addEventListener('click', function(e) {
-            if (e.target.closest('.rp-upvote-btn')) return;
+            if (e.target.closest('.rp-upvote-btn') || e.target.closest('button')) return;
             loadAudioTrack(i, true);
           });
 
           var upvoteBtn = item.querySelector('.rp-upvote-btn');
           if (upvoteBtn) {
             upvoteBtn.addEventListener('click', function(e) {
+              e.preventDefault();
               e.stopPropagation();
               handleTrackVote(i);
             });
