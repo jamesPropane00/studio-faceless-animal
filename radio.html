@@ -1830,7 +1830,7 @@
 
           var res = await supabase
             .from('radio_tracks')
-            .select('id,title,artist,src,play_count,upvotes')
+            .select('id,title,src,play_count,upvotes')
             .order('play_count', { ascending: false });
 
           if (res.error) {
@@ -2022,7 +2022,7 @@
             return {
               id: t.id,
               title: t.title || t.name || 'Unknown Track',
-              artist: t.artist || '',
+              artist: typeof t.artist !== 'undefined' ? t.artist : '',
               src: t.src || t.audio_url || '',
               play_count: t.play_count || 0,
               upvotes: t.upvotes || 0,
