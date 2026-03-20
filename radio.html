@@ -1956,9 +1956,6 @@
 
         await upvoteTrack(track.id, sess.username);
 
-        if (track.upvotes === undefined) track.upvotes = 0;
-        track.upvotes += 1;
-
         buildTrackList();
         buildTopTracks();
       }
