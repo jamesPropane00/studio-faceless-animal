@@ -57,6 +57,15 @@
   var playing       = false;           // live state — can't persist across pages cleanly
   var activeTab     = 'radio';
 
+  console.log('[rw-debug] restored fas_rw_ state', {
+    station: activeStation,
+    volume: volume,
+    muted: muted,
+    trackIndex: trackIndex,
+    currentTime: currentTime,
+    isPlaying: isPlaying,
+  });
+
   /* ── Count simulation ──────────────────────────────────────── */
   var listenerCount = 24 + Math.floor(Math.random() * 8);
   function tickCount() {
@@ -129,8 +138,29 @@
     audioEl.preload = 'metadata';
     audioEl.style.display = 'none';
     document.body.appendChild(audioEl);
+    console.log('[rw-debug] initAudio created audioEl');
     audioEl.addEventListener('ended',  function() { audioSkip(1, true); });
-    audioEl.addEventListener('error',  function() { audioSkip(1, true); });
+    audioEl.addEventListener('error',  function(e) {
+      console.log('[rw-debug] audio error', {
+        src: audioEl && audioEl.src,
+        currentSrc: audioEl && audioEl.currentSrc,
+        error: audioEl && audioEl.error,
+        event: e,
+      });
+      audioSkip(1, true);
+    });
+    audioEl.addEventListener('canplay', function() {
+      console.log('[rw-debug] canplay', {
+        src: audioEl && audioEl.src,
+        currentSrc: audioEl && audioEl.currentSrc,
+      });
+    });
+    audioEl.addEventListener('loadedmetadata', function() {
+      console.log('[rw-debug] loadedmetadata', {
+        src: audioEl && audioEl.src,
+        duration: audioEl && audioEl.duration,
+      });
+    });
     audioEl.addEventListener('play',   function() { playing = true;  setPlayIcon(true);  updateNowPlayingAudio(); ss('is_playing', '1'); });
     audioEl.addEventListener('pause',  function() { playing = false; setPlayIcon(false); ss('is_playing', '0'); });
     audioEl.addEventListener('timeupdate', function() {
@@ -145,6 +175,11 @@
   function loadAudioTrack(idx, autoplay) {
     var tracks = STATIONS['1'].tracks;
     if (!audioEl) initAudio();
+    console.log('[rw-debug] loadAudioTrack start', {
+      idx: idx,
+      autoplay: autoplay,
+      tracksLength: tracks ? tracks.length : 0,
+    });
     if (!tracks || !tracks.length) {
       setNowPlayingText('No tracks loaded yet');
       setPlayIcon(false);
@@ -153,30 +188,60 @@
     idx = ((idx % tracks.length) + tracks.length) % tracks.length;
     audioTrackIdx = idx;
     ss('track_index', idx);
+    console.log('[rw-debug] selected track', tracks[idx]);
     audioEl.src = tracks[idx].src;
+    console.log('[rw-debug] assigned audioEl.src', audioEl.src);
     audioEl.addEventListener('loadedmetadata', function() {
       var savedTime = parseFloat(ss('current_time') || '0');
       if (savedTime > 0 && savedTime < audioEl.duration) {
         audioEl.currentTime = savedTime;
       }
       var savedPlaying = ss('is_playing') === '1';
+      console.log('[rw-debug] loadedmetadata restore check', {
+        savedTime: savedTime,
+        duration: audioEl && audioEl.duration,
+        savedPlaying: savedPlaying,
+      });
       if (savedPlaying) {
+        console.log('[rw-debug] before audioEl.play() from savedPlaying', {
+          src: audioEl && audioEl.src,
+          paused: audioEl && audioEl.paused,
+        });
         audioEl.play().catch(function() {});
       }
     }, { once: true });
     setNowPlayingText(tracks[idx].title || ('Track ' + (idx + 1)));
-    if (autoplay) { audioEl.play().catch(function() {}); }
+    if (autoplay) {
+      console.log('[rw-debug] before audioEl.play() from autoplay', {
+        src: audioEl && audioEl.src,
+        paused: audioEl && audioEl.paused,
+      });
+      audioEl.play().catch(function() {});
+    }
   }
 
   function audioPlayPause() {
     var tracks = STATIONS['1'].tracks;
     if (!audioEl) initAudio();
+    console.log('[rw-debug] audioPlayPause', {
+      activeStation: activeStation,
+      tracksLength: tracks ? tracks.length : 0,
+      audioSrc: audioEl && audioEl.src,
+      paused: audioEl && audioEl.paused,
+      currentHref: window.location.href,
+    });
     if (!tracks || !tracks.length) return;
     if (!audioEl.src || audioEl.src === window.location.href) {
       loadAudioTrack(0, true);
       return;
     }
-    if (audioEl.paused) { audioEl.play().catch(function() {}); }
+    if (audioEl.paused) {
+      console.log('[rw-debug] before audioEl.play() from audioPlayPause', {
+        src: audioEl && audioEl.src,
+        paused: audioEl && audioEl.paused,
+      });
+      audioEl.play().catch(function() {});
+    }
     else { audioEl.pause(); }
   }
 
@@ -627,12 +692,29 @@
     loadDMBadge();
     setInterval(loadDMBadge, 60000);
 
-    /* Load Station 1 tracks from server */
-    fetch('/api/radio/tracks')
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (Array.isArray(data.tracks) && data.tracks.length) {
-          STATIONS['1'].tracks = data.tracks;
+    /* Load Station 1 tracks from Supabase */
+    import('./supabase-config.js')
+      .then(function(mod) {
+        var supabase = mod && mod.supabase;
+        var ready = mod && mod.SUPABASE_READY;
+        if (!ready || !supabase) return { data: [] };
+        return supabase
+          .from('radio_tracks')
+          .select('id,title,src,storage_path,play_count,upvotes,channel,is_active')
+          .eq('channel', 1)
+          .eq('is_active', true)
+          .order('play_count', { ascending: false });
+      })
+      .then(function(res) {
+        var rows = res && Array.isArray(res.data) ? res.data : [];
+        if (rows.length) {
+          STATIONS['1'].tracks = rows.map(function(t) {
+            return Object.assign({}, t, {
+              src: t && t.storage_path
+                ? 'https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/radio/' + String(t.storage_path).replace(/^\/+/, '')
+                : (t && t.src ? t.src : ''),
+            });
+          });
           if (STATIONS['1'].tracks.length > 0) {
             var savedIdx = parseInt(ss('track_index') || '0', 10);
             if (savedIdx >= 0 && savedIdx < STATIONS['1'].tracks.length) {
@@ -705,14 +787,31 @@
     }
 
     var playBtn = document.getElementById('fas-rw-play-btn');
-    if (playBtn) playBtn.addEventListener('click', function(e) { e.stopPropagation(); togglePlay(); });
+    if (playBtn) playBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      console.log('[rw-debug] play button clicked', {
+        button: 'fas-rw-play-btn',
+        activeStation: activeStation,
+        stationType: STATIONS[activeStation] && STATIONS[activeStation].type,
+        tracksLength: STATIONS['1'] && STATIONS['1'].tracks ? STATIONS['1'].tracks.length : 0,
+      });
+      togglePlay();
+    });
     var prevBtn = document.getElementById('fas-rw-prev-btn');
     if (prevBtn) prevBtn.addEventListener('click', function(e) { e.stopPropagation(); handlePrev(); });
     var nextBtn = document.getElementById('fas-rw-next-btn');
     if (nextBtn) nextBtn.addEventListener('click', function(e) { e.stopPropagation(); handleNext(); });
 
     var playBtn2 = document.getElementById('fas-rw-play-btn2');
-    if (playBtn2) playBtn2.addEventListener('click', function() { togglePlay(); });
+    if (playBtn2) playBtn2.addEventListener('click', function() {
+      console.log('[rw-debug] play button clicked', {
+        button: 'fas-rw-play-btn2',
+        activeStation: activeStation,
+        stationType: STATIONS[activeStation] && STATIONS[activeStation].type,
+        tracksLength: STATIONS['1'] && STATIONS['1'].tracks ? STATIONS['1'].tracks.length : 0,
+      });
+      togglePlay();
+    });
     var prevBtn2 = document.getElementById('fas-rw-prev-btn2');
     if (prevBtn2) prevBtn2.addEventListener('click', function() { handlePrev(); });
     var nextBtn2 = document.getElementById('fas-rw-next-btn2');
@@ -816,6 +915,15 @@
   /* ── Play toggle ───────────────────────────────────────────── */
   function togglePlay() {
     var st = STATIONS[activeStation];
+    console.log('[rw-debug] togglePlay', {
+      activeStation: activeStation,
+      stationType: st && st.type,
+      tracksLength: STATIONS['1'] && STATIONS['1'].tracks ? STATIONS['1'].tracks.length : 0,
+      audioSrc: audioEl && audioEl.src,
+      savedTrackIndex: ss('track_index'),
+      savedIsPlaying: ss('is_playing'),
+      savedCurrentTime: ss('current_time'),
+    });
     if (st.type === 'audio') {
       audioPlayPause();
       return;

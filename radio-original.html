@@ -295,113 +295,6 @@
       padding: 2.5rem 1rem;
       line-height: 1.7;
     }
-    .rp-track-stats {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-size: 0.7rem;
-      color: var(--text-3);
-      flex-shrink: 0;
-      margin-left: auto;
-    }
-    .rp-track-stat-item {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-    .rp-upvote-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.2rem;
-      background: none;
-      border: 1px solid rgba(139,92,246,0.25);
-      border-radius: 6px;
-      padding: 0.35rem 0.6rem;
-      color: var(--text-3);
-      cursor: pointer;
-      font-size: 0.65rem;
-      font-weight: 700;
-      transition: all 0.15s;
-      font-family: inherit;
-    }
-    .rp-upvote-btn:hover {
-      background: rgba(139,92,246,0.08);
-      border-color: rgba(139,92,246,0.4);
-      color: var(--purple-bright);
-    }
-    .rp-top-tracks {
-      max-width: 780px;
-      margin: 1.5rem auto 0;
-      padding: 0 1.25rem;
-    }
-    .rp-top-tracks-inner {
-      background: rgba(139,92,246,0.04);
-      border: 1px solid rgba(139,92,246,0.15);
-      border-radius: 14px;
-      padding: 1.25rem;
-    }
-    .rp-top-tracks-title {
-      font-size: 0.78rem;
-      font-weight: 900;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--purple-bright);
-      margin: 0 0 0.85rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .rp-top-tracks-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .rp-top-track-item {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      padding: 0.7rem 0.9rem;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(139,92,246,0.1);
-      border-radius: 8px;
-      font-size: 0.8rem;
-      color: var(--text-2);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .rp-top-track-item:hover {
-      background: rgba(139,92,246,0.08);
-      border-color: rgba(139,92,246,0.2);
-      color: var(--text);
-    }
-    .rp-top-track-rank {
-      font-size: 0.7rem;
-      font-weight: 800;
-      color: var(--text-3);
-      width: 24px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-    .rp-top-track-info {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-weight: 500;
-    }
-    .rp-top-track-score {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.72rem;
-      color: var(--text-3);
-      flex-shrink: 0;
-    }
-    .rp-top-track-score-val {
-      font-weight: 700;
-      color: var(--purple-bright);
-    }
 
     /* ── Playback control bar ── */
     .rp-controls {
@@ -1184,18 +1077,6 @@
       </div>
     </div>
 
-    <!-- ── Top Tracks Panel ── -->
-    <div class="rp-top-tracks">
-      <div class="rp-top-tracks-inner">
-        <p class="rp-top-tracks-title">
-          <span>🔥</span> Top Tracks
-        </p>
-        <div id="rp-top-tracks-list" class="rp-top-tracks-list">
-          <p style="font-size:0.8rem;color:var(--text-3);text-align:center;margin:0;">Loading top tracks…</p>
-        </div>
-      </div>
-    </div>
-
     <!-- ── Station 1 Community Upload Section ── -->
     <div id="rp-submit-section" style="max-width:780px;margin:1.5rem auto 0;padding:0 1.25rem;">
       <div style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.22);border-radius:16px;padding:1.5rem;">
@@ -1502,6 +1383,7 @@
       if (successEl) successEl.style.display = '';
 
       // Reload Station 1 track list to include the new track
+      if (typeof window.loadChannelTracks === 'function') window.loadChannelTracks('1');
     }
     </script>
 
@@ -1809,190 +1691,18 @@
       /* ── Audio player — channel-aware track loader ── */
       var AUDIO_TRACKS   = [];
       var activeChannel  = '1';  // tracks which upload-channel is loaded (1, 4, or 5)
-      var lastPlayCountedTrackId = null;
 
-      async function loadTracks(ch) {
-        ch = String(ch || '1');
-        var channelInt = parseInt(ch, 10);
-        window.tracksByChannel = window.tracksByChannel || {};
-        if (Array.isArray(window.tracksByChannel[ch]) && window.tracksByChannel[ch].length) {
-          return window.tracksByChannel[ch];
-        }
-
-        try {
-          var mod = await import('./assets/js/supabase-config.js');
-          var supabase = mod.supabase;
-          var SUPABASE_READY = mod.SUPABASE_READY;
-
-          if (!SUPABASE_READY || !supabase) {
-            console.log('[radio] loadTracks: Supabase not ready');
-            window.tracksByChannel[ch] = [];
-            return window.tracksByChannel[ch];
-          }
-
-          var res = await supabase
-            .from('radio_tracks')
-            .select('id,title,src,storage_path,play_count,upvotes,channel,is_active')
-            .eq('channel', channelInt)
-            .eq('is_active', true)
-            .order('play_count', { ascending: false });
-
-          if (res.error) {
-            console.log('[radio] loadTracks supersabre error', res.error);
-            window.tracksByChannel[ch] = [];
-            return window.tracksByChannel[ch];
-          }
-
-          window.tracksByChannel[ch] = Array.isArray(res.data)
-            ? res.data.filter(function(t) { return String((t && t.channel) || '') === ch; })
-            : [];
-          return window.tracksByChannel[ch];
-        } catch (err) {
-          console.log('[radio] loadTracks failed', err);
-          window.tracksByChannel[ch] = [];
-          return window.tracksByChannel[ch];
-        }
-      }
-
-      async function incrementPlayCount(trackId) {
-        if (!trackId) return;
-
-        try {
-          var mod = await import('./assets/js/supabase-config.js');
-          var supabase = mod.supabase;
-          var SUPABASE_READY = mod.SUPABASE_READY;
-          if (!SUPABASE_READY || !supabase) {
-            console.log('[radio] incrementPlayCount: Supabase not ready');
-            return;
-          }
-
-          // Try RPC first
-          var rpcResult = await supabase.rpc('increment_play', { row_id: trackId });
-          if (rpcResult.error) {
-            console.log('[radio] incrementPlayCount rpc error (falling back)', rpcResult.error);
-            // fallback: read + update
-            var existing = await supabase.from('radio_tracks').select('play_count').eq('id', trackId).single();
-            if (existing.error || !existing.data) {
-              console.log('[radio] incrementPlayCount lookup error', existing.error);
-              return;
-            }
-            var next = (existing.data.play_count || 0) + 1;
-            var upd = await supabase.from('radio_tracks').update({ play_count: next }).eq('id', trackId);
-            if (upd.error) console.log('[radio] incrementPlayCount update error', upd.error);
-            return;
-          }
-
-          return rpcResult;
-        } catch (err) {
-          console.log('[radio] incrementPlayCount failed', err);
-        }
-      }
-
-      async function upvoteTrack(trackId, username) {
-        // Voting temporarily disabled for stability
-        return;
-      }
-
-      async function handleTrackVote(idx) {
-        if (!AUDIO_TRACKS || !AUDIO_TRACKS[idx]) return;
-        var track = AUDIO_TRACKS[idx];
-        if (!track || !track.id || track._voted) return;
-        track._voted = true;
-        track.upvotes = (Number(track.upvotes) || 0) + 1;
-        buildTrackList();
-        updateTrackListActive(audioTrackIdx);
-
-        // Best-effort remote write; no toggle/unvote path.
-        var username = (getSession() && getSession().username) || 'guest';
-        upvoteTrack(track.id, username).catch(function() {});
-      }
-
-      function buildTopTracks() {
-        var container = document.getElementById('rp-top-tracks-list');
-        if (!container) return;
-
-        var sorted = (Array.isArray(AUDIO_TRACKS) ? AUDIO_TRACKS.slice() : [])
-          .map(function(track) {
-            var upvotes = Number(track && track.upvotes) || 0;
-            var playCount = Number(track && track.play_count) || 0;
-            return {
-              track: track || {},
-              score: (upvotes * 4) + playCount,
-            };
+      function loadChannelTracks(ch, cb) {
+        fetch('/api/radio/tracks?channel=' + ch)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            AUDIO_TRACKS = Array.isArray(data.tracks) ? data.tracks : [];
+            audioTrackIdx = 0;
+            if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
+            buildTrackList();
+            if (cb) cb();
           })
-          .sort(function(a, b) { return b.score - a.score; })
-          .slice(0, 10);
-
-        if (!sorted.length) {
-          container.innerHTML = '<p style="font-size:0.8rem;color:var(--text-3);text-align:center;margin:0;">Top tracks will appear here soon.</p>';
-          return;
-        }
-
-        container.innerHTML = '';
-        sorted.forEach(function(item, rank) {
-          var div = document.createElement('div');
-          div.className = 'rp-top-track-item';
-          div.innerHTML =
-            '<div class="rp-top-track-rank">#' + (rank + 1) + '</div>' +
-            '<div class="rp-top-track-info">' + escHtml(item.track.title || 'Track') + '</div>' +
-            '<div class="rp-top-track-score">' +
-              '<span>⭐ <span class="rp-top-track-score-val">' + item.score + '</span></span>' +
-            '</div>';
-          container.appendChild(div);
-        });
-      }
-
-      async function loadChannelTracks(ch, cb) {
-        ch = String(ch || '1');
-        activeChannel = ch;
-        try {
-          var fetchedTracks = await loadTracks(ch);
-          AUDIO_TRACKS = (Array.isArray(fetchedTracks) ? fetchedTracks : []).map(function(t) {
-            var directSrc = t && t.src ? String(t.src) : '';
-            var storagePath = t && t.storage_path ? String(t.storage_path) : '';
-            var isAbsolute = /^https?:\/\//i.test(directSrc);
-            var isLocalPath = directSrc.indexOf('/') === 0 || directSrc.indexOf('./') === 0 || directSrc.indexOf('../') === 0;
-            var resolvedSrc = directSrc || '';
-            if (!resolvedSrc && storagePath) {
-              resolvedSrc = 'https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/radio/' + storagePath.replace(/^\/+/, '');
-            } else if (resolvedSrc && !isAbsolute && !isLocalPath && resolvedSrc.indexOf('/storage/v1/object/public/') === -1) {
-              resolvedSrc = 'https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/radio/' + resolvedSrc.replace(/^\/+/, '');
-            }
-            return {
-              id: t.id,
-              title: t.title || t.name || 'Unknown Track',
-              artist: typeof t.artist !== 'undefined' ? t.artist : '',
-              src: resolvedSrc,
-              play_count: t.play_count || 0,
-              upvotes: t.upvotes || 0,
-            };
-          });
-          console.log('[radio] loadChannelTracks mapped', ch, AUDIO_TRACKS);
-
-          if (!AUDIO_TRACKS.length) {
-            // fallback to original endpoint for backwards compatibility
-            throw new Error('No tracks from Supabase');
-          }
-
-          audioTrackIdx = 0;
-          if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
-          buildTrackList();
-          if (cb) cb();
-          return;
-        } catch (err) {
-          console.log('[radio] loadChannelTracks supabase fallback', err);
-          fetch('/api/radio/tracks?channel=' + encodeURIComponent(parseInt(ch, 10)))
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-              AUDIO_TRACKS = Array.isArray(data.tracks) ? data.tracks : [];
-              console.log('[radio] loadChannelTracks fallback', ch, AUDIO_TRACKS);
-              audioTrackIdx = 0;
-              if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
-              buildTrackList();
-              if (cb) cb();
-            })
-            .catch(function() { AUDIO_TRACKS = []; buildTrackList(); if (cb) cb(); });
-        }
+          .catch(function() { AUDIO_TRACKS = []; buildTrackList(); if (cb) cb(); });
       }
 
       loadChannelTracks('1');
@@ -2011,7 +1721,6 @@
       }
 
       function buildTrackList() {
-        if (typeof buildTopTracks === 'function') buildTopTracks();
         var list = document.getElementById('rp-track-list');
         if (!list) return;
         if (!AUDIO_TRACKS.length) {
@@ -2023,35 +1732,11 @@
           var item = document.createElement('div');
           item.className = 'rp-track-item' + (i === 0 ? ' rp-track-item--active' : '');
           item.dataset.idx = i;
-
-          var playCount = t.play_count || 0;
-          var upvotes = t.upvotes || 0;
-
           item.innerHTML =
             '<span class="rp-track-num">' + (i + 1) + '</span>' +
             '<span class="rp-track-name">' + escHtml(t.title) + '</span>' +
-            (i === 0 ? '<span class="rp-track-playing-icon">&#x25B6;</span>' : '') +
-            '<div class="rp-track-stats">' +
-              '<div class="rp-track-stat-item"><span>▶</span> <span>' + playCount + '</span></div>' +
-              '<button class="rp-upvote-btn" data-idx="' + i + '" title="Upvote this track">👍 ' + upvotes + '</button>' +
-            '</div>';
-
-          item.addEventListener('click', function(e) {
-            if (e.target.closest('.rp-upvote-btn') || e.target.closest('button')) return;
-            loadAudioTrack(i, true);
-          });
-
-          var upvoteBtn = item.querySelector('.rp-upvote-btn');
-          if (upvoteBtn) {
-            upvoteBtn.addEventListener('click', function(e) {
-              e.preventDefault();
-              e.stopPropagation();
-              if (upvoteBtn.dataset.voted === '1') return;
-              upvoteBtn.dataset.voted = '1';
-              handleTrackVote(i);
-            });
-          }
-
+            (i === 0 ? '<span class="rp-track-playing-icon">&#x25B6;</span>' : '');
+          item.addEventListener('click', function() { loadAudioTrack(i, true); });
           list.appendChild(item);
         });
       }
@@ -2080,9 +1765,7 @@
         if (!AUDIO_TRACKS.length) return;
         idx = ((idx % AUDIO_TRACKS.length) + AUDIO_TRACKS.length) % AUDIO_TRACKS.length;
         audioTrackIdx = idx;
-        console.log('[radio] selected track', audioTrackIdx, AUDIO_TRACKS[audioTrackIdx]);
         audioEl.src = AUDIO_TRACKS[idx].src;
-        console.log('[radio] assigned audio src', audioEl.src);
         if (nowPlaying) nowPlaying.textContent = AUDIO_TRACKS[idx].title || ('Track ' + (idx + 1));
         updateTrackListActive(idx);
         if (autoplay) { audioEl.play().catch(function() {}); }
@@ -2102,8 +1785,7 @@
         audioEl.addEventListener('play',    function() { setPlayIcon(true); });
         audioEl.addEventListener('pause',   function() { setPlayIcon(false); });
         audioEl.addEventListener('ended',   function() { loadAudioTrack(audioTrackIdx + 1, true); });
-        audioEl.addEventListener('error',   function() { console.log('[radio] audio error on track', audioTrackIdx, AUDIO_TRACKS[audioTrackIdx]); });
-        audioEl.addEventListener('canplay', function() { console.log('[radio] canplay', audioTrackIdx, audioEl.src); });
+        audioEl.addEventListener('error',   function() { loadAudioTrack(audioTrackIdx + 1, true); });
         audioEl.addEventListener('timeupdate', function() {
           if (!audioEl.duration) return;
           var pct = (audioEl.currentTime / audioEl.duration) * 100;
@@ -2115,7 +1797,6 @@
           if (currentTimeEl) currentTimeEl.textContent = fmtTime(audioEl.currentTime);
         });
         audioEl.addEventListener('loadedmetadata', function() {
-          console.log('[radio] loadedmetadata', audioTrackIdx, audioEl.src, audioEl.duration);
           if (durationEl) durationEl.textContent = fmtTime(audioEl.duration);
         });
       }
@@ -2128,7 +1809,7 @@
         });
       }
 
-        buildTrackList();
+      buildTrackList();
 
       /* ── Station switching ── */
       var stationBtns    = document.querySelectorAll('.rp-station-btn');
@@ -2150,7 +1831,6 @@
       var AUDIO_STATIONS = { '1': true, '4': true, '5': true };
 
       function switchStation(id) {
-        id = String(id);
         if (id === activeStation) return;
         var prev = activeStation;
         activeStation = id;
@@ -2266,7 +1946,7 @@
       /* Play / Pause button — routes to audio or YouTube */
       if (playBtn) {
         playBtn.addEventListener('click', function() {
-          if (AUDIO_STATIONS[activeStation]) {
+          if (activeStation === '1') {
             audioPlayPause();
           } else if (ytPlayer) {
             if (isPlaying) { ytPlayer.pauseVideo(); } else { ytPlayer.playVideo(); }
@@ -2277,7 +1957,7 @@
       /* Skip back */
       if (skipBackBtn) {
         skipBackBtn.addEventListener('click', function() {
-          if (AUDIO_STATIONS[activeStation]) {
+          if (activeStation === '1') {
             loadAudioTrack(audioTrackIdx - 1, isPlaying);
           } else if (ytPlayer && ytPlayer.previousVideo) {
             ytPlayer.previousVideo();
@@ -2289,7 +1969,7 @@
       /* Skip forward */
       if (skipFwdBtn) {
         skipFwdBtn.addEventListener('click', function() {
-          if (AUDIO_STATIONS[activeStation]) {
+          if (activeStation === '1') {
             loadAudioTrack(audioTrackIdx + 1, isPlaying);
           } else if (ytPlayer && ytPlayer.nextVideo) {
             ytPlayer.nextVideo();
@@ -2368,6 +2048,7 @@
 
   <!-- ── Radio Chat Module (Supabase Realtime + simulation fallback) ── -->
   <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
+  <script src="assets/js/env.js" onerror="void 0"></script>
   <script type="module">
     import { initRadioChat } from './assets/js/radio-chat.js'
 
