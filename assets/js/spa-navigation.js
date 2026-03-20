@@ -20,14 +20,25 @@
       .then(html => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
-        const newApp = doc.querySelector("#app-content");
         const currentApp = document.querySelector("#app-content");
 
-        if (newApp && currentApp) {
-          currentApp.innerHTML = newApp.innerHTML;
-        } else {
-          console.warn("SPA: #app-content not found");
+        // Try to find #app-content first
+        let sourceContent = doc.querySelector("#app-content");
+        
+        // Fallback to <main> if #app-content doesn't exist
+        if (!sourceContent) {
+          sourceContent = doc.querySelector("main");
         }
+
+        // If we found content, inject it
+        if (sourceContent && currentApp) {
+          currentApp.innerHTML = sourceContent.innerHTML;
+        } else if (!sourceContent) {
+          console.warn("SPA: Neither #app-content nor <main> found in fetched page:", url);
+        } else if (!currentApp) {
+          console.warn("SPA: #app-content not found in shell page");
+        }
+
         document.dispatchEvent(new Event("page:loaded"));
         if (push) {
           history.pushState({url}, '', url);
