@@ -295,6 +295,113 @@
       padding: 2.5rem 1rem;
       line-height: 1.7;
     }
+    .rp-track-stats {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.7rem;
+      color: var(--text-3);
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .rp-track-stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .rp-upvote-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      background: none;
+      border: 1px solid rgba(139,92,246,0.25);
+      border-radius: 6px;
+      padding: 0.35rem 0.6rem;
+      color: var(--text-3);
+      cursor: pointer;
+      font-size: 0.65rem;
+      font-weight: 700;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .rp-upvote-btn:hover {
+      background: rgba(139,92,246,0.08);
+      border-color: rgba(139,92,246,0.4);
+      color: var(--purple-bright);
+    }
+    .rp-top-tracks {
+      max-width: 780px;
+      margin: 1.5rem auto 0;
+      padding: 0 1.25rem;
+    }
+    .rp-top-tracks-inner {
+      background: rgba(139,92,246,0.04);
+      border: 1px solid rgba(139,92,246,0.15);
+      border-radius: 14px;
+      padding: 1.25rem;
+    }
+    .rp-top-tracks-title {
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--purple-bright);
+      margin: 0 0 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .rp-top-tracks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .rp-top-track-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.7rem 0.9rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(139,92,246,0.1);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .rp-top-track-item:hover {
+      background: rgba(139,92,246,0.08);
+      border-color: rgba(139,92,246,0.2);
+      color: var(--text);
+    }
+    .rp-top-track-rank {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--text-3);
+      width: 24px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .rp-top-track-info {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    .rp-top-track-score {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      color: var(--text-3);
+      flex-shrink: 0;
+    }
+    .rp-top-track-score-val {
+      font-weight: 700;
+      color: var(--purple-bright);
+    }
 
     /* ── Playback control bar ── */
     .rp-controls {
@@ -1077,6 +1184,18 @@
       </div>
     </div>
 
+    <!-- ── Top Tracks Panel ── -->
+    <div class="rp-top-tracks">
+      <div class="rp-top-tracks-inner">
+        <p class="rp-top-tracks-title">
+          <span>🔥</span> Top Tracks
+        </p>
+        <div id="rp-top-tracks-list" class="rp-top-tracks-list">
+          <p style="font-size:0.8rem;color:var(--text-3);text-align:center;margin:0;">Loading top tracks…</p>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Station 1 Community Upload Section ── -->
     <div id="rp-submit-section" style="max-width:780px;margin:1.5rem auto 0;padding:0 1.25rem;">
       <div style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.22);border-radius:16px;padding:1.5rem;">
@@ -1814,6 +1933,75 @@
         }
       }
 
+      async function handleTrackVote(idx) {
+        if (!AUDIO_TRACKS || !AUDIO_TRACKS[idx]) {
+          console.log('[radio] handleTrackVote: invalid track index', idx);
+          return;
+        }
+
+        var track = AUDIO_TRACKS[idx];
+        var sess = null;
+        try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
+
+        if (!sess || !sess.username) {
+          console.log('[radio] handleTrackVote: not logged in');
+          alert('Sign in to upvote tracks.');
+          return;
+        }
+
+        if (!track.id) {
+          console.log('[radio] handleTrackVote: no track id');
+          return;
+        }
+
+        await upvoteTrack(track.id, sess.username);
+
+        if (track.upvotes === undefined) track.upvotes = 0;
+        track.upvotes += 1;
+
+        buildTrackList();
+        buildTopTracks();
+      }
+
+      function buildTopTracks() {
+        var container = document.getElementById('rp-top-tracks-list');
+        if (!container || !AUDIO_TRACKS || !AUDIO_TRACKS.length) return;
+
+        var sorted = AUDIO_TRACKS.slice()
+          .map(function(t) {
+            var score = (t.upvotes || 0) * 4 + (t.play_count || 0);
+            return { track: t, score: score };
+          })
+          .sort(function(a, b) {
+            if (b.score !== a.score) return b.score - a.score;
+            return 0;
+          })
+          .slice(0, 10);
+
+        if (!sorted.length) {
+          container.innerHTML = '<p style="font-size:0.8rem;color:var(--text-3);text-align:center;margin:0;">No tracks yet.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        sorted.forEach(function(item, rank) {
+          var t = item.track;
+          var div = document.createElement('div');
+          div.className = 'rp-top-track-item';
+          div.innerHTML =
+            '<div class="rp-top-track-rank">#' + (rank + 1) + '</div>' +
+            '<div class="rp-top-track-info">' + escHtml(t.title || 'Track') + '</div>' +
+            '<div class="rp-top-track-score">' +
+              '<span>⭐ <span class="rp-top-track-score-val">' + item.score + '</span></span>' +
+            '</div>';
+          div.addEventListener('click', function() {
+            var idx = AUDIO_TRACKS.indexOf(t);
+            if (idx !== -1) loadAudioTrack(idx, true);
+          });
+          container.appendChild(div);
+        });
+      }
+
       async function loadChannelTracks(ch, cb) {
         try {
           var fetchedTracks = await loadTracks();
@@ -1836,6 +2024,7 @@
           audioTrackIdx = 0;
           if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
           buildTrackList();
+          buildTopTracks();
           if (cb) cb();
           return;
         } catch (err) {
@@ -1847,9 +2036,10 @@
               audioTrackIdx = 0;
               if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
               buildTrackList();
+              buildTopTracks();
               if (cb) cb();
             })
-            .catch(function() { AUDIO_TRACKS = []; buildTrackList(); if (cb) cb(); });
+            .catch(function() { AUDIO_TRACKS = []; buildTrackList(); buildTopTracks(); if (cb) cb(); });
         }
       }
 
@@ -1880,11 +2070,32 @@
           var item = document.createElement('div');
           item.className = 'rp-track-item' + (i === 0 ? ' rp-track-item--active' : '');
           item.dataset.idx = i;
+
+          var playCount = t.play_count || 0;
+          var upvotes = t.upvotes || 0;
+
           item.innerHTML =
             '<span class="rp-track-num">' + (i + 1) + '</span>' +
             '<span class="rp-track-name">' + escHtml(t.title) + '</span>' +
-            (i === 0 ? '<span class="rp-track-playing-icon">&#x25B6;</span>' : '');
-          item.addEventListener('click', function() { loadAudioTrack(i, true); });
+            (i === 0 ? '<span class="rp-track-playing-icon">&#x25B6;</span>' : '') +
+            '<div class="rp-track-stats">' +
+              '<div class="rp-track-stat-item"><span>▶</span> <span>' + playCount + '</span></div>' +
+              '<button class="rp-upvote-btn" data-idx="' + i + '" title="Upvote this track">👍 ' + upvotes + '</button>' +
+            '</div>';
+
+          item.addEventListener('click', function(e) {
+            if (e.target.closest('.rp-upvote-btn')) return;
+            loadAudioTrack(i, true);
+          });
+
+          var upvoteBtn = item.querySelector('.rp-upvote-btn');
+          if (upvoteBtn) {
+            upvoteBtn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              handleTrackVote(i);
+            });
+          }
+
           list.appendChild(item);
         });
       }
@@ -1965,6 +2176,7 @@
       }
 
       buildTrackList();
+      buildTopTracks();
 
       /* ── Station switching ── */
       var stationBtns    = document.querySelectorAll('.rp-station-btn');
