@@ -39,9 +39,12 @@
 
   document.addEventListener('click', e => {
     const a = e.target.closest('a');
-    if (a && a.href && isInternalLink(a.href) && !a.target) {
-      e.preventDefault();
-      loadPage(a.href);
+    if (a && a.getAttribute('href')) {
+      const href = a.getAttribute('href');
+      if (isInternalLink(href) && !a.target) {
+        e.preventDefault();
+        loadPage(href);
+      }
     }
   });
 
