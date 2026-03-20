@@ -1884,7 +1884,6 @@
       }
 
       async function upvoteTrack(trackId, username) {
-          console.log('[radio] upvoteTrack: TOGGLE START', trackId, username);
         console.log('[radio] upvoteTrack: START', trackId, username);
         if (!trackId || !username) {
           console.log('[radio] upvoteTrack requires trackId and username');
@@ -1901,7 +1900,7 @@
             return;
           }
 
-          console.log('[radio] upvoteTrack: about to insert vote');
+          // Insert vote
           var vote = await supabase.from('radio_track_votes').insert({ track_id: trackId, username: username });
           console.log('[radio] upvoteTrack: vote insert result', vote);
           if (vote.error) {
@@ -1913,24 +1912,18 @@
             return;
           }
 
-          console.log('[radio] upvoteTrack: about to fetch track');
+          // Increment upvotes
           var trackRecord = await supabase.from('radio_tracks').select('upvotes').eq('id', trackId).single();
-          console.log('[radio] upvoteTrack: track fetch result', trackRecord);
           if (trackRecord.error) {
             console.log('[radio] upvoteTrack fetch track error', trackRecord.error);
             return;
           }
-
           var newUpvotes = ((trackRecord.data && trackRecord.data.upvotes) || 0) + 1;
-          console.log('[radio] upvoteTrack: about to update track', newUpvotes);
           var updateResult = await supabase.from('radio_tracks').update({ upvotes: newUpvotes }).eq('id', trackId);
-          console.log('[radio] upvoteTrack: track update result', updateResult);
           if (updateResult.error) {
             console.log('[radio] upvoteTrack update error', updateResult.error);
             return;
           }
-
-          console.log('[radio] upvoteTrack: success');
 
           if (window.tracks && Array.isArray(window.tracks)) {
             var match = window.tracks.find(function(t) { return t.id === trackId; });
