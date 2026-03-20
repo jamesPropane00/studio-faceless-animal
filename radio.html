@@ -1883,6 +1883,7 @@
       }
 
       async function upvoteTrack(trackId, username) {
+        console.log('[radio] upvoteTrack: START', trackId, username);
         if (!trackId || !username) {
           console.log('[radio] upvoteTrack requires trackId and username');
           return;
@@ -1892,32 +1893,42 @@
           var mod = await import('./assets/js/supabase-config.js');
           var supabase = mod.supabase;
           var SUPABASE_READY = mod.SUPABASE_READY;
+          console.log('[radio] upvoteTrack: supabase ready?', SUPABASE_READY, !!supabase);
           if (!SUPABASE_READY || !supabase) {
             console.log('[radio] upvoteTrack: Supabase not ready');
             return;
           }
 
+          console.log('[radio] upvoteTrack: about to insert vote');
           var vote = await supabase.from('radio_track_votes').insert({ track_id: trackId, username: username });
+          console.log('[radio] upvoteTrack: vote insert result', vote);
           if (vote.error) {
             if (String(vote.error.message || '').toLowerCase().includes('duplicate') || String(vote.error.code).includes('23505')) {
+              console.log('[radio] upvoteTrack: duplicate vote, skipping update');
               return;
             }
             console.log('[radio] upvoteTrack insert error', vote.error);
             return;
           }
 
+          console.log('[radio] upvoteTrack: about to fetch track');
           var trackRecord = await supabase.from('radio_tracks').select('upvotes').eq('id', trackId).single();
+          console.log('[radio] upvoteTrack: track fetch result', trackRecord);
           if (trackRecord.error) {
             console.log('[radio] upvoteTrack fetch track error', trackRecord.error);
             return;
           }
 
           var newUpvotes = ((trackRecord.data && trackRecord.data.upvotes) || 0) + 1;
+          console.log('[radio] upvoteTrack: about to update track', newUpvotes);
           var updateResult = await supabase.from('radio_tracks').update({ upvotes: newUpvotes }).eq('id', trackId);
+          console.log('[radio] upvoteTrack: track update result', updateResult);
           if (updateResult.error) {
             console.log('[radio] upvoteTrack update error', updateResult.error);
             return;
           }
+
+          console.log('[radio] upvoteTrack: success');
 
           if (window.tracks && Array.isArray(window.tracks)) {
             var match = window.tracks.find(function(t) { return t.id === trackId; });
@@ -1934,6 +1945,7 @@
       }
 
       async function handleTrackVote(idx) {
+        console.log('[radio] handleTrackVote: started with idx', idx);
         if (!AUDIO_TRACKS || !AUDIO_TRACKS[idx]) {
           console.log('[radio] handleTrackVote: invalid track index', idx);
           return;
@@ -1942,6 +1954,7 @@
         var track = AUDIO_TRACKS[idx];
         var sess = null;
         try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
+        console.log('[radio] handleTrackVote: session read', sess);
 
         if (!sess || !sess.username) {
           console.log('[radio] handleTrackVote: not logged in');
@@ -1954,7 +1967,10 @@
           return;
         }
 
+        console.log('[radio] handleTrackVote: track.id present', track.id);
+        console.log('[radio] handleTrackVote: about to call upvoteTrack');
         await upvoteTrack(track.id, sess.username);
+        console.log('[radio] handleTrackVote: upvoteTrack completed');
 
         buildTrackList();
         buildTopTracks();
