@@ -2057,7 +2057,7 @@
           audioTrackIdx = 0;
           if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
           buildTrackList();
-          buildTopTracks();
+          // buildTopTracks();
           if (cb) cb();
           return;
         } catch (err) {
@@ -2069,10 +2069,10 @@
               audioTrackIdx = 0;
               if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
               buildTrackList();
-              buildTopTracks();
+              // buildTopTracks();
               if (cb) cb();
             })
-            .catch(function() { AUDIO_TRACKS = []; buildTrackList(); buildTopTracks(); if (cb) cb(); });
+            .catch(function() { AUDIO_TRACKS = []; buildTrackList(); /* buildTopTracks(); */ if (cb) cb(); });
         }
       }
 
@@ -2210,7 +2210,7 @@
       }
 
       buildTrackList();
-      buildTopTracks();
+      // buildTopTracks();
 
       /* ── Station switching ── */
       var stationBtns    = document.querySelectorAll('.rp-station-btn');
@@ -2452,7 +2452,7 @@
 
   <!-- ── Radio Chat Module (Supabase Realtime + simulation fallback) ── -->
   <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
-  <script src="assets/js/env.js" onerror="void 0"></script>
+  <!-- <script src="assets/js/env.js" onerror="void 0"></script> -->
   <script type="module">
     import { initRadioChat } from './assets/js/radio-chat.js'
 
