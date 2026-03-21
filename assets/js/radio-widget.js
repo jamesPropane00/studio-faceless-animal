@@ -7,7 +7,7 @@
  *   • Hidden YouTube iframe — plays continuously as you browse
  *   • Play/Pause · Skip Back · Skip Forward
  *   • Volume slider + mute toggle
- *   • 3-station switcher (two YT playlists + Spotify)
+ *   • 5-station switcher (audio channels 1/4/5 + YT + Spotify)
  *   • Expandable panel with Radio info + Live Chat tabs
  *   • Live chat feed from Supabase (messages table, room: radio)
  *   • DM notification badge (unread messages)
@@ -40,15 +40,23 @@
       type: 'audio',
       tracks: [],
     },
-    '2': { label: 'Station 2 · Mix',       type: 'yt',      listId: 'PLuaOk7bBVKJTqt9w6hS_MxjeQHGURWaBN' },
-    '3': { label: 'Station 3 · Spotify',   type: 'spotify', listId: null },
+    '2': { label: 'Station 2 · Mix Playlist', type: 'yt',      listId: 'PLuaOk7bBVKJTqt9w6hS_MxjeQHGURWaBN' },
+    '3': { label: 'Station 3 · Spotify',      type: 'spotify', listId: null },
+    '4': { label: 'Station 4 · Blends',       type: 'audio',   tracks: [] },
+    '5': { label: 'Station 5 · Archives',     type: 'audio',   tracks: [] },
   };
+  var SPOTIFY_ARTIST_URL = 'https://open.spotify.com/artist/0pO4yejvRakRu8CzXlRwan?si=biawU4dRTAOQa9-y2vQH5w';
 
   /* ── Persistent state (sessionStorage) ─────────────────────── */
   var PRE = 'fas_rw_';
   function ss(k, v) { if (v === undefined) return sessionStorage.getItem(PRE + k); sessionStorage.setItem(PRE + k, String(v)); }
 
   var activeStation = ss('station') || '1';
+  if (!STATIONS[activeStation]) {
+    activeStation = '1';
+    ss('station', activeStation);
+  }
+  var activeAudioChannel = (STATIONS[activeStation] && STATIONS[activeStation].type === 'audio') ? activeStation : '1';
   var volume        = parseInt(ss('volume') || '80', 10);
   var muted         = ss('muted') === '1';
   var trackIndex    = parseInt(ss('track_index') || '0', 10);
@@ -172,8 +180,68 @@
     });
   }
 
+  function getAudioTracks(channel) {
+    var st = STATIONS[String(channel)];
+    return st && Array.isArray(st.tracks) ? st.tracks : [];
+  }
+
+  function getActiveAudioTracks() {
+    return getAudioTracks(activeAudioChannel);
+  }
+
+  function mapTrackRow(t) {
+    return Object.assign({}, t, {
+      src: t && t.storage_path
+        ? 'https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/radio/' + String(t.storage_path).replace(/^\/+/, '')
+        : (t && t.src ? t.src : ''),
+    });
+  }
+
+  function setAudioTracksForChannel(channel, rows) {
+    var id = String(channel || '1');
+    if (!STATIONS[id] || STATIONS[id].type !== 'audio') return [];
+    STATIONS[id].tracks = (Array.isArray(rows) ? rows : []).map(mapTrackRow);
+    return STATIONS[id].tracks;
+  }
+
+  function loadAudioTracksForChannel(channel) {
+    var id = String(channel || '1');
+    if (!STATIONS[id] || STATIONS[id].type !== 'audio') return Promise.resolve([]);
+
+    if (Array.isArray(STATIONS[id].tracks) && STATIONS[id].tracks.length) {
+      return Promise.resolve(STATIONS[id].tracks);
+    }
+
+    var channelInt = parseInt(id, 10);
+    return import('./supabase-config.js')
+      .then(function(mod) {
+        var supabase = mod && mod.supabase;
+        var ready = mod && mod.SUPABASE_READY;
+        if (!ready || !supabase) return { data: [] };
+        return supabase
+          .from('radio_tracks')
+          .select('id,title,src,storage_path,play_count,upvotes,channel,is_active')
+          .eq('channel', channelInt)
+          .eq('is_active', true)
+          .order('play_count', { ascending: false });
+      })
+      .then(function(res) {
+        var rows = res && Array.isArray(res.data) ? res.data : [];
+        if (rows.length) return setAudioTracksForChannel(id, rows);
+
+        return fetch('/api/radio/tracks?channel=' + encodeURIComponent(channelInt))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            var fallbackRows = Array.isArray(data && data.tracks) ? data.tracks : [];
+            return setAudioTracksForChannel(id, fallbackRows);
+          })
+          .catch(function() { return setAudioTracksForChannel(id, []); });
+      })
+      .catch(function() { return setAudioTracksForChannel(id, []); });
+  }
+
   function loadAudioTrack(idx, autoplay) {
-    var tracks = STATIONS['1'].tracks;
+    var tracks = getActiveAudioTracks();
     if (!audioEl) initAudio();
     console.log('[rw-debug] loadAudioTrack start', {
       idx: idx,
@@ -221,7 +289,7 @@
   }
 
   function audioPlayPause() {
-    var tracks = STATIONS['1'].tracks;
+    var tracks = getActiveAudioTracks();
     if (!audioEl) initAudio();
     console.log('[rw-debug] audioPlayPause', {
       activeStation: activeStation,
@@ -246,7 +314,7 @@
   }
 
   function audioSkip(dir, auto) {
-    var tracks = STATIONS['1'].tracks;
+    var tracks = getActiveAudioTracks();
     if (!tracks || !tracks.length) return;
     loadAudioTrack(audioTrackIdx + dir, auto || playing);
   }
@@ -271,10 +339,11 @@
   }
 
   function updateNowPlayingAudio() {
-    var tracks = STATIONS['1'].tracks;
+    var tracks = getActiveAudioTracks();
     if (!tracks || !tracks.length) { setNowPlayingText('No tracks loaded yet'); return; }
     var t = tracks[audioTrackIdx];
-    setNowPlayingText(t ? (t.title || ('Track ' + (audioTrackIdx + 1))) : STATIONS['1'].label);
+    var fallbackStation = STATIONS[activeAudioChannel] || STATIONS['1'];
+    setNowPlayingText(t ? (t.title || ('Track ' + (audioTrackIdx + 1))) : fallbackStation.label);
   }
 
   function setPlayIcon(isPlaying) {
@@ -315,11 +384,15 @@
 
     var controls = document.querySelector('.fas-rw-controls');
     var spotifyInfo = document.getElementById('fas-rw-spotify-info');
+    var panelCtrl = document.getElementById('fas-rw-panel-ctrl');
+    var spotifyPanel = document.getElementById('fas-rw-spotify-panel');
+    var volIcon = document.getElementById('fas-rw-vol-icon');
+    var volSlider = document.getElementById('fas-rw-vol-slider');
 
     /* ── Stop the previous station ── */
-    if (prev === '1') {
+    if (STATIONS[prev] && STATIONS[prev].type === 'audio') {
       audioStop();
-    } else if (prev === '2') {
+    } else if (STATIONS[prev] && STATIONS[prev].type === 'yt') {
       ytCmd('pauseVideo');
       playing     = false;
       pendingPlay = false;
@@ -332,14 +405,29 @@
       if (ytWrap) ytWrap.style.display = 'none';
       if (controls)    controls.style.display    = '';
       if (spotifyInfo) spotifyInfo.style.display = 'none';
+      if (panelCtrl) panelCtrl.style.display = '';
+      if (spotifyPanel) spotifyPanel.style.display = 'none';
+      if (volIcon) volIcon.style.display = '';
+      if (volSlider) volSlider.style.display = '';
+      activeAudioChannel = id;
+      audioTrackIdx = 0;
+      ss('track_index', '0');
+      ss('current_time', '0');
       initAudio();
-      updateNowPlayingAudio();
+      loadAudioTracksForChannel(id).then(function() {
+        if (activeStation !== id) return;
+        updateNowPlayingAudio();
+      });
 
     } else if (st.type === 'yt') {
       var ytWrap2 = document.getElementById('fas-rw-yt-wrap');
       if (ytWrap2) ytWrap2.style.display = '';
       if (controls)    controls.style.display    = '';
       if (spotifyInfo) spotifyInfo.style.display = 'none';
+      if (panelCtrl) panelCtrl.style.display = '';
+      if (spotifyPanel) spotifyPanel.style.display = 'none';
+      if (volIcon) volIcon.style.display = '';
+      if (volSlider) volSlider.style.display = '';
 
       if (ytReady && ytPlayer && ytPlayer.loadPlaylist) {
         try { ytPlayer.loadPlaylist({ list: st.listId, listType: 'playlist' }); }
@@ -354,8 +442,12 @@
     } else if (st.type === 'spotify') {
       if (controls)    controls.style.display    = 'none';
       if (spotifyInfo) spotifyInfo.style.display = '';
+      if (panelCtrl) panelCtrl.style.display = 'none';
+      if (spotifyPanel) spotifyPanel.style.display = '';
+      if (volIcon) volIcon.style.display = 'none';
+      if (volSlider) volSlider.style.display = 'none';
       setPlayIcon(false);
-      setNowPlayingText('Spotify — Open Radio page to listen');
+      setNowPlayingText('DJ Faceless Animal — Live on Spotify');
     }
   }
 
@@ -593,6 +685,12 @@
             '<button class="fas-rw-st-btn" data-station="3">',
               '<span class="fas-rw-st-dot fas-rw-st-dot--spotify"></span> Spotify',
             '</button>',
+            '<button class="fas-rw-st-btn" data-station="4">',
+              '<span class="fas-rw-st-dot fas-rw-st-dot--on"></span> Stn 4',
+            '</button>',
+            '<button class="fas-rw-st-btn" data-station="5">',
+              '<span class="fas-rw-st-dot fas-rw-st-dot--on"></span> Stn 5',
+            '</button>',
           '</div>',
           /* Now playing */
           '<p class="fas-rw-now-playing-label">Now Playing</p>',
@@ -605,10 +703,8 @@
           '</div>',
           /* Spotify station note */
           '<div class="fas-rw-spotify-panel" id="fas-rw-spotify-panel" style="display:none;">',
-            '<p style="font-size:0.78rem;color:var(--text-2);text-align:center;padding:0.5rem;">',
-              '&#x1F3B5; Spotify station — open the full radio page to listen.',
-            '</p>',
-            '<a href="radio.html" class="fas-rw-open-link">Open Radio Page &rarr;</a>',
+            '<p class="fas-rw-spotify-title">DJ Faceless Animal &mdash; Live on Spotify</p>',
+            '<a href="' + SPOTIFY_ARTIST_URL + '" class="fas-rw-open-link fas-rw-spotify-cta" target="_blank" rel="noopener noreferrer">Open Spotify Channel &rarr;</a>',
           '</div>',
           /* Full page link */
           '<a href="radio.html" class="fas-rw-open-link" style="margin-top:0.75rem;">Open Full Radio Page &rarr;</a>',
@@ -692,38 +788,13 @@
     loadDMBadge();
     setInterval(loadDMBadge, 60000);
 
-    /* Load Station 1 tracks from Supabase */
-    import('./supabase-config.js')
-      .then(function(mod) {
-        var supabase = mod && mod.supabase;
-        var ready = mod && mod.SUPABASE_READY;
-        if (!ready || !supabase) return { data: [] };
-        return supabase
-          .from('radio_tracks')
-          .select('id,title,src,storage_path,play_count,upvotes,channel,is_active')
-          .eq('channel', 1)
-          .eq('is_active', true)
-          .order('play_count', { ascending: false });
-      })
-      .then(function(res) {
-        var rows = res && Array.isArray(res.data) ? res.data : [];
-        if (rows.length) {
-          STATIONS['1'].tracks = rows.map(function(t) {
-            return Object.assign({}, t, {
-              src: t && t.storage_path
-                ? 'https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/radio/' + String(t.storage_path).replace(/^\/+/, '')
-                : (t && t.src ? t.src : ''),
-            });
-          });
-          if (STATIONS['1'].tracks.length > 0) {
-            var savedIdx = parseInt(ss('track_index') || '0', 10);
-            if (savedIdx >= 0 && savedIdx < STATIONS['1'].tracks.length) {
-              loadAudioTrack(savedIdx, false);
-            }
-          }
-        }
-      })
-      .catch(function() { /* no tracks yet */ });
+    loadAudioTracksForChannel(activeAudioChannel).then(function(tracks) {
+      if (!tracks || !tracks.length) return;
+      var savedIdx = parseInt(ss('track_index') || '0', 10);
+      if (savedIdx >= 0 && savedIdx < tracks.length) {
+        loadAudioTrack(savedIdx, false);
+      }
+    });
 
     /* Sync initial station */
     switchStation(activeStation);
@@ -793,7 +864,7 @@
         button: 'fas-rw-play-btn',
         activeStation: activeStation,
         stationType: STATIONS[activeStation] && STATIONS[activeStation].type,
-        tracksLength: STATIONS['1'] && STATIONS['1'].tracks ? STATIONS['1'].tracks.length : 0,
+        tracksLength: getActiveAudioTracks().length,
       });
       togglePlay();
     });
@@ -808,7 +879,7 @@
         button: 'fas-rw-play-btn2',
         activeStation: activeStation,
         stationType: STATIONS[activeStation] && STATIONS[activeStation].type,
-        tracksLength: STATIONS['1'] && STATIONS['1'].tracks ? STATIONS['1'].tracks.length : 0,
+        tracksLength: getActiveAudioTracks().length,
       });
       togglePlay();
     });
@@ -918,7 +989,7 @@
     console.log('[rw-debug] togglePlay', {
       activeStation: activeStation,
       stationType: st && st.type,
-      tracksLength: STATIONS['1'] && STATIONS['1'].tracks ? STATIONS['1'].tracks.length : 0,
+      tracksLength: getActiveAudioTracks().length,
       audioSrc: audioEl && audioEl.src,
       savedTrackIndex: ss('track_index'),
       savedIsPlaying: ss('is_playing'),

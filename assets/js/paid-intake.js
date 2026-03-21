@@ -254,8 +254,16 @@ function showSuccess({ username, display_name, selected_plan, category, isStatic
     emailEl.textContent = emailInput ? emailInput.value : '—'
   }
 
-  if (isStatic) {
+  const staticNoteId = 'paid-intake-static-note'
+  const existingStaticNote = document.getElementById(staticNoteId)
+
+  if (existingStaticNote) {
+    existingStaticNote.remove()
+  }
+
+  if (isStatic && !SUPABASE_READY) {
     const staticNote = document.createElement('p')
+    staticNote.id = staticNoteId
     staticNote.className = 'success-static-note'
     staticNote.textContent = 'Your details were not saved to our system yet — the backend is not connected in this environment. Email djfacelessanimal@gmail.com with your info and we\'ll set you up manually.'
     success.insertBefore(staticNote, success.querySelector('.paid-success-next'))

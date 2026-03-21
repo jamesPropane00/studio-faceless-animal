@@ -383,7 +383,7 @@
         </div>
 
         <!-- Feature access -->
-        <div class="dash-section">
+        <div class="dash-section" style="display:none;">
           <p class="dash-section-title">What You Have Access To</p>
           <div class="dash-card">
             <div class="dash-features-grid">
@@ -429,26 +429,30 @@
 
         <!-- Quick access -->
         <div class="dash-section">
-          <p class="dash-section-title">Quick Access</p>
+          <p class="dash-section-title">Start Here</p>
+          <p style="font-size:0.75rem;color:var(--text-3);margin:-0.25rem 0 0.65rem;">Listen first &middot; Upload your work &middot; Control your presence</p>
           <div class="dash-links-grid">
+            <a href="radio.html" class="dash-link-card"><span class="dash-link-icon">📻</span><span class="dash-link-label">Radio</span></a>
+            <button class="dash-link-card" id="qa-tracks" style="cursor:pointer;">
+              <span class="dash-link-icon">🎵</span><span class="dash-link-label">Tracks</span>
+            </button>
             <button class="dash-link-card" id="qa-edit-profile" style="cursor:pointer;background:rgba(139,92,246,0.06);border-color:rgba(139,92,246,0.25);">
               <span class="dash-link-icon">✏️</span><span class="dash-link-label">Edit Profile</span>
             </button>
             <a href="#" id="qa-my-page" class="dash-link-card" style="display:none;">
               <span class="dash-link-icon">🪪</span><span class="dash-link-label">My Page</span>
             </a>
-            <a href="radio.html" class="dash-link-card"><span class="dash-link-icon">📻</span><span class="dash-link-label">Radio</span></a>
-            <a href="messages.html" class="dash-link-card"><span class="dash-link-icon">💬</span><span class="dash-link-label">Messages</span></a>
-            <a href="messages.html" class="dash-link-card" id="qa-attachments"><span class="dash-link-icon">📎</span><span class="dash-link-label">Attachments</span></a>
-            <a href="network.html" class="dash-link-card"><span class="dash-link-icon">🌐</span><span class="dash-link-label">Network</span></a>
-            <a href="games.html" class="dash-link-card" id="qa-games"><span class="dash-link-icon">🎮</span><span class="dash-link-label">Games</span></a>
-            <a href="apps.html" class="dash-link-card" id="qa-apps"><span class="dash-link-icon">📱</span><span class="dash-link-label">Apps</span></a>
-            <a href="drops.html" class="dash-link-card" id="qa-drops"><span class="dash-link-icon">🔥</span><span class="dash-link-label">Drops</span></a>
+            <a href="messages.html" class="dash-link-card" style="display:none;"><span class="dash-link-icon">💬</span><span class="dash-link-label">Messages</span></a>
+            <a href="messages.html" class="dash-link-card" id="qa-attachments" style="display:none;"><span class="dash-link-icon">📎</span><span class="dash-link-label">Attachments</span></a>
+            <a href="network.html" class="dash-link-card" style="display:none;"><span class="dash-link-icon">🌐</span><span class="dash-link-label">Network</span></a>
+            <a href="games.html" class="dash-link-card" id="qa-games" style="display:none;"><span class="dash-link-icon">🎮</span><span class="dash-link-label">Games</span></a>
+            <a href="apps.html" class="dash-link-card" id="qa-apps" style="display:none;"><span class="dash-link-icon">📱</span><span class="dash-link-label">Apps</span></a>
+            <a href="drops.html" class="dash-link-card" id="qa-drops" style="display:none;"><span class="dash-link-icon">🔥</span><span class="dash-link-label">Drops</span></a>
           </div>
         </div>
 
         <!-- Messages preview -->
-        <div class="dash-section">
+        <div class="dash-section" style="display:none;">
           <p class="dash-section-title">Recent Messages</p>
           <div id="dash-msg-preview">
             <div class="dash-loading" id="dash-msg-loading">Loading…</div>
@@ -466,7 +470,7 @@
         </div>
 
         <!-- Recent activity -->
-        <div class="dash-section">
+        <div class="dash-section" style="display:none;">
           <p class="dash-section-title">Recent Activity</p>
           <div class="dash-card" id="dash-activity-preview">
             <div class="dash-loading" id="dash-activity-loading">Loading…</div>
@@ -478,7 +482,7 @@
         </div>
 
         <!-- Upgrade CTA -->
-        <div class="dash-section" id="dash-upgrade-section">
+        <div class="dash-section" id="dash-upgrade-section" style="display:none;">
           <p class="dash-section-title">Unlock More</p>
           <div class="dash-upgrade-banner">
             <p class="dash-upgrade-title">Go Active — $5/Month</p>
@@ -656,7 +660,8 @@
         <div id="tracks-upload-section" style="display:none;">
 
           <div class="dash-section">
-            <p class="dash-section-title">Upload a Track</p>
+            <!-- Fix 5: track count shown near upload form so creator knows their quota at a glance -->
+            <p class="dash-section-title" style="display:flex;align-items:center;gap:0.5rem;">Upload a Track <span id="track-upload-count" style="font-size:0.7rem;color:var(--text-3);font-weight:400;"></span></p>
             <div class="dash-card">
 
               <!-- Drop zone -->
@@ -712,6 +717,9 @@
               Your Tracks
               <span id="tracks-count" style="font-size:0.7rem;color:var(--text-3);font-weight:400;"></span>
             </p>
+            <!-- Fix 1: visibility clarification so creator knows where tracks live -->
+            <p style="font-size:0.72rem;color:var(--text-3);margin:-0.15rem 0 0.75rem;">Stored to your account &middot; Private &middot; Playable here in your dashboard</p>
+            <span class="dash-save-note" id="track-report-note" style="display:block;margin:0 0 0.65rem;"></span>
             <div id="tracks-list">
               <p id="tracks-empty" style="font-size:0.82rem;color:var(--text-3);padding:0.5rem 0;">No tracks uploaded yet. Upload your first track above.</p>
             </div>
@@ -801,6 +809,47 @@
             </div>
           </div>
         </div>
+
+        <!-- Moderation Queue (UI-only placeholder) -->
+        <div class="dash-section">
+          <p class="dash-section-title">Moderation Queue</p>
+          <div class="dash-card" style="padding:0;overflow:hidden;">
+            <p style="font-size:0.78rem;color:var(--text-3);padding:0.9rem 1rem;border-bottom:1px solid rgba(255,255,255,0.06);">No reports yet</p>
+
+            <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,0.9fr) minmax(0,0.95fr) auto;gap:0.6rem;align-items:center;padding:0.75rem 1rem;border-bottom:1px solid rgba(255,255,255,0.06);">
+              <div style="min-width:0;"><p style="font-size:0.82rem;color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Night Run (Demo)</p></div>
+              <div style="font-size:0.74rem;color:var(--text-2);">Spam</div>
+              <div style="font-size:0.74rem;color:var(--text-2);">@samplecreator</div>
+              <div style="display:flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" type="button">Approve</button>
+                <button class="btn btn-ghost btn-sm" type="button">Remove</button>
+                <button class="btn btn-ghost btn-sm" type="button">Restrict User</button>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,0.9fr) minmax(0,0.95fr) auto;gap:0.6rem;align-items:center;padding:0.75rem 1rem;border-bottom:1px solid rgba(255,255,255,0.06);">
+              <div style="min-width:0;"><p style="font-size:0.82rem;color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Street Echoes</p></div>
+              <div style="font-size:0.74rem;color:var(--text-2);">Explicit Content</div>
+              <div style="font-size:0.74rem;color:var(--text-2);">@koldvisual</div>
+              <div style="display:flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" type="button">Approve</button>
+                <button class="btn btn-ghost btn-sm" type="button">Remove</button>
+                <button class="btn btn-ghost btn-sm" type="button">Restrict User</button>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,0.9fr) minmax(0,0.95fr) auto;gap:0.6rem;align-items:center;padding:0.75rem 1rem;">
+              <div style="min-width:0;"><p style="font-size:0.82rem;color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">After Hours Loop</p></div>
+              <div style="font-size:0.74rem;color:var(--text-2);">Stolen Content</div>
+              <div style="font-size:0.74rem;color:var(--text-2);">@djfacelessanimal</div>
+              <div style="display:flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" type="button">Approve</button>
+                <button class="btn btn-ghost btn-sm" type="button">Remove</button>
+                <button class="btn btn-ghost btn-sm" type="button">Restrict User</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div><!-- end panel-super-admin -->
 
       <!-- Sign out -->
@@ -821,6 +870,29 @@
         <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" class="btn btn-primary btn-sm" target="_blank" rel="noopener">Get Access — $5/mo →</a>
         <a href="pricing.html" class="btn btn-ghost btn-sm">See All Plans</a>
         <button class="btn btn-ghost btn-sm" id="dash-upgrade-modal-close" style="margin-left:auto;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Track report modal (UI-only, local state) -->
+  <div id="track-report-modal" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;padding:1.5rem;" role="dialog" aria-modal="true" aria-labelledby="track-report-title">
+    <div style="background:var(--bg-2,#111);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:1.25rem 1.25rem 1rem;width:100%;max-width:420px;">
+      <h2 id="track-report-title" style="font-size:1.05rem;font-weight:800;color:var(--text,#fff);margin:0 0 0.35rem;">Report Track</h2>
+      <p id="track-report-target" style="font-size:0.75rem;color:var(--text-3,#777);margin:0 0 0.85rem;"></p>
+      <div style="display:flex;flex-direction:column;gap:0.65rem;">
+        <label for="track-report-reason" style="font-size:0.72rem;color:var(--text-3,#777);text-transform:uppercase;letter-spacing:0.06em;">Reason</label>
+        <select id="track-report-reason" class="dash-social-input" style="width:100%;">
+          <option>Spam</option>
+          <option>Stolen Content</option>
+          <option>Explicit Content</option>
+          <option>Other</option>
+        </select>
+        <label for="track-report-details" style="font-size:0.72rem;color:var(--text-3,#777);text-transform:uppercase;letter-spacing:0.06em;">Additional details (optional)</label>
+        <textarea id="track-report-details" class="dash-social-input" rows="3" placeholder="Add context (optional)" style="resize:vertical;"></textarea>
+      </div>
+      <div style="display:flex;gap:0.6rem;justify-content:flex-end;margin-top:0.95rem;">
+        <button class="btn btn-ghost btn-sm" id="track-report-cancel" type="button">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="track-report-submit" type="button">Submit Report</button>
       </div>
     </div>
   </div>
@@ -943,6 +1015,12 @@
     // ── Quick action: Edit Profile ─────────────────────────────
     document.getElementById('qa-edit-profile')?.addEventListener('click', () => {
       switchTab('profile')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+
+    // ── Quick action: Tracks ───────────────────────────────────
+    document.getElementById('qa-tracks')?.addEventListener('click', () => {
+      switchTab('tracks')
       window.scrollTo({ top: 0, behavior: 'smooth' })
     })
 
@@ -1592,6 +1670,9 @@
 
     let trackList    = []   // current saved tracks
     let pendingTrack = null // File object pending upload
+  const reportedTrackKeys = new Set() // local-only moderation marker
+  let reportTargetKey = ''
+    let reportModalBound = false
 
     function trackFileSize(bytes) {
       if (!bytes) return ''
@@ -1604,7 +1685,36 @@
       if (!el) return
       el.textContent = msg
       el.className   = 'dash-save-note ' + (ok ? '' : 'dash-save-note--err')
-      if (ok && msg) setTimeout(() => { if (el.textContent === msg) el.textContent = '' }, 4000)
+      // Fix 2: success message stays visible until a new file is selected (cleared in setTrackFile)
+      // Error messages never auto-cleared — unchanged.
+    }
+
+    function trackReportNote(msg) {
+      const el = document.getElementById('track-report-note')
+      if (!el) return
+      el.textContent = msg
+      if (msg) {
+        setTimeout(() => {
+          if (el.textContent === msg) el.textContent = ''
+        }, 3000)
+      }
+    }
+
+    function openTrackReportModal(key, title) {
+      reportTargetKey = key || ''
+      const modal = document.getElementById('track-report-modal')
+      const target = document.getElementById('track-report-target')
+      const reason = document.getElementById('track-report-reason')
+      const details = document.getElementById('track-report-details')
+      if (target) target.textContent = title ? `Track: ${title}` : ''
+      if (reason) reason.value = 'Spam'
+      if (details) details.value = ''
+      if (modal) modal.style.display = 'flex'
+    }
+
+    function closeTrackReportModal() {
+      const modal = document.getElementById('track-report-modal')
+      if (modal) modal.style.display = 'none'
     }
 
     function renderTracks() {
@@ -1613,6 +1723,9 @@
       const count = document.getElementById('tracks-count')
       if (!list) return
       if (count) count.textContent = trackList.length ? `(${trackList.length}/${TRACK_MAX_CNT})` : ''
+      // Fix 5: mirror count near the upload form title
+      const uploadCount = document.getElementById('track-upload-count')
+      if (uploadCount) uploadCount.textContent = trackList.length ? `(${trackList.length}/${TRACK_MAX_CNT} stored)` : ''
       if (!trackList.length) {
         if (empty) empty.style.display = ''
         list.querySelectorAll('.track-card').forEach(c => c.remove())
@@ -1624,6 +1737,8 @@
         const card = document.createElement('div')
         card.className = 'track-card'
         card.dataset.idx = idx
+        const reportKey = tr.path || tr.url || `${tr.title || 'track'}-${idx}`
+        const isReported = reportedTrackKeys.has(reportKey)
         const uploadedDate = tr.uploaded_at
           ? new Date(tr.uploaded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
           : ''
@@ -1634,6 +1749,10 @@
               <div class="track-card-title">${tr.title.replace(/</g,'&lt;')}</div>
               ${tr.description ? `<div class="track-card-desc">${tr.description.replace(/</g,'&lt;')}</div>` : ''}
               <div class="track-card-sub">${trackFileSize(tr.size)}${uploadedDate ? ' · ' + uploadedDate : ''}</div>
+              <div style="display:flex;align-items:center;gap:0.55rem;margin-top:0.28rem;">
+                <button class="track-card-report" data-report-key="${reportKey.replace(/"/g, '&quot;')}" data-report-title="${(tr.title || 'Track').replace(/"/g, '&quot;')}" ${isReported ? 'disabled' : ''} style="background:none;border:none;padding:0;color:${isReported ? 'var(--text-3)' : 'var(--text-2)'};font-size:0.68rem;cursor:${isReported ? 'default' : 'pointer'};text-decoration:underline;">${isReported ? 'Reported' : 'Report'}</button>
+                <span class="track-card-reported" style="display:${isReported ? '' : 'none'};font-size:0.64rem;color:#f59e0b;letter-spacing:0.04em;text-transform:uppercase;">Reported</span>
+              </div>
             </div>
             <button class="track-card-delete" data-idx="${idx}" title="Delete track">🗑</button>
           </div>
@@ -1644,6 +1763,13 @@
       // Attach delete handlers
       list.querySelectorAll('.track-card-delete').forEach(btn => {
         btn.addEventListener('click', () => deleteTrack(parseInt(btn.dataset.idx, 10)))
+      })
+      // Attach report handlers (UI-only)
+      list.querySelectorAll('.track-card-report').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.disabled) return
+          openTrackReportModal(btn.dataset.reportKey || '', btn.dataset.reportTitle || '')
+        })
       })
     }
 
@@ -1665,6 +1791,8 @@
         return
       }
       pendingTrack = file
+      // Fix 2: clear lingering success note when creator picks a new file
+      trackNote('')
       const sel  = document.getElementById('track-file-selected')
       const name = document.getElementById('track-file-name')
       const size = document.getElementById('track-file-size')
@@ -1713,10 +1841,16 @@
       let result
       try {
         // Animate progress bar while waiting
+        // Fix 4: update label text based on progress stage
         let pct = 15
         const ticker = setInterval(() => {
           pct = Math.min(pct + 8, 85)
           if (bar) bar.style.width = pct + '%'
+          if (label) {
+            if (pct < 50)      label.textContent = 'Sending to server…'
+            else if (pct < 75) label.textContent = 'Transferring file…'
+            else               label.textContent = 'Almost there…'
+          }
         }, 600)
 
         const res = await fetch('/api/music/upload', {
@@ -1822,7 +1956,11 @@
           .then(data => {
             if (Array.isArray(data) && data.length) { trackList = data; renderTracks() }
           })
-          .catch(() => { /* first time — no index yet */ })
+          .catch(() => {
+            // Fix 3: show a message if the index fetch fails (not just first-time empty)
+            const empty = document.getElementById('tracks-empty')
+            if (empty) empty.textContent = "Couldn't load your tracks. Refresh to retry."
+          })
       }
 
       // Drop zone click → open file picker
@@ -1859,6 +1997,22 @@
         const btn = document.getElementById('track-upload-btn')
         if (btn) btn.disabled = !pendingTrack || !document.getElementById('track-title-input').value.trim()
       })
+
+      // Report modal actions (UI-only, no backend)
+      if (!reportModalBound) {
+        reportModalBound = true
+        document.getElementById('track-report-cancel')?.addEventListener('click', closeTrackReportModal)
+        document.getElementById('track-report-modal')?.addEventListener('click', e => {
+          if (e.target && e.target.id === 'track-report-modal') closeTrackReportModal()
+        })
+        document.getElementById('track-report-submit')?.addEventListener('click', () => {
+          if (!reportTargetKey) { closeTrackReportModal(); return }
+          reportedTrackKeys.add(reportTargetKey)
+          trackReportNote('Report submitted.')
+          closeTrackReportModal()
+          renderTracks()
+        })
+      }
     }
 
     // ── Messages preview ──────────────────────────────────────
@@ -1956,10 +2110,12 @@
     // ── Admin actions (only moderator role changes are real) ──
     async function handleUserAction(actionType, targetUser) {
       const action = String(actionType || '').toLowerCase()
+      const notify = (msg) => alert(msg)
 
       // Keep non-wired actions as stubs for now.
       if (action !== 'make_moderator' && action !== 'remove_moderator' && action !== 'soft_delete') {
         console.log('ACTION:', actionType, targetUser)
+        notify('This action is not wired yet.')
         return
       }
 
@@ -1968,6 +2124,7 @@
         const actorRole = String(getUserRole(memberData) || 'user').toLowerCase()
         if (actorRole !== 'super_admin') {
           console.error('Admin action denied: actor is not super_admin')
+          notify('Only super_admin can run this action.')
           return
         }
 
@@ -1978,57 +2135,82 @@
         // Guard: cannot modify your own row.
         if (targetUsername && targetUsername === myUsername) {
           console.error('Admin action denied: cannot modify your own account')
+          notify('You cannot run this action on your own account.')
           return
         }
 
         // Guard: cannot modify a super_admin target.
         if (targetRole === 'super_admin') {
           console.error('Admin action denied: cannot modify super_admin account')
+          notify('You cannot run this action on a super_admin account.')
           return
         }
 
         if (!targetId) {
           console.error('Admin action failed: missing target user id')
+          notify('This action is unavailable because the target user is missing.')
           return
         }
 
         if (action === 'make_moderator') {
-          if (!SUPABASE_READY || !supabase) {
-            console.error('make_moderator failed: Supabase unavailable')
+          const sess = getSession()
+          if (!sess || !sess.username || !sess.ph) {
+            notify('Session expired — sign in again.')
             return
           }
 
-          const { error } = await supabase
-            .from('member_accounts')
-            .update({ role: 'moderator' })
-            .eq('id', targetId)
+          const res = await fetch('/api/admin/users/set-role', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              actor_username: String(sess.username || '').toLowerCase(),
+              ph: sess.ph,
+              target_user_id: targetId,
+              action: 'make_moderator',
+            }),
+          })
 
-          if (error) {
-            console.error('make_moderator failed:', error)
+          const payload = await res.json().catch(function() { return null })
+          if (!res.ok || !payload || !payload.ok) {
+            const message = payload && payload.error ? payload.error : 'Action failed while updating moderator role.'
+            console.error('make_moderator failed:', message)
+            notify(message)
             return
           }
 
           await loadAllUsers()
+          notify(payload.message || 'User updated to moderator.')
           return
         }
 
         if (action === 'remove_moderator') {
-          if (!SUPABASE_READY || !supabase) {
-            console.error('remove_moderator failed: Supabase unavailable')
+          const sess = getSession()
+          if (!sess || !sess.username || !sess.ph) {
+            notify('Session expired — sign in again.')
             return
           }
 
-          const { error } = await supabase
-            .from('member_accounts')
-            .update({ role: 'user' })
-            .eq('id', targetId)
+          const res = await fetch('/api/admin/users/set-role', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              actor_username: String(sess.username || '').toLowerCase(),
+              ph: sess.ph,
+              target_user_id: targetId,
+              action: 'remove_moderator',
+            }),
+          })
 
-          if (error) {
-            console.error('remove_moderator failed:', error)
+          const payload = await res.json().catch(function() { return null })
+          if (!res.ok || !payload || !payload.ok) {
+            const message = payload && payload.error ? payload.error : 'Action failed while removing moderator role.'
+            console.error('remove_moderator failed:', message)
+            notify(message)
             return
           }
 
           await loadAllUsers()
+          notify(payload.message || 'Moderator role removed.')
           return
         }
 
@@ -2039,34 +2221,48 @@
             return
           }
 
-          const res = await fetch('/api/admin/users/soft-delete', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + sess.ph,
-              'X-FAS-Username': String(sess.username || '').toLowerCase(),
-            },
-            body: JSON.stringify({
-              actor_username: String(sess.username || '').toLowerCase(),
-              target_user_id: targetId,
-              ph: sess.ph,
-            }),
-          })
+          let res
+          try {
+            res = await fetch('/api/admin/users/soft-delete', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + sess.ph,
+                'X-FAS-Username': String(sess.username || '').toLowerCase(),
+              },
+              body: JSON.stringify({
+                actor_username: String(sess.username || '').toLowerCase(),
+                target_user_id: targetId,
+                ph: sess.ph,
+              }),
+            })
+          } catch (netErr) {
+            console.error('soft_delete failed: runtime endpoint unavailable', netErr)
+            notify('Soft delete is unavailable in this runtime.')
+            return
+          }
 
           const payload = await res.json().catch(function() { return null })
           if (!res.ok || !payload || !payload.ok) {
+            if (res.status === 404) {
+              console.error('soft_delete failed: endpoint not found')
+              notify('Soft delete is unavailable in this runtime.')
+              return
+            }
             const message = payload && payload.error ? payload.error : 'Soft delete failed.'
             console.error('soft_delete failed:', message)
-            alert(message)
+            notify(message)
             return
           }
 
           console.log('soft_delete success:', targetUsername)
           await loadAllUsers()
+          notify('User soft deleted.')
           return
         }
       } catch (err) {
         console.error('Admin action error:', err)
+        notify('Action failed. Please try again.')
       }
     }
 
@@ -2088,24 +2284,34 @@
       try {
         const { data, error } = await supabase
           .from('member_accounts')
-          .select('id, username, display_name, role, membership_tier, account_status, last_active_at')
-          .or('is_deleted.is.null,is_deleted.eq.false')
+          // Keep this query schema-tolerant across environments.
+          // Some DBs expose plan_type/member_status, some expose membership_tier/account_status,
+          // and some do not yet have is_deleted.
+          .select('*')
           .order('created_at', { ascending: false })
           .limit(50)
 
-        if (error || !Array.isArray(data) || !data.length) { showEmpty(); return }
+        if (error || !Array.isArray(data)) { showEmpty(); return }
+
+        const visibleUsers = data.filter(function(u) {
+          return u && u.is_deleted !== true
+        })
+
+        if (!visibleUsers.length) { showEmpty(); return }
 
         if (loading) loading.style.display = 'none'
         if (empty)   empty.style.display = 'none'
-        if (count)   count.textContent = '(' + data.length + ')'
+        if (count)   count.textContent = '(' + visibleUsers.length + ')'
         if (!rows)   return
 
         rows.style.display = ''
-        rows.innerHTML = data.map(function(u) {
+        rows.innerHTML = visibleUsers.map(function(u) {
           const rawRole    = (u.role || 'user').toLowerCase()
           const role       = escHtml(rawRole)
-          const tier       = escHtml(u.membership_tier || 'free')
-          const status     = escHtml(u.account_status  || 'active')
+          const rawTier    = (u.membership_tier || u.plan_type || 'free')
+          const rawStatus  = (u.account_status  || u.member_status || 'active')
+          const tier       = escHtml(rawTier)
+          const status     = escHtml(rawStatus)
           const rawUser    = (u.username || '').toLowerCase()
           const username   = escHtml(u.username || '—')
           const name       = escHtml(u.display_name    || '')

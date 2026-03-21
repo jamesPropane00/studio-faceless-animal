@@ -107,7 +107,7 @@
         or Resend.com to data.email with the intake summary.
         ════════════════════════════════════════════════════════════════
       -->
-      <div class="ty-preview-notice" role="alert" aria-live="polite" id="ty-preview-notice">
+      <div class="ty-preview-notice" role="alert" aria-live="polite" id="ty-preview-notice" style="display:none;">
         <p class="ty-preview-notice-title">Preview Mode — No Data Was Saved</p>
         <p class="ty-preview-notice-body">
           The form you submitted is currently a static preview. <strong>No data was recorded.</strong>
@@ -252,12 +252,15 @@
     [SUPABASE CONNECT] — When backend is connected, fetch the real
     intake_submissions row by a token passed in the URL instead.
   -->
+  <script src="assets/js/env.js" onerror="void 0"></script>
   <script>
     (function() {
       const params = new URLSearchParams(window.location.search)
       const name     = params.get('name')     || ''
       const plan     = params.get('plan')     || ''
       const username = params.get('username') || ''
+      const preview  = params.get('preview') === '1'
+      const ready    = !!(window.__FAS_CONFIG && window.__FAS_CONFIG.ready)
 
       // --- Personalize name display ---
       const nameDisplay = document.getElementById('ty-name-display')
@@ -276,6 +279,11 @@
           ? username.toLowerCase().replace(/[^a-z0-9_-]/g, '')
           : 'yourname'
         urlDisplay.textContent = 'facelessanimalstudios.com/' + slug
+      }
+
+      const previewNotice = document.getElementById('ty-preview-notice')
+      if (previewNotice) {
+        previewNotice.style.display = (!ready || preview) ? '' : 'none'
       }
 
       // --- Plan line ---
@@ -301,7 +309,6 @@
     })()
   </script>
 
-  <script src="assets/js/env.js" onerror="void 0"></script>
   <script src="assets/js/radio-widget.js" defer></script>
 </body>
 </html>

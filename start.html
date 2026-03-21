@@ -55,7 +55,7 @@
           Faceless Animal Studios · Let's Build
         </p>
         <h1 class="page-hero-title" style="text-align:left;">Fill This Out.<br /><em>We Handle the Rest.</em></h1>
-        <p class="page-hero-sub" style="margin-left:0;text-align:left;">
+        <p class="page-hero-sub" style="margin-left:0;text-align:left;" id="start-hero-sub">
           Pick your plan and fill out the form. Free pages go live instantly — no waiting. Page packages (Starter $30, Pro $55, Premium $105) are all-in via Stripe. Or skip the page entirely and subscribe to Platform Access for $5/month — games, apps, DMs, and radio. Either way, you're in the network from day one.
         </p>
       </div>
@@ -179,7 +179,7 @@
           <div class="section-header text-center">
             <p class="section-label">Free Starter Presence · $0</p>
             <h2 id="signup-heading">Fill This Out.<br /><em>Your Page Is Next.</em></h2>
-            <p class="section-sub">No credit card. No approval waiting period. Submit below — your free presence page goes live instantly. You're in the network from day one.</p>
+            <p class="section-sub" id="start-free-live-note">No credit card. No approval waiting period. Submit below — your free presence page goes live instantly. You're in the network from day one.</p>
           </div>
 
           <form
@@ -835,6 +835,24 @@
           formSection.hidden = false
           formSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
+      }
+    })()
+  </script>
+
+  <script>
+    (function () {
+      var ready = !!(window.__FAS_CONFIG && window.__FAS_CONFIG.ready)
+      if (ready) return
+
+      var heroSub = document.getElementById('start-hero-sub')
+      var freeLiveNote = document.getElementById('start-free-live-note')
+
+      if (heroSub) {
+        heroSub.textContent = 'Pick your path and preview the intake flow. Preview mode is active right now, so submissions are not saved automatically yet. Use the form to review the experience, then email djfacelessanimal@gmail.com to start your official build.'
+      }
+
+      if (freeLiveNote) {
+        freeLiveNote.textContent = 'Preview mode is active in this environment. Submit to test the form flow, then email djfacelessanimal@gmail.com to officially start your free page.'
       }
     })()
   </script>

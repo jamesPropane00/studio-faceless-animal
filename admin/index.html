@@ -386,6 +386,38 @@
           <button class="adm-filter-btn" data-group="board" data-preset="hidden">Hidden</button>
         </div>
       </div>
+
+      <!-- Moderation Queue (UI-only placeholder for track reports) -->
+      <div class="adm-table-wrap" style="margin-bottom:1rem;">
+        <div style="padding:0.65rem 0.85rem;border-bottom:1px solid var(--border);background:var(--bg-3);display:flex;align-items:center;justify-content:space-between;gap:0.6rem;">
+          <strong style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);">Moderation Queue</strong>
+          <span style="font-size:0.68rem;color:var(--text-3);">Music reports (UI only)</span>
+        </div>
+        <div id="adm-mod-queue-empty" class="adm-state-msg adm-state-msg--dim" style="display:none;padding:1rem;">No reports yet</div>
+        <div id="adm-mod-queue-list">
+          <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,0.9fr) minmax(0,0.9fr) auto;gap:0.6rem;align-items:center;padding:0.7rem 0.85rem;border-bottom:1px solid #1a1a1a;">
+            <div style="min-width:0;"><div style="font-size:0.82rem;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Night Run (Demo)</div></div>
+            <div style="font-size:0.76rem;color:var(--text-2);">Spam</div>
+            <div style="font-size:0.76rem;color:var(--text-2);">@samplecreator</div>
+            <div style="display:flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
+              <button class="adm-action-btn" type="button">Approve</button>
+              <button class="adm-action-btn adm-action-btn--danger" type="button">Remove</button>
+              <button class="adm-action-btn" type="button">Restrict User</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,0.9fr) minmax(0,0.9fr) auto;gap:0.6rem;align-items:center;padding:0.7rem 0.85rem;">
+            <div style="min-width:0;"><div style="font-size:0.82rem;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Street Echoes</div></div>
+            <div style="font-size:0.76rem;color:var(--text-2);">Explicit Content</div>
+            <div style="font-size:0.76rem;color:var(--text-2);">@koldvisual</div>
+            <div style="display:flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
+              <button class="adm-action-btn" type="button">Approve</button>
+              <button class="adm-action-btn adm-action-btn--danger" type="button">Remove</button>
+              <button class="adm-action-btn" type="button">Restrict User</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="adm-table-wrap">
         <div id="adm-board-body"><p class="adm-state-msg adm-state-msg--dim">Select this tab to load.</p></div>
       </div>
@@ -494,6 +526,16 @@
   </div><!-- /adm-main -->
 
   <script src="../assets/js/env.js"></script>
+  <script>
+    ;(() => {
+      // UI-only empty-state behavior for the moderation queue.
+      const list = document.getElementById('adm-mod-queue-list')
+      const empty = document.getElementById('adm-mod-queue-empty')
+      if (!list || !empty) return
+      const hasItems = Array.from(list.children).some(el => el.nodeType === 1)
+      empty.style.display = hasItems ? 'none' : ''
+    })()
+  </script>
   <script type="module" src="../assets/js/admin.js"></script>
 
 </body>

@@ -287,6 +287,85 @@ function renderWorks(works) {
     </article>`).join('')
 }
 
+// ── TRACK RENDERER ───────────────────────────────────────────────
+
+const creatorReportedTrackKeys = new Set() // local-only report state
+let creatorReportTargetKey = ''
+
+function renderTracks(tracks) {
+  if (!tracks || !tracks.length) return ''
+  return tracks.map(tr => `
+    <div style="background:var(--bg-3,rgba(255,255,255,0.04));border:1px solid var(--border,rgba(255,255,255,0.09));border-radius:12px;padding:1rem 1.1rem;">
+      <p style="font-size:0.88rem;font-weight:800;color:var(--text);margin:0 0 0.2rem;">${esc(tr.title)}</p>
+      ${tr.description ? `<p style="font-size:0.72rem;color:var(--text-3);margin:0 0 0.6rem;">${esc(tr.description)}</p>` : ''}
+      <div style="display:flex;align-items:center;gap:0.55rem;margin:0 0 0.55rem;">
+        <button data-track-report-btn data-track-report-key="${esc(tr.path || tr.url || tr.title || '')}" data-track-report-title="${esc(tr.title || 'Track')}" ${creatorReportedTrackKeys.has(tr.path || tr.url || tr.title || '') ? 'disabled' : ''} style="background:none;border:none;padding:0;font-size:0.68rem;color:${creatorReportedTrackKeys.has(tr.path || tr.url || tr.title || '') ? 'var(--text-3)' : 'var(--text-2)'};cursor:${creatorReportedTrackKeys.has(tr.path || tr.url || tr.title || '') ? 'default' : 'pointer'};text-decoration:underline;">${creatorReportedTrackKeys.has(tr.path || tr.url || tr.title || '') ? 'Reported' : 'Report'}</button>
+        <span data-track-reported-label style="display:${creatorReportedTrackKeys.has(tr.path || tr.url || tr.title || '') ? '' : 'none'};font-size:0.64rem;color:#f59e0b;letter-spacing:0.04em;text-transform:uppercase;">Reported</span>
+      </div>
+      <audio controls preload="none" src="${esc(tr.url)}" style="width:100%;height:36px;border-radius:8px;margin-top:${tr.description ? '0' : '0.5rem'};"></audio>
+    </div>`).join('')
+}
+
+function initCreatorTrackReportUI() {
+  if (window.__fasCreatorTrackReportInit) return
+  window.__fasCreatorTrackReportInit = true
+
+  const modal = document.getElementById('creator-track-report-modal')
+  const reason = document.getElementById('creator-track-report-reason')
+  const details = document.getElementById('creator-track-report-details')
+  const target = document.getElementById('creator-track-report-target')
+  const submit = document.getElementById('creator-track-report-submit')
+  const cancel = document.getElementById('creator-track-report-cancel')
+  const note = document.getElementById('creator-track-report-note')
+
+  if (!modal || !submit || !cancel) return
+
+  function closeModal() {
+    modal.style.display = 'none'
+  }
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-track-report-btn]')
+    if (!btn || btn.disabled) return
+    creatorReportTargetKey = btn.dataset.trackReportKey || ''
+    if (target) target.textContent = btn.dataset.trackReportTitle ? `Track: ${btn.dataset.trackReportTitle}` : ''
+    if (reason) reason.value = 'Spam'
+    if (details) details.value = ''
+    modal.style.display = 'flex'
+  })
+
+  modal.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'creator-track-report-modal') closeModal()
+  })
+  cancel.addEventListener('click', closeModal)
+
+  submit.addEventListener('click', () => {
+    if (!creatorReportTargetKey) { closeModal(); return }
+    creatorReportedTrackKeys.add(creatorReportTargetKey)
+    document.querySelectorAll('[data-track-report-btn]').forEach((btn) => {
+      if (btn.dataset.trackReportKey === creatorReportTargetKey) {
+        btn.disabled = true
+        btn.textContent = 'Reported'
+        btn.style.color = 'var(--text-3)'
+        btn.style.cursor = 'default'
+        const label = btn.parentElement?.querySelector('[data-track-reported-label]')
+        if (label) label.style.display = ''
+      }
+    })
+    if (note) {
+      note.style.display = ''
+      note.textContent = 'Report submitted.'
+      setTimeout(() => {
+        if (note.textContent === 'Report submitted.') {
+          note.textContent = ''
+          note.style.display = 'none'
+        }
+      }, 3000)
+    }
+    closeModal()
+  })
+}
+
 function renderServices(services) {
   if (!services || !services.length) return ''
   return services.map(s => `
@@ -517,6 +596,25 @@ async function init() {
   if (!page) { showNotFound(slug); return }
 
   hydrate(profile, page)
+  initCreatorTrackReportUI()
+
+  // ── Uploaded tracks — fetch public _index.json from creator-media bucket ──
+  // Mirror the server's sanitization: username.toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  // Section stays hidden if fetch fails, returns 404, or returns no tracks.
+  const supaUrl = (window.__FAS_CONFIG || {}).SUPABASE_URL
+  if (supaUrl && profile.username) {
+    const folderName = (profile.username || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+    const indexUrl   = `${supaUrl}/storage/v1/object/public/creator-media/${folderName}/tracks/_index.json`
+    fetch(indexUrl, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => {
+        if (Array.isArray(data) && data.length) {
+          slot('tracks', renderTracks(data))
+          showSection('tracks', true)
+        }
+      })
+      .catch(() => {}) // no tracks or network error — section stays hidden
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init)

@@ -246,6 +246,21 @@ function handleRequest(req, res) {
   }
 
   // ── CONTACT FORM API ──────────────────────────────────────────────
+  if (urlPath === '/api/admin/users/set-role') {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    if (req.method === 'OPTIONS') { send(res, 204, 'text/plain', ''); return }
+    if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.', code: 'METHOD_NOT_ALLOWED' }); return }
+
+    handleAdminSetRole(req, res).catch(err => {
+      console.error('[FAS:admin:set-role] Unhandled error:', err.message)
+      if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.', code: 'INTERNAL_ERROR' })
+    })
+    return
+  }
+
+  // ── CONTACT FORM API ──────────────────────────────────────────────
   if (urlPath === '/api/contact') {
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -319,6 +334,126 @@ function handleRequest(req, res) {
   }
 
   serveFile(res, filePath)
+}
+
+// ── ADMIN ROLE ACTIONS (trusted server path) ─────────────────────────
+// Supports only:
+//   - make_moderator  -> role: moderator
+//   - remove_moderator -> role: user
+async function handleAdminSetRole(req, res) {
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.', code: 'INVALID_BODY' })
+  }
+
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.', code: 'INVALID_JSON' })
+  }
+
+  const actorUsername = String(body && body.actor_username || '').toLowerCase().trim()
+  const ph            = String(body && body.ph || '').trim()
+  const targetUserId  = String(body && body.target_user_id || '').trim()
+  const action        = String(body && body.action || '').toLowerCase().trim()
+
+  if (!actorUsername || !ph || !targetUserId || !action) {
+    return sendJSON(res, 400, { ok: false, error: 'Missing required fields.', code: 'MISSING_FIELDS' })
+  }
+
+  if (action !== 'make_moderator' && action !== 'remove_moderator') {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid action.', code: 'INVALID_ACTION' })
+  }
+
+  const actor = actorUsername.replace(/[^a-z0-9_-]/g, '')
+  if (!actor) {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid actor username.', code: 'INVALID_ACTOR' })
+  }
+
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { ok: false, error: 'Server not available.', code: 'SERVER_NOT_CONFIGURED' })
+  }
+
+  const ok = await verifyIdentity(creds.host, creds.key, actor, ph)
+  if (!ok) {
+    return sendJSON(res, 401, { ok: false, error: 'Authentication failed.', code: 'UNAUTHENTICATED' })
+  }
+
+  let actorRow = null
+  try {
+    const actorRes = await sbRequest(
+      creds.host,
+      creds.key,
+      'GET',
+      `/rest/v1/member_accounts?username=eq.${encodeURIComponent(actor)}&select=id,username,role&limit=1`,
+      null
+    )
+    const rows = JSON.parse(actorRes.body.toString())
+    actorRow = Array.isArray(rows) ? rows[0] : null
+  } catch {}
+
+  if (!actorRow) {
+    return sendJSON(res, 403, { ok: false, error: 'Actor account not found.', code: 'ACTOR_NOT_FOUND' })
+  }
+  if (String(actorRow.role || 'user').toLowerCase() !== 'super_admin') {
+    return sendJSON(res, 403, { ok: false, error: 'Only super_admin can change roles.', code: 'FORBIDDEN_NOT_SUPER_ADMIN' })
+  }
+
+  let targetRow = null
+  try {
+    const targetRes = await sbRequest(
+      creds.host,
+      creds.key,
+      'GET',
+      `/rest/v1/member_accounts?id=eq.${encodeURIComponent(targetUserId)}&select=id,username,role&limit=1`,
+      null
+    )
+    const rows = JSON.parse(targetRes.body.toString())
+    targetRow = Array.isArray(rows) ? rows[0] : null
+  } catch {}
+
+  if (!targetRow) {
+    return sendJSON(res, 404, { ok: false, error: 'Target user not found.', code: 'TARGET_NOT_FOUND' })
+  }
+
+  if (String(targetRow.id || '') === String(actorRow.id || '')) {
+    return sendJSON(res, 403, { ok: false, error: 'You cannot modify your own role.', code: 'FORBIDDEN_SELF_TARGET' })
+  }
+
+  const previousRole = String(targetRow.role || 'user').toLowerCase()
+  if (previousRole === 'super_admin') {
+    return sendJSON(res, 403, { ok: false, error: 'You cannot modify a super_admin account.', code: 'FORBIDDEN_TARGET_SUPER_ADMIN' })
+  }
+
+  const nextRole = action === 'make_moderator' ? 'moderator' : 'user'
+
+  try {
+    const updateRes = await sbRequest(
+      creds.host,
+      creds.key,
+      'PATCH',
+      `/rest/v1/member_accounts?id=eq.${encodeURIComponent(targetUserId)}`,
+      JSON.stringify({ role: nextRole })
+    )
+
+    if (updateRes.status < 200 || updateRes.status >= 300) {
+      return sendJSON(res, 500, { ok: false, error: 'Could not update role.', code: 'UPDATE_FAILED' })
+    }
+  } catch {
+    return sendJSON(res, 500, { ok: false, error: 'Could not update role.', code: 'UPDATE_FAILED' })
+  }
+
+  sendJSON(res, 200, {
+    ok: true,
+    message: nextRole === 'moderator' ? 'User updated to moderator.' : 'Moderator role removed.',
+    action,
+    target: {
+      id: targetRow.id,
+      username: targetRow.username,
+      previous_role: previousRole,
+      next_role: nextRole,
+    },
+  })
 }
 
 function serveFile(res, filePath) {
