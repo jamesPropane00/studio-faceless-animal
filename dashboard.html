@@ -1366,7 +1366,7 @@
 
       const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       const res = await updateMember(myUsername, { vibe, vibe_expires_at: expires })
-      if (res) {
+      if (res && res.ok) {
         showNote(noteEl, 'Vibe set ✓', true)
         const pill = document.getElementById('dash-vibe-pill')
         pill.textContent = vibe
@@ -1378,11 +1378,15 @@
 
     document.getElementById('dash-vibe-clear')?.addEventListener('click', async () => {
       const noteEl = document.getElementById('vibe-save-note')
-      await updateMember(myUsername, { vibe: null, vibe_expires_at: null })
-      document.getElementById('dash-vibe-text').value = ''
-      document.getElementById('dash-vibe-emoji-btn').textContent = '😶'
-      document.getElementById('dash-vibe-pill').style.display = 'none'
-      showNote(noteEl, 'Cleared', true)
+      const res = await updateMember(myUsername, { vibe: null, vibe_expires_at: null })
+      if (res && res.ok) {
+        document.getElementById('dash-vibe-text').value = ''
+        document.getElementById('dash-vibe-emoji-btn').textContent = '😶'
+        document.getElementById('dash-vibe-pill').style.display = 'none'
+        showNote(noteEl, 'Cleared', true)
+      } else {
+        showNote(noteEl, 'Could not clear vibe. Try again.', false)
+      }
     })
 
     // ── PROFILE SAVE ──────────────────────────────────────────
@@ -1395,11 +1399,14 @@
       // Loading state
       if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…' }
 
-      const fields = {
+      const coreFields = {
         display_name: display,
         bio:          document.getElementById('edit-bio').value.trim() || null,
         city:         document.getElementById('edit-city').value.trim() || null,
         state_abbr:   document.getElementById('edit-state').value.trim().toUpperCase() || null,
+      }
+
+      const optionalFields = {
         cover_url:    document.getElementById('edit-cover-url').value.trim() || null,
         social_links: {
           instagram:  document.getElementById('social-instagram').value.trim() || null,
@@ -1413,29 +1420,36 @@
         }
       }
 
-      // Write to member_accounts
-      const res = await updateMember(myUsername, fields)
-      if (!res) {
+      // Write core profile fields first (blocking)
+      const coreRes = await updateMember(myUsername, coreFields)
+      if (!coreRes || !coreRes.ok) {
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Profile' }
-        showNote(noteEl, 'Save failed. Try again.', false)
+        const msg = coreRes && coreRes.error && coreRes.error.message
+          ? `Save failed: ${coreRes.error.message}`
+          : 'Save failed. Core profile fields could not be saved.'
+        showNote(noteEl, msg, false)
         return
       }
+
+      // Write optional profile fields second (non-blocking)
+      const optionalRes = await updateMember(myUsername, optionalFields)
+      let optionalSaveFailed = !optionalRes || !optionalRes.ok
 
       // Also try to update profiles table (for public page sync)
       const avatarUrl = document.getElementById('edit-avatar-url').value.trim() || null
       if (SUPABASE_READY && supabase) {
         const profileUpdate = {
           display_name: display,
-          bio:          fields.bio,
-          city:         fields.city,
-          state:        fields.state_abbr,
+          bio:          coreFields.bio,
+          city:         coreFields.city,
+          state:        coreFields.state_abbr,
         }
         if (avatarUrl) profileUpdate.avatar_url = avatarUrl
         // Build links_json as flat object { platform: url }
         const linksObj = {}
         const linkKeys = ['spotify','soundcloud','youtube','instagram','tiktok','twitter','website']
         linkKeys.forEach(key => {
-          const url = fields.social_links[key]
+          const url = optionalFields.social_links[key]
           if (url) linksObj[key] = url
         })
         profileUpdate.links_json = linksObj
@@ -1443,9 +1457,13 @@
         const { error: profileErr } = await supabase.from('profiles').update(profileUpdate).eq('username', myUsername)
         if (profileErr) {
           console.warn('[FAS] dashboard: profiles update warning:', profileErr.message)
-          // Non-fatal: member_accounts was saved, show partial success note
+          // Non-fatal: core member profile was saved
           if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Profile' }
-          showNote(noteEl, 'Profile saved (note: public page sync may be delayed)', true)
+          if (optionalSaveFailed) {
+            showNote(noteEl, 'Core profile saved, but some optional fields could not be saved. Public sync may be delayed.', true)
+          } else {
+            showNote(noteEl, 'Profile saved (note: public page sync may be delayed)', true)
+          }
           // Update local session display
           try {
             const sess = JSON.parse(localStorage.getItem('fas_user') || '{}')
@@ -1483,7 +1501,11 @@
 
       // Restore save button
       if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Profile' }
-      showNote(noteEl, 'Saved ✓ — profile updated', true)
+      if (optionalSaveFailed) {
+        showNote(noteEl, 'Core profile saved, but some optional fields could not be saved.', true)
+      } else {
+        showNote(noteEl, 'Saved ✓ — profile updated', true)
+      }
     })
 
     // ── HIGHLIGHTS (Instagram-inspired) ───────────────────────
@@ -1553,7 +1575,7 @@
     document.getElementById('dash-hl-save')?.addEventListener('click', async () => {
       const noteEl = document.getElementById('hl-save-note')
       const res = await updateMember(myUsername, { highlights_json: highlights })
-      if (res) {
+      if (res && res.ok) {
         showNote(noteEl, 'Highlights saved ✓', true)
       } else {
         showNote(noteEl, 'Save failed. Try again.', false)

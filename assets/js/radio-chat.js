@@ -225,6 +225,37 @@ export function initRadioChat(config) {
   let simCountTimerId  = null
   let simMsgTimerId    = null
 
+  function insertRoomNotice(text) {
+    if (!feedEl || !feedEl.parentElement) return
+    const parent = feedEl.parentElement
+    if (parent.querySelector('.' + cssPrefix + '-room-note')) return
+
+    const note = document.createElement('p')
+    note.className = cssPrefix + '-room-note'
+    note.style.cssText = [
+      'font-size:0.68rem',
+      'color:var(--text-3)',
+      'letter-spacing:0.05em',
+      'margin:0 0 0.45rem',
+      'padding:0.35rem 0.55rem',
+      'background:rgba(255,255,255,0.03)',
+      'border:1px solid rgba(255,255,255,0.07)',
+      'border-radius:7px',
+    ].join(';')
+    note.textContent = text
+    parent.insertBefore(note, feedEl)
+  }
+
+  function clearLiveRoomCounts() {
+    if (activeCountEl) activeCountEl.textContent = '—'
+    if (tabEls) {
+      tabEls.forEach(function(t) {
+        const countSpan = t.querySelector('.rp-room-count, .rs-room-tab-count')
+        if (countSpan) countSpan.textContent = '—'
+      })
+    }
+  }
+
   // ── Update count displays ─────────────────────────────────────────
   function setCountDisplay(count) {
     if (activeCountEl) activeCountEl.textContent = count
@@ -477,18 +508,33 @@ export function initRadioChat(config) {
 
   // ── Initialize ────────────────────────────────────────────────────
   if (useLive) {
+    clearLiveRoomCounts()
+    insertRoomNotice('Rooms switch chat threads. Member counts are not live yet.')
+
     // loadHistory falls back to simulation automatically on error
     loadHistory(activeRoom).then(function(ok) {
       if (ok) subscribeRoom(activeRoom)
     })
   } else {
     // Simulation fallback (no credentials or simulationMode=true)
+    insertRoomNotice('Demo mode: room counts and message activity are simulated.')
     startSimulation()
   }
 
   // ── Tier-limited notice ───────────────────────────────────────────
-  // Free users: show a rate-limit notice above the input bar.
+  // Free users: lock input/send UI so visible state matches permissions.
   if (tierLimited && inputEl && inputEl.parentElement) {
+    inputEl.disabled = true
+    inputEl.readOnly = true
+    inputEl.placeholder = 'Chat is members-only. Upgrade to join the room.'
+    inputEl.setAttribute('aria-disabled', 'true')
+
+    if (sendBtnEl) {
+      sendBtnEl.disabled = true
+      sendBtnEl.setAttribute('aria-disabled', 'true')
+      sendBtnEl.title = 'Members-only chat'
+    }
+
     var limitNotice = document.createElement('p')
     limitNotice.style.cssText = [
       'font-size:0.7rem',
@@ -500,7 +546,7 @@ export function initRadioChat(config) {
       'border-radius:6px',
       'border:1px solid rgba(255,255,255,0.06)',
     ].join(';')
-    limitNotice.textContent = '⚡ Free access — 10 second cooldown between messages. Upgrade for full chat.'
+    limitNotice.textContent = '🔒 Free access — chat sending is locked. Upgrade to join the room.'
     inputEl.parentElement.insertBefore(limitNotice, inputEl)
   }
 

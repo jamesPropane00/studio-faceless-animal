@@ -11,6 +11,7 @@
     if (href.startsWith('#')) return false;
     if (!href.endsWith('.html')) return false;
     if (href.includes('radio.html')) return false;
+    if (href.includes('directory.html')) return false;
     return true;
   }
 

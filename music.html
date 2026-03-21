@@ -74,6 +74,68 @@
       text-transform: uppercase;
       color: var(--text-3);
     }
+    .music-feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .music-feature-card {
+      padding: 1.1rem;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+    }
+    .music-feature-label {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 0.55rem;
+    }
+    .music-feature-title {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--text);
+      margin: 0 0 0.28rem;
+      letter-spacing: 0.01em;
+    }
+    .music-feature-sub {
+      font-size: 0.75rem;
+      color: var(--text-3);
+      margin: 0 0 0.45rem;
+    }
+    .music-feature-desc {
+      font-size: 0.8rem;
+      color: var(--text-2);
+      line-height: 1.6;
+      margin: 0 0 0.75rem;
+    }
+    .music-feature-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+    }
+    .music-feature-preview {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-3);
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.04);
+      border-radius: 999px;
+      padding: 0.22rem 0.62rem;
+      cursor: not-allowed;
+    }
+    .music-feature-link {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--purple-bright);
+      text-decoration: none;
+    }
+    .music-feature-link:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -243,6 +305,59 @@
             <span class="music-offer-icon" aria-hidden="true">◉</span>
             <p class="music-offer-title">Creative Collaboration</p>
             <p class="music-offer-desc">Joint projects, featured work, production partnerships. Open to working with artists, producers, and creators at any level.</p>
+          </article>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         FEATURED TRACKS (STATIC SHOWCASE)
+    ============================================================ -->
+    <section class="section section-alt" id="featured-tracks" aria-labelledby="featured-tracks-heading">
+      <div class="container" style="max-width:920px;">
+
+        <div class="section-header" style="margin-bottom:0.3rem;">
+          <p class="section-label">Showcase</p>
+          <h2 id="featured-tracks-heading">Featured<br /><em>Tracks.</em></h2>
+          <p class="section-sub">A quick look at current sound direction and energy. Static highlights for now.</p>
+        </div>
+
+        <div class="music-feature-grid" role="list" aria-label="Featured tracks">
+
+          <article class="music-feature-card" role="listitem">
+            <span class="music-feature-label">Freestyle Cut</span>
+            <p class="music-feature-title">Pressure In The Room</p>
+            <p class="music-feature-sub">Raw drill cadence · Night session</p>
+            <p class="music-feature-desc">Heavy low-end and stripped percussion built for late-night momentum.</p>
+            <div class="music-feature-foot">
+              <button class="music-feature-preview" type="button" disabled aria-disabled="true">Preview Soon</button>
+              <a href="artists/djfacelessanimal.html" class="music-feature-link">Artist Page →</a>
+            </div>
+          </article>
+
+          <article class="music-feature-card" role="listitem">
+            <span class="music-feature-label">Blend Session</span>
+            <p class="music-feature-title">No Sleep Rotation</p>
+            <p class="music-feature-sub">Underground mix · Club tension</p>
+            <p class="music-feature-desc">A transition-forward blend focused on pressure, pacing, and atmosphere.</p>
+            <div class="music-feature-foot">
+              <button class="music-feature-preview" type="button" disabled aria-disabled="true">Preview Soon</button>
+              <a href="radio.html" class="music-feature-link">Listen Live →</a>
+            </div>
+          </article>
+
+          <article class="music-feature-card" role="listitem">
+            <span class="music-feature-label">Original Draft</span>
+            <p class="music-feature-title">Concrete Echoes</p>
+            <p class="music-feature-sub">Hip-hop texture · Dark melody</p>
+            <p class="music-feature-desc">Atmospheric layers with direct drums designed for focused replay value.</p>
+            <div class="music-feature-foot">
+              <button class="music-feature-preview" type="button" disabled aria-disabled="true">Preview Soon</button>
+              <a href="#music-contact" class="music-feature-link">Request Work →</a>
+            </div>
           </article>
 
         </div>

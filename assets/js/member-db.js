@@ -91,7 +91,9 @@ export async function getMember(username) {
  * Update fields on a member record.
  */
 export async function updateMember(username, fields) {
-  if (!SUPABASE_READY || !supabase) return null
+  if (!SUPABASE_READY || !supabase) {
+    return { ok: false, data: null, error: { message: 'Supabase is not ready.' } }
+  }
   const { data, error } = await supabase
     .from('member_accounts')
     .update({ ...fields, last_active_at: new Date().toISOString() })
@@ -100,9 +102,17 @@ export async function updateMember(username, fields) {
     .single()
   if (error) {
     console.info('[FAS] member-db: updateMember error', error.message)
-    return null
+    return {
+      ok: false,
+      data: null,
+      error: {
+        message: error.message || 'Update failed.',
+        code: error.code || null,
+        details: error.details || null,
+      },
+    }
   }
-  return data
+  return { ok: true, data, error: null }
 }
 
 /**
