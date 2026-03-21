@@ -299,7 +299,7 @@
   <script src="assets/js/radio-widget.js" defer></script>
   <script type="module">
     import { signIn, createAccount, setInitialPassword, isUsernameAvailable, cleanUsername, validatePassword, getStoredSession, clearStoredSession } from './assets/js/auth.js'
-    import { touchActive } from './assets/js/member-db.js'
+    import { trackMemberActivity } from './assets/js/member-db.js'
 
     // ── DOM refs ──────────────────────────────────────────────
     const loginPanel  = document.getElementById('login-panel')
@@ -392,7 +392,11 @@
       const { success, error, errorCode } = await signIn(username, password)
 
       if (success) {
-        touchActive(username)
+        trackMemberActivity(username, 'login', {
+          source: 'client',
+          pagePath: window.location.pathname,
+          momentumDelta: 1,
+        })
         showSuccess(username)
         return
       }
@@ -450,7 +454,11 @@
       // Password set — now sign them in
       const { success: signinOk, error: signinErr2 } = await signIn(username, pw1)
       if (signinOk) {
-        touchActive(username)
+        trackMemberActivity(username, 'login', {
+          source: 'client',
+          pagePath: window.location.pathname,
+          momentumDelta: 1,
+        })
         showSuccess(username)
       } else {
         setLoading(setPwBtn, false, 'Set Password & Sign In →')
@@ -510,7 +518,11 @@
       const { success, error } = await createAccount(username, password, displayRaw, emailRaw)
 
       if (success) {
-        touchActive(username)
+        trackMemberActivity(username, 'login', {
+          source: 'client',
+          pagePath: window.location.pathname,
+          momentumDelta: 1,
+        })
         showSuccess(username)
         return
       }

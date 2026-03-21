@@ -31,6 +31,29 @@
     var isAdmin  = ['jamespropane00','arianamnm'].indexOf(username) !== -1;
     var isPaid   = ['starter','pro','premium','access'].indexOf(plan) !== -1;
 
+    // Track one visit event per pathname per browser tab session.
+    try {
+      var pathname = window.location.pathname || '/';
+      var visitKey = 'fas_alive_seen_' + pathname;
+      if (!sessionStorage.getItem(visitKey)) {
+        sessionStorage.setItem(visitKey, '1');
+        import('./js/member-db.js')
+          .then(function(mod) {
+            if (mod && typeof mod.trackMemberActivity === 'function') {
+              return mod.trackMemberActivity(username, 'page_visit_session_start', {
+                pagePath: pathname,
+                source: 'client',
+                momentumDelta: 1,
+                context: {
+                  plan: plan,
+                },
+              });
+            }
+          })
+          .catch(function() {});
+      }
+    } catch (e) {}
+
     document.body.classList.add('is-logged-in');
     if (isPaid)    document.body.classList.add('is-member');
     if (plan === 'premium') document.body.classList.add('is-premium');

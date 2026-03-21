@@ -117,6 +117,70 @@ export async function touchActive(username) {
 }
 
 /**
+ * Best-effort activity tracker.
+ * Updates last_active_at, increments momentum, and inserts activity_log.
+ * Never throws to callers and should not block user flow.
+ */
+export async function trackMemberActivity(username, actionType, opts) {
+  if (!SUPABASE_READY || !supabase) return false
+
+  const options = opts || {}
+  const key = String(username || '').toLowerCase().trim()
+  const action = String(actionType || '').trim()
+  const momentumDelta = Math.max(0, Number(options.momentumDelta || 1))
+  const pagePath = options.pagePath || null
+  const source = options.source || 'client'
+  const refId = options.refId || null
+  const context = options.context && typeof options.context === 'object' ? options.context : {}
+
+  if (!key || !action) return false
+
+  try {
+    const nowIso = new Date().toISOString()
+
+    // Always touch last active first.
+    await supabase
+      .from('member_accounts')
+      .update({ last_active_at: nowIso })
+      .eq('username', key)
+
+    // Momentum increment is lightweight and best-effort.
+    const { data: row } = await supabase
+      .from('member_accounts')
+      .select('momentum')
+      .eq('username', key)
+      .single()
+
+    const currentMomentum = Number((row && row.momentum) || 0)
+    const nextMomentum = Math.max(0, currentMomentum + momentumDelta)
+
+    await supabase
+      .from('member_accounts')
+      .update({
+        momentum: nextMomentum,
+        last_active_at: nowIso,
+      })
+      .eq('username', key)
+
+    await supabase
+      .from('activity_log')
+      .insert({
+        username: key,
+        action_type: action,
+        page_path: pagePath,
+        context_json: context,
+        source: source,
+        ref_id: refId,
+      })
+
+    return true
+  } catch (err) {
+    console.info('[FAS] member-db: trackMemberActivity skipped', err && err.message ? err.message : err)
+    return false
+  }
+}
+
+/**
  * Look up public profile from profiles table by username/slug.
  * Returns null if not found (member may not have a built page yet).
  */

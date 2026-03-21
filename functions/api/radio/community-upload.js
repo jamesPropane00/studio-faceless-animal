@@ -163,11 +163,24 @@ export async function onRequestPost(context) {
       return json({ error: `Quota record failed: ${t}` }, 500);
     }
 
+    await writeMemberActivityBestEffort({
+      supabaseUrl,
+      serviceKey,
+      username: cleanUser,
+      actionType: "radio_upload_success",
+      pagePath: "/radio.html",
+      source: "server_cf",
+      refId: (track && track.id) ? String(track.id) : storagePath,
+      momentumDelta: 1,
+      context: { station: "1" },
+    });
+
     return json({
       ok: true,
       track,
       used_this_month: (Array.isArray(quotaRows) ? quotaRows.length : 0) + 1,
       remaining_this_month: Math.max(0, 2 - ((Array.isArray(quotaRows) ? quotaRows.length : 0) + 1)),
+      remaining: Math.max(0, 2 - ((Array.isArray(quotaRows) ? quotaRows.length : 0) + 1)),
     }, 200);
 
   } catch (err) {
@@ -217,4 +230,87 @@ function getExt(fileName, mime) {
     "audio/aiff": ".aiff",
   };
   return map[mime] || ".mp3";
+}
+
+async function writeMemberActivityBestEffort(input) {
+  try {
+    const {
+      supabaseUrl,
+      serviceKey,
+      username,
+      actionType,
+      pagePath,
+      source,
+      refId,
+      momentumDelta,
+      context,
+    } = input || {};
+
+    const key = String(username || "").toLowerCase().trim();
+    const action = String(actionType || "").trim();
+    if (!key || !action) return;
+
+    const nowIso = new Date().toISOString();
+
+    await fetch(
+      `${supabaseUrl}/rest/v1/member_accounts?username=eq.${encodeURIComponent(key)}`,
+      {
+        method: "PATCH",
+        headers: {
+          ...sbHeaders(serviceKey),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ last_active_at: nowIso }),
+      }
+    );
+
+    let currentMomentum = 0;
+    try {
+      const momentumRes = await fetch(
+        `${supabaseUrl}/rest/v1/member_accounts?username=eq.${encodeURIComponent(key)}&select=momentum&limit=1`,
+        { headers: sbHeaders(serviceKey) }
+      );
+      if (momentumRes.ok) {
+        const momentumRows = await momentumRes.json();
+        if (Array.isArray(momentumRows) && momentumRows.length > 0) {
+          currentMomentum = Number(momentumRows[0].momentum || 0);
+        }
+      }
+    } catch {}
+
+    const nextMomentum = Math.max(0, currentMomentum + Math.max(0, Number(momentumDelta || 1)));
+
+    await fetch(
+      `${supabaseUrl}/rest/v1/member_accounts?username=eq.${encodeURIComponent(key)}`,
+      {
+        method: "PATCH",
+        headers: {
+          ...sbHeaders(serviceKey),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          momentum: nextMomentum,
+          last_active_at: nowIso,
+        }),
+      }
+    );
+
+    await fetch(`${supabaseUrl}/rest/v1/activity_log`, {
+      method: "POST",
+      headers: {
+        ...sbHeaders(serviceKey),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([{
+        username: key,
+        action_type: action,
+        page_path: pagePath || null,
+        context_json: (context && typeof context === "object") ? context : {},
+        source: source || "server",
+        ref_id: refId || null,
+      }]),
+    });
+  } catch {
+    // best-effort only
+  }
 }

@@ -1446,7 +1446,7 @@
 
       var resp, data;
       try {
-        resp = await fetch('/api/radio/upload', {
+        resp = await fetch('/api/radio/community-upload', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    payload,
@@ -1478,10 +1478,11 @@
       var detailEl  = document.getElementById('rp-sub-success-detail');
       var remEl     = document.getElementById('rp-sub-remaining-msg');
       var badge     = document.getElementById('rp-quota-badge');
+      var remaining = data.remaining ?? data.remaining_this_month ?? null;
 
       if (detailEl) detailEl.textContent = '"' + title + '" is now live on Station 1. Refresh the player to hear it.';
       if (remEl) {
-        var rem = typeof data.remaining !== 'undefined' ? data.remaining : '';
+        var rem = remaining;
         remEl.textContent = rem === 0
           ? "That was your last upload for this month."
           : rem + " upload" + (rem === 1 ? '' : 's') + " remaining this month.";
@@ -1489,7 +1490,7 @@
       }
       if (badge) {
         badge.style.display = '';
-        var rem2 = typeof data.remaining !== 'undefined' ? data.remaining : '';
+        var rem2 = remaining;
         if (rem2 === 0) {
           badge.textContent = '0 uploads left this month';
           badge.style.background = 'rgba(248,113,113,0.12)';

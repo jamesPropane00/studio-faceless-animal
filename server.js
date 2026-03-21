@@ -520,6 +520,7 @@ async function handleRadioDelete(req, res) {
 const COMMUNITY_AUDIO_DIR      = path.join(AUDIO_DIR, 'community')
 const COMMUNITY_MAX_FILE_MB    = 30
 const COMMUNITY_MAX_FILE_B     = COMMUNITY_MAX_FILE_MB * 1024 * 1024
+const COMMUNITY_MAX_PER_MONTH  = 2
 const COMMUNITY_PAID_PLANS     = new Set(['access', 'starter', 'pro', 'premium'])
 
 /** POST /api/radio/community-upload — paid members, max 2/month, goes to Station 1 */
@@ -569,7 +570,29 @@ async function handleCommunityUpload(req, res) {
   } catch {}
   if (!planOk) return sendJSON(res, 403, { error: 'Active paid membership required to upload tracks to Station 1.' })
 
-  // TODO: 2/month limit via Supabase quota tracking (coming later)
+  // Monthly quota from Supabase source-of-truth table.
+  const now = new Date()
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0)).toISOString()
+  const nextMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0)).toISOString()
+
+  let monthCount = 0
+  try {
+    const quotaRes = await sbRequest(
+      creds.host,
+      creds.key,
+      'GET',
+      `/rest/v1/radio_upload_quota?username=eq.${encodeURIComponent(u)}&uploaded_at=gte.${encodeURIComponent(monthStart)}&uploaded_at=lt.${encodeURIComponent(nextMonthStart)}&select=id`,
+      null
+    )
+    const rows = JSON.parse(quotaRes.body.toString())
+    monthCount = Array.isArray(rows) ? rows.length : 0
+  } catch {
+    return sendJSON(res, 500, { error: 'Could not check monthly quota. Please try again.' })
+  }
+
+  if (monthCount >= COMMUNITY_MAX_PER_MONTH) {
+    return sendJSON(res, 429, { error: 'You have already used your 2 uploads for this month.' })
+  }
 
   let fileBuffer
   try { fileBuffer = Buffer.from(file_b64, 'base64') } catch {
@@ -579,46 +602,86 @@ async function handleCommunityUpload(req, res) {
     return sendJSON(res, 400, { error: `File exceeds ${COMMUNITY_MAX_FILE_MB}MB limit.` })
   }
 
-  // Save file to assets/audio/community/
+  // Upload to Supabase Storage bucket so metadata remains canonical in Supabase.
   const ext      = path.extname(file_name).toLowerCase() || '.mp3'
   const safeName = (path.basename(file_name, ext) || 'track').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60)
   const fileName = Date.now() + '_' + u + '_' + safeName + ext
-  const filePath = path.join(COMMUNITY_AUDIO_DIR, fileName)
-  const srcPath  = 'assets/audio/community/' + fileName
+  const storagePath = 'ch1/community/' + fileName
+  const publicSrc = `https://${creds.host}/storage/v1/object/public/radio/${storagePath}`
 
   try {
-    if (!fs.existsSync(COMMUNITY_AUDIO_DIR)) fs.mkdirSync(COMMUNITY_AUDIO_DIR, { recursive: true })
-    fs.writeFileSync(filePath, fileBuffer)
+    const upload = await sbStorageUpload(
+      creds.host,
+      creds.key,
+      'radio',
+      storagePath,
+      file_type,
+      fileBuffer,
+      false
+    )
+    if (upload.status < 200 || upload.status >= 300) {
+      return sendJSON(res, 500, { error: 'Could not upload your track to storage. Try again.' })
+    }
   } catch (e) {
-    console.error('[FAS:community:upload] write error:', e.message)
+    console.error('[FAS:community:upload] storage upload error:', e.message)
     return sendJSON(res, 500, { error: 'Could not save your track. Try again.' })
   }
 
-  // Add to Station 1 track list
-  const trackEntry = {
-    id:         fileName,
-    title:      title.trim().slice(0, 100) + ' · @' + u,
-    src:        srcPath,
-    uploader:   u,
-    uploadedAt: new Date().toISOString(),
-    community:  true,
-  }
-  const station1Tracks = readChannelTracks('1')
-  station1Tracks.push(trackEntry)
+  let trackEntry = null
   try {
-    writeChannelTracks(station1Tracks, '1')
+    const ins = await sbRequest(
+      creds.host,
+      creds.key,
+      'POST',
+      '/rest/v1/radio_tracks',
+      JSON.stringify([{
+        channel: '1',
+        title: title.trim().slice(0, 100) + ' · @' + u,
+        src: publicSrc,
+        storage_path: storagePath,
+        uploaded_by: u,
+        is_active: true,
+      }])
+    )
+    if (ins.status < 200 || ins.status >= 300) {
+      console.error('[FAS:community:upload] radio_tracks insert failed:', ins.body.toString())
+      return sendJSON(res, 500, { error: 'Track upload succeeded but metadata save failed.' })
+    }
+    const rows = JSON.parse(ins.body.toString())
+    trackEntry = Array.isArray(rows) && rows.length ? rows[0] : null
+
+    const quotaIns = await sbRequest(
+      creds.host,
+      creds.key,
+      'POST',
+      '/rest/v1/radio_upload_quota',
+      JSON.stringify([{
+        username: u,
+        station: '1',
+        title: title.trim().slice(0, 100),
+        storage_path: storagePath,
+      }])
+    )
+    if (quotaIns.status < 200 || quotaIns.status >= 300) {
+      console.error('[FAS:community:upload] radio_upload_quota insert failed:', quotaIns.body.toString())
+      return sendJSON(res, 500, { error: 'Track uploaded but quota write failed.' })
+    }
   } catch (e) {
-    console.error('[FAS:community:upload] tracks.json write error:', e.message)
+    console.error('[FAS:community:upload] metadata write error:', e.message)
+    return sendJSON(res, 500, { error: 'Could not finalize upload metadata.' })
   }
 
   console.log('[FAS:community:upload]', u, 'uploaded:', fileName,
     `(${fileBuffer.length} bytes, month ${monthCount + 1}/${COMMUNITY_MAX_PER_MONTH})`)
 
+  const nextCount = monthCount + 1
+  const remaining = Math.max(0, COMMUNITY_MAX_PER_MONTH - nextCount)
+
   sendJSON(res, 200, {
     ok:        true,
     track:     trackEntry,
-    monthCount: monthCount + 1,
-    remaining:  Math.max(0, COMMUNITY_MAX_PER_MONTH - monthCount - 1),
+    monthCount: nextCount,
+    remaining:  remaining,
   })
 }
 
@@ -871,6 +934,76 @@ function sendJSON(res, status, data) {
 
 // Generic Supabase REST/RPC request (JSON body)
 function sbRequest(host, serviceKey, method, urlPath, jsonBody) {
+
+  // Best-effort member activity write for server-authoritative events.
+  async function recordMemberActivityServer(host, serviceKey, evt) {
+    try {
+      const username = String(evt && evt.username || '').toLowerCase().trim()
+      const actionType = String(evt && evt.actionType || '').trim()
+      if (!username || !actionType) return false
+
+      const pagePath = evt && evt.pagePath ? String(evt.pagePath) : null
+      const source = evt && evt.source ? String(evt.source) : 'server'
+      const refId = evt && evt.refId ? String(evt.refId) : null
+      const momentumDelta = Math.max(0, Number(evt && evt.momentumDelta || 1))
+      const context = evt && evt.context && typeof evt.context === 'object' ? evt.context : {}
+      const nowIso = new Date().toISOString()
+
+      await sbRequest(
+        host,
+        serviceKey,
+        'PATCH',
+        `/rest/v1/member_accounts?username=eq.${encodeURIComponent(username)}`,
+        JSON.stringify({ last_active_at: nowIso })
+      )
+
+      let currentMomentum = 0
+      try {
+        const mRes = await sbRequest(
+          host,
+          serviceKey,
+          'GET',
+          `/rest/v1/member_accounts?username=eq.${encodeURIComponent(username)}&select=momentum&limit=1`,
+          null
+        )
+        const mRows = JSON.parse(mRes.body.toString())
+        if (Array.isArray(mRows) && mRows.length) {
+          currentMomentum = Number(mRows[0].momentum || 0)
+        }
+      } catch {}
+
+      await sbRequest(
+        host,
+        serviceKey,
+        'PATCH',
+        `/rest/v1/member_accounts?username=eq.${encodeURIComponent(username)}`,
+        JSON.stringify({
+          momentum: Math.max(0, currentMomentum + momentumDelta),
+          last_active_at: nowIso,
+        })
+      )
+
+      await sbRequest(
+        host,
+        serviceKey,
+        'POST',
+        '/rest/v1/activity_log',
+        JSON.stringify([{
+          username,
+          action_type: actionType,
+          page_path: pagePath,
+          context_json: context,
+          source,
+          ref_id: refId,
+        }])
+      )
+
+      return true
+    } catch (err) {
+      console.info('[FAS] activity log skipped:', err && err.message ? err.message : err)
+      return false
+    }
+  }
   return new Promise((resolve, reject) => {
     const bodyBuf = jsonBody ? Buffer.from(jsonBody, 'utf8') : null
     const headers = {
@@ -878,6 +1011,16 @@ function sbRequest(host, serviceKey, method, urlPath, jsonBody) {
       'Authorization': `Bearer ${serviceKey}`,
       'Content-Type':  'application/json',
       'Prefer':        'return=representation',
+
+      await recordMemberActivityServer(creds.host, creds.key, {
+        username: u,
+        actionType: 'radio_upload_success',
+        pagePath: '/radio.html',
+        source: 'server_local',
+        refId: (trackEntry && trackEntry.id) ? String(trackEntry.id) : storagePath,
+        momentumDelta: 1,
+        context: { station: '1' },
+      })
     }
     if (bodyBuf) headers['Content-Length'] = bodyBuf.length
 
