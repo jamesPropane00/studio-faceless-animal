@@ -371,6 +371,8 @@
             <div class="dash-status-row"><span class="dash-status-label">Plan Tier</span><span class="dash-status-val" id="dash-plan-val">Free</span></div>
             <div class="dash-status-row"><span class="dash-status-label">Page Status</span><span class="dash-status-val dash-status-val--none" id="dash-page-status">No Page Yet</span></div>
             <div class="dash-status-row"><span class="dash-status-label">Member Since</span><span class="dash-status-val" id="dash-since">—</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Last Active</span><span class="dash-status-val" id="dash-last-active">—</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Momentum</span><span class="dash-status-val" id="dash-momentum">0</span></div>
             <div id="dash-page-link-row" style="display:none;margin-top:0.85rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.06);">
               <a id="dash-page-link" href="#" class="btn btn-ghost btn-sm" style="font-size:0.72rem;">View My Page →</a>
             </div>
@@ -457,6 +459,18 @@
           </div>
           <div style="margin-top:0.65rem;">
             <a href="messages.html" class="btn btn-ghost btn-sm" style="font-size:0.72rem;">View All Messages →</a>
+          </div>
+        </div>
+
+        <!-- Recent activity -->
+        <div class="dash-section">
+          <p class="dash-section-title">Recent Activity</p>
+          <div class="dash-card" id="dash-activity-preview">
+            <div class="dash-loading" id="dash-activity-loading">Loading…</div>
+            <div id="dash-activity-list" style="display:none;"></div>
+            <div id="dash-activity-empty" style="display:none;">
+              <p style="font-size:0.82rem;color:var(--text-3);">No recent activity yet.</p>
+            </div>
           </div>
         </div>
 
@@ -833,7 +847,6 @@
     } else {
       gate.style.display = 'none'
       main.style.display = ''
-      init(session)
     }
 
     // ── Tab switching ──────────────────────────────────────────
@@ -928,6 +941,11 @@
     let memberData  = null
     let highlights  = []
 
+    // Run init only after state variables are declared.
+    if (session && session.username) {
+      init(session)
+    }
+
     // ── Init ───────────────────────────────────────────────────
     async function init(sess) {
       myUsername = sess.username.toLowerCase()
@@ -997,6 +1015,7 @@
       if (pub) preFillPublicProfile(pub)
 
       loadMessagesPreview(myUsername)
+      loadRecentActivity(myUsername)
       loadMyBoardPosts(myUsername)
       initTrackTab(sess)
     }
@@ -1049,6 +1068,12 @@
         const sc = document.getElementById('dash-since')
         if (sc) sc.textContent = new Date(m.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
       }
+
+      const la = document.getElementById('dash-last-active')
+      if (la) la.textContent = m.last_active_at ? formatTimeAgo(m.last_active_at) : '—'
+
+      const mom = document.getElementById('dash-momentum')
+      if (mom) mom.textContent = String(Number(m.momentum || 0))
 
       if (m.page_slug && ps === 'live') {
         const row  = document.getElementById('dash-page-link-row')
@@ -1798,6 +1823,57 @@
       }
     }
 
+    // ── Recent activity preview ──────────────────────────────
+    async function loadRecentActivity(username) {
+      const loading = document.getElementById('dash-activity-loading')
+      const list    = document.getElementById('dash-activity-list')
+      const empty   = document.getElementById('dash-activity-empty')
+
+      function showEmpty() {
+        if (loading) loading.style.display = 'none'
+        if (list) {
+          list.style.display = 'none'
+          list.innerHTML = ''
+        }
+        if (empty) empty.style.display = ''
+      }
+
+      if (!SUPABASE_READY || !supabase || !username) {
+        showEmpty()
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('activity_log')
+          .select('action_type, created_at, page_path, source, ref_id, context_json')
+          .eq('username', String(username).toLowerCase())
+          .order('created_at', { ascending: false })
+          .limit(8)
+
+        if (error || !Array.isArray(data) || !data.length) {
+          showEmpty()
+          return
+        }
+
+        if (loading) loading.style.display = 'none'
+        if (empty) empty.style.display = 'none'
+        if (!list) return
+
+        list.style.display = ''
+        list.innerHTML = data.map(function(row) {
+          return (
+            '<div style="display:flex;justify-content:space-between;gap:0.75rem;padding:0.55rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">' +
+              '<span style="font-size:0.8rem;color:var(--text-2);">' + escHtml(formatActivityLabel(row)) + '</span>' +
+              '<span style="font-size:0.7rem;color:var(--text-3);white-space:nowrap;">' + escHtml(formatTimeAgo(row && row.created_at)) + '</span>' +
+            '</div>'
+          )
+        }).join('')
+      } catch (_) {
+        showEmpty()
+      }
+    }
+
     // ── Sign out ───────────────────────────────────────────────
     document.getElementById('dash-logout')?.addEventListener('click', e => {
       e.preventDefault()
@@ -1816,6 +1892,40 @@
     function escHtml(str) {
       if (str == null) return ''
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+
+    function formatTimeAgo(ts) {
+      if (!ts) return '—'
+      const d = new Date(ts)
+      if (isNaN(d.getTime())) return '—'
+
+      const diffMs = Date.now() - d.getTime()
+      if (diffMs < 0) return 'Just now'
+
+      const sec = Math.floor(diffMs / 1000)
+      if (sec < 60) return 'Just now'
+      const min = Math.floor(sec / 60)
+      if (min < 60) return min + 'm ago'
+      const hr = Math.floor(min / 60)
+      if (hr < 24) return hr + 'h ago'
+      const day = Math.floor(hr / 24)
+      if (day < 7) return day + 'd ago'
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }
+
+    function formatActivityLabel(row) {
+      const action = String((row && row.action_type) || '').toLowerCase()
+      if (action === 'login') return 'Signed in'
+      if (action === 'page_visit_session_start') {
+        const page = (row && row.page_path) ? String(row.page_path) : ''
+        if (page) return 'Started a session on ' + page
+        return 'Started a session'
+      }
+      if (action === 'radio_upload_success') return 'Uploaded a track to Station 1'
+
+      const raw = String((row && row.action_type) || 'activity')
+      const human = raw.replace(/[_-]+/g, ' ').trim()
+      return human ? human.charAt(0).toUpperCase() + human.slice(1) : 'Activity'
     }
   </script>
 </body>
