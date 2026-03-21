@@ -781,8 +781,24 @@
         <div class="dash-section dash-section-role-panel">
           <p class="dash-section-title">Admin Overview</p>
           <div class="dash-card">
-            <p style="font-size:0.9rem;color:var(--text-2);line-height:1.6;margin-bottom:1rem;">Full platform administration — manage users, roles, membership, and platform settings.</p>
-            <p style="font-size:0.82rem;color:var(--text-3);">Admin tools coming soon.</p>
+            <p style="font-size:0.9rem;color:var(--text-2);line-height:1.6;">Full platform administration — manage users, roles, membership, and platform settings.</p>
+          </div>
+        </div>
+
+        <!-- User Manager -->
+        <div class="dash-section">
+          <p class="dash-section-title" style="display:flex;align-items:center;gap:0.5rem;">
+            User Manager
+            <span id="admin-user-count" style="font-size:0.7rem;color:var(--text-3);font-weight:400;"></span>
+          </p>
+          <div id="admin-user-list">
+            <div class="dash-loading" id="admin-user-loading">Loading users…</div>
+            <div id="admin-user-rows" style="display:none;"></div>
+            <div id="admin-user-empty" style="display:none;">
+              <div class="dash-card" style="text-align:center;padding:1.25rem;">
+                <p style="font-size:0.82rem;color:var(--text-3);">No users found.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div><!-- end panel-super-admin -->
@@ -885,6 +901,7 @@
       if (role === 'super_admin') {
         const superAdminPanel = document.getElementById('panel-super-admin')
         if (superAdminPanel) superAdminPanel.style.display = ''
+        loadAllUsers()
       } else if (role === 'moderator') {
         const modPanel = document.getElementById('panel-moderator')
         if (modPanel) modPanel.style.display = ''
@@ -1931,6 +1948,219 @@
             '</div>'
           )
         }).join('')
+      } catch (_) {
+        showEmpty()
+      }
+    }
+
+    // ── Admin actions (only moderator role changes are real) ──
+    async function handleUserAction(actionType, targetUser) {
+      const action = String(actionType || '').toLowerCase()
+
+      // Keep non-wired actions as stubs for now.
+      if (action !== 'make_moderator' && action !== 'remove_moderator' && action !== 'soft_delete') {
+        console.log('ACTION:', actionType, targetUser)
+        return
+      }
+
+      try {
+        // Guard: actor must be super_admin.
+        const actorRole = String(getUserRole(memberData) || 'user').toLowerCase()
+        if (actorRole !== 'super_admin') {
+          console.error('Admin action denied: actor is not super_admin')
+          return
+        }
+
+        const targetUsername = String(targetUser && targetUser.username || '').toLowerCase()
+        const targetRole = String(targetUser && targetUser.role || '').toLowerCase()
+        const targetId = String(targetUser && targetUser.id || '')
+
+        // Guard: cannot modify your own row.
+        if (targetUsername && targetUsername === myUsername) {
+          console.error('Admin action denied: cannot modify your own account')
+          return
+        }
+
+        // Guard: cannot modify a super_admin target.
+        if (targetRole === 'super_admin') {
+          console.error('Admin action denied: cannot modify super_admin account')
+          return
+        }
+
+        if (!targetId) {
+          console.error('Admin action failed: missing target user id')
+          return
+        }
+
+        if (action === 'make_moderator') {
+          if (!SUPABASE_READY || !supabase) {
+            console.error('make_moderator failed: Supabase unavailable')
+            return
+          }
+
+          const { error } = await supabase
+            .from('member_accounts')
+            .update({ role: 'moderator' })
+            .eq('id', targetId)
+
+          if (error) {
+            console.error('make_moderator failed:', error)
+            return
+          }
+
+          await loadAllUsers()
+          return
+        }
+
+        if (action === 'remove_moderator') {
+          if (!SUPABASE_READY || !supabase) {
+            console.error('remove_moderator failed: Supabase unavailable')
+            return
+          }
+
+          const { error } = await supabase
+            .from('member_accounts')
+            .update({ role: 'user' })
+            .eq('id', targetId)
+
+          if (error) {
+            console.error('remove_moderator failed:', error)
+            return
+          }
+
+          await loadAllUsers()
+          return
+        }
+
+        if (action === 'soft_delete') {
+          const sess = getSession()
+          if (!sess || !sess.username || !sess.ph) {
+            alert('Session expired — sign in again.')
+            return
+          }
+
+          const res = await fetch('/api/admin/users/soft-delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + sess.ph,
+              'X-FAS-Username': String(sess.username || '').toLowerCase(),
+            },
+            body: JSON.stringify({
+              actor_username: String(sess.username || '').toLowerCase(),
+              target_user_id: targetId,
+              ph: sess.ph,
+            }),
+          })
+
+          const payload = await res.json().catch(function() { return null })
+          if (!res.ok || !payload || !payload.ok) {
+            const message = payload && payload.error ? payload.error : 'Soft delete failed.'
+            console.error('soft_delete failed:', message)
+            alert(message)
+            return
+          }
+
+          console.log('soft_delete success:', targetUsername)
+          await loadAllUsers()
+          return
+        }
+      } catch (err) {
+        console.error('Admin action error:', err)
+      }
+    }
+
+    // ── Admin: Load all users (super_admin only, read-only) ───
+    async function loadAllUsers() {
+      const loading = document.getElementById('admin-user-loading')
+      const rows    = document.getElementById('admin-user-rows')
+      const empty   = document.getElementById('admin-user-empty')
+      const count   = document.getElementById('admin-user-count')
+
+      function showEmpty() {
+        if (loading) loading.style.display = 'none'
+        if (rows)    { rows.style.display = 'none'; rows.innerHTML = '' }
+        if (empty)   empty.style.display = ''
+      }
+
+      if (!SUPABASE_READY || !supabase) { showEmpty(); return }
+
+      try {
+        const { data, error } = await supabase
+          .from('member_accounts')
+          .select('id, username, display_name, role, membership_tier, account_status, last_active_at')
+          .or('is_deleted.is.null,is_deleted.eq.false')
+          .order('created_at', { ascending: false })
+          .limit(50)
+
+        if (error || !Array.isArray(data) || !data.length) { showEmpty(); return }
+
+        if (loading) loading.style.display = 'none'
+        if (empty)   empty.style.display = 'none'
+        if (count)   count.textContent = '(' + data.length + ')'
+        if (!rows)   return
+
+        rows.style.display = ''
+        rows.innerHTML = data.map(function(u) {
+          const rawRole    = (u.role || 'user').toLowerCase()
+          const role       = escHtml(rawRole)
+          const tier       = escHtml(u.membership_tier || 'free')
+          const status     = escHtml(u.account_status  || 'active')
+          const rawUser    = (u.username || '').toLowerCase()
+          const username   = escHtml(u.username || '—')
+          const name       = escHtml(u.display_name    || '')
+          const lastActive = u.last_active_at ? escHtml(formatTimeAgo(u.last_active_at)) : '—'
+          const isSelfRow  = !!rawUser && rawUser === myUsername
+          const isTargetSA = rawRole === 'super_admin'
+          const disableAll = isSelfRow || isTargetSA
+          const btnDisabledAttr = disableAll ? ' disabled' : ''
+          const rowHint = isSelfRow ? 'Cannot run actions on your own account.'
+                       : isTargetSA ? 'Cannot run actions on super_admin accounts.'
+                       : ''
+
+          const roleColor   = rawRole === 'super_admin' ? '#a78bfa'   : rawRole === 'moderator' ? '#60a5fa' : 'var(--text-3)'
+          const statusColor = status === 'banned' || status === 'suspended' ? '#f87171'
+                            : status === 'limited' || status === 'warned'   ? '#fbbf24'
+                            : 'var(--text-3)'
+
+          return (
+            '<div class="admin-user-row" style="display:flex;flex-wrap:wrap;gap:0.5rem 1rem;align-items:center;' +
+              'padding:0.65rem 0.9rem;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.82rem;">' +
+              '<div style="flex:0 0 auto;min-width:7rem;">' +
+                '<span style="font-weight:700;color:var(--text);">@' + username + '</span>' +
+                (name ? '<br><span style="font-size:0.72rem;color:var(--text-3);">' + name + '</span>' : '') +
+              '</div>' +
+              '<div style="flex:1;min-width:4rem;color:' + roleColor + ';">' + role + '</div>' +
+              '<div style="flex:1;min-width:4rem;color:var(--text-2);">' + tier + '</div>' +
+              '<div style="flex:1;min-width:4rem;color:' + statusColor + ';">' + status + '</div>' +
+              '<div style="flex:0 0 auto;font-size:0.72rem;color:var(--text-3);white-space:nowrap;">' + lastActive + '</div>' +
+              '<div class="admin-action-group" style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;">' +
+                '<button type="button" class="admin-action-btn" data-action="make_moderator" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Make Moderator</button>' +
+                '<button type="button" class="admin-action-btn" data-action="remove_moderator" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Remove Moderator</button>' +
+                '<button type="button" class="admin-action-btn admin-action-btn--danger" data-action="soft_delete" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Soft Delete</button>' +
+                '<button type="button" class="admin-action-btn admin-action-btn--premium" data-action="set_premium" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Set Premium</button>' +
+                '<button type="button" class="admin-action-btn admin-action-btn--warn" data-action="warn" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Warn</button>' +
+                '<button type="button" class="admin-action-btn admin-action-btn--danger" data-action="suspend" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Suspend</button>' +
+                '<button type="button" class="admin-action-btn admin-action-btn--danger" data-action="ban" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Ban</button>' +
+              '</div>' +
+              (rowHint ? '<div style="flex:1 1 100%;font-size:0.7rem;color:var(--text-3);">' + escHtml(rowHint) + '</div>' : '') +
+            '</div>'
+          )
+        }).join('')
+
+        rows.onclick = function(e) {
+          const btn = e.target && e.target.closest('button[data-action][data-username]')
+          if (!btn || btn.disabled) return
+          const actionType = btn.getAttribute('data-action') || ''
+          const targetUser = {
+            id: btn.getAttribute('data-user-id') || '',
+            username: btn.getAttribute('data-username') || '',
+            role: btn.getAttribute('data-role') || '',
+            membership_tier: btn.getAttribute('data-tier') || '',
+            account_status: btn.getAttribute('data-status') || ''
+          }
+          handleUserAction(actionType, targetUser)
+        }
       } catch (_) {
         showEmpty()
       }
