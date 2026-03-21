@@ -105,8 +105,8 @@
       // Add admin radio link if admin
       if (isAdmin && !mobileNav.querySelector('.admin-radio-link')) {
         var ma = document.createElement('a');
-        ma.href      = 'admin-radio.html';
-        ma.textContent = '🎛 Radio Admin Panel';
+        ma.href      = 'admin/index.html';
+        ma.textContent = '🛠 Admin Dashboard';
         ma.className = 'admin-radio-link';
         ma.style.cssText = 'color:var(--gold-bright);font-weight:700;font-size:0.9rem;';
         mobileNav.insertBefore(ma, mobileNav.firstChild);
@@ -119,10 +119,10 @@
       if (desktopNav && !desktopNav.querySelector('.admin-radio-link')) {
         var li = document.createElement('li');
         var a  = document.createElement('a');
-        a.href      = 'admin-radio.html';
-        a.textContent = '🎛 Upload';
+        a.href      = 'admin/index.html';
+        a.textContent = '🛠 Admin Dashboard';
         a.className = 'admin-radio-link';
-        a.title     = 'Radio Admin — Upload tracks';
+        a.title     = 'Admin Dashboard';
         a.style.cssText = 'color:var(--gold-bright);font-size:0.8rem;';
         li.appendChild(a);
         // Insert before the CTA (last item)

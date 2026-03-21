@@ -12,6 +12,7 @@
     if (!href.endsWith('.html')) return false;
     if (href.includes('radio.html')) return false;
     if (href.includes('directory.html')) return false;
+    if (href.includes('dashboard.html')) return false;
     return true;
   }
 

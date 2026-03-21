@@ -967,7 +967,12 @@
       // Determine user role and show appropriate panel
       if (!currentUser) return
 
-      const role = getUserRole(currentUser)
+      const rawRole = getUserRole(currentUser)
+      const role = String(rawRole || 'user').trim().toLowerCase()
+      const knownRoles = new Set(['super_admin', 'moderator', 'admin', 'user'])
+      if (!knownRoles.has(role)) {
+        console.warn('[FAS] dashboard: unexpected user role value:', rawRole)
+      }
 
       // Show panel based on role
       if (role === 'super_admin') {
@@ -2295,13 +2300,24 @@
       const empty   = document.getElementById('admin-user-empty')
       const count   = document.getElementById('admin-user-count')
 
+      function showError(msg) {
+        if (loading) { loading.style.display = ''; loading.textContent = msg || 'Could not load users.' }
+        if (rows)    { rows.style.display = 'none'; rows.innerHTML = '' }
+        if (empty)   empty.style.display = 'none'
+        if (count)   count.textContent = ''
+      }
+
       function showEmpty() {
         if (loading) loading.style.display = 'none'
         if (rows)    { rows.style.display = 'none'; rows.innerHTML = '' }
         if (empty)   empty.style.display = ''
+        if (count)   count.textContent = ''
       }
 
-      if (!SUPABASE_READY || !supabase) { showEmpty(); return }
+      if (!SUPABASE_READY || !supabase) {
+        showError('Could not load users: Supabase is not ready.')
+        return
+      }
 
       try {
         const { data, error } = await supabase
@@ -2313,7 +2329,14 @@
           .order('created_at', { ascending: false })
           .limit(50)
 
-        if (error || !Array.isArray(data)) { showEmpty(); return }
+        if (error) {
+          showError('Could not load users: ' + (error.message || 'query failed'))
+          return
+        }
+        if (!Array.isArray(data)) {
+          showError('Could not load users: invalid response format.')
+          return
+        }
 
         const visibleUsers = data.filter(function(u) {
           return u && u.is_deleted !== true
@@ -2390,7 +2413,7 @@
           handleUserAction(actionType, targetUser)
         }
       } catch (_) {
-        showEmpty()
+        showError('Could not load users right now. Please try again.')
       }
     }
 
