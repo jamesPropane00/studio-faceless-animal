@@ -351,6 +351,9 @@
         <span class="dash-plan-badge dash-plan-badge--free" id="dash-plan-badge">Free</span>
       </div>
 
+      <!-- Role-based panel: User default view (tabs + content) -->
+      <div id="panel-user-default">
+
       <!-- Tabs -->
       <div class="dash-tabs" role="tablist">
         <button class="dash-tab-btn dash-tab-btn--active" data-tab="overview"    role="tab" aria-selected="true">Overview</button>
@@ -760,6 +763,30 @@
 
       </div><!-- end tab-post -->
 
+      </div><!-- end panel-user-default -->
+
+      <!-- Role-based panel: Moderator view (hidden by default) -->
+      <div id="panel-moderator" style="display:none;">
+        <div class="dash-section dash-section-role-panel">
+          <p class="dash-section-title">Moderator Panel</p>
+          <div class="dash-card">
+            <p style="font-size:0.9rem;color:var(--text-2);line-height:1.6;margin-bottom:1rem;">Limited moderation tools — review and moderate community content.</p>
+            <p style="font-size:0.82rem;color:var(--text-3);">Moderation features coming soon.</p>
+          </div>
+        </div>
+      </div><!-- end panel-moderator -->
+
+      <!-- Role-based panel: Super admin view (hidden by default) -->
+      <div id="panel-super-admin" style="display:none;">
+        <div class="dash-section dash-section-role-panel">
+          <p class="dash-section-title">Admin Overview</p>
+          <div class="dash-card">
+            <p style="font-size:0.9rem;color:var(--text-2);line-height:1.6;margin-bottom:1rem;">Full platform administration — manage users, roles, membership, and platform settings.</p>
+            <p style="font-size:0.82rem;color:var(--text-3);">Admin tools coming soon.</p>
+          </div>
+        </div>
+      </div><!-- end panel-super-admin -->
+
       <!-- Sign out -->
       <div class="dash-logout">
         <a href="#" id="dash-logout">Sign out</a>
@@ -835,6 +862,38 @@
     import { supabase, SUPABASE_READY } from './assets/js/supabase-client.js'
     import { getSession, getMember, syncMember, updateMember, touchActive, clearSession, getPlanMeta, getStatusMeta, getPublicProfile } from './assets/js/member-db.js'
     import { loadThreads, formatDMTime, DM_READY } from './assets/js/dm.js'
+    import { getUserRole } from './assets/js/admin-permissions.js'
+
+    // ── Role-based panel rendering ────────────────────────────
+    function renderDashboardByRole(currentUser) {
+      // Hide all role-based panels by default
+      const panels = [
+        document.getElementById('panel-super-admin'),
+        document.getElementById('panel-moderator'),
+        document.getElementById('panel-user-default')
+      ]
+      panels.forEach(p => {
+        if (p) p.style.display = 'none'
+      })
+
+      // Determine user role and show appropriate panel
+      if (!currentUser) return
+
+      const role = getUserRole(currentUser)
+
+      // Show panel based on role
+      if (role === 'super_admin') {
+        const superAdminPanel = document.getElementById('panel-super-admin')
+        if (superAdminPanel) superAdminPanel.style.display = ''
+      } else if (role === 'moderator') {
+        const modPanel = document.getElementById('panel-moderator')
+        if (modPanel) modPanel.style.display = ''
+      } else {
+        // Everyone else (user role) gets default panel
+        const defaultPanel = document.getElementById('panel-user-default')
+        if (defaultPanel) defaultPanel.style.display = ''
+      }
+    }
 
     // ── Auth gate ──────────────────────────────────────────────
     const gate    = document.getElementById('dash-gate')
@@ -989,6 +1048,7 @@
         }
 
         applyMemberData(member)
+        renderDashboardByRole(member)
 
         // ── Write authoritative plan back to localStorage so gated pages see it ──
         try {
@@ -1005,8 +1065,10 @@
         // Fall back to session plan rather than always showing "Free"
         if (sess.plan && sess.plan !== 'free') {
           applyMemberData({ plan_type: sess.plan, member_status: sess.status || 'active' })
+          renderDashboardByRole({ plan_type: sess.plan, member_status: sess.status || 'active' })
         } else {
           applyFreeDefaults()
+          renderDashboardByRole({ plan_type: 'free', member_status: 'active' })
         }
       }
 
