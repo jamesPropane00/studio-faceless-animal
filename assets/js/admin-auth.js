@@ -7,64 +7,77 @@
  *  logic for the admin dashboard so it can be hardened in
  *  one place without touching dashboard code.
  *
- *  Phase 1 — Hardened:
- *    - Supabase email/password session is the primary gate
- *    - Email allowlist (ADMIN_EMAILS) restricts access to
- *      known admin accounts — any other authenticated user
- *      is turned away with a clear "not authorized" reason
- *    - hasRole() returns false for non-admins
- *
- *  Phase 2 (future — when user_roles table exists):
- *    1. Create `user_roles` table in Supabase:
- *         user_roles(user_id uuid references auth.users, role text)
- *         add RLS: only service_role can write; authenticated can read own row
- *    2. Insert rows for each admin: { user_id: <uid>, role: 'super_admin' }
- *    3. Replace the allowlist check below with a DB role lookup
+ *  Access model:
+ *    - Uses the same platform-native member session as the main app
+ *      (localStorage key: fas_user)
+ *    - Session is verified against member_accounts via username + password_hash
+ *    - Authorization is derived from member_accounts.role only
+ *    - Only super_admin/admin can access the standalone admin page
+ *    - No email lookups or Supabase auth bridge required
  * ============================================================
  */
 
 import { supabase } from './supabase-client.js'
 
-// ── Admin email allowlist ────────────────────────────────────
-// Phase 1: hardcoded list of emails that are allowed admin access.
-// Matching is case-insensitive. Add new admins here as needed.
-const ADMIN_EMAILS = new Set([
-  'djfacelessanimal@gmail.com',
-  'jamespropane00@gmail.com',
-])
+const ADMIN_ACCESS_ROLES = new Set(['super_admin', 'admin'])
 
 // ── Role constants ──────────────────────────────────────────
 export const ADMIN_ROLES = {
   SUPER_ADMIN: 'super_admin',
+  ADMIN:       'admin',
   MODERATOR:   'moderator',
   VIEWER:      'viewer',
 }
 
-// ── isAdminEmail ─────────────────────────────────────────────
-/**
- * Returns true if the given email is in the admin allowlist.
- * @param {string|null} email
- * @returns {boolean}
- */
-function isAdminEmail(email) {
-  if (!email) return false
-  return ADMIN_EMAILS.has(email.toLowerCase().trim())
+function normalizeRole(role) {
+  return String(role || '').trim().toLowerCase()
+}
+
+function getLocalMemberSession() {
+  try {
+    return JSON.parse(localStorage.getItem('fas_user') || 'null')
+  } catch {
+    return null
+  }
+}
+
+function normalizeUsername(raw) {
+  return String(raw || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '')
+}
+
+async function getRoleFromMemberSession(sess) {
+  const username = normalizeUsername(sess && sess.username)
+  const ph = String(sess && sess.ph || '').trim()
+  if (!username || !ph) return null
+
+  const { data, error } = await supabase
+    .from('member_accounts')
+    .select('role')
+    .eq('username', username)
+    .eq('password_hash', ph)
+    .limit(1)
+
+  if (error) return null
+
+  const row = Array.isArray(data) ? data[0] : null
+  return normalizeRole(row && row.role)
 }
 
 // ── getAdminSession ──────────────────────────────────────────
 /**
- * Returns the current Supabase session and whether the user
+ * Returns the current platform member session and whether the user
  * is a recognised admin, or null if not signed in.
  */
 export async function getAdminSession() {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return { session: null, role: null, isAdmin: false }
+  const session = getLocalMemberSession()
+  if (!session || !session.username || !session.ph) {
+    return { session: null, role: null, isAdmin: false }
+  }
 
-  const email = session.user?.email ?? null
-  const isAdmin = isAdminEmail(email)
-  const role = isAdmin ? ADMIN_ROLES.SUPER_ADMIN : null
+  const role = await getRoleFromMemberSession(session)
+  const isAdmin = ADMIN_ACCESS_ROLES.has(role)
 
-  return { session, role, isAdmin }
+  return { session, role: role || null, isAdmin }
 }
 
 // ── requireAdminSession ─────────────────────────────────────
@@ -77,8 +90,8 @@ export async function getAdminSession() {
  *
  * Reasons:
  *   'not_authenticated'  — no active Supabase session
- *   'not_authorized'     — authenticated but not in admin allowlist
- *   'insufficient_role'  — in allowlist but requiredRole not met
+ *   'not_authorized'     — authenticated but role is not admin-eligible
+ *   'insufficient_role'  — role exists but requiredRole not met
  */
 export async function requireAdminSession({ requiredRole = null } = {}) {
   const { session, role, isAdmin } = await getAdminSession()
@@ -133,17 +146,40 @@ export function hasRole(role) {
  * Returns the subscription object (call .unsubscribe() to clean up).
  */
 export function onAuthChange({ onSignIn, onSignOut }) {
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-    if (session) {
-      const email   = session.user?.email ?? null
-      const isAdmin = isAdminEmail(email)
-      const role    = isAdmin ? ADMIN_ROLES.SUPER_ADMIN : null
-      setAdminState(isAdmin, role)
-      onSignIn(session, role, isAdmin)
-    } else {
+  let lastSessionSig = ''
+  let active = true
+
+  const poll = async () => {
+    if (!active) return
+    const session = getLocalMemberSession()
+    const sig = session && session.username && session.ph
+      ? `${normalizeUsername(session.username)}:${String(session.ph).slice(0, 12)}`
+      : ''
+
+    if (sig === lastSessionSig) return
+    lastSessionSig = sig
+
+    if (!session || !session.username || !session.ph) {
       setAdminState(false, null)
       onSignOut()
+      return
     }
-  })
-  return subscription
+
+    const role = await getRoleFromMemberSession(session)
+    const isAdmin = ADMIN_ACCESS_ROLES.has(role)
+    setAdminState(isAdmin, role)
+    onSignIn(session, role, isAdmin)
+  }
+
+  const interval = setInterval(poll, 1200)
+  window.addEventListener('storage', poll)
+  poll()
+
+  return {
+    unsubscribe() {
+      active = false
+      clearInterval(interval)
+      window.removeEventListener('storage', poll)
+    }
+  }
 }

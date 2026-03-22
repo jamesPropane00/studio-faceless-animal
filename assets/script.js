@@ -15,6 +15,29 @@
     try { return JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) { return null; }
   }
 
+  function rootHref(target) {
+    return '/' + String(target || '').replace(/^\/+/, '');
+  }
+
+  function hasAdminAccessRole(role) {
+    var normalized = String(role || '').toLowerCase();
+    return normalized === 'super_admin' || normalized === 'admin';
+  }
+
+  function armSingleNavigation(link) {
+    if (!link || link.dataset.navGuardBound === '1') return;
+    link.dataset.navGuardBound = '1';
+    link.addEventListener('click', function(e) {
+      if (link.dataset.navPending === '1') {
+        e.preventDefault();
+        return;
+      }
+      link.dataset.navPending = '1';
+      link.style.pointerEvents = 'none';
+      link.setAttribute('aria-disabled', 'true');
+    });
+  }
+
   function updateNav() {
     var sess = getSession();
 
@@ -28,7 +51,7 @@
     var username = sess.username.toLowerCase();
     var plan     = sess.plan || 'free';
     var initial  = display.charAt(0).toUpperCase();
-    var isAdmin  = ['jamespropane00','arianamnm'].indexOf(username) !== -1;
+    var isAdmin  = hasAdminAccessRole(sess.role);
     var isPaid   = ['starter','pro','premium','access'].indexOf(plan) !== -1;
 
     // Track one visit event per pathname per browser tab session.
@@ -62,7 +85,7 @@
     // ── Desktop nav: replace "Sign In" link with user pill ───────
     var ctaLinks = document.querySelectorAll('a.nav-cta');
     ctaLinks.forEach(function(a) {
-      a.href = 'dashboard.html';
+      a.href = rootHref('dashboard.html');
       a.title = 'Your dashboard';
       a.innerHTML =
         '<span style="display:inline-flex;align-items:center;gap:6px;">' +
@@ -84,7 +107,7 @@
       // Replace the Sign In link
       mobileNav.querySelectorAll('a').forEach(function(a) {
         if (a.href && a.href.indexOf('login') !== -1 && a.textContent.indexOf('Sign') !== -1) {
-          a.href = 'dashboard.html';
+          a.href = rootHref('dashboard.html');
           a.innerHTML =
             '<span style="display:inline-flex;align-items:center;gap:8px;">' +
               '<span style="display:inline-flex;align-items:center;justify-content:center;' +
@@ -105,10 +128,11 @@
       // Add admin radio link if admin
       if (isAdmin && !mobileNav.querySelector('.admin-radio-link')) {
         var ma = document.createElement('a');
-        ma.href      = 'admin/index.html';
+        ma.href      = rootHref('admin/index.html');
         ma.textContent = '🛠 Admin Dashboard';
         ma.className = 'admin-radio-link';
         ma.style.cssText = 'color:var(--gold-bright);font-weight:700;font-size:0.9rem;';
+        armSingleNavigation(ma);
         mobileNav.insertBefore(ma, mobileNav.firstChild);
       }
     }
@@ -119,11 +143,12 @@
       if (desktopNav && !desktopNav.querySelector('.admin-radio-link')) {
         var li = document.createElement('li');
         var a  = document.createElement('a');
-        a.href      = 'admin/index.html';
+        a.href      = rootHref('admin/index.html');
         a.textContent = '🛠 Admin Dashboard';
         a.className = 'admin-radio-link';
         a.title     = 'Admin Dashboard';
         a.style.cssText = 'color:var(--gold-bright);font-size:0.8rem;';
+        armSingleNavigation(a);
         li.appendChild(a);
         // Insert before the CTA (last item)
         var ctaItem = desktopNav.querySelector('li:last-child');
@@ -145,7 +170,7 @@
           initial +
         '</span>' +
         '<span>Signed in as <strong style="color:var(--purple-bright);">@' + username + '</strong>' + planBadge + '</span>' +
-        '<a href="dashboard.html" style="margin-left:auto;color:var(--purple-bright);font-weight:700;font-size:0.72rem;white-space:nowrap;text-decoration:none;">Dashboard →</a>';
+        '<a href="' + rootHref('dashboard.html') + '" style="margin-left:auto;color:var(--purple-bright);font-weight:700;font-size:0.72rem;white-space:nowrap;text-decoration:none;">Dashboard →</a>';
       bar.style.cssText =
         'position:fixed;top:0;left:0;right:0;z-index:10000;' +
         'display:flex;align-items:center;gap:6px;' +

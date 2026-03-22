@@ -114,6 +114,21 @@
           <a href="network.html" class="btn btn-ghost btn-lg" style="margin-left:1rem;">View the Board</a>
         </div>
 
+        <div style="margin-top:2.4rem;">
+          <div class="section-header" style="margin-bottom:0.9rem;">
+            <p class="section-label">Live Activity</p>
+            <h2 style="font-size:clamp(1.4rem,3.4vw,2rem);">Signal Feed<br /><em>Preview.</em></h2>
+            <p class="section-sub" style="max-width:680px;">The directory is connected to real post activity. These are the latest approved public signals from active members.</p>
+          </div>
+          <div id="dir-signal-feed-loading" style="font-size:0.8rem;color:var(--text-3);padding:0.65rem 0;">Loading live signal feed…</div>
+          <div id="dir-signal-feed" style="display:none;"></div>
+          <div id="dir-signal-feed-empty" style="display:none;">
+            <div class="dash-card" style="text-align:center;padding:1.25rem;">
+              <p style="font-size:0.82rem;color:var(--text-3);">No public posts yet. New signals appear here as creators publish.</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -333,9 +348,96 @@
       });
     }
 
+    function loadSignalFeedPreview() {
+      var loading = document.getElementById('dir-signal-feed-loading');
+      var list = document.getElementById('dir-signal-feed');
+      var empty = document.getElementById('dir-signal-feed-empty');
+
+      var signalUrl = SUPABASE_URL
+        + '/rest/v1/signal_posts'
+        + '?select=author_username,post_type,category,body_text,media_url,created_at'
+        + '&moderation_state=eq.approved'
+        + '&visibility=eq.public'
+        + '&order=created_at.desc'
+        + '&limit=6';
+
+      function showRows(rows) {
+        if (loading) loading.style.display = 'none';
+        if (!rows || !rows.length) {
+          if (empty) empty.style.display = '';
+          if (list) { list.style.display = 'none'; list.innerHTML = ''; }
+          return;
+        }
+
+        if (empty) empty.style.display = 'none';
+        if (!list) return;
+        list.style.display = '';
+        list.innerHTML = rows.map(function(row) {
+          var when = row.created_at ? new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'now';
+          var body = esc((row.body_text || '').slice(0, 260));
+          var type = esc(row.post_type || 'text');
+          var cat = esc(row.category || 'update');
+          var media = row.media_url ? '<p style="margin:0.45rem 0 0;font-size:0.72rem;color:var(--purple-bright);word-break:break-all;">' + esc(row.media_url) + '</p>' : '';
+          return '<article class="dir-card" style="margin-bottom:0.65rem;">'
+            + '<p style="font-size:0.7rem;color:var(--text-3);margin:0 0 0.45rem;text-transform:uppercase;letter-spacing:0.06em;">@' + esc(row.author_username || 'member') + ' · ' + type + ' · ' + cat + ' · ' + when + '</p>'
+            + '<p style="font-size:0.84rem;color:var(--text-2);line-height:1.6;margin:0;">' + body + '</p>'
+            + media
+            + '</article>';
+        }).join('');
+      }
+
+      fetch(signalUrl, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+        }
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(rows) {
+        if (Array.isArray(rows) && rows.length) {
+          showRows(rows);
+          return;
+        }
+
+        var fallbackUrl = SUPABASE_URL
+          + '/rest/v1/board_posts'
+          + '?select=username,category,post_text,image_url,created_at'
+          + '&is_approved=eq.true'
+          + '&visibility_status=eq.visible'
+          + '&order=created_at.desc'
+          + '&limit=6';
+
+        return fetch(fallbackUrl, {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+          }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(boardRows) {
+          var normalized = (boardRows || []).map(function(b) {
+            return {
+              author_username: b.username,
+              post_type: 'text',
+              category: b.category,
+              body_text: b.post_text,
+              media_url: b.image_url,
+              created_at: b.created_at
+            };
+          });
+          showRows(normalized);
+        });
+      })
+      .catch(function() {
+        if (loading) loading.style.display = 'none';
+        if (empty) empty.style.display = '';
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
       initFilter();
       loadDirectory();
+      loadSignalFeedPreview();
     });
   }());
   </script>

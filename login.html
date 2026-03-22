@@ -138,7 +138,7 @@
       <div id="login-panel">
 
         <h1 class="login-title">Sign In.<br /><em>Take Your Seat.</em></h1>
-        <p class="login-sub">Your handle + password gets you in. New here? Create a free account below.</p>
+        <p class="login-sub">Anonymous identity only. Use your handle or Signal ID + password. New here? Create a free account below and save your recovery code.</p>
 
         <!-- Tabs -->
         <div class="login-tabs" role="tablist">
@@ -152,8 +152,8 @@
           <!-- Normal sign-in form -->
           <form class="login-form" id="signin-form" novalidate>
             <div>
-              <label class="lf-label" for="signin-username">Username</label>
-              <input class="lf-input" type="text" id="signin-username" name="username" placeholder="@yourhandle" autocomplete="username" spellcheck="false" autocorrect="off" autocapitalize="none" required />
+              <label class="lf-label" for="signin-username">Username or Signal ID</label>
+              <input class="lf-input" type="text" id="signin-username" name="username" placeholder="@yourhandle or sig_xxxxxxxx" autocomplete="username" spellcheck="false" autocorrect="off" autocapitalize="none" required />
             </div>
             <div>
               <label class="lf-label" for="signin-password">Password</label>
@@ -214,9 +214,10 @@
             </div>
 
             <div>
-              <label class="lf-label" for="create-email">Email <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
-              <input class="lf-input" type="email" id="create-email" name="email" placeholder="you@example.com" autocomplete="email" maxlength="120" />
-              <p class="lf-hint">Only used to reach you about your page. Never sold or shared.</p>
+              <p class="lf-hint" style="margin-top:0;color:var(--text-2);line-height:1.7;">
+                This platform does not use email or real-world identity.
+                Your account belongs to your handle, password, and private recovery code.
+              </p>
             </div>
 
             <div>
@@ -235,6 +236,17 @@
                 <button type="button" class="lf-pw-toggle" data-target="create-confirm" aria-label="Show/hide password">👁</button>
               </div>
             </div>
+
+            <div>
+              <label class="lf-label" for="create-recovery">Recovery Code <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;">(leave blank to auto-generate)</span></label>
+              <input class="lf-input" type="text" id="create-recovery" name="recovery_code" placeholder="ABCD-EFGH-IJKL-MNOP" autocomplete="off" maxlength="64" />
+              <p class="lf-hint">Wallet-style recovery: if you lose password and recovery code, this account cannot be restored.</p>
+            </div>
+
+            <label style="display:flex;gap:0.55rem;align-items:flex-start;font-size:0.78rem;color:var(--text-2);line-height:1.5;">
+              <input type="checkbox" id="create-recovery-ack" style="margin-top:0.2rem;" required />
+              <span>I understand this account cannot be recovered without my recovery code.</span>
+            </label>
 
             <div id="create-error" class="lf-error" role="alert"></div>
             <button type="submit" class="lf-submit" id="create-btn">Create Account →</button>
@@ -281,6 +293,7 @@
         <p class="login-success-title">You're In.</p>
         <p class="login-success-handle" id="success-handle">@handle</p>
         <p class="login-success-sub">You're signed in. The radio chat is open and platform features are unlocked.</p>
+        <p class="login-success-sub" id="success-meta" style="display:none;font-size:0.78rem;line-height:1.7;color:var(--gold-dim);"></p>
         <div class="login-success-actions">
           <a href="dashboard.html" class="btn btn-primary">Dashboard →</a>
           <a href="radio.html" class="btn btn-ghost">Radio</a>
@@ -355,10 +368,21 @@
     })
 
     // ── Show success ──────────────────────────────────────────
-    function showSuccess(username) {
+    function showSuccess(username, meta = null) {
       loginPanel.style.display = 'none'
       successCard.classList.add('visible')
       document.getElementById('success-handle').textContent = '@' + username
+      const metaEl = document.getElementById('success-meta')
+      if (metaEl) {
+        if (meta && meta.recoveryCode) {
+          const platformLine = meta.platformId ? ('Signal ID: <strong>' + meta.platformId + '</strong><br>') : ''
+          metaEl.innerHTML = platformLine + 'Recovery code: <strong>' + meta.recoveryCode + '</strong><br>Save this now. It cannot be recovered later.'
+          metaEl.style.display = ''
+        } else {
+          metaEl.style.display = 'none'
+          metaEl.textContent = ''
+        }
+      }
       const redirect = params.get('redirect')
       // Always auto-redirect: use the `redirect` param if present, else go to dashboard
       const dest = redirect ? decodeURIComponent(redirect) : 'dashboard.html'
@@ -497,7 +521,8 @@
 
       const rawUsername = document.getElementById('create-username').value
       const displayRaw  = document.getElementById('create-display').value.trim()
-      const emailRaw    = document.getElementById('create-email').value.trim()
+      const recoveryRaw = document.getElementById('create-recovery').value.trim()
+      const recoveryAck = !!document.getElementById('create-recovery-ack')?.checked
       const password    = document.getElementById('create-password').value
       const confirm     = document.getElementById('create-confirm').value
       const username    = cleanUsername(rawUsername)
@@ -512,10 +537,14 @@
         showErr(createErr, 'Passwords do not match. Re-enter them.')
         return
       }
+      if (!recoveryAck) {
+        showErr(createErr, 'You must confirm the recovery-code warning to continue.')
+        return
+      }
 
       setLoading(createBtn, true, 'Creating Account…')
 
-      const { success, error } = await createAccount(username, password, displayRaw, emailRaw)
+      const { success, error, recoveryCode, platformId } = await createAccount(username, password, displayRaw, recoveryRaw)
 
       if (success) {
         trackMemberActivity(username, 'login', {
@@ -523,7 +552,7 @@
           pagePath: window.location.pathname,
           momentumDelta: 1,
         })
-        showSuccess(username)
+        showSuccess(username, { recoveryCode, platformId })
         return
       }
 

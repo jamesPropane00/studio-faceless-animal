@@ -25,7 +25,7 @@
  *
  *    STATIC FALLBACK:
  *      If SUPABASE_READY is false (env vars not set), the form
- *      opens a mailto and shows a "We'll reach out" confirmation.
+ *      shows a preview-mode confirmation only.
  *
  *  DEPENDENCIES:
  *    - start.html: form#fas-free-signup-form, #fas-signup-panel,
@@ -39,6 +39,7 @@
 import { supabase, SUPABASE_READY } from './supabase-client.js'
 import { syncMember }               from './member-db.js'
 import { uploadProfileImage }       from './services/submissions.js'
+import { generateRecoveryCode, cleanRecoveryCode, hashRecoveryCode } from './auth.js'
 
 
 /* ── PBKDF2 constants (must match auth.js) ───────────────────── */
@@ -46,10 +47,11 @@ const PBKDF2_ITERATIONS = 100_000
 const PBKDF2_HASH       = 'SHA-256'
 const PBKDF2_BITS       = 256
 const SALT_BYTES        = 16
+const PLATFORM_ID_PREFIX = 'sig_'
 
 
 /* ── REQUIRED FIELDS ─────────────────────────────────────────── */
-const REQUIRED = ['display_name', 'username', 'email', 'password', 'confirm_password', 'category', 'bio']
+const REQUIRED = ['display_name', 'username', 'password', 'confirm_password', 'category', 'bio', 'recovery_ack']
 
 
 /* ── CATEGORY → PAGE TYPE MAP ────────────────────────────────── */
@@ -109,6 +111,16 @@ function clientUUID() {
     const r = Math.random() * 16 | 0
     return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
   })
+}
+
+function generatePlatformId() {
+  const bytes = new Uint8Array(8)
+  crypto.getRandomValues(bytes)
+  let out = ''
+  for (let i = 0; i < bytes.length; i++) {
+    out += (bytes[i] % 36).toString(36)
+  }
+  return PLATFORM_ID_PREFIX + out
 }
 
 
@@ -193,24 +205,10 @@ async function handleSubmit(e, form, btn) {
   setLoading(btn, true)
 
   /* ── STATIC FALLBACK (no Supabase env vars) ─────────────────
-   *  Open a pre-filled mailto so the submission still reaches
-   *  the studio, then show the confirmation screen.
+   *  Show the confirmation screen in preview mode.
    */
   if (!SUPABASE_READY) {
     await delay(400)
-    const subject = encodeURIComponent('FAS Free Page Signup: @' + (data.username || ''))
-    const body = encodeURIComponent(
-      'Name: '     + (data.display_name || '') + '\n' +
-      'Handle: @'  + (data.username     || '') + '\n' +
-      'Email: '    + (data.email        || '') + '\n' +
-      'Category: ' + (data.category     || '') + '\n' +
-      'Bio: '      + (data.bio          || '') + '\n' +
-      'Links: '    + [
-        data.link_spotify, data.link_youtube, data.link_instagram,
-        data.link_tiktok, data.link_soundcloud, data.link_website, data.link_other,
-      ].filter(Boolean).join(', ')
-    )
-    try { window.open('mailto:djfacelessanimal@gmail.com?subject=' + subject + '&body=' + body, '_blank') } catch(ignore) {}
     showSuccess({ username: data.username, display_name: data.display_name, category: data.category, isStatic: true })
     return
   }
@@ -226,6 +224,24 @@ async function handleSubmit(e, form, btn) {
     } catch (cryptoErr) {
       setLoading(btn, false)
       showError(form, 'Password hashing failed. Your browser may not support Web Crypto. Try a modern browser.')
+      return
+    }
+
+    let recoveryCode = String(data.recovery_code || '').trim()
+    if (!recoveryCode) recoveryCode = generateRecoveryCode()
+    const recoveryNormalized = cleanRecoveryCode(recoveryCode)
+    if (recoveryNormalized.length < 8) {
+      setLoading(btn, false)
+      showError(form, 'Recovery code is too short. Use at least 8 characters.')
+      return
+    }
+
+    let recoveryHash
+    try {
+      recoveryHash = await hashRecoveryCode(recoveryNormalized)
+    } catch (recoveryErr) {
+      setLoading(btn, false)
+      showError(form, 'Could not process recovery code. Please try again.')
       return
     }
 
@@ -259,10 +275,42 @@ async function handleSubmit(e, form, btn) {
      *  This happens BEFORE profile/page creation so auth setup
      *  can fail cleanly with no orphaned rows.
      */
-    const synced = await syncMember(data.username, data.display_name, data.email)
+    const synced = await syncMember(data.username, data.display_name)
     if (!synced) {
       setLoading(btn, false)
       showError(form, 'Could not create your account. Please try again.')
+      return
+    }
+
+    let platformId = ''
+    let identitySaved = false
+    for (let i = 0; i < 5; i++) {
+      platformId = generatePlatformId()
+      const { error: identityErr } = await supabase
+        .from('member_accounts')
+        .update({
+          platform_id: platformId,
+          recovery_code_hash: recoveryHash,
+          recovery_code_set_at: new Date().toISOString(),
+        })
+        .eq('username', data.username)
+        .is('platform_id', null)
+
+      if (!identityErr) {
+        identitySaved = true
+        break
+      }
+
+      if (identityErr.code !== '23505') {
+        setLoading(btn, false)
+        showError(form, 'Anonymous identity columns are missing. Run migration 019 and try again.')
+        return
+      }
+    }
+
+    if (!identitySaved) {
+      setLoading(btn, false)
+      showError(form, 'Could not allocate a Signal ID. Please try again.')
       return
     }
 
@@ -273,7 +321,7 @@ async function handleSubmit(e, form, btn) {
     if (pwErr) {
       setLoading(btn, false)
       console.error('[FAS] set_member_password error:', pwErr)
-      showError(form, 'Account was created but password setup failed. Please try again or contact djfacelessanimal@gmail.com.')
+      showError(form, 'Account was created but password setup failed. Please try again.')
       return
     }
 
@@ -302,7 +350,6 @@ async function handleSubmit(e, form, btn) {
       id:           profileId,
       username:     data.username,
       display_name: data.display_name,
-      email:        data.email,
       bio:          data.bio || null,
       avatar_url:   avatarUrl,
       category:     data.category,
@@ -327,17 +374,15 @@ async function handleSubmit(e, form, btn) {
           // Auth account was created but profile already exists — still a success path
           // Log in the user and show success
           console.warn('[FAS] profile already exists for username, treating as success')
-          storeSession({ username: data.username, display_name: data.display_name, email: data.email, hash })
-          showSuccess({ username: data.username, display_name: data.display_name, category: data.category })
+          storeSession({ username: data.username, display_name: data.display_name, hash, platform_id: platformId })
+          showSuccess({ username: data.username, display_name: data.display_name, category: data.category, recoveryCode, platformId })
           return
-        } else if (profileInsertErr.message.includes('email')) {
-          showError(form, 'That email is already registered. If you need help, email djfacelessanimal@gmail.com.')
         } else {
-          showError(form, 'A duplicate was detected. Check your username and email, then try again.')
+          showError(form, 'A duplicate was detected. Check your username, then try again.')
         }
       } else {
         console.error('[FAS] profiles insert error:', profileInsertErr)
-        showError(form, 'Your account was created but the profile page could not be saved. Please contact djfacelessanimal@gmail.com — your login is active.')
+        showError(form, 'Your account was created but the profile page could not be saved. Your login is active.')
       }
       return
     }
@@ -361,8 +406,8 @@ async function handleSubmit(e, form, btn) {
     if (pageInsertErr) {
       console.error('[FAS] pages insert error:', pageInsertErr)
       // Non-fatal: profile + auth created. User can log in; admin can create the page.
-      storeSession({ username: data.username, display_name: data.display_name, email: data.email, hash })
-      showSuccess({ username: data.username, display_name: data.display_name, category: data.category, noPage: true })
+      storeSession({ username: data.username, display_name: data.display_name, hash, platform_id: platformId })
+      showSuccess({ username: data.username, display_name: data.display_name, category: data.category, noPage: true, recoveryCode, platformId })
       return
     }
 
@@ -400,25 +445,25 @@ async function handleSubmit(e, form, btn) {
     }
 
     /* ── STEP 9: Store session + show success ──────────────── */
-    storeSession({ username: data.username, display_name: data.display_name, email: data.email, hash })
-    showSuccess({ username: data.username, display_name: data.display_name, category: data.category })
+    storeSession({ username: data.username, display_name: data.display_name, hash, platform_id: platformId })
+    showSuccess({ username: data.username, display_name: data.display_name, category: data.category, recoveryCode, platformId })
 
   } catch (caught) {
     console.error('[FAS] Unexpected free signup error:', caught)
     setLoading(btn, false)
-    showError(form, 'An unexpected error occurred. Please try again or contact djfacelessanimal@gmail.com.')
+    showError(form, 'An unexpected error occurred. Please try again.')
   }
 }
 
 
 /* ── SESSION STORAGE ─────────────────────────────────────────── */
-function storeSession({ username, display_name, email, hash }) {
+function storeSession({ username, display_name, hash, platform_id }) {
   try {
     localStorage.setItem('fas_member', 'true')
     localStorage.setItem('fas_user', JSON.stringify({
       username,
       display: display_name,
-      email:   email || '',
+      platform_id: platform_id || '',
       plan:    'free',
       status:  'free',
       ts:      Date.now(),
@@ -512,11 +557,6 @@ function validate(data) {
     return 'Username can only contain lowercase letters, numbers, hyphens, and underscores.'
   }
 
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email || '')
-  if (!emailOk) {
-    return 'Enter a valid email address.'
-  }
-
   if (!data.password || data.password.length < 8) {
     return 'Password must be at least 8 characters.'
   }
@@ -527,6 +567,10 @@ function validate(data) {
 
   if (data.password !== data.confirm_password) {
     return 'Passwords do not match. Re-enter your password in both fields.'
+  }
+
+  if (!data.recovery_ack) {
+    return 'You must confirm the recovery-code warning to continue.'
   }
 
   if (!data.category) {
@@ -556,7 +600,7 @@ function categoryToRoutePrefix(category) {
 
 
 /* ── SUCCESS STATE ───────────────────────────────────────────── */
-function showSuccess({ username, display_name, category, isStatic = false, noPage = false }) {
+function showSuccess({ username, display_name, category, isStatic = false, noPage = false, recoveryCode = '', platformId = '' }) {
   const panel   = document.getElementById('fas-signup-panel')
   const success = document.getElementById('fas-signup-success')
 
@@ -567,6 +611,7 @@ function showSuccess({ username, display_name, category, isStatic = false, noPag
   const urlEl      = success.querySelector('.success-page-url')
   const noteEl     = success.querySelector('.success-static-note')
   const redirectEl = success.querySelector('.success-redirect-note')
+  const recoveryEl = document.getElementById('fs-success-recovery')
 
   const prefix  = categoryToRoutePrefix(category)
   const pageUrl = prefix + username
@@ -575,6 +620,16 @@ function showSuccess({ username, display_name, category, isStatic = false, noPag
   if (handleEl) handleEl.textContent = '@' + username
   if (urlEl)    urlEl.textContent = 'facelessanimalstudios.com' + pageUrl
   if (noteEl)   noteEl.hidden = !isStatic
+  if (recoveryEl) {
+    if (recoveryCode) {
+      const idLine = platformId ? ('Signal ID: ' + platformId + ' · ') : ''
+      recoveryEl.textContent = idLine + 'Recovery code: ' + recoveryCode + ' — save this now. It cannot be recovered later.'
+      recoveryEl.hidden = false
+    } else {
+      recoveryEl.hidden = true
+      recoveryEl.textContent = ''
+    }
+  }
 
   if (panel) panel.hidden = true
   success.hidden = false

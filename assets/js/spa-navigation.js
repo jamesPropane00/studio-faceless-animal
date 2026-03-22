@@ -3,6 +3,12 @@
 
   const appContent = document.getElementById('app-content');
   if (!appContent) return; // not on SPA page
+  const spaEnabled = document.documentElement.hasAttribute('data-fas-spa') ||
+    document.body.hasAttribute('data-fas-spa') ||
+    appContent.hasAttribute('data-fas-spa');
+  if (!spaEnabled) return; // restore original full-page navigation unless explicitly enabled
+
+  let isNavigating = false;
 
   function isInternalLink(href) {
     if (!href) return false;
@@ -17,6 +23,8 @@
   }
 
   function loadPage(url, push = true) {
+    if (isNavigating) return;
+    isNavigating = true;
     fetch(url)
       .then(r => r.text())
       .then(html => {
@@ -46,6 +54,9 @@
           history.pushState({url}, '', url);
         }
         // Re-run any page-specific init if needed (minimal, none for now)
+      })
+      .finally(() => {
+        isNavigating = false;
       })
       .catch(err => console.error('Load page error:', err));
   }

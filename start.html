@@ -238,19 +238,10 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label" for="fs_email">
-                    Email Address <span class="form-required" aria-hidden="true">*</span>
-                  </label>
-                  <input
-                    class="form-input"
-                    type="email"
-                    id="fs_email"
-                    name="email"
-                    placeholder="you@example.com"
-                    required
-                    autocomplete="email"
-                  />
-                  <p class="form-optional" style="font-size:0.7rem;color:var(--text-3);margin-top:0.3rem;">Used for page-ready notifications only. Not shared.</p>
+                  <p class="form-note" style="margin:0;line-height:1.7;">
+                    This platform does not use email or real-world identity.
+                    Your account belongs to your handle, password, and private recovery code.
+                  </p>
                 </div>
 
                 <div class="intake-grid-2">
@@ -294,6 +285,30 @@
                       />
                       <button type="button" class="fs-pw-toggle" data-target="fs_confirm_password" aria-label="Show or hide password" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-3);cursor:pointer;font-size:0.85rem;padding:0.2rem;">👁</button>
                     </div>
+                  </div>
+                </div>
+
+                <div class="intake-grid-2">
+                  <div class="form-group">
+                    <label class="form-label" for="fs_recovery_code">
+                      Recovery Code <span class="form-optional" style="font-weight:500;">(leave blank to auto-generate)</span>
+                    </label>
+                    <input
+                      class="form-input"
+                      type="text"
+                      id="fs_recovery_code"
+                      name="recovery_code"
+                      placeholder="ABCD-EFGH-IJKL-MNOP"
+                      autocomplete="off"
+                      maxlength="64"
+                    />
+                    <p class="form-optional" style="font-size:0.7rem;color:var(--text-3);margin-top:0.3rem;">Wallet-style recovery: lose password + recovery code and this account is permanently unrecoverable.</p>
+                  </div>
+                  <div class="form-group" style="display:flex;align-items:flex-end;">
+                    <label style="display:flex;gap:0.55rem;align-items:flex-start;font-size:0.82rem;color:var(--text-2);line-height:1.55;">
+                      <input type="checkbox" id="fs_recovery_ack" name="recovery_ack" required style="margin-top:0.2rem;" />
+                      <span>I understand this account cannot be recovered without my recovery code.</span>
+                    </label>
                   </div>
                 </div>
 
@@ -417,7 +432,7 @@
                   </div>
                 </div>
 
-                <p class="form-note">No image yet? Email it to <strong style="color:var(--text-2);">djfacelessanimal@gmail.com</strong> after submitting. We'll add it before your page goes live.</p>
+                <p class="form-note">No image yet? You can add one later from your dashboard profile editor.</p>
 
               </div>
             </fieldset>
@@ -640,9 +655,10 @@
           <p class="success-redirect-note" style="font-size:0.82rem;color:var(--gold-dim);margin-top:0.75rem;letter-spacing:0.02em;">
             Taking you there in 2…
           </p>
+          <p id="fs-success-recovery" style="display:block;font-size:0.78rem;line-height:1.7;color:var(--gold-dim);margin-top:0.4rem;" hidden></p>
 
           <p class="success-static-note" hidden>
-            We're currently in preview mode — your form data wasn't saved to the database yet. We'll follow up at the email you provided within 1–2 business days to complete your page setup.
+            Preview mode is active — your form data was not saved in this environment. Use a live environment to create your real account and recovery code.
           </p>
 
           <ul class="success-steps" aria-label="What you get">
@@ -652,7 +668,7 @@
             </li>
             <li>
               <span class="success-step-num">02</span>
-              <span>Want to add a profile photo? Email it to <strong>djfacelessanimal@gmail.com</strong> and we'll get it added.</span>
+              <span>Your private recovery code is generated and logged at account creation. Save it now.</span>
             </li>
             <li>
               <span class="success-step-num">03</span>
@@ -693,7 +709,7 @@
           <div class="join-step">
             <p class="join-step-num">02</p>
             <p class="join-step-title">Add Your Photo</p>
-            <p class="join-step-desc">Don't have an image URL? Just email your photo to <strong>djfacelessanimal@gmail.com</strong> with your handle and we'll get it added. Square images work best.</p>
+            <p class="join-step-desc">Don't have an image URL yet? Upload it later from your dashboard. Square images work best.</p>
           </div>
 
           <div class="join-step">
@@ -722,14 +738,9 @@
           Reach Out<br /><em>Directly.</em>
         </h2>
         <p style="font-size:0.9rem;color:var(--text-2);line-height:1.9;margin-bottom:2rem;">
-          Prefer to just send an email? That works too. Include your name, handle, which plan you want, your bio, and your links. We'll take it from there.
+          Anonymous onboarding is built into this page. Create your account with handle, password, and recovery code.
         </p>
-        <a
-          href="mailto:djfacelessanimal@gmail.com?subject=FAS%20Platform%20Intake&body=Name%2FHandle%3A%0APlan%3A%0ABio%3A%0ALinks%3A"
-          class="btn btn-primary btn-lg"
-        >
-          Email djfacelessanimal@gmail.com →
-        </a>
+        <a href="#free-signup-form" class="btn btn-primary btn-lg">Open Anonymous Signup →</a>
       </div>
     </section>
 
@@ -778,7 +789,7 @@
 
         </div>
         <p style="text-align:center;font-size:0.72rem;color:var(--text-3);">
-          Prefer Cash App? Send to <a href="https://cash.app/$Jamespropane00" target="_blank" rel="noopener noreferrer" style="color:var(--gold-dim);text-decoration:underline;">$Jamespropane00</a> — note your plan + your email so we can reach out ·
+          Prefer Cash App? Send to <a href="https://cash.app/$Jamespropane00" target="_blank" rel="noopener noreferrer" style="color:var(--gold-dim);text-decoration:underline;">$Jamespropane00</a> — note your plan + your handle ·
           <a href="pricing.html" style="color:var(--gold-dim);text-decoration:underline;">Full plan comparison →</a>
         </p>
       </div>
@@ -848,11 +859,11 @@
       var freeLiveNote = document.getElementById('start-free-live-note')
 
       if (heroSub) {
-        heroSub.textContent = 'Pick your path and preview the intake flow. Preview mode is active right now, so submissions are not saved automatically yet. Use the form to review the experience, then email djfacelessanimal@gmail.com to start your official build.'
+        heroSub.textContent = 'Pick your path and preview the intake flow. This platform is anonymous-first: handle, password, and recovery code only.'
       }
 
       if (freeLiveNote) {
-        freeLiveNote.textContent = 'Preview mode is active in this environment. Submit to test the form flow, then email djfacelessanimal@gmail.com to officially start your free page.'
+        freeLiveNote.textContent = 'Preview mode is active in this environment. Submit to test anonymous signup flow and recovery warning copy.'
       }
     })()
   </script>

@@ -31,11 +31,10 @@ export function clearSession() {
   localStorage.removeItem(MEMBER_KEY)
 }
 
-export function setSession(username, display, email, extra) {
+export function setSession(username, display, extra) {
   const user = {
     username,
     display: display || username,
-    email: email || '',
     ts: Date.now(),
     ...(extra || {}),
   }
@@ -49,19 +48,19 @@ export function setSession(username, display, email, extra) {
  * Upsert member to Supabase member_accounts.
  * Called on create or sign-in.
  */
-export async function syncMember(username, display, email) {
+export async function syncMember(username, display) {
   if (!SUPABASE_READY || !supabase) return null
   const key = username.toLowerCase()
+  const payload = {
+    username:      key,
+    display_name:  display || username,
+    avatar_initial: (display || username).charAt(0).toUpperCase(),
+    last_active_at: new Date().toISOString(),
+  }
   const { data, error } = await supabase
     .from('member_accounts')
     .upsert(
-      {
-        username:      key,
-        display_name:  display || username,
-        email:         email || null,
-        avatar_initial: (display || username).charAt(0).toUpperCase(),
-        last_active_at: new Date().toISOString(),
-      },
+      payload,
       { onConflict: 'username', ignoreDuplicates: false }
     )
     .select()

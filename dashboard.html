@@ -194,6 +194,38 @@
     .dash-save-note--ok  { color: #22c55e; }
     .dash-save-note--err { color: #f87171; }
 
+    /* ── Identity rows (Identity/Access tab) ── */
+    .dash-id-row {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 0.45rem;
+      padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .dash-id-label { font-size: 0.67rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-3); flex-shrink: 0; min-width: 88px; }
+    .dash-id-val { font-size: 0.82rem; font-weight: 700; color: var(--text-2); word-break: break-all; }
+    .dash-id-val--mono { font-family: monospace; letter-spacing: 0.06em; color: var(--purple-bright); }
+    .dash-id-val-wrap { display: flex; align-items: center; gap: 0.4rem; }
+    .dash-copy-btn {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 5px; color: var(--text-3); cursor: pointer;
+      font-size: 0.7rem; line-height: 1; padding: 0.18rem 0.42rem;
+      transition: background 0.15s, color 0.15s; flex-shrink: 0;
+    }
+    .dash-copy-btn:hover { background: rgba(139,92,246,0.18); color: var(--purple-bright); border-color: rgba(139,92,246,0.3); }
+    .dash-copy-btn--ok { background: rgba(34,197,94,0.12) !important; color: #22c55e !important; border-color: rgba(34,197,94,0.25) !important; }
+
+    /* ── File upload zones (Profile tab) ── */
+    .dash-file-upload-zone {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0.4rem; border: 2px dashed rgba(139,92,246,0.3); border-radius: 12px;
+      padding: 1rem 0.75rem; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+      text-align: center; background: rgba(139,92,246,0.03);
+    }
+    .dash-file-upload-zone:hover { border-color: rgba(139,92,246,0.55); background: rgba(139,92,246,0.07); }
+    .dash-file-upload-zone input[type=file] { display: none; }
+    .dash-upload-divider { display: flex; align-items: center; gap: 0.55rem; margin: 0.5rem 0 0.25rem; }
+    .dash-upload-divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+    .dash-upload-divider-text { font-size: 0.62rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; }
+
     /* ── Highlights (Instagram-inspired) ── */
     .dash-highlights-list { display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1rem; }
     .dash-hl-item {
@@ -356,11 +388,19 @@
 
       <!-- Tabs -->
       <div class="dash-tabs" role="tablist">
-        <button class="dash-tab-btn dash-tab-btn--active" data-tab="overview"    role="tab" aria-selected="true">Overview</button>
-        <button class="dash-tab-btn"                       data-tab="profile"     role="tab" aria-selected="false">Edit Profile</button>
+        <button class="dash-tab-btn dash-tab-btn--active" data-tab="overview"    role="tab" aria-selected="true">My Dashboard</button>
+        <button class="dash-tab-btn"                       data-tab="profile"     role="tab" aria-selected="false">Profile</button>
         <button class="dash-tab-btn"                       data-tab="highlights"  role="tab" aria-selected="false">Highlights</button>
         <button class="dash-tab-btn"                       data-tab="tracks"      role="tab" aria-selected="false">Tracks</button>
-        <button class="dash-tab-btn"                       data-tab="post"        role="tab" aria-selected="false">Post</button>
+        <button class="dash-tab-btn"                       data-tab="post"        role="tab" aria-selected="false">Signal Feed</button>
+        <button class="dash-tab-btn"                       data-tab="platform"    role="tab" aria-selected="false">Overview</button>
+        <button class="dash-tab-btn"                       data-tab="identity"    role="tab" aria-selected="false">Identity / Access</button>
+        <button class="dash-tab-btn"                       data-tab="comms"       role="tab" aria-selected="false">Messages / Calls</button>
+        <button class="dash-tab-btn"                       data-tab="faq"         role="tab" aria-selected="false">FAQ</button>
+        <button class="dash-tab-btn admin-only-tab" style="display:none;" data-admin-tab="1" data-tab="users"       role="tab" aria-selected="false">Users</button>
+        <button class="dash-tab-btn admin-only-tab" style="display:none;" data-admin-tab="1" data-tab="admin"       role="tab" aria-selected="false">Admin</button>
+        <button class="dash-tab-btn admin-only-tab" style="display:none;" data-admin-tab="1" data-tab="reports"     role="tab" aria-selected="false">Reports</button>
+        <button class="dash-tab-btn admin-only-tab" style="display:none;" data-admin-tab="1" data-tab="membership"  role="tab" aria-selected="false">Membership</button>
       </div>
 
       <!-- ══ TAB: OVERVIEW ══════════════════════════════════════ -->
@@ -561,13 +601,43 @@
               </div>
 
               <div class="dash-field">
-                <label for="edit-avatar-url">Avatar Image URL</label>
-                <input type="url" id="edit-avatar-url" placeholder="https://…" />
-                <span class="dash-field-note">Paste a direct image link or upload to Imgur/etc first.</span>
+                <label>Avatar Image</label>
+                <div class="dash-file-upload-zone" id="avatar-upload-zone">
+                  <span style="font-size:1.4rem;">🖼️</span>
+                  <span style="font-size:0.72rem;color:var(--text-3);">Click to upload — JPG, PNG, WebP, GIF &bull; max 5 MB</span>
+                  <span id="avatar-file-chosen" style="font-size:0.78rem;font-weight:700;color:var(--purple-bright);display:none;"></span>
+                  <input type="file" id="avatar-file-input" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" />
+                </div>
+                <div style="display:flex;align-items:center;gap:0.65rem;margin-top:0.5rem;">
+                  <button type="button" class="btn btn-ghost btn-sm" id="avatar-upload-btn" disabled>Upload Avatar</button>
+                  <span class="dash-save-note" id="avatar-upload-note"></span>
+                </div>
+                <div class="dash-upload-divider">
+                  <div class="dash-upload-divider-line"></div>
+                  <span class="dash-upload-divider-text">or paste a URL</span>
+                  <div class="dash-upload-divider-line"></div>
+                </div>
+                <input type="url" id="edit-avatar-url" placeholder="https://… (optional — use upload above instead)" />
+                <span class="dash-field-note">Uploaded images are stored in your creator media folder. URL paste is an option if you host images elsewhere.</span>
               </div>
 
               <div class="dash-field">
-                <label for="edit-cover-url">Cover / Banner URL</label>
+                <label>Cover / Banner Image</label>
+                <div class="dash-file-upload-zone" id="cover-upload-zone">
+                  <span style="font-size:1.4rem;">🏙️</span>
+                  <span style="font-size:0.72rem;color:var(--text-3);">Click to upload banner — JPG, PNG, WebP, GIF &bull; max 10 MB</span>
+                  <span id="cover-file-chosen" style="font-size:0.78rem;font-weight:700;color:var(--purple-bright);display:none;"></span>
+                  <input type="file" id="cover-file-input" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" />
+                </div>
+                <div style="display:flex;align-items:center;gap:0.65rem;margin-top:0.5rem;">
+                  <button type="button" class="btn btn-ghost btn-sm" id="cover-upload-btn" disabled>Upload Banner</button>
+                  <span class="dash-save-note" id="cover-upload-note"></span>
+                </div>
+                <div class="dash-upload-divider">
+                  <div class="dash-upload-divider-line"></div>
+                  <span class="dash-upload-divider-text">or paste a URL</span>
+                  <div class="dash-upload-divider-line"></div>
+                </div>
                 <input type="url" id="edit-cover-url" placeholder="https://… (optional)" />
               </div>
 
@@ -733,10 +803,27 @@
       <div class="dash-tab-panel" id="tab-post">
 
         <div class="dash-section">
-          <p class="dash-section-title">Post to Creator Board</p>
-          <p style="font-size:0.8rem;color:var(--text-3);margin-bottom:1rem;line-height:1.6;">Share an update with the network. Posts go live after review — usually same day.</p>
+          <p class="dash-section-title">Signal Composer</p>
+          <p style="font-size:0.8rem;color:var(--text-3);margin-bottom:1rem;line-height:1.6;">Publish text, announcements, updates, links, and media references. Your posts appear in your creator history immediately and move to public stream once approved.</p>
           <div class="dash-card dash-card--purple">
             <textarea class="dash-board-post-area" id="board-post-text" placeholder="Drop something with the crew — a release, collab call, event, or what you're working on…" maxlength="500"></textarea>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.55rem;margin-top:0.6rem;">
+              <select class="dash-board-cat-select" id="signal-post-type">
+                <option value="text">Text Post</option>
+                <option value="announcement">Announcement</option>
+                <option value="status">Status Update</option>
+                <option value="link">Link Share</option>
+                <option value="image">Image Update</option>
+                <option value="audio">Audio / Music Update</option>
+                <option value="event">Event / Page Update</option>
+              </select>
+              <select class="dash-board-cat-select" id="signal-post-visibility">
+                <option value="public">Public</option>
+                <option value="members">Members Only</option>
+                <option value="private">Private Draft</option>
+              </select>
+              <input class="dash-social-input" id="signal-post-media" type="url" placeholder="Media or link URL (optional)" />
+            </div>
             <div class="dash-board-actions">
               <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap;">
                 <select class="dash-board-cat-select" id="board-post-cat">
@@ -769,7 +856,267 @@
           </div>
         </div>
 
+        <div class="dash-section">
+          <p class="dash-section-title">Live Signal Stream</p>
+          <p style="font-size:0.76rem;color:var(--text-3);line-height:1.6;margin-bottom:0.6rem;">This preview keeps your dashboard connected to the platform pulse: posts, updates, and announcements across active creators.</p>
+          <div id="signal-global-feed-wrap">
+            <div class="dash-loading" id="signal-global-feed-loading">Loading stream…</div>
+            <div id="signal-global-feed-list" style="display:none;"></div>
+            <div id="signal-global-feed-empty" style="display:none;">
+              <div class="dash-card" style="text-align:center;padding:1.25rem;">
+                <p style="font-size:0.82rem;color:var(--text-3);">No live posts yet. Be the first signal in this wave.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div><!-- end tab-post -->
+
+      <!-- ══ TAB: PLATFORM OVERVIEW ════════════════════════════ -->
+      <div class="dash-tab-panel" id="tab-platform">
+        <div class="dash-section">
+          <p class="dash-section-title">Platform Overview</p>
+          <div class="dash-card dash-card--purple">
+            <p style="font-size:0.86rem;color:var(--text);line-height:1.75;margin:0 0 0.75rem;">Signal is an anonymous-first social platform. You move through it with your handle, Signal ID, and recovery-backed account identity. Radio, directory, creator pages, dashboard posting, and private communication all connect through one system.</p>
+            <div class="dash-status-row"><span class="dash-status-label">Current Role</span><span class="dash-status-val" id="platform-role-label">user</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Current Plan</span><span class="dash-status-val" id="platform-plan-label">free</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Account Status</span><span class="dash-status-val" id="platform-status-label">active</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Active Identity</span><span class="dash-status-val" id="platform-identity-label">@handle</span></div>
+          </div>
+        </div>
+      </div><!-- end tab-platform -->
+
+      <!-- ══ TAB: IDENTITY / ACCESS ════════════════════════════ -->
+      <div class="dash-tab-panel" id="tab-identity">
+
+        <!-- Private Identity Card -->
+        <div class="dash-section">
+          <p class="dash-section-title">Private Identity</p>
+          <p style="font-size:0.78rem;color:var(--text-3);line-height:1.65;margin:-0.15rem 0 0.85rem;">This section is visible only to you while signed in. Your identity values are platform-native and private by default. Share your Signal ID intentionally — treat it like a contact handle for people you trust.</p>
+          <div class="dash-card dash-card--purple">
+            <div class="dash-id-row">
+              <span class="dash-id-label">Display Name</span>
+              <span class="dash-id-val" id="id-display-name">—</span>
+            </div>
+            <div class="dash-id-row">
+              <span class="dash-id-label">Username</span>
+              <span class="dash-id-val-wrap">
+                <span class="dash-id-val dash-id-val--mono" id="id-username">—</span>
+                <button type="button" class="dash-copy-btn" id="copy-username-btn" title="Copy username">Copy</button>
+              </span>
+            </div>
+            <div class="dash-id-row">
+              <span class="dash-id-label">Signal ID</span>
+              <span class="dash-id-val-wrap">
+                <span class="dash-id-val dash-id-val--mono" id="id-signal-id">—</span>
+                <button type="button" class="dash-copy-btn" id="copy-signal-id-btn" title="Copy Signal ID">Copy</button>
+              </span>
+            </div>
+            <div class="dash-id-row">
+              <span class="dash-id-label">Role</span>
+              <span class="dash-id-val" id="id-role">—</span>
+            </div>
+            <div class="dash-id-row">
+              <span class="dash-id-label">Plan</span>
+              <span class="dash-id-val" id="id-plan">—</span>
+            </div>
+            <div class="dash-id-row">
+              <span class="dash-id-label">Status</span>
+              <span class="dash-id-val" id="id-status">—</span>
+            </div>
+            <div class="dash-id-row" id="id-founder-row" style="display:none;">
+              <span class="dash-id-label">Circle</span>
+              <span class="dash-id-val" id="id-founder-label" style="color:var(--gold-bright);">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recovery Section -->
+        <div class="dash-section">
+          <p class="dash-section-title">Recovery</p>
+          <div class="dash-card" id="recovery-state-card">
+            <div id="recovery-state-checking">
+              <p style="font-size:0.82rem;color:var(--text-3);margin:0;">Checking recovery status…</p>
+            </div>
+            <div id="recovery-state-ok" style="display:none;">
+              <p style="font-size:0.84rem;font-weight:700;color:#22c55e;margin:0 0 0.45rem;">✓ Recovery Code On File</p>
+              <p style="font-size:0.78rem;color:var(--text-3);line-height:1.65;margin:0 0 0.5rem;">Your recovery code was saved when you created your account. For security, only a verification hash is stored — the original raw code is not held anywhere on the platform and cannot be displayed again. If you have lost your code, use the button below to generate and record a new one.</p>
+              <p style="font-size:0.7rem;color:var(--text-3);margin:0;">Last set: <span id="recovery-set-at">—</span></p>
+            </div>
+            <div id="recovery-state-missing" style="display:none;">
+              <p style="font-size:0.84rem;font-weight:700;color:#f87171;margin:0 0 0.45rem;">⚠ Recovery Setup Required</p>
+              <p style="font-size:0.78rem;color:var(--text-2);line-height:1.65;margin:0;">Your account does not have a recovery code on file. Without one, you cannot recover access if your password is lost. Generate a new recovery code now and store it somewhere private and safe — a password manager or a written note kept offline.</p>
+            </div>
+            <div id="recovery-state-new-code" style="display:none;">
+              <p style="font-size:0.84rem;font-weight:700;color:var(--gold-bright);margin:0 0 0.5rem;">⚡ New Recovery Code — Save This Now</p>
+              <p style="font-size:0.78rem;color:var(--text-2);line-height:1.65;margin:0 0 0.65rem;">This is the only time this code will ever be visible. As soon as you leave this screen, the raw code is gone — only a secure hash remains on the platform. Copy it immediately and store it in a private, safe location.</p>
+              <div style="display:flex;align-items:center;gap:0.6rem;background:rgba(139,92,246,0.09);border:1px solid rgba(139,92,246,0.28);border-radius:10px;padding:0.75rem 1rem;margin-bottom:0.7rem;flex-wrap:wrap;">
+                <span id="recovery-new-code-display" style="flex:1;font-family:monospace;font-size:0.95rem;letter-spacing:0.1em;color:var(--text);word-break:break-all;"></span>
+                <button type="button" class="dash-copy-btn" id="copy-recovery-code-btn" title="Copy recovery code">Copy</button>
+              </div>
+              <p style="font-size:0.7rem;color:#f87171;font-weight:700;margin:0 0 0.75rem;">⚠ Navigate away and this code is unrecoverable. Save it before continuing.</p>
+              <button type="button" class="btn btn-ghost btn-sm" id="recovery-confirm-saved-btn">I Have Saved My Recovery Code →</button>
+            </div>
+          </div>
+          <div style="margin-top:0.65rem;display:flex;gap:0.65rem;flex-wrap:wrap;align-items:center;">
+            <button type="button" class="btn btn-ghost btn-sm" id="recovery-generate-btn" style="display:none;">Generate Recovery Code</button>
+            <span class="dash-save-note" id="recovery-action-note"></span>
+          </div>
+          <div class="dash-card" style="margin-top:0.65rem;border-color:rgba(248,113,113,0.18);background:rgba(248,113,113,0.03);">
+            <p style="font-size:0.72rem;color:var(--text-3);line-height:1.7;margin:0;"><strong style="color:var(--text-2);">Critical:</strong> This platform does not store your email address or real-world identity. Your password and recovery code are the only proofs of account ownership that exist. If both are lost, account restoration is not possible — by design, and without exception.</p>
+          </div>
+        </div>
+
+        <!-- Storage Section -->
+        <div class="dash-section">
+          <p class="dash-section-title">Storage</p>
+          <div class="dash-card">
+            <div class="dash-id-row">
+              <span class="dash-id-label">Plan Limit</span>
+              <span class="dash-id-val" id="storage-plan-limit">—</span>
+            </div>
+            <div class="dash-id-row">
+              <span class="dash-id-label">Used</span>
+              <span class="dash-id-val" id="storage-used-display">—</span>
+            </div>
+            <div class="dash-id-row">
+              <span class="dash-id-label">Remaining</span>
+              <span class="dash-id-val" id="storage-remaining-display">—</span>
+            </div>
+            <div style="margin-top:0.85rem;">
+              <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;">
+                <div id="storage-bar-fill" style="height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);width:0%;transition:width 0.4s;border-radius:3px;"></div>
+              </div>
+              <p id="storage-bar-label" style="font-size:0.7rem;color:var(--text-3);margin:0.3rem 0 0;"></p>
+            </div>
+            <p style="font-size:0.72rem;color:var(--text-3);line-height:1.65;margin:0.75rem 0 0;">Storage covers avatar images, banner images, board post media, and creator files uploaded through your profile. Free accounts: 150 MB. Premium accounts: 600 MB.</p>
+          </div>
+        </div>
+
+        <!-- Access Policy Notes -->
+        <div class="dash-section">
+          <p class="dash-section-title">Access Policy</p>
+          <div class="dash-card">
+            <p style="font-size:0.82rem;font-weight:700;color:var(--text);margin:0 0 0.35rem;">How your account works on Signal</p>
+            <p style="font-size:0.78rem;color:var(--text-2);line-height:1.75;margin:0 0 0.65rem;">Your account is fully platform-native. There is no email address, no social login, and no external account dependency. Your username, Signal ID, password, and recovery code are the only credentials that belong to you here.</p>
+            <p style="font-size:0.82rem;font-weight:700;color:var(--text);margin:0 0 0.35rem;">Signal ID</p>
+            <p style="font-size:0.78rem;color:var(--text-2);line-height:1.75;margin:0 0 0.65rem;">Your Signal ID is a unique platform identifier separate from your username. Share it with members you trust — it will power contact-style connections in a future build. The platform does not expose it publicly on your behalf.</p>
+            <p style="font-size:0.82rem;font-weight:700;color:var(--text);margin:0 0 0.35rem;">What stays private</p>
+            <p style="font-size:0.78rem;color:var(--text-2);line-height:1.75;margin:0;">Your role, plan tier, account status, recovery state, and storage data shown here are visible only to you while signed in. Your recovery code is never transmitted in plaintext, never stored in raw form, and is not viewable by anyone — including admins.</p>
+          </div>
+        </div>
+
+        <!-- Placeholder IDs retained for backward-compat with applyMemberData -->
+        <span id="identity-username" style="display:none;"></span>
+        <span id="identity-signal-id" style="display:none;"></span>
+
+      </div><!-- end tab-identity -->
+
+      <!-- ══ TAB: MESSAGES / CALLS ═════════════════════════════ -->
+      <div class="dash-tab-panel" id="tab-comms">
+        <div class="dash-section">
+          <p class="dash-section-title">Messages / Calls</p>
+          <div class="dash-card dash-card--purple">
+            <p style="font-size:0.84rem;color:var(--text);line-height:1.7;margin:0 0 0.75rem;">DMs and calling are core communication tools on Signal. They are free product features. File-sharing and storage-heavy tools can be restricted by plan or moderation policy.</p>
+            <div class="dash-status-row"><span class="dash-status-label">Direct Messages</span><span class="dash-status-val">Free by default</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Voice / Calls</span><span class="dash-status-val">Free by default</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Voice Changer</span><span class="dash-status-val">Core communication layer (roadmap active)</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">File Sharing</span><span class="dash-status-val">Plan/moderation controlled</span></div>
+            <div style="margin-top:0.85rem;"><a href="messages.html" class="btn btn-ghost btn-sm">Open Messages →</a></div>
+          </div>
+        </div>
+      </div><!-- end tab-comms -->
+
+      <!-- ══ TAB: FAQ ══════════════════════════════════════════ -->
+      <div class="dash-tab-panel" id="tab-faq">
+        <div class="dash-section">
+          <p class="dash-section-title">FAQ / Help</p>
+          <div class="dash-card">
+            <h3 style="font-size:0.84rem;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-3);margin:0 0 0.55rem;">What Signal Is</h3>
+            <p style="font-size:0.84rem;line-height:1.7;color:var(--text-2);margin:0 0 0.8rem;">Signal is an anonymous-first social platform built around handles, creator pages, live posting, private communication, and radio culture. It is designed for presence without forcing real-world identity or email-based account ownership.</p>
+            <h3 style="font-size:0.84rem;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-3);margin:0 0 0.55rem;">Core Rules</h3>
+            <p style="font-size:0.84rem;line-height:1.7;color:var(--text-2);margin:0 0 0.8rem;">DMs and calls are free. Premium tiers can gate storage-heavy features and creator tools. Recovery codes are mandatory for account ownership. If password and recovery code are both lost, account recovery is not possible.</p>
+            <a href="faq.html" class="btn btn-ghost btn-sm">Open Full FAQ →</a>
+          </div>
+        </div>
+      </div><!-- end tab-faq -->
+
+      <!-- ══ TAB: USERS (ADMIN ONLY) ═══════════════════════════ -->
+      <div class="dash-tab-panel" id="tab-users">
+        <div class="dash-section">
+          <p class="dash-section-title" style="display:flex;align-items:center;gap:0.5rem;">User Management <span id="admin-user-count" style="font-size:0.7rem;color:var(--text-3);font-weight:400;"></span></p>
+          <p style="font-size:0.76rem;color:var(--text-3);line-height:1.6;margin-bottom:0.65rem;">Role and moderation controls for platform accounts. DMs and calls are moderation controls only, never premium paywalls.</p>
+          <div class="dash-card" style="margin-bottom:0.75rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.55rem;">
+            <input id="admin-user-search" class="dash-social-input" placeholder="Search username, display, or Signal ID" />
+            <select id="admin-user-role-filter" class="dash-board-cat-select">
+              <option value="all">All Roles</option>
+              <option value="super_admin">Super Admin</option>
+              <option value="admin">Admin</option>
+              <option value="moderator">Moderator</option>
+              <option value="user">User</option>
+            </select>
+            <select id="admin-user-status-filter" class="dash-board-cat-select">
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="warned">Warned</option>
+              <option value="limited">Limited</option>
+              <option value="suspended">Suspended</option>
+              <option value="banned">Banned</option>
+            </select>
+          </div>
+          <div id="admin-user-list">
+            <div class="dash-loading" id="admin-user-loading">Loading users…</div>
+            <div id="admin-user-rows" style="display:none;"></div>
+            <div id="admin-user-empty" style="display:none;">
+              <div class="dash-card" style="text-align:center;padding:1.25rem;"><p style="font-size:0.82rem;color:var(--text-3);">No users found.</p></div>
+            </div>
+          </div>
+        </div>
+      </div><!-- end tab-users -->
+
+      <!-- ══ TAB: ADMIN (ADMIN ONLY) ═══════════════════════════ -->
+      <div class="dash-tab-panel" id="tab-admin">
+        <div class="dash-section">
+          <p class="dash-section-title">Admin Control Center</p>
+          <div class="dash-card dash-card--purple">
+            <p style="font-size:0.84rem;color:var(--text);line-height:1.75;margin:0 0 0.75rem;">Use this section for platform policy, role governance, and system controls. High-impact actions should remain restricted to super_admin.</p>
+            <div class="dash-status-row"><span class="dash-status-label">Role Model</span><span class="dash-status-val">member_accounts.role</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Identity Model</span><span class="dash-status-val">Handle / Signal ID / Password / Recovery Code</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Enforcement</span><span class="dash-status-val">warn / suspend / ban / soft delete</span></div>
+            <div style="margin-top:0.8rem;"><a class="btn btn-ghost btn-sm" href="admin/index.html">Open Standalone Admin Surface →</a></div>
+          </div>
+        </div>
+      </div><!-- end tab-admin -->
+
+      <!-- ══ TAB: REPORTS (ADMIN ONLY) ═════════════════════════ -->
+      <div class="dash-tab-panel" id="tab-reports">
+        <div class="dash-section">
+          <p class="dash-section-title">Reports / Moderation</p>
+          <div class="dash-card">
+            <p style="font-size:0.84rem;color:var(--text-2);line-height:1.7;margin:0 0 0.8rem;">Moderation queue combines flagged content, warnings, restrictions, suspensions, and ban actions. Full report ingestion is staged for the next backend pass.</p>
+            <ul style="margin:0;padding-left:1.1rem;color:var(--text-3);font-size:0.78rem;line-height:1.7;">
+              <li>Flagged content queue: active in Board/Admin</li>
+              <li>Track reports: dashboard local marker (backend queue pending)</li>
+              <li>Enforcement history: admin_logs available for expansion</li>
+              <li>Warning/suspension/ban controls: action wiring in progress</li>
+            </ul>
+          </div>
+        </div>
+      </div><!-- end tab-reports -->
+
+      <!-- ══ TAB: MEMBERSHIP (ADMIN ONLY) ══════════════════════ -->
+      <div class="dash-tab-panel" id="tab-membership">
+        <div class="dash-section">
+          <p class="dash-section-title">Membership / Billing</p>
+          <div class="dash-card dash-card--purple">
+            <p style="font-size:0.84rem;color:var(--text);line-height:1.75;margin:0 0 0.75rem;">Free forever includes account, identity, DMs, and calls. Paid layers unlock storage-heavy and premium creator tools. Moderation controls can override communication access for safety.</p>
+            <div class="dash-status-row"><span class="dash-status-label">Free Forever</span><span class="dash-status-val">Identity, DMs, calls, dashboard access</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Premium Layers</span><span class="dash-status-val">Uploads, storage-heavy tools, advanced creator modules</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Moderation Overrides</span><span class="dash-status-val">Per-user restrictions independent of billing</span></div>
+            <div style="margin-top:0.8rem;"><a href="pricing.html" class="btn btn-ghost btn-sm">Open Plan Matrix →</a></div>
+          </div>
+        </div>
+      </div><!-- end tab-membership -->
 
       </div><!-- end panel-user-default -->
 
@@ -797,12 +1144,12 @@
         <div class="dash-section">
           <p class="dash-section-title" style="display:flex;align-items:center;gap:0.5rem;">
             User Manager
-            <span id="admin-user-count" style="font-size:0.7rem;color:var(--text-3);font-weight:400;"></span>
+            <span id="legacy-admin-user-count" style="font-size:0.7rem;color:var(--text-3);font-weight:400;"></span>
           </p>
-          <div id="admin-user-list">
-            <div class="dash-loading" id="admin-user-loading">Loading users…</div>
-            <div id="admin-user-rows" style="display:none;"></div>
-            <div id="admin-user-empty" style="display:none;">
+          <div id="legacy-admin-user-list">
+            <div class="dash-loading" id="legacy-admin-user-loading">Loading users…</div>
+            <div id="legacy-admin-user-rows" style="display:none;"></div>
+            <div id="legacy-admin-user-empty" style="display:none;">
               <div class="dash-card" style="text-align:center;padding:1.25rem;">
                 <p style="font-size:0.82rem;color:var(--text-3);">No users found.</p>
               </div>
@@ -951,20 +1298,23 @@
     import { getSession, getMember, syncMember, updateMember, touchActive, clearSession, getPlanMeta, getStatusMeta, getPublicProfile } from './assets/js/member-db.js'
     import { loadThreads, formatDMTime, DM_READY } from './assets/js/dm.js'
     import { getUserRole } from './assets/js/admin-permissions.js'
+    import { generateRecoveryCode, cleanRecoveryCode, hashRecoveryCode } from './assets/js/auth.js'
+    import { uploadAvatar, uploadCover } from './assets/js/services/storage.js'
 
     // ── Role-based panel rendering ────────────────────────────
     function renderDashboardByRole(currentUser) {
-      // Hide all role-based panels by default
-      const panels = [
-        document.getElementById('panel-super-admin'),
-        document.getElementById('panel-moderator'),
-        document.getElementById('panel-user-default')
-      ]
-      panels.forEach(p => {
-        if (p) p.style.display = 'none'
-      })
+      // Member-first shell: everyone sees the normal dashboard panel.
+      const userPanel = document.getElementById('panel-user-default')
+      if (userPanel) userPanel.style.display = ''
 
-      // Determine user role and show appropriate panel
+      // Legacy side panels are intentionally hidden in the unified shell.
+      const legacyPanels = [
+        document.getElementById('panel-super-admin'),
+        document.getElementById('panel-moderator')
+      ]
+      legacyPanels.forEach(p => { if (p) p.style.display = 'none' })
+
+      // Determine role and reveal admin-only tabs as an additional layer.
       if (!currentUser) return
 
       const rawRole = getUserRole(currentUser)
@@ -974,19 +1324,12 @@
         console.warn('[FAS] dashboard: unexpected user role value:', rawRole)
       }
 
-      // Show panel based on role
-      if (role === 'super_admin') {
-        const superAdminPanel = document.getElementById('panel-super-admin')
-        if (superAdminPanel) superAdminPanel.style.display = ''
-        loadAllUsers()
-      } else if (role === 'moderator') {
-        const modPanel = document.getElementById('panel-moderator')
-        if (modPanel) modPanel.style.display = ''
-      } else {
-        // Everyone else (user role) gets default panel
-        const defaultPanel = document.getElementById('panel-user-default')
-        if (defaultPanel) defaultPanel.style.display = ''
-      }
+      const adminEligible = role === 'super_admin' || role === 'admin' || role === 'moderator'
+      document.querySelectorAll('.admin-only-tab').forEach(btn => {
+        btn.style.display = adminEligible ? '' : 'none'
+      })
+
+      if (adminEligible) loadAllUsers()
     }
 
     // ── Auth gate ──────────────────────────────────────────────
@@ -1003,7 +1346,26 @@
     }
 
     // ── Tab switching ──────────────────────────────────────────
+    let dashboardInitInFlight = false
+    let dashboardReady = false
+    let currentTabName = 'overview'
+    let adminUsersLoadPromise = null
+    let adminUsersLoadToken = 0
+    let adminUsersCache = []
+    let adminActionPending = false
+    let trackTabInitialized = false
+
+    function setDashboardBusy(isBusy) {
+      document.querySelectorAll('.dash-tab-btn').forEach(btn => {
+        btn.disabled = !!isBusy
+        btn.setAttribute('aria-disabled', isBusy ? 'true' : 'false')
+      })
+    }
+
     function switchTab(target) {
+      if (!target || dashboardInitInFlight) return
+      if (currentTabName === target) return
+      currentTabName = target
       document.querySelectorAll('.dash-tab-btn').forEach(b => {
         b.classList.toggle('dash-tab-btn--active', b.dataset.tab === target)
         b.setAttribute('aria-selected', b.dataset.tab === target ? 'true' : 'false')
@@ -1011,6 +1373,13 @@
       document.querySelectorAll('.dash-tab-panel').forEach(p => {
         p.classList.toggle('dash-tab-panel--active', p.id === 'tab-' + target)
       })
+
+      if (target === 'users') {
+        loadAllUsers()
+      }
+      if (target === 'post') {
+        loadGlobalSignalFeed()
+      }
     }
 
     document.querySelectorAll('.dash-tab-btn').forEach(btn => {
@@ -1107,7 +1476,12 @@
 
     // ── Init ───────────────────────────────────────────────────
     async function init(sess) {
+      if (dashboardInitInFlight || dashboardReady) return
+      dashboardInitInFlight = true
+      setDashboardBusy(true)
       myUsername = sess.username.toLowerCase()
+
+      try {
 
       // Populate header immediately from localStorage — null-guarded to prevent
       // a missing element from killing the whole async init chain
@@ -1154,14 +1528,18 @@
         try {
           const stored = JSON.parse(localStorage.getItem('fas_user') || '{}')
           const authPlan = member.plan_type || 'free'
+          const authRole = member.role || 'user'
+          if (stored.role !== authRole) {
+            stored.role = authRole
+          }
           if (stored.plan !== authPlan) {
             stored.plan = authPlan
-            localStorage.setItem('fas_user', JSON.stringify(stored))
-            applyGatedLinkState()
           }
+          localStorage.setItem('fas_user', JSON.stringify(stored))
+          applyGatedLinkState()
         } catch(_) {}
       } else {
-        await syncMember(myUsername, sess.display, sess.email)
+        await syncMember(myUsername, sess.display)
         // Fall back to session plan rather than always showing "Free"
         if (sess.plan && sess.plan !== 'free') {
           applyMemberData({ plan_type: sess.plan, member_status: sess.status || 'active' })
@@ -1179,7 +1557,13 @@
       loadMessagesPreview(myUsername)
       loadRecentActivity(myUsername)
       loadMyBoardPosts(myUsername)
+      loadGlobalSignalFeed()
       initTrackTab(sess)
+      } finally {
+        dashboardInitInFlight = false
+        dashboardReady = true
+        setDashboardBusy(false)
+      }
     }
 
     // ── Apply member data to Overview ─────────────────────────
@@ -1233,6 +1617,22 @@
 
       const la = document.getElementById('dash-last-active')
       if (la) la.textContent = m.last_active_at ? formatTimeAgo(m.last_active_at) : '—'
+
+      const roleLabel = document.getElementById('platform-role-label')
+      if (roleLabel) roleLabel.textContent = String(m.role || 'user')
+      const planLabel = document.getElementById('platform-plan-label')
+      if (planLabel) planLabel.textContent = String(planMeta.label || 'Free')
+      const statusLabel = document.getElementById('platform-status-label')
+      if (statusLabel) statusLabel.textContent = String(statusMeta.label || status)
+      const identityLabel = document.getElementById('platform-identity-label')
+      if (identityLabel) identityLabel.textContent = '@' + myUsername
+      const identityUsername = document.getElementById('identity-username')
+      if (identityUsername) identityUsername.textContent = '@' + myUsername
+      const identitySignalId = document.getElementById('identity-signal-id')
+      if (identitySignalId) identitySignalId.textContent = m.platform_id || 'Not assigned yet'
+
+      // Populate the full private identity panel
+      populateIdentityPanel(m)
 
       const mom = document.getElementById('dash-momentum')
       if (mom) mom.textContent = String(Number(m.momentum || 0))
@@ -1587,7 +1987,7 @@
       }
     })
 
-    // ── BOARD POST (Facebook-inspired) ────────────────────────
+    // ── SIGNAL POSTS (member feed + public stream preview) ───
     const postTextEl  = document.getElementById('board-post-text')
     const charCountEl = document.getElementById('board-char-count')
     postTextEl?.addEventListener('input', () => {
@@ -1598,45 +1998,72 @@
       const noteEl  = document.getElementById('board-post-note')
       const text    = postTextEl.value.trim()
       const cat     = document.getElementById('board-post-cat').value
+      const postType = document.getElementById('signal-post-type')?.value || 'text'
+      const visibility = document.getElementById('signal-post-visibility')?.value || 'public'
+      const mediaUrl = (document.getElementById('signal-post-media')?.value || '').trim() || null
 
       if (!text || text.length < 5) { showNote(noteEl, 'Write at least 5 characters.', false); return }
       if (text.length > 500) { showNote(noteEl, 'Too long — max 500 characters.', false); return }
 
       if (!SUPABASE_READY || !supabase) { showNote(noteEl, 'Offline — cannot post right now.', false); return }
 
-      // Look up profile_id from profiles table
-      let profileId = null
-      const { data: profileRow } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', myUsername)
-        .single()
-      if (profileRow) profileId = profileRow.id
-
-      if (!profileId) {
-        showNote(noteEl, 'You need a creator page to post to the board. Get one free at /start.html', false)
-        return
-      }
-
-      const { error } = await supabase
-        .from('board_posts')
+      const { error: signalErr } = await supabase
+        .from('signal_posts')
         .insert({
-          profile_id:        profileId,
-          username:          myUsername,
-          post_text:         text,
-          category:          cat,
-          is_approved:       false,
-          visibility_status: 'pending',
+          author_username: myUsername,
+          author_platform_id: memberData?.platform_id || null,
+          post_type: postType,
+          category: cat,
+          body_text: text,
+          media_url: mediaUrl,
+          visibility: visibility,
+          moderation_state: 'pending',
+          comments_enabled: true,
+          reactions_enabled: true,
+          is_pinned: false,
         })
 
-      if (error) {
-        console.error('[FAS] board post error:', error.message)
+      let finalError = signalErr || null
+
+      // Fallback for environments that have not run migration 020 yet.
+      if (signalErr && String(signalErr.code || '') === '42P01') {
+        let profileId = null
+        const { data: profileRow } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', myUsername)
+          .single()
+        if (profileRow) profileId = profileRow.id
+        if (!profileId) {
+          showNote(noteEl, 'You need a creator page to post to the board. Get one free at /start.html', false)
+          return
+        }
+
+        const { error: boardErr } = await supabase
+          .from('board_posts')
+          .insert({
+            profile_id:        profileId,
+            username:          myUsername,
+            post_text:         text,
+            category:          cat,
+            image_url:         mediaUrl,
+            is_approved:       false,
+            visibility_status: 'pending',
+          })
+        finalError = boardErr || null
+      }
+
+      if (finalError) {
+        console.error('[FAS] signal post error:', finalError.message)
         showNote(noteEl, 'Post failed. Try again.', false)
       } else {
         postTextEl.value = ''
         charCountEl.textContent = '0 / 500'
-        showNote(noteEl, 'Posted ✓ — visible after review (same day)', true)
+        const mediaInput = document.getElementById('signal-post-media')
+        if (mediaInput) mediaInput.value = ''
+        showNote(noteEl, 'Signal posted ✓ — public visibility follows moderation rules.', true)
         loadMyBoardPosts(myUsername)
+        loadGlobalSignalFeed()
       }
     })
 
@@ -1649,12 +2076,27 @@
         return
       }
 
-      const { data } = await supabase
-        .from('board_posts')
-        .select('post_text, category, created_at, visibility_status')
-        .eq('username', username)
+      let data = null
+      let usingSignalPosts = true
+      const signalRes = await supabase
+        .from('signal_posts')
+        .select('body_text, category, post_type, created_at, moderation_state, visibility, media_url')
+        .eq('author_username', username)
         .order('created_at', { ascending: false })
         .limit(10)
+
+      if (signalRes.error && String(signalRes.error.code || '') === '42P01') {
+        usingSignalPosts = false
+        const boardRes = await supabase
+          .from('board_posts')
+          .select('post_text, category, created_at, visibility_status, image_url')
+          .eq('username', username)
+          .order('created_at', { ascending: false })
+          .limit(10)
+        data = boardRes.data || []
+      } else {
+        data = signalRes.data || []
+      }
 
       if (loadingEl) loadingEl.style.display = 'none'
 
@@ -1666,15 +2108,87 @@
       if (listEl) {
         listEl.style.display = ''
         listEl.innerHTML = data.map(p => {
-          const status = p.visibility_status === 'visible' ? '✓ Live' : (p.visibility_status === 'pending' ? '⏳ Pending' : p.visibility_status)
+          const rawStatus = usingSignalPosts ? p.moderation_state : p.visibility_status
+          const status = rawStatus === 'visible' || rawStatus === 'approved'
+            ? '✓ Live'
+            : (rawStatus === 'pending' ? '⏳ Pending' : rawStatus)
+          const text = usingSignalPosts ? (p.body_text || '') : (p.post_text || '')
+          const media = usingSignalPosts ? p.media_url : p.image_url
+          const typeLine = usingSignalPosts ? (' · ' + (p.post_type || 'text')) : ''
           return `
             <div class="dash-card" style="margin-bottom:0.6rem;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
-                <span style="font-size:0.65rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);">${escHtml(p.category || 'update')}</span>
+                <span style="font-size:0.65rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);">${escHtml((p.category || 'update') + typeLine)}</span>
                 <span style="font-size:0.65rem;color:var(--text-3);">${status} · ${formatDMTime(p.created_at)}</span>
               </div>
-              <p style="font-size:0.82rem;color:var(--text-2);line-height:1.55;">${escHtml(p.post_text)}</p>
+              <p style="font-size:0.82rem;color:var(--text-2);line-height:1.55;">${escHtml(text)}</p>
+              ${media ? `<p style="margin-top:0.5rem;font-size:0.72rem;color:var(--purple-bright);word-break:break-all;">${escHtml(media)}</p>` : ''}
             </div>`
+        }).join('')
+      }
+    }
+
+    async function loadGlobalSignalFeed() {
+      const loadingEl = document.getElementById('signal-global-feed-loading')
+      const listEl = document.getElementById('signal-global-feed-list')
+      const emptyEl = document.getElementById('signal-global-feed-empty')
+
+      if (!SUPABASE_READY || !supabase) {
+        if (loadingEl) loadingEl.textContent = 'Unavailable offline.'
+        return
+      }
+
+      const signalRes = await supabase
+        .from('signal_posts')
+        .select('author_username, post_type, category, body_text, media_url, created_at, moderation_state')
+        .eq('moderation_state', 'approved')
+        .eq('visibility', 'public')
+        .order('created_at', { ascending: false })
+        .limit(12)
+
+      let data = signalRes.data || []
+      if (signalRes.error && String(signalRes.error.code || '') === '42P01') {
+        const boardRes = await supabase
+          .from('board_posts')
+          .select('username, category, post_text, image_url, created_at, visibility_status')
+          .eq('is_approved', true)
+          .eq('visibility_status', 'visible')
+          .order('created_at', { ascending: false })
+          .limit(12)
+        data = (boardRes.data || []).map(row => ({
+          author_username: row.username,
+          category: row.category,
+          post_type: 'text',
+          body_text: row.post_text,
+          media_url: row.image_url,
+          created_at: row.created_at,
+          moderation_state: row.visibility_status,
+        }))
+      }
+
+      if (loadingEl) loadingEl.style.display = 'none'
+      if (!data.length) {
+        if (emptyEl) emptyEl.style.display = ''
+        if (listEl) { listEl.style.display = 'none'; listEl.innerHTML = '' }
+        return
+      }
+
+      if (emptyEl) emptyEl.style.display = 'none'
+      if (listEl) {
+        listEl.style.display = ''
+        listEl.innerHTML = data.map(row => {
+          const type = row.post_type || 'text'
+          const category = row.category || 'update'
+          return `
+            <div class="dash-card" style="margin-bottom:0.55rem;">
+              <div style="display:flex;justify-content:space-between;gap:0.6rem;align-items:center;margin-bottom:0.45rem;">
+                <span style="font-size:0.69rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;">@${escHtml(row.author_username || 'member')} · ${escHtml(type)} · ${escHtml(category)}</span>
+                <span style="font-size:0.68rem;color:var(--text-3);">${formatDMTime(row.created_at)}</span>
+              </div>
+              <p style="font-size:0.82rem;color:var(--text-2);line-height:1.6;margin:0;">${escHtml(row.body_text || '')}</p>
+              ${row.media_url ? `<p style="margin:0.5rem 0 0;font-size:0.72rem;color:var(--purple-bright);word-break:break-all;">${escHtml(row.media_url)}</p>` : ''}
+            </div>
+          `
         }).join('')
       }
     }
@@ -1697,8 +2211,8 @@
 
     let trackList    = []   // current saved tracks
     let pendingTrack = null // File object pending upload
-  const reportedTrackKeys = new Set() // local-only moderation marker
-  let reportTargetKey = ''
+    const reportedTrackKeys = new Set() // local-only moderation marker
+    let reportTargetKey = ''
     let reportModalBound = false
 
     function trackFileSize(bytes) {
@@ -1959,6 +2473,8 @@
     }
 
     function initTrackTab(sess) {
+      if (trackTabInitialized) return
+      trackTabInitialized = true
       const isPaid = FAS.isPaidMember()
 
       // Show/hide gate vs upload section
@@ -2139,6 +2655,11 @@
       const action = String(actionType || '').toLowerCase()
       const notify = (msg) => alert(msg)
 
+      if (adminActionPending) {
+        notify('An admin action is already running.')
+        return
+      }
+
       // Keep non-wired actions as stubs for now.
       if (action !== 'make_moderator' && action !== 'remove_moderator' && action !== 'soft_delete') {
         console.log('ACTION:', actionType, targetUser)
@@ -2146,6 +2667,7 @@
         return
       }
 
+      adminActionPending = true
       try {
         // Guard: actor must be super_admin.
         const actorRole = String(getUserRole(memberData) || 'user').toLowerCase()
@@ -2290,15 +2812,142 @@
       } catch (err) {
         console.error('Admin action error:', err)
         notify('Action failed. Please try again.')
+      } finally {
+        adminActionPending = false
+      }
+    }
+
+    function matchesAdminFilters(user) {
+      const q = String(document.getElementById('admin-user-search')?.value || '').trim().toLowerCase()
+      const roleFilter = String(document.getElementById('admin-user-role-filter')?.value || 'all').toLowerCase()
+      const statusFilter = String(document.getElementById('admin-user-status-filter')?.value || 'all').toLowerCase()
+      const role = String(user.role || 'user').toLowerCase()
+      const status = String(user.account_status || user.member_status || 'active').toLowerCase()
+
+      if (roleFilter !== 'all' && role !== roleFilter) return false
+      if (statusFilter !== 'all' && status !== statusFilter) return false
+
+      if (!q) return true
+      const hay = [
+        user.username,
+        user.display_name,
+        user.platform_id,
+        user.plan_type,
+        user.membership_tier,
+        user.account_status,
+        user.member_status,
+      ].map(v => String(v || '').toLowerCase()).join(' ')
+      return hay.includes(q)
+    }
+
+    function renderAdminUsers() {
+      const rows = document.getElementById('admin-user-rows')
+      const loading = document.getElementById('admin-user-loading')
+      const empty = document.getElementById('admin-user-empty')
+      const count = document.getElementById('admin-user-count')
+      if (!rows) return
+
+      const filtered = adminUsersCache.filter(matchesAdminFilters)
+      if (loading) loading.style.display = 'none'
+
+      if (!filtered.length) {
+        rows.style.display = 'none'
+        rows.innerHTML = ''
+        if (empty) empty.style.display = ''
+        if (count) count.textContent = '(0)'
+        return
+      }
+
+      if (empty) empty.style.display = 'none'
+      if (count) count.textContent = '(' + filtered.length + ')'
+
+      rows.style.display = ''
+      rows.innerHTML = filtered.map(function(u) {
+        const founderUsernames = new Set(['arianamnm'])
+        const rawRole    = (u.role || 'user').toLowerCase()
+        const role       = escHtml(rawRole)
+        const rawTier    = (u.membership_tier || u.plan_type || 'free')
+        const rawStatus  = (u.account_status  || u.member_status || 'active')
+        const tier       = escHtml(rawTier)
+        const status     = escHtml(rawStatus)
+        const rawUser    = (u.username || '').toLowerCase()
+        const username   = escHtml(u.username || '—')
+        const signalId   = escHtml(u.platform_id || '—')
+        const name       = escHtml(u.display_name || '')
+        const nameRaw    = String(u.display_name || '').toLowerCase()
+        const isFounder  = u.is_founder === true || founderUsernames.has(rawUser) || rawUser.includes('renee') || nameRaw.includes('renee')
+        const founderLabel = escHtml(u.founder_label || (isFounder ? 'Founder' : ''))
+        const recoveryOk = !!(u.recovery_code_hash)
+        const recoveryReq = !!(u.recovery_required)
+        const recoveryStatus = recoveryOk ? (recoveryReq ? '⚠ Needs Reset' : '✓ On File') : '— Missing'
+        const recoveryColor  = recoveryOk && !recoveryReq ? '#22c55e' : (!recoveryOk ? '#f87171' : '#fbbf24')
+        const storageUsed = typeof u.storage_used_bytes === 'number' ? formatBytes(u.storage_used_bytes) : '—'
+        const lastActive = u.last_active_at ? escHtml(formatTimeAgo(u.last_active_at)) : '—'
+        const createdAt  = u.created_at ? escHtml(formatDMTime(u.created_at)) : '—'
+        const pageState  = escHtml(u.page_status || 'none')
+        const pageSlug   = escHtml(u.page_slug || '—')
+        const isSelfRow  = !!rawUser && rawUser === myUsername
+        const isTargetSA = rawRole === 'super_admin'
+        const disableAll = isSelfRow || isTargetSA
+        const btnDisabledAttr = disableAll ? ' disabled' : ''
+
+        const roleColor   = rawRole === 'super_admin' ? '#a78bfa' : rawRole === 'moderator' ? '#60a5fa' : 'var(--text-3)'
+        const statusColor = status === 'banned' || status === 'suspended' ? '#f87171'
+                          : status === 'limited' || status === 'warned' ? '#fbbf24'
+                          : 'var(--text-3)'
+
+        return (
+          '<div class="admin-user-row" style="padding:0.75rem 0.9rem;border-bottom:1px solid rgba(255,255,255,0.05);">' +
+            '<div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:0.55rem;align-items:start;">' +
+              '<div>' +
+                '<div style="font-size:0.83rem;font-weight:800;color:var(--text);">@' + username + '</div>' +
+                (name ? '<div style="font-size:0.72rem;color:var(--text-3);">' + name + '</div>' : '') +
+                (isFounder ? '<div style="font-size:0.64rem;color:var(--gold-bright);margin-top:0.15rem;letter-spacing:0.08em;text-transform:uppercase;">' + founderLabel + '</div>' : '') +
+                '<div style="font-size:0.68rem;color:var(--purple-bright);margin-top:0.12rem;">Signal ID: ' + signalId + '</div>' +
+              '</div>' +
+              '<div style="font-size:0.74rem;color:' + roleColor + ';">Role: ' + role + '<br><span style="color:var(--text-3);">Plan: ' + tier + '</span></div>' +
+              '<div style="font-size:0.74rem;color:' + statusColor + ';">Status: ' + status + '<br><span style="color:var(--text-3);">Page: ' + pageState + '</span></div>' +
+              '<div style="font-size:0.7rem;color:var(--text-3);">Joined: ' + createdAt + '<br>Last active: ' + lastActive + '<br><span style="color:' + recoveryColor + ';">Recovery: ' + recoveryStatus + '</span><br>Storage: ' + storageUsed + '<br>Slug: ' + pageSlug + '</div>' +
+              '<div class="admin-action-group" style="display:flex;flex-wrap:wrap;gap:0.35rem;justify-content:flex-end;">' +
+                '<button type="button" class="admin-action-btn" data-action="make_moderator" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Make Mod</button>' +
+                '<button type="button" class="admin-action-btn" data-action="remove_moderator" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Remove Mod</button>' +
+                '<button type="button" class="admin-action-btn admin-action-btn--danger" data-action="soft_delete" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Soft Delete</button>' +
+              '</div>' +
+            '</div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:0.45rem;margin-top:0.55rem;">' +
+              '<span class="creator-tag creator-tag--open" style="margin:0;">DMs: moderation control</span>' +
+              '<span class="creator-tag creator-tag--open" style="margin:0;">Calls: moderation control</span>' +
+              '<span class="creator-tag creator-tag--open" style="margin:0;">Uploads: plan/moderation</span>' +
+              '<span class="creator-tag creator-tag--open" style="margin:0;">Posting: enabled</span>' +
+            '</div>' +
+          '</div>'
+        )
+      }).join('')
+
+      rows.onclick = function(e) {
+        if (adminActionPending) return
+        const btn = e.target && e.target.closest('button[data-action][data-username]')
+        if (!btn || btn.disabled) return
+        const actionType = btn.getAttribute('data-action') || ''
+        const targetUser = {
+          id: btn.getAttribute('data-user-id') || '',
+          username: btn.getAttribute('data-username') || '',
+          role: btn.getAttribute('data-role') || '',
+          membership_tier: btn.getAttribute('data-tier') || '',
+          account_status: btn.getAttribute('data-status') || ''
+        }
+        handleUserAction(actionType, targetUser)
       }
     }
 
     // ── Admin: Load all users (super_admin only, read-only) ───
     async function loadAllUsers() {
+      if (adminUsersLoadPromise) return adminUsersLoadPromise
       const loading = document.getElementById('admin-user-loading')
       const rows    = document.getElementById('admin-user-rows')
       const empty   = document.getElementById('admin-user-empty')
       const count   = document.getElementById('admin-user-count')
+      const loadToken = ++adminUsersLoadToken
 
       function showError(msg) {
         if (loading) { loading.style.display = ''; loading.textContent = msg || 'Could not load users.' }
@@ -2319,6 +2968,11 @@
         return
       }
 
+      if (loading) { loading.style.display = ''; loading.textContent = 'Loading users…' }
+      if (rows) { rows.style.display = 'none'; rows.innerHTML = '' }
+      if (empty) empty.style.display = 'none'
+
+      adminUsersLoadPromise = (async function() {
       try {
         const { data, error } = await supabase
           .from('member_accounts')
@@ -2337,84 +2991,39 @@
           showError('Could not load users: invalid response format.')
           return
         }
+        if (loadToken !== adminUsersLoadToken) return
 
         const visibleUsers = data.filter(function(u) {
           return u && u.is_deleted !== true
         })
 
         if (!visibleUsers.length) { showEmpty(); return }
+        adminUsersCache = visibleUsers
+        renderAdminUsers()
 
-        if (loading) loading.style.display = 'none'
-        if (empty)   empty.style.display = 'none'
-        if (count)   count.textContent = '(' + visibleUsers.length + ')'
-        if (!rows)   return
-
-        rows.style.display = ''
-        rows.innerHTML = visibleUsers.map(function(u) {
-          const rawRole    = (u.role || 'user').toLowerCase()
-          const role       = escHtml(rawRole)
-          const rawTier    = (u.membership_tier || u.plan_type || 'free')
-          const rawStatus  = (u.account_status  || u.member_status || 'active')
-          const tier       = escHtml(rawTier)
-          const status     = escHtml(rawStatus)
-          const rawUser    = (u.username || '').toLowerCase()
-          const username   = escHtml(u.username || '—')
-          const name       = escHtml(u.display_name    || '')
-          const lastActive = u.last_active_at ? escHtml(formatTimeAgo(u.last_active_at)) : '—'
-          const isSelfRow  = !!rawUser && rawUser === myUsername
-          const isTargetSA = rawRole === 'super_admin'
-          const disableAll = isSelfRow || isTargetSA
-          const btnDisabledAttr = disableAll ? ' disabled' : ''
-          const rowHint = isSelfRow ? 'Cannot run actions on your own account.'
-                       : isTargetSA ? 'Cannot run actions on super_admin accounts.'
-                       : ''
-
-          const roleColor   = rawRole === 'super_admin' ? '#a78bfa'   : rawRole === 'moderator' ? '#60a5fa' : 'var(--text-3)'
-          const statusColor = status === 'banned' || status === 'suspended' ? '#f87171'
-                            : status === 'limited' || status === 'warned'   ? '#fbbf24'
-                            : 'var(--text-3)'
-
-          return (
-            '<div class="admin-user-row" style="display:flex;flex-wrap:wrap;gap:0.5rem 1rem;align-items:center;' +
-              'padding:0.65rem 0.9rem;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.82rem;">' +
-              '<div style="flex:0 0 auto;min-width:7rem;">' +
-                '<span style="font-weight:700;color:var(--text);">@' + username + '</span>' +
-                (name ? '<br><span style="font-size:0.72rem;color:var(--text-3);">' + name + '</span>' : '') +
-              '</div>' +
-              '<div style="flex:1;min-width:4rem;color:' + roleColor + ';">' + role + '</div>' +
-              '<div style="flex:1;min-width:4rem;color:var(--text-2);">' + tier + '</div>' +
-              '<div style="flex:1;min-width:4rem;color:' + statusColor + ';">' + status + '</div>' +
-              '<div style="flex:0 0 auto;font-size:0.72rem;color:var(--text-3);white-space:nowrap;">' + lastActive + '</div>' +
-              '<div class="admin-action-group" style="display:flex;flex-wrap:wrap;gap:0.35rem;align-items:center;">' +
-                '<button type="button" class="admin-action-btn" data-action="make_moderator" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Make Moderator</button>' +
-                '<button type="button" class="admin-action-btn" data-action="remove_moderator" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Remove Moderator</button>' +
-                '<button type="button" class="admin-action-btn admin-action-btn--danger" data-action="soft_delete" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Soft Delete</button>' +
-                '<button type="button" class="admin-action-btn admin-action-btn--premium" data-action="set_premium" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Set Premium</button>' +
-                '<button type="button" class="admin-action-btn admin-action-btn--warn" data-action="warn" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Warn</button>' +
-                '<button type="button" class="admin-action-btn admin-action-btn--danger" data-action="suspend" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Suspend</button>' +
-                '<button type="button" class="admin-action-btn admin-action-btn--danger" data-action="ban" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Ban</button>' +
-              '</div>' +
-              (rowHint ? '<div style="flex:1 1 100%;font-size:0.7rem;color:var(--text-3);">' + escHtml(rowHint) + '</div>' : '') +
-            '</div>'
-          )
-        }).join('')
-
-        rows.onclick = function(e) {
-          const btn = e.target && e.target.closest('button[data-action][data-username]')
-          if (!btn || btn.disabled) return
-          const actionType = btn.getAttribute('data-action') || ''
-          const targetUser = {
-            id: btn.getAttribute('data-user-id') || '',
-            username: btn.getAttribute('data-username') || '',
-            role: btn.getAttribute('data-role') || '',
-            membership_tier: btn.getAttribute('data-tier') || '',
-            account_status: btn.getAttribute('data-status') || ''
-          }
-          handleUserAction(actionType, targetUser)
+        const searchEl = document.getElementById('admin-user-search')
+        const roleEl = document.getElementById('admin-user-role-filter')
+        const statusEl = document.getElementById('admin-user-status-filter')
+        if (searchEl && !searchEl.dataset.bound) {
+          searchEl.dataset.bound = '1'
+          searchEl.addEventListener('input', renderAdminUsers)
+        }
+        if (roleEl && !roleEl.dataset.bound) {
+          roleEl.dataset.bound = '1'
+          roleEl.addEventListener('change', renderAdminUsers)
+        }
+        if (statusEl && !statusEl.dataset.bound) {
+          statusEl.dataset.bound = '1'
+          statusEl.addEventListener('change', renderAdminUsers)
         }
       } catch (_) {
         showError('Could not load users right now. Please try again.')
+      } finally {
+        adminUsersLoadPromise = null
       }
+      }())
+
+      return adminUsersLoadPromise
     }
 
     // ── Sign out ───────────────────────────────────────────────
@@ -2455,6 +3064,353 @@
       if (day < 7) return day + 'd ago'
       return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     }
+
+    // ── Copy to clipboard ─────────────────────────────────────
+    function copyToClipboard(text, btn) {
+      if (!text) return
+      const doFallback = () => {
+        try {
+          const ta = document.createElement('textarea')
+          ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;'
+          document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta)
+          if (btn) { const o = btn.textContent; btn.textContent = '✓'; btn.classList.add('dash-copy-btn--ok'); setTimeout(() => { btn.textContent = o; btn.classList.remove('dash-copy-btn--ok') }, 2200) }
+        } catch(e) { if (btn) btn.textContent = 'Failed' }
+      }
+      if (!navigator.clipboard) { doFallback(); return }
+      navigator.clipboard.writeText(text).then(() => {
+        if (!btn) return
+        const orig = btn.textContent
+        btn.textContent = '✓ Copied'
+        btn.classList.add('dash-copy-btn--ok')
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('dash-copy-btn--ok') }, 2200)
+      }).catch(doFallback)
+    }
+
+    // Copy button event delegation (identity tab)
+    document.addEventListener('click', function(e) {
+      const btn = e.target && e.target.closest('.dash-copy-btn[id]')
+      if (!btn) return
+      const id = btn.id
+      if (id === 'copy-username-btn') {
+        copyToClipboard(myUsername || '', btn)
+      } else if (id === 'copy-signal-id-btn') {
+        const s = document.getElementById('id-signal-id')
+        const text = s ? s.textContent.trim() : ''
+        if (text.startsWith('sig_')) copyToClipboard(text, btn)
+        else { btn.textContent = 'Not ready'; setTimeout(() => { btn.textContent = 'Copy' }, 1800) }
+      } else if (id === 'copy-recovery-code-btn') {
+        const c = document.getElementById('recovery-new-code-display')
+        copyToClipboard(c ? c.textContent.trim() : '', btn)
+      }
+    })
+
+    // ── Bytes formatter ───────────────────────────────────────
+    function formatBytes(bytes) {
+      if (typeof bytes !== 'number' || isNaN(bytes) || bytes < 0) return '0 B'
+      if (bytes < 1024) return bytes + ' B'
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+      if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
+      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
+    }
+
+    // ── Storage plan limits ───────────────────────────────────
+    const STORAGE_LIMITS = {
+      free:    150 * 1024 * 1024,   // 150 MB
+      starter: 600 * 1024 * 1024,   // 600 MB
+      pro:     600 * 1024 * 1024,   // 600 MB
+      premium: 600 * 1024 * 1024,   // 600 MB
+    }
+    function getStorageLimitForPlan(planType) {
+      return STORAGE_LIMITS[String(planType || 'free').toLowerCase()] || STORAGE_LIMITS.free
+    }
+
+    // ── Update storage bar UI ─────────────────────────────────
+    function updateStorageBar(usedBytes, limitBytes) {
+      const used  = Number(usedBytes  || 0)
+      const limit = Number(limitBytes || STORAGE_LIMITS.free)
+      const pct   = Math.min(100, Math.round((used / limit) * 100))
+      const remaining = Math.max(0, limit - used)
+
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val }
+      set('storage-plan-limit',       formatBytes(limit))
+      set('storage-used-display',     formatBytes(used))
+      set('storage-remaining-display', formatBytes(remaining))
+
+      const fill = document.getElementById('storage-bar-fill')
+      const label = document.getElementById('storage-bar-label')
+      if (fill) {
+        fill.style.width = pct + '%'
+        fill.style.background = pct > 95
+          ? 'linear-gradient(90deg,#ef4444,#f87171)'
+          : pct > 80
+            ? 'linear-gradient(90deg,#f59e0b,#fbbf24)'
+            : 'linear-gradient(90deg,#7c3aed,#a78bfa)'
+      }
+      if (label) label.textContent = pct + '% of ' + formatBytes(limit) + ' used'
+    }
+
+    // ── Populate full identity panel ──────────────────────────
+    function populateIdentityPanel(m) {
+      const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val == null ? '—' : val) }
+      const plan = m.plan_type || 'free'
+      const planMeta = getPlanMeta(plan)
+
+      setEl('id-display-name', m.display_name || myUsername || '—')
+      setEl('id-username',     '@' + myUsername)
+      setEl('id-signal-id',    m.platform_id  || 'Not yet assigned — re-login to generate.')
+      setEl('id-role',         m.role         || 'user')
+      setEl('id-plan',         planMeta ? planMeta.label : plan)
+      setEl('id-status',       m.member_status || m.account_status || 'active')
+
+      // Founder badge
+      const founderRow = document.getElementById('id-founder-row')
+      const founderLbl = document.getElementById('id-founder-label')
+      if (m.is_founder && founderRow) {
+        founderRow.style.display = ''
+        if (founderLbl) founderLbl.textContent = m.founder_label || 'Founding Member'
+      }
+
+      // Recovery state
+      loadRecoveryState(m)
+
+      // Storage
+      updateStorageBar(m.storage_used_bytes || 0, getStorageLimitForPlan(plan))
+    }
+
+    // ── Load recovery state into UI ───────────────────────────
+    function loadRecoveryState(m) {
+      const checkEl   = document.getElementById('recovery-state-checking')
+      const okEl      = document.getElementById('recovery-state-ok')
+      const missingEl = document.getElementById('recovery-state-missing')
+      const newCodeEl = document.getElementById('recovery-state-new-code')
+      const genBtn    = document.getElementById('recovery-generate-btn')
+      const setAtEl   = document.getElementById('recovery-set-at')
+
+      if (checkEl)   checkEl.style.display   = 'none'
+      if (newCodeEl) newCodeEl.style.display  = 'none'
+
+      const hasRecovery = !!(m && m.recovery_code_hash)
+      const isRequired  = !!(m && m.recovery_required)
+
+      if (hasRecovery && !isRequired) {
+        if (okEl)      okEl.style.display      = ''
+        if (missingEl) missingEl.style.display = 'none'
+        if (setAtEl && m.recovery_code_set_at) {
+          setAtEl.textContent = new Date(m.recovery_code_set_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        }
+        if (genBtn) { genBtn.textContent = 'Regenerate Recovery Code'; genBtn.style.display = '' }
+      } else {
+        if (missingEl) missingEl.style.display = ''
+        if (okEl)      okEl.style.display      = 'none'
+        if (genBtn)    { genBtn.textContent = 'Generate Recovery Code'; genBtn.style.display = '' }
+      }
+    }
+
+    // ── Generate / reset recovery code ────────────────────────
+    document.getElementById('recovery-generate-btn')?.addEventListener('click', async function() {
+      const noteEl = document.getElementById('recovery-action-note')
+      const genBtn = document.getElementById('recovery-generate-btn')
+      if (!myUsername || !SUPABASE_READY || !supabase) {
+        showNote(noteEl, 'Cannot generate: not signed in or connection unavailable.', false); return
+      }
+      const sess = getSession()
+      if (!sess || !sess.ph) {
+        showNote(noteEl, 'Session missing password hash. Please sign out and back in.', false); return
+      }
+      const hasExisting = !!(memberData && memberData.recovery_code_hash)
+      if (hasExisting && !confirm('This will replace your existing recovery code. Any saved copy of your old code will stop working. Continue?')) return
+
+      genBtn.disabled = true; genBtn.textContent = 'Generating…'
+      try {
+        const rawCode    = generateRecoveryCode()
+        const normalized = cleanRecoveryCode(rawCode)
+        const newHash    = await hashRecoveryCode(normalized)
+
+        const { data: rpcOk, error: rpcErr } = await supabase.rpc('reset_member_recovery_code', {
+          p_username:          myUsername,
+          p_ph:                sess.ph,
+          p_new_recovery_hash: newHash
+        })
+
+        if (rpcErr) {
+          genBtn.disabled = false; genBtn.textContent = hasExisting ? 'Regenerate Recovery Code' : 'Generate Recovery Code'
+          showNote(noteEl, 'Server error: ' + (rpcErr.message || 'try again'), false)
+          return
+        }
+        if (!rpcOk) {
+          genBtn.disabled = false; genBtn.textContent = hasExisting ? 'Regenerate Recovery Code' : 'Generate Recovery Code'
+          showNote(noteEl, 'Auth verification failed. Sign out and back in, then try again.', false)
+          return
+        }
+
+        // Show the raw code once
+        const checkEl   = document.getElementById('recovery-state-checking')
+        const okEl      = document.getElementById('recovery-state-ok')
+        const missingEl = document.getElementById('recovery-state-missing')
+        const newCodeEl = document.getElementById('recovery-state-new-code')
+        const codeDsp   = document.getElementById('recovery-new-code-display')
+        if (checkEl)   checkEl.style.display   = 'none'
+        if (okEl)      okEl.style.display       = 'none'
+        if (missingEl) missingEl.style.display  = 'none'
+        if (newCodeEl) newCodeEl.style.display  = ''
+        if (codeDsp)   codeDsp.textContent      = rawCode
+        genBtn.style.display = 'none'
+        showNote(noteEl, 'New recovery code generated. Save it now.', true)
+      } catch(err) {
+        genBtn.disabled = false; genBtn.textContent = hasExisting ? 'Regenerate Recovery Code' : 'Generate Recovery Code'
+        showNote(noteEl, 'Error: ' + (err.message || 'unknown'), false)
+      }
+    })
+
+    document.getElementById('recovery-confirm-saved-btn')?.addEventListener('click', function() {
+      const okEl      = document.getElementById('recovery-state-ok')
+      const newCodeEl = document.getElementById('recovery-state-new-code')
+      const genBtn    = document.getElementById('recovery-generate-btn')
+      const setAtEl   = document.getElementById('recovery-set-at')
+      if (newCodeEl) newCodeEl.style.display  = 'none'
+      if (okEl)      okEl.style.display       = ''
+      if (setAtEl)   setAtEl.textContent      = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      if (genBtn)    { genBtn.disabled = false; genBtn.textContent = 'Regenerate Recovery Code'; genBtn.style.display = '' }
+    })
+
+    // ── Track storage usage client-side ──────────────────────
+    async function addToStorageUsed(bytesAdded) {
+      if (!myUsername || !SUPABASE_READY || !supabase || bytesAdded <= 0) return
+      try {
+        const { data } = await supabase
+          .from('member_accounts')
+          .select('storage_used_bytes, plan_type')
+          .eq('username', myUsername)
+          .single()
+        const current  = Number((data && data.storage_used_bytes) || 0)
+        const newTotal = current + bytesAdded
+        await supabase.from('member_accounts').update({ storage_used_bytes: newTotal }).eq('username', myUsername)
+        updateStorageBar(newTotal, getStorageLimitForPlan((data && data.plan_type) || 'free'))
+      } catch(e) { console.warn('[FAS] addToStorageUsed:', e) }
+    }
+
+    async function checkStorageAvailable(fileSize) {
+      if (!myUsername || !SUPABASE_READY || !supabase) return { ok: true }
+      try {
+        const { data } = await supabase
+          .from('member_accounts')
+          .select('storage_used_bytes, plan_type')
+          .eq('username', myUsername).single()
+        const used  = Number((data && data.storage_used_bytes) || 0)
+        const limit = getStorageLimitForPlan((data && data.plan_type) || 'free')
+        if (used + fileSize > limit) {
+          return { ok: false, message: 'Storage limit reached (' + formatBytes(used) + ' of ' + formatBytes(limit) + ' used). Upgrade to Premium for 600 MB.' }
+        }
+        return { ok: true }
+      } catch(e) { return { ok: true } }
+    }
+
+    // ── Avatar file upload ────────────────────────────────────
+    ;(function() {
+      const zone      = document.getElementById('avatar-upload-zone')
+      const fileInput = document.getElementById('avatar-file-input')
+      const chosen    = document.getElementById('avatar-file-chosen')
+      const uploadBtn = document.getElementById('avatar-upload-btn')
+      const noteEl    = document.getElementById('avatar-upload-note')
+      if (!zone || !fileInput) return
+
+      zone.addEventListener('click', () => fileInput.click())
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files && fileInput.files[0]
+        if (!file) return
+        if (chosen) { chosen.textContent = file.name; chosen.style.display = '' }
+        if (uploadBtn) uploadBtn.disabled = false
+      })
+
+      if (uploadBtn) {
+        uploadBtn.addEventListener('click', async () => {
+          const file = fileInput.files && fileInput.files[0]
+          if (!file) { showNote(noteEl, 'No file selected.', false); return }
+          const chk = await checkStorageAvailable(file.size)
+          if (!chk.ok) { showNote(noteEl, chk.message, false); return }
+
+          uploadBtn.disabled = true; uploadBtn.textContent = 'Uploading…'
+          try {
+            const { url, error } = await uploadAvatar(myUsername, file)
+            if (error || !url) {
+              uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Avatar'
+              showNote(noteEl, 'Upload failed: ' + (error && error.message ? error.message : 'unknown error'), false)
+              return
+            }
+            // Persist URL to profiles
+            if (SUPABASE_READY && supabase) {
+              await supabase.from('profiles').update({ avatar_url: url }).eq('username', myUsername)
+            }
+            // Fill URL paste field so profile-save also uses the new URL
+            const urlInput = document.getElementById('edit-avatar-url')
+            if (urlInput) urlInput.value = url
+            // Update the header avatar preview immediately
+            const avatarDiv = document.querySelector('.dash-avatar')
+            if (avatarDiv) {
+              let img = avatarDiv.querySelector('img')
+              if (!img) { img = document.createElement('img'); img.alt = 'Avatar'; avatarDiv.appendChild(img) }
+              img.src = url; img.style.display = ''
+            }
+            await addToStorageUsed(file.size)
+            uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Avatar'
+            showNote(noteEl, 'Avatar uploaded ✓', true)
+          } catch(err) {
+            uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Avatar'
+            showNote(noteEl, 'Upload error: ' + (err.message || 'unknown'), false)
+          }
+        })
+      }
+    })()
+
+    // ── Cover / banner file upload ────────────────────────────
+    ;(function() {
+      const zone      = document.getElementById('cover-upload-zone')
+      const fileInput = document.getElementById('cover-file-input')
+      const chosen    = document.getElementById('cover-file-chosen')
+      const uploadBtn = document.getElementById('cover-upload-btn')
+      const noteEl    = document.getElementById('cover-upload-note')
+      if (!zone || !fileInput) return
+
+      zone.addEventListener('click', () => fileInput.click())
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files && fileInput.files[0]
+        if (!file) return
+        if (chosen) { chosen.textContent = file.name; chosen.style.display = '' }
+        if (uploadBtn) uploadBtn.disabled = false
+      })
+
+      if (uploadBtn) {
+        uploadBtn.addEventListener('click', async () => {
+          const file = fileInput.files && fileInput.files[0]
+          if (!file) { showNote(noteEl, 'No file selected.', false); return }
+          const chk = await checkStorageAvailable(file.size)
+          if (!chk.ok) { showNote(noteEl, chk.message, false); return }
+
+          uploadBtn.disabled = true; uploadBtn.textContent = 'Uploading…'
+          try {
+            const { url, error } = await uploadCover(myUsername, file)
+            if (error || !url) {
+              uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Banner'
+              showNote(noteEl, 'Upload failed: ' + (error && error.message ? error.message : 'unknown error'), false)
+              return
+            }
+            if (SUPABASE_READY && supabase) {
+              await supabase.from('profiles').update({ cover_image_url: url }).eq('username', myUsername)
+              // Best-effort update to member_accounts cover_url (column may exist)
+              supabase.from('member_accounts').update({ cover_url: url }).eq('username', myUsername).then(() => {})
+            }
+            const urlInput = document.getElementById('edit-cover-url')
+            if (urlInput) urlInput.value = url
+            await addToStorageUsed(file.size)
+            uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Banner'
+            showNote(noteEl, 'Banner uploaded ✓', true)
+          } catch(err) {
+            uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Banner'
+            showNote(noteEl, 'Upload error: ' + (err.message || 'unknown'), false)
+          }
+        })
+      }
+    })()
 
     function formatActivityLabel(row) {
       const action = String((row && row.action_type) || '').toLowerCase()

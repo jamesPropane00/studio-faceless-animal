@@ -26,6 +26,9 @@ const SALT_BYTES        = 16
 const SESSION_KEY       = 'fas_user'
 const MEMBER_KEY        = 'fas_member'
 const ACCOUNTS_KEY      = 'fas_accounts'   // legacy localStorage list
+const PLATFORM_ID_PREFIX = 'sig_'
+
+const RECOVERY_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 
 // ── Crypto helpers ────────────────────────────────────────────
 
@@ -91,6 +94,64 @@ export function cleanUsername(raw) {
   return /^[a-z0-9_-]{3,40}$/.test(cleaned) ? cleaned : null
 }
 
+export function cleanPlatformId(raw) {
+  const cleaned = String(raw || '').trim().toLowerCase()
+  return /^sig_[a-z0-9]{10,20}$/.test(cleaned) ? cleaned : null
+}
+
+export function cleanRecoveryCode(raw) {
+  return String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+}
+
+export function generateRecoveryCode() {
+  const bytes = new Uint8Array(16)
+  crypto.getRandomValues(bytes)
+  const chars = []
+  for (let i = 0; i < bytes.length; i++) {
+    chars.push(RECOVERY_ALPHABET[bytes[i] % RECOVERY_ALPHABET.length])
+  }
+  const joined = chars.join('')
+  return joined.slice(0, 4) + '-' + joined.slice(4, 8) + '-' + joined.slice(8, 12) + '-' + joined.slice(12, 16)
+}
+
+function generatePlatformId() {
+  const bytes = new Uint8Array(8)
+  crypto.getRandomValues(bytes)
+  let out = ''
+  for (let i = 0; i < bytes.length; i++) {
+    out += (bytes[i] % 36).toString(36)
+  }
+  return PLATFORM_ID_PREFIX + out
+}
+
+export async function hashRecoveryCode(recoveryCode) {
+  const encoder = new TextEncoder()
+  const normalized = cleanRecoveryCode(recoveryCode)
+  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(normalized))
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+}
+
+async function resolveUsernameFromLoginId(loginId) {
+  const raw = String(loginId || '').trim().toLowerCase()
+  const asUsername = cleanUsername(raw)
+  if (asUsername) return { username: asUsername, source: 'username' }
+
+  const asPlatformId = cleanPlatformId(raw)
+  if (!asPlatformId) return { username: null, source: null }
+
+  const { data, error } = await supabase
+    .from('member_accounts')
+    .select('username')
+    .eq('platform_id', asPlatformId)
+    .maybeSingle()
+
+  if (error || !data || !data.username) {
+    return { username: null, source: 'platform_id' }
+  }
+
+  return { username: String(data.username).toLowerCase(), source: 'platform_id' }
+}
+
 /**
  * Check if a username is available in member_accounts.
  * Returns { available: bool, error: string|null }
@@ -110,10 +171,17 @@ export async function isUsernameAvailable(username) {
  * @returns {object} { success, error, errorCode, session }
  *   errorCode: 'offline' | 'username_not_found' | 'no_password' | 'wrong_password' | 'rpc_error'
  */
-export async function signIn(username, password) {
+export async function signIn(loginId, password) {
   if (!SUPABASE_READY || !supabase) return { success: false, error: 'Cannot connect. Try again.', errorCode: 'offline' }
 
-  const u = username.toLowerCase()
+  const resolved = await resolveUsernameFromLoginId(loginId)
+  const u = resolved.username
+  if (!u) {
+    if (resolved.source === 'platform_id') {
+      return { success: false, error: 'Signal ID not found. Check the ID or create a new account.', errorCode: 'id_not_found' }
+    }
+    return { success: false, error: 'Username or Signal ID is invalid.', errorCode: 'invalid_login_id' }
+  }
 
   // Step 1: Get salt for this user
   const { data: salt, error: saltError } = await supabase
@@ -164,16 +232,17 @@ export async function signIn(username, password) {
   // Step 4: Load member info for session
   const { data: member } = await supabase
     .from('member_accounts')
-    .select('username, display_name, email, plan_type, member_status')
+    .select('*')
     .eq('username', u)
     .single()
 
   const session = {
     username: u,
     display:  member?.display_name || u,
-    email:    member?.email || '',
+    platform_id: member?.platform_id || '',
     plan:     member?.plan_type || 'free',
     status:   member?.member_status || 'free',
+    role:     member?.role || 'user',
     ts:       Date.now(),
     ph:       hash,
   }
@@ -188,7 +257,7 @@ export async function signIn(username, password) {
  * @returns {object} { success, error, errorCode, session }
  *   errorCode: 'offline' | 'taken' | 'weak_password' | 'sync_failed' | 'password_failed'
  */
-export async function createAccount(username, password, displayName, email) {
+export async function createAccount(username, password, displayName, recoveryCodeInput) {
   if (!SUPABASE_READY || !supabase) return { success: false, error: 'Cannot connect. Try again.', errorCode: 'offline' }
 
   // Validate
@@ -197,7 +266,12 @@ export async function createAccount(username, password, displayName, email) {
 
   const u       = username.toLowerCase()
   const display = (displayName || '').trim() || u
-  const mail    = (email || '').trim()
+  const candidateRecovery = String(recoveryCodeInput || '').trim()
+  const recoveryCode = candidateRecovery ? candidateRecovery : generateRecoveryCode()
+  const recoveryNormalized = cleanRecoveryCode(recoveryCode)
+  if (recoveryNormalized.length < 8) {
+    return { success: false, error: 'Recovery code is too short. Use at least 8 characters.', errorCode: 'weak_recovery_code' }
+  }
 
   // Check availability
   const { available, error: availErr } = await isUsernameAvailable(u)
@@ -217,10 +291,49 @@ export async function createAccount(username, password, displayName, email) {
     return { success: false, error: 'Hashing failed. Browser may not support Web Crypto.', errorCode: 'crypto_error' }
   }
 
+  let recoveryHash
+  try {
+    recoveryHash = await hashRecoveryCode(recoveryNormalized)
+  } catch (e) {
+    return { success: false, error: 'Could not process recovery code. Try again.', errorCode: 'recovery_hash_failed' }
+  }
+
   // Create member_accounts row
-  const synced = await syncMember(u, display, mail)
+  const synced = await syncMember(u, display)
   // syncMember returns the data or null — non-null means success
   // Even if null (e.g. row already exists), proceed to try set_member_password
+
+  let platformId = ''
+  let identitySaved = false
+  for (let i = 0; i < 5; i++) {
+    platformId = generatePlatformId()
+    const { error: identityErr } = await supabase
+      .from('member_accounts')
+      .update({
+        platform_id: platformId,
+        recovery_code_hash: recoveryHash,
+        recovery_code_set_at: new Date().toISOString(),
+      })
+      .eq('username', u)
+      .is('platform_id', null)
+
+    if (!identityErr) {
+      identitySaved = true
+      break
+    }
+
+    if (identityErr.code !== '23505') {
+      return {
+        success: false,
+        error: 'Account setup is missing anonymous identity support. Run migration 019 and try again.',
+        errorCode: 'identity_schema_missing',
+      }
+    }
+  }
+
+  if (!identitySaved) {
+    return { success: false, error: 'Could not allocate a Signal ID. Please try again.', errorCode: 'platform_id_collision' }
+  }
 
   // Set password (only works if password_hash IS NULL)
   const { data: ok, error: setErr } = await supabase
@@ -239,13 +352,13 @@ export async function createAccount(username, password, displayName, email) {
   // Store in legacy localStorage accounts list (for offline radio chat gate)
   try {
     const accounts = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '{}')
-    accounts[u] = { username: u, display, email: mail, created: Date.now() }
+    accounts[u] = { username: u, display, platform_id: platformId, created: Date.now() }
     localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts))
   } catch(e) {}
 
-  const session = { username: u, display, email: mail, plan: 'free', status: 'free', ts: Date.now(), ph: hash }
+  const session = { username: u, display, platform_id: platformId, plan: 'free', status: 'free', role: 'user', ts: Date.now(), ph: hash }
   storeSession(session)
-  return { success: true, session }
+  return { success: true, session, recoveryCode, platformId }
 }
 
 /**

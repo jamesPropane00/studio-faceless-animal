@@ -3,26 +3,28 @@
  *  FACELESS ANIMAL STUDIOS — ADMIN DASHBOARD
  *  assets/js/admin.js
  *
- *  Supabase-connected admin module. Requires Supabase auth.
+ *  Supabase-backed admin module. Uses platform-native member auth.
  *  Loaded as ES module by admin/index.html.
  *
  *  Auth architecture:
  *    All authentication and authorisation logic lives in
  *    admin-auth.js. This file only calls those helpers —
- *    it never talks to supabase.auth directly.
+ *    it never uses email-identity auth.
  *
- *    Current access model: any authenticated Supabase user
- *    can reach the dashboard. Role gates are stubbed in
- *    admin-auth.js and ready to activate (see TODO: AUTH).
+ *    Current access model: platform-native member session
+ *    (username/Signal ID + password hash), then role check
+ *    in member_accounts.
+ *    Access is granted only for role super_admin/admin.
  *
  *    Write operations are annotated with:
  *      // TODO: ROLE CHECK — require ADMIN_ROLES.SUPER_ADMIN
  *    These lines are where per-operation permission checks
- *    will be enforced once the user_roles table is in place.
+ *    should be enforced for sensitive admin mutations.
  * ============================================================
  */
 
 import { supabase, SUPABASE_READY } from './supabase-client.js'
+import { signIn as signInMember } from './auth.js'
 import { confirmPayment, rejectPayment, recordPayment } from './services/payments.js'
 import { applyUpgrade, requestUpgrade, cancelUpgradeRequest, getPlanSummary } from './services/plan-manager.js'
 import {
@@ -128,8 +130,17 @@ function showLogin() {
 function showDashboard() {
   $('adm-login').style.display = 'none'
   $('adm-main').style.display = ''
-  $('adm-user-email').textContent = session?.user?.email ?? ''
+  $('adm-user-identity').textContent = getAdminActorTag()
   activateTab('profiles')
+}
+
+function getAdminActorTag() {
+  try {
+    const local = JSON.parse(localStorage.getItem('fas_user') || 'null')
+    if (local && local.username) return '@' + String(local.username).toLowerCase()
+    if (local && local.platform_id) return String(local.platform_id)
+  } catch {}
+  return session?.platform_id || session?.username || 'admin-session'
 }
 
 function showNotAuthorized() {
@@ -139,14 +150,17 @@ function showNotAuthorized() {
   if (form) {
     form.innerHTML = [
       '<p style="color:#f87171;text-align:center;font-size:1rem;font-weight:800;margin-bottom:0.75rem;">Not Authorized</p>',
-      '<p style="color:#a8a8a8;text-align:center;font-size:0.84rem;line-height:1.6;">Your account does not have admin access to this dashboard.</p>',
+      '<p style="color:#a8a8a8;text-align:center;font-size:0.84rem;line-height:1.6;">This admin page requires role <strong>super_admin</strong> or <strong>admin</strong> in member_accounts for the signed-in admin account.</p>',
       '<p style="text-align:center;margin-top:1.25rem;">',
       '<a href="../index.html" style="color:#c9a96e;font-size:0.8rem;">← Back to site</a>',
       '</p>',
     ].join('')
   }
-  // Sign the non-admin user out so they cannot retry with the same session
-  supabase.auth.signOut().catch(() => {})
+  // Clear local member session so the user cannot retry with stale access.
+  try {
+    localStorage.removeItem('fas_user')
+    localStorage.removeItem('fas_member')
+  } catch {}
 }
 
 function showConfigError() {
@@ -157,34 +171,47 @@ function showConfigError() {
 }
 
 // ── AUTH ───────────────────────────────────────────────────────
-// Sign-in and sign-out call supabase.auth directly here because
-// they ARE the auth flow — not operations that need to be guarded.
+// Sign-in and sign-out use the same member auth flow as the live app.
 // All post-auth routing is handled by the onAuthChange callback in init().
 async function signIn() {
-  const email    = $('adm-email').value.trim()
+  const loginKey = $('adm-login-id').value.trim()
   const password = $('adm-password').value
   const btn      = $('adm-signin-btn')
   const err      = $('adm-login-error')
 
-  if (!email || !password) { err.textContent = 'Email and password required.'; return }
+  if (!loginKey || !password) { err.textContent = 'Username/Signal ID and password are required.'; return }
 
   btn.textContent = 'Signing in…'
   btn.disabled = true
   err.textContent = ''
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const result = await signInMember(loginKey, password)
 
   btn.textContent = 'Sign In'
   btn.disabled = false
 
-  if (error) err.textContent = error.message
-  // TODO: AUTH — Phase 2: after sign-in, check that the user has a valid admin
-  // role in user_roles before calling showDashboard(). If no role row exists,
-  // call signOut() and show an "Access denied" message instead.
+  if (!result || !result.success) {
+    err.textContent = result && result.error ? result.error : 'Sign in failed.'
+    return
+  }
+
+  const auth = await requireAdminSession()
+  if (!auth.ok) {
+    err.textContent = 'This account does not have admin access.'
+    await signOut()
+    return
+  }
+
+  session = auth.session
+  setAdminState(true, auth.role)
+  showDashboard()
 }
 
 async function signOut() {
-  await supabase.auth.signOut()
+  try {
+    localStorage.removeItem('fas_user')
+    localStorage.removeItem('fas_member')
+  } catch {}
 }
 
 // ── TABS ───────────────────────────────────────────────────────
@@ -603,7 +630,7 @@ async function confirmAndActivate(paymentId) {
   // if (!auth.ok) { alert('Access denied.'); return }
   if (!confirm('Confirm this payment and activate the creator\'s page?')) return
   setLoading('adm-payments-body', 'Confirming payment…')
-  const { error } = await confirmPayment(paymentId, { confirmedBy: session?.user?.email })
+  const { error } = await confirmPayment(paymentId, { confirmedBy: getAdminActorTag() })
   if (error) { alert('Error: ' + error.message); loadPayments(); return }
   loadPayments()
 }
@@ -613,7 +640,7 @@ async function adminRejectPayment(paymentId) {
   // const auth = await requireAdminSession({ requiredRole: ADMIN_ROLES.SUPER_ADMIN })
   // if (!auth.ok) { alert('Access denied.'); return }
   if (!confirm('Reject this payment?')) return
-  const { error } = await rejectPayment(paymentId, { rejectedBy: session?.user?.email })
+  const { error } = await rejectPayment(paymentId, { rejectedBy: getAdminActorTag() })
   if (error) { alert('Error: ' + error.message); return }
   loadPayments()
 }
@@ -624,7 +651,7 @@ async function adminUpgradePlan(profileId, planType) {
   // if (!auth.ok) { alert('Access denied.'); return }
   if (!planType || !profileId) return
   if (!confirm(`Change plan to "${planType}"? This updates the profile and all associated pages immediately.`)) return
-  const { error } = await applyUpgrade(profileId, planType, { triggeredBy: session?.user?.email })
+  const { error } = await applyUpgrade(profileId, planType, { triggeredBy: getAdminActorTag() })
   if (error) { alert('Error: ' + error.message); return }
   loadProfiles()
 }
@@ -754,7 +781,7 @@ async function addNote() {
   const { error } = await supabase.from('admin_notes').insert([{
     content,
     current_status: status || null,
-    author:    session?.user?.email || 'admin',
+    author:    getAdminActorTag(),
     profile_id,
   }])
 

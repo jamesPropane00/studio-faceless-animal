@@ -296,7 +296,7 @@ function handleRequest(req, res) {
   //      a browser extension like ModHeader, or a Cloudflare
   //      Transform Rule / Access policy in production).
   //
-  // Client-side auth (Supabase session + ADMIN_EMAILS allowlist in
+  // Client-side auth (Supabase session + member_accounts role check in
   // admin-auth.js) provides a second independent layer of protection
   // once the page is loaded.
   if (urlPath.startsWith('/admin')) {
