@@ -491,9 +491,22 @@
           </div>
         </div>
 
+        <!-- Signal pulse summary -->
+        <div class="dash-section">
+          <p class="dash-section-title">Signal Pulse</p>
+          <div class="dash-card dash-card--purple">
+            <p style="font-size:0.82rem;color:var(--text-2);line-height:1.65;margin:0 0 0.7rem;">This is your live platform snapshot: what you posted, where your conversations are, and how active the network is around you right now.</p>
+            <div class="dash-status-row"><span class="dash-status-label">My Recent Posts</span><span class="dash-status-val" id="pulse-my-posts">0</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Live Signal Items</span><span class="dash-status-val" id="pulse-live-feed">0</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Open DM Threads</span><span class="dash-status-val" id="pulse-threads">0</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Last Activity</span><span class="dash-status-val" id="pulse-last-activity">—</span></div>
+          </div>
+        </div>
+
         <!-- Messages preview -->
-        <div class="dash-section" style="display:none;">
+        <div class="dash-section">
           <p class="dash-section-title">Recent Messages</p>
+          <p style="font-size:0.75rem;color:var(--text-3);margin:-0.2rem 0 0.65rem;line-height:1.6;">Signal keeps communication direct and immediate. This preview shows your most recent active threads.</p>
           <div id="dash-msg-preview">
             <div class="dash-loading" id="dash-msg-loading">Loading…</div>
             <div class="dash-msg-list" id="dash-msg-list" style="display:none;"></div>
@@ -510,8 +523,9 @@
         </div>
 
         <!-- Recent activity -->
-        <div class="dash-section" style="display:none;">
+        <div class="dash-section">
           <p class="dash-section-title">Recent Activity</p>
+          <p style="font-size:0.75rem;color:var(--text-3);margin:-0.2rem 0 0.65rem;line-height:1.6;">Your movement inside the platform: sign-ins, uploads, posts, and page actions. This is your personal signal trail.</p>
           <div class="dash-card" id="dash-activity-preview">
             <div class="dash-loading" id="dash-activity-loading">Loading…</div>
             <div id="dash-activity-list" style="display:none;"></div>
@@ -1022,6 +1036,9 @@
             <div class="dash-status-row"><span class="dash-status-label">Voice / Calls</span><span class="dash-status-val">Free by default</span></div>
             <div class="dash-status-row"><span class="dash-status-label">Voice Changer</span><span class="dash-status-val">Core communication layer (roadmap active)</span></div>
             <div class="dash-status-row"><span class="dash-status-label">File Sharing</span><span class="dash-status-val">Plan/moderation controlled</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Active Threads</span><span class="dash-status-val" id="comms-thread-count">0</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Unread Messages</span><span class="dash-status-val" id="comms-unread-count">0</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Latest Message</span><span class="dash-status-val" id="comms-last-active">—</span></div>
             <div style="margin-top:0.85rem;"><a href="messages.html" class="btn btn-ghost btn-sm">Open Messages →</a></div>
           </div>
         </div>
@@ -1062,6 +1079,20 @@
               <option value="limited">Limited</option>
               <option value="suspended">Suspended</option>
               <option value="banned">Banned</option>
+            </select>
+            <select id="admin-user-plan-filter" class="dash-board-cat-select">
+              <option value="all">All Plans</option>
+              <option value="free">Free</option>
+              <option value="starter">Starter</option>
+              <option value="pro">Pro</option>
+              <option value="premium">Premium</option>
+            </select>
+            <select id="admin-user-sort" class="dash-board-cat-select">
+              <option value="created_desc">Newest First</option>
+              <option value="created_asc">Oldest First</option>
+              <option value="active_desc">Recently Active</option>
+              <option value="username_asc">Username A→Z</option>
+              <option value="storage_desc">Storage High→Low</option>
             </select>
           </div>
           <div id="admin-user-list">
@@ -2102,8 +2133,13 @@
 
       if (!data || !data.length) {
         if (emptyEl) emptyEl.style.display = ''
+        const pulseMyPosts = document.getElementById('pulse-my-posts')
+        if (pulseMyPosts) pulseMyPosts.textContent = '0'
         return
       }
+
+      const pulseMyPosts = document.getElementById('pulse-my-posts')
+      if (pulseMyPosts) pulseMyPosts.textContent = String(data.length)
 
       if (listEl) {
         listEl.style.display = ''
@@ -2170,8 +2206,13 @@
       if (!data.length) {
         if (emptyEl) emptyEl.style.display = ''
         if (listEl) { listEl.style.display = 'none'; listEl.innerHTML = '' }
+        const pulseLive = document.getElementById('pulse-live-feed')
+        if (pulseLive) pulseLive.textContent = '0'
         return
       }
+
+      const pulseLive = document.getElementById('pulse-live-feed')
+      if (pulseLive) pulseLive.textContent = String(data.length)
 
       if (emptyEl) emptyEl.style.display = 'none'
       if (listEl) {
@@ -2566,11 +2607,29 @@
 
       if (!DM_READY) {
         if (loading) loading.textContent = 'Messages unavailable offline.'
+        const threadCountEl = document.getElementById('comms-thread-count')
+        const unreadCountEl = document.getElementById('comms-unread-count')
+        const pulseThreads  = document.getElementById('pulse-threads')
+        if (threadCountEl) threadCountEl.textContent = '0'
+        if (unreadCountEl) unreadCountEl.textContent = '0'
+        if (pulseThreads) pulseThreads.textContent = '0'
         return
       }
 
       const threads = await loadThreads(username)
       if (loading) loading.style.display = 'none'
+
+      const threadCountEl = document.getElementById('comms-thread-count')
+      const unreadCountEl = document.getElementById('comms-unread-count')
+      const lastMsgEl     = document.getElementById('comms-last-active')
+      const pulseThreads  = document.getElementById('pulse-threads')
+      const threadCount   = Array.isArray(threads) ? threads.length : 0
+      const unreadTotal   = (threads || []).reduce((sum, t) => sum + Number((t && t.unread) || 0), 0)
+
+      if (threadCountEl) threadCountEl.textContent = String(threadCount)
+      if (pulseThreads)  pulseThreads.textContent  = String(threadCount)
+      if (unreadCountEl) unreadCountEl.textContent = String(unreadTotal)
+      if (lastMsgEl) lastMsgEl.textContent = (threadCount && threads[0] && threads[0].last_ts) ? formatDMTime(threads[0].last_ts) : '—'
 
       if (!threads.length) {
         if (empty) empty.style.display = ''
@@ -2612,6 +2671,8 @@
           list.innerHTML = ''
         }
         if (empty) empty.style.display = ''
+        const pulseLast = document.getElementById('pulse-last-activity')
+        if (pulseLast) pulseLast.textContent = '—'
       }
 
       if (!SUPABASE_READY || !supabase || !username) {
@@ -2635,6 +2696,9 @@
         if (loading) loading.style.display = 'none'
         if (empty) empty.style.display = 'none'
         if (!list) return
+
+        const pulseLast = document.getElementById('pulse-last-activity')
+        if (pulseLast) pulseLast.textContent = formatTimeAgo(data[0] && data[0].created_at)
 
         list.style.display = ''
         list.innerHTML = data.map(function(row) {
@@ -2821,11 +2885,14 @@
       const q = String(document.getElementById('admin-user-search')?.value || '').trim().toLowerCase()
       const roleFilter = String(document.getElementById('admin-user-role-filter')?.value || 'all').toLowerCase()
       const statusFilter = String(document.getElementById('admin-user-status-filter')?.value || 'all').toLowerCase()
+      const planFilter = String(document.getElementById('admin-user-plan-filter')?.value || 'all').toLowerCase()
       const role = String(user.role || 'user').toLowerCase()
       const status = String(user.account_status || user.member_status || 'active').toLowerCase()
+      const plan = String(user.plan_type || user.membership_tier || 'free').toLowerCase()
 
       if (roleFilter !== 'all' && role !== roleFilter) return false
       if (statusFilter !== 'all' && status !== statusFilter) return false
+      if (planFilter !== 'all' && plan !== planFilter) return false
 
       if (!q) return true
       const hay = [
@@ -2840,6 +2907,33 @@
       return hay.includes(q)
     }
 
+    function sortAdminUsers(users) {
+      const mode = String(document.getElementById('admin-user-sort')?.value || 'created_desc').toLowerCase()
+      const out = users.slice()
+      out.sort(function(a, b) {
+        if (mode === 'username_asc') {
+          return String(a.username || '').localeCompare(String(b.username || ''))
+        }
+        if (mode === 'created_asc' || mode === 'created_desc') {
+          const ta = new Date(a.created_at || 0).getTime() || 0
+          const tb = new Date(b.created_at || 0).getTime() || 0
+          return mode === 'created_asc' ? ta - tb : tb - ta
+        }
+        if (mode === 'active_desc') {
+          const ta = new Date(a.last_active_at || 0).getTime() || 0
+          const tb = new Date(b.last_active_at || 0).getTime() || 0
+          return tb - ta
+        }
+        if (mode === 'storage_desc') {
+          const sa = Number(a.storage_used_bytes || 0)
+          const sb = Number(b.storage_used_bytes || 0)
+          return sb - sa
+        }
+        return 0
+      })
+      return out
+    }
+
     function renderAdminUsers() {
       const rows = document.getElementById('admin-user-rows')
       const loading = document.getElementById('admin-user-loading')
@@ -2847,7 +2941,7 @@
       const count = document.getElementById('admin-user-count')
       if (!rows) return
 
-      const filtered = adminUsersCache.filter(matchesAdminFilters)
+      const filtered = sortAdminUsers(adminUsersCache.filter(matchesAdminFilters))
       if (loading) loading.style.display = 'none'
 
       if (!filtered.length) {
@@ -3004,6 +3098,8 @@
         const searchEl = document.getElementById('admin-user-search')
         const roleEl = document.getElementById('admin-user-role-filter')
         const statusEl = document.getElementById('admin-user-status-filter')
+        const planEl = document.getElementById('admin-user-plan-filter')
+        const sortEl = document.getElementById('admin-user-sort')
         if (searchEl && !searchEl.dataset.bound) {
           searchEl.dataset.bound = '1'
           searchEl.addEventListener('input', renderAdminUsers)
@@ -3015,6 +3111,14 @@
         if (statusEl && !statusEl.dataset.bound) {
           statusEl.dataset.bound = '1'
           statusEl.addEventListener('change', renderAdminUsers)
+        }
+        if (planEl && !planEl.dataset.bound) {
+          planEl.dataset.bound = '1'
+          planEl.addEventListener('change', renderAdminUsers)
+        }
+        if (sortEl && !sortEl.dataset.bound) {
+          sortEl.dataset.bound = '1'
+          sortEl.addEventListener('change', renderAdminUsers)
         }
       } catch (_) {
         showError('Could not load users right now. Please try again.')
@@ -3191,6 +3295,7 @@
 
       const hasRecovery = !!(m && m.recovery_code_hash)
       const isRequired  = !!(m && m.recovery_required)
+      const ackRequired = !!(m && m.recovery_ack_required)
 
       if (hasRecovery && !isRequired) {
         if (okEl)      okEl.style.display      = ''
@@ -3199,6 +3304,9 @@
           setAtEl.textContent = new Date(m.recovery_code_set_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         }
         if (genBtn) { genBtn.textContent = 'Regenerate Recovery Code'; genBtn.style.display = '' }
+        if (ackRequired && okEl && !document.getElementById('recovery-ack-note')) {
+          okEl.insertAdjacentHTML('beforeend', '<p id="recovery-ack-note" style="font-size:0.72rem;color:var(--gold-bright);margin:0.55rem 0 0;">Recovery was recently refreshed. Confirm your new code is stored safely before continuing.</p>')
+        }
       } else {
         if (missingEl) missingEl.style.display = ''
         if (okEl)      okEl.style.display      = 'none'
@@ -3262,15 +3370,36 @@
       }
     })
 
-    document.getElementById('recovery-confirm-saved-btn')?.addEventListener('click', function() {
+    document.getElementById('recovery-confirm-saved-btn')?.addEventListener('click', async function() {
       const okEl      = document.getElementById('recovery-state-ok')
       const newCodeEl = document.getElementById('recovery-state-new-code')
       const genBtn    = document.getElementById('recovery-generate-btn')
       const setAtEl   = document.getElementById('recovery-set-at')
+      const noteEl    = document.getElementById('recovery-action-note')
+      const sess      = getSession()
+
+      if (!sess || !sess.username || !sess.ph) {
+        showNote(noteEl, 'Session expired. Sign in again to confirm recovery setup.', false)
+        return
+      }
+
+      if (SUPABASE_READY && supabase) {
+        const { data: ackOk, error: ackErr } = await supabase.rpc('confirm_member_recovery_ack', {
+          p_username: String(sess.username || '').toLowerCase(),
+          p_ph: sess.ph,
+        })
+        if (ackErr || !ackOk) {
+          showNote(noteEl, 'Could not confirm recovery acknowledgment. Try again.', false)
+          return
+        }
+      }
+
+      if (memberData) memberData.recovery_ack_required = false
       if (newCodeEl) newCodeEl.style.display  = 'none'
       if (okEl)      okEl.style.display       = ''
       if (setAtEl)   setAtEl.textContent      = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       if (genBtn)    { genBtn.disabled = false; genBtn.textContent = 'Regenerate Recovery Code'; genBtn.style.display = '' }
+      showNote(noteEl, 'Recovery code confirmed and secured.', true)
     })
 
     // ── Track storage usage client-side ──────────────────────

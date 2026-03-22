@@ -4,6 +4,66 @@
    ------------------------------------------------------------------ */
 
 /* ================================================================
+   LOCAL DEV CACHE SAFETY — runs before app init.
+   Purpose: prevent stale service-worker/cache takeover during
+   localhost testing while keeping production untouched.
+   ================================================================ */
+(function () {
+  'use strict';
+
+  function isLocalDevHost() {
+    var host = String(window.location.hostname || '').toLowerCase();
+    if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return true;
+    if (host.endsWith('.local')) return true;
+    return window.location.protocol === 'file:';
+  }
+
+  if (!isLocalDevHost()) return;
+
+  // Add no-cache meta directives during local testing only.
+  // This helps prevent stale HTML/assets from browser cache.
+  try {
+    var head = document.head || document.getElementsByTagName('head')[0];
+    if (head) {
+      var tags = [
+        { h: 'Cache-Control', c: 'no-store, no-cache, must-revalidate, max-age=0' },
+        { h: 'Pragma', c: 'no-cache' },
+        { h: 'Expires', c: '0' }
+      ];
+      for (var i = 0; i < tags.length; i++) {
+        var meta = document.createElement('meta');
+        meta.setAttribute('http-equiv', tags[i].h);
+        meta.setAttribute('content', tags[i].c);
+        head.appendChild(meta);
+      }
+    }
+  } catch (e) {}
+
+  // Neutralize any previously installed service workers from older builds.
+  // The repo currently has no registration code, but this protects local dev.
+  try {
+    if ('serviceWorker' in navigator && typeof navigator.serviceWorker.getRegistrations === 'function') {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of (registrations || [])) {
+          registration.unregister();
+        }
+      }).catch(function () {});
+    }
+  } catch (e2) {}
+
+  // Clear CacheStorage entries in local dev to avoid stale asset responses.
+  try {
+    if ('caches' in window && typeof caches.keys === 'function') {
+      caches.keys()
+        .then(function (keys) {
+          return Promise.all((keys || []).map(function (key) { return caches.delete(key); }));
+        })
+        .catch(function () {});
+    }
+  } catch (e3) {}
+}());
+
+/* ================================================================
    SESSION-AWARE NAV — runs on every page that loads this script.
    Reads fas_user from localStorage and updates nav + adds a
    signed-in bar so the site always knows who is logged in.

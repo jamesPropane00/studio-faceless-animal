@@ -54,7 +54,7 @@
         </p>
         <h1 class="page-hero-title">The Faceless<br /><em>Index.</em></h1>
         <p class="page-hero-sub">
-          Artists. Creators. Businesses. All hosted on one underground platform.
+          Signal is an anonymous-first social platform for listening, posting, messaging, and creator pages without tying identity to email. Artists, creators, and businesses move through one live underground network.
           <a href="radio.html" style="color:var(--purple-bright);font-weight:700;white-space:nowrap;">Radio is live →</a>
         </p>
         <div class="page-hero-actions">
@@ -225,28 +225,63 @@
       return colors[idx % colors.length];
     }
 
-    function buildCard(m) {
+    function categoryToRoutePrefix(category) {
+      var c = String(category || '').toLowerCase();
+      var dj = ['dj','producer','artist'];
+      var biz = ['business','collective'];
+      if (dj.indexOf(c) !== -1) return '/artist/';
+      if (biz.indexOf(c) !== -1) return '/business/';
+      return '/creator/';
+    }
+
+    function isRecentlyActive(ts) {
+      if (!ts) return false;
+      var d = new Date(ts);
+      if (isNaN(d.getTime())) return false;
+      return (Date.now() - d.getTime()) < (7 * 24 * 60 * 60 * 1000);
+    }
+
+    function buildCard(m, profileMap) {
+      var p = (profileMap && profileMap[String(m.username || '').toLowerCase()]) || {};
       var location = [m.city, m.state_abbr].filter(Boolean).join(', ') || 'Faceless Animal Studios';
       var bio      = m.bio ? m.bio.slice(0, 160) : 'Platform member on Faceless Animal Studios.';
-      var cats     = ['artist featured'];
-      if (m.plan_type === 'premium') cats.push('featured');
+      var cat      = String((p.category || m.category || 'creator')).toLowerCase();
+      var cats     = [cat];
+      if (m.plan_type === 'premium' || m.is_founder === true || m.username === 'jamespropane00') cats.push('featured');
 
-      var hasPage  = m.page_status === 'live';
-      var isFounder = m.username === 'jamespropane00';
+      var hasPage  = m.page_status === 'live' && !!m.page_slug;
+      var isFounder = m.is_founder === true || m.username === 'jamespropane00';
+      var founderLabel = m.founder_label || (isFounder ? 'Founder' : '');
+      var activeNow = isRecentlyActive(m.last_active_at);
+      var routePrefix = categoryToRoutePrefix(cat);
       var link     = isFounder
         ? '<a href="artists/djfacelessanimal.html" class="dir-card-link">View Page →</a>'
         : hasPage
-          ? '<a href="' + esc('/creator/' + esc(m.page_slug || m.username)) + '" class="dir-card-link">View Page →</a>'
+          ? '<a href="' + esc(routePrefix + (m.page_slug || m.username)) + '" class="dir-card-link">View Page →</a>'
           : '<span class="dir-card-link" style="color:var(--text-3);cursor:default;">Building →</span>';
 
-      var liveStatus = hasPage || isFounder
-        ? '<span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Live</span>'
+      var liveStatus = activeNow
+        ? '<span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Active</span>'
+        : (hasPage || isFounder)
+          ? '<span class="status-tag" style="background:rgba(255,255,255,0.05);color:var(--text-2);border-color:rgba(255,255,255,0.12);">Live</span>'
         : '<span class="status-tag" style="background:rgba(255,255,255,0.04);color:var(--text-3);border-color:rgba(255,255,255,0.08);">Joining</span>';
+
+      var founderTag = isFounder
+        ? '<span class="access-tag access-tag--free" style="border-color:rgba(201,169,110,0.45);color:var(--gold-bright);">' + esc(founderLabel) + '</span>'
+        : '';
+
+      var avatarNode = p.avatar_url
+        ? '<img src="' + esc(p.avatar_url) + '" alt="' + esc(m.display_name || m.username || 'member') + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />'
+        : esc(initials(m.display_name));
+
+      var signalLine = m.platform_id
+        ? '<p style="font-size:0.68rem;color:var(--purple-bright);margin:0 0 0.35rem;letter-spacing:0.04em;">Signal: ' + esc(m.platform_id) + '</p>'
+        : '';
 
       return '<article class="dir-card' + (m.plan_type === 'premium' ? ' dir-card--featured' : '') + '"'
         + ' data-category="' + esc(cats.join(' ')) + '" role="listitem">'
         + '<div class="dir-card-top">'
-        + '<div class="dir-avatar" aria-hidden="true" style="' + esc(avatarBg(m.username, m.plan_type)) + '">' + esc(initials(m.display_name)) + '</div>'
+        + '<div class="dir-avatar" aria-hidden="true" style="' + esc(avatarBg(m.username, m.plan_type)) + '">' + avatarNode + '</div>'
         + '<div class="dir-card-meta">'
         + '<p class="dir-card-name">' + esc(m.display_name) + '</p>'
         + '<p class="dir-card-slug">@' + esc(m.username) + ' · ' + esc(location) + '</p>'
@@ -255,7 +290,9 @@
         + '<div class="dir-card-tags">'
         + liveStatus
         + '<span class="access-tag ' + esc(planBadgeClass(m.plan_type)) + '">' + esc(planLabel(m.plan_type)) + '</span>'
+        + founderTag
         + '</div>'
+        + signalLine
         + '<p class="dir-card-bio">' + esc(bio) + '</p>'
         + link
         + '</article>';
@@ -307,20 +344,51 @@
 
       var url = SUPABASE_URL
         + '/rest/v1/member_accounts'
-        + '?select=username,display_name,bio,city,state_abbr,plan_type,member_status,page_slug,page_status'
+        + '?select=username,display_name,bio,city,state_abbr,plan_type,member_status,page_slug,page_status,platform_id,last_active_at,created_at'
         + '&member_status=eq.active'
-        + '&order=plan_type.desc,created_at.asc'
+        + '&order=created_at.desc'
         + '&limit=50';
 
-      fetch(url, {
-        headers: {
+      var enhancedUrl = SUPABASE_URL
+        + '/rest/v1/member_accounts'
+        + '?select=username,display_name,bio,city,state_abbr,plan_type,member_status,page_slug,page_status,platform_id,last_active_at,created_at,is_founder,founder_label,public_listing_enabled'
+        + '&member_status=eq.active'
+        + '&order=created_at.desc'
+        + '&limit=50';
+
+      function authHeaders() {
+        return {
           'apikey': SUPABASE_ANON_KEY,
           'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
         }
+      }
+
+      // Try enhanced query first (founder/listing fields), then fall back to legacy-safe query.
+      fetch(enhancedUrl, { headers: authHeaders() })
+      .then(function(r) {
+        if (!r.ok) return fetch(url, { headers: authHeaders() })
+        return r
       })
-      .then(function(r) { return r.json(); })
+      .then(function(r) {
+        if (!r.ok) throw new Error('member_accounts query failed')
+        return r.json()
+      })
       .then(function(rows) {
-        var members = (rows || []).filter(function(m) { return !isTest(m.username); });
+        var members = (rows || []).filter(function(m) {
+          if (!m || isTest(m.username)) return false;
+          if (m.public_listing_enabled === false) return false;
+          return true;
+        });
+
+        // Prioritize recently active members so the directory feels live.
+        members.sort(function(a, b) {
+          var aa = isRecentlyActive(a.last_active_at) ? 1 : 0;
+          var bb = isRecentlyActive(b.last_active_at) ? 1 : 0;
+          if (aa !== bb) return bb - aa;
+          if ((a.plan_type || '') === 'premium' && (b.plan_type || '') !== 'premium') return -1;
+          if ((a.plan_type || '') !== 'premium' && (b.plan_type || '') === 'premium') return 1;
+          return 0;
+        });
 
         if (loading) loading.remove();
 
@@ -333,9 +401,36 @@
         // Skip jamespropane00 from the grid (shown in featured hero above)
         var gridMembers = members.filter(function(m) { return m.username !== 'jamespropane00'; });
 
-        var html = gridMembers.map(buildCard).join('') + buildOpenSlot();
-        grid.innerHTML = html;
-        initFilter();
+        // Pull lightweight profile metadata (category/avatar) for richer cards.
+        var profileUrl = SUPABASE_URL
+          + '/rest/v1/profiles'
+          + '?select=username,category,avatar_url'
+          + '&is_active=eq.true'
+          + '&limit=200';
+
+        return fetch(profileUrl, {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+          }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(profiles) {
+          var profileMap = {};
+          (profiles || []).forEach(function(p) {
+            if (p && p.username) profileMap[String(p.username).toLowerCase()] = p;
+          });
+          var html = gridMembers.map(function(m) {
+            return buildCard(m, profileMap);
+          }).join('') + buildOpenSlot();
+          grid.innerHTML = html;
+          initFilter();
+        })
+        .catch(function() {
+          var html = gridMembers.map(function(m) { return buildCard(m, {}); }).join('') + buildOpenSlot();
+          grid.innerHTML = html;
+          initFilter();
+        });
       })
       .catch(function(err) {
         console.warn('[FAS] Directory load failed:', err);
