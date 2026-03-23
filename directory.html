@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
 </head>
 <body>
 
@@ -72,6 +72,11 @@
           <p class="section-label">The Index</p>
           <h2 id="dir-heading">Browse the<br /><em>Network.</em></h2>
           <p class="section-sub">Every profile below is hosted on the Faceless Animal Studios platform. Real pages. Real creators. Growing from the ground up.</p>
+        </div>
+
+        <div class="dash-card" style="padding:0.75rem 0.95rem;margin-bottom:0.95rem;border-color:rgba(139,92,246,0.2);background:rgba(139,92,246,0.05);">
+          <p style="font-size:0.62rem;letter-spacing:0.11em;text-transform:uppercase;color:var(--purple-bright);font-weight:800;margin:0 0 0.35rem;">Signal Pulse</p>
+          <p id="dir-pulse-strip" style="font-size:0.79rem;color:var(--text-2);line-height:1.55;margin:0;">Loading network pulse…</p>
         </div>
 
         <!-- Filter chips -->
@@ -160,7 +165,7 @@
     </div>
   </footer>
 
-  <script src="assets/script.js"></script>
+  <script src="assets/script.js?v=20260322"></script>
   <script src="assets/js/radio-widget.js" defer></script>
 
   <script>
@@ -243,8 +248,13 @@
 
     function buildCard(m, profileMap) {
       var p = (profileMap && profileMap[String(m.username || '').toLowerCase()]) || {};
-      var location = [m.city, m.state_abbr].filter(Boolean).join(', ') || 'Faceless Animal Studios';
-      var bio      = m.bio ? m.bio.slice(0, 160) : 'Platform member on Faceless Animal Studios.';
+      var veilState = String(m.veil_state || 'unveiled').toLowerCase();
+      var isVeiled = veilState === 'veiled' || veilState === 'deep';
+      var location = [p.city || m.city, p.state || m.state_abbr].filter(Boolean).join(', ') || 'Faceless Animal Studios';
+      var bioSource = p.bio || m.bio || '';
+      var bio      = isVeiled
+        ? 'Moving under the Veil. Identity details are intentionally minimized on public surfaces.'
+        : (bioSource ? bioSource.slice(0, 160) : 'Platform member on Faceless Animal Studios.');
       var cat      = String((p.category || m.category || 'creator')).toLowerCase();
       var cats     = [cat];
       if (m.plan_type === 'premium' || m.is_founder === true || m.username === 'jamespropane00') cats.push('featured');
@@ -254,10 +264,11 @@
       var founderLabel = m.founder_label || (isFounder ? 'Founder' : '');
       var activeNow = isRecentlyActive(m.last_active_at);
       var routePrefix = categoryToRoutePrefix(cat);
+      var publicSlug = p.slug || m.page_slug || m.username;
       var link     = isFounder
         ? '<a href="artists/djfacelessanimal.html" class="dir-card-link">View Page →</a>'
         : hasPage
-          ? '<a href="' + esc(routePrefix + (m.page_slug || m.username)) + '" class="dir-card-link">View Page →</a>'
+          ? '<a href="' + esc(routePrefix + publicSlug) + '" class="dir-card-link">' + (isVeiled ? 'View Veiled Page →' : 'View Page →') + '</a>'
           : '<span class="dir-card-link" style="color:var(--text-3);cursor:default;">Building →</span>';
 
       var liveStatus = activeNow
@@ -269,21 +280,23 @@
       var founderTag = isFounder
         ? '<span class="access-tag access-tag--free" style="border-color:rgba(201,169,110,0.45);color:var(--gold-bright);">' + esc(founderLabel) + '</span>'
         : '';
-
-      var avatarNode = p.avatar_url
-        ? '<img src="' + esc(p.avatar_url) + '" alt="' + esc(m.display_name || m.username || 'member') + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />'
-        : esc(initials(m.display_name));
-
-      var signalLine = m.platform_id
-        ? '<p style="font-size:0.68rem;color:var(--purple-bright);margin:0 0 0.35rem;letter-spacing:0.04em;">Signal: ' + esc(m.platform_id) + '</p>'
+      var veilTag = isVeiled
+        ? '<span class="access-tag access-tag--free" style="border-color:rgba(139,92,246,0.42);color:var(--purple-bright);">Veiled</span>'
         : '';
+
+      var cardName = isVeiled ? 'Veiled User' : (p.display_name || m.display_name || m.username || 'member');
+      var avatarNode = p.avatar_url
+        ? '<img src="' + esc(p.avatar_url) + '" alt="' + esc(cardName) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />'
+        : esc(initials(cardName));
+
+      var signalLine = '<p style="font-size:0.68rem;color:var(--text-3);margin:0 0 0.35rem;letter-spacing:0.04em;">Direct contact locked · Signal access private</p>';
 
       return '<article class="dir-card' + (m.plan_type === 'premium' ? ' dir-card--featured' : '') + '"'
         + ' data-category="' + esc(cats.join(' ')) + '" role="listitem">'
         + '<div class="dir-card-top">'
         + '<div class="dir-avatar" aria-hidden="true" style="' + esc(avatarBg(m.username, m.plan_type)) + '">' + avatarNode + '</div>'
         + '<div class="dir-card-meta">'
-        + '<p class="dir-card-name">' + esc(m.display_name) + '</p>'
+        + '<p class="dir-card-name">' + esc(cardName) + '</p>'
         + '<p class="dir-card-slug">@' + esc(m.username) + ' · ' + esc(location) + '</p>'
         + '</div>'
         + '</div>'
@@ -291,6 +304,7 @@
         + liveStatus
         + '<span class="access-tag ' + esc(planBadgeClass(m.plan_type)) + '">' + esc(planLabel(m.plan_type)) + '</span>'
         + founderTag
+        + veilTag
         + '</div>'
         + signalLine
         + '<p class="dir-card-bio">' + esc(bio) + '</p>'
@@ -310,6 +324,24 @@
         + '</div>'
         + '<p class="dir-card-bio" style="color:var(--text-3);">Get your page in the index. Artists, creators, and businesses welcome. Start free — no builder required.</p>'
         + '<a href="start.html" class="dir-card-link">Claim Your Spot →</a>'
+        + '</article>';
+    }
+
+    function buildServicesCard() {
+      return '<article class="dir-card" data-category="services" role="listitem"'
+        + ' style="border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.02);">'
+        + '<div class="dir-card-top">'
+        + '<div class="dir-avatar" aria-hidden="true" style="background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.18);color:var(--text-3);">↗</div>'
+        + '<div class="dir-card-meta">'
+        + '<p class="dir-card-name">Your Project Here</p>'
+        + '<p class="dir-card-slug">Faceless Animal Studios</p>'
+        + '</div>'
+        + '</div>'
+        + '<div class="dir-card-tags">'
+        + '<span class="status-tag" style="background:rgba(255,255,255,0.04);color:var(--text-2);border-color:rgba(255,255,255,0.12);">Builder Services</span>'
+        + '</div>'
+        + '<p class="dir-card-bio">Need a custom website, hosted page, or system like this platform? Work directly with the builder.</p>'
+        + '<a href="services.html" class="dir-card-link">View Services →</a>'
         + '</article>';
     }
 
@@ -344,14 +376,14 @@
 
       var url = SUPABASE_URL
         + '/rest/v1/member_accounts'
-        + '?select=username,display_name,bio,city,state_abbr,plan_type,member_status,page_slug,page_status,platform_id,last_active_at,created_at'
+        + '?select=username,display_name,bio,city,state_abbr,plan_type,member_status,page_slug,page_status,last_active_at,created_at'
         + '&member_status=eq.active'
         + '&order=created_at.desc'
         + '&limit=50';
 
       var enhancedUrl = SUPABASE_URL
         + '/rest/v1/member_accounts'
-        + '?select=username,display_name,bio,city,state_abbr,plan_type,member_status,page_slug,page_status,platform_id,last_active_at,created_at,is_founder,founder_label,public_listing_enabled'
+        + '?select=username,display_name,bio,city,state_abbr,plan_type,member_status,page_slug,page_status,last_active_at,created_at,is_founder,founder_label,public_listing_enabled,veil_state'
         + '&member_status=eq.active'
         + '&order=created_at.desc'
         + '&limit=50';
@@ -393,7 +425,7 @@
         if (loading) loading.remove();
 
         if (!members.length) {
-          grid.innerHTML = buildOpenSlot();
+          grid.innerHTML = buildOpenSlot() + buildServicesCard();
           initFilter();
           return;
         }
@@ -404,7 +436,7 @@
         // Pull lightweight profile metadata (category/avatar) for richer cards.
         var profileUrl = SUPABASE_URL
           + '/rest/v1/profiles'
-          + '?select=username,category,avatar_url'
+          + '?select=username,display_name,bio,category,avatar_url,city,state,slug'
           + '&is_active=eq.true'
           + '&limit=200';
 
@@ -422,12 +454,12 @@
           });
           var html = gridMembers.map(function(m) {
             return buildCard(m, profileMap);
-          }).join('') + buildOpenSlot();
+          }).join('') + buildOpenSlot() + buildServicesCard();
           grid.innerHTML = html;
           initFilter();
         })
         .catch(function() {
-          var html = gridMembers.map(function(m) { return buildCard(m, {}); }).join('') + buildOpenSlot();
+          var html = gridMembers.map(function(m) { return buildCard(m, {}); }).join('') + buildOpenSlot() + buildServicesCard();
           grid.innerHTML = html;
           initFilter();
         });
@@ -437,7 +469,8 @@
         if (loading) loading.remove();
         // Fallback: show the static cards
         grid.innerHTML = [
-          buildOpenSlot()
+          buildOpenSlot(),
+          buildServicesCard()
         ].join('');
         initFilter();
       });
@@ -529,10 +562,85 @@
       });
     }
 
+    function loadSignalPulseStrip() {
+      var strip = document.getElementById('dir-pulse-strip');
+      if (!strip) return;
+
+      var events = [];
+      function addEvent(text, ts) {
+        if (!text) return;
+        if (events.some(function(e) { return e.text === text; })) return;
+        events.push({ text: text, ts: ts || null });
+      }
+
+      function formatWhen(ts) {
+        if (!ts) return 'now';
+        var d = new Date(ts);
+        if (isNaN(d.getTime())) return 'now';
+        return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      }
+
+      function render(index) {
+        if (!events.length) {
+          strip.textContent = 'No pulse events yet. New activity appears here as members post and join.';
+          return;
+        }
+        var item = events[index % events.length];
+        strip.innerHTML = '<strong style="color:var(--text);font-weight:700;">Live:</strong> ' + esc(item.text) + ' <span style="color:var(--text-3);font-size:0.72rem;">· ' + esc(formatWhen(item.ts)) + '</span>';
+      }
+
+      var postsUrl = SUPABASE_URL
+        + '/rest/v1/signal_posts'
+        + '?select=author_username,created_at'
+        + '&moderation_state=eq.approved'
+        + '&visibility=eq.public'
+        + '&order=created_at.desc'
+        + '&limit=5';
+
+      var membersUrl = SUPABASE_URL
+        + '/rest/v1/member_accounts'
+        + '?select=username,created_at,page_status,updated_at,veil_state'
+        + '&member_status=eq.active'
+        + '&order=created_at.desc'
+        + '&limit=5';
+
+      Promise.all([
+        fetch(postsUrl, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } }).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; }),
+        fetch(membersUrl, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } }).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; })
+      ]).then(function(results) {
+        var posts = Array.isArray(results[0]) ? results[0] : [];
+        var members = Array.isArray(results[1]) ? results[1] : [];
+
+        posts.forEach(function(row) {
+          if (!row || !row.author_username) return;
+          addEvent('@' + row.author_username + ' dropped a signal', row.created_at);
+        });
+        members.forEach(function(row) {
+          if (!row || !row.username) return;
+          addEvent('@' + row.username + ' joined the network', row.created_at);
+          if (row.page_status === 'live') addEvent('@' + row.username + ' page went live', row.updated_at || row.created_at);
+          var state = String(row.veil_state || '').toLowerCase();
+          if (state === 'veiled' || state === 'deep') addEvent('@' + row.username + ' activated the Veil', row.updated_at || row.created_at);
+        });
+
+        render(0);
+        if (events.length > 1) {
+          var idx = 0;
+          setInterval(function() {
+            idx = (idx + 1) % events.length;
+            render(idx);
+          }, 4800);
+        }
+      }).catch(function() {
+        strip.textContent = 'Pulse unavailable right now. Directory cards and live feed still reflect current network data.';
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
       initFilter();
       loadDirectory();
       loadSignalFeedPreview();
+      loadSignalPulseStrip();
     });
   }());
   </script>

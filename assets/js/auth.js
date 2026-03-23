@@ -26,9 +26,18 @@ const SALT_BYTES        = 16
 const SESSION_KEY       = 'fas_user'
 const MEMBER_KEY        = 'fas_member'
 const ACCOUNTS_KEY      = 'fas_accounts'   // legacy localStorage list
-const PLATFORM_ID_PREFIX = 'sig_'
+const SIGNAL_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+const SIGNAL_CODE_REGEX = /^SIG-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/i
+const LEGACY_PLATFORM_ID_REGEX = /^sig_[a-z0-9]{10,20}$/
 
 const RECOVERY_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+function normalizeVeilState(raw) {
+  const v = String(raw || '').toLowerCase().trim()
+  if (v === 'veiled') return 'veiled'
+  if (v === 'deep') return 'deep'
+  return 'unveiled'
+}
 
 // ── Crypto helpers ────────────────────────────────────────────
 
@@ -95,8 +104,11 @@ export function cleanUsername(raw) {
 }
 
 export function cleanPlatformId(raw) {
-  const cleaned = String(raw || '').trim().toLowerCase()
-  return /^sig_[a-z0-9]{10,20}$/.test(cleaned) ? cleaned : null
+  const signalCode = String(raw || '').trim().toUpperCase()
+  if (SIGNAL_CODE_REGEX.test(signalCode)) return signalCode
+
+  const legacy = String(raw || '').trim().toLowerCase()
+  return LEGACY_PLATFORM_ID_REGEX.test(legacy) ? legacy : null
 }
 
 export function cleanRecoveryCode(raw) {
@@ -114,14 +126,14 @@ export function generateRecoveryCode() {
   return joined.slice(0, 4) + '-' + joined.slice(4, 8) + '-' + joined.slice(8, 12) + '-' + joined.slice(12, 16)
 }
 
-function generatePlatformId() {
+function generateSignalCode() {
   const bytes = new Uint8Array(8)
   crypto.getRandomValues(bytes)
-  let out = ''
-  for (let i = 0; i < bytes.length; i++) {
-    out += (bytes[i] % 36).toString(36)
-  }
-  return PLATFORM_ID_PREFIX + out
+  let out = 'SIG-'
+  for (let i = 0; i < 4; i++) out += SIGNAL_CODE_ALPHABET[bytes[i] % SIGNAL_CODE_ALPHABET.length]
+  out += '-'
+  for (let i = 4; i < 8; i++) out += SIGNAL_CODE_ALPHABET[bytes[i] % SIGNAL_CODE_ALPHABET.length]
+  return out
 }
 
 export async function hashRecoveryCode(recoveryCode) {
@@ -142,7 +154,7 @@ async function resolveUsernameFromLoginId(loginId) {
   const { data, error } = await supabase
     .from('member_accounts')
     .select('username')
-    .eq('platform_id', asPlatformId)
+    .ilike('platform_id', asPlatformId)
     .maybeSingle()
 
   if (error || !data || !data.username) {
@@ -243,6 +255,7 @@ export async function signIn(loginId, password) {
     plan:     member?.plan_type || 'free',
     status:   member?.member_status || 'free',
     role:     member?.role || 'user',
+    veil_state: normalizeVeilState(member?.veil_state),
     ts:       Date.now(),
     ph:       hash,
   }
@@ -306,7 +319,7 @@ export async function createAccount(username, password, displayName, recoveryCod
   let platformId = ''
   let identitySaved = false
   for (let i = 0; i < 5; i++) {
-    platformId = generatePlatformId()
+    platformId = generateSignalCode()
     const { error: identityErr } = await supabase
       .from('member_accounts')
       .update({
@@ -315,7 +328,6 @@ export async function createAccount(username, password, displayName, recoveryCod
         recovery_code_set_at: new Date().toISOString(),
       })
       .eq('username', u)
-      .is('platform_id', null)
 
     if (!identityErr) {
       identitySaved = true
@@ -333,6 +345,16 @@ export async function createAccount(username, password, displayName, recoveryCod
 
   if (!identitySaved) {
     return { success: false, error: 'Could not allocate a Signal ID. Please try again.', errorCode: 'platform_id_collision' }
+  }
+
+  const { data: identityRow } = await supabase
+    .from('member_accounts')
+    .select('platform_id')
+    .eq('username', u)
+    .maybeSingle()
+
+  if (identityRow && identityRow.platform_id) {
+    platformId = String(identityRow.platform_id).toUpperCase()
   }
 
   // Set password (only works if password_hash IS NULL)
@@ -356,7 +378,17 @@ export async function createAccount(username, password, displayName, recoveryCod
     localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts))
   } catch(e) {}
 
-  const session = { username: u, display, platform_id: platformId, plan: 'free', status: 'free', role: 'user', ts: Date.now(), ph: hash }
+  const session = {
+    username: u,
+    display,
+    platform_id: platformId,
+    plan: 'free',
+    status: 'free',
+    role: 'user',
+    veil_state: 'unveiled',
+    ts: Date.now(),
+    ph: hash,
+  }
   storeSession(session)
   return { success: true, session, recoveryCode, platformId }
 }
@@ -396,13 +428,24 @@ export async function setInitialPassword(username, password) {
 
 function storeSession(session) {
   try {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+    const normalized = {
+      ...(session || {}),
+      veil_state: normalizeVeilState(session && session.veil_state),
+    }
+    localStorage.setItem(SESSION_KEY, JSON.stringify(normalized))
     localStorage.setItem(MEMBER_KEY, 'true')
   } catch(e) {}
 }
 
 export function getStoredSession() {
-  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') } catch(e) { return null }
+  try {
+    const raw = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null')
+    if (!raw) return null
+    raw.veil_state = normalizeVeilState(raw.veil_state)
+    return raw
+  } catch(e) {
+    return null
+  }
 }
 
 export function clearStoredSession() {

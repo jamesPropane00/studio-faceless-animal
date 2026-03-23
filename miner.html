@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Signal Reactor Miner for Faceless Animal Studios. Live Veil engine and Vault flow control center." />
+  <title>Signal Reactor Miner - Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Exo+2:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
+  <style>
+    :root {
+      --miner-bg: #06080f;
+      --miner-panel: rgba(10, 14, 26, 0.76);
+      --miner-border: rgba(90, 129, 255, 0.35);
+      --miner-glow: #59d5ff;
+      --miner-hot: #8e5dff;
+      --miner-ok: #27d37e;
+      --miner-warn: #ffcc66;
+      --miner-bad: #ff6b7d;
+      --miner-text: #f4f7ff;
+      --miner-muted: #99a8cf;
+    }
+
+    body {
+      background: radial-gradient(circle at 10% 6%, rgba(88, 88, 240, 0.22), transparent 34%),
+                  radial-gradient(circle at 88% 4%, rgba(57, 200, 255, 0.16), transparent 36%),
+                  linear-gradient(180deg, #05070d 0%, #080b16 48%, #0a0d19 100%);
+      color: var(--miner-text);
+      font-family: 'Exo 2', var(--font-body), sans-serif;
+      min-height: 100dvh;
+    }
+
+    .miner-wrap {
+      min-height: 100dvh;
+      padding: 1.2rem 1rem 5rem;
+      position: relative;
+      overflow: clip;
+    }
+
+    .miner-wrap::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.02) 0px,
+        rgba(255, 255, 255, 0.02) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+      opacity: 0.22;
+      mix-blend-mode: screen;
+    }
+
+    .miner-shell {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .miner-head {
+      border: 1px solid var(--miner-border);
+      background: linear-gradient(155deg, rgba(13, 19, 36, 0.92), rgba(9, 11, 22, 0.86));
+      border-radius: 20px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45), inset 0 0 45px rgba(89, 213, 255, 0.08);
+      padding: 1rem 1.1rem;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .miner-title-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .miner-kicker {
+      margin: 0;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--miner-glow);
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .miner-title {
+      margin: 0.2rem 0 0;
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.2rem, 3.3vw, 2rem);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .miner-sub {
+      margin: 0.35rem 0 0;
+      color: var(--miner-muted);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      max-width: 65ch;
+    }
+
+    .miner-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid rgba(39, 211, 126, 0.35);
+      border-radius: 999px;
+      padding: 0.38rem 0.68rem;
+      color: #a5f0cc;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      background: rgba(39, 211, 126, 0.1);
+    }
+
+    .miner-live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #30de8a;
+      box-shadow: 0 0 0 0 rgba(48, 222, 138, 0.9);
+      animation: minerPulse 1.5s infinite;
+    }
+
+    @keyframes minerPulse {
+      0% { box-shadow: 0 0 0 0 rgba(48, 222, 138, 0.8); }
+      70% { box-shadow: 0 0 0 13px rgba(48, 222, 138, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(48, 222, 138, 0); }
+    }
+
+    .miner-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .reactor-card,
+    .panel-card {
+      border: 1px solid var(--miner-border);
+      background: var(--miner-panel);
+      border-radius: 20px;
+      box-shadow: inset 0 0 40px rgba(12, 22, 49, 0.78), 0 14px 45px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(6px);
+    }
+
+    .reactor-card {
+      padding: 1rem;
+      display: grid;
+      gap: 0.95rem;
+      position: relative;
+      overflow: hidden;
+      min-height: 530px;
+    }
+
+    .reactor-card::after {
+      content: '';
+      position: absolute;
+      inset: -30% 20% auto;
+      height: 160px;
+      background: radial-gradient(circle, rgba(89, 213, 255, 0.22), transparent 72%);
+      filter: blur(22px);
+      pointer-events: none;
+    }
+
+    .reactor-core-zone {
+      position: relative;
+      min-height: 320px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      border: 1px solid rgba(120, 160, 255, 0.3);
+      background: radial-gradient(circle at 50% 45%, rgba(48, 84, 181, 0.26), rgba(9, 14, 30, 0.9));
+      overflow: hidden;
+    }
+
+    .ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(116, 167, 255, 0.32);
+      box-shadow: inset 0 0 18px rgba(89, 213, 255, 0.2), 0 0 20px rgba(89, 213, 255, 0.1);
+      pointer-events: none;
+    }
+
+    .ring-a {
+      width: 310px;
+      height: 310px;
+      animation: spin 15s linear infinite;
+    }
+
+    .ring-b {
+      width: 240px;
+      height: 240px;
+      border-style: dashed;
+      animation: spinReverse 9s linear infinite;
+    }
+
+    .ring-c {
+      width: 170px;
+      height: 170px;
+      border-color: rgba(142, 93, 255, 0.45);
+      animation: pulseRing 2.2s ease-in-out infinite;
+    }
+
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes spinReverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+    @keyframes pulseRing { 0%, 100% { transform: scale(0.92); opacity: 0.6; } 50% { transform: scale(1.04); opacity: 1; } }
+
+    .reactor-core-img {
+      width: min(190px, 60vw);
+      filter: drop-shadow(0 0 18px rgba(89, 213, 255, 0.55)) drop-shadow(0 0 40px rgba(142, 93, 255, 0.32));
+      z-index: 3;
+      animation: hoverCore 3.4s ease-in-out infinite;
+    }
+
+    @keyframes hoverCore {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .reactor-labels {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.6rem;
+    }
+
+    .mini-label {
+      border: 1px solid rgba(120, 160, 255, 0.25);
+      border-radius: 12px;
+      padding: 0.55rem 0.6rem;
+      background: rgba(8, 11, 22, 0.65);
+    }
+
+    .mini-label p {
+      margin: 0;
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--miner-muted);
+      font-weight: 700;
+    }
+
+    .mini-label strong {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: 0.92rem;
+      color: var(--miner-text);
+      font-weight: 700;
+    }
+
+    .panel-card {
+      padding: 0.95rem;
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 0.88rem;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.7rem;
+      align-items: baseline;
+      border-bottom: 1px dashed rgba(127, 155, 221, 0.24);
+      padding-bottom: 0.43rem;
+      margin-bottom: 0.43rem;
+    }
+
+    .status-row:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .status-row span {
+      color: var(--miner-muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .status-row strong {
+      font-size: 0.82rem;
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .status-good { color: var(--miner-ok); }
+    .status-warn { color: var(--miner-warn); }
+    .status-bad { color: var(--miner-bad); }
+    .status-hot { color: var(--miner-hot); }
+
+    .panel-actions {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .panel-note {
+      margin: 0;
+      min-height: 1.15rem;
+      color: var(--miner-muted);
+      font-size: 0.73rem;
+      line-height: 1.55;
+    }
+
+    .feed-list {
+      display: grid;
+      gap: 0.5rem;
+      max-height: 260px;
+      overflow: auto;
+      padding-right: 0.15rem;
+    }
+
+    .feed-item {
+      border: 1px solid rgba(125, 146, 210, 0.25);
+      border-radius: 12px;
+      background: rgba(8, 13, 24, 0.74);
+      padding: 0.55rem 0.65rem;
+      display: grid;
+      gap: 0.28rem;
+    }
+
+    .feed-item p {
+      margin: 0;
+      font-size: 0.74rem;
+      line-height: 1.45;
+    }
+
+    .feed-item small {
+      color: var(--miner-muted);
+      font-size: 0.66rem;
+    }
+
+    .quick-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .auth-gate {
+      max-width: 760px;
+      margin: 2rem auto;
+      border-radius: 20px;
+      border: 1px solid rgba(120, 160, 255, 0.3);
+      padding: 1.2rem;
+      background: rgba(8, 12, 24, 0.9);
+      text-align: center;
+    }
+
+    .auth-gate p {
+      color: var(--miner-muted);
+      margin: 0.5rem 0 0;
+      line-height: 1.6;
+      font-size: 0.83rem;
+    }
+
+    @media (max-width: 980px) {
+      .miner-grid {
+        grid-template-columns: 1fr;
+      }
+      .reactor-labels {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="network.html">Board</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="wallet.html">Wallet</a></li>
+          <li><a href="phone.html">Phone</a></li>
+          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="network.html">Board</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="wallet.html">Wallet</a>
+    <a href="phone.html">Phone</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+  </div>
+
+  <main class="miner-wrap">
+    <section id="miner-gate" class="auth-gate" style="display:none;">
+      <h1 class="miner-title" style="margin:0;">Signal Reactor Locked</h1>
+      <p>The Miner is tied to your Signal identity and Vault credentials. Sign in to run the Veil engine and monitor flow.</p>
+      <div style="margin-top:0.8rem;display:flex;gap:0.6rem;justify-content:center;flex-wrap:wrap;">
+        <a href="login.html?redirect=miner.html" class="btn btn-primary">Sign In</a>
+        <a href="start.html" class="btn btn-ghost">Create Account</a>
+      </div>
+    </section>
+
+    <section id="miner-app" class="miner-shell" style="display:none;">
+      <header class="miner-head">
+        <div class="miner-title-row">
+          <div>
+            <p class="miner-kicker">Signal Reactor</p>
+            <h1 class="miner-title">Veil Engine Miner</h1>
+            <p class="miner-sub">Run flow ticks, monitor cycle pressure, and keep your Vault link hot. Pulse rail is shown here with staged controls until dedicated Pulse balance endpoints go live.</p>
+          </div>
+          <div class="miner-live"><span class="miner-live-dot"></span>Flow Link <span id="miner-live-tag">Online</span></div>
+        </div>
+      </header>
+
+      <div class="miner-grid">
+        <article class="reactor-card">
+          <div class="reactor-core-zone" aria-label="Signal reactor core">
+            <div class="ring ring-a"></div>
+            <div class="ring ring-b"></div>
+            <div class="ring ring-c"></div>
+            <img src="assets/boombox.png" alt="Signal Reactor Core" class="reactor-core-img" />
+          </div>
+
+          <div class="reactor-labels">
+            <div class="mini-label">
+              <p>Veil Engine</p>
+              <strong id="miner-veil-engine-state" class="status-hot">Idle</strong>
+            </div>
+            <div class="mini-label">
+              <p>Pulse Engine</p>
+              <strong id="miner-pulse-engine-state" class="status-warn">Staged</strong>
+            </div>
+            <div class="mini-label">
+              <p>Cycle Timer</p>
+              <strong id="miner-cycle-timer">00:00</strong>
+            </div>
+          </div>
+
+          <div class="quick-nav">
+            <a href="wallet.html" class="btn btn-primary btn-sm">Open Wallet</a>
+            <a href="network.html" class="btn btn-ghost btn-sm">Open Board</a>
+            <a href="phone.html" class="btn btn-ghost btn-sm">Open Phone</a>
+            <a href="dashboard.html" class="btn btn-ghost btn-sm">Dashboard</a>
+          </div>
+        </article>
+
+        <aside class="panel-card">
+          <h2 class="panel-title">Engine Telemetry</h2>
+
+          <div>
+            <div class="status-row"><span>Signal Account</span><strong id="miner-user">@guest</strong></div>
+            <div class="status-row"><span>Vault Balance</span><strong id="miner-sc-balance">0 SC</strong></div>
+            <div class="status-row"><span>Veil Layer</span><strong id="miner-veil-layer">Free</strong></div>
+            <div class="status-row"><span>Veil Balance</span><strong id="miner-veil-balance" class="status-warn">No standalone veil_balance field</strong></div>
+            <div class="status-row"><span>Pulse Balance</span><strong id="miner-pulse-balance" class="status-warn">Not exposed</strong></div>
+            <div class="status-row"><span>Flow Rate</span><strong id="miner-flow-rate">0.00 SC / min</strong></div>
+            <div class="status-row"><span>24h Cycle</span><strong id="miner-daily-cap">0 / 0</strong></div>
+            <div class="status-row"><span>Daily Reset (UTC)</span><strong id="miner-reset-timer">--:--:--</strong></div>
+          </div>
+
+          <div class="panel-actions">
+            <button id="miner-start-veil" type="button" class="btn btn-primary btn-sm">Start Veil Engine</button>
+            <button id="miner-start-pulse" type="button" class="btn btn-ghost btn-sm">Start Pulse Engine (Staged)</button>
+            <button id="miner-refresh" type="button" class="btn btn-ghost btn-sm">Refresh Reactor</button>
+          </div>
+
+          <p id="miner-note" class="panel-note">Vault link established. Waiting for first tick.</p>
+
+          <h3 class="panel-title" style="margin-top:0.3rem;">Live Flow Feed</h3>
+          <div id="miner-feed" class="feed-list" aria-live="polite">
+            <div class="feed-item">
+              <p>Reactor boot complete. Run Veil Engine to generate flow.</p>
+              <small>now</small>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/script.js?v=20260322"></script>
+  <script src="assets/js/access-gate.js?v=20260322"></script>
+  <script type="module" src="assets/js/miner.js"></script>
+  <script src="assets/js/radio-widget.js" defer></script>
+</body>
+</html>

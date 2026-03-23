@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
 </head>
 <body>
 
@@ -45,6 +45,56 @@
   <main>
 
     <!-- ============================================================
+         MISSION STATEMENT
+    ============================================================ -->
+    <section class="section section-alt" aria-labelledby="mission-heading">
+      <div class="container" style="max-width:920px;">
+        <div class="section-header text-center" style="margin-bottom:1.3rem;">
+          <p class="section-label">Mission</p>
+          <h2 id="mission-heading">Presence Without<br /><em>Exposure.</em></h2>
+          <p class="section-sub" style="max-width:760px;margin:0 auto;">Signal is a controlled network built for presence without exposure. In a world where everything is tracked, labeled, and archived, Signal moves differently: visible by design, reachable by choice, and locked through intentional access.</p>
+        </div>
+
+        <div class="dash-card" style="padding:1.35rem 1.2rem;border-color:rgba(139,92,246,0.22);background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(255,255,255,0.02));">
+          <p style="font-size:0.86rem;color:var(--text-2);line-height:1.8;margin:0 0 0.8rem;">Visibility is public. Access is private. Your account runs on handle, Signal Code, password, and recovery code. No open lines. No forced identity. No uncontrolled contact.</p>
+          <p style="font-size:0.86rem;color:var(--text-2);line-height:1.8;margin:0 0 0.8rem;">Signal Codes gate direct access. Trade codes, then connect. If someone does not have your Signal Code, they do not have direct access to you.</p>
+          <p style="font-size:0.86rem;color:var(--text-2);line-height:1.8;margin:0;">You are not the data. You control the signal.</p>
+        </div>
+
+        <div style="display:flex;gap:0.65rem;justify-content:center;flex-wrap:wrap;margin-top:1rem;">
+          <a href="start.html?plan=free" class="btn btn-primary btn-sm">Create Free Identity →</a>
+          <a href="#mission-heading" class="btn btn-ghost btn-sm">Mission Section</a>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         CORE FEATURES SNAPSHOT
+    ============================================================ -->
+    <section class="section" aria-labelledby="features-heading">
+      <div class="container" style="max-width:980px;">
+        <div class="section-header text-center" style="margin-bottom:1rem;">
+          <p class="section-label">Core Features</p>
+          <h2 id="features-heading">What Signal<br /><em>Actually Includes.</em></h2>
+          <p class="section-sub" style="max-width:740px;margin:0 auto;">This is a connected platform, not a single-page tool. Identity, communication, publishing, and network discovery live in one system.</p>
+        </div>
+
+        <div class="divisions-grid" role="list" style="margin-top:1.4rem;">
+          <article class="division-card" role="listitem"><div class="division-icon" aria-hidden="true">#</div><h3>Signal IDs</h3><p>Each account gets a platform-native Signal ID for internal identity and role-aware tooling.</p></article>
+          <article class="division-card" role="listitem"><div class="division-icon" aria-hidden="true">◉</div><h3>The Veil</h3><p>Veil states allow controlled public identity expression without breaking internal account continuity.</p></article>
+          <article class="division-card" role="listitem"><div class="division-icon" aria-hidden="true">▣</div><h3>Creator Pages</h3><p>Public pages tied to handles with live/draft controls, category routing, and profile-linked presence.</p></article>
+          <article class="division-card" role="listitem"><div class="division-icon" aria-hidden="true">✉</div><h3>Messages & Calls</h3><p>Direct communication is platform-native and designed for real member interaction, not vanity metrics.</p></article>
+          <article class="division-card" role="listitem"><div class="division-icon" aria-hidden="true">▶</div><h3>Live Radio</h3><p>A live culture layer inside the same ecosystem, connected to identity and member state.</p></article>
+          <article class="division-card" role="listitem"><div class="division-icon" aria-hidden="true">↗</div><h3>Board + Directory</h3><p>Network discovery surfaces that connect profiles, live pages, and approved feed activity.</p></article>
+          <article class="division-card" role="listitem"><div class="division-icon" aria-hidden="true">☰</div><h3>Posts / Signal Feed</h3><p>Status updates, releases, and announcements with moderation-state controls for quality and safety.</p></article>
+          <article class="division-card" role="listitem"><div class="division-icon" aria-hidden="true">⬢</div><h3>Storage + Recovery</h3><p>Plan-aware storage and recovery-code model keep ownership anchored to the user, not email vendors.</p></article>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
          HERO
     ============================================================ -->
     <section class="page-hero page-hero--left" aria-label="FAQ hero">
@@ -76,6 +126,7 @@
         <nav class="faq-jump-nav" aria-label="Jump to FAQ section">
           <a class="faq-jump-link" href="#faq-signal">What Is Signal</a>
           <a class="faq-jump-link" href="#faq-identity">Identity & Recovery</a>
+          <a class="faq-jump-link" href="#faq-vault">Signal Vault</a>
           <a class="faq-jump-link" href="#faq-comms">Messages & Calls</a>
           <a class="faq-jump-link" href="#faq-posting">Posting & Feed</a>
           <a class="faq-jump-link" href="#faq-moderation">Moderation</a>
@@ -100,14 +151,14 @@
             <details class="faq-item" role="listitem">
               <summary class="faq-question">What is Signal on this platform?</summary>
               <div class="faq-answer">
-                <p>Signal is the live social layer of Faceless Animal Studios. It connects identity pages, posting, radio, directory discovery, and private communication in one system. It is designed for creators and communities that want presence without algorithm pressure.</p>
+                <p>Signal is a controlled network where you can exist publicly without giving up control of who can reach you. It connects identity pages, posting, radio, directory discovery, and private communication under one gated system.</p>
               </div>
             </details>
 
             <details class="faq-item" role="listitem">
               <summary class="faq-question">How is this different from a normal social network?</summary>
               <div class="faq-answer">
-                <p>Signal is not built around follower games, ad-driven engagement loops, or real-name identity. You operate through platform-native identity (handle + Signal ID), publish on your terms, and connect through direct communication and creator pages.</p>
+                <p>Signal is not built around follower games, open-access inboxes, or ad-driven loops. You operate through platform-native identity, publish intentionally, and use Signal Codes to control direct connection.</p>
               </div>
             </details>
 
@@ -134,7 +185,7 @@
             <details class="faq-item" role="listitem">
               <summary class="faq-question">Do I need email to create an account?</summary>
               <div class="faq-answer">
-                <p>No. Account identity is based on your handle, Signal ID, password, and private recovery code. Email is not required for signup, login, recovery, messaging, or admin access in the active app flow.</p>
+                <p>No. Account identity is based on your handle, Signal ID, password, and private recovery code. Email and phone identity are not required for signup, login, recovery, or communication access.</p>
               </div>
             </details>
 
@@ -157,6 +208,61 @@
         <hr class="faq-section-divider" style="margin:3rem 0;" />
 
 
+        <!-- ── SECTION: SIGNAL VAULT ───────────────────────── -->
+        <div id="faq-vault">
+          <div class="faq-section-heading">
+            <p class="section-label">Signal Vault</p>
+            <h2>Signal Flow Engine<br /><em>And Credits.</em></h2>
+          </div>
+
+          <div class="faq-list" role="list">
+            <details class="faq-item" role="listitem">
+              <summary class="faq-question">What is the Signal Vault?</summary>
+              <div class="faq-answer">
+                <p>Your Signal Vault is your control center and credit engine. It manages your Veil posture, access layer, and Signal Credits in one live system.</p>
+              </div>
+            </details>
+
+            <details class="faq-item" role="listitem">
+              <summary class="faq-question">What is Signal Flow?</summary>
+              <div class="faq-answer">
+                <p>Signal Flow is the rate your Vault generates Signal Credits while you are active. Higher Veil tiers increase your flow multiplier and expand your daily earning ceiling.</p>
+              </div>
+            </details>
+
+            <details class="faq-item" role="listitem">
+              <summary class="faq-question">Do I earn credits just by being online?</summary>
+              <div class="faq-answer">
+                <p>Yes. While you are signed in and active in the network, your Vault runs and credits accumulate based on your current Veil tier and daily cap.</p>
+              </div>
+            </details>
+
+            <details class="faq-item" role="listitem">
+              <summary class="faq-question">Why upgrade Veil?</summary>
+              <div class="faq-answer">
+                <p>Upgrading Veil increases privacy posture, control posture, and Signal Flow strength. It is both an identity setting and an earning-power setting.</p>
+              </div>
+            </details>
+
+            <details class="faq-item" role="listitem">
+              <summary class="faq-question">What are Signal Credits used for?</summary>
+              <div class="faq-answer">
+                <p>Signal Credits power Boost Signal, Visibility Burst, Featured Page Highlight, priority placement paths, advanced creator controls, and future cosmetic/voice extras. Core communication features stay free.</p>
+              </div>
+            </details>
+
+            <details class="faq-item" role="listitem">
+              <summary class="faq-question">Are DMs and calls paid with credits?</summary>
+              <div class="faq-answer">
+                <p>No. DMs, calls, Signal identity, and core posting stay free. Credits are used for acceleration, visibility, and premium control actions.</p>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <hr class="faq-section-divider" style="margin:3rem 0;" />
+
+
         <!-- ── SECTION: MESSAGES & CALLS ───────────────────── -->
         <div id="faq-comms">
           <div class="faq-section-heading">
@@ -169,6 +275,13 @@
               <summary class="faq-question">Are DMs and calls paid features?</summary>
               <div class="faq-answer">
                 <p>No. DMs and calls are core platform communication features and are free by default.</p>
+              </div>
+            </details>
+
+            <details class="faq-item" role="listitem">
+              <summary class="faq-question">Why can people not just message me directly?</summary>
+              <div class="faq-answer">
+                <p>Because access is earned, not assumed. Direct contact is gated by Signal Code connection state. No code, no contact.</p>
               </div>
             </details>
 
@@ -709,7 +822,7 @@
     </div>
   </footer>
 
-  <script src="assets/script.js"></script>
+  <script src="assets/script.js?v=20260322"></script>
   <script src="assets/js/radio-widget.js" defer></script>
 </body>
 </html>

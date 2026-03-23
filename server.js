@@ -165,7 +165,7 @@ function handleRequest(req, res) {
   if (urlPath.startsWith('/api/dm/')) {
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
     if (req.method === 'OPTIONS') { send(res, 204, 'text/plain', ''); return }
 
     if (urlPath === '/api/dm/upload') {
@@ -199,6 +199,24 @@ function handleRequest(req, res) {
       if (req.method !== 'POST') { sendJSON(res, 405, { error: 'Method not allowed.' }); return }
       handleDMSend(req, res).catch(err => {
         console.error('[FAS:dm:send] Unhandled error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/dm/connect-by-code') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { error: 'Method not allowed.' }); return }
+      handleDMConnectByCode(req, res).catch(err => {
+        console.error('[FAS:dm:connect-by-code] Unhandled error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/dm/connection') {
+      if (req.method !== 'GET') { sendJSON(res, 405, { error: 'Method not allowed.' }); return }
+      handleDMConnectionStatus(req, res).catch(err => {
+        console.error('[FAS:dm:connection] Unhandled error:', err.message)
         if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
       })
       return
@@ -245,6 +263,71 @@ function handleRequest(req, res) {
     return
   }
 
+  // ── MEMBER SIGNAL CODE API ─────────────────────────────────────────
+  if (urlPath.startsWith('/api/member/')) {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    if (req.method === 'OPTIONS') { send(res, 204, 'text/plain', ''); return }
+
+    if (urlPath === '/api/member/ensure-signal-code') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
+      handleEnsureMemberSignalCode(req, res).catch(err => {
+        console.error('[FAS:member:ensure-signal-code] Unhandled error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/member/backfill-signal-codes') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
+      handleBackfillMemberSignalCodes(req, res).catch(err => {
+        console.error('[FAS:member:backfill-signal-codes] Unhandled error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/member/vault-flow-tick') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
+      handleMemberVaultFlowTick(req, res).catch(err => {
+        console.error('[FAS:member:vault-flow-tick] Unhandled error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/member/vault-transfer') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
+      handleMemberVaultTransfer(req, res).catch(err => {
+        console.error('[FAS:member:vault-transfer] Unhandled error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/member/vault-activity') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
+      handleMemberVaultActivity(req, res).catch(err => {
+        console.error('[FAS:member:vault-activity] Unhandled error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/member/vault-spend') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
+      handleMemberVaultSpend(req, res).catch(err => {
+        console.error('[FAS:member:vault-spend] Unhandled error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
+      })
+      return
+    }
+
+    sendJSON(res, 404, { ok: false, error: 'Not found.' })
+    return
+  }
+
   // ── CONTACT FORM API ──────────────────────────────────────────────
   if (urlPath === '/api/admin/users/set-role') {
     res.setHeader('Access-Control-Allow-Origin', '*')
@@ -255,6 +338,48 @@ function handleRequest(req, res) {
 
     handleAdminSetRole(req, res).catch(err => {
       console.error('[FAS:admin:set-role] Unhandled error:', err.message)
+      if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.', code: 'INTERNAL_ERROR' })
+    })
+    return
+  }
+
+  if (urlPath === '/api/admin/wallet/freeze') {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    if (req.method === 'OPTIONS') { send(res, 204, 'text/plain', ''); return }
+    if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.', code: 'METHOD_NOT_ALLOWED' }); return }
+
+    handleAdminWalletFreeze(req, res).catch(err => {
+      console.error('[FAS:admin:wallet:freeze] Unhandled error:', err.message)
+      if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.', code: 'INTERNAL_ERROR' })
+    })
+    return
+  }
+
+  if (urlPath === '/api/admin/wallet/reverse-transfer') {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    if (req.method === 'OPTIONS') { send(res, 204, 'text/plain', ''); return }
+    if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.', code: 'METHOD_NOT_ALLOWED' }); return }
+
+    handleAdminWalletReverseTransfer(req, res).catch(err => {
+      console.error('[FAS:admin:wallet:reverse-transfer] Unhandled error:', err.message)
+      if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.', code: 'INTERNAL_ERROR' })
+    })
+    return
+  }
+
+  if (urlPath === '/api/admin/wallet/audit') {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    if (req.method === 'OPTIONS') { send(res, 204, 'text/plain', ''); return }
+    if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.', code: 'METHOD_NOT_ALLOWED' }); return }
+
+    handleAdminWalletAudit(req, res).catch(err => {
+      console.error('[FAS:admin:wallet:audit] Unhandled error:', err.message)
       if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.', code: 'INTERNAL_ERROR' })
     })
     return
@@ -454,6 +579,220 @@ async function handleAdminSetRole(req, res) {
       next_role: nextRole,
     },
   })
+}
+
+async function getVerifiedActorRow(host, key, actorUsername, ph) {
+  const actor = String(actorUsername || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  const secret = String(ph || '').trim()
+  if (!actor || !secret) return null
+
+  const ok = await verifyIdentity(host, key, actor, secret)
+  if (!ok) return null
+
+  try {
+    const actorRes = await sbRequest(
+      host,
+      key,
+      'GET',
+      `/rest/v1/member_accounts?username=eq.${encodeURIComponent(actor)}&select=id,username,role&limit=1`,
+      null
+    )
+    if (actorRes.status !== 200) return null
+    const rows = JSON.parse(actorRes.body.toString())
+    return Array.isArray(rows) && rows[0] ? rows[0] : null
+  } catch {
+    return null
+  }
+}
+
+async function handleAdminWalletFreeze(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { ok: false, error: 'Server not available.', code: 'SERVER_NOT_CONFIGURED' })
+  }
+
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.', code: 'INVALID_BODY' })
+  }
+
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.', code: 'INVALID_JSON' })
+  }
+
+  const actorUsername = String(body && body.actor_username || '').toLowerCase().trim()
+  const ph = String(body && body.ph || '').trim()
+  const targetUsername = String(body && body.target_username || '').toLowerCase().trim()
+  const reason = String(body && body.reason || '').trim().slice(0, 300)
+  const freeze = body && body.freeze === true
+
+  if (!actorUsername || !ph || !targetUsername) {
+    return sendJSON(res, 400, { ok: false, error: 'Missing required fields.', code: 'MISSING_FIELDS' })
+  }
+
+  const actorRow = await getVerifiedActorRow(creds.host, creds.key, actorUsername, ph)
+  if (!actorRow) {
+    return sendJSON(res, 401, { ok: false, error: 'Authentication failed.', code: 'UNAUTHENTICATED' })
+  }
+  if (String(actorRow.role || 'user').toLowerCase() !== 'super_admin') {
+    return sendJSON(res, 403, { ok: false, error: 'Only super_admin can change wallet freeze state.', code: 'FORBIDDEN_NOT_SUPER_ADMIN' })
+  }
+
+  const rpcRes = await sbRequest(
+    creds.host,
+    creds.key,
+    'POST',
+    '/rest/v1/rpc/admin_set_wallet_frozen',
+    JSON.stringify({
+      p_actor_username: actorUsername,
+      p_actor_ph: ph,
+      p_target_username: targetUsername,
+      p_frozen: freeze,
+      p_reason: reason || null,
+    })
+  )
+
+  let payload = null
+  try { payload = JSON.parse(rpcRes.body.toString('utf8')) } catch {}
+
+  if (rpcRes.status < 200 || rpcRes.status >= 300) {
+    return sendJSON(res, 500, { ok: false, error: (payload && (payload.error || payload.message)) || 'Wallet freeze update failed.' })
+  }
+  if (!payload || payload.error || payload.success !== true) {
+    return sendJSON(res, 400, { ok: false, error: (payload && payload.error) || 'Wallet freeze update failed.' })
+  }
+
+  return sendJSON(res, 200, { ok: true, result: payload })
+}
+
+async function handleAdminWalletReverseTransfer(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { ok: false, error: 'Server not available.', code: 'SERVER_NOT_CONFIGURED' })
+  }
+
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.', code: 'INVALID_BODY' })
+  }
+
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.', code: 'INVALID_JSON' })
+  }
+
+  const actorUsername = String(body && body.actor_username || '').toLowerCase().trim()
+  const ph = String(body && body.ph || '').trim()
+  const transferId = String(body && body.transfer_id || '').trim()
+  const reason = String(body && body.reason || '').trim().slice(0, 300)
+
+  if (!actorUsername || !ph || !transferId) {
+    return sendJSON(res, 400, { ok: false, error: 'Missing required fields.', code: 'MISSING_FIELDS' })
+  }
+
+  const actorRow = await getVerifiedActorRow(creds.host, creds.key, actorUsername, ph)
+  if (!actorRow) {
+    return sendJSON(res, 401, { ok: false, error: 'Authentication failed.', code: 'UNAUTHENTICATED' })
+  }
+  if (String(actorRow.role || 'user').toLowerCase() !== 'super_admin') {
+    return sendJSON(res, 403, { ok: false, error: 'Only super_admin can reverse transfers.', code: 'FORBIDDEN_NOT_SUPER_ADMIN' })
+  }
+
+  const rpcRes = await sbRequest(
+    creds.host,
+    creds.key,
+    'POST',
+    '/rest/v1/rpc/admin_reverse_veil_transfer',
+    JSON.stringify({
+      p_actor_username: actorUsername,
+      p_actor_ph: ph,
+      p_transfer_id: transferId,
+      p_reason: reason || null,
+    })
+  )
+
+  let payload = null
+  try { payload = JSON.parse(rpcRes.body.toString('utf8')) } catch {}
+
+  if (rpcRes.status < 200 || rpcRes.status >= 300) {
+    return sendJSON(res, 500, { ok: false, error: (payload && (payload.error || payload.message)) || 'Transfer reversal failed.' })
+  }
+  if (!payload || payload.error || payload.success !== true) {
+    return sendJSON(res, 400, { ok: false, error: (payload && payload.error) || 'Transfer reversal failed.' })
+  }
+
+  return sendJSON(res, 200, { ok: true, result: payload })
+}
+
+async function handleAdminWalletAudit(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { ok: false, error: 'Server not available.', code: 'SERVER_NOT_CONFIGURED' })
+  }
+
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.', code: 'INVALID_BODY' })
+  }
+
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.', code: 'INVALID_JSON' })
+  }
+
+  const actorUsername = String(body && body.actor_username || '').toLowerCase().trim()
+  const ph = String(body && body.ph || '').trim()
+  if (!actorUsername || !ph) {
+    return sendJSON(res, 400, { ok: false, error: 'Missing required fields.', code: 'MISSING_FIELDS' })
+  }
+
+  const actorRow = await getVerifiedActorRow(creds.host, creds.key, actorUsername, ph)
+  if (!actorRow) {
+    return sendJSON(res, 401, { ok: false, error: 'Authentication failed.', code: 'UNAUTHENTICATED' })
+  }
+
+  const actorRole = String(actorRow.role || 'user').toLowerCase()
+  if (actorRole !== 'super_admin' && actorRole !== 'admin') {
+    return sendJSON(res, 403, { ok: false, error: 'Only admin or super_admin can access wallet audit.', code: 'FORBIDDEN_NOT_ADMIN' })
+  }
+
+  const actionRes = await sbRequest(
+    creds.host,
+    creds.key,
+    'GET',
+    '/rest/v1/vault_admin_actions?select=id,actor_username,target_username,action_type,reference_id,amount,reason,metadata,created_at&order=created_at.desc&limit=50',
+    null
+  )
+
+  const transferRes = await sbRequest(
+    creds.host,
+    creds.key,
+    'GET',
+    '/rest/v1/veil_transactions?select=id,sender_code,recipient_code,amount,fee,amount_received,note,created_at,reversed,reversed_at,reversed_by,reversal_reason&order=created_at.desc&limit=50',
+    null
+  )
+
+  if (actionRes.status !== 200 || transferRes.status !== 200) {
+    return sendJSON(res, 500, { ok: false, error: 'Could not load wallet audit data.' })
+  }
+
+  let actions = []
+  let transfers = []
+  try {
+    const a = JSON.parse(actionRes.body.toString('utf8'))
+    actions = Array.isArray(a) ? a : []
+  } catch {
+    actions = []
+  }
+  try {
+    const t = JSON.parse(transferRes.body.toString('utf8'))
+    transfers = Array.isArray(t) ? t : []
+  } catch {
+    transfers = []
+  }
+
+  return sendJSON(res, 200, { ok: true, actions, transfers })
 }
 
 function serveFile(res, filePath) {
@@ -1429,6 +1768,617 @@ async function verifyIdentity(host, key, username, ph) {
   }
 }
 
+function sanitizeSignalCode(rawCode) {
+  return String(rawCode || '').trim().replace(/\s+/g, '')
+}
+
+const SIGNAL_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+function isValidSignalCode(code) {
+  return /^SIG-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/i.test(String(code || '').trim())
+}
+
+function generateSignalCodeCandidate() {
+  let out = 'SIG-'
+  for (let i = 0; i < 4; i++) out += SIGNAL_CODE_ALPHABET[Math.floor(Math.random() * SIGNAL_CODE_ALPHABET.length)]
+  out += '-'
+  for (let i = 0; i < 4; i++) out += SIGNAL_CODE_ALPHABET[Math.floor(Math.random() * SIGNAL_CODE_ALPHABET.length)]
+  return out
+}
+
+async function setMemberSignalCode(host, key, username, signalCode) {
+  const u = String(username || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  const code = String(signalCode || '').trim().toUpperCase()
+  if (!u || !isValidSignalCode(code)) return false
+  const path = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(u)}`
+  const result = await sbRequest(host, key, 'PATCH', path, JSON.stringify({ platform_id: code }))
+  return result.status >= 200 && result.status < 300
+}
+
+async function assignUniqueSignalCodeToUser(host, key, username) {
+  const u = String(username || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  if (!u) return null
+
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const candidate = generateSignalCodeCandidate()
+    const taken = await getMemberBySignalCode(host, key, candidate)
+    if (taken && String(taken.username || '').toLowerCase() !== u) continue
+    const ok = await setMemberSignalCode(host, key, u, candidate)
+    if (!ok) continue
+    const row = await getMemberByUsername(host, key, u)
+    const finalCode = String((row && row.platform_id) || '').trim().toUpperCase()
+    if (isValidSignalCode(finalCode)) return finalCode
+  }
+  return null
+}
+
+async function getMemberByUsername(host, key, username) {
+  const u = String(username || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  if (!u) return null
+  const path = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(u)}&select=username,display_name,platform_id,role,dms_enabled,calls_enabled,contact_mode,auto_accept_code_holders&limit=1`
+  const result = await sbRequest(host, key, 'GET', path, null)
+  if (result.status !== 200) return null
+  try {
+    const rows = JSON.parse(result.body.toString())
+    return Array.isArray(rows) && rows[0] ? rows[0] : null
+  } catch {
+    return null
+  }
+}
+
+async function getMemberBySignalCode(host, key, signalCode) {
+  const code = sanitizeSignalCode(signalCode)
+  if (!code) return null
+  const path = `/rest/v1/member_accounts?platform_id=ilike.${encodeURIComponent(code)}&select=username,display_name,platform_id,dms_enabled,calls_enabled,contact_mode,auto_accept_code_holders&limit=1`
+  const result = await sbRequest(host, key, 'GET', path, null)
+  if (result.status !== 200) return null
+  try {
+    const rows = JSON.parse(result.body.toString())
+    return Array.isArray(rows) && rows[0] ? rows[0] : null
+  } catch {
+    return null
+  }
+}
+
+const FLOW_BASE_SC_PER_MIN = 0.2 // +1 SC every 5 minutes at 1x
+const FLOW_MAX_ELAPSED_MIN = 10  // clamp catch-up to active-session windows
+
+function toFixedNumber(value, digits) {
+  const n = Number(value || 0)
+  if (!Number.isFinite(n)) return 0
+  const p = Math.pow(10, digits)
+  return Math.round(n * p) / p
+}
+
+function utcDayKey(date) {
+  const d = date instanceof Date ? date : new Date()
+  const y = d.getUTCFullYear()
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(d.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function vaultProfileForMember(row) {
+  const level = Number(row && row.veil_level)
+  if (Number.isFinite(level)) {
+    if (level <= 0) return { tier: 'Veil IV', multiplier: 5, dailyCap: null }
+    if (level === 1) return { tier: 'Veil III', multiplier: 3, dailyCap: 1000 }
+    if (level === 2) return { tier: 'Veil II', multiplier: 2, dailyCap: 400 }
+    if (level === 3) return { tier: 'Veil I', multiplier: 1.5, dailyCap: 150 }
+    return { tier: 'Free', multiplier: 1, dailyCap: 50 }
+  }
+
+  const state = String((row && row.veil_state) || '').toLowerCase().trim()
+  if (state === 'deep') return { tier: 'Veil III', multiplier: 3, dailyCap: 1000 }
+  if (state === 'veiled') return { tier: 'Veil I', multiplier: 1.5, dailyCap: 150 }
+  return { tier: 'Free', multiplier: 1, dailyCap: 50 }
+}
+
+function vaultSnapshotFromRow(row, profile, generated, elapsedMinutes, tickedAt) {
+  const activeProfile = profile || vaultProfileForMember(row)
+  return {
+    credits_balance: toFixedNumber(Math.max(0, Number(row && row.credits_balance || 0) || 0), 4),
+    flow_rate_per_min: toFixedNumber(Math.max(0, Number(row && row.flow_rate_per_min || (FLOW_BASE_SC_PER_MIN * activeProfile.multiplier)) || 0), 4),
+    flow_earned_today: toFixedNumber(Math.max(0, Number(row && row.flow_earned_today || 0) || 0), 4),
+    daily_cap: activeProfile.dailyCap,
+    vault_tier_label: activeProfile.tier,
+    generated: toFixedNumber(generated || 0, 4),
+    elapsed_minutes: toFixedNumber(elapsedMinutes || 0, 4),
+    ticked_at: tickedAt || new Date().toISOString(),
+  }
+}
+
+async function getMemberVaultRow(host, key, username) {
+  const u = String(username || '').toLowerCase().trim()
+  if (!u) return null
+  const readPath = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(u)}&select=id,username,display_name,platform_id,veil_level,veil_state,credits_balance,flow_last_tick_at,flow_last_day,flow_earned_today,flow_rate_per_min&limit=1`
+  const readRes = await sbRequest(host, key, 'GET', readPath, null)
+  if (readRes.status !== 200) return null
+  try {
+    const rows = JSON.parse(readRes.body.toString('utf8'))
+    return Array.isArray(rows) && rows.length ? rows[0] : null
+  } catch {
+    return null
+  }
+}
+
+async function tickMemberVaultFlow(host, key, row) {
+  if (!row || !row.username) return { ok: false, error: 'Member row not found.' }
+
+  const profile = vaultProfileForMember(row)
+  const now = new Date()
+  const nowIso = now.toISOString()
+  const todayKey = utcDayKey(now)
+
+  const balance = Math.max(0, Number(row.credits_balance || 0) || 0)
+  let earnedToday = Math.max(0, Number(row.flow_earned_today || 0) || 0)
+  const storedDay = String(row.flow_last_day || '').slice(0, 10)
+  if (!storedDay || storedDay !== todayKey) earnedToday = 0
+
+  const lastTickRaw = String(row.flow_last_tick_at || '')
+  const lastTickMs = lastTickRaw ? Date.parse(lastTickRaw) : Date.now()
+  const nowMs = Date.now()
+  let elapsedMin = Math.max(0, (nowMs - (Number.isFinite(lastTickMs) ? lastTickMs : nowMs)) / 60000)
+  elapsedMin = Math.min(elapsedMin, FLOW_MAX_ELAPSED_MIN)
+
+  const flowRate = toFixedNumber(FLOW_BASE_SC_PER_MIN * profile.multiplier, 4)
+  let generated = toFixedNumber(elapsedMin * flowRate, 4)
+
+  if (profile.dailyCap != null) {
+    const remaining = Math.max(0, Number(profile.dailyCap) - earnedToday)
+    generated = Math.min(generated, remaining)
+  }
+
+  const nextEarned = toFixedNumber(earnedToday + generated, 4)
+  const nextBalance = toFixedNumber(balance + generated, 4)
+  const mergedRow = {
+    ...row,
+    credits_balance: nextBalance,
+    flow_last_tick_at: nowIso,
+    flow_last_day: todayKey,
+    flow_earned_today: nextEarned,
+    flow_rate_per_min: flowRate,
+  }
+
+  const patchBody = JSON.stringify({
+    credits_balance: nextBalance,
+    flow_last_tick_at: nowIso,
+    flow_last_day: todayKey,
+    flow_earned_today: nextEarned,
+    flow_rate_per_min: flowRate,
+  })
+
+  const writePath = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(String(row.username || '').toLowerCase())}`
+  const writeRes = await sbRequest(host, key, 'PATCH', writePath, patchBody)
+  if (writeRes.status < 200 || writeRes.status >= 300) {
+    return { ok: false, error: 'Could not persist vault flow tick.' }
+  }
+
+  return {
+    ok: true,
+    row: mergedRow,
+    snapshot: vaultSnapshotFromRow(mergedRow, profile, generated, elapsedMin, nowIso),
+  }
+}
+
+async function handleMemberVaultFlowTick(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { ok: false, error: 'Server credentials not configured.' })
+  }
+
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const username = String(body && body.username || '').toLowerCase().trim()
+  const ph = String(body && body.ph || '').trim()
+  if (!username || !ph) return sendJSON(res, 400, { ok: false, error: 'Missing username/ph.' })
+
+  const identityOk = await verifyIdentity(creds.host, creds.key, username, ph)
+  if (!identityOk) return sendJSON(res, 401, { ok: false, error: 'Authentication failed.' })
+
+  const row = await getMemberVaultRow(creds.host, creds.key, username)
+  if (!row) return sendJSON(res, 404, { ok: false, error: 'Member row not found.' })
+
+  const tickResult = await tickMemberVaultFlow(creds.host, creds.key, row)
+  if (!tickResult.ok) {
+    return sendJSON(res, 500, { ok: false, error: tickResult.error || 'Could not persist vault flow tick.' })
+  }
+
+  return sendJSON(res, 200, { ok: true, ...tickResult.snapshot })
+}
+
+async function handleMemberVaultTransfer(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { ok: false, error: 'Server credentials not configured.' })
+  }
+
+  let rawBody
+  try { rawBody = await readBody(req, 12288) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const username = String(body && body.username || '').toLowerCase().trim()
+  const ph = String(body && body.ph || '').trim()
+  const recipientCode = sanitizeSignalCode(body && body.recipient_code).toUpperCase()
+  const rawAmount = Number(body && body.send_amount)
+  const sendAmount = toFixedNumber(rawAmount, 4)
+  const note = String(body && body.note || '').trim().slice(0, 240)
+
+  if (!username || !ph) return sendJSON(res, 400, { ok: false, error: 'Missing username/ph.' })
+  if (!isValidSignalCode(recipientCode)) return sendJSON(res, 400, { ok: false, error: 'Recipient code invalid.' })
+  if (!Number.isFinite(rawAmount) || sendAmount <= 0) return sendJSON(res, 400, { ok: false, error: 'Invalid transfer amount.' })
+
+  const identityOk = await verifyIdentity(creds.host, creds.key, username, ph)
+  if (!identityOk) return sendJSON(res, 401, { ok: false, error: 'Authentication failed.' })
+
+  const row = await getMemberVaultRow(creds.host, creds.key, username)
+  if (!row) return sendJSON(res, 404, { ok: false, error: 'Member row not found.' })
+
+  const tickResult = await tickMemberVaultFlow(creds.host, creds.key, row)
+  if (!tickResult.ok) {
+    return sendJSON(res, 500, { ok: false, error: tickResult.error || 'Could not refresh vault balance.' })
+  }
+
+  const senderCode = String(tickResult.row.platform_id || '').toUpperCase()
+  if (senderCode && senderCode === recipientCode) {
+    return sendJSON(res, 400, { ok: false, error: 'Cannot send to your own Signal Code.' })
+  }
+
+  const availableBalance = Math.max(0, Number(tickResult.row.credits_balance || 0) || 0)
+  if (availableBalance < sendAmount) {
+    return sendJSON(res, 400, { ok: false, error: 'Insufficient balance.' })
+  }
+
+  const rpcRes = await sbRequest(
+    creds.host,
+    creds.key,
+    'POST',
+    '/rest/v1/rpc/transfer_veil',
+    JSON.stringify({
+      sender: tickResult.row.id,
+      recipient_code: recipientCode,
+      send_amount: sendAmount,
+      note: note || null,
+    })
+  )
+
+  let rpcPayload = null
+  try { rpcPayload = JSON.parse(rpcRes.body.toString('utf8')) } catch {}
+
+  if (rpcRes.status < 200 || rpcRes.status >= 300) {
+    const message = rpcPayload && (rpcPayload.error || rpcPayload.message || rpcPayload.details)
+    return sendJSON(res, 500, { ok: false, error: message || 'Transfer failed.' })
+  }
+
+  if (!rpcPayload || rpcPayload.error || rpcPayload.success !== true) {
+    return sendJSON(res, 400, { ok: false, error: (rpcPayload && rpcPayload.error) || 'Transfer failed.' })
+  }
+
+  const finalRow = await getMemberVaultRow(creds.host, creds.key, username)
+  if (!finalRow) {
+    return sendJSON(res, 500, { ok: false, error: 'Transfer completed but vault state could not be reloaded.' })
+  }
+
+  return sendJSON(res, 200, {
+    ok: true,
+    ...vaultSnapshotFromRow(finalRow, vaultProfileForMember(finalRow), 0, 0, new Date().toISOString()),
+    transfer: {
+      sent: toFixedNumber(rpcPayload.sent || sendAmount, 4),
+      fee: toFixedNumber(rpcPayload.fee || 0, 4),
+      received: toFixedNumber(rpcPayload.received || 0, 4),
+      recipient_code: String(rpcPayload.recipient_code || recipientCode).toUpperCase(),
+      note: note || '',
+    },
+  })
+}
+
+async function handleMemberVaultActivity(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { ok: false, error: 'Server credentials not configured.' })
+  }
+
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const username = String(body && body.username || '').toLowerCase().trim()
+  const ph = String(body && body.ph || '').trim()
+  if (!username || !ph) return sendJSON(res, 400, { ok: false, error: 'Missing username/ph.' })
+
+  const identityOk = await verifyIdentity(creds.host, creds.key, username, ph)
+  if (!identityOk) return sendJSON(res, 401, { ok: false, error: 'Authentication failed.' })
+
+  const row = await getMemberVaultRow(creds.host, creds.key, username)
+  if (!row || !row.id) return sendJSON(res, 404, { ok: false, error: 'Member row not found.' })
+
+  const memberId = encodeURIComponent(String(row.id))
+  const transferPath = `/rest/v1/veil_transactions?select=id,sender_id,recipient_id,sender_code,recipient_code,amount,fee,amount_received,note,created_at,reversed,reversed_at,reversed_by,reversal_reason&or=(sender_id.eq.${memberId},recipient_id.eq.${memberId})&order=created_at.desc&limit=30`
+  const transferRes = await sbRequest(creds.host, creds.key, 'GET', transferPath, null)
+  const spendPath = `/rest/v1/vault_spend_events?select=id,spend_type,amount,metadata,created_at&member_id=eq.${memberId}&order=created_at.desc&limit=30`
+  const spendRes = await sbRequest(creds.host, creds.key, 'GET', spendPath, null)
+
+  if (transferRes.status !== 200 || spendRes.status !== 200) {
+    return sendJSON(res, 500, { ok: false, error: 'Could not load vault activity.' })
+  }
+
+  let rows = []
+  let spendRows = []
+  try {
+    const parsed = JSON.parse(transferRes.body.toString('utf8'))
+    rows = Array.isArray(parsed) ? parsed : []
+  } catch {
+    rows = []
+  }
+  try {
+    const parsed = JSON.parse(spendRes.body.toString('utf8'))
+    spendRows = Array.isArray(parsed) ? parsed : []
+  } catch {
+    spendRows = []
+  }
+
+  const selfId = String(row.id)
+  const transferActivity = rows.map((entry) => {
+    const isSent = String(entry && entry.sender_id || '') === selfId
+    return {
+      id: entry && entry.id ? String(entry.id) : '',
+      kind: 'transfer',
+      direction: isSent ? 'sent' : 'received',
+      amount: toFixedNumber(isSent ? entry.amount : entry.amount_received, 4),
+      gross_amount: toFixedNumber(entry && entry.amount || 0, 4),
+      fee: toFixedNumber(entry && entry.fee || 0, 4),
+      amount_received: toFixedNumber(entry && entry.amount_received || 0, 4),
+      counterparty_code: String((isSent ? entry && entry.recipient_code : entry && entry.sender_code) || '').toUpperCase(),
+      note: String(entry && entry.note || ''),
+      created_at: entry && entry.created_at ? String(entry.created_at) : '',
+      reversed: entry && entry.reversed === true,
+      reversed_at: entry && entry.reversed_at ? String(entry.reversed_at) : '',
+      reversed_by: entry && entry.reversed_by ? String(entry.reversed_by) : '',
+      reversal_reason: entry && entry.reversal_reason ? String(entry.reversal_reason) : '',
+    }
+  })
+
+  const spendActivity = spendRows.map((entry) => {
+    return {
+      id: entry && entry.id ? String(entry.id) : '',
+      kind: 'spend',
+      spend_type: String(entry && entry.spend_type || ''),
+      spent: toFixedNumber(entry && entry.amount || 0, 4),
+      metadata: entry && typeof entry.metadata === 'object' ? entry.metadata : {},
+      created_at: entry && entry.created_at ? String(entry.created_at) : '',
+    }
+  })
+
+  const activity = transferActivity.concat(spendActivity).sort((a, b) => {
+    const ta = Date.parse(String(a && a.created_at || '')) || 0
+    const tb = Date.parse(String(b && b.created_at || '')) || 0
+    return tb - ta
+  }).slice(0, 40)
+
+  return sendJSON(res, 200, { ok: true, activity })
+}
+
+async function handleMemberVaultSpend(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { ok: false, error: 'Server credentials not configured.' })
+  }
+
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const username = String(body && body.username || '').toLowerCase().trim()
+  const ph = String(body && body.ph || '').trim()
+  const spendType = String(body && body.spend_type || '').toLowerCase().trim()
+  const costMap = {
+    boost_signal: 25,
+    visibility_burst: 50,
+    featured_highlight: 100,
+  }
+  const spendAmount = toFixedNumber(Number(costMap[spendType] || 0), 4)
+
+  if (!username || !ph) return sendJSON(res, 400, { ok: false, error: 'Missing username/ph.' })
+  if (!costMap[spendType]) return sendJSON(res, 400, { ok: false, error: 'Invalid spend type.' })
+
+  const identityOk = await verifyIdentity(creds.host, creds.key, username, ph)
+  if (!identityOk) return sendJSON(res, 401, { ok: false, error: 'Authentication failed.' })
+
+  const row = await getMemberVaultRow(creds.host, creds.key, username)
+  if (!row) return sendJSON(res, 404, { ok: false, error: 'Member row not found.' })
+
+  const tickResult = await tickMemberVaultFlow(creds.host, creds.key, row)
+  if (!tickResult.ok) {
+    return sendJSON(res, 500, { ok: false, error: tickResult.error || 'Could not refresh vault balance.' })
+  }
+
+  const rpcRes = await sbRequest(
+    creds.host,
+    creds.key,
+    'POST',
+    '/rest/v1/rpc/spend_vault_credits',
+    JSON.stringify({
+      p_username: username,
+      p_ph: ph,
+      p_spend_type: spendType,
+      p_amount: spendAmount,
+      p_metadata: {
+        source: 'dashboard',
+        actor_username: username,
+      },
+    })
+  )
+
+  let rpcPayload = null
+  try { rpcPayload = JSON.parse(rpcRes.body.toString('utf8')) } catch {}
+
+  if (rpcRes.status < 200 || rpcRes.status >= 300) {
+    const msg = rpcPayload && (rpcPayload.error || rpcPayload.message || rpcPayload.details)
+    return sendJSON(res, 500, { ok: false, error: msg || 'Vault spend failed.' })
+  }
+
+  if (!rpcPayload || rpcPayload.error || rpcPayload.success !== true) {
+    return sendJSON(res, 400, { ok: false, error: (rpcPayload && rpcPayload.error) || 'Vault spend failed.' })
+  }
+
+  const finalRow = await getMemberVaultRow(creds.host, creds.key, username)
+  if (!finalRow) {
+    return sendJSON(res, 500, { ok: false, error: 'Spend completed but vault state could not be reloaded.' })
+  }
+
+  return sendJSON(res, 200, {
+    ok: true,
+    ...vaultSnapshotFromRow(finalRow, vaultProfileForMember(finalRow), 0, 0, new Date().toISOString()),
+    spend: {
+      spend_type: spendType,
+      spent: spendAmount,
+      remaining_balance: toFixedNumber(finalRow.credits_balance || 0, 4),
+    },
+  })
+}
+
+async function handleEnsureMemberSignalCode(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { ok: false, error: 'Server credentials not configured.' })
+  }
+
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const username = String(body && body.username || '').toLowerCase().trim()
+  const ph = String(body && body.ph || '').trim()
+  if (!username || !ph) return sendJSON(res, 400, { ok: false, error: 'Missing username/ph.' })
+
+  const identityOk = await verifyIdentity(creds.host, creds.key, username, ph)
+  if (!identityOk) return sendJSON(res, 401, { ok: false, error: 'Authentication failed.' })
+
+  const existing = await getMemberByUsername(creds.host, creds.key, username)
+  if (!existing) return sendJSON(res, 404, { ok: false, error: 'Member row not found.' })
+
+  const currentCode = String(existing.platform_id || '').trim().toUpperCase()
+  if (isValidSignalCode(currentCode)) {
+    return sendJSON(res, 200, { ok: true, code: currentCode, updated: false })
+  }
+
+  const assigned = await assignUniqueSignalCodeToUser(creds.host, creds.key, username)
+  if (!assigned) {
+    return sendJSON(res, 500, { ok: false, error: 'Could not allocate Signal Code.' })
+  }
+
+  return sendJSON(res, 200, { ok: true, code: assigned, updated: true })
+}
+
+async function handleBackfillMemberSignalCodes(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { ok: false, error: 'Server credentials not configured.' })
+  }
+
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const actor = String(body && body.username || '').toLowerCase().trim()
+  const ph = String(body && body.ph || '').trim()
+  if (!actor || !ph) return sendJSON(res, 400, { ok: false, error: 'Missing username/ph.' })
+
+  const identityOk = await verifyIdentity(creds.host, creds.key, actor, ph)
+  if (!identityOk) return sendJSON(res, 401, { ok: false, error: 'Authentication failed.' })
+
+  const actorRow = await getMemberByUsername(creds.host, creds.key, actor)
+  const role = String((actorRow && actorRow.role) || '').toLowerCase()
+  if (role !== 'super_admin') {
+    return sendJSON(res, 403, { ok: false, error: 'Only super_admin can run full Signal Code backfill.' })
+  }
+
+  const listRes = await sbRequest(
+    creds.host,
+    creds.key,
+    'GET',
+    '/rest/v1/member_accounts?select=username,platform_id&order=created_at.asc&limit=1000',
+    null
+  )
+  if (listRes.status !== 200) {
+    return sendJSON(res, 500, { ok: false, error: 'Could not read member_accounts for backfill.' })
+  }
+
+  let rows = []
+  try { rows = JSON.parse(listRes.body.toString('utf8')) } catch { rows = [] }
+  if (!Array.isArray(rows)) rows = []
+
+  let updated = 0
+  for (const row of rows) {
+    const u = String((row && row.username) || '').toLowerCase().trim()
+    if (!u) continue
+    const code = String((row && row.platform_id) || '').trim().toUpperCase()
+    if (isValidSignalCode(code)) continue
+    const assigned = await assignUniqueSignalCodeToUser(creds.host, creds.key, u)
+    if (assigned) updated += 1
+  }
+
+  return sendJSON(res, 200, { ok: true, updated_count: updated })
+}
+
+function buildConnectionOrFilter(a, b) {
+  return `or=(and(requester_username.eq.${encodeURIComponent(a)},target_username.eq.${encodeURIComponent(b)}),and(requester_username.eq.${encodeURIComponent(b)},target_username.eq.${encodeURIComponent(a)}))`
+}
+
+async function getConnectionRow(host, key, a, b) {
+  const filter = buildConnectionOrFilter(a, b)
+  const path = `/rest/v1/user_connections?${filter}&select=id,requester_username,target_username,state,updated_at,created_at&limit=1`
+  const result = await sbRequest(host, key, 'GET', path, null)
+  if (result.status !== 200) return null
+  try {
+    const rows = JSON.parse(result.body.toString())
+    return Array.isArray(rows) && rows[0] ? rows[0] : null
+  } catch {
+    return null
+  }
+}
+
+async function isConnectedForDM(host, key, me, other) {
+  const row = await getConnectionRow(host, key, me, other)
+  return Boolean(row && row.state === 'connected')
+}
+
 /**
  * GET /api/dm/threads?username=X
  * Authorization: Bearer <ph>
@@ -1450,6 +2400,11 @@ async function handleDMThreads(req, res) {
 
   const ok = await verifyIdentity(creds.host, creds.key, username, ph)
   if (!ok) return sendJSON(res, 401, { error: 'Authentication failed.' })
+
+  const me = await getMemberByUsername(creds.host, creds.key, username)
+  if (!me || me.dms_enabled === false) {
+    return sendJSON(res, 403, { error: 'Direct messages are disabled for this account.' })
+  }
 
   const filter = `or=(sender.eq.${encodeURIComponent(username)},recipient.eq.${encodeURIComponent(username)})`
     + `&select=sender,recipient,message,file_name,created_at,read_at`
@@ -1499,6 +2454,11 @@ async function handleDMMessages(req, res) {
   const ok = await verifyIdentity(creds.host, creds.key, me, ph)
   if (!ok) return sendJSON(res, 401, { error: 'Authentication failed.' })
 
+  const hasConnection = await isConnectedForDM(creds.host, creds.key, me, other)
+  if (!hasConnection) {
+    return sendJSON(res, 403, { error: 'Direct contact requires an approved Signal Code connection.' })
+  }
+
   const filter = `or=(and(sender.eq.${encodeURIComponent(me)},recipient.eq.${encodeURIComponent(other)}),and(sender.eq.${encodeURIComponent(other)},recipient.eq.${encodeURIComponent(me)}))`
     + `&order=created_at.asc&limit=100`
   const result = await sbRequest(creds.host, creds.key, 'GET', `/rest/v1/dm_messages?${filter}`, null)
@@ -1537,6 +2497,20 @@ async function handleDMSend(req, res) {
 
   const ok = await verifyIdentity(creds.host, creds.key, sender, ph)
   if (!ok) return sendJSON(res, 401, { error: 'Authentication failed.' })
+
+  const senderMember = await getMemberByUsername(creds.host, creds.key, sender)
+  const recipientMember = await getMemberByUsername(creds.host, creds.key, recip)
+  if (!senderMember || senderMember.dms_enabled === false) {
+    return sendJSON(res, 403, { error: 'Direct messages are disabled for this account.' })
+  }
+  if (!recipientMember || recipientMember.dms_enabled === false) {
+    return sendJSON(res, 403, { error: 'Recipient cannot receive direct messages right now.' })
+  }
+
+  const hasConnection = await isConnectedForDM(creds.host, creds.key, sender, recip)
+  if (!hasConnection) {
+    return sendJSON(res, 403, { error: 'Direct contact requires a Signal Code connection first.' })
+  }
 
   const insertRow = { sender, recipient: recip, message: text }
   if (file_url)       insertRow.file_url        = file_url
@@ -1582,6 +2556,11 @@ async function handleDMMarkRead(req, res) {
   const ok = await verifyIdentity(creds.host, creds.key, me, ph)
   if (!ok) return sendJSON(res, 401, { error: 'Authentication failed.' })
 
+  const hasConnection = await isConnectedForDM(creds.host, creds.key, me, them)
+  if (!hasConnection) {
+    return sendJSON(res, 403, { error: 'Direct contact requires an approved Signal Code connection.' })
+  }
+
   // PATCH dm_messages where recipient=me, sender=them, read_at IS NULL
   const filter  = `recipient=eq.${encodeURIComponent(me)}&sender=eq.${encodeURIComponent(them)}&read_at=is.null`
   const payload = JSON.stringify({ read_at: new Date().toISOString() })
@@ -1592,8 +2571,204 @@ async function handleDMMarkRead(req, res) {
   sendJSON(res, 200, { ok: true })
 }
 
+/**
+ * POST /api/dm/connect-by-code { username, ph, signal_code }
+ * Resolve contact by Signal Code and create/confirm connection.
+ */
+async function handleDMConnectByCode(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { error: 'DM service unavailable.' })
+  }
+
+  let body
+  try {
+    const raw = await readBody(req, 16 * 1024)
+    body = JSON.parse(raw.toString('utf8'))
+  } catch {
+    return sendJSON(res, 400, { error: 'Invalid request body.' })
+  }
+
+  const sender = String(body.username || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  const ph = String(body.ph || '').trim()
+  const signalCode = sanitizeSignalCode(body.signal_code)
+
+  if (!sender || !ph || !signalCode) {
+    return sendJSON(res, 400, { error: 'Missing username, auth token, or Signal Code.' })
+  }
+
+  const ok = await verifyIdentity(creds.host, creds.key, sender, ph)
+  if (!ok) return sendJSON(res, 401, { error: 'Authentication failed.' })
+
+  const me = await getMemberByUsername(creds.host, creds.key, sender)
+  if (!me || me.dms_enabled === false) {
+    return sendJSON(res, 403, { error: 'Direct messages are disabled for this account.' })
+  }
+
+  const target = await getMemberBySignalCode(creds.host, creds.key, signalCode)
+  if (!target || !target.username) {
+    return sendJSON(res, 404, { error: 'No user found for that Signal Code.' })
+  }
+
+  const targetUsername = String(target.username).toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  if (!targetUsername || targetUsername === sender) {
+    return sendJSON(res, 400, { error: "You can't connect to your own Signal Code." })
+  }
+
+  if (target.contact_mode && target.contact_mode !== 'signal_code_only') {
+    return sendJSON(res, 403, { error: 'Target contact policy blocks direct connection.' })
+  }
+  if (target.dms_enabled === false) {
+    return sendJSON(res, 403, { error: 'Target cannot receive direct messages right now.' })
+  }
+
+  const existing = await getConnectionRow(creds.host, creds.key, sender, targetUsername)
+  if (existing && existing.state === 'blocked') {
+    return sendJSON(res, 403, { error: 'Connection is blocked.' })
+  }
+
+  if (existing && existing.state === 'connected') {
+    return sendJSON(res, 200, {
+      ok: true,
+      state: 'connected',
+      target: {
+        username: targetUsername,
+        display_name: target.display_name || targetUsername,
+        platform_id: target.platform_id || null,
+        calls_enabled: target.calls_enabled !== false,
+      },
+    })
+  }
+
+  const nextState = target.auto_accept_code_holders === false ? 'requested' : 'connected'
+  const payload = JSON.stringify({
+    requester_username: sender,
+    requester_platform_id: me.platform_id || null,
+    target_username: targetUsername,
+    target_platform_id: target.platform_id || null,
+    state: nextState,
+  })
+
+  let writeResult
+  if (existing && existing.id) {
+    writeResult = await sbRequest(
+      creds.host,
+      creds.key,
+      'PATCH',
+      `/rest/v1/user_connections?id=eq.${encodeURIComponent(existing.id)}`,
+      JSON.stringify({
+        requester_username: sender,
+        requester_platform_id: me.platform_id || null,
+        target_username: targetUsername,
+        target_platform_id: target.platform_id || null,
+        state: nextState,
+      })
+    )
+  } else {
+    writeResult = await sbRequest(creds.host, creds.key, 'POST', '/rest/v1/user_connections', payload)
+  }
+
+  if (writeResult.status < 200 || writeResult.status >= 300) {
+    console.warn('[FAS:dm:connect-by-code] write error', writeResult.status, writeResult.body.toString())
+    return sendJSON(res, 500, { error: 'Could not save Signal Code connection.' })
+  }
+
+  return sendJSON(res, 200, {
+    ok: true,
+    state: nextState,
+    target: {
+      username: targetUsername,
+      display_name: target.display_name || targetUsername,
+      platform_id: target.platform_id || null,
+      calls_enabled: target.calls_enabled !== false,
+    },
+  })
+}
+
+/**
+ * GET /api/dm/connection?username=X&with=Y
+ * Authorization: Bearer <ph>
+ */
+async function handleDMConnectionStatus(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { error: 'DM service unavailable.' })
+  }
+
+  const qs = new URL(req.url, `http://localhost`).searchParams
+  const username = String(qs.get('username') || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  const other = String(qs.get('with') || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  const authHeader = req.headers['authorization'] || ''
+  const ph = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : ''
+
+  if (!username || !other || !ph) {
+    return sendJSON(res, 400, { error: 'Missing username, with, or auth token.' })
+  }
+
+  const ok = await verifyIdentity(creds.host, creds.key, username, ph)
+  if (!ok) return sendJSON(res, 401, { error: 'Authentication failed.' })
+
+  const target = await getMemberByUsername(creds.host, creds.key, other)
+  if (!target) return sendJSON(res, 404, { error: 'User not found.' })
+
+  const row = await getConnectionRow(creds.host, creds.key, username, other)
+  const state = row && row.state ? row.state : 'none'
+
+  return sendJSON(res, 200, {
+    ok: true,
+    state,
+    target: {
+      username: String(target.username || '').toLowerCase(),
+      display_name: target.display_name || target.username || other,
+      platform_id: target.platform_id || null,
+      calls_enabled: target.calls_enabled !== false,
+      dms_enabled: target.dms_enabled !== false,
+      contact_mode: target.contact_mode || 'signal_code_only',
+    },
+  })
+}
+
+let signalCodeBackfillStarted = false
+
+async function runSignalCodeBackfillOnBoot() {
+  if (signalCodeBackfillStarted) return
+  signalCodeBackfillStarted = true
+
+  let creds
+  try {
+    creds = getServiceCreds()
+  } catch {
+    console.warn('[FAS] Signal Code boot backfill skipped: service credentials are not configured.')
+    return
+  }
+
+  try {
+    const result = await sbRequest(creds.host, creds.key, 'POST', '/rest/v1/rpc/fas_backfill_missing_signal_codes', '{}')
+    if (result.status >= 200 && result.status < 300) {
+      let updated = null
+      try {
+        updated = JSON.parse(result.body.toString())
+      } catch {
+        updated = null
+      }
+      const count = Number(updated)
+      if (Number.isFinite(count)) {
+        console.log(`[FAS] Signal Code boot backfill complete. Updated users: ${count}`)
+      } else {
+        console.log('[FAS] Signal Code boot backfill executed.')
+      }
+      return
+    }
+
+    console.warn('[FAS] Signal Code boot backfill failed:', result.status, result.body.toString().slice(0, 240))
+  } catch (err) {
+    console.warn('[FAS] Signal Code boot backfill error:', err && err.message ? err.message : err)
+  }
+}
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`[FAS] Studio running → http://localhost:${PORT}`)
+  runSignalCodeBackfillOnBoot()
 })
 
 server.on('error', (err) => {
@@ -1605,6 +2780,7 @@ server.on('error', (err) => {
       setTimeout(() => {
         server.listen(PORT, '0.0.0.0', () => {
           console.log(`[FAS] Studio running → http://localhost:${PORT}`)
+          runSignalCodeBackfillOnBoot()
         })
       }, 1000)
     } else {

@@ -47,7 +47,7 @@ const PBKDF2_ITERATIONS = 100_000
 const PBKDF2_HASH       = 'SHA-256'
 const PBKDF2_BITS       = 256
 const SALT_BYTES        = 16
-const PLATFORM_ID_PREFIX = 'sig_'
+const SIGNAL_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 
 
 /* ── REQUIRED FIELDS ─────────────────────────────────────────── */
@@ -113,14 +113,14 @@ function clientUUID() {
   })
 }
 
-function generatePlatformId() {
+function generateSignalCode() {
   const bytes = new Uint8Array(8)
   crypto.getRandomValues(bytes)
-  let out = ''
-  for (let i = 0; i < bytes.length; i++) {
-    out += (bytes[i] % 36).toString(36)
-  }
-  return PLATFORM_ID_PREFIX + out
+  let out = 'SIG-'
+  for (let i = 0; i < 4; i++) out += SIGNAL_CODE_ALPHABET[bytes[i] % SIGNAL_CODE_ALPHABET.length]
+  out += '-'
+  for (let i = 4; i < 8; i++) out += SIGNAL_CODE_ALPHABET[bytes[i] % SIGNAL_CODE_ALPHABET.length]
+  return out
 }
 
 
@@ -285,7 +285,7 @@ async function handleSubmit(e, form, btn) {
     let platformId = ''
     let identitySaved = false
     for (let i = 0; i < 5; i++) {
-      platformId = generatePlatformId()
+      platformId = generateSignalCode()
       const { error: identityErr } = await supabase
         .from('member_accounts')
         .update({
@@ -294,7 +294,6 @@ async function handleSubmit(e, form, btn) {
           recovery_code_set_at: new Date().toISOString(),
         })
         .eq('username', data.username)
-        .is('platform_id', null)
 
       if (!identityErr) {
         identitySaved = true
@@ -312,6 +311,16 @@ async function handleSubmit(e, form, btn) {
       setLoading(btn, false)
       showError(form, 'Could not allocate a Signal ID. Please try again.')
       return
+    }
+
+    const { data: identityRow } = await supabase
+      .from('member_accounts')
+      .select('platform_id')
+      .eq('username', data.username)
+      .maybeSingle()
+
+    if (identityRow && identityRow.platform_id) {
+      platformId = String(identityRow.platform_id).toUpperCase()
     }
 
     /* ── STEP 4: Set password hash via RPC ─────────────────── */
@@ -615,6 +624,10 @@ function showSuccess({ username, display_name, category, isStatic = false, noPag
 
   const prefix  = categoryToRoutePrefix(category)
   const pageUrl = prefix + username
+  const params = new URLSearchParams(window.location.search)
+  const hasDraft = !!readDraftPayload()
+  const wantsPostReturn = String(params.get('intent') || '').toLowerCase() === 'post' && hasDraft
+  const postReturnUrl = 'network.html?intent=post'
 
   if (nameEl)   nameEl.textContent = display_name || 'Creator'
   if (handleEl) handleEl.textContent = '@' + username
@@ -649,17 +662,32 @@ function showSuccess({ username, display_name, category, isStatic = false, noPag
       }
       if (countdown <= 0) {
         clearInterval(tick)
-        window.location.href = pageUrl
+        window.location.href = wantsPostReturn ? postReturnUrl : pageUrl
       }
     }, 1000)
   } else if (redirectEl) {
     // noPage: redirect to dashboard instead
     if (noPage && !isStatic) {
       redirectEl.textContent = 'Taking you to your dashboard…'
-      setTimeout(() => { window.location.href = 'dashboard.html' }, 2000)
+      setTimeout(() => {
+        window.location.href = wantsPostReturn ? postReturnUrl : 'dashboard.html'
+      }, 2000)
     } else {
       redirectEl.hidden = true
     }
+  }
+}
+
+function readDraftPayload() {
+  try {
+    const raw = localStorage.getItem('signal_draft')
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return null
+    if (!String(parsed.text || '').trim()) return null
+    return parsed
+  } catch (_) {
+    return null
   }
 }
 

@@ -137,6 +137,65 @@ export async function sendDM(sender, recipient, message) {
 }
 
 /**
+ * Resolve and connect contact by Signal Code.
+ * Returns { data, error } where data includes { state, target }.
+ */
+export async function connectBySignalCode(sender, signalCode) {
+  const ph = _getSessionPH()
+  if (!ph) return { data: null, error: 'Session expired — please sign in again.' }
+
+  const code = String(signalCode || '').trim()
+  if (!code) return { data: null, error: 'Enter a Signal Code.' }
+
+  try {
+    const res = await fetch('/api/dm/connect-by-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: String(sender || '').toLowerCase(),
+        ph,
+        signal_code: code,
+      }),
+    })
+
+    const data = await res.json()
+    if (!res.ok || !data || data.ok !== true) {
+      return { data: null, error: (data && data.error) || 'Could not connect by Signal Code.' }
+    }
+
+    return { data, error: null }
+  } catch {
+    return { data: null, error: 'Network error. Check your connection.' }
+  }
+}
+
+/**
+ * Get connection state + partner identity for current thread header.
+ */
+export async function getConnectionState(myUsername, otherUsername) {
+  const ph = _getSessionPH()
+  if (!ph) return { data: null, error: 'Session expired — please sign in again.' }
+
+  const me = String(myUsername || '').toLowerCase().trim()
+  const other = String(otherUsername || '').toLowerCase().trim()
+  if (!me || !other) return { data: null, error: 'Missing usernames.' }
+
+  try {
+    const res = await fetch(
+      `/api/dm/connection?username=${encodeURIComponent(me)}&with=${encodeURIComponent(other)}`,
+      { headers: _dmHeaders(ph, me) }
+    )
+    const data = await res.json()
+    if (!res.ok || !data || data.ok !== true) {
+      return { data: null, error: (data && data.error) || 'Could not load connection state.' }
+    }
+    return { data, error: null }
+  } catch {
+    return { data: null, error: 'Network error. Check your connection.' }
+  }
+}
+
+/**
  * Send a DM with a file attachment.
  * File must already be uploaded via uploadDMFile().
  * @param {string} sender

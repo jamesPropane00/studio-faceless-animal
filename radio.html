@@ -583,6 +583,108 @@
     }
     .rp-chat-username-signout:hover { color: var(--text-2); }
 
+    /* Signal Vault entry panel (snapshot only; no player coupling) */
+    .rp-vault-chip {
+      display: grid;
+      gap: 0.55rem;
+      margin-bottom: 0.75rem;
+      padding: 0.7rem 0.8rem;
+      border-radius: 10px;
+      border: 1px solid rgba(139,92,246,0.24);
+      background: linear-gradient(140deg, rgba(139,92,246,0.12), rgba(56,189,248,0.06));
+      box-shadow: inset 0 0 28px rgba(0,0,0,0.18);
+    }
+    .rp-vault-chip-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .rp-vault-chip-title {
+      margin: 0;
+      font-size: 0.67rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--purple-bright);
+    }
+    .rp-vault-chip-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.66rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-2);
+    }
+    .rp-vault-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      box-shadow: 0 0 0 rgba(74,222,128,0);
+      transition: background 0.15s;
+    }
+    .rp-vault-status-dot--active {
+      background: #4ade80;
+      box-shadow: 0 0 0 5px rgba(74,222,128,0.1);
+    }
+    .rp-vault-status-dot--warn {
+      background: #fbbf24;
+      box-shadow: 0 0 0 5px rgba(251,191,36,0.1);
+    }
+    .rp-vault-chip-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+    }
+    .rp-vault-chip-cell {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 0.45rem 0.55rem;
+      background: rgba(0,0,0,0.22);
+    }
+    .rp-vault-chip-cell p { margin: 0; }
+    .rp-vault-chip-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      font-weight: 700;
+    }
+    .rp-vault-chip-val {
+      margin-top: 0.2rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rp-vault-chip-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .rp-vault-chip-note {
+      margin: 0;
+      font-size: 0.67rem;
+      color: var(--text-3);
+    }
+    .rp-vault-chip-actions {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 560px) {
+      .rp-vault-chip-grid { grid-template-columns: 1fr; }
+    }
+
     /* ── Chat section ── */
     .rp-chat-section {
       flex: 1;
@@ -992,6 +1094,7 @@
           <li><a href="games.html">Games</a></li>
           <li><a href="music.html">Music</a></li>
           <li><a href="radio.html" aria-current="page" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="wallet.html">Vault</a></li>
           <li><a href="pricing.html">Pricing</a></li>
           <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
         </ul>
@@ -1007,6 +1110,7 @@
     <a href="games.html">Games</a>
     <a href="music.html">Music</a>
     <a href="radio.html" aria-current="page" style="color:var(--purple-bright);">Radio</a>
+    <a href="wallet.html">Vault</a>
     <a href="pricing.html">Pricing</a>
     <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
     <a href="dashboard.html">Dashboard</a>
@@ -1555,6 +1659,30 @@
           <span id="rp-listener-pill-num">24</span> in the room
         </span>
       </div>
+
+      <section class="rp-vault-chip" id="rp-vault-chip" aria-label="Signal Vault quick panel">
+        <div class="rp-vault-chip-head">
+          <p class="rp-vault-chip-title">Signal Vault</p>
+          <span class="rp-vault-chip-status"><span id="rp-vault-status-dot" class="rp-vault-status-dot" aria-hidden="true"></span><span id="rp-vault-status-text">Idle</span></span>
+        </div>
+        <div class="rp-vault-chip-grid">
+          <div class="rp-vault-chip-cell">
+            <p class="rp-vault-chip-label">Veil Balance</p>
+            <p id="rp-vault-veil-val" class="rp-vault-chip-val">--</p>
+          </div>
+          <div class="rp-vault-chip-cell">
+            <p class="rp-vault-chip-label">Pulse Balance</p>
+            <p id="rp-vault-pulse-val" class="rp-vault-chip-val">--</p>
+          </div>
+        </div>
+        <div class="rp-vault-chip-foot">
+          <p id="rp-vault-note" class="rp-vault-chip-note">Vault snapshot ready.</p>
+          <div class="rp-vault-chip-actions">
+            <a href="miner.html" class="btn btn-ghost btn-sm">Open Miner</a>
+            <a href="wallet.html" class="btn btn-primary btn-sm">Open Wallet</a>
+          </div>
+        </div>
+      </section>
 
       <!-- Room tabs -->
       <div class="rp-rooms-strip">
@@ -2366,6 +2494,8 @@
   </script>
   <!-- Load YouTube IFrame API for volume control -->
   <script src="https://www.youtube.com/iframe_api" async></script>
+
+  <script type="module" src="assets/js/radio-vault-entry.js"></script>
 
   <!-- ── Radio Chat Module (Supabase Realtime + simulation fallback) ── -->
   <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>

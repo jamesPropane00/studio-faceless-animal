@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
   <style>
     /* ── Dashboard shell ── */
     .dash-wrap { min-height: 100dvh; padding: 2rem 0 8rem; background: var(--bg); }
@@ -88,6 +88,46 @@
     .dash-card + .dash-card { margin-top: 0.75rem; }
     .dash-card--purple { border-color: rgba(139,92,246,0.22); }
     .dash-card--gold   { border-color: rgba(212,175,55,0.22); }
+
+    .dash-moment {
+      margin-bottom: 1rem;
+      border: 1px solid rgba(139,92,246,0.35);
+      background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(255,255,255,0.02));
+      border-radius: 14px;
+      padding: 0.95rem 1rem;
+    }
+    .dash-moment-eyebrow {
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--purple-bright);
+      font-weight: 800;
+      margin: 0 0 0.35rem;
+    }
+    .dash-moment-text {
+      font-size: 0.82rem;
+      color: var(--text-2);
+      line-height: 1.62;
+      margin: 0;
+    }
+    .dash-pulse-roll {
+      margin-top: 0.7rem;
+      padding-top: 0.7rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .dash-pulse-item {
+      font-size: 0.76rem;
+      color: var(--text-2);
+      line-height: 1.55;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+    }
+    .dash-pulse-item strong {
+      color: var(--text);
+      font-weight: 700;
+    }
 
     /* ── Status rows ── */
     .dash-status-row {
@@ -332,6 +372,7 @@
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
           <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="wallet.html">Vault</a></li>
           <li><a href="games.html">Games</a></li>
           <li><a href="pricing.html">Pricing</a></li>
           <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
@@ -348,6 +389,7 @@
     <a href="games.html">Games</a>
     <a href="music.html">Music</a>
     <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
+    <a href="wallet.html">Vault</a>
     <a href="pricing.html">Pricing</a>
     <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
     <a href="dashboard.html">Dashboard</a>
@@ -381,6 +423,29 @@
           <p class="dash-vibe-pill" id="dash-vibe-pill" style="display:none;"></p>
         </div>
         <span class="dash-plan-badge dash-plan-badge--free" id="dash-plan-badge">Free</span>
+      </div>
+
+      <div class="dash-moment" id="dash-moment" style="display:none;">
+        <p class="dash-moment-eyebrow" id="dash-moment-title">Signal Active</p>
+        <p class="dash-moment-text" id="dash-moment-text">You are connected to the network.</p>
+        <div style="display:flex;justify-content:flex-end;margin-top:0.65rem;">
+          <button type="button" class="btn btn-ghost btn-sm" id="dash-moment-dismiss" style="font-size:0.68rem;">Continue</button>
+        </div>
+      </div>
+
+      <p id="fas-promo-dashboard" style="display:none;margin:0 0 0.9rem;font-size:0.74rem;color:var(--text-3);line-height:1.6;"></p>
+
+      <div class="dash-card dash-card--purple" style="margin:0 0 1rem;">
+        <div class="dash-status-row" style="align-items:flex-start;">
+          <div>
+            <p class="dash-section-title" style="border:none;padding:0;margin:0 0 0.35rem;">Signal Vault</p>
+            <p style="margin:0;font-size:0.8rem;color:var(--text-2);line-height:1.6;">Open your Wallet or Miner from the top of the dashboard without digging into lower sections.</p>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:flex-end;">
+            <a href="wallet.html" class="btn btn-primary btn-sm">Open Vault</a>
+            <a href="miner.html" class="btn btn-ghost btn-sm">Open Miner</a>
+          </div>
+        </div>
       </div>
 
       <!-- Role-based panel: User default view (tabs + content) -->
@@ -473,6 +538,8 @@
           <p style="font-size:0.75rem;color:var(--text-3);margin:-0.25rem 0 0.65rem;">Listen first &middot; Upload your work &middot; Control your presence</p>
           <div class="dash-links-grid">
             <a href="radio.html" class="dash-link-card"><span class="dash-link-icon">📻</span><span class="dash-link-label">Radio</span></a>
+            <a href="miner.html" class="dash-link-card"><span class="dash-link-icon">⚛️</span><span class="dash-link-label">Miner</span></a>
+            <a href="wallet.html" class="dash-link-card"><span class="dash-link-icon">🏦</span><span class="dash-link-label">Wallet</span></a>
             <button class="dash-link-card" id="qa-tracks" style="cursor:pointer;">
               <span class="dash-link-icon">🎵</span><span class="dash-link-label">Tracks</span>
             </button>
@@ -500,6 +567,18 @@
             <div class="dash-status-row"><span class="dash-status-label">Live Signal Items</span><span class="dash-status-val" id="pulse-live-feed">0</span></div>
             <div class="dash-status-row"><span class="dash-status-label">Open DM Threads</span><span class="dash-status-val" id="pulse-threads">0</span></div>
             <div class="dash-status-row"><span class="dash-status-label">Last Activity</span><span class="dash-status-val" id="pulse-last-activity">—</span></div>
+            <div class="dash-pulse-roll">
+              <div id="pulse-roll-item" class="dash-pulse-item" style="display:none;"></div>
+              <p id="pulse-roll-empty" style="font-size:0.74rem;color:var(--text-3);margin:0;">No pulse events yet. Your activity and network events appear here as they happen.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-section">
+          <p class="dash-section-title">Build Your Own Platform</p>
+          <div class="dash-card">
+            <p style="font-size:0.81rem;color:var(--text-2);line-height:1.72;margin:0 0 0.65rem;">Need a custom site, hosted presence, or a full system like this one? Work directly with the builder behind FAS Signal.</p>
+            <a href="services.html" class="btn btn-ghost btn-sm" style="font-size:0.72rem;">View Services →</a>
           </div>
         </div>
 
@@ -580,6 +659,18 @@
           </div>
         </div>
 
+        <!-- Public page summary -->
+        <div class="dash-section">
+          <p class="dash-section-title">Public Page</p>
+          <div class="dash-card">
+            <p style="font-size:0.8rem;color:var(--text-2);line-height:1.7;margin:0 0 0.75rem;">This tab controls the public version of your profile. Live makes your page public. Hidden keeps the page saved in your account without showing it on the public route.</p>
+            <div class="dash-status-row"><span class="dash-status-label">Public State</span><span class="dash-status-val dash-status-val--none" id="profile-public-state">Hidden / Draft</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Directory</span><span class="dash-status-val" id="profile-directory-state">Visible in Directory</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Profile Completion</span><span class="dash-status-val" id="profile-completion-state">0 / 6 basics filled</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Public URL</span><span class="dash-status-val" id="profile-public-url">Page is saved privately until you switch it live.</span></div>
+          </div>
+        </div>
+
         <!-- Profile info -->
         <div class="dash-section">
           <p class="dash-section-title">Profile Info</p>
@@ -614,6 +705,41 @@
                 </div>
               </div>
 
+              <div class="dash-form-row">
+                <div class="dash-field">
+                  <label for="edit-category">Creator Type</label>
+                  <select id="edit-category" class="dash-social-input">
+                    <option value="creator">Creator</option>
+                    <option value="artist">Artist</option>
+                    <option value="dj">DJ</option>
+                    <option value="producer">Producer</option>
+                    <option value="gamer">Gamer</option>
+                    <option value="visual_artist">Visual Artist</option>
+                    <option value="photographer">Photographer</option>
+                    <option value="writer">Writer</option>
+                    <option value="business">Business</option>
+                    <option value="collective">Collective</option>
+                  </select>
+                  <span class="dash-field-note">This controls your public page type and directory category.</span>
+                </div>
+                <div class="dash-field">
+                  <label for="edit-page-status">Public Page Status</label>
+                  <select id="edit-page-status" class="dash-social-input">
+                    <option value="live">Live</option>
+                    <option value="draft">Hidden / Draft</option>
+                  </select>
+                  <span class="dash-field-note">Live shows your public page now. Hidden keeps it saved without exposing it publicly.</span>
+                </div>
+              </div>
+
+              <div class="dash-field">
+                <label style="display:flex;align-items:center;gap:0.65rem;cursor:pointer;">
+                  <input type="checkbox" id="edit-public-listing" checked />
+                  <span>Show me in the public directory</span>
+                </label>
+                <span class="dash-field-note" id="edit-public-listing-note">You can keep a public page live but stay out of the directory if you want a lower-profile presence.</span>
+              </div>
+
               <div class="dash-field">
                 <label>Avatar Image</label>
                 <div class="dash-file-upload-zone" id="avatar-upload-zone">
@@ -632,7 +758,7 @@
                   <div class="dash-upload-divider-line"></div>
                 </div>
                 <input type="url" id="edit-avatar-url" placeholder="https://… (optional — use upload above instead)" />
-                <span class="dash-field-note">Uploaded images are stored in your creator media folder. URL paste is an option if you host images elsewhere.</span>
+                <span class="dash-field-note">Uploaded images are saved to your public profile image storage. URL paste still works if you host images elsewhere.</span>
               </div>
 
               <div class="dash-field">
@@ -854,6 +980,11 @@
                 <span class="dash-save-note" id="board-post-note"></span>
               </div>
             </div>
+            <div style="margin-top:0.75rem;display:flex;gap:0.55rem;flex-wrap:wrap;align-items:center;">
+              <button class="btn btn-ghost btn-sm" id="board-copy-latest-signal" type="button" style="font-size:0.72rem;">Copy Signal</button>
+              <button class="btn btn-ghost btn-sm" id="board-copy-my-signal-id" type="button" style="font-size:0.72rem;">Copy Signal ID</button>
+              <span class="dash-save-note" id="board-share-note"></span>
+            </div>
           </div>
         </div>
 
@@ -878,7 +1009,7 @@
             <div id="signal-global-feed-list" style="display:none;"></div>
             <div id="signal-global-feed-empty" style="display:none;">
               <div class="dash-card" style="text-align:center;padding:1.25rem;">
-                <p style="font-size:0.82rem;color:var(--text-3);">No live posts yet. Be the first signal in this wave.</p>
+                <p style="font-size:0.82rem;color:var(--text-3);">Nothing here yet. Start the signal.</p>
               </div>
             </div>
           </div>
@@ -905,8 +1036,8 @@
 
         <!-- Private Identity Card -->
         <div class="dash-section">
-          <p class="dash-section-title">Private Identity</p>
-          <p style="font-size:0.78rem;color:var(--text-3);line-height:1.65;margin:-0.15rem 0 0.85rem;">This section is visible only to you while signed in. Your identity values are platform-native and private by default. Share your Signal ID intentionally — treat it like a contact handle for people you trust.</p>
+          <p class="dash-section-title">Your Signal Identity</p>
+          <p style="font-size:0.78rem;color:var(--text-3);line-height:1.65;margin:-0.15rem 0 0.85rem;">This section is visible only to you while signed in. Your identity values are platform-native and private by default. Your Signal Code is your direct contact key.</p>
           <div class="dash-card dash-card--purple">
             <div class="dash-id-row">
               <span class="dash-id-label">Display Name</span>
@@ -920,10 +1051,26 @@
               </span>
             </div>
             <div class="dash-id-row">
-              <span class="dash-id-label">Signal ID</span>
+              <span class="dash-id-label">Signal Code</span>
               <span class="dash-id-val-wrap">
                 <span class="dash-id-val dash-id-val--mono" id="id-signal-id">—</span>
-                <button type="button" class="dash-copy-btn" id="copy-signal-id-btn" title="Copy Signal ID">Copy</button>
+                <button type="button" class="dash-copy-btn" id="copy-signal-id-btn" title="Copy Signal Code">Copy</button>
+              </span>
+            </div>
+            <p id="signal-code-diagnostics" style="font-size:0.68rem;color:var(--text-3);line-height:1.6;margin:0.35rem 0 0.2rem;">Signal diagnostics: waiting for identity check...</p>
+            <div id="signal-code-retry-wrap" style="display:none;margin:0 0 0.55rem;">
+              <button type="button" id="signal-code-retry-btn" class="btn btn-ghost btn-sm" style="font-size:0.7rem;padding:0.3rem 0.75rem;">Retry Signal Code Assignment</button>
+              <span id="signal-code-retry-note" style="font-size:0.68rem;color:var(--text-3);margin-left:0.6rem;"></span>
+            </div>
+            <div class="dash-id-row">
+              <span class="dash-id-label">Connection</span>
+              <span class="dash-id-val">Only people with your code can request direct contact.</span>
+            </div>
+            <div class="dash-id-row">
+              <span class="dash-id-label">Add by ID</span>
+              <span class="dash-id-val-wrap" style="width:100%;justify-content:flex-end;gap:0.5rem;">
+                <input id="connect-signal-id-input" type="text" class="dash-social-input" placeholder="SIG-XXXX-XXXX" style="max-width:220px;" />
+                <a href="messages.html" id="connect-signal-id-btn" class="btn btn-ghost btn-sm" style="font-size:0.72rem;">Add by Signal ID</a>
               </span>
             </div>
             <div class="dash-id-row">
@@ -942,6 +1089,73 @@
               <span class="dash-id-label">Circle</span>
               <span class="dash-id-val" id="id-founder-label" style="color:var(--gold-bright);">—</span>
             </div>
+          </div>
+        </div>
+
+        <div class="dash-section">
+          <p class="dash-section-title">Signal Vault</p>
+          <div class="dash-card dash-card--purple">
+            <div class="dash-status-row"><span class="dash-status-label">Balance</span><span class="dash-status-val dash-status-val--live" id="vault-balance">0 SC</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Signal Flow Engine</span><span class="dash-status-val dash-status-val--active" id="vault-status">Flow Active</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Flow Rate</span><span class="dash-status-val dash-status-val--active" id="vault-flow-rate">+0.2 SC / min</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Veil</span><span class="dash-status-val" id="vault-veil-layer">Free Layer</span></div>
+            <div class="dash-status-row"><span class="dash-status-label">Daily Cap</span><span class="dash-status-val" id="vault-daily-progress">0 / 50 SC</span></div>
+            <div style="margin-top:0.8rem;">
+              <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;">
+                <div id="vault-flow-bar" style="height:100%;width:4%;background:linear-gradient(90deg,#7c3aed,#22c55e);transition:width 0.4s;"></div>
+              </div>
+            </div>
+            <p id="vault-note" style="font-size:0.74rem;color:var(--text-3);line-height:1.65;margin:0.68rem 0 0.82rem;">Your Vault generates Signal Credits while you are active inside the network. Your Veil determines your flow strength.</p>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <button type="button" class="btn btn-ghost btn-sm" id="vault-boost-btn">Boost Signal · 25 SC</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="vault-visibility-btn">Visibility Burst · 50 SC</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="vault-highlight-btn">Highlight My Page · 100 SC</button>
+            </div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.55rem;">
+              <a href="miner.html" class="btn btn-ghost btn-sm">Open Miner</a>
+              <a href="wallet.html" class="btn btn-ghost btn-sm">Open Wallet</a>
+            </div>
+            <div style="margin-top:1rem;padding-top:0.95rem;border-top:1px solid rgba(255,255,255,0.08);">
+              <p style="font-size:0.82rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;margin:0 0 0.45rem;">Vault Transfer</p>
+              <p style="font-size:0.74rem;color:var(--text-3);line-height:1.65;margin:0 0 0.75rem;">Transfers are processed through the Vault network. A 30% system fee is applied to all transfers. Only Signal Codes can receive Signal Credits.</p>
+              <div style="display:grid;gap:0.55rem;">
+                <input type="text" id="vault-transfer-code" class="dash-social-input" placeholder="Signal Code (SIG-XXXX-XXXX)" maxlength="13" autocomplete="off" spellcheck="false" />
+                <input type="number" id="vault-transfer-amount" class="dash-social-input" placeholder="Amount" min="0.1" step="0.1" inputmode="decimal" />
+                <input type="text" id="vault-transfer-message" class="dash-social-input" placeholder="Note (optional)" maxlength="240" autocomplete="off" />
+              </div>
+              <div style="margin-top:0.75rem;padding:0.8rem 0.9rem;border-radius:14px;background:rgba(11,15,25,0.34);border:1px solid rgba(255,255,255,0.08);display:grid;gap:0.35rem;">
+                <div class="dash-status-row"><span class="dash-status-label">You send</span><span class="dash-status-val" id="vault-transfer-preview-send">0 SC</span></div>
+                <div class="dash-status-row"><span class="dash-status-label">Fee (30%)</span><span class="dash-status-val" id="vault-transfer-preview-fee">0 SC</span></div>
+                <div class="dash-status-row"><span class="dash-status-label">Recipient receives</span><span class="dash-status-val dash-status-val--live" id="vault-transfer-preview-receive">0 SC</span></div>
+                <div class="dash-status-row"><span class="dash-status-label">Target</span><span class="dash-status-val" id="vault-transfer-preview-target">Signal Code required</span></div>
+              </div>
+              <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;margin-top:0.75rem;">
+                <button type="button" class="btn btn-ghost btn-sm" id="vault-transfer-btn">Send Transfer</button>
+                <span class="dash-save-note" id="vault-transfer-state" style="margin:0;"></span>
+              </div>
+            </div>
+            <div style="margin-top:1rem;padding-top:0.95rem;border-top:1px solid rgba(255,255,255,0.08);">
+              <p style="font-size:0.82rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;margin:0 0 0.55rem;">Vault Activity</p>
+              <div id="vault-activity-list" style="display:grid;gap:0.55rem;">
+                <p style="font-size:0.74rem;color:var(--text-3);line-height:1.65;margin:0;">No transfers yet. Incoming and outgoing Vault transfers will appear here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-section">
+          <p class="dash-section-title">The Veil</p>
+          <div class="dash-card dash-card--purple">
+            <p style="font-size:0.82rem;color:var(--text-2);line-height:1.7;margin:0 0 0.7rem;">The Veil controls how your identity is displayed across public surfaces. Your real account data stays intact internally; this only changes public-facing presentation.</p>
+            <div class="dash-status-row"><span class="dash-status-label">Current Veil State</span><span class="dash-status-val" id="veil-state-label">Unveiled</span></div>
+            <p style="font-size:0.74rem;color:var(--text-3);line-height:1.6;margin:0.55rem 0 0.75rem;" id="veil-state-note">Unveiled means your public page and feed show your creator identity normally.</p>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <button type="button" class="btn btn-ghost btn-sm" id="veil-set-unveiled">Unveiled</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="veil-set-veiled">Veiled</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="veil-set-deep">Deep Veil</button>
+            </div>
+            <p style="font-size:0.72rem;color:var(--text-3);line-height:1.65;margin:0.7rem 0 0;">Live now: Unveiled and Veiled are active in UI/session. Deep Veil is saved as state for future policy expansion.</p>
+            <span class="dash-save-note" id="veil-action-note" style="display:block;margin-top:0.6rem;"></span>
           </div>
         </div>
 
@@ -1094,7 +1308,11 @@
               <option value="username_asc">Username A→Z</option>
               <option value="storage_desc">Storage High→Low</option>
             </select>
+            <button type="button" id="admin-fix-signal-codes-btn" class="btn btn-ghost btn-sm" style="font-size:0.72rem;">Fix Missing Signal Codes</button>
+            <button type="button" id="admin-copy-migration-sql-btn" class="btn btn-ghost btn-sm" style="font-size:0.72rem;">Copy DB Migration SQL</button>
           </div>
+          <p id="admin-signal-note" class="dash-save-note" style="margin:0 0 0.6rem;"></p>
+          <p style="font-size:0.68rem;color:var(--text-3);margin:0 0 0.6rem;line-height:1.6;">If Signal Codes fail to assign, run <strong>031_signal_code_recovery_rpcs.sql</strong> in your <a href="https://supabase.com/dashboard" target="_blank" rel="noopener" style="color:var(--purple-bright);">Supabase SQL Editor</a>, then click "Fix Missing Signal Codes".</p>
           <div id="admin-user-list">
             <div class="dash-loading" id="admin-user-loading">Loading users…</div>
             <div id="admin-user-rows" style="display:none;"></div>
@@ -1115,6 +1333,37 @@
             <div class="dash-status-row"><span class="dash-status-label">Identity Model</span><span class="dash-status-val">Handle / Signal ID / Password / Recovery Code</span></div>
             <div class="dash-status-row"><span class="dash-status-label">Enforcement</span><span class="dash-status-val">warn / suspend / ban / soft delete</span></div>
             <div style="margin-top:0.8rem;"><a class="btn btn-ghost btn-sm" href="admin/index.html">Open Standalone Admin Surface →</a></div>
+          </div>
+        </div>
+
+        <div class="dash-section">
+          <p class="dash-section-title">Wallet Governance</p>
+          <div class="dash-card">
+            <p style="font-size:0.8rem;color:var(--text-2);line-height:1.65;margin:0 0 0.65rem;">Veil economy is internal-only. Freeze and reversal actions are super_admin-only and fully audited.</p>
+            <div style="display:grid;gap:0.55rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:0.75rem;">
+              <input type="text" id="admin-wallet-target-username" class="dash-social-input" placeholder="Target username" autocomplete="off" />
+              <input type="text" id="admin-wallet-freeze-reason" class="dash-social-input" placeholder="Freeze reason (optional)" maxlength="300" autocomplete="off" />
+              <button type="button" id="admin-wallet-freeze-btn" class="btn btn-ghost btn-sm">Freeze Wallet</button>
+              <button type="button" id="admin-wallet-unfreeze-btn" class="btn btn-ghost btn-sm">Unfreeze Wallet</button>
+            </div>
+
+            <div style="display:grid;gap:0.55rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:0.75rem;">
+              <input type="text" id="admin-wallet-reverse-transfer-id" class="dash-social-input" placeholder="Transfer ID (UUID)" autocomplete="off" />
+              <input type="text" id="admin-wallet-reverse-reason" class="dash-social-input" placeholder="Reversal reason" maxlength="300" autocomplete="off" />
+              <button type="button" id="admin-wallet-reverse-btn" class="btn btn-ghost btn-sm">Reverse Transfer</button>
+              <button type="button" id="admin-wallet-audit-refresh-btn" class="btn btn-ghost btn-sm">Refresh Wallet Audit</button>
+            </div>
+
+            <p id="admin-wallet-note" class="dash-save-note" style="margin:0;"></p>
+          </div>
+        </div>
+
+        <div class="dash-section">
+          <p class="dash-section-title">Wallet Audit</p>
+          <div class="dash-card dash-card--purple">
+            <div id="admin-wallet-audit-list" style="display:grid;gap:0.5rem;">
+              <p style="font-size:0.78rem;color:var(--text-3);line-height:1.65;margin:0;">Audit feed idle. Press Refresh Wallet Audit.</p>
+            </div>
           </div>
         </div>
       </div><!-- end tab-admin -->
@@ -1275,8 +1524,8 @@
     </div>
   </div>
 
-  <script src="assets/script.js"></script>
-  <script src="assets/js/access-gate.js"></script>
+  <script src="assets/script.js?v=20260322"></script>
+  <script src="assets/js/access-gate.js?v=20260322"></script>
   <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
   <script src="assets/js/env.js" onerror="void 0"></script>
   <script src="assets/js/radio-widget.js" defer></script>
@@ -1327,10 +1576,11 @@
   <script type="module">
     import { supabase, SUPABASE_READY } from './assets/js/supabase-client.js'
     import { getSession, getMember, syncMember, updateMember, touchActive, clearSession, getPlanMeta, getStatusMeta, getPublicProfile } from './assets/js/member-db.js'
+    import { createBoardPost } from './assets/js/services/board.js'
     import { loadThreads, formatDMTime, DM_READY } from './assets/js/dm.js'
     import { getUserRole } from './assets/js/admin-permissions.js'
     import { generateRecoveryCode, cleanRecoveryCode, hashRecoveryCode } from './assets/js/auth.js'
-    import { uploadAvatar, uploadCover } from './assets/js/services/storage.js'
+    import { uploadProfileImage } from './assets/js/services/submissions.js'
 
     // ── Role-based panel rendering ────────────────────────────
     function renderDashboardByRole(currentUser) {
@@ -1384,6 +1634,9 @@
     let adminUsersLoadToken = 0
     let adminUsersCache = []
     let adminActionPending = false
+    let adminSignalToolsBound = false
+    let adminWalletAuditInFlight = false
+    let adminWalletToolsBound = false
     let trackTabInitialized = false
 
     function setDashboardBusy(isBusy) {
@@ -1410,6 +1663,10 @@
       }
       if (target === 'post') {
         loadGlobalSignalFeed()
+      }
+      if (target === 'admin') {
+        bindAdminWalletTools()
+        loadAdminWalletAudit()
       }
     }
 
@@ -1498,7 +1755,796 @@
     // ── State ──────────────────────────────────────────────────
     let myUsername  = ''
     let memberData  = null
+    let publicProfileData = null
     let highlights  = []
+    let currentVeilState = 'unveiled'
+    let signalCodeUiState = 'error'
+    let vaultCredits = 0
+    let vaultFlowPerMin = 0.2
+    let vaultDailyCap = 50
+    let vaultEarnedToday = 0
+    let vaultTierLabel = 'Free'
+    let vaultFlowStatus = 'Flow Active'
+    let vaultFlowHealthy = true
+    let vaultTickInFlight = false
+    let vaultTransferInFlight = false
+    let vaultActivityInFlight = false
+    let vaultActivityLoaded = false
+    let vaultVisibilityBound = false
+    let vaultTicker = null
+    let pulseRollEvents = []
+    let pulseRollIndex = 0
+    let pulseRollTimer = null
+    let memberSupportsPublicListing = false
+
+    const PROFILE_CATEGORY_OPTIONS = [
+      { value: 'creator', label: 'Creator' },
+      { value: 'artist', label: 'Artist' },
+      { value: 'dj', label: 'DJ' },
+      { value: 'producer', label: 'Producer' },
+      { value: 'gamer', label: 'Gamer' },
+      { value: 'visual_artist', label: 'Visual Artist' },
+      { value: 'photographer', label: 'Photographer' },
+      { value: 'writer', label: 'Writer' },
+      { value: 'business', label: 'Business' },
+      { value: 'collective', label: 'Collective' },
+    ]
+
+    const PAGE_TYPE_MAP = {
+      dj: 'artist',
+      artist: 'artist',
+      producer: 'artist',
+      business: 'business',
+      collective: 'business',
+      creator: 'creator',
+      gamer: 'creator',
+      visual_artist: 'creator',
+      photographer: 'creator',
+      writer: 'creator',
+    }
+
+    function clientUUID() {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0
+        const v = c === 'x' ? r : (r & 0x3 | 0x8)
+        return v.toString(16)
+      })
+    }
+
+    function categoryToRoutePrefix(category) {
+      const cat = String(category || '').toLowerCase()
+      if (['dj', 'producer', 'artist'].includes(cat)) return '/artist/'
+      if (['business', 'collective'].includes(cat)) return '/business/'
+      return '/creator/'
+    }
+
+    function normalizedProfileCategory(category) {
+      const raw = String(category || '').toLowerCase().trim()
+      return PROFILE_CATEGORY_OPTIONS.some(opt => opt.value === raw) ? raw : 'creator'
+    }
+
+    function normalizeVeilState(raw) {
+      const v = String(raw || '').toLowerCase().trim()
+      if (v === 'veiled') return 'veiled'
+      if (v === 'deep') return 'deep'
+      return 'unveiled'
+    }
+
+    function veilLabel(state) {
+      if (state === 'veiled') return 'Veiled'
+      if (state === 'deep') return 'Deep Veil'
+      return 'Unveiled'
+    }
+
+    function veilNote(state) {
+      if (state === 'veiled') return 'You are moving under the Veil. Public surfaces show masked identity presentation.'
+      if (state === 'deep') return 'Deep Veil is enabled as a future-ready state. Public masking is active with stricter posture messaging.'
+      return 'Unveiled means your public page and feed show your creator identity normally.'
+    }
+
+    function upsertPulseEvent(text, ts) {
+      const label = String(text || '').trim()
+      if (!label) return
+      if (pulseRollEvents.some(evt => evt.text === label)) return
+      pulseRollEvents.unshift({ text: label, ts: ts || Date.now() })
+      pulseRollEvents = pulseRollEvents.slice(0, 18)
+      renderPulseRoll(true)
+    }
+
+    function pulseTime(ts) {
+      if (!ts) return 'now'
+      const d = new Date(ts)
+      if (isNaN(d.getTime())) return 'now'
+      return formatTimeAgo(d.toISOString())
+    }
+
+    function renderPulseRoll(forceFirst) {
+      const itemEl = document.getElementById('pulse-roll-item')
+      const emptyEl = document.getElementById('pulse-roll-empty')
+      if (!itemEl || !emptyEl) return
+
+      if (!pulseRollEvents.length) {
+        itemEl.style.display = 'none'
+        itemEl.innerHTML = ''
+        emptyEl.style.display = ''
+        return
+      }
+
+      if (forceFirst) pulseRollIndex = 0
+      if (pulseRollIndex >= pulseRollEvents.length) pulseRollIndex = 0
+
+      const row = pulseRollEvents[pulseRollIndex]
+      itemEl.innerHTML = `<span><strong>Signal Pulse:</strong> ${escHtml(row.text)}</span><span style="font-size:0.68rem;color:var(--text-3);white-space:nowrap;">${escHtml(pulseTime(row.ts))}</span>`
+      itemEl.style.display = ''
+      emptyEl.style.display = 'none'
+    }
+
+    function startPulseRoll() {
+      if (pulseRollTimer) return
+      pulseRollTimer = setInterval(() => {
+        if (!pulseRollEvents.length) return
+        pulseRollIndex = (pulseRollIndex + 1) % pulseRollEvents.length
+        renderPulseRoll(false)
+      }, 5000)
+    }
+
+    function updateSessionVeilState(next) {
+      try {
+        const sess = JSON.parse(localStorage.getItem('fas_user') || '{}')
+        sess.veil_state = normalizeVeilState(next)
+        localStorage.setItem('fas_user', JSON.stringify(sess))
+      } catch (_) {}
+    }
+
+    function updateVeilUI() {
+      const state = normalizeVeilState(currentVeilState)
+      const labelEl = document.getElementById('veil-state-label')
+      const noteEl = document.getElementById('veil-state-note')
+      if (labelEl) {
+        labelEl.textContent = veilLabel(state)
+        labelEl.className = 'dash-status-val ' + (state === 'unveiled' ? 'dash-status-val--live' : 'dash-status-val--active')
+      }
+      if (noteEl) noteEl.textContent = veilNote(state)
+
+      const btnMap = [
+        ['veil-set-unveiled', 'unveiled'],
+        ['veil-set-veiled', 'veiled'],
+        ['veil-set-deep', 'deep'],
+      ]
+      btnMap.forEach(([id, val]) => {
+        const btn = document.getElementById(id)
+        if (!btn) return
+        const active = state === val
+        btn.style.borderColor = active ? 'rgba(139,92,246,0.45)' : 'rgba(255,255,255,0.14)'
+        btn.style.color = active ? 'var(--purple-bright)' : 'var(--text-2)'
+      })
+      updateVaultUI()
+    }
+
+    function signalCodeDisplay(rawCode) {
+      const code = String(rawCode || '').trim()
+      if (isValidSignalCode(code)) return code.toUpperCase()
+      if (signalCodeUiState === 'error') return 'Unable to assign Signal Code right now.'
+      return 'Assigning your Signal Code...'
+    }
+
+    function applySignalCodeUiState(memberRow) {
+      const code = String((memberRow && memberRow.platform_id) || '').trim()
+      signalCodeUiState = isValidSignalCode(code) ? 'ready' : 'error'
+      const next = signalCodeDisplay(code)
+      const s1 = document.getElementById('identity-signal-id')
+      const s2 = document.getElementById('id-signal-id')
+      if (s1) s1.textContent = next
+      if (s2) s2.textContent = next
+      const diag = document.getElementById('signal-code-diagnostics')
+      const retryWrap = document.getElementById('signal-code-retry-wrap')
+      if (diag) {
+        if (signalCodeUiState === 'ready') {
+          diag.textContent = 'Signal diagnostics: code active and loaded.'
+          diag.style.color = '#22c55e'
+          if (retryWrap) retryWrap.style.display = 'none'
+        } else {
+          if (retryWrap) retryWrap.style.display = ''
+        }
+        // When in error state, do NOT overwrite the diagnostic text — autoAssignSignalCode()
+        // already wrote the specific failure reason (e.g. which RPC or path failed).
+        // Keeping that message is far more useful than replacing it with a generic one.
+        // The error colour is already set by setSignalCodeDiagnostics().
+      }
+    }
+
+    function setSignalCodeDiagnostics(text, ok) {
+      const diag = document.getElementById('signal-code-diagnostics')
+      if (!diag) return
+      diag.textContent = 'Signal diagnostics: ' + String(text || '')
+      diag.style.color = ok ? '#22c55e' : '#f87171'
+    }
+
+    function vaultLayerLabel() {
+      return vaultTierLabel + ' Layer'
+    }
+
+    function localVaultProfileByVeil() {
+      const state = normalizeVeilState(currentVeilState)
+      if (state === 'deep') return { label: 'Veil III', multiplier: 3, cap: 1000 }
+      if (state === 'veiled') return { label: 'Veil I', multiplier: 1.5, cap: 150 }
+      return { label: 'Free', multiplier: 1, cap: 50 }
+    }
+
+    function formatVaultAmount(value) {
+      return Math.max(0, Number(value || 0) || 0).toFixed(1).replace(/\.0$/, '') + ' SC'
+    }
+
+    function sanitizeVaultTransferCode(value) {
+      return String(value || '').trim().replace(/\s+/g, '').toUpperCase()
+    }
+
+    function formatVaultActivityTime(ts) {
+      if (!ts) return 'Just now'
+      const d = new Date(ts)
+      if (isNaN(d.getTime())) return 'Just now'
+      return d.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
+    }
+
+    function updateVaultTransferPreview() {
+      const code = sanitizeVaultTransferCode(document.getElementById('vault-transfer-code')?.value)
+      const amountRaw = Number(document.getElementById('vault-transfer-amount')?.value || 0)
+      const amount = Number.isFinite(amountRaw) && amountRaw > 0 ? Math.round(amountRaw * 10000) / 10000 : 0
+      const fee = Math.round(amount * 0.30 * 10000) / 10000
+      const received = Math.round((amount - fee) * 10000) / 10000
+      const sendEl = document.getElementById('vault-transfer-preview-send')
+      const feeEl = document.getElementById('vault-transfer-preview-fee')
+      const receiveEl = document.getElementById('vault-transfer-preview-receive')
+      const targetEl = document.getElementById('vault-transfer-preview-target')
+      const btn = document.getElementById('vault-transfer-btn')
+      const validCode = isValidSignalCode(code)
+
+      if (sendEl) sendEl.textContent = formatVaultAmount(amount)
+      if (feeEl) feeEl.textContent = formatVaultAmount(fee)
+      if (receiveEl) receiveEl.textContent = formatVaultAmount(received)
+      if (targetEl) targetEl.textContent = validCode ? code : (code ? 'Invalid Signal Code' : 'Signal Code required')
+      if (btn) btn.disabled = vaultTransferInFlight || !validCode || amount <= 0
+    }
+
+    function renderVaultActivity(items) {
+      const listEl = document.getElementById('vault-activity-list')
+      if (!listEl) return
+      const rows = Array.isArray(items) ? items : []
+      if (!rows.length) {
+        listEl.innerHTML = '<p style="font-size:0.74rem;color:var(--text-3);line-height:1.65;margin:0;">No transfers yet. Incoming and outgoing Vault transfers will appear here.</p>'
+        return
+      }
+
+      listEl.innerHTML = rows.map((item) => {
+        if (item && item.kind === 'spend') {
+          const spendTypeRaw = String(item.spend_type || '').toLowerCase()
+          const spendLabel = spendTypeRaw === 'boost_signal' ? 'Signal Boost'
+            : spendTypeRaw === 'visibility_burst' ? 'Visibility Burst'
+            : spendTypeRaw === 'featured_highlight' ? 'Featured Page Highlight'
+            : 'Vault Spend'
+          const meta = item.metadata && typeof item.metadata === 'object' ? item.metadata : {}
+          const metaLine = meta && meta.source ? 'Source: ' + escHtml(String(meta.source)) : 'Signal Credits spent on platform action'
+          return '<div style="padding:0.78rem 0.9rem;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(11,15,25,0.28);">'
+            + '<div style="display:flex;justify-content:space-between;gap:0.75rem;align-items:flex-start;">'
+            + '<div>'
+            + '<p style="font-size:0.78rem;font-weight:700;color:var(--text-1);margin:0;">Spent ' + formatVaultAmount(item.spent) + ' · ' + escHtml(spendLabel) + '</p>'
+            + '<p style="font-size:0.72rem;color:var(--text-3);line-height:1.55;margin:0.22rem 0 0;">' + metaLine + '</p>'
+            + '</div>'
+            + '<span style="font-size:0.66rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#f43f5e;white-space:nowrap;">Spend</span>'
+            + '</div>'
+            + '<p style="font-size:0.7rem;color:var(--text-3);margin:0.45rem 0 0;">' + escHtml(formatVaultActivityTime(item.created_at)) + '</p>'
+            + '</div>'
+        }
+
+        const sent = item.direction === 'sent'
+        const counterparty = escHtml(item.counterparty_code || 'Unknown Signal Code')
+        const headline = sent
+          ? 'Sent ' + formatVaultAmount(item.gross_amount) + ' → ' + counterparty
+          : 'Received ' + formatVaultAmount(item.amount_received) + ' ← ' + counterparty
+        const detail = sent
+          ? 'Fee: ' + formatVaultAmount(item.fee) + ' · Recipient received: ' + formatVaultAmount(item.amount_received)
+          : 'Sender paid: ' + formatVaultAmount(item.gross_amount) + ' · Fee: ' + formatVaultAmount(item.fee)
+        const noteLine = item.note ? '<p style="font-size:0.74rem;color:var(--text-2);line-height:1.55;margin:0.35rem 0 0;">' + escHtml(item.note) + '</p>' : ''
+        const badgeColor = sent ? '#f59e0b' : '#22c55e'
+        const badgeLabel = sent ? 'Sent' : 'Received'
+        const reversedLine = item.reversed
+          ? '<p style="font-size:0.72rem;color:#f97316;line-height:1.55;margin:0.32rem 0 0;">Reversed by @' + escHtml(item.reversed_by || 'system') + (item.reversal_reason ? ' · ' + escHtml(item.reversal_reason) : '') + '</p>'
+          : ''
+        return '<div style="padding:0.78rem 0.9rem;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(11,15,25,0.28);">'
+          + '<div style="display:flex;justify-content:space-between;gap:0.75rem;align-items:flex-start;">'
+          + '<div>'
+          + '<p style="font-size:0.78rem;font-weight:700;color:var(--text-1);margin:0;">' + headline + '</p>'
+          + '<p style="font-size:0.72rem;color:var(--text-3);line-height:1.55;margin:0.22rem 0 0;">' + detail + '</p>'
+          + '</div>'
+          + '<span style="font-size:0.66rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:' + badgeColor + ';white-space:nowrap;">' + badgeLabel + '</span>'
+          + '</div>'
+          + noteLine
+          + reversedLine
+          + '<p style="font-size:0.7rem;color:var(--text-3);margin:0.45rem 0 0;">' + escHtml(formatVaultActivityTime(item.created_at)) + '</p>'
+          + '</div>'
+      }).join('')
+    }
+
+    async function spendVaultCredits(spendType, label, cost) {
+      const sess = getSession()
+      const noteEl = document.getElementById('vault-note')
+      if (!sess || !sess.username || !sess.ph) {
+        if (noteEl) noteEl.textContent = 'Session expired. Sign in again to use Vault spend actions.'
+        return
+      }
+
+      try {
+        const res = await withTimeout(fetch('/api/member/vault-spend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: sess.username,
+            ph: sess.ph,
+            spend_type: spendType,
+          }),
+        }), 7000, 'vault spend')
+
+        const payload = await res.json().catch(() => null)
+        if (!res.ok || !payload || !payload.ok) {
+          throw new Error((payload && payload.error) || (label + ' failed.'))
+        }
+
+        vaultFlowHealthy = true
+        vaultFlowStatus = 'Flow Active'
+        applyVaultSnapshot(payload)
+        updateVaultUI()
+        if (noteEl) noteEl.textContent = label + ' activated. ' + formatVaultAmount(cost) + ' spent.'
+        upsertPulseEvent('Vault spend: ' + label, new Date().toISOString())
+        await loadVaultActivity(true)
+      } catch (err) {
+        if (noteEl) noteEl.textContent = String((err && err.message) || 'Vault spend failed.').slice(0, 180)
+      }
+    }
+
+    async function loadVaultActivity(force) {
+      if (vaultActivityInFlight) return
+      if (vaultActivityLoaded && !force) return
+
+      const listEl = document.getElementById('vault-activity-list')
+      const sess = getSession()
+      if (!sess || !sess.username || !sess.ph) {
+        renderVaultActivity([])
+        return
+      }
+
+      vaultActivityInFlight = true
+      if (listEl) {
+        listEl.innerHTML = '<p style="font-size:0.74rem;color:var(--text-3);line-height:1.65;margin:0;">Loading Vault activity...</p>'
+      }
+
+      try {
+        const res = await withTimeout(fetch('/api/member/vault-activity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: sess.username, ph: sess.ph }),
+        }), 6000, 'vault activity')
+
+        const payload = await res.json().catch(() => null)
+        if (!res.ok || !payload || !payload.ok) {
+          throw new Error((payload && payload.error) || 'Could not load Vault activity.')
+        }
+
+        vaultActivityLoaded = true
+        renderVaultActivity(payload.activity || [])
+      } catch (err) {
+        if (listEl) {
+          listEl.innerHTML = '<p style="font-size:0.74rem;color:#f87171;line-height:1.65;margin:0;">Vault activity unavailable right now.</p>'
+        }
+      } finally {
+        vaultActivityInFlight = false
+      }
+    }
+
+    async function submitVaultTransfer() {
+      if (vaultTransferInFlight) return
+
+      const sess = getSession()
+      const codeInput = document.getElementById('vault-transfer-code')
+      const amountInput = document.getElementById('vault-transfer-amount')
+      const noteInput = document.getElementById('vault-transfer-message')
+      const button = document.getElementById('vault-transfer-btn')
+      const stateEl = document.getElementById('vault-transfer-state')
+      const recipientCode = sanitizeVaultTransferCode(codeInput?.value)
+      const rawAmount = Number(amountInput?.value || 0)
+      const sendAmount = Number.isFinite(rawAmount) && rawAmount > 0 ? Math.round(rawAmount * 10000) / 10000 : 0
+      const note = String(noteInput?.value || '').trim().slice(0, 240)
+
+      if (!sess || !sess.username || !sess.ph) {
+        showNote(stateEl, 'Session expired. Sign in again to send transfers.', false)
+        return
+      }
+      if (!isValidSignalCode(recipientCode)) {
+        showNote(stateEl, 'Enter a valid Signal Code.', false)
+        return
+      }
+      if (!(sendAmount > 0)) {
+        showNote(stateEl, 'Enter a transfer amount greater than zero.', false)
+        return
+      }
+
+      vaultTransferInFlight = true
+      if (button) {
+        button.disabled = true
+        button.textContent = 'Sending...'
+      }
+
+      try {
+        const res = await withTimeout(fetch('/api/member/vault-transfer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: sess.username,
+            ph: sess.ph,
+            recipient_code: recipientCode,
+            send_amount: sendAmount,
+            note,
+          }),
+        }), 8000, 'vault transfer')
+
+        const payload = await res.json().catch(() => null)
+        if (!res.ok || !payload || !payload.ok) {
+          throw new Error((payload && payload.error) || 'Transfer failed.')
+        }
+
+        vaultFlowHealthy = true
+        vaultFlowStatus = 'Flow Active'
+        applyVaultSnapshot(payload)
+        updateVaultUI()
+        if (codeInput) codeInput.value = ''
+        if (amountInput) amountInput.value = ''
+        if (noteInput) noteInput.value = ''
+        updateVaultTransferPreview()
+        showNote(stateEl, 'Transfer sent: ' + formatVaultAmount(payload.transfer && payload.transfer.sent) + ' to ' + String(payload.transfer && payload.transfer.recipient_code || recipientCode) + '.', true)
+        upsertPulseEvent('Vault transfer sent to ' + recipientCode, new Date().toISOString())
+        await loadVaultActivity(true)
+      } catch (err) {
+        showNote(stateEl, (err && err.message) || 'Transfer failed.', false)
+      } finally {
+        vaultTransferInFlight = false
+        if (button) button.textContent = 'Send Transfer'
+        updateVaultTransferPreview()
+      }
+    }
+
+    function applyVaultSnapshot(snapshot) {
+      if (!snapshot || typeof snapshot !== 'object') return
+      if (Number.isFinite(Number(snapshot.credits_balance))) {
+        vaultCredits = Math.max(0, Number(snapshot.credits_balance))
+      }
+      if (Number.isFinite(Number(snapshot.flow_rate_per_min))) {
+        vaultFlowPerMin = Math.max(0, Number(snapshot.flow_rate_per_min))
+      }
+      if (snapshot.vault_tier_label) vaultTierLabel = String(snapshot.vault_tier_label)
+
+      if (snapshot.daily_cap == null || snapshot.daily_cap >= 999999) {
+        vaultDailyCap = null
+      } else if (Number.isFinite(Number(snapshot.daily_cap))) {
+        vaultDailyCap = Math.max(0, Number(snapshot.daily_cap))
+      }
+
+      if (Number.isFinite(Number(snapshot.flow_earned_today))) {
+        vaultEarnedToday = Math.max(0, Number(snapshot.flow_earned_today))
+      }
+
+      if (memberData) {
+        memberData.credits_balance = vaultCredits
+        memberData.flow_rate_per_min = vaultFlowPerMin
+        memberData.flow_earned_today = vaultEarnedToday
+      }
+
+      updateVaultTransferPreview()
+    }
+
+    async function syncVaultFlowTick(force) {
+      if (vaultTickInFlight) return
+      const sess = getSession()
+      if (!sess || !sess.username || !sess.ph) {
+        vaultFlowHealthy = false
+        vaultFlowStatus = 'Flow Paused'
+        updateVaultUI()
+        return
+      }
+
+      vaultTickInFlight = true
+      try {
+        const API_BASE = (location.port === '5500' || location.port === '5501') ? 'http://localhost:3000' : ''
+        const res = await withTimeout(fetch(API_BASE + '/api/member/vault-flow-tick', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: sess.username, ph: sess.ph, force: !!force }),
+        }), 6000, 'vault flow tick')
+
+        const payload = await res.json().catch(() => null)
+        if (!res.ok || !payload || !payload.ok) {
+          vaultFlowHealthy = false
+          vaultFlowStatus = 'Flow Degraded'
+          if (payload && payload.error) {
+            const note = document.getElementById('vault-note')
+            if (note) note.textContent = 'Signal Flow Engine issue: ' + String(payload.error)
+          }
+          return
+        }
+
+        vaultFlowHealthy = true
+        vaultFlowStatus = 'Flow Active'
+        applyVaultSnapshot(payload)
+      } catch (_) {
+        vaultFlowHealthy = false
+        vaultFlowStatus = 'Flow Degraded'
+      } finally {
+        vaultTickInFlight = false
+        updateVaultUI()
+      }
+    }
+
+    function updateVaultUI() {
+      const balanceEl = document.getElementById('vault-balance')
+      const flowEl = document.getElementById('vault-flow-rate')
+      const veilEl = document.getElementById('vault-veil-layer')
+      const dailyEl = document.getElementById('vault-daily-progress')
+      const statusEl = document.getElementById('vault-status')
+      const noteEl = document.getElementById('vault-note')
+      const barEl = document.getElementById('vault-flow-bar')
+
+      if (!vaultTickInFlight && !vaultFlowHealthy && vaultCredits <= 0) {
+        const fallback = localVaultProfileByVeil()
+        vaultTierLabel = fallback.label
+        vaultFlowPerMin = 0.2 * fallback.multiplier
+        vaultDailyCap = fallback.cap
+      }
+
+      if (balanceEl) balanceEl.textContent = formatVaultAmount(vaultCredits)
+      if (flowEl) flowEl.textContent = '+' + vaultFlowPerMin.toFixed(2).replace(/\.00$/, '') + ' SC / min'
+      if (veilEl) veilEl.textContent = vaultLayerLabel()
+      if (statusEl) {
+        statusEl.textContent = (vaultFlowHealthy ? '● ' : '○ ') + vaultFlowStatus
+        statusEl.className = 'dash-status-val ' + (vaultFlowHealthy ? 'dash-status-val--live' : 'dash-status-val--active')
+      }
+      if (dailyEl) {
+        if (vaultDailyCap == null) dailyEl.textContent = Math.max(0, vaultEarnedToday).toFixed(1).replace(/\.0$/, '') + ' SC / No cap'
+        else dailyEl.textContent = Math.max(0, vaultEarnedToday).toFixed(1).replace(/\.0$/, '') + ' / ' + Math.max(0, vaultDailyCap).toFixed(1).replace(/\.0$/, '') + ' SC'
+      }
+      if (noteEl && vaultFlowHealthy) {
+        noteEl.textContent = 'Your Vault generates Signal Credits while you are active inside the network. Your Veil determines your flow strength.'
+      }
+      if (barEl) {
+        const pct = vaultDailyCap == null || vaultDailyCap <= 0
+          ? Math.max(8, Math.min(100, 14 + Math.round((vaultCredits % 86))))
+          : Math.max(4, Math.min(100, Math.round((vaultEarnedToday / vaultDailyCap) * 100)))
+        barEl.style.width = pct + '%'
+      }
+
+      updateVaultTransferPreview()
+    }
+
+    function startVaultTicker() {
+      if (vaultTicker) return
+      syncVaultFlowTick(true)
+      vaultTicker = setInterval(() => {
+        syncVaultFlowTick(false)
+      }, 30000)
+
+      if (!vaultVisibilityBound) {
+        vaultVisibilityBound = true
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') syncVaultFlowTick(true)
+        })
+      }
+    }
+
+    function maybeShowMoment(force) {
+      const box = document.getElementById('dash-moment')
+      const title = document.getElementById('dash-moment-title')
+      const text = document.getElementById('dash-moment-text')
+      if (!box || !title || !text) return
+
+      const sessionKey = 'fas_moment_seen_' + myUsername + '_' + String(session && session.ts || 'session')
+      if (!force && sessionStorage.getItem(sessionKey) === '1') {
+        box.style.display = 'none'
+        return
+      }
+
+      const display = (memberData && memberData.display_name) || myUsername
+      const signalId = (memberData && memberData.platform_id) || 'pending'
+      const veil = normalizeVeilState(currentVeilState)
+      title.textContent = veil === 'unveiled' ? 'You Are In The Network' : 'Signal Active Under The Veil'
+      text.textContent = `Identity: ${display} (@${myUsername}) · ${signalId}. Status: ${veilLabel(veil)}. Your identity is yours. Move how you want.`
+      box.style.display = ''
+
+      document.getElementById('dash-moment-dismiss')?.addEventListener('click', () => {
+        box.style.display = 'none'
+        sessionStorage.setItem(sessionKey, '1')
+      }, { once: true })
+    }
+
+    function collectProfileFormState() {
+      const publicListingToggle = document.getElementById('edit-public-listing')
+      const socialLinks = {
+        instagram:  document.getElementById('social-instagram').value.trim() || null,
+        snapchat:   document.getElementById('social-snapchat').value.trim() || null,
+        tiktok:     document.getElementById('social-tiktok').value.trim() || null,
+        twitter:    document.getElementById('social-twitter').value.trim() || null,
+        youtube:    document.getElementById('social-youtube').value.trim() || null,
+        soundcloud: document.getElementById('social-soundcloud').value.trim() || null,
+        spotify:    document.getElementById('social-spotify').value.trim() || null,
+        website:    document.getElementById('social-website').value.trim() || null,
+      }
+
+      const publicLinks = {}
+      ;['spotify', 'soundcloud', 'youtube', 'instagram', 'tiktok', 'twitter', 'website'].forEach(key => {
+        if (socialLinks[key]) publicLinks[key] = socialLinks[key]
+      })
+
+      return {
+        display: document.getElementById('edit-display-name').value.trim(),
+        bio: document.getElementById('edit-bio').value.trim() || null,
+        city: document.getElementById('edit-city').value.trim() || null,
+        state: document.getElementById('edit-state').value.trim().toUpperCase() || null,
+        avatarUrl: document.getElementById('edit-avatar-url').value.trim() || null,
+        coverUrl: document.getElementById('edit-cover-url').value.trim() || null,
+        category: normalizedProfileCategory(document.getElementById('edit-category').value),
+        pageStatus: document.getElementById('edit-page-status').value === 'draft' ? 'draft' : 'live',
+        publicListingEnabled: memberSupportsPublicListing ? !!(publicListingToggle && publicListingToggle.checked) : true,
+        socialLinks,
+        publicLinks,
+      }
+    }
+
+    function syncPublicListingUI() {
+      const toggle = document.getElementById('edit-public-listing')
+      const note = document.getElementById('edit-public-listing-note')
+      const directoryState = document.getElementById('profile-directory-state')
+      if (!toggle || !note) return
+
+      toggle.disabled = !memberSupportsPublicListing
+      toggle.closest('label')?.setAttribute('aria-disabled', memberSupportsPublicListing ? 'false' : 'true')
+
+      if (memberSupportsPublicListing) {
+        note.textContent = 'You can keep a public page live but stay out of the directory if you want a lower-profile presence.'
+        if (directoryState && collectProfileFormState().pageStatus) {
+          directoryState.textContent = collectProfileFormState().publicListingEnabled ? 'Visible in Directory' : 'Hidden from Directory'
+        }
+        return
+      }
+
+      toggle.checked = true
+      note.textContent = 'Directory visibility control is not live on this environment yet. Profile save will continue without this optional field.'
+      if (directoryState) directoryState.textContent = 'Directory control unavailable in current live schema'
+    }
+
+    function computeProfileCompletion(state) {
+      const checks = [
+        !!state.display,
+        !!state.bio,
+        !!state.category,
+        !!state.avatarUrl,
+        !!state.coverUrl,
+        !!(state.city || state.state),
+      ]
+      return checks.filter(Boolean).length
+    }
+
+    function updateProfileSummary(state) {
+      const publicState = document.getElementById('profile-public-state')
+      const listingState = document.getElementById('profile-directory-state')
+      const completionState = document.getElementById('profile-completion-state')
+      const publicUrl = document.getElementById('profile-public-url')
+      const completion = computeProfileCompletion(state)
+
+      if (publicState) {
+        publicState.textContent = state.pageStatus === 'live' ? 'Live' : 'Hidden / Draft'
+        publicState.className = 'dash-status-val dash-status-val--' + (state.pageStatus === 'live' ? 'live' : 'none')
+      }
+      if (listingState) {
+        listingState.textContent = memberSupportsPublicListing
+          ? (state.publicListingEnabled ? 'Visible in Directory' : 'Hidden from Directory')
+          : 'Directory control unavailable in current live schema'
+      }
+      if (completionState) {
+        completionState.textContent = completion + ' / 6 basics filled'
+      }
+      if (publicUrl) {
+        publicUrl.textContent = state.pageStatus === 'live'
+          ? categoryToRoutePrefix(state.category) + myUsername
+          : 'Page is saved privately until you switch it live.'
+      }
+    }
+
+    async function syncPublicProfileAndPage(state) {
+      if (!SUPABASE_READY || !supabase) {
+        return { ok: false, error: { message: 'Supabase is not ready.' } }
+      }
+
+      const profilePayload = {
+        username: myUsername,
+        display_name: state.display,
+        bio: state.bio,
+        avatar_url: state.avatarUrl,
+        cover_image_url: state.coverUrl,
+        category: state.category,
+        city: state.city,
+        state: state.state,
+        links_json: state.publicLinks,
+        plan_type: memberData?.plan_type || 'free',
+        slug: myUsername,
+        is_active: state.pageStatus === 'live',
+      }
+
+      const { data: profileRow, error: profileErr } = await supabase
+        .from('profiles')
+        .upsert([profilePayload], { onConflict: 'username' })
+        .select('id, username, display_name, bio, avatar_url, cover_image_url, category, city, state, links_json, plan_type, slug, is_active')
+        .single()
+
+      if (profileErr || !profileRow) {
+        return { ok: false, error: profileErr || { message: 'Could not save public profile.' } }
+      }
+
+      const { data: existingPage } = await supabase
+        .from('pages')
+        .select('id, template_name, theme_style, metadata_json, custom_domain, upgrade_status, subtitle')
+        .eq('page_slug', myUsername)
+        .maybeSingle()
+
+      const pagePayload = {
+        id: existingPage?.id || clientUUID(),
+        profile_id: profileRow.id,
+        page_type: PAGE_TYPE_MAP[state.category] || 'creator',
+        template_name: existingPage?.template_name || 'dark-minimal',
+        title: state.display,
+        subtitle: existingPage?.subtitle || 'Faceless Animal Studios',
+        theme_style: existingPage?.theme_style || null,
+        page_status: state.pageStatus,
+        custom_domain: existingPage?.custom_domain || null,
+        page_slug: myUsername,
+        upgrade_status: existingPage?.upgrade_status || 'none',
+        metadata_json: {
+          ...(existingPage?.metadata_json || {}),
+          veil_state: normalizeVeilState(currentVeilState),
+        },
+      }
+
+      const { error: pageErr } = await supabase
+        .from('pages')
+        .upsert([pagePayload], { onConflict: 'page_slug' })
+
+      if (pageErr) return { ok: false, error: pageErr }
+
+      publicProfileData = profileRow
+      return { ok: true, profile: profileRow }
+    }
+
+    function bindProfileSummaryInputs() {
+      const ids = [
+        'edit-display-name',
+        'edit-bio',
+        'edit-city',
+        'edit-state',
+        'edit-avatar-url',
+        'edit-cover-url',
+        'edit-category',
+        'edit-page-status',
+        'edit-public-listing',
+      ]
+      ids.forEach(id => {
+        const el = document.getElementById(id)
+        if (!el) return
+        const evt = el.tagName === 'INPUT' && el.type === 'checkbox' ? 'change' : 'input'
+        el.addEventListener(evt, () => updateProfileSummary(collectProfileFormState()))
+        if (evt !== 'change') el.addEventListener('change', () => updateProfileSummary(collectProfileFormState()))
+      })
+    }
 
     // Run init only after state variables are declared.
     if (session && session.username) {
@@ -1534,7 +2580,7 @@
       }
 
       // Load fresh data from Supabase (overrides session data with authoritative values)
-      const member = await getMember(myUsername)
+      let member = await getMember(myUsername)
 
       // Plan reconciliation helper — always use the higher of (session, Supabase).
       // signIn() confirmed the user's plan at login; if Supabase returns a lower
@@ -1545,6 +2591,24 @@
 
       if (member) {
         memberData = member
+        const adminBackfill = await runAdminGlobalSignalCodeBackfill(sess)
+        if (adminBackfill && adminBackfill.ok) {
+          const refreshed = await getMember(myUsername)
+          if (refreshed) {
+            member = refreshed
+            memberData = refreshed
+          }
+        }
+
+        if (!isValidSignalCode(member.platform_id)) {
+          member = await autoAssignSignalCode(member)
+          memberData = member
+        }
+        applySignalCodeUiState(member)
+
+        currentVeilState = normalizeVeilState(member.veil_state || sess.veil_state)
+        updateSessionVeilState(currentVeilState)
+        updateVeilUI()
 
         // If DB returned a lower-rank plan than the session, keep session plan
         const rawDbPlan = (member.plan_type || 'free').toLowerCase()
@@ -1560,22 +2624,42 @@
           const stored = JSON.parse(localStorage.getItem('fas_user') || '{}')
           const authPlan = member.plan_type || 'free'
           const authRole = member.role || 'user'
+          const authSignalId = String(member.platform_id || '').trim()
           if (stored.role !== authRole) {
             stored.role = authRole
           }
           if (stored.plan !== authPlan) {
             stored.plan = authPlan
           }
+          if (isValidSignalCode(authSignalId)) {
+            stored.platform_id = authSignalId.toUpperCase()
+          }
+          stored.veil_state = normalizeVeilState(member.veil_state || stored.veil_state)
           localStorage.setItem('fas_user', JSON.stringify(stored))
           applyGatedLinkState()
         } catch(_) {}
       } else {
         await syncMember(myUsername, sess.display)
+        let syncedMember = await getMember(myUsername)
+        if (syncedMember && !isValidSignalCode(syncedMember.platform_id)) {
+          syncedMember = await autoAssignSignalCode(syncedMember)
+        }
+        if (syncedMember && isValidSignalCode(syncedMember.platform_id)) {
+          signalCodeUiState = 'ready'
+          memberData = syncedMember
+          applyMemberData(syncedMember)
+          renderDashboardByRole(syncedMember)
+        } else if (syncedMember) {
+          applySignalCodeUiState(syncedMember)
+        }
+        currentVeilState = normalizeVeilState(sess.veil_state)
+        updateSessionVeilState(currentVeilState)
+        updateVeilUI()
         // Fall back to session plan rather than always showing "Free"
-        if (sess.plan && sess.plan !== 'free') {
+        if (!syncedMember && sess.plan && sess.plan !== 'free') {
           applyMemberData({ plan_type: sess.plan, member_status: sess.status || 'active' })
           renderDashboardByRole({ plan_type: sess.plan, member_status: sess.status || 'active' })
-        } else {
+        } else if (!syncedMember) {
           applyFreeDefaults()
           renderDashboardByRole({ plan_type: 'free', member_status: 'active' })
         }
@@ -1584,12 +2668,23 @@
       // Also try to load public profile data to pre-fill edit form
       const pub = await getPublicProfile(myUsername)
       if (pub) preFillPublicProfile(pub)
+      else updateProfileSummary(collectProfileFormState())
 
+      bindProfileSummaryInputs()
       loadMessagesPreview(myUsername)
       loadRecentActivity(myUsername)
       loadMyBoardPosts(myUsername)
       loadGlobalSignalFeed()
+      loadNetworkPulseEvents()
       initTrackTab(sess)
+      startPulseRoll()
+      startVaultTicker()
+      loadVaultActivity()
+      bindAdminWalletTools()
+      updateVaultUI()
+      updateVaultTransferPreview()
+      applySignalCodeUiState(memberData)
+      maybeShowMoment()
       } finally {
         dashboardInitInFlight = false
         dashboardReady = true
@@ -1660,7 +2755,21 @@
       const identityUsername = document.getElementById('identity-username')
       if (identityUsername) identityUsername.textContent = '@' + myUsername
       const identitySignalId = document.getElementById('identity-signal-id')
-      if (identitySignalId) identitySignalId.textContent = m.platform_id || 'Not assigned yet'
+      if (identitySignalId) identitySignalId.textContent = signalCodeDisplay(m.platform_id)
+
+      applyVaultSnapshot({
+        credits_balance: m.credits_balance,
+        flow_rate_per_min: m.flow_rate_per_min,
+        flow_earned_today: m.flow_earned_today,
+        daily_cap: m.daily_cap,
+        vault_tier_label: m.vault_tier_label,
+      })
+
+      currentVeilState = normalizeVeilState((m && m.veil_state) || currentVeilState)
+      updateVeilUI()
+      updateSessionVeilState(currentVeilState)
+      memberSupportsPublicListing = !!(m && Object.prototype.hasOwnProperty.call(m, 'public_listing_enabled'))
+      syncPublicListingUI()
 
       // Populate the full private identity panel
       populateIdentityPanel(m)
@@ -1671,11 +2780,13 @@
       if (m.page_slug && ps === 'live') {
         const row  = document.getElementById('dash-page-link-row')
         const link = document.getElementById('dash-page-link')
+        const publicCategory = publicProfileData?.category || document.getElementById('edit-category')?.value || 'creator'
+        const prefix = categoryToRoutePrefix(publicCategory)
         if (row)  row.style.display = ''
-        if (link) { link.href = '/creator/' + m.page_slug; link.textContent = '/' + m.page_slug + ' →' }
+        if (link) { link.href = prefix + m.page_slug; link.textContent = '/' + m.page_slug + ' →' }
         // Also update "My Page" quick-action card
         const qaMy = document.getElementById('qa-my-page')
-        if (qaMy) { qaMy.href = '/creator/' + m.page_slug; qaMy.style.display = '' }
+        if (qaMy) { qaMy.href = prefix + m.page_slug; qaMy.style.display = '' }
       }
 
       // Feature access
@@ -1723,8 +2834,13 @@
       set('edit-bio',          m.bio || '')
       set('edit-city',         m.city || '')
       set('edit-state',        m.state_abbr || '')
-      set('edit-avatar-url',   '') // handled from profiles
-      set('edit-cover-url',    m.cover_url || '')
+      set('edit-avatar-url',   publicProfileData?.avatar_url || '')
+      set('edit-cover-url',    m.cover_url || publicProfileData?.cover_image_url || '')
+      set('edit-page-status',  m.page_status === 'live' ? 'live' : 'draft')
+      set('edit-category',     normalizedProfileCategory(publicProfileData?.category))
+      const listing = document.getElementById('edit-public-listing')
+      if (listing) listing.checked = memberSupportsPublicListing ? (m.public_listing_enabled !== false) : true
+      syncPublicListingUI()
 
       const sl = m.social_links || {}
       set('social-instagram', sl.instagram || '')
@@ -1739,7 +2855,11 @@
 
     // ── Pre-fill avatar/bio from profiles table ───────────────
     function preFillPublicProfile(pub) {
+      publicProfileData = pub
       set('edit-avatar-url',  pub.avatar_url  || '')
+      if (!document.getElementById('edit-cover-url').value)
+        set('edit-cover-url', pub.cover_image_url || '')
+      set('edit-category', normalizedProfileCategory(pub.category))
       if (!document.getElementById('edit-bio').value)
         set('edit-bio',         pub.bio         || '')
       if (!document.getElementById('edit-display-name').value)
@@ -1772,6 +2892,13 @@
           qaMy.style.display = ''
         }
       }
+
+      updateProfileSummary({
+        ...collectProfileFormState(),
+        category: normalizedProfileCategory(pub.category),
+        avatarUrl: document.getElementById('edit-avatar-url').value.trim() || null,
+        coverUrl: document.getElementById('edit-cover-url').value.trim() || null,
+      })
     }
 
     function set(id, val) {
@@ -1829,31 +2956,33 @@
     document.getElementById('dash-profile-save')?.addEventListener('click', async () => {
       const noteEl = document.getElementById('profile-save-note')
       const saveBtn = document.getElementById('dash-profile-save')
-      const display = document.getElementById('edit-display-name').value.trim()
+      const formState = collectProfileFormState()
+      const display = formState.display
       if (!display) { showNote(noteEl, 'Display name is required.', false); return }
+
+      const effectivePageStatus = memberData?.page_publishing_enabled === false && formState.pageStatus === 'live'
+        ? 'draft'
+        : formState.pageStatus
+      if (effectivePageStatus !== formState.pageStatus) {
+        formState.pageStatus = effectivePageStatus
+        set('edit-page-status', 'draft')
+      }
 
       // Loading state
       if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…' }
 
       const coreFields = {
         display_name: display,
-        bio:          document.getElementById('edit-bio').value.trim() || null,
-        city:         document.getElementById('edit-city').value.trim() || null,
-        state_abbr:   document.getElementById('edit-state').value.trim().toUpperCase() || null,
+        bio:          formState.bio,
+        city:         formState.city,
+        state_abbr:   formState.state,
+        page_slug:    myUsername,
+        page_status:  formState.pageStatus,
       }
 
       const optionalFields = {
-        cover_url:    document.getElementById('edit-cover-url').value.trim() || null,
-        social_links: {
-          instagram:  document.getElementById('social-instagram').value.trim() || null,
-          snapchat:   document.getElementById('social-snapchat').value.trim() || null,
-          tiktok:     document.getElementById('social-tiktok').value.trim() || null,
-          twitter:    document.getElementById('social-twitter').value.trim() || null,
-          youtube:    document.getElementById('social-youtube').value.trim() || null,
-          soundcloud: document.getElementById('social-soundcloud').value.trim() || null,
-          spotify:    document.getElementById('social-spotify').value.trim() || null,
-          website:    document.getElementById('social-website').value.trim() || null,
-        }
+        cover_url:    formState.coverUrl,
+        social_links: formState.socialLinks,
       }
 
       // Write core profile fields first (blocking)
@@ -1871,45 +3000,13 @@
       const optionalRes = await updateMember(myUsername, optionalFields)
       let optionalSaveFailed = !optionalRes || !optionalRes.ok
 
-      // Also try to update profiles table (for public page sync)
-      const avatarUrl = document.getElementById('edit-avatar-url').value.trim() || null
-      if (SUPABASE_READY && supabase) {
-        const profileUpdate = {
-          display_name: display,
-          bio:          coreFields.bio,
-          city:         coreFields.city,
-          state:        coreFields.state_abbr,
-        }
-        if (avatarUrl) profileUpdate.avatar_url = avatarUrl
-        // Build links_json as flat object { platform: url }
-        const linksObj = {}
-        const linkKeys = ['spotify','soundcloud','youtube','instagram','tiktok','twitter','website']
-        linkKeys.forEach(key => {
-          const url = optionalFields.social_links[key]
-          if (url) linksObj[key] = url
-        })
-        profileUpdate.links_json = linksObj
-
-        const { error: profileErr } = await supabase.from('profiles').update(profileUpdate).eq('username', myUsername)
-        if (profileErr) {
-          console.warn('[FAS] dashboard: profiles update warning:', profileErr.message)
-          // Non-fatal: core member profile was saved
-          if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Profile' }
-          if (optionalSaveFailed) {
-            showNote(noteEl, 'Core profile saved, but some optional fields could not be saved. Public sync may be delayed.', true)
-          } else {
-            showNote(noteEl, 'Profile saved (note: public page sync may be delayed)', true)
-          }
-          // Update local session display
-          try {
-            const sess = JSON.parse(localStorage.getItem('fas_user') || '{}')
-            sess.display = display
-            localStorage.setItem('fas_user', JSON.stringify(sess))
-          } catch(e) {}
-          document.getElementById('dash-display').textContent = display
-          document.getElementById('dash-avatar-initial').textContent = display.charAt(0).toUpperCase()
-          return
-        }
+      formState.pageStatus = effectivePageStatus
+      const publicSync = await syncPublicProfileAndPage(formState)
+      if (!publicSync.ok) {
+        console.warn('[FAS] dashboard: public profile sync warning:', publicSync.error?.message || publicSync.error)
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Profile' }
+        showNote(noteEl, 'Member profile saved, but public page sync failed. ' + (publicSync.error?.message || 'Try again.'), false)
+        return
       }
 
       // Update localStorage display name
@@ -1924,7 +3021,7 @@
       document.getElementById('dash-avatar-initial').textContent = display.charAt(0).toUpperCase()
 
       // Update avatar preview if URL given
-      if (avatarUrl) {
+      if (formState.avatarUrl) {
         const av = document.getElementById('dash-avatar')
         let img = av.querySelector('img')
         if (!img) {
@@ -1932,15 +3029,30 @@
           img.alt = display
           av.appendChild(img)
         }
-        img.src = avatarUrl
+        img.src = formState.avatarUrl
       }
+
+      memberData = {
+        ...(memberData || {}),
+        ...coreFields,
+        ...optionalFields,
+      }
+      if (coreRes && Array.isArray(coreRes.strippedFields) && coreRes.strippedFields.includes('public_listing_enabled')) {
+        memberSupportsPublicListing = false
+        syncPublicListingUI()
+      }
+      preFillPublicProfile(publicSync.profile)
+      updateProfileSummary(formState)
+      applyMemberData(memberData)
 
       // Restore save button
       if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Profile' }
       if (optionalSaveFailed) {
-        showNote(noteEl, 'Core profile saved, but some optional fields could not be saved.', true)
+        showNote(noteEl, 'Profile is saved and your public page state is updated, but some optional fields did not persist.', true)
       } else {
-        showNote(noteEl, 'Saved ✓ — profile updated', true)
+        const successUrl = formState.pageStatus === 'live' ? categoryToRoutePrefix(formState.category) + myUsername : 'draft mode'
+        const listingNote = memberSupportsPublicListing ? '' : ' Directory visibility setting was skipped because the live schema does not support it yet.'
+        showNote(noteEl, 'Saved ✓ — public profile updated (' + successUrl + ')' + listingNote, true)
       }
     })
 
@@ -2027,6 +3139,7 @@
 
     document.getElementById('board-post-btn')?.addEventListener('click', async () => {
       const noteEl  = document.getElementById('board-post-note')
+      const postBtn = document.getElementById('board-post-btn')
       const text    = postTextEl.value.trim()
       const cat     = document.getElementById('board-post-cat').value
       const postType = document.getElementById('signal-post-type')?.value || 'text'
@@ -2035,67 +3148,108 @@
 
       if (!text || text.length < 5) { showNote(noteEl, 'Write at least 5 characters.', false); return }
       if (text.length > 500) { showNote(noteEl, 'Too long — max 500 characters.', false); return }
+      if (visibility !== 'public') { showNote(noteEl, 'Only public posting is live right now.', false); return }
 
       if (!SUPABASE_READY || !supabase) { showNote(noteEl, 'Offline — cannot post right now.', false); return }
 
-      const { error: signalErr } = await supabase
-        .from('signal_posts')
-        .insert({
-          author_username: myUsername,
-          author_platform_id: memberData?.platform_id || null,
-          post_type: postType,
-          category: cat,
-          body_text: text,
-          media_url: mediaUrl,
-          visibility: visibility,
-          moderation_state: 'pending',
-          comments_enabled: true,
-          reactions_enabled: true,
-          is_pinned: false,
-        })
-
-      let finalError = signalErr || null
-
-      // Fallback for environments that have not run migration 020 yet.
-      if (signalErr && String(signalErr.code || '') === '42P01') {
-        let profileId = null
-        const { data: profileRow } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('username', myUsername)
-          .single()
-        if (profileRow) profileId = profileRow.id
-        if (!profileId) {
-          showNote(noteEl, 'You need a creator page to post to the board. Get one free at /start.html', false)
-          return
-        }
-
-        const { error: boardErr } = await supabase
-          .from('board_posts')
-          .insert({
-            profile_id:        profileId,
-            username:          myUsername,
-            post_text:         text,
-            category:          cat,
-            image_url:         mediaUrl,
-            is_approved:       false,
-            visibility_status: 'pending',
-          })
-        finalError = boardErr || null
+      const localPostingEnabled = memberData?.posting_enabled !== false
+      const localModeration = String(memberData?.moderation_state || '').toLowerCase()
+      if (!localPostingEnabled || localModeration === 'suspended' || localModeration === 'banned') {
+        showNote(noteEl, 'Your posting access is currently disabled.', false)
+        return
       }
+
+      if (postBtn) {
+        postBtn.disabled = true
+        postBtn.textContent = 'Posting…'
+      }
+
+      const normalizedSignalType = String(postType || '').toLowerCase() === 'text'
+        ? String(cat || 'drop').toLowerCase()
+        : String(postType || 'drop').toLowerCase()
+
+      const { error: finalError } = await createBoardPost({
+        username: myUsername,
+        display_name: memberData?.display_name || myUsername,
+        platform_id: memberData?.platform_id || null,
+        content: text,
+        media_url: mediaUrl,
+        signal_type: normalizedSignalType,
+      })
 
       if (finalError) {
         console.error('[FAS] signal post error:', finalError.message)
-        showNote(noteEl, 'Post failed. Try again.', false)
+        if (String(finalError.code || '') === 'POSTING_DISABLED') {
+          showNote(noteEl, finalError.message || 'Your posting access is currently disabled.', false)
+        } else {
+          showNote(noteEl, 'Post failed. Try again.', false)
+        }
       } else {
+        if (memberData) {
+          memberData.last_active_at = new Date().toISOString()
+        }
         postTextEl.value = ''
         charCountEl.textContent = '0 / 500'
         const mediaInput = document.getElementById('signal-post-media')
         if (mediaInput) mediaInput.value = ''
-        showNote(noteEl, 'Signal posted ✓ — public visibility follows moderation rules.', true)
+        showNote(noteEl, 'Your signal is live.', true)
+        try {
+          localStorage.setItem('dashboard_last_signal', JSON.stringify({
+            username: myUsername,
+            display_name: memberData?.display_name || myUsername,
+            content: text,
+            ts: Date.now(),
+          }))
+        } catch (_) {}
         loadMyBoardPosts(myUsername)
         loadGlobalSignalFeed()
       }
+
+      if (postBtn) {
+        postBtn.disabled = false
+        postBtn.textContent = 'Post →'
+      }
+    })
+
+    document.getElementById('board-copy-latest-signal')?.addEventListener('click', async () => {
+      const noteEl = document.getElementById('board-share-note')
+      let payload = null
+      try {
+        payload = JSON.parse(localStorage.getItem('dashboard_last_signal') || 'null')
+      } catch (_) {}
+      if (!payload || !payload.content) {
+        showNote(noteEl, 'Post a signal first to copy it.', false)
+        return
+      }
+      const text = `Signal from ${payload.display_name || payload.username} (@${payload.username}) — ${String(payload.content).slice(0, 120)}`
+      try {
+        await navigator.clipboard.writeText(text)
+        showNote(noteEl, 'Copied signal.', true)
+      } catch (_) {
+        showNote(noteEl, 'Copy failed. Try again.', false)
+      }
+    })
+
+    document.getElementById('board-copy-my-signal-id')?.addEventListener('click', async () => {
+      const noteEl = document.getElementById('board-share-note')
+      const signalId = (memberData && memberData.platform_id) || ''
+      if (!signalId) {
+        showNote(noteEl, 'Signal Code missing. Run Signal Code backfill.', false)
+        return
+      }
+      try {
+        await navigator.clipboard.writeText(signalId)
+        showNote(noteEl, 'Copied Signal ID.', true)
+      } catch (_) {
+        showNote(noteEl, 'Copy failed. Try again.', false)
+      }
+    })
+
+    document.getElementById('connect-signal-id-btn')?.addEventListener('click', (e) => {
+      const input = document.getElementById('connect-signal-id-input')
+      const val = String(input?.value || '').trim()
+      if (!val) return
+      e.currentTarget.href = 'messages.html?signal_id=' + encodeURIComponent(val)
     })
 
     async function loadMyBoardPosts(username) {
@@ -2140,6 +3294,10 @@
 
       const pulseMyPosts = document.getElementById('pulse-my-posts')
       if (pulseMyPosts) pulseMyPosts.textContent = String(data.length)
+      const newestMyPost = data[0]
+      if (newestMyPost && newestMyPost.created_at) {
+        upsertPulseEvent('@' + username + ' dropped a signal', newestMyPost.created_at)
+      }
 
       if (listEl) {
         listEl.style.display = ''
@@ -2213,6 +3371,25 @@
 
       const pulseLive = document.getElementById('pulse-live-feed')
       if (pulseLive) pulseLive.textContent = String(data.length)
+      data.slice(0, 3).forEach(row => {
+        if (!row || !row.author_username) return
+        upsertPulseEvent('@' + row.author_username + ' posted to the live stream', row.created_at)
+      })
+
+      let veilMap = {}
+      try {
+        const usernames = Array.from(new Set(data.map(r => String(r.author_username || '').toLowerCase()).filter(Boolean)))
+        if (usernames.length) {
+          const { data: veilRows } = await supabase
+            .from('member_accounts')
+            .select('username, veil_state')
+            .in('username', usernames)
+          ;(veilRows || []).forEach(row => {
+            if (!row || !row.username) return
+            veilMap[String(row.username).toLowerCase()] = normalizeVeilState(row.veil_state)
+          })
+        }
+      } catch (_) {}
 
       if (emptyEl) emptyEl.style.display = 'none'
       if (listEl) {
@@ -2220,18 +3397,79 @@
         listEl.innerHTML = data.map(row => {
           const type = row.post_type || 'text'
           const category = row.category || 'update'
+          const authorKey = String(row.author_username || '').toLowerCase()
+          const authorVeil = veilMap[authorKey] || 'unveiled'
+          const authorLabel = authorVeil === 'unveiled' ? ('@' + (row.author_username || 'member')) : 'Veiled User'
           return `
             <div class="dash-card" style="margin-bottom:0.55rem;">
               <div style="display:flex;justify-content:space-between;gap:0.6rem;align-items:center;margin-bottom:0.45rem;">
-                <span style="font-size:0.69rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;">@${escHtml(row.author_username || 'member')} · ${escHtml(type)} · ${escHtml(category)}</span>
+                <span style="font-size:0.69rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;">${escHtml(authorLabel)} · ${escHtml(type)} · ${escHtml(category)}${authorVeil !== 'unveiled' ? ' · veil' : ''}</span>
                 <span style="font-size:0.68rem;color:var(--text-3);">${formatDMTime(row.created_at)}</span>
               </div>
               <p style="font-size:0.82rem;color:var(--text-2);line-height:1.6;margin:0;">${escHtml(row.body_text || '')}</p>
               ${row.media_url ? `<p style="margin:0.5rem 0 0;font-size:0.72rem;color:var(--purple-bright);word-break:break-all;">${escHtml(row.media_url)}</p>` : ''}
+              <div style="margin-top:0.55rem;display:flex;justify-content:flex-end;">
+                <button type="button" class="dash-copy-btn signal-global-copy" data-copy-text="${escHtml(`Signal from ${authorLabel} — ${String(row.body_text || '').slice(0, 120)}`)}">Copy Signal</button>
+              </div>
             </div>
           `
         }).join('')
+
+        listEl.querySelectorAll('.signal-global-copy').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const txt = btn.getAttribute('data-copy-text') || ''
+            if (!txt) return
+            try {
+              await navigator.clipboard.writeText(txt)
+              const prev = btn.textContent
+              btn.textContent = 'Copied'
+              btn.classList.add('dash-copy-btn--ok')
+              setTimeout(() => {
+                btn.textContent = prev
+                btn.classList.remove('dash-copy-btn--ok')
+              }, 1200)
+            } catch (_) {}
+          })
+        })
       }
+    }
+
+    async function loadNetworkPulseEvents() {
+      if (!SUPABASE_READY || !supabase) return
+      try {
+        const isSchemaMismatch = (err) => {
+          const code = String((err && err.code) || '')
+          const msg = String((err && err.message) || '').toLowerCase()
+          return code === '42703' || msg.includes('column') || msg.includes('does not exist')
+        }
+
+        let result = await supabase
+          .from('member_accounts')
+          .select('username, created_at, updated_at, page_status, public_listing_enabled')
+          .order('created_at', { ascending: false })
+          .limit(8)
+
+        if (result.error && isSchemaMismatch(result.error)) {
+          result = await supabase
+            .from('member_accounts')
+            .select('username, created_at, updated_at, page_status')
+            .order('created_at', { ascending: false })
+            .limit(8)
+        }
+
+        const { data } = result
+
+        ;(data || []).slice(0, 4).forEach(row => {
+          if (!row || !row.username) return
+          upsertPulseEvent('@' + row.username + ' joined the network', row.created_at)
+          if (row.page_status === 'live') {
+            upsertPulseEvent('@' + row.username + ' page is live', row.updated_at || row.created_at)
+          }
+          if (row.public_listing_enabled === false) {
+            upsertPulseEvent('@' + row.username + ' moved to low-profile mode', row.updated_at || row.created_at)
+          }
+        })
+      } catch (_) {}
     }
 
     // ── Track Upload Tab ──────────────────────────────────────
@@ -2630,6 +3868,9 @@
       if (pulseThreads)  pulseThreads.textContent  = String(threadCount)
       if (unreadCountEl) unreadCountEl.textContent = String(unreadTotal)
       if (lastMsgEl) lastMsgEl.textContent = (threadCount && threads[0] && threads[0].last_ts) ? formatDMTime(threads[0].last_ts) : '—'
+      if (threadCount > 0 && threads[0] && threads[0].username) {
+        upsertPulseEvent('Direct thread active with @' + threads[0].username, threads[0].last_ts)
+      }
 
       if (!threads.length) {
         if (empty) empty.style.display = ''
@@ -2699,6 +3940,10 @@
 
         const pulseLast = document.getElementById('pulse-last-activity')
         if (pulseLast) pulseLast.textContent = formatTimeAgo(data[0] && data[0].created_at)
+        data.slice(0, 4).forEach(function(row) {
+          const label = formatActivityLabel(row)
+          if (label) upsertPulseEvent(label, row && row.created_at)
+        })
 
         list.style.display = ''
         list.innerHTML = data.map(function(row) {
@@ -2724,20 +3969,48 @@
         return
       }
 
-      // Keep non-wired actions as stubs for now.
-      if (action !== 'make_moderator' && action !== 'remove_moderator' && action !== 'soft_delete') {
+      const supportedActions = new Set([
+        'make_moderator',
+        'remove_moderator',
+        'soft_delete',
+        'toggle_dms',
+        'toggle_calls',
+        'toggle_posting',
+        'wallet_freeze',
+        'wallet_unfreeze',
+        'disable_board_posting',
+        'enable_board_posting',
+        'suspend_board',
+        'restore_board',
+        'cycle_moderation',
+        'copy_signal_code',
+        'regenerate_signal_code',
+      ])
+
+      if (!supportedActions.has(action)) {
         console.log('ACTION:', actionType, targetUser)
         notify('This action is not wired yet.')
         return
       }
 
+      if (action === 'copy_signal_code') {
+        const code = String(targetUser && targetUser.platform_id || '').trim()
+        if (!isValidSignalCode(code)) {
+          notify('This user does not have a valid Signal Code yet.')
+          return
+        }
+        copyToClipboard(code)
+        notify('Signal Code copied: ' + code)
+        return
+      }
+
       adminActionPending = true
       try {
-        // Guard: actor must be super_admin.
+        // Guard: actor must be admin or super_admin.
         const actorRole = String(getUserRole(memberData) || 'user').toLowerCase()
-        if (actorRole !== 'super_admin') {
-          console.error('Admin action denied: actor is not super_admin')
-          notify('Only super_admin can run this action.')
+        if (actorRole !== 'super_admin' && actorRole !== 'admin') {
+          console.error('Admin action denied: actor is not admin/super_admin')
+          notify('Only admin or super_admin can run this action.')
           return
         }
 
@@ -2873,6 +4146,187 @@
           notify('User soft deleted.')
           return
         }
+
+        if (action === 'regenerate_signal_code') {
+          const sess = getSession()
+          if (!sess || !sess.username || !sess.ph) { notify('Session expired — sign in again.'); return }
+
+          if (!confirm('This will replace @' + targetUsername + '\'s current Signal Code. Existing direct connections may break. Continue?')) {
+            return
+          }
+
+          const { data: rpcResult, error: rpcErr } = await supabase.rpc('admin_regenerate_signal_code', {
+            p_actor_username: String(sess.username || '').toLowerCase(),
+            p_actor_ph: sess.ph,
+            p_target_username: String(targetUsername || '').toLowerCase(),
+          })
+
+          if (rpcErr) {
+            notify('Server error: ' + (rpcErr.message || 'regeneration failed'))
+            return
+          }
+          if (!rpcResult || !rpcResult.ok) {
+            notify((rpcResult && rpcResult.error) || 'Regeneration failed.')
+            return
+          }
+
+          await loadAllUsers()
+          notify('@' + targetUsername + ' Signal Code regenerated: ' + (rpcResult.new_code || 'updated'))
+          return
+        }
+
+        if (action === 'wallet_freeze' || action === 'wallet_unfreeze') {
+          const sess = getSession()
+          if (!sess || !sess.username || !sess.ph) { notify('Session expired — sign in again.'); return }
+
+          const freeze = action === 'wallet_freeze'
+          const reason = freeze
+            ? String(prompt('Freeze reason for @' + targetUsername + ' (optional):') || '').trim().slice(0, 300)
+            : ''
+
+          const response = await fetch('/api/admin/wallet/freeze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              actor_username: String(sess.username || '').toLowerCase(),
+              ph: sess.ph,
+              target_username: String(targetUsername || '').toLowerCase(),
+              freeze,
+              reason: reason || null,
+            }),
+          })
+
+          const payload = await response.json().catch(() => null)
+          if (!response.ok || !payload || !payload.ok) {
+            notify((payload && payload.error) || 'Wallet action failed.')
+            return
+          }
+
+          await loadAllUsers()
+          notify('@' + targetUsername + (freeze ? ' wallet frozen.' : ' wallet unfrozen.'))
+          return
+        }
+
+        if (action === 'disable_board_posting' || action === 'enable_board_posting' || action === 'suspend_board' || action === 'restore_board') {
+          const sess = getSession()
+          if (!sess || !sess.username || !sess.ph) { notify('Session expired — sign in again.'); return }
+
+          const setPostingEnabled = action === 'enable_board_posting' || action === 'restore_board'
+          const currentModState = String(targetUser.currentMod || 'clear').toLowerCase()
+
+          const { data: postResult, error: postErr } = await supabase.rpc('admin_update_user_feature', {
+            p_actor_username:  String(sess.username || '').toLowerCase(),
+            p_actor_ph:        sess.ph,
+            p_target_username: String(targetUsername || '').toLowerCase(),
+            p_field:           'posting_enabled',
+            p_value:           String(setPostingEnabled),
+          })
+
+          if (postErr) {
+            notify('Server error: ' + (postErr.message || 'update failed'))
+            return
+          }
+          if (!postResult || !postResult.ok) {
+            notify((postResult && postResult.error) || 'Update failed — check role.')
+            return
+          }
+
+          if (action === 'suspend_board' && currentModState === 'clear') {
+            await supabase.rpc('admin_update_user_feature', {
+              p_actor_username:  String(sess.username || '').toLowerCase(),
+              p_actor_ph:        sess.ph,
+              p_target_username: String(targetUsername || '').toLowerCase(),
+              p_field:           'moderation_state',
+              p_value:           'limited',
+            }).catch(() => {})
+          }
+
+          if (action === 'restore_board' && currentModState === 'limited') {
+            await supabase.rpc('admin_update_user_feature', {
+              p_actor_username:  String(sess.username || '').toLowerCase(),
+              p_actor_ph:        sess.ph,
+              p_target_username: String(targetUsername || '').toLowerCase(),
+              p_field:           'moderation_state',
+              p_value:           'clear',
+            }).catch(() => {})
+          }
+
+          await loadAllUsers()
+          if (action === 'disable_board_posting') notify('@' + targetUsername + ' posting access disabled.')
+          if (action === 'enable_board_posting') notify('@' + targetUsername + ' posting access enabled.')
+          if (action === 'suspend_board') notify('@' + targetUsername + ' suspended from board posting.')
+          if (action === 'restore_board') notify('@' + targetUsername + ' board posting restored.')
+          return
+        }
+
+        // ── Moderation toggle: dms_enabled / calls_enabled / posting_enabled ──
+        if (action === 'toggle_dms' || action === 'toggle_calls' || action === 'toggle_posting') {
+          const sess = getSession()
+          if (!sess || !sess.username || !sess.ph) { notify('Session expired — sign in again.'); return }
+
+          const fieldMap = {
+            toggle_dms:     'dms_enabled',
+            toggle_calls:   'calls_enabled',
+            toggle_posting: 'posting_enabled',
+          }
+          const field  = fieldMap[action]
+          const newVal = targetUser.currentVal !== 'true'  // toggle opposite of current
+
+          const { data: rpcResult, error: rpcErr } = await supabase.rpc('admin_update_user_feature', {
+            p_actor_username:  String(sess.username || '').toLowerCase(),
+            p_actor_ph:        sess.ph,
+            p_target_username: String(targetUsername || '').toLowerCase(),
+            p_field:           field,
+            p_value:           String(newVal),
+          })
+
+          if (rpcErr) {
+            notify('Server error: ' + (rpcErr.message || 'update failed'))
+            return
+          }
+          if (!rpcResult || !rpcResult.ok) {
+            notify((rpcResult && rpcResult.error) || 'Update failed — check role.')
+            return
+          }
+
+          await loadAllUsers()
+          notify('@' + targetUsername + ' — ' + field.replace('_enabled', '') + ' set to ' + (newVal ? 'enabled' : 'disabled'))
+          return
+        }
+
+        // ── Moderation state: cycle through clear→warned→limited→suspended→banned ──
+        if (action === 'cycle_moderation') {
+          const sess = getSession()
+          if (!sess || !sess.username || !sess.ph) { notify('Session expired — sign in again.'); return }
+
+          const nextState = targetUser.nextVal || 'clear'
+          const label = nextState === 'suspended' || nextState === 'banned'
+            ? 'This will restrict @' + targetUsername + '\u2019s access. Set moderation to \"' + nextState + '\"?'
+            : null
+          if (label && !confirm(label)) return
+
+          const { data: rpcResult, error: rpcErr } = await supabase.rpc('admin_update_user_feature', {
+            p_actor_username:  String(sess.username || '').toLowerCase(),
+            p_actor_ph:        sess.ph,
+            p_target_username: String(targetUsername || '').toLowerCase(),
+            p_field:           'moderation_state',
+            p_value:           nextState,
+          })
+
+          if (rpcErr) {
+            notify('Server error: ' + (rpcErr.message || 'update failed'))
+            return
+          }
+          if (!rpcResult || !rpcResult.ok) {
+            notify((rpcResult && rpcResult.error) || 'Update failed — check role.')
+            return
+          }
+
+          await loadAllUsers()
+          notify('@' + targetUsername + ' moderation → ' + nextState)
+          return
+        }
+
       } catch (err) {
         console.error('Admin action error:', err)
         notify('Action failed. Please try again.')
@@ -2985,6 +4439,21 @@
         const disableAll = isSelfRow || isTargetSA
         const btnDisabledAttr = disableAll ? ' disabled' : ''
 
+        const dmsOn      = u.dms_enabled !== false
+        const callsOn    = u.calls_enabled !== false
+        const postingOn  = u.posting_enabled !== false
+        const walletFrozen = u.wallet_frozen === true
+        const walletFreezeReason = String(u.wallet_freeze_reason || '')
+        const moderationState = u.moderation_state || 'clear'
+        const boardRestricted = postingOn === false || moderationState === 'suspended' || moderationState === 'banned' || moderationState === 'limited'
+        const boardStatusText = boardRestricted ? 'Restricted' : 'Posting Enabled'
+        const boardStatusColor = boardRestricted ? '#f87171' : '#22c55e'
+        const modStateEsc = escHtml(moderationState)
+        const MOD_STATES  = ['clear','warned','limited','suspended','banned']
+        const nextModState = MOD_STATES[(MOD_STATES.indexOf(moderationState) + 1) % MOD_STATES.length]
+        const modColor    = moderationState === 'clear' ? 'var(--text-3)'
+          : (moderationState === 'warned' || moderationState === 'limited') ? '#fbbf24' : '#f87171'
+
         const roleColor   = rawRole === 'super_admin' ? '#a78bfa' : rawRole === 'moderator' ? '#60a5fa' : 'var(--text-3)'
         const statusColor = status === 'banned' || status === 'suspended' ? '#f87171'
                           : status === 'limited' || status === 'warned' ? '#fbbf24'
@@ -3001,7 +4470,7 @@
               '</div>' +
               '<div style="font-size:0.74rem;color:' + roleColor + ';">Role: ' + role + '<br><span style="color:var(--text-3);">Plan: ' + tier + '</span></div>' +
               '<div style="font-size:0.74rem;color:' + statusColor + ';">Status: ' + status + '<br><span style="color:var(--text-3);">Page: ' + pageState + '</span></div>' +
-              '<div style="font-size:0.7rem;color:var(--text-3);">Joined: ' + createdAt + '<br>Last active: ' + lastActive + '<br><span style="color:' + recoveryColor + ';">Recovery: ' + recoveryStatus + '</span><br>Storage: ' + storageUsed + '<br>Slug: ' + pageSlug + '</div>' +
+              '<div style="font-size:0.7rem;color:var(--text-3);">Joined: ' + createdAt + '<br>Last active: ' + lastActive + '<br><span style="color:' + recoveryColor + ';">Recovery: ' + recoveryStatus + '</span><br>Storage: ' + storageUsed + '<br>Slug: ' + pageSlug + '<br><span style="color:' + boardStatusColor + ';">Board: ' + boardStatusText + '</span><br><span style="color:' + (walletFrozen ? '#f97316' : '#22c55e') + ';">Wallet: ' + (walletFrozen ? 'Frozen' : 'Active') + '</span></div>' +
               '<div class="admin-action-group" style="display:flex;flex-wrap:wrap;gap:0.35rem;justify-content:flex-end;">' +
                 '<button type="button" class="admin-action-btn" data-action="make_moderator" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Make Mod</button>' +
                 '<button type="button" class="admin-action-btn" data-action="remove_moderator" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-role="' + role + '" data-tier="' + tier + '" data-status="' + status + '"' + btnDisabledAttr + '>Remove Mod</button>' +
@@ -3009,10 +4478,17 @@
               '</div>' +
             '</div>' +
             '<div style="display:flex;flex-wrap:wrap;gap:0.45rem;margin-top:0.55rem;">' +
-              '<span class="creator-tag creator-tag--open" style="margin:0;">DMs: moderation control</span>' +
-              '<span class="creator-tag creator-tag--open" style="margin:0;">Calls: moderation control</span>' +
-              '<span class="creator-tag creator-tag--open" style="margin:0;">Uploads: plan/moderation</span>' +
-              '<span class="creator-tag creator-tag--open" style="margin:0;">Posting: enabled</span>' +
+              '<button type="button" class="admin-action-btn" style="font-size:0.67rem;" data-action="copy_signal_code" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-platform-id="' + signalId + '">📋 Copy Code</button>' +
+              '<button type="button" class="admin-action-btn" style="font-size:0.67rem;" data-action="regenerate_signal_code" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '"' + btnDisabledAttr + '>♻ Regenerate Signal Code</button>' +
+              '<button type="button" class="admin-action-btn" style="font-size:0.67rem;" data-action="toggle_dms" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-current-val="' + (dmsOn ? 'true' : 'false') + '"' + btnDisabledAttr + '>💬 DMs ' + (dmsOn ? '✓ ON' : '✗ OFF') + '</button>' +
+              '<button type="button" class="admin-action-btn" style="font-size:0.67rem;" data-action="toggle_calls" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-current-val="' + (callsOn ? 'true' : 'false') + '"' + btnDisabledAttr + '>📞 Calls ' + (callsOn ? '✓ ON' : '✗ OFF') + '</button>' +
+              '<button type="button" class="admin-action-btn" style="font-size:0.67rem;" data-action="wallet_freeze" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-wallet-frozen="' + (walletFrozen ? 'true' : 'false') + '" data-wallet-reason="' + escHtml(walletFreezeReason) + '"' + btnDisabledAttr + '>🧊 Freeze Wallet</button>' +
+              '<button type="button" class="admin-action-btn" style="font-size:0.67rem;" data-action="wallet_unfreeze" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-wallet-frozen="' + (walletFrozen ? 'true' : 'false') + '"' + btnDisabledAttr + '>🔥 Unfreeze Wallet</button>' +
+              '<button type="button" class="admin-action-btn" style="font-size:0.67rem;" data-action="disable_board_posting" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-current-val="' + (postingOn ? 'true' : 'false') + '" data-current-mod="' + modStateEsc + '"' + btnDisabledAttr + '>🧱 Disable Posting</button>' +
+              '<button type="button" class="admin-action-btn" style="font-size:0.67rem;" data-action="enable_board_posting" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-current-val="' + (postingOn ? 'true' : 'false') + '" data-current-mod="' + modStateEsc + '"' + btnDisabledAttr + '>✅ Enable Posting</button>' +
+              '<button type="button" class="admin-action-btn admin-action-btn--danger" style="font-size:0.67rem;" data-action="suspend_board" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-current-val="' + (postingOn ? 'true' : 'false') + '" data-current-mod="' + modStateEsc + '"' + btnDisabledAttr + '>⛔ Suspend Board</button>' +
+              '<button type="button" class="admin-action-btn" style="font-size:0.67rem;" data-action="restore_board" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-current-val="' + (postingOn ? 'true' : 'false') + '" data-current-mod="' + modStateEsc + '"' + btnDisabledAttr + '>♻ Restore Board</button>' +
+              '<button type="button" class="admin-action-btn' + (moderationState !== 'clear' ? ' admin-action-btn--danger' : '') + '" style="font-size:0.67rem;color:' + modColor + ';" data-action="cycle_moderation" data-user-id="' + escHtml(u.id || '') + '" data-username="' + username + '" data-current-val="' + modStateEsc + '" data-next-val="' + escHtml(nextModState) + '" data-current-mod="' + modStateEsc + '"' + btnDisabledAttr + '>⚖️ ' + modStateEsc + ' → ' + escHtml(nextModState) + '</button>' +
             '</div>' +
           '</div>'
         )
@@ -3028,7 +4504,13 @@
           username: btn.getAttribute('data-username') || '',
           role: btn.getAttribute('data-role') || '',
           membership_tier: btn.getAttribute('data-tier') || '',
-          account_status: btn.getAttribute('data-status') || ''
+          account_status: btn.getAttribute('data-status') || '',
+          platform_id: btn.getAttribute('data-platform-id') || '',
+          currentVal: btn.getAttribute('data-current-val') || '',
+          nextVal: btn.getAttribute('data-next-val') || '',
+          currentMod: btn.getAttribute('data-current-mod') || '',
+          walletFrozen: btn.getAttribute('data-wallet-frozen') || '',
+          walletReason: btn.getAttribute('data-wallet-reason') || '',
         }
         handleUserAction(actionType, targetUser)
       }
@@ -3094,6 +4576,7 @@
         if (!visibleUsers.length) { showEmpty(); return }
         adminUsersCache = visibleUsers
         renderAdminUsers()
+        bindAdminWalletTools()
 
         const searchEl = document.getElementById('admin-user-search')
         const roleEl = document.getElementById('admin-user-role-filter')
@@ -3120,6 +4603,187 @@
           sortEl.dataset.bound = '1'
           sortEl.addEventListener('change', renderAdminUsers)
         }
+
+        const bindSignalTools = () => {
+          if (adminSignalToolsBound) return
+          adminSignalToolsBound = true
+          const btn = document.getElementById('admin-fix-signal-codes-btn')
+          const note = document.getElementById('admin-signal-note')
+          btn?.addEventListener('click', async () => {
+            const sess = getSession()
+            if (!sess || !sess.username || !sess.ph) {
+              showNote(note, 'Session expired — sign in again.', false)
+              return
+            }
+            if (!confirm('Generate Signal Codes for all missing/invalid users now?')) return
+
+            const beforeAudit = computeSignalCodeAudit(adminUsersCache)
+
+            btn.disabled = true
+            btn.textContent = 'Fixing…'
+
+            let updatedCount = null
+            let lastError = ''
+
+            // Primary path: server endpoint (service role) does not depend on DB RPCs.
+            try {
+              const endpointRes = await withTimeout(fetch('/api/member/backfill-signal-codes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: sess.username, ph: sess.ph }),
+              }), 6000, 'member backfill endpoint')
+
+              if (endpointRes && endpointRes.ok) {
+                const json = await endpointRes.json().catch(() => null)
+                if (json && json.ok) {
+                  updatedCount = Number(json.updated_count || 0)
+                } else {
+                  lastError = String((json && json.error) || 'endpoint backfill failed')
+                }
+              }
+            } catch (err) {
+              lastError = String((err && err.message) || 'endpoint request failed')
+            }
+
+            // Fallback path: DB RPC (requires migration 031).
+            if (updatedCount === null) {
+              const { data: rpcResult, error: rpcErr } = await supabase.rpc('admin_fix_missing_signal_codes', {
+                p_actor_username: String(sess.username || '').toLowerCase(),
+                p_actor_ph: sess.ph,
+              })
+
+              if (!rpcErr && rpcResult && rpcResult.ok) {
+                updatedCount = Number(rpcResult.updated_count || 0)
+              } else if (rpcErr) {
+                lastError = String(rpcErr.message || 'rpc backfill failed')
+              } else {
+                lastError = String((rpcResult && rpcResult.error) || 'rpc backfill failed')
+              }
+            }
+
+            btn.disabled = false
+            btn.textContent = 'Fix Missing Signal Codes'
+
+            if (updatedCount === null) {
+              const hint = lastError.toLowerCase().includes('does not exist') || lastError.toLowerCase().includes('not found')
+                ? ' Run migration 031_signal_code_recovery_rpcs.sql in Supabase SQL Editor, then retry.'
+                : ''
+              showNote(note, 'Backfill failed: ' + (lastError || 'unknown error') + '.' + hint, false)
+              return
+            }
+
+            await loadAllUsers()
+            const afterAudit = computeSignalCodeAudit(adminUsersCache)
+            showNote(
+              note,
+              'Signal Code backfill complete. Updated users: '
+                + String(updatedCount || 0)
+                + ' | Missing: ' + beforeAudit.missing + '→' + afterAudit.missing
+                + ' | Invalid: ' + beforeAudit.invalid + '→' + afterAudit.invalid
+                + ' | Duplicates: ' + beforeAudit.duplicateCodeGroups + '→' + afterAudit.duplicateCodeGroups,
+              true
+            )
+          })
+
+          // "Copy DB Migration SQL" — copies migration 031 to clipboard so admin
+          // can paste it directly into Supabase SQL Editor.
+          const copyMigBtn = document.getElementById('admin-copy-migration-sql-btn')
+          copyMigBtn?.addEventListener('click', async () => {
+            const migrationSql = `-- Run this in your Supabase SQL Editor to enable Signal Code assignment RPCs.
+-- https://supabase.com/dashboard → Project → SQL Editor → New Query
+
+CREATE OR REPLACE FUNCTION fas_signal_code_is_valid(p_code TEXT)
+RETURNS BOOLEAN LANGUAGE plpgsql IMMUTABLE AS $$
+BEGIN
+  IF p_code IS NULL THEN RETURN FALSE; END IF;
+  RETURN upper(trim(p_code)) ~ '^SIG-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$';
+END; $$;
+
+CREATE OR REPLACE FUNCTION fas_generate_signal_code()
+RETURNS TEXT LANGUAGE plpgsql AS $$
+DECLARE
+  v_chars CONSTANT TEXT := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  v_code TEXT; v_part1 TEXT; v_part2 TEXT; i INTEGER; taken BOOLEAN;
+BEGIN
+  LOOP
+    v_part1 := ''; v_part2 := '';
+    FOR i IN 1..4 LOOP
+      v_part1 := v_part1 || substr(v_chars, 1 + floor(random() * length(v_chars))::INTEGER, 1);
+      v_part2 := v_part2 || substr(v_chars, 1 + floor(random() * length(v_chars))::INTEGER, 1);
+    END LOOP;
+    v_code := 'SIG-' || v_part1 || '-' || v_part2;
+    SELECT EXISTS(SELECT 1 FROM member_accounts WHERE platform_id IS NOT NULL AND upper(platform_id) = v_code) INTO taken;
+    IF NOT taken THEN RETURN v_code; END IF;
+  END LOOP;
+END; $$;
+
+CREATE OR REPLACE FUNCTION fas_backfill_missing_signal_codes()
+RETURNS INTEGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE rec RECORD; updated_count INTEGER := 0; need_fix BOOLEAN;
+BEGIN
+  FOR rec IN SELECT m.id, m.platform_id FROM member_accounts m ORDER BY m.created_at ASC NULLS LAST, m.id ASC LOOP
+    need_fix := FALSE;
+    IF rec.platform_id IS NULL OR NOT fas_signal_code_is_valid(rec.platform_id) THEN need_fix := TRUE;
+    ELSE
+      IF EXISTS(SELECT 1 FROM member_accounts m2 WHERE m2.id <> rec.id AND m2.platform_id IS NOT NULL AND upper(m2.platform_id) = upper(rec.platform_id)) THEN need_fix := TRUE; END IF;
+    END IF;
+    IF need_fix THEN UPDATE member_accounts SET platform_id = fas_generate_signal_code() WHERE id = rec.id; updated_count := updated_count + 1; END IF;
+  END LOOP;
+  RETURN updated_count;
+END; $$;
+
+CREATE OR REPLACE FUNCTION ensure_member_signal_code(p_username TEXT, p_ph TEXT)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  v_username TEXT := lower(trim(p_username));
+  v_exists BOOLEAN := FALSE; v_current TEXT; v_next TEXT;
+BEGIN
+  SELECT EXISTS(SELECT 1 FROM member_accounts WHERE username = v_username AND password_hash = p_ph) INTO v_exists;
+  IF NOT v_exists THEN RETURN jsonb_build_object('ok', false, 'error', 'Authentication failed.'); END IF;
+  SELECT platform_id INTO v_current FROM member_accounts WHERE username = v_username LIMIT 1;
+  IF v_current IS NOT NULL AND fas_signal_code_is_valid(v_current) THEN
+    RETURN jsonb_build_object('ok', true, 'code', upper(trim(v_current)), 'updated', false);
+  END IF;
+  v_next := fas_generate_signal_code();
+  UPDATE member_accounts SET platform_id = v_next WHERE username = v_username;
+  RETURN jsonb_build_object('ok', true, 'code', v_next, 'updated', true);
+END; $$;
+
+CREATE OR REPLACE FUNCTION admin_fix_missing_signal_codes(p_actor_username TEXT, p_actor_ph TEXT)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE v_actor_role TEXT; v_updated INTEGER;
+BEGIN
+  SELECT role INTO v_actor_role FROM member_accounts WHERE username = lower(trim(p_actor_username)) AND password_hash = p_actor_ph LIMIT 1;
+  IF v_actor_role IS NULL THEN RETURN jsonb_build_object('ok', false, 'error', 'Authentication failed.'); END IF;
+  IF v_actor_role <> 'super_admin' THEN RETURN jsonb_build_object('ok', false, 'error', 'Only super_admin can run full Signal Code backfill.'); END IF;
+  SELECT fas_backfill_missing_signal_codes() INTO v_updated;
+  RETURN jsonb_build_object('ok', true, 'updated_count', v_updated);
+END; $$;
+
+-- Assign codes to all users missing them right now:
+SELECT fas_backfill_missing_signal_codes();
+
+GRANT EXECUTE ON FUNCTION fas_signal_code_is_valid(TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION fas_generate_signal_code() TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION fas_backfill_missing_signal_codes() TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION ensure_member_signal_code(TEXT, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION admin_fix_missing_signal_codes(TEXT, TEXT) TO anon, authenticated;`
+            try {
+              await navigator.clipboard.writeText(migrationSql)
+              const prev = copyMigBtn.textContent
+              copyMigBtn.textContent = 'Copied! Paste in Supabase SQL Editor'
+              copyMigBtn.classList.add('dash-copy-btn--ok')
+              setTimeout(() => {
+                copyMigBtn.textContent = prev
+                copyMigBtn.classList.remove('dash-copy-btn--ok')
+              }, 3000)
+            } catch (_) {
+              alert('Could not copy. Open supabase/migrations/031_signal_code_recovery_rpcs.sql and run it in your Supabase SQL Editor.')
+            }
+          })
+        }
+
+        bindSignalTools()
       } catch (_) {
         showError('Could not load users right now. Please try again.')
       } finally {
@@ -3143,6 +4807,230 @@
       el.textContent = msg
       el.className   = 'dash-save-note dash-save-note--' + (ok ? 'ok' : 'err')
       setTimeout(() => { if (el) el.textContent = '' }, 4000)
+    }
+
+    function withTimeout(promise, ms, label) {
+      let timer = null
+      const timeout = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error((label || 'operation') + ' timed out')), ms)
+      })
+      return Promise.race([promise, timeout]).finally(() => { if (timer) clearTimeout(timer) })
+    }
+
+    function isValidSignalCode(code) {
+      return /^SIG-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/i.test(String(code || '').trim())
+    }
+
+    function generateSignalCode() {
+      const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+      const bytes = new Uint8Array(8)
+      crypto.getRandomValues(bytes)
+      let out = 'SIG-'
+      for (let i = 0; i < 4; i++) out += alpha[bytes[i] % alpha.length]
+      out += '-'
+      for (let i = 4; i < 8; i++) out += alpha[bytes[i] % alpha.length]
+      return out
+    }
+
+    // Auto-assign a Signal Code to the current signed-in user if their row
+    // has no valid platform_id. Runs silently in the live user path — never
+    // shows "run backfill" to a normal user.
+    async function autoAssignSignalCode(memberRow) {
+      if (!memberRow || isValidSignalCode(memberRow.platform_id)) return memberRow
+
+      // Show temporary assigning state in identity UI immediately.
+      signalCodeUiState = 'assigning'
+      const assignMsg = 'Assigning your Signal Code...'
+      const sigIdEl = document.getElementById('identity-signal-id')
+      const idSigEl = document.getElementById('id-signal-id')
+      if (sigIdEl) sigIdEl.textContent = assignMsg
+      if (idSigEl) idSigEl.textContent = assignMsg
+      setSignalCodeDiagnostics('assigning code for @' + myUsername + '...', true)
+
+      // Fail-safe: never leave UI stuck in assigning state.
+      const assignStartedAt = Date.now()
+
+      if (!SUPABASE_READY || !supabase) {
+        signalCodeUiState = 'error'
+        setSignalCodeDiagnostics('supabase client unavailable.', false)
+        return memberRow
+      }
+
+      let assigned = null
+
+      // Primary path: server-side RPC can assign code even if direct row update
+      // is blocked by policies. Auth model matches the rest of the app.
+      try {
+        const sess = getSession()
+        const ph = String((sess && sess.ph) || '')
+        if (ph) {
+          // First try server endpoint (service-role path, no DB RPC dependency).
+          try {
+            const ensureRes = await withTimeout(fetch('/api/member/ensure-signal-code', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: myUsername, ph }),
+            }), 4500, 'member ensure endpoint')
+            if (ensureRes && ensureRes.ok) {
+              const ensureJson = await ensureRes.json()
+              if (ensureJson && ensureJson.ok && isValidSignalCode(ensureJson.code)) {
+                assigned = String(ensureJson.code).toUpperCase()
+                setSignalCodeDiagnostics('server ensure endpoint succeeded.', true)
+              } else if (ensureJson && !ensureJson.ok) {
+                setSignalCodeDiagnostics('server ensure endpoint rejected: ' + (ensureJson.error || 'unknown') + '.', false)
+              }
+            }
+          } catch (_) {}
+
+          // Fallback to DB RPC if endpoint is unavailable.
+          if (!assigned) {
+          const { data: rpcResult, error: rpcErr } = await withTimeout(
+            supabase.rpc('ensure_member_signal_code', {
+              p_username: myUsername,
+              p_ph: ph,
+            }),
+            4500,
+            'ensure_member_signal_code'
+          )
+          if (!rpcErr && rpcResult && rpcResult.ok && isValidSignalCode(rpcResult.code)) {
+            assigned = String(rpcResult.code).toUpperCase()
+            setSignalCodeDiagnostics('rpc ensure_member_signal_code succeeded.', true)
+          } else if (rpcErr) {
+            setSignalCodeDiagnostics('rpc ensure_member_signal_code error: ' + (rpcErr.message || 'unknown') + '.', false)
+          } else if (rpcResult && !rpcResult.ok) {
+            setSignalCodeDiagnostics('rpc ensure_member_signal_code rejected: ' + (rpcResult.error || 'unknown') + '.', false)
+          }
+          }
+        }
+      } catch (_) {}
+
+      // Fallback: direct update with retries for environments without RPC.
+      if (!assigned) {
+        for (let attempt = 0; attempt < 8; attempt++) {
+          const candidate = generateSignalCode()
+          let save = null
+          try {
+            save = await withTimeout(updateMember(myUsername, { platform_id: candidate }), 3200, 'updateMember')
+          } catch (err) {
+            setSignalCodeDiagnostics((err && err.message) || 'updateMember timed out.', false)
+            break
+          }
+          if (save && save.ok) {
+            assigned = candidate
+            break
+          }
+          const msg = String((save && save.error && save.error.message) || '').toLowerCase()
+          const isCollision = msg.includes('duplicate') || msg.includes('unique') || msg.includes('platform_id')
+          if (!isCollision) break
+        }
+      }
+
+      if (!assigned) {
+        signalCodeUiState = 'error'
+        const failMsg = 'Unable to assign Signal Code right now.'
+        if (sigIdEl) sigIdEl.textContent = failMsg
+        if (idSigEl) idSigEl.textContent = failMsg
+        setSignalCodeDiagnostics('all assignment paths failed.', false)
+        return memberRow
+      }
+
+      signalCodeUiState = 'ready'
+      setSignalCodeDiagnostics('assigned ' + assigned + ' and refreshing member record.', true)
+
+      // Write new code into localStorage so phone.js and other pages see it immediately.
+      try {
+        const stored = JSON.parse(localStorage.getItem('fas_user') || '{}')
+        stored.platform_id = assigned
+        localStorage.setItem('fas_user', JSON.stringify(stored))
+      } catch (_) {}
+
+      // Re-fetch the authoritative row and return it.
+      let fresh = null
+      try {
+        fresh = await withTimeout(getMember(myUsername), 3200, 'getMember refresh')
+      } catch (_) {}
+      const merged = fresh || { ...memberRow, platform_id: assigned }
+      if (!isValidSignalCode(merged.platform_id) && (Date.now() - assignStartedAt) > 2500) {
+        signalCodeUiState = 'error'
+        setSignalCodeDiagnostics('assignment returned but final code validation failed.', false)
+      }
+      return merged
+    }
+
+    async function runAdminGlobalSignalCodeBackfill(sess) {
+      if (!sess || !sess.username || !sess.ph) return null
+      const role = String((memberData && memberData.role) || '').toLowerCase()
+      if (role !== 'super_admin') return null
+
+      const runKey = 'fas_signal_code_backfill_done_' + String(sess.username || '').toLowerCase()
+      if (sessionStorage.getItem(runKey) === '1') return null
+
+      // First try server endpoint to avoid DB RPC dependency.
+      try {
+        const backfillRes = await withTimeout(fetch('/api/member/backfill-signal-codes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: String(sess.username || '').toLowerCase(), ph: sess.ph }),
+        }), 7000, 'member backfill endpoint')
+        if (backfillRes && backfillRes.ok) {
+          const json = await backfillRes.json()
+          if (json && json.ok) {
+            sessionStorage.setItem(runKey, '1')
+            setSignalCodeDiagnostics('server global backfill updated ' + Number(json.updated_count || 0) + ' user(s).', true)
+            return { ok: true, updated: Number(json.updated_count || 0) }
+          }
+        }
+      } catch (_) {}
+
+      const { data: rpcResult, error: rpcErr } = await withTimeout(
+        supabase.rpc('admin_fix_missing_signal_codes', {
+          p_actor_username: String(sess.username || '').toLowerCase(),
+          p_actor_ph: sess.ph,
+        }),
+        6000,
+        'admin_fix_missing_signal_codes'
+      )
+
+      // Mark as attempted once per session to avoid repeated global scans.
+      sessionStorage.setItem(runKey, '1')
+
+      if (rpcErr) {
+        setSignalCodeDiagnostics('admin global backfill error: ' + (rpcErr.message || 'unknown') + '.', false)
+        return { ok: false, error: rpcErr.message || 'Backfill RPC failed.' }
+      }
+      if (!rpcResult || !rpcResult.ok) {
+        setSignalCodeDiagnostics('admin global backfill denied: ' + ((rpcResult && rpcResult.error) || 'unknown') + '.', false)
+        return { ok: false, error: (rpcResult && rpcResult.error) || 'Backfill denied.' }
+      }
+      setSignalCodeDiagnostics('admin global backfill updated ' + Number(rpcResult.updated_count || 0) + ' user(s).', true)
+      return { ok: true, updated: Number(rpcResult.updated_count || 0) }
+    }
+
+    function computeSignalCodeAudit(users) {
+      const rows = Array.isArray(users) ? users : []
+      const total = rows.length
+
+      let missing = 0
+      let invalid = 0
+      const seen = new Map()
+
+      rows.forEach((u) => {
+        const raw = String((u && u.platform_id) || '').trim()
+        if (!raw) {
+          missing += 1
+          return
+        }
+
+        if (!isValidSignalCode(raw)) {
+          invalid += 1
+        }
+
+        const key = raw.toUpperCase()
+        seen.set(key, (seen.get(key) || 0) + 1)
+      })
+
+      const duplicateCodeGroups = Array.from(seen.values()).filter((n) => n > 1).length
+      return { total, missing, invalid, duplicateCodeGroups }
     }
 
     function escHtml(str) {
@@ -3200,12 +5088,37 @@
       } else if (id === 'copy-signal-id-btn') {
         const s = document.getElementById('id-signal-id')
         const text = s ? s.textContent.trim() : ''
-        if (text.startsWith('sig_')) copyToClipboard(text, btn)
+        if (isValidSignalCode(text)) copyToClipboard(text.toUpperCase(), btn)
         else { btn.textContent = 'Not ready'; setTimeout(() => { btn.textContent = 'Copy' }, 1800) }
       } else if (id === 'copy-recovery-code-btn') {
         const c = document.getElementById('recovery-new-code-display')
         copyToClipboard(c ? c.textContent.trim() : '', btn)
       }
+    })
+
+    // Retry button: re-runs Signal Code assignment on demand.
+    document.getElementById('signal-code-retry-btn')?.addEventListener('click', async () => {
+      const retryBtn = document.getElementById('signal-code-retry-btn')
+      const retryNote = document.getElementById('signal-code-retry-note')
+      if (retryBtn) { retryBtn.disabled = true; retryBtn.textContent = 'Retrying…' }
+      if (retryNote) retryNote.textContent = ''
+      try {
+        const fresh = memberData ? { ...memberData } : null
+        if (fresh) {
+          fresh.platform_id = null // force re-assignment attempt
+          const result = await autoAssignSignalCode(fresh)
+          if (result && isValidSignalCode(result.platform_id)) {
+            memberData = result
+            applySignalCodeUiState(result)
+            if (retryNote) { retryNote.textContent = 'Code assigned!'; retryNote.style.color = '#22c55e' }
+          } else {
+            if (retryNote) { retryNote.textContent = 'Still failing — see diagnostics above.'; retryNote.style.color = '#f87171' }
+          }
+        }
+      } catch (_) {
+        if (retryNote) { retryNote.textContent = 'Error during retry.'; retryNote.style.color = '#f87171' }
+      }
+      if (retryBtn) { retryBtn.disabled = false; retryBtn.textContent = 'Retry Signal Code Assignment' }
     })
 
     // ── Bytes formatter ───────────────────────────────────────
@@ -3218,20 +5131,21 @@
     }
 
     // ── Storage plan limits ───────────────────────────────────
-    const STORAGE_LIMITS = {
-      free:    150 * 1024 * 1024,   // 150 MB
-      starter: 600 * 1024 * 1024,   // 600 MB
-      pro:     600 * 1024 * 1024,   // 600 MB
-      premium: 600 * 1024 * 1024,   // 600 MB
-    }
+    // Keep limits function-local so calls from early init never hit TDZ.
     function getStorageLimitForPlan(planType) {
-      return STORAGE_LIMITS[String(planType || 'free').toLowerCase()] || STORAGE_LIMITS.free
+      const limits = {
+        free:    150 * 1024 * 1024,   // 150 MB
+        starter: 600 * 1024 * 1024,   // 600 MB
+        pro:     600 * 1024 * 1024,   // 600 MB
+        premium: 600 * 1024 * 1024,   // 600 MB
+      }
+      return limits[String(planType || 'free').toLowerCase()] || limits.free
     }
 
     // ── Update storage bar UI ─────────────────────────────────
     function updateStorageBar(usedBytes, limitBytes) {
       const used  = Number(usedBytes  || 0)
-      const limit = Number(limitBytes || STORAGE_LIMITS.free)
+      const limit = Number(limitBytes || getStorageLimitForPlan('free'))
       const pct   = Math.min(100, Math.round((used / limit) * 100))
       const remaining = Math.max(0, limit - used)
 
@@ -3261,10 +5175,18 @@
 
       setEl('id-display-name', m.display_name || myUsername || '—')
       setEl('id-username',     '@' + myUsername)
-      setEl('id-signal-id',    m.platform_id  || 'Not yet assigned — re-login to generate.')
+      setEl('id-signal-id',    signalCodeDisplay(m.platform_id))
       setEl('id-role',         m.role         || 'user')
       setEl('id-plan',         planMeta ? planMeta.label : plan)
       setEl('id-status',       m.member_status || m.account_status || 'active')
+
+      applyVaultSnapshot({
+        credits_balance: m.credits_balance,
+        flow_rate_per_min: m.flow_rate_per_min,
+        flow_earned_today: m.flow_earned_today,
+        daily_cap: m.daily_cap,
+        vault_tier_label: m.vault_tier_label,
+      })
 
       // Founder badge
       const founderRow = document.getElementById('id-founder-row')
@@ -3279,6 +5201,52 @@
 
       // Storage
       updateStorageBar(m.storage_used_bytes || 0, getStorageLimitForPlan(plan))
+
+      // Veil
+      currentVeilState = normalizeVeilState(m.veil_state || currentVeilState)
+      updateVeilUI()
+      updateVaultUI()
+    }
+
+    async function setVeilState(nextState) {
+      const noteEl = document.getElementById('veil-action-note')
+      const next = normalizeVeilState(nextState)
+      if (next === normalizeVeilState(currentVeilState)) {
+        showNote(noteEl, 'Veil already set to ' + veilLabel(next) + '.', true)
+        return
+      }
+
+      const prev = normalizeVeilState(currentVeilState)
+      currentVeilState = next
+      updateVeilUI()
+      updateSessionVeilState(next)
+
+      // Persist to member row when schema supports veil_state.
+      const dbRes = await updateMember(myUsername, { veil_state: next })
+      if (!dbRes || !dbRes.ok) {
+        const msg = String((dbRes && dbRes.error && dbRes.error.message) || '').toLowerCase()
+        const schemaMissing = msg.includes('veil_state') && msg.includes('column')
+        if (!schemaMissing) {
+          currentVeilState = prev
+          updateVeilUI()
+          updateSessionVeilState(prev)
+          showNote(noteEl, 'Could not save Veil state right now. Try again.', false)
+          return
+        }
+      } else if (dbRes.data) {
+        memberData = { ...(memberData || {}), ...dbRes.data }
+      }
+
+      const publicSync = await syncPublicProfileAndPage(collectProfileFormState())
+      if (!publicSync.ok) {
+        console.warn('[FAS] veil sync warning:', publicSync.error && publicSync.error.message)
+      }
+
+      upsertPulseEvent(next === 'unveiled' ? 'Identity returned to Unveiled' : 'Veil activated: ' + veilLabel(next), new Date().toISOString())
+      syncVaultFlowTick(true)
+      maybeShowMoment(true)
+      updateVaultUI()
+      showNote(noteEl, 'Veil state updated: ' + veilLabel(next), true)
     }
 
     // ── Load recovery state into UI ───────────────────────────
@@ -3312,6 +5280,182 @@
         if (okEl)      okEl.style.display      = 'none'
         if (genBtn)    { genBtn.textContent = 'Generate Recovery Code'; genBtn.style.display = '' }
       }
+    }
+
+    document.getElementById('veil-set-unveiled')?.addEventListener('click', () => setVeilState('unveiled'))
+    document.getElementById('veil-set-veiled')?.addEventListener('click', () => setVeilState('veiled'))
+    document.getElementById('veil-set-deep')?.addEventListener('click', () => setVeilState('deep'))
+
+    document.getElementById('vault-boost-btn')?.addEventListener('click', () => {
+      spendVaultCredits('boost_signal', 'Signal Boost', 25)
+    })
+
+    document.getElementById('vault-visibility-btn')?.addEventListener('click', () => {
+      spendVaultCredits('visibility_burst', 'Visibility Burst', 50)
+    })
+
+    document.getElementById('vault-highlight-btn')?.addEventListener('click', () => {
+      spendVaultCredits('featured_highlight', 'Featured Page Highlight', 100)
+    })
+
+    document.getElementById('vault-transfer-code')?.addEventListener('input', updateVaultTransferPreview)
+    document.getElementById('vault-transfer-amount')?.addEventListener('input', updateVaultTransferPreview)
+    document.getElementById('vault-transfer-message')?.addEventListener('input', updateVaultTransferPreview)
+    document.getElementById('vault-transfer-btn')?.addEventListener('click', submitVaultTransfer)
+
+    function renderAdminWalletAudit(payload) {
+      const wrap = document.getElementById('admin-wallet-audit-list')
+      if (!wrap) return
+      const actions = Array.isArray(payload && payload.actions) ? payload.actions : []
+      const transfers = Array.isArray(payload && payload.transfers) ? payload.transfers : []
+
+      const actionCards = actions.slice(0, 8).map((row) => {
+        const actionType = String(row && row.action_type || 'action')
+        const actor = String(row && row.actor_username || 'system')
+        const target = String(row && row.target_username || '-')
+        const reason = String(row && row.reason || '')
+        const amount = Number(row && row.amount || 0)
+        const amountLine = amount > 0 ? ' · ' + formatVaultAmount(amount) : ''
+        return '<div style="padding:0.72rem 0.86rem;border-radius:12px;background:rgba(11,15,25,0.32);border:1px solid rgba(255,255,255,0.08);">'
+          + '<p style="margin:0;font-size:0.76rem;color:var(--text-1);font-weight:700;">' + escHtml(actionType.replace(/_/g, ' ')) + amountLine + '</p>'
+          + '<p style="margin:0.2rem 0 0;font-size:0.7rem;color:var(--text-3);">@' + escHtml(actor) + ' → @' + escHtml(target) + '</p>'
+          + (reason ? '<p style="margin:0.28rem 0 0;font-size:0.7rem;color:var(--text-2);">' + escHtml(reason) + '</p>' : '')
+          + '<p style="margin:0.32rem 0 0;font-size:0.68rem;color:var(--text-3);">' + escHtml(formatVaultActivityTime(row && row.created_at)) + '</p>'
+          + '</div>'
+      }).join('')
+
+      const transferCards = transfers.slice(0, 8).map((row) => {
+        const sender = String(row && row.sender_code || 'SIG-XXXX-XXXX')
+        const recipient = String(row && row.recipient_code || 'SIG-XXXX-XXXX')
+        const reversed = row && row.reversed === true
+        const reversedLine = reversed
+          ? '<p style="margin:0.22rem 0 0;font-size:0.69rem;color:#f97316;">Reversed by @' + escHtml(String(row && row.reversed_by || 'system')) + '</p>'
+          : ''
+        return '<div style="padding:0.72rem 0.86rem;border-radius:12px;background:rgba(11,15,25,0.32);border:1px solid rgba(255,255,255,0.08);">'
+          + '<p style="margin:0;font-size:0.75rem;color:var(--text-1);font-weight:700;">' + formatVaultAmount(row && row.amount || 0) + ' · ' + escHtml(sender) + ' → ' + escHtml(recipient) + '</p>'
+          + '<p style="margin:0.2rem 0 0;font-size:0.69rem;color:var(--text-3);">Fee: ' + formatVaultAmount(row && row.fee || 0) + ' · Recipient got: ' + formatVaultAmount(row && row.amount_received || 0) + '</p>'
+          + reversedLine
+          + '<p style="margin:0.32rem 0 0;font-size:0.68rem;color:var(--text-3);">' + escHtml(formatVaultActivityTime(row && row.created_at)) + '</p>'
+          + '</div>'
+      }).join('')
+
+      const a = actionCards || '<p style="font-size:0.74rem;color:var(--text-3);line-height:1.65;margin:0;">No admin wallet actions yet.</p>'
+      const t = transferCards || '<p style="font-size:0.74rem;color:var(--text-3);line-height:1.65;margin:0;">No wallet transfers logged yet.</p>'
+      wrap.innerHTML = '<p style="margin:0;font-size:0.75rem;font-weight:700;color:var(--text-2);letter-spacing:0.06em;text-transform:uppercase;">Admin Actions</p>'
+        + a
+        + '<p style="margin:0.3rem 0 0;font-size:0.75rem;font-weight:700;color:var(--text-2);letter-spacing:0.06em;text-transform:uppercase;">Recent Transfers</p>'
+        + t
+    }
+
+    async function loadAdminWalletAudit() {
+      if (adminWalletAuditInFlight) return
+      const sess = getSession()
+      const noteEl = document.getElementById('admin-wallet-note')
+      const wrap = document.getElementById('admin-wallet-audit-list')
+      if (!sess || !sess.username || !sess.ph) {
+        showNote(noteEl, 'Session expired — sign in again.', false)
+        return
+      }
+
+      adminWalletAuditInFlight = true
+      if (wrap) wrap.innerHTML = '<p style="font-size:0.74rem;color:var(--text-3);line-height:1.65;margin:0;">Loading wallet audit...</p>'
+      try {
+        const res = await withTimeout(fetch('/api/admin/wallet/audit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ actor_username: sess.username, ph: sess.ph }),
+        }), 8000, 'wallet audit')
+        const payload = await res.json().catch(() => null)
+        if (!res.ok || !payload || !payload.ok) {
+          throw new Error((payload && payload.error) || 'Could not load wallet audit.')
+        }
+        renderAdminWalletAudit(payload)
+        showNote(noteEl, 'Wallet audit refreshed.', true)
+      } catch (err) {
+        if (wrap) wrap.innerHTML = '<p style="font-size:0.74rem;color:#f87171;line-height:1.65;margin:0;">Wallet audit unavailable right now.</p>'
+        showNote(noteEl, (err && err.message) || 'Could not load wallet audit.', false)
+      } finally {
+        adminWalletAuditInFlight = false
+      }
+    }
+
+    function bindAdminWalletTools() {
+      if (adminWalletToolsBound) return
+      adminWalletToolsBound = true
+      const freezeBtn = document.getElementById('admin-wallet-freeze-btn')
+      const unfreezeBtn = document.getElementById('admin-wallet-unfreeze-btn')
+      const reverseBtn = document.getElementById('admin-wallet-reverse-btn')
+      const refreshBtn = document.getElementById('admin-wallet-audit-refresh-btn')
+      const noteEl = document.getElementById('admin-wallet-note')
+
+      freezeBtn?.addEventListener('click', async () => {
+        const sess = getSession()
+        const target = String(document.getElementById('admin-wallet-target-username')?.value || '').trim().toLowerCase()
+        const reason = String(document.getElementById('admin-wallet-freeze-reason')?.value || '').trim().slice(0, 300)
+        if (!sess || !sess.username || !sess.ph) { showNote(noteEl, 'Session expired — sign in again.', false); return }
+        if (!target) { showNote(noteEl, 'Enter target username.', false); return }
+
+        const res = await fetch('/api/admin/wallet/freeze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ actor_username: sess.username, ph: sess.ph, target_username: target, freeze: true, reason }),
+        })
+        const payload = await res.json().catch(() => null)
+        if (!res.ok || !payload || !payload.ok) {
+          showNote(noteEl, (payload && payload.error) || 'Freeze failed.', false)
+          return
+        }
+        showNote(noteEl, '@' + target + ' wallet frozen.', true)
+        await loadAllUsers()
+        await loadAdminWalletAudit()
+      })
+
+      unfreezeBtn?.addEventListener('click', async () => {
+        const sess = getSession()
+        const target = String(document.getElementById('admin-wallet-target-username')?.value || '').trim().toLowerCase()
+        if (!sess || !sess.username || !sess.ph) { showNote(noteEl, 'Session expired — sign in again.', false); return }
+        if (!target) { showNote(noteEl, 'Enter target username.', false); return }
+
+        const res = await fetch('/api/admin/wallet/freeze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ actor_username: sess.username, ph: sess.ph, target_username: target, freeze: false }),
+        })
+        const payload = await res.json().catch(() => null)
+        if (!res.ok || !payload || !payload.ok) {
+          showNote(noteEl, (payload && payload.error) || 'Unfreeze failed.', false)
+          return
+        }
+        showNote(noteEl, '@' + target + ' wallet unfrozen.', true)
+        await loadAllUsers()
+        await loadAdminWalletAudit()
+      })
+
+      reverseBtn?.addEventListener('click', async () => {
+        const sess = getSession()
+        const transferId = String(document.getElementById('admin-wallet-reverse-transfer-id')?.value || '').trim()
+        const reason = String(document.getElementById('admin-wallet-reverse-reason')?.value || '').trim().slice(0, 300)
+        if (!sess || !sess.username || !sess.ph) { showNote(noteEl, 'Session expired — sign in again.', false); return }
+        if (!transferId) { showNote(noteEl, 'Enter transfer ID.', false); return }
+        if (!confirm('Reverse transfer ' + transferId + '?')) return
+
+        const res = await fetch('/api/admin/wallet/reverse-transfer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ actor_username: sess.username, ph: sess.ph, transfer_id: transferId, reason }),
+        })
+        const payload = await res.json().catch(() => null)
+        if (!res.ok || !payload || !payload.ok) {
+          showNote(noteEl, (payload && payload.error) || 'Transfer reversal failed.', false)
+          return
+        }
+        showNote(noteEl, 'Transfer reversed.', true)
+        await loadAllUsers()
+        await loadAdminWalletAudit()
+        await loadVaultActivity(true)
+      })
+
+      refreshBtn?.addEventListener('click', loadAdminWalletAudit)
     }
 
     // ── Generate / reset recovery code ────────────────────────
@@ -3460,19 +5604,23 @@
 
           uploadBtn.disabled = true; uploadBtn.textContent = 'Uploading…'
           try {
-            const { url, error } = await uploadAvatar(myUsername, file)
+            const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
+            const renamed = new File([file], 'avatar-' + Date.now() + '.' + ext, { type: file.type, lastModified: file.lastModified })
+            const { url, error } = await uploadProfileImage(myUsername, renamed)
             if (error || !url) {
               uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Avatar'
               showNote(noteEl, 'Upload failed: ' + (error && error.message ? error.message : 'unknown error'), false)
               return
             }
-            // Persist URL to profiles
-            if (SUPABASE_READY && supabase) {
-              await supabase.from('profiles').update({ avatar_url: url }).eq('username', myUsername)
-            }
             // Fill URL paste field so profile-save also uses the new URL
             const urlInput = document.getElementById('edit-avatar-url')
             if (urlInput) urlInput.value = url
+            const syncRes = await syncPublicProfileAndPage(collectProfileFormState())
+            if (!syncRes.ok) {
+              uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Avatar'
+              showNote(noteEl, 'Avatar uploaded, but public profile sync failed. Save Profile next.', false)
+              return
+            }
             // Update the header avatar preview immediately
             const avatarDiv = document.querySelector('.dash-avatar')
             if (avatarDiv) {
@@ -3480,9 +5628,11 @@
               if (!img) { img = document.createElement('img'); img.alt = 'Avatar'; avatarDiv.appendChild(img) }
               img.src = url; img.style.display = ''
             }
+            publicProfileData = syncRes.profile
+            updateProfileSummary(collectProfileFormState())
             await addToStorageUsed(file.size)
             uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Avatar'
-            showNote(noteEl, 'Avatar uploaded ✓', true)
+            showNote(noteEl, 'Avatar uploaded ✓ Save Profile if you changed anything else.', true)
           } catch(err) {
             uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Avatar'
             showNote(noteEl, 'Upload error: ' + (err.message || 'unknown'), false)
@@ -3517,19 +5667,27 @@
 
           uploadBtn.disabled = true; uploadBtn.textContent = 'Uploading…'
           try {
-            const { url, error } = await uploadCover(myUsername, file)
+            const ext = (file.name.split('.').pop() || 'jpg').toLowerCase()
+            const renamed = new File([file], 'banner-' + Date.now() + '.' + ext, { type: file.type, lastModified: file.lastModified })
+            const { url, error } = await uploadProfileImage(myUsername, renamed)
             if (error || !url) {
               uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Banner'
               showNote(noteEl, 'Upload failed: ' + (error && error.message ? error.message : 'unknown error'), false)
               return
             }
             if (SUPABASE_READY && supabase) {
-              await supabase.from('profiles').update({ cover_image_url: url }).eq('username', myUsername)
-              // Best-effort update to member_accounts cover_url (column may exist)
-              supabase.from('member_accounts').update({ cover_url: url }).eq('username', myUsername).then(() => {})
+              await updateMember(myUsername, { cover_url: url })
             }
             const urlInput = document.getElementById('edit-cover-url')
             if (urlInput) urlInput.value = url
+            const syncRes = await syncPublicProfileAndPage(collectProfileFormState())
+            if (!syncRes.ok) {
+              uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Banner'
+              showNote(noteEl, 'Banner uploaded, but public profile sync failed. Save Profile next.', false)
+              return
+            }
+            publicProfileData = syncRes.profile
+            updateProfileSummary(collectProfileFormState())
             await addToStorageUsed(file.size)
             uploadBtn.disabled = false; uploadBtn.textContent = 'Upload Banner'
             showNote(noteEl, 'Banner uploaded ✓', true)

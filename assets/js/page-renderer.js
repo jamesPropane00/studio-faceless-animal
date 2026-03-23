@@ -125,6 +125,25 @@ function formatLocation(profile) {
   return [profile.city, profile.state].filter(Boolean).join(', ') || ''
 }
 
+function applyHeroCover(coverUrl) {
+  const hero = document.querySelector('.ap-hero')
+  if (!hero) return
+
+  if (!coverUrl) {
+    hero.style.backgroundImage = ''
+    hero.style.backgroundSize = ''
+    hero.style.backgroundPosition = ''
+    hero.style.backgroundRepeat = ''
+    return
+  }
+
+  const safeUrl = esc(coverUrl)
+  hero.style.backgroundImage = `linear-gradient(180deg, rgba(7,7,10,0.62) 0%, rgba(7,7,10,0.84) 100%), url("${safeUrl}")`
+  hero.style.backgroundSize = 'cover'
+  hero.style.backgroundPosition = 'center'
+  hero.style.backgroundRepeat = 'no-repeat'
+}
+
 /** Split name into words with italic last word */
 function heroHeadingHTML(name) {
   if (!name) return 'Creator'
@@ -418,6 +437,12 @@ function hydrateShared(profile, page) {
   const cat   = profile.category || 'creator'
   const loc   = formatLocation(profile)
   const name  = profile.display_name || profile.username || 'Creator'
+  const veilState = String(meta.veil_state || 'unveiled').toLowerCase()
+  const isVeiled = veilState === 'veiled' || veilState === 'deep'
+  const publicName = isVeiled ? 'Veiled User' : name
+  const publicBio = isVeiled
+    ? 'This creator is moving under the Veil. Identity details are intentionally masked on public surfaces.'
+    : (profile.bio || '')
   const plan  = profile.plan_type   || 'free'
   // Per-profile feature overrides from admin (profiles.plan_features column)
   const pfeat = profile.plan_features || {}
@@ -432,37 +457,41 @@ function hydrateShared(profile, page) {
   applyAccentColor(accent)
 
   // Document meta
-  document.title = `${name} — Faceless Animal Studios`
+  document.title = `${publicName} — Faceless Animal Studios`
   const metaDesc = document.querySelector('meta[name="description"]')
   if (metaDesc) {
     metaDesc.setAttribute('content',
-      `${name} — ${categoryLabel(cat)}${loc ? ` based in ${loc}` : ''}. Part of the Faceless Animal Studios platform.`)
+      `${publicName} — ${categoryLabel(cat)}${loc ? ` based in ${loc}` : ''}. Part of the Faceless Animal Studios platform.`)
   }
 
   // Basic text fills
-  fill('display_name', name)
+  fill('display_name', publicName)
   fill('username',     `@${profile.username || profile.slug}`)
   fill('category_label', categoryLabel(cat))
   fill('location',     loc)
-  fill('tagline',      page.subtitle || page.title || categoryLabel(cat))
+  fill('tagline',      isVeiled ? 'Moving under the Veil' : (page.subtitle || page.title || categoryLabel(cat)))
 
   // Hero heading with italic last word
   document.querySelectorAll('[data-f="hero_heading"]').forEach(el => {
-    el.innerHTML = heroHeadingHTML(page.title || name)
+    el.innerHTML = heroHeadingHTML(isVeiled ? 'Veiled Presence' : (page.title || name))
   })
 
   // Bio paragraphs
-  const bio = profile.bio || ''
+  const bio = publicBio
   const paras = bio.split(/\n\n+/).filter(Boolean)
   fill('bio_short', paras[0] || bio)
   slot('bio', paras.map(p => `<p>${esc(p)}</p>`).join('') || `<p>${esc(bio)}</p>`)
 
   // Avatar / profile image
-  if (profile.avatar_url) {
+  if (isVeiled) {
+    slot('avatar', '◉')
+  } else if (profile.avatar_url) {
     slot('avatar', `<img src="${esc(profile.avatar_url)}" alt="${esc(name)}" class="creator-avatar-img" />`)
   } else {
     slot('avatar', initials(name))
   }
+
+  applyHeroCover(profile.cover_image_url || '')
 
   // Tags — custom tags require Starter or per-profile override
   const canCustomTags = planAtLeast(plan, 'starter') || pfeat.custom_tags === true

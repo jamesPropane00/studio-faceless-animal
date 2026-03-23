@@ -17,9 +17,23 @@ import { supabase, SUPABASE_READY } from './supabase-client.js'
 const STORAGE_KEY = 'fas_user'
 const MEMBER_KEY  = 'fas_member'
 
+function normalizeVeilState(raw) {
+  const v = String(raw || '').toLowerCase().trim()
+  if (v === 'veiled') return 'veiled'
+  if (v === 'deep') return 'deep'
+  return 'unveiled'
+}
+
 // ── Session helpers ───────────────────────────────────────────
 export function getSession() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') } catch { return null }
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')
+    if (!raw) return null
+    raw.veil_state = normalizeVeilState(raw.veil_state)
+    return raw
+  } catch {
+    return null
+  }
 }
 
 export function isMember() {
@@ -35,9 +49,11 @@ export function setSession(username, display, extra) {
   const user = {
     username,
     display: display || username,
+    veil_state: normalizeVeilState(extra && extra.veil_state),
     ts: Date.now(),
     ...(extra || {}),
   }
+  user.veil_state = normalizeVeilState(user.veil_state)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
   localStorage.setItem(MEMBER_KEY, 'true')
 }
@@ -81,7 +97,9 @@ export async function getMember(username) {
     .from('member_accounts')
     .select('*')
     .eq('username', username.toLowerCase())
-    .single()
+    .order('last_active_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
   if (error) return null
   return data
 }
@@ -93,13 +111,57 @@ export async function updateMember(username, fields) {
   if (!SUPABASE_READY || !supabase) {
     return { ok: false, data: null, error: { message: 'Supabase is not ready.' } }
   }
-  const { data, error } = await supabase
+
+  const { data: targetRow, error: targetErr } = await supabase
     .from('member_accounts')
-    .update({ ...fields, last_active_at: new Date().toISOString() })
+    .select('id')
     .eq('username', username.toLowerCase())
-    .select()
-    .single()
-  if (error) {
+    .order('last_active_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (targetErr || !targetRow || !targetRow.id) {
+    return {
+      ok: false,
+      data: null,
+      error: {
+        message: (targetErr && targetErr.message) || 'Member row not found for save.',
+        code: (targetErr && targetErr.code) || null,
+        details: (targetErr && targetErr.details) || null,
+      },
+      strippedFields: [],
+    }
+  }
+
+  function extractMissingColumn(error) {
+    const msg = String((error && error.message) || '')
+    const schemaCacheMatch = msg.match(/Could not find the '([^']+)' column/i)
+    if (schemaCacheMatch && schemaCacheMatch[1]) return schemaCacheMatch[1]
+
+    const missingColumnMatch = msg.match(/column\s+['"]?([^'"\s]+)['"]?\s+does not exist/i)
+    if (missingColumnMatch && missingColumnMatch[1]) return missingColumnMatch[1]
+
+    return null
+  }
+
+  async function attemptUpdate(activeFields, strippedFields) {
+    const { data, error } = await supabase
+      .from('member_accounts')
+      .update({ ...activeFields, last_active_at: new Date().toISOString() })
+      .eq('id', targetRow.id)
+      .select()
+      .limit(1)
+      .maybeSingle()
+
+    if (!error) return { ok: true, data, error: null, strippedFields }
+
+    const missingColumn = extractMissingColumn(error)
+    if (missingColumn && Object.prototype.hasOwnProperty.call(activeFields, missingColumn)) {
+      const nextFields = { ...activeFields }
+      delete nextFields[missingColumn]
+      return attemptUpdate(nextFields, strippedFields.concat(missingColumn))
+    }
+
     console.info('[FAS] member-db: updateMember error', error.message)
     return {
       ok: false,
@@ -109,9 +171,11 @@ export async function updateMember(username, fields) {
         code: error.code || null,
         details: error.details || null,
       },
+      strippedFields,
     }
   }
-  return { ok: true, data, error: null }
+
+  return attemptUpdate(fields, [])
 }
 
 /**
@@ -197,7 +261,7 @@ export async function getPublicProfile(username) {
   if (!SUPABASE_READY || !supabase) return null
   const { data } = await supabase
     .from('profiles')
-    .select('username, display_name, bio, avatar_url, category, city, state, plan_type, slug, is_active')
+    .select('username, display_name, bio, avatar_url, cover_image_url, category, city, state, links_json, plan_type, slug, is_active')
     .eq('username', username.toLowerCase())
     .single()
   return data || null

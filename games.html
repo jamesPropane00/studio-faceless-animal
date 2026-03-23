@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
   <style>
     .upsell-banner {
       background: linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(109,40,217,0.08) 100%);
@@ -260,44 +260,45 @@
         </div>
 
         <div class="dash-card" style="padding:1.4rem 1.35rem;margin-bottom:1.2rem;">
-          <p class="section-label" style="margin-bottom:0.55rem;">Studio Build Notes</p>
-          <h3 style="font-size:1.3rem;font-weight:900;letter-spacing:-0.03em;color:var(--text);margin:0 0 0.7rem;">Games here are not side decorations. They come out of the same system work that built the platform.</h3>
-          <p style="font-size:0.86rem;line-height:1.8;color:var(--text-2);margin:0 0 0.85rem;">Faceless Animal Studios builds from the ground up: game loops, frontend systems, dashboards, admin controls, access layers, payment hooks, storage flows, and platform identity. The games page is one part of a larger studio practice where code, design, and street-level instinct all live in the same room. Nothing here is trying to imitate polished corporate game publishing. The work comes from building with what is available, fixing what is broken, and turning limited resources into something that still feels sharp, playable, and alive.</p>
-          <p style="font-size:0.84rem;line-height:1.8;color:var(--text-2);margin:0 0 0.85rem;">The studio direction carries founder energy through the product. Renee and Ariana are part of the foundation behind how this space is being shaped: not as a fake startup story, but as a real independent system built for people who make things, move culture, and need tools that do not flatten them. That means game work here sits next to platform engineering, creator identity systems, experimental UI, music infrastructure, and custom digital builds for people who need something more specific than a template.</p>
-          <p style="font-size:0.84rem;line-height:1.8;color:var(--text-2);margin:0;">So if someone lands here looking at the games, they should understand what the studio really does: browser games, Godot direction, interface systems, platform architecture, custom creator tools, bug fixing, rebuild work, and deployment-minded development that can actually go live instead of staying stuck as mockups.</p>
+          <p class="section-label" style="margin-bottom:0.55rem;">How This Actually Gets Built</p>
+          <h3 style="font-size:1.3rem;font-weight:900;letter-spacing:-0.03em;color:var(--text);margin:0 0 0.85rem;">This is not a game studio with a budget. It is one person with a browser, a terminal, and years of figuring it out the hard way.</h3>
+          <p style="font-size:0.86rem;line-height:1.88;color:var(--text-2);margin:0 0 0.85rem;">Every system on this platform was written from scratch. The authentication uses PBKDF2 key derivation with 100,000 iterations. The session model is anonymous-first — no email, no real-world identity tied to an account. The database migration list is 23 files deep. The admin panel verifies identity by checking a password hash against the member_accounts table before allowing any write. None of that came from a template. It came from late nights, broken builds, and a decision to actually understand what was being built instead of copying it.</p>
+          <p style="font-size:0.84rem;line-height:1.88;color:var(--text-2);margin:0 0 0.85rem;">The games live inside the same ecosystem that runs the radio, the creator pages, the member dashboard, the identity system, and the signal feed. They are not a separate side project stapled onto a marketing site. They are part of the studio’s practice of shipping real interactive work instead of just describing it. Quick Tap, Word Drop, Number Rush, and Beat Tap were all designed and built here — game loop, session state, mobile layout, access gating, and asset delivery all handled without a game engine framework in sight. The next ones are in progress using Godot for anything that needs physics or world state.</p>
+          <p style="font-size:0.84rem;line-height:1.88;color:var(--text-2);margin:0 0 0.85rem;">Faceless Animal Studios is based in Providence, RI. It runs five active divisions: music and radio culture, creator identity pages, platform infrastructure, games and interactive builds, and client work for people who need something that does not exist yet. The client work is where the underground instinct becomes useful to someone else — fixing broken platforms, building custom systems, finishing features that were started and abandoned, and writing things that actually deploy instead of getting stuck in a Figma file forever.</p>
+          <p style="font-size:0.84rem;line-height:1.88;color:var(--text-2);margin:0;">If you are here looking at games, you are also looking at everything else this studio does. The games are evidence. The platform behind them is the work.</p>
         </div>
 
         <div class="game-grid" role="list" style="margin-bottom:2rem;">
-          <article class="game-card" role="listitem" aria-label="Platform systems and web game development">
-            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#1b1036,#36105f);">🧠</div>
+          <article class="game-card" role="listitem" aria-label="Signal platform infrastructure and systems work">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#1b1036,#36105f);">⚙️</div>
             <div class="game-card-body">
               <div class="game-card-top">
-                <h3 class="game-card-title">Platform Systems</h3>
-                <span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Active Work</span>
+                <h3 class="game-card-title">Signal Platform</h3>
+                <span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Live + Running</span>
               </div>
-              <p class="game-card-desc">Anonymous-first auth, admin controls, user dashboards, gated tools, payment layers, posting/feed systems, and connected platform behavior. The game work is backed by real systems engineering, not isolated prototypes.</p>
+              <p class="game-card-desc">Anonymous-first identity. PBKDF2 password auth. Real migrations. Admin moderation controls. Signal ID per member. Storage tracking. Feed and posting infrastructure. DM system. Radio integration. All of it live and running on this site right now — not a prototype.</p>
             </div>
           </article>
 
-          <article class="game-card" role="listitem" aria-label="Playable game development and release work">
-            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#062229,#0d4d57);">🕹</div>
+          <article class="game-card" role="listitem" aria-label="Games and interactive development">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#062229,#0d4d57);">🕹️</div>
             <div class="game-card-body">
               <div class="game-card-top">
-                <h3 class="game-card-title">Playable Releases</h3>
-                <span class="free-badge">Live + In Progress</span>
+                <h3 class="game-card-title">Games &amp; Interactive</h3>
+                <span class="free-badge">4 Live · More In Dev</span>
               </div>
-              <p class="game-card-desc">Fast browser games, score loops, reaction games, music-adjacent mechanics, and longer-form world building like Stages of Mazes. The point is not just concept art. The point is shipping playable work inside the studio ecosystem.</p>
+              <p class="game-card-desc">Vanilla JS browser games built mobile-first without an engine. Reaction, rhythm, word, and number mechanics. Beat Tap, Quick Tap, Word Drop, Number Rush are live. Block Dash, Sound Drop, and Night Crawler are in the pipeline. Godot in progress for physics-based work.</p>
             </div>
           </article>
 
-          <article class="game-card" role="listitem" aria-label="Custom build and repair work">
-            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#32160a,#6b2a10);">🛠</div>
+          <article class="game-card" role="listitem" aria-label="Client builds and custom platform work">
+            <div class="game-card-thumb" aria-hidden="true" style="background:linear-gradient(135deg,#32160a,#6b2a10);">🔧</div>
             <div class="game-card-body">
               <div class="game-card-top">
-                <h3 class="game-card-title">Custom Build Work</h3>
-                <span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Studio Service</span>
+                <h3 class="game-card-title">Client Builds</h3>
+                <span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Available</span>
               </div>
-              <p class="game-card-desc">When people need a game page, a custom creator system, a platform fix, UI restructuring, or a live feature finished properly, this is the kind of work the studio is built to handle. It is service-minded, but still grounded in the same voice and culture as the rest of the platform.</p>
+              <p class="game-card-desc">Broken platforms rebuilt. Custom creator tools built from scratch. Game pages, identity systems, admin panels, UI restructuring, and live feature completion for people who need something real. Underground pricing. Work that ships.</p>
             </div>
           </article>
         </div>

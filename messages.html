@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
   <style>
     /* ── Layout ── */
     .msg-wrap {
@@ -405,10 +405,11 @@
         <div class="msg-thread" id="msg-thread-panel">
           <div class="msg-thread-hdr">
             <button class="msg-back-btn" id="msg-back-btn" aria-label="Back to inbox">←</button>
-            <div>
+            <div style="min-width:0;flex:1;">
               <p class="msg-thread-who" id="msg-thread-who">Select a conversation</p>
-              <p class="msg-thread-sub" id="msg-thread-sub">Platform · Private</p>
+              <p class="msg-thread-sub" id="msg-thread-sub">Signal Code required · Private</p>
             </div>
+            <button class="btn btn-ghost btn-sm" id="msg-call-btn" type="button" aria-label="Start call" style="display:none;font-size:0.72rem;padding:0.45rem 0.8rem;">Call</button>
           </div>
           <div class="msg-feed" id="msg-feed" role="log" aria-label="Messages" aria-live="polite">
             <div class="msg-thread-empty" id="msg-thread-placeholder">
@@ -451,8 +452,9 @@
   <div class="msg-modal-overlay" id="msg-compose-modal" role="dialog" aria-modal="true" aria-labelledby="compose-title">
     <div class="msg-modal">
       <h2 class="msg-modal-title" id="compose-title">New Message</h2>
-      <p class="msg-modal-sub">Enter the username of the person you want to message.</p>
-      <input type="text" id="compose-to" placeholder="@username" maxlength="30" autocomplete="off" />
+      <p class="msg-modal-sub">Enter a Signal ID or username to start a conversation.</p>
+      <input type="text" id="compose-to" placeholder="Signal ID or @username" maxlength="80" autocomplete="off" />
+      <p id="compose-resolved" style="display:none;margin:0.35rem 0 0;font-size:0.72rem;color:var(--text-3);"></p>
       <input type="text" id="compose-text" placeholder="Your message…" maxlength="500" autocomplete="off" />
       <p class="msg-modal-error" id="compose-error"></p>
       <div class="msg-modal-actions">
@@ -462,13 +464,31 @@
     </div>
   </div>
 
-  <script src="assets/script.js"></script>
-  <script src="assets/js/access-gate.js"></script>
+  <!-- Call modal -->
+  <div class="msg-modal-overlay" id="msg-call-modal" role="dialog" aria-modal="true" aria-labelledby="call-title" style="display:none;">
+    <div class="msg-modal">
+      <h2 class="msg-modal-title" id="call-title">Start Call</h2>
+      <p class="msg-modal-sub" id="call-modal-sub">Calls are unlocked through Signal Code connections.</p>
+      <div class="dash-card" style="padding:0.75rem 0.85rem;margin-bottom:0.65rem;">
+        <p style="margin:0 0 0.25rem;font-size:0.82rem;color:var(--text);" id="call-target-name">—</p>
+        <p style="margin:0;font-size:0.72rem;color:var(--text-3);" id="call-target-meta">—</p>
+      </div>
+      <p class="msg-modal-error" id="call-error"></p>
+      <div class="msg-modal-actions">
+        <button class="btn btn-primary btn-sm" id="call-request-btn">Send Call Request</button>
+        <button class="btn btn-ghost btn-sm" id="call-cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/script.js?v=20260322"></script>
+  <script src="assets/js/access-gate.js?v=20260322"></script>
   <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
   <script src="assets/js/env.js" onerror="void 0"></script>
   <script type="module">
     import { getSession } from './assets/js/member-db.js'
-    import { loadThreads, loadMessages, sendDM, sendDMWithFile, uploadDMFile, validateDMFile, formatFileSize, markRead, subscribeThread, formatDMTime, DM_READY } from './assets/js/dm.js'
+    import { supabase, SUPABASE_READY } from './assets/js/supabase-client.js'
+    import { loadThreads, loadMessages, sendDM, sendDMWithFile, uploadDMFile, validateDMFile, formatFileSize, markRead, subscribeThread, formatDMTime, DM_READY, connectBySignalCode, getConnectionState } from './assets/js/dm.js'
 
     // ── Auth gate ─────────────────────────────────────────────
     const session = getSession()
@@ -488,6 +508,8 @@
     let sendDebounce   = false
     let canAttach      = false  // true for paid/active members only
     let pendingFile    = null   // File object queued for sending
+    let activePartnerMeta = null
+    let wantsAutoCall = false
 
     // ── Init ─────────────────────────────────────────────────
     async function init(username) {
@@ -507,11 +529,18 @@
       // Check ?with= param for deep link
       const params = new URLSearchParams(window.location.search)
       const withParam = params.get('with')
+      const signalCodeParam = params.get('signal_id') || params.get('code')
+      wantsAutoCall = String(params.get('call') || params.get('action') || '').toLowerCase() === '1'
+        || String(params.get('action') || '').toLowerCase() === 'call'
 
       await renderInbox()
 
       if (withParam) {
-        openThread(withParam.toLowerCase())
+        await openThread(withParam.toLowerCase())
+        maybeAutoOpenCallModal()
+      } else if (signalCodeParam) {
+        document.getElementById('compose-to').value = signalCodeParam
+        document.getElementById('msg-compose-modal').classList.add('open')
       }
     }
 
@@ -612,16 +641,17 @@
     async function openThread(partner) {
       if (unsubThread) { unsubThread(); unsubThread = null }
       activeThread = partner
+      activePartnerMeta = null
 
       // Update active state in inbox
       document.querySelectorAll('.msg-inbox-item').forEach(el => {
         el.classList.toggle('msg-inbox-item--active', el.dataset.username === partner)
       })
 
-      document.getElementById('msg-thread-who').textContent = '@' + partner
-      document.getElementById('msg-thread-sub').textContent = 'Private · Platform'
+      await refreshThreadIdentity(partner)
       document.getElementById('msg-input-bar').style.display = ''
       document.getElementById('msg-thread-placeholder').style.display = 'none'
+      document.getElementById('msg-call-btn').style.display = ''
 
       // Mobile: show thread, hide inbox
       document.getElementById('msg-inbox-panel').classList.add('hidden-mobile')
@@ -647,6 +677,24 @@
 
       // Focus input
       document.getElementById('msg-input').focus()
+    }
+
+    async function refreshThreadIdentity(partner) {
+      const whoEl = document.getElementById('msg-thread-who')
+      const subEl = document.getElementById('msg-thread-sub')
+      whoEl.textContent = '@' + partner
+      subEl.textContent = 'Signal Code required · Private'
+
+      const { data, error } = await getConnectionState(myUsername, partner)
+      if (error || !data || !data.target) return
+
+      activePartnerMeta = data.target
+      const displayName = String(data.target.display_name || '').trim()
+      const handle = '@' + String(data.target.username || partner)
+      whoEl.textContent = displayName ? `${displayName} (${handle})` : handle
+      const signalCode = data.target.platform_id ? `Signal Code: ${data.target.platform_id}` : 'Signal Code unavailable'
+      const state = String(data.state || 'none')
+      subEl.textContent = `${signalCode} · ${state}`
     }
 
     async function renderThread(partner) {
@@ -813,10 +861,12 @@
     document.getElementById('msg-back-btn').addEventListener('click', () => {
       if (unsubThread) { unsubThread(); unsubThread = null }
       activeThread = null
+      activePartnerMeta = null
       document.getElementById('msg-inbox-panel').classList.remove('hidden-mobile')
       document.getElementById('msg-thread-panel').classList.add('hidden-mobile')
       document.getElementById('msg-input-bar').style.display = 'none'
       document.getElementById('msg-thread-placeholder').style.display = ''
+      document.getElementById('msg-call-btn').style.display = 'none'
     })
 
     // ── Compose modal ─────────────────────────────────────────
@@ -832,31 +882,107 @@
       }
     })
 
+    async function resolveRecipientIdentity(rawInput) {
+      const raw = String(rawInput || '').trim()
+      if (!raw || raw.length < 2) {
+        return { user: null, error: 'Enter a valid Signal ID or username.' }
+      }
+      if (!SUPABASE_READY || !supabase) {
+        return { user: null, error: 'Directory lookup is unavailable right now. Try again.' }
+      }
+
+      // 1) Try exact Signal ID (platform_id) match first.
+      const { data: bySignal, error: signalErr } = await supabase
+        .from('member_accounts')
+        .select('username, display_name, platform_id')
+        .eq('platform_id', raw)
+        .maybeSingle()
+
+      if (!signalErr && bySignal && bySignal.username) {
+        return { user: {
+          username: String(bySignal.username).toLowerCase(),
+          display_name: bySignal.display_name || bySignal.username,
+          platform_id: bySignal.platform_id || null,
+        }, error: null }
+      }
+
+      // 2) Fallback to normalized username (@username or username).
+      const normalizedUsername = raw.replace(/^@+/, '').toLowerCase()
+      if (!normalizedUsername || normalizedUsername.length < 2) {
+        return { user: null, error: 'Enter a valid Signal ID or username.' }
+      }
+
+      const { data: byUsername, error: usernameErr } = await supabase
+        .from('member_accounts')
+        .select('username, display_name, platform_id')
+        .eq('username', normalizedUsername)
+        .maybeSingle()
+
+      if (!usernameErr && byUsername && byUsername.username) {
+        return { user: {
+          username: String(byUsername.username).toLowerCase(),
+          display_name: byUsername.display_name || byUsername.username,
+          platform_id: byUsername.platform_id || null,
+        }, error: null }
+      }
+
+      return { user: null, error: 'No user found for that Signal ID or username.' }
+    }
+
     document.getElementById('compose-send-btn').addEventListener('click', async () => {
-      const toRaw  = document.getElementById('compose-to').value.trim().replace(/^@/,'').toLowerCase()
+      const toInput = document.getElementById('compose-to').value.trim()
       const textEl = document.getElementById('compose-text')
       const errEl  = document.getElementById('compose-error')
+      const resolvedEl = document.getElementById('compose-resolved')
       const text   = textEl.value.trim()
 
       errEl.classList.remove('visible')
+      resolvedEl.style.display = 'none'
+      resolvedEl.textContent = ''
 
-      if (!toRaw || toRaw.length < 2) {
-        errEl.textContent = 'Enter a valid username.'
+      const { user: recipient, error: resolveError } = await resolveRecipientIdentity(toInput)
+      if (resolveError || !recipient) {
+        errEl.textContent = resolveError || 'No user found for that Signal ID or username.'
         errEl.classList.add('visible')
         return
       }
+
+      resolvedEl.textContent = `Resolved: ${recipient.display_name} (@${recipient.username}) · ${recipient.platform_id || 'No Signal ID'}`
+      resolvedEl.style.display = ''
+
+      if (!recipient.platform_id) {
+        errEl.textContent = 'This user does not have a valid Signal ID yet.'
+        errEl.classList.add('visible')
+        return
+      }
+
+      const { data: connectData, error: connectError } = await connectBySignalCode(myUsername, recipient.platform_id)
+      if (connectError || !connectData || !connectData.target || !connectData.target.username) {
+        errEl.textContent = connectError || 'Failed to create connection. Try again.'
+        errEl.classList.add('visible')
+        return
+      }
+
+      const recipientUsername = String(connectData.target.username).toLowerCase()
+
+      if (String(connectData.state || 'none') !== 'connected') {
+        errEl.textContent = 'Connection request sent. Messaging unlocks after approval.'
+        errEl.classList.add('visible')
+        return
+      }
+
       if (!text) {
         errEl.textContent = 'Enter a message.'
         errEl.classList.add('visible')
         return
       }
-      if (toRaw === myUsername) {
+      if (recipientUsername === myUsername) {
         errEl.textContent = "You can't message yourself."
         errEl.classList.add('visible')
         return
       }
 
-      const { error } = await sendDM(myUsername, toRaw, text)
+      const { error } = await sendDM(myUsername, recipientUsername, text)
       if (error) {
         errEl.textContent = 'Failed to send. Try again.'
         errEl.classList.add('visible')
@@ -868,7 +994,99 @@
       document.getElementById('compose-text').value = ''
 
       await renderInbox()
-      openThread(toRaw)
+      await openThread(recipientUsername)
+      maybeAutoOpenCallModal()
+    })
+
+    function maybeAutoOpenCallModal() {
+      if (!wantsAutoCall) return
+      wantsAutoCall = false
+      setTimeout(() => {
+        document.getElementById('msg-call-btn')?.click()
+      }, 180)
+    }
+
+    // ── Call modal ────────────────────────────────────────────
+    const callModal = document.getElementById('msg-call-modal')
+    const callErrEl = document.getElementById('call-error')
+
+    function closeCallModal() {
+      if (!callModal) return
+      callModal.style.display = 'none'
+      if (callErrEl) {
+        callErrEl.textContent = ''
+        callErrEl.classList.remove('visible')
+      }
+    }
+
+    document.getElementById('msg-call-btn')?.addEventListener('click', async () => {
+      if (!activeThread) return
+
+      const { data, error } = await getConnectionState(myUsername, activeThread)
+      if (error || !data || !data.target) {
+        if (callErrEl) {
+          callErrEl.textContent = error || 'Could not verify call permissions.'
+          callErrEl.classList.add('visible')
+        }
+        callModal.style.display = 'flex'
+        return
+      }
+
+      activePartnerMeta = data.target
+      const targetName = data.target.display_name || ('@' + data.target.username)
+      const targetMeta = `@${data.target.username} · ${data.target.platform_id || 'No Signal Code'} · ${data.state}`
+      document.getElementById('call-target-name').textContent = targetName
+      document.getElementById('call-target-meta').textContent = targetMeta
+
+      if (callErrEl) {
+        callErrEl.textContent = ''
+        callErrEl.classList.remove('visible')
+      }
+      callModal.style.display = 'flex'
+    })
+
+    document.getElementById('call-cancel-btn')?.addEventListener('click', closeCallModal)
+    callModal?.addEventListener('click', e => {
+      if (e.target === callModal) closeCallModal()
+    })
+
+    document.getElementById('call-request-btn')?.addEventListener('click', async () => {
+      if (!activeThread || !activePartnerMeta) {
+        if (callErrEl) {
+          callErrEl.textContent = 'Open a connected thread first.'
+          callErrEl.classList.add('visible')
+        }
+        return
+      }
+
+      const { data, error } = await getConnectionState(myUsername, activeThread)
+      if (error || !data || data.state !== 'connected') {
+        if (callErrEl) {
+          callErrEl.textContent = 'Calls require an approved Signal Code connection.'
+          callErrEl.classList.add('visible')
+        }
+        return
+      }
+      if (data.target && data.target.calls_enabled === false) {
+        if (callErrEl) {
+          callErrEl.textContent = 'This user has calls disabled.'
+          callErrEl.classList.add('visible')
+        }
+        return
+      }
+
+      const callText = `📞 Call request from @${myUsername} (${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })})`
+      const { error: sendErr } = await sendDM(myUsername, activeThread, callText)
+      if (sendErr) {
+        if (callErrEl) {
+          callErrEl.textContent = sendErr
+          callErrEl.classList.add('visible')
+        }
+        return
+      }
+
+      closeCallModal()
+      await renderThread(activeThread)
     })
 
     // ── Escape key closes modal ───────────────────────────────

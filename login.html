@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
   <style>
     .login-wrap {
       min-height: 100dvh;
@@ -29,6 +29,56 @@
     .login-title { font-size: clamp(1.6rem,4vw,2rem); font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; color: var(--text); margin-bottom: 0.5rem; }
     .login-title em { color: var(--purple-bright); font-style: normal; }
     .login-sub { font-size: 0.85rem; color: var(--text-2); line-height: 1.7; margin-bottom: 2rem; }
+
+    .entry-gate {
+      margin-bottom: 1.35rem;
+      padding: 1rem 1rem 0.95rem;
+      border: 1px solid rgba(139,92,246,0.26);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.14), rgba(255,255,255,0.02));
+    }
+    .entry-gate-eyebrow {
+      margin: 0 0 0.35rem;
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--purple-bright);
+      font-weight: 800;
+    }
+    .entry-gate-title {
+      margin: 0;
+      font-size: clamp(1.25rem, 3.3vw, 1.7rem);
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      font-weight: 900;
+      color: var(--text);
+    }
+    .entry-gate-title em { color: var(--purple-bright); font-style: normal; }
+    .entry-gate-sub {
+      margin: 0.55rem 0 0;
+      font-size: 0.81rem;
+      color: var(--text-2);
+      line-height: 1.72;
+    }
+    .entry-gate-actions {
+      margin-top: 0.75rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .entry-gate-linkrow {
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+    .entry-gate-linkrow a {
+      font-size: 0.72rem;
+      color: var(--text-3);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .entry-gate-linkrow a:hover { color: var(--text-2); }
 
     .login-tabs { display: flex; gap: 0; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; margin-bottom: 1.75rem; }
     .login-tab { flex: 1; padding: 0.6rem 1rem; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); background: transparent; border: none; cursor: pointer; transition: background 0.15s, color 0.15s; }
@@ -137,8 +187,24 @@
       <!-- ── Main Login Panel ── -->
       <div id="login-panel">
 
+        <section class="entry-gate" aria-label="Platform gateway">
+          <p class="entry-gate-eyebrow">FAS Signal · Anonymous Creator Network</p>
+          <h1 class="entry-gate-title">Enter the <em>Signal.</em></h1>
+          <p class="entry-gate-sub">Signal is built for controlled presence. In a world that tracks everything, you move differently here: visible without exposure, reachable by choice, and accessed through Signal Codes.</p>
+          <div class="entry-gate-actions">
+            <button type="button" class="btn btn-primary btn-sm" id="entry-gate-signin">Continue to Sign In →</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="entry-gate-create">Create Account</button>
+          </div>
+          <div class="entry-gate-linkrow">
+            <a href="faq.html">What is Signal?</a>
+            <a href="faq.html#mission-heading">Read the Mission</a>
+            <a href="services.html">Work with the Builder</a>
+            <a href="radio.html">Listen as Guest</a>
+          </div>
+        </section>
+
         <h1 class="login-title">Sign In.<br /><em>Take Your Seat.</em></h1>
-        <p class="login-sub">Anonymous identity only. Use your handle or Signal ID + password. New here? Create a free account below and save your recovery code.</p>
+        <p class="login-sub">Identity is not assigned here. Access is not assumed. Use your handle or Signal ID plus password, then protect your recovery code.</p>
 
         <!-- Tabs -->
         <div class="login-tabs" role="tablist">
@@ -150,7 +216,7 @@
         <div id="panel-signin" role="tabpanel" aria-labelledby="tab-signin">
 
           <!-- Normal sign-in form -->
-          <form class="login-form" id="signin-form" novalidate>
+          <form class="login-formgit" id="signin-form" novalidate>
             <div>
               <label class="lf-label" for="signin-username">Username or Signal ID</label>
               <input class="lf-input" type="text" id="signin-username" name="username" placeholder="@yourhandle or sig_xxxxxxxx" autocomplete="username" spellcheck="false" autocorrect="off" autocapitalize="none" required />
@@ -285,6 +351,8 @@
           </div>
         </div>
 
+        <p id="fas-promo-entry" style="margin:0.35rem 0 0;text-align:center;font-size:0.72rem;color:var(--text-3);"></p>
+
       </div><!-- end #login-panel -->
 
       <!-- ── Success State ── -->
@@ -306,7 +374,7 @@
     </div><!-- end .login-card -->
   </div>
 
-  <script src="assets/script.js"></script>
+  <script src="assets/script.js?v=20260322"></script>
   <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
   <script src="assets/js/env.js" onerror="void 0"></script>
   <script src="assets/js/radio-widget.js" defer></script>
@@ -325,14 +393,26 @@
     // ── Already signed in? ────────────────────────────────────
     const existing = getStoredSession()
     const params   = new URLSearchParams(window.location.search)
+
+    function resolvePostIntentDestination() {
+      const intent = (params.get('intent') || '').toLowerCase()
+      const redirect = params.get('redirect')
+      if (intent === 'post') {
+        try {
+          const draft = JSON.parse(localStorage.getItem('signal_draft') || 'null')
+          if (draft && String(draft.text || '').trim()) return 'network.html?intent=post'
+        } catch (_) {}
+      }
+      return redirect ? decodeURIComponent(redirect) : 'dashboard.html'
+    }
+
     // Only auto-redirect if NOT explicitly visiting to switch accounts
     if (existing && existing.username && !params.get('switch')) {
       // Show success but don't auto-redirect — let user choose
       loginPanel.style.display = 'none'
       successCard.classList.add('visible')
       document.getElementById('success-handle').textContent = '@' + existing.username
-      const redirect = params.get('redirect')
-      const dest = redirect ? decodeURIComponent(redirect) : 'dashboard.html'
+      const dest = resolvePostIntentDestination()
       setTimeout(() => { window.location.href = dest }, 1200)
     } else if (params.get('tab') === 'create') {
       showTab('create')
@@ -355,6 +435,14 @@
     tabSignin.addEventListener('click', () => showTab('signin'))
     tabCreate.addEventListener('click', () => showTab('create'))
     document.getElementById('switch-to-signin')?.addEventListener('click', e => { e.preventDefault(); showTab('signin') })
+    document.getElementById('entry-gate-signin')?.addEventListener('click', () => {
+      showTab('signin')
+      document.getElementById('signin-username')?.focus()
+    })
+    document.getElementById('entry-gate-create')?.addEventListener('click', () => {
+      showTab('create')
+      document.getElementById('create-username')?.focus()
+    })
 
     // ── Password show/hide toggles ────────────────────────────
     document.querySelectorAll('.lf-pw-toggle').forEach(btn => {
@@ -383,9 +471,7 @@
           metaEl.textContent = ''
         }
       }
-      const redirect = params.get('redirect')
-      // Always auto-redirect: use the `redirect` param if present, else go to dashboard
-      const dest = redirect ? decodeURIComponent(redirect) : 'dashboard.html'
+      const dest = resolvePostIntentDestination()
       setTimeout(() => { window.location.href = dest }, 1200)
     }
 
