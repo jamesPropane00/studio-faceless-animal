@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="The Faceless Index — browse artists, creators, and businesses hosted on the Faceless Animal Studios platform." />
+  <title>The Faceless Index — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="/start.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html" aria-current="page">Directory</a></li>
+          <li><a href="games.html">Games</a></li>
+          <li><a href="music.html">Music</a></li>
+          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html" aria-current="page">Directory</a>
+    <a href="games.html">Games</a>
+    <a href="music.html">Music</a>
+    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="about.html">About</a>
+  </div>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="page-hero" aria-label="Directory hero">
+      <div class="page-hero-glow" aria-hidden="true"></div>
+      <div class="container">
+        <p class="page-hero-eyebrow">
+          <span class="eyebrow-dot" aria-hidden="true"></span>
+          Faceless Animal Studios · Public Directory
+        </p>
+        <h1 class="page-hero-title">The Faceless<br /><em>Index.</em></h1>
+        <p class="page-hero-sub">
+          Signal is an anonymous-first social platform for listening, posting, messaging, and creator pages without tying identity to email. Artists, creators, and businesses move through one live underground network.
+          <a href="radio.html" style="color:var(--purple-bright);font-weight:700;white-space:nowrap;">Radio is live →</a>
+        </p>
+        <div class="page-hero-actions">
+          <a href="start.html" class="btn btn-primary btn-lg">Get Your Page →</a>
+          <a href="network.html" class="btn btn-ghost btn-lg">View the Board</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter + Directory -->
+    <section class="section section-alt" id="index" aria-labelledby="dir-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <p class="section-label">The Index</p>
+          <h2 id="dir-heading">Browse the<br /><em>Network.</em></h2>
+          <p class="section-sub">Every profile below is hosted on the Faceless Animal Studios platform. Real pages. Real creators. Growing from the ground up.</p>
+        </div>
+
+        <div class="dash-card" style="padding:0.75rem 0.95rem;margin-bottom:0.95rem;border-color:rgba(139,92,246,0.2);background:rgba(139,92,246,0.05);">
+          <p style="font-size:0.62rem;letter-spacing:0.11em;text-transform:uppercase;color:var(--purple-bright);font-weight:800;margin:0 0 0.35rem;">Signal Pulse</p>
+          <p id="dir-pulse-strip" style="font-size:0.79rem;color:var(--text-2);line-height:1.55;margin:0;">Loading network pulse…</p>
+        </div>
+
+        <!-- Filter chips -->
+        <div class="dir-filter-row" role="group" aria-label="Filter by category" id="dir-filter-row">
+          <button class="dir-filter-chip dir-filter-chip--active" data-filter="all">All</button>
+          <button class="dir-filter-chip" data-filter="artist">Artists</button>
+          <button class="dir-filter-chip" data-filter="creator">Creators</button>
+          <button class="dir-filter-chip" data-filter="business">Businesses</button>
+          <button class="dir-filter-chip" data-filter="featured">Featured</button>
+        </div>
+
+        <!-- Featured hero card — always shown for platform founder -->
+        <div class="dir-featured-hero" data-category="artist featured" role="article" aria-label="Featured: DJ Faceless Animal">
+          <div class="dir-featured-avatar" aria-hidden="true">FA</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.65rem;">
+              <span class="access-tag access-tag--free">Featured</span>
+              <span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Live</span>
+              <span class="dir-filter-chip" style="cursor:default;font-size:0.6rem;padding:0.2rem 0.6rem;">Artist</span>
+            </div>
+            <h2 style="font-size:1.5rem;font-weight:900;margin:0 0 0.4rem;color:var(--gold);">DJ Faceless Animal</h2>
+            <p style="font-size:0.78rem;color:var(--text-3);margin:0 0 0.6rem;letter-spacing:0.04em;">facelessanimalstudios.com/artists/djfacelessanimal</p>
+            <p style="font-size:0.9rem;color:var(--text-2);line-height:1.75;margin:0 0 1rem;max-width:520px;">Underground hip-hop and drill DJ based in Providence, RI. Custom blends, raw sound, and real culture. The foundation of the Faceless Animal Studios platform.</p>
+            <a href="artists/djfacelessanimal.html" class="btn btn-primary" style="font-size:0.82rem;">View Page →</a>
+          </div>
+        </div>
+
+        <!-- Directory grid — populated by JS; static card shown while loading -->
+        <div class="dir-grid" id="dir-grid" role="list" aria-live="polite" aria-label="Member directory">
+          <!-- Loading skeleton -->
+          <div id="dir-loading" style="grid-column:1/-1;text-align:center;padding:3rem 1rem;">
+            <div class="post-loading" role="status" aria-label="Loading directory"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+
+        <!-- Bottom CTA -->
+        <div style="text-align:center;margin-top:3rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.06);">
+          <p style="font-size:0.84rem;color:var(--text-2);margin-bottom:1.25rem;">The directory grows as the platform grows. Want to be listed?</p>
+          <a href="start.html" class="btn btn-primary btn-lg">Get Your Page →</a>
+          <a href="network.html" class="btn btn-ghost btn-lg" style="margin-left:1rem;">View the Board</a>
+        </div>
+
+        <div style="margin-top:2.4rem;">
+          <div class="section-header" style="margin-bottom:0.9rem;">
+            <p class="section-label">Live Activity</p>
+            <h2 style="font-size:clamp(1.4rem,3.4vw,2rem);">Signal Feed<br /><em>Preview.</em></h2>
+            <p class="section-sub" style="max-width:680px;">The directory is connected to real post activity. These are the latest approved public signals from active members.</p>
+          </div>
+          <div id="dir-signal-feed-loading" style="font-size:0.8rem;color:var(--text-3);padding:0.65rem 0;">Loading live signal feed…</div>
+          <div id="dir-signal-feed" style="display:none;"></div>
+          <div id="dir-signal-feed-empty" style="display:none;">
+            <div class="dash-card" style="text-align:center;padding:1.25rem;">
+              <p style="font-size:0.82rem;color:var(--text-3);">No public posts yet. New signals appear here as creators publish.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="about.html">About</a>
+          <a href="network.html">Network</a>
+          <a href="directory.html">Directory</a>
+          <a href="games.html">Games</a>
+          <a href="apps.html">Apps</a>
+          <a href="music.html">Music</a>
+          <a href="radio.html">Radio</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="start.html">Get Started Free</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/script.js?v=20260322"></script>
+  <script src="assets/js/radio-widget.js" defer></script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var SUPABASE_URL = 'https://ghufaozjwondqcrcucjs.supabase.co';
+    var SUPABASE_ANON_KEY = 'sb_publishable_kixI74nB7Drt6mQKooaXHg_nPoE0h_-';
+
+    // Known test-account prefixes to skip
+    var TEST_PREFIXES = [
+      'fas_rpc_test_','conntest_','probe_','fastest_','smoketest',
+      'diag','uploadtest','imgtest','testdj_','testartist',
+      'xslx','xnbs','xdpv','xez6','xv20','xdby','xx7u','x2q3',
+      'xeq5','xuoj','x44r','x9qz','x7q1','xsq2','xvl4','xo01',
+      'xvhp','x9f2','x6nu','x9xe','xfxk'
+    ];
+
+    function isTest(username) {
+      var u = (username || '').toLowerCase();
+      return TEST_PREFIXES.some(function(p) { return u.indexOf(p) === 0; });
+    }
+
+    function esc(s) {
+      return String(s || '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+
+    function initials(name) {
+      if (!name) return '?';
+      var words = name.trim().split(/\s+/);
+      if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+      return words.slice(0, 3).map(function(w) { return w[0]; }).join('').toUpperCase();
+    }
+
+    function planLabel(plan) {
+      return { premium:'Premium', pro:'Pro Page', starter:'Starter Page', free:'Free Tier' }[plan] || 'Member';
+    }
+
+    function planBadgeClass(plan) {
+      return {
+        premium: 'access-tag--paid',
+        pro:     'access-tag--paid',
+        starter: 'access-tag--free',
+        free:    'access-tag--free'
+      }[plan] || 'access-tag--free';
+    }
+
+    function avatarBg(username, plan) {
+      if (plan === 'premium') return 'background:linear-gradient(135deg,rgba(201,169,110,0.25),rgba(201,169,110,0.08));border-color:rgba(201,169,110,0.4);color:var(--gold);';
+      var colors = [
+        'background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(139,92,246,0.06));border-color:rgba(139,92,246,0.35);color:#a78bfa;',
+        'background:linear-gradient(135deg,rgba(40,130,200,0.2),rgba(40,130,200,0.06));border-color:rgba(40,130,200,0.35);color:#5aabdc;',
+        'background:linear-gradient(135deg,rgba(200,60,60,0.2),rgba(200,60,60,0.06));border-color:rgba(200,60,60,0.35);color:#e07070;',
+        'background:linear-gradient(135deg,rgba(40,160,130,0.2),rgba(40,160,130,0.06));border-color:rgba(40,160,130,0.35);color:#6abfa8;',
+        'background:linear-gradient(135deg,rgba(140,60,200,0.2),rgba(140,60,200,0.06));border-color:rgba(140,60,200,0.35);color:#a06ae0;'
+      ];
+      var idx = 0;
+      for (var i = 0; i < (username || '').length; i++) idx += username.charCodeAt(i);
+      return colors[idx % colors.length];
+    }
+
+    function categoryToRoutePrefix(category) {
+      var c = String(category || '').toLowerCase();
+      var dj = ['dj','producer','artist'];
+      var biz = ['business','collective'];
+      if (dj.indexOf(c) !== -1) return '/artist/';
+      if (biz.indexOf(c) !== -1) return '/business/';
+      return '/creator/';
+    }
+
+    function isRecentlyActive(ts) {
+      if (!ts) return false;
+      var d = new Date(ts);
+      if (isNaN(d.getTime())) return false;
+      return (Date.now() - d.getTime()) < (7 * 24 * 60 * 60 * 1000);
+    }
+
+    function buildCard(m, profileMap) {
+      var p = (profileMap && profileMap[String(m.username || '').toLowerCase()]) || {};
+      var veilState = String(m.veil_state || 'unveiled').toLowerCase();
+      var isVeiled = veilState === 'veiled' || veilState === 'deep';
+      var location = [p.city || m.city, p.state || m.state_abbr].filter(Boolean).join(', ') || 'Faceless Animal Studios';
+      var bioSource = p.bio || m.bio || '';
+      var bio      = isVeiled
+        ? 'Moving under the Veil. Identity details are intentionally minimized on public surfaces.'
+        : (bioSource ? bioSource.slice(0, 160) : 'Platform member on Faceless Animal Studios.');
+      var cat      = String((p.category || m.category || 'creator')).toLowerCase();
+      var cats     = [cat];
+      if (m.plan_type === 'premium' || m.is_founder === true || m.username === 'jamespropane00') cats.push('featured');
+
+      var hasPage  = m.page_status === 'live' && !!m.page_slug;
+      var isFounder = m.is_founder === true || m.username === 'jamespropane00';
+      var founderLabel = m.founder_label || (isFounder ? 'Founder' : '');
+      var activeNow = isRecentlyActive(m.last_active_at);
+      var routePrefix = categoryToRoutePrefix(cat);
+      var publicSlug = p.slug || m.page_slug || m.username;
+      var link     = isFounder
+        ? '<a href="artists/djfacelessanimal.html" class="dir-card-link">View Page →</a>'
+        : hasPage
+          ? '<a href="' + esc(routePrefix + publicSlug) + '" class="dir-card-link">' + (isVeiled ? 'View Veiled Page →' : 'View Page →') + '</a>'
+          : '<span class="dir-card-link" style="color:var(--text-3);cursor:default;">Building →</span>';
+
+      var liveStatus = activeNow
+        ? '<span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Active</span>'
+        : (hasPage || isFounder)
+          ? '<span class="status-tag" style="background:rgba(255,255,255,0.05);color:var(--text-2);border-color:rgba(255,255,255,0.12);">Live</span>'
+        : '<span class="status-tag" style="background:rgba(255,255,255,0.04);color:var(--text-3);border-color:rgba(255,255,255,0.08);">Joining</span>';
+
+      var founderTag = isFounder
+        ? '<span class="access-tag access-tag--free" style="border-color:rgba(201,169,110,0.45);color:var(--gold-bright);">' + esc(founderLabel) + '</span>'
+        : '';
+      var veilTag = isVeiled
+        ? '<span class="access-tag access-tag--free" style="border-color:rgba(139,92,246,0.42);color:var(--purple-bright);">Veiled</span>'
+        : '';
+
+      var cardName = isVeiled ? 'Veiled User' : (p.display_name || m.display_name || m.username || 'member');
+      var avatarNode = p.avatar_url
+        ? '<img src="' + esc(p.avatar_url) + '" alt="' + esc(cardName) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />'
+        : esc(initials(cardName));
+
+      var signalLine = '<p style="font-size:0.68rem;color:var(--text-3);margin:0 0 0.35rem;letter-spacing:0.04em;">Direct contact locked · Signal access private</p>';
+
+      return '<article class="dir-card' + (m.plan_type === 'premium' ? ' dir-card--featured' : '') + '"'
+        + ' data-category="' + esc(cats.join(' ')) + '" role="listitem">'
+        + '<div class="dir-card-top">'
+        + '<div class="dir-avatar" aria-hidden="true" style="' + esc(avatarBg(m.username, m.plan_type)) + '">' + avatarNode + '</div>'
+        + '<div class="dir-card-meta">'
+        + '<p class="dir-card-name">' + esc(cardName) + '</p>'
+        + '<p class="dir-card-slug">@' + esc(m.username) + ' · ' + esc(location) + '</p>'
+        + '</div>'
+        + '</div>'
+        + '<div class="dir-card-tags">'
+        + liveStatus
+        + '<span class="access-tag ' + esc(planBadgeClass(m.plan_type)) + '">' + esc(planLabel(m.plan_type)) + '</span>'
+        + founderTag
+        + veilTag
+        + '</div>'
+        + signalLine
+        + '<p class="dir-card-bio">' + esc(bio) + '</p>'
+        + link
+        + '</article>';
+    }
+
+    function buildOpenSlot() {
+      return '<article class="dir-card" data-category="open" role="listitem"'
+        + ' style="border-style:dashed;border-color:rgba(139,92,246,0.25);background:rgba(139,92,246,0.03);">'
+        + '<div class="dir-card-top">'
+        + '<div class="dir-avatar" aria-hidden="true" style="background:rgba(139,92,246,0.15);color:var(--purple-bright);font-size:1.2rem;border-style:dashed;">+</div>'
+        + '<div class="dir-card-meta">'
+        + '<p class="dir-card-name" style="color:var(--purple-bright);">Your Name Here</p>'
+        + '<p class="dir-card-slug">/yourname</p>'
+        + '</div>'
+        + '</div>'
+        + '<p class="dir-card-bio" style="color:var(--text-3);">Get your page in the index. Artists, creators, and businesses welcome. Start free — no builder required.</p>'
+        + '<a href="start.html" class="dir-card-link">Claim Your Spot →</a>'
+        + '</article>';
+    }
+
+    function buildServicesCard() {
+      return '<article class="dir-card" data-category="services" role="listitem"'
+        + ' style="border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.02);">'
+        + '<div class="dir-card-top">'
+        + '<div class="dir-avatar" aria-hidden="true" style="background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.18);color:var(--text-3);">↗</div>'
+        + '<div class="dir-card-meta">'
+        + '<p class="dir-card-name">Your Project Here</p>'
+        + '<p class="dir-card-slug">Faceless Animal Studios</p>'
+        + '</div>'
+        + '</div>'
+        + '<div class="dir-card-tags">'
+        + '<span class="status-tag" style="background:rgba(255,255,255,0.04);color:var(--text-2);border-color:rgba(255,255,255,0.12);">Builder Services</span>'
+        + '</div>'
+        + '<p class="dir-card-bio">Need a custom website, hosted page, or system like this platform? Work directly with the builder.</p>'
+        + '<a href="services.html" class="dir-card-link">View Services →</a>'
+        + '</article>';
+    }
+
+    function initFilter() {
+      var chips = document.querySelectorAll('#dir-filter-row .dir-filter-chip[data-filter]');
+      var grid  = document.getElementById('dir-grid');
+      var hero  = document.querySelector('.dir-featured-hero');
+
+      chips.forEach(function(chip) {
+        chip.addEventListener('click', function() {
+          chips.forEach(function(c) { c.classList.remove('dir-filter-chip--active'); });
+          chip.classList.add('dir-filter-chip--active');
+          var f = chip.dataset.filter;
+
+          var cards = grid.querySelectorAll('[data-category]');
+          cards.forEach(function(card) {
+            var cats = (card.dataset.category || '').split(' ');
+            card.style.display = (f === 'all' || cats.indexOf(f) !== -1) ? '' : 'none';
+          });
+
+          if (hero) {
+            var heroCats = (hero.dataset.category || '').split(' ');
+            hero.style.display = (f === 'all' || heroCats.indexOf(f) !== -1) ? '' : 'none';
+          }
+        });
+      });
+    }
+
+    function loadDirectory() {
+      var grid = document.getElementById('dir-grid');
+      var loading = document.getElementById('dir-loading');
+
+      var url = SUPABASE_URL
+        + '/rest/v1/member_accounts'
+        + '?select=username,display_name,bio,city,state_abbr,plan_type,member_status,page_slug,page_status,last_active_at,created_at'
+        + '&member_status=eq.active'
+        + '&order=created_at.desc'
+        + '&limit=50';
+
+      var enhancedUrl = SUPABASE_URL
+        + '/rest/v1/member_accounts'
+        + '?select=username,display_name,bio,city,state_abbr,plan_type,member_status,page_slug,page_status,last_active_at,created_at,is_founder,founder_label,public_listing_enabled,veil_state'
+        + '&member_status=eq.active'
+        + '&order=created_at.desc'
+        + '&limit=50';
+
+      function authHeaders() {
+        return {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+        }
+      }
+
+      // Try enhanced query first (founder/listing fields), then fall back to legacy-safe query.
+      fetch(enhancedUrl, { headers: authHeaders() })
+      .then(function(r) {
+        if (!r.ok) return fetch(url, { headers: authHeaders() })
+        return r
+      })
+      .then(function(r) {
+        if (!r.ok) throw new Error('member_accounts query failed')
+        return r.json()
+      })
+      .then(function(rows) {
+        var members = (rows || []).filter(function(m) {
+          if (!m || isTest(m.username)) return false;
+          if (m.public_listing_enabled === false) return false;
+          return true;
+        });
+
+        // Prioritize recently active members so the directory feels live.
+        members.sort(function(a, b) {
+          var aa = isRecentlyActive(a.last_active_at) ? 1 : 0;
+          var bb = isRecentlyActive(b.last_active_at) ? 1 : 0;
+          if (aa !== bb) return bb - aa;
+          if ((a.plan_type || '') === 'premium' && (b.plan_type || '') !== 'premium') return -1;
+          if ((a.plan_type || '') !== 'premium' && (b.plan_type || '') === 'premium') return 1;
+          return 0;
+        });
+
+        if (loading) loading.remove();
+
+        if (!members.length) {
+          grid.innerHTML = buildOpenSlot() + buildServicesCard();
+          initFilter();
+          return;
+        }
+
+        // Skip jamespropane00 from the grid (shown in featured hero above)
+        var gridMembers = members.filter(function(m) { return m.username !== 'jamespropane00'; });
+
+        // Pull lightweight profile metadata (category/avatar) for richer cards.
+        var profileUrl = SUPABASE_URL
+          + '/rest/v1/profiles'
+          + '?select=username,display_name,bio,category,avatar_url,city,state,slug'
+          + '&is_active=eq.true'
+          + '&limit=200';
+
+        return fetch(profileUrl, {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+          }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(profiles) {
+          var profileMap = {};
+          (profiles || []).forEach(function(p) {
+            if (p && p.username) profileMap[String(p.username).toLowerCase()] = p;
+          });
+          var html = gridMembers.map(function(m) {
+            return buildCard(m, profileMap);
+          }).join('') + buildOpenSlot() + buildServicesCard();
+          grid.innerHTML = html;
+          initFilter();
+        })
+        .catch(function() {
+          var html = gridMembers.map(function(m) { return buildCard(m, {}); }).join('') + buildOpenSlot() + buildServicesCard();
+          grid.innerHTML = html;
+          initFilter();
+        });
+      })
+      .catch(function(err) {
+        console.warn('[FAS] Directory load failed:', err);
+        if (loading) loading.remove();
+        // Fallback: show the static cards
+        grid.innerHTML = [
+          buildOpenSlot(),
+          buildServicesCard()
+        ].join('');
+        initFilter();
+      });
+    }
+
+    function loadSignalFeedPreview() {
+      var loading = document.getElementById('dir-signal-feed-loading');
+      var list = document.getElementById('dir-signal-feed');
+      var empty = document.getElementById('dir-signal-feed-empty');
+
+      var signalUrl = SUPABASE_URL
+        + '/rest/v1/signal_posts'
+        + '?select=author_username,post_type,category,body_text,media_url,created_at'
+        + '&moderation_state=eq.approved'
+        + '&visibility=eq.public'
+        + '&order=created_at.desc'
+        + '&limit=6';
+
+      function showRows(rows) {
+        if (loading) loading.style.display = 'none';
+        if (!rows || !rows.length) {
+          if (empty) empty.style.display = '';
+          if (list) { list.style.display = 'none'; list.innerHTML = ''; }
+          return;
+        }
+
+        if (empty) empty.style.display = 'none';
+        if (!list) return;
+        list.style.display = '';
+        list.innerHTML = rows.map(function(row) {
+          var when = row.created_at ? new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'now';
+          var body = esc((row.body_text || '').slice(0, 260));
+          var type = esc(row.post_type || 'text');
+          var cat = esc(row.category || 'update');
+          var media = row.media_url ? '<p style="margin:0.45rem 0 0;font-size:0.72rem;color:var(--purple-bright);word-break:break-all;">' + esc(row.media_url) + '</p>' : '';
+          return '<article class="dir-card" style="margin-bottom:0.65rem;">'
+            + '<p style="font-size:0.7rem;color:var(--text-3);margin:0 0 0.45rem;text-transform:uppercase;letter-spacing:0.06em;">@' + esc(row.author_username || 'member') + ' · ' + type + ' · ' + cat + ' · ' + when + '</p>'
+            + '<p style="font-size:0.84rem;color:var(--text-2);line-height:1.6;margin:0;">' + body + '</p>'
+            + media
+            + '</article>';
+        }).join('');
+      }
+
+      fetch(signalUrl, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+        }
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(rows) {
+        if (Array.isArray(rows) && rows.length) {
+          showRows(rows);
+          return;
+        }
+
+        var fallbackUrl = SUPABASE_URL
+          + '/rest/v1/board_posts'
+          + '?select=username,category,post_text,image_url,created_at'
+          + '&is_approved=eq.true'
+          + '&visibility_status=eq.visible'
+          + '&order=created_at.desc'
+          + '&limit=6';
+
+        return fetch(fallbackUrl, {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+          }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(boardRows) {
+          var normalized = (boardRows || []).map(function(b) {
+            return {
+              author_username: b.username,
+              post_type: 'text',
+              category: b.category,
+              body_text: b.post_text,
+              media_url: b.image_url,
+              created_at: b.created_at
+            };
+          });
+          showRows(normalized);
+        });
+      })
+      .catch(function() {
+        if (loading) loading.style.display = 'none';
+        if (empty) empty.style.display = '';
+      });
+    }
+
+    function loadSignalPulseStrip() {
+      var strip = document.getElementById('dir-pulse-strip');
+      if (!strip) return;
+
+      var events = [];
+      function addEvent(text, ts) {
+        if (!text) return;
+        if (events.some(function(e) { return e.text === text; })) return;
+        events.push({ text: text, ts: ts || null });
+      }
+
+      function formatWhen(ts) {
+        if (!ts) return 'now';
+        var d = new Date(ts);
+        if (isNaN(d.getTime())) return 'now';
+        return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      }
+
+      function render(index) {
+        if (!events.length) {
+          strip.textContent = 'No pulse events yet. New activity appears here as members post and join.';
+          return;
+        }
+        var item = events[index % events.length];
+        strip.innerHTML = '<strong style="color:var(--text);font-weight:700;">Live:</strong> ' + esc(item.text) + ' <span style="color:var(--text-3);font-size:0.72rem;">· ' + esc(formatWhen(item.ts)) + '</span>';
+      }
+
+      var postsUrl = SUPABASE_URL
+        + '/rest/v1/signal_posts'
+        + '?select=author_username,created_at'
+        + '&moderation_state=eq.approved'
+        + '&visibility=eq.public'
+        + '&order=created_at.desc'
+        + '&limit=5';
+
+      var membersUrl = SUPABASE_URL
+        + '/rest/v1/member_accounts'
+        + '?select=username,created_at,page_status,updated_at,veil_state'
+        + '&member_status=eq.active'
+        + '&order=created_at.desc'
+        + '&limit=5';
+
+      Promise.all([
+        fetch(postsUrl, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } }).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; }),
+        fetch(membersUrl, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } }).then(function(r) { return r.ok ? r.json() : []; }).catch(function() { return []; })
+      ]).then(function(results) {
+        var posts = Array.isArray(results[0]) ? results[0] : [];
+        var members = Array.isArray(results[1]) ? results[1] : [];
+
+        posts.forEach(function(row) {
+          if (!row || !row.author_username) return;
+          addEvent('@' + row.author_username + ' dropped a signal', row.created_at);
+        });
+        members.forEach(function(row) {
+          if (!row || !row.username) return;
+          addEvent('@' + row.username + ' joined the network', row.created_at);
+          if (row.page_status === 'live') addEvent('@' + row.username + ' page went live', row.updated_at || row.created_at);
+          var state = String(row.veil_state || '').toLowerCase();
+          if (state === 'veiled' || state === 'deep') addEvent('@' + row.username + ' activated the Veil', row.updated_at || row.created_at);
+        });
+
+        render(0);
+        if (events.length > 1) {
+          var idx = 0;
+          setInterval(function() {
+            idx = (idx + 1) % events.length;
+            render(idx);
+          }, 4800);
+        }
+      }).catch(function() {
+        strip.textContent = 'Pulse unavailable right now. Directory cards and live feed still reflect current network data.';
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      initFilter();
+      loadDirectory();
+      loadSignalFeedPreview();
+      loadSignalPulseStrip();
+    });
+  }());
+  </script>
+</body>
+</html>

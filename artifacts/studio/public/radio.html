@@ -1,0 +1,2671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DJ Faceless Animal Radio — live underground hip-hop, drill, and real blends. Tap in with the room. Leave it running." />
+  <title>Radio — DJ Faceless Animal · Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+  <style>
+    /* ── Radio page shell ── */
+    body { background: var(--bg); }
+
+    .radio-page-wrap {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .radio-page-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top station strip ── */
+    .rp-station-strip {
+      background: linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(0,0,0,0) 100%);
+      border-bottom: 1px solid rgba(139,92,246,0.18);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .rp-strip-left {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .rp-strip-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+    .rp-strip-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+    .rp-live-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: radio-pulse 2s ease-in-out infinite;
+    }
+
+    /* ── Station selector bar ── */
+    .rp-stations-bar {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.85rem 1.25rem 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .rp-stations-bar::-webkit-scrollbar { display: none; }
+    .rp-station-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-3);
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.18s;
+    }
+    .rp-station-btn:hover { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.3); color: var(--text-2); }
+    .rp-station-btn--active {
+      background: rgba(139,92,246,0.18);
+      border-color: rgba(139,92,246,0.42);
+      color: var(--purple-bright);
+    }
+    .rp-station-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--purple-bright);
+      flex-shrink: 0;
+      animation: fas-rw-pulse 2.4s ease-out infinite;
+    }
+    .rp-station-dot--spotify { background: #1DB954; }
+    .rp-station-dot--dim { background: rgba(255,255,255,0.2); animation: none; }
+
+    /* ── Station 3 coming soon placeholder ── */
+    .rp-station-coming-soon {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      background: rgba(0,0,0,0.15);
+    }
+    .rp-station-cs-label {
+      font-size: 0.65rem; font-weight: 800;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--text-3); margin-bottom: 0.5rem;
+    }
+    .rp-station-cs-title {
+      font-size: 1.5rem; font-weight: 900;
+      letter-spacing: -0.03em; color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+    .rp-station-cs-sub {
+      font-size: 0.82rem; color: var(--text-3); line-height: 1.65;
+    }
+
+    /* ── Boombox + player card ── */
+    .rp-player-section {
+      background: linear-gradient(180deg, rgba(139,92,246,0.08) 0%, var(--bg) 100%);
+      padding: 1.5rem 1.25rem 0;
+    }
+    .rp-player-card {
+      max-width: 780px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    /* Boombox header */
+    .rp-boombox-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: rgba(139,92,246,0.07);
+      border-bottom: 1px solid rgba(139,92,246,0.12);
+    }
+    .rp-boombox-img {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 14px rgba(139,92,246,0.55));
+      animation: boombox-float 4s ease-in-out infinite;
+    }
+    @media (max-width: 400px) { .rp-boombox-img { width: 64px; height: 64px; } }
+    .rp-boombox-info { flex: 1; min-width: 0; }
+    .rp-boombox-name {
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text);
+      margin: 0 0 0.2rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    @media (max-width: 380px) { .rp-boombox-name { font-size: 0.82rem; } }
+    .rp-boombox-tagline {
+      font-size: 0.7rem;
+      color: var(--text-3);
+      margin: 0 0 0.5rem;
+      line-height: 1.5;
+    }
+    .rp-eq-inline {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 16px;
+    }
+    .rp-eq-inline span {
+      display: block;
+      width: 3px;
+      background: var(--purple-bright);
+      border-radius: 1px;
+      animation: eq-dance 0.7s ease-in-out infinite alternate;
+    }
+    .rp-eq-inline span:nth-child(1) { height: 6px;  animation-delay: 0s; }
+    .rp-eq-inline span:nth-child(2) { height: 12px; animation-delay: 0.12s; }
+    .rp-eq-inline span:nth-child(3) { height: 8px;  animation-delay: 0.24s; }
+    .rp-eq-inline span:nth-child(4) { height: 14px; animation-delay: 0.08s; }
+    .rp-eq-inline span:nth-child(5) { height: 5px;  animation-delay: 0.2s; }
+
+    /* YouTube embed */
+    .rp-embed-ratio {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    .rp-embed-ratio iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: 0;
+    }
+
+    /* ── Station 1 — Audio player ── */
+    .rp-audio-player {
+      padding: 1rem 1.25rem 0.5rem;
+      min-height: 180px;
+    }
+    .rp-track-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      max-height: 260px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(139,92,246,0.3) transparent;
+      margin-bottom: 0.85rem;
+    }
+    .rp-track-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.15s, border-color 0.15s;
+      font-size: 0.83rem;
+      color: var(--text-2);
+    }
+    .rp-track-item:hover { background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.2); color: var(--text); }
+    .rp-track-item--active {
+      background: rgba(139,92,246,0.15);
+      border-color: rgba(139,92,246,0.35);
+      color: var(--purple-bright);
+    }
+    .rp-track-num {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-3);
+      width: 18px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .rp-track-item--active .rp-track-num { color: var(--purple-bright); }
+    .rp-track-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+    .rp-track-playing-icon {
+      font-size: 0.7rem;
+      color: var(--purple-bright);
+      flex-shrink: 0;
+    }
+    .rp-audio-seek-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.65rem;
+      color: var(--text-3);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 0 0.15rem;
+    }
+    .rp-audio-seek {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 3px;
+      border-radius: 2px;
+      background: linear-gradient(to right, var(--purple-bright) 0%, rgba(255,255,255,0.12) 0%);
+      outline: none;
+      cursor: pointer;
+    }
+    .rp-audio-seek::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      background: var(--purple-bright);
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(139,92,246,0.5);
+    }
+    .rp-no-tracks-msg {
+      font-size: 0.82rem;
+      color: var(--text-3);
+      text-align: center;
+      padding: 2.5rem 1rem;
+      line-height: 1.7;
+    }
+    .rp-track-stats {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.7rem;
+      color: var(--text-3);
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .rp-track-stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .rp-upvote-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      background: none;
+      border: 1px solid rgba(139,92,246,0.25);
+      border-radius: 6px;
+      padding: 0.35rem 0.6rem;
+      color: var(--text-3);
+      cursor: pointer;
+      font-size: 0.65rem;
+      font-weight: 700;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .rp-upvote-btn:hover {
+      background: rgba(139,92,246,0.08);
+      border-color: rgba(139,92,246,0.4);
+      color: var(--purple-bright);
+    }
+    .rp-top-tracks {
+      max-width: 780px;
+      margin: 1.5rem auto 0;
+      padding: 0 1.25rem;
+    }
+    .rp-top-tracks-inner {
+      background: rgba(139,92,246,0.04);
+      border: 1px solid rgba(139,92,246,0.15);
+      border-radius: 14px;
+      padding: 1.25rem;
+    }
+    .rp-top-tracks-title {
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--purple-bright);
+      margin: 0 0 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .rp-top-tracks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .rp-top-track-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.7rem 0.9rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(139,92,246,0.1);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .rp-top-track-item:hover {
+      background: rgba(139,92,246,0.08);
+      border-color: rgba(139,92,246,0.2);
+      color: var(--text);
+    }
+    .rp-top-track-rank {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--text-3);
+      width: 24px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .rp-top-track-info {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    .rp-top-track-score {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      color: var(--text-3);
+      flex-shrink: 0;
+    }
+    .rp-top-track-score-val {
+      font-weight: 700;
+      color: var(--purple-bright);
+    }
+
+    /* ── Playback control bar ── */
+    .rp-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 0.85rem 1.25rem 0.5rem;
+      background: rgba(0,0,0,0.18);
+    }
+    .rp-ctrl-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(139,92,246,0.12);
+      border: 1px solid rgba(139,92,246,0.28);
+      border-radius: 50%;
+      color: var(--text-1);
+      cursor: pointer;
+      transition: background 0.18s, transform 0.12s;
+      flex-shrink: 0;
+    }
+    .rp-ctrl-btn:hover { background: rgba(139,92,246,0.28); }
+    .rp-ctrl-btn:active { transform: scale(0.92); }
+    .rp-ctrl-btn--skip { width: 40px; height: 40px; font-size: 1rem; }
+    .rp-ctrl-btn--play {
+      width: 54px; height: 54px; font-size: 1.35rem;
+      background: rgba(139,92,246,0.22);
+      border-color: rgba(139,92,246,0.5);
+      box-shadow: 0 0 14px rgba(139,92,246,0.22);
+    }
+    .rp-ctrl-btn--play:hover { background: rgba(139,92,246,0.4); }
+    .rp-ctrl-now-playing {
+      font-size: 0.7rem;
+      color: var(--text-3);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 0 1.25rem 0.6rem;
+      background: rgba(0,0,0,0.18);
+    }
+
+    /* Volume control row */
+    .rp-vol-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1.25rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      background: rgba(0,0,0,0.15);
+    }
+    .rp-vol-icon {
+      font-size: 1rem;
+      flex-shrink: 0;
+      cursor: pointer;
+      user-select: none;
+    }
+    .rp-vol-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(to right,
+        var(--purple) 0%, var(--purple) var(--vol-pct, 80%),
+        rgba(255,255,255,0.1) var(--vol-pct, 80%), rgba(255,255,255,0.1) 100%);
+      outline: none;
+      cursor: pointer;
+    }
+    .rp-vol-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--purple-bright);
+      border: 2px solid var(--bg);
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(139,92,246,0.5);
+    }
+    .rp-vol-slider::-moz-range-thumb {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--purple-bright);
+      border: 2px solid var(--bg);
+      cursor: pointer;
+    }
+    .rp-vol-num {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: var(--text-3);
+      min-width: 2.5ch;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ── Chat gate ── */
+    .rp-chat-gate {
+      border: 1px solid rgba(139,92,246,0.25);
+      border-radius: 14px;
+      background: rgba(139,92,246,0.06);
+      padding: 1.5rem 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .rp-gate-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.6rem;
+    }
+    .rp-gate-icon {
+      font-size: 1.6rem;
+      color: var(--purple-bright);
+      opacity: 0.7;
+    }
+    .rp-gate-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text);
+      margin: 0;
+    }
+    .rp-gate-sub {
+      font-size: 0.8rem;
+      color: var(--text-2);
+      line-height: 1.65;
+      margin: 0;
+      max-width: 320px;
+    }
+    .rp-gate-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 0.4rem;
+    }
+    .rp-gate-input {
+      flex: 1;
+      min-width: 0;
+      padding: 0.55rem 0.85rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .rp-gate-input::placeholder { color: var(--text-3); }
+    .rp-gate-input:focus { border-color: rgba(139,92,246,0.5); }
+
+    .rp-chat-username-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.75rem;
+      background: rgba(139,92,246,0.08);
+      border: 1px solid rgba(139,92,246,0.18);
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--purple-bright);
+      margin-bottom: 0.5rem;
+    }
+    .rp-chat-username-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #4ade80;
+      flex-shrink: 0;
+    }
+    .rp-chat-username-signout {
+      margin-left: auto;
+      font-size: 0.68rem;
+      color: var(--text-3);
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .rp-chat-username-signout:hover { color: var(--text-2); }
+
+    /* Signal Vault entry panel (snapshot only; no player coupling) */
+    .rp-vault-chip {
+      display: grid;
+      gap: 0.55rem;
+      margin-bottom: 0.75rem;
+      padding: 0.7rem 0.8rem;
+      border-radius: 10px;
+      border: 1px solid rgba(139,92,246,0.24);
+      background: linear-gradient(140deg, rgba(139,92,246,0.12), rgba(56,189,248,0.06));
+      box-shadow: inset 0 0 28px rgba(0,0,0,0.18);
+    }
+    .rp-vault-chip-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .rp-vault-chip-title {
+      margin: 0;
+      font-size: 0.67rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--purple-bright);
+    }
+    .rp-vault-chip-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.66rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-2);
+    }
+    .rp-vault-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      box-shadow: 0 0 0 rgba(74,222,128,0);
+      transition: background 0.15s;
+    }
+    .rp-vault-status-dot--active {
+      background: #4ade80;
+      box-shadow: 0 0 0 5px rgba(74,222,128,0.1);
+    }
+    .rp-vault-status-dot--warn {
+      background: #fbbf24;
+      box-shadow: 0 0 0 5px rgba(251,191,36,0.1);
+    }
+    .rp-vault-chip-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+    }
+    .rp-vault-chip-cell {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 0.45rem 0.55rem;
+      background: rgba(0,0,0,0.22);
+    }
+    .rp-vault-chip-cell p { margin: 0; }
+    .rp-vault-chip-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      font-weight: 700;
+    }
+    .rp-vault-chip-val {
+      margin-top: 0.2rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rp-vault-chip-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .rp-vault-chip-note {
+      margin: 0;
+      font-size: 0.67rem;
+      color: var(--text-3);
+    }
+    .rp-vault-chip-actions {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 560px) {
+      .rp-vault-chip-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Chat section ── */
+    .rp-chat-section {
+      flex: 1;
+      max-width: 780px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 1.25rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Room title */
+    .rp-chat-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.25rem 0 0.75rem;
+      flex-wrap: wrap;
+    }
+    .rp-chat-title {
+      font-size: clamp(1.1rem, 4vw, 1.5rem);
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      margin: 0;
+      line-height: 1.15;
+    }
+    .rp-chat-title em {
+      color: var(--purple-bright);
+      font-style: normal;
+    }
+    .rp-listener-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(74,222,128,0.08);
+      border: 1px solid rgba(74,222,128,0.2);
+      border-radius: 20px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #4ade80;
+      white-space: nowrap;
+    }
+
+    /* Room tabs */
+    .rp-rooms-strip {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+    }
+    .rp-rooms-scroll {
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex: 1;
+    }
+    .rp-rooms-scroll::-webkit-scrollbar { display: none; }
+    .rp-room-tab {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.65rem 1rem;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-3);
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      font-family: var(--font-body);
+    }
+    .rp-room-tab:hover { color: var(--text-2); }
+    .rp-room-tab--active {
+      color: var(--purple-bright);
+      border-bottom-color: var(--purple-bright);
+    }
+    .rp-room-count {
+      background: rgba(139,92,246,0.2);
+      color: var(--purple-bright);
+      border-radius: 20px;
+      padding: 1px 6px;
+      font-size: 0.6rem;
+      font-weight: 900;
+    }
+    .rp-create-btn {
+      flex-shrink: 0;
+      padding: 0.4rem 0.85rem;
+      margin: 0.25rem 0.4rem;
+      background: rgba(139,92,246,0.1);
+      border: 1px solid rgba(139,92,246,0.3);
+      border-radius: 8px;
+      color: var(--purple-bright);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+      font-family: var(--font-body);
+    }
+    .rp-create-btn:hover { background: rgba(139,92,246,0.2); }
+
+    /* Active room bar */
+    .rp-active-room-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.85rem;
+      background: rgba(139,92,246,0.05);
+      border: 1px solid rgba(139,92,246,0.1);
+      border-radius: 8px;
+      margin-bottom: 0.6rem;
+    }
+    .rp-active-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--purple-bright);
+      flex-shrink: 0;
+      animation: radio-pulse 1.4s ease-in-out infinite;
+    }
+    .rp-active-name {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-2);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .rp-active-count {
+      font-size: 0.66rem;
+      color: var(--text-3);
+      white-space: nowrap;
+    }
+
+    /* Chat feed */
+    .rp-chat-feed {
+      flex: 1;
+      min-height: 280px;
+      max-height: 420px;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px 12px 0 0;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      scroll-behavior: smooth;
+    }
+    .rp-chat-feed::-webkit-scrollbar { width: 4px; }
+    .rp-chat-feed::-webkit-scrollbar-track { background: transparent; }
+    .rp-chat-feed::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 2px; }
+
+    .rp-msg {
+      display: flex;
+      gap: 0.65rem;
+      align-items: flex-start;
+    }
+    .rp-avatar {
+      width: 32px; height: 32px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--purple-bright));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.58rem;
+      font-weight: 900;
+      color: #fff;
+    }
+    .rp-msg-body { flex: 1; min-width: 0; }
+    .rp-handle {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--purple-bright);
+      display: block;
+      margin-bottom: 0.15rem;
+      letter-spacing: 0.04em;
+    }
+    .rp-msg-text {
+      font-size: 0.875rem;
+      color: var(--text-2);
+      line-height: 1.55;
+      margin: 0;
+      word-break: break-word;
+    }
+    .rp-msg--self .rp-handle { color: var(--gold); }
+    .rp-msg--self .rp-avatar { background: linear-gradient(135deg, #d4af37, #f59e0b); }
+    .rp-msg--system {
+      justify-content: center;
+      padding: 0.25rem 0;
+    }
+    .rp-msg--system p {
+      font-size: 0.66rem;
+      color: var(--text-3);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 0;
+      text-align: center;
+    }
+
+    /* Input bar — sticky-feel at bottom of chat card */
+    .rp-input-wrap {
+      display: flex;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.25);
+    }
+    .rp-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 0.9rem 1rem;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: var(--font-body);
+      outline: none;
+      min-width: 0;
+    }
+    .rp-input::placeholder { color: var(--text-3); }
+    .rp-input:focus { background: rgba(139,92,246,0.05); }
+    .rp-send {
+      flex-shrink: 0;
+      width: 52px;
+      min-height: 44px;
+      background: var(--purple);
+      border: none;
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-body);
+    }
+    .rp-send:hover { background: var(--purple-bright); }
+    .rp-send:active { transform: scale(0.94); }
+
+    .rp-phase-note {
+      font-size: 0.66rem;
+      color: var(--text-3);
+      text-align: center;
+      padding: 0.6rem 0 0;
+      letter-spacing: 0.04em;
+    }
+    .rp-phase-note a { color: var(--purple-bright); text-decoration: none; }
+    .rp-phase-note a:hover { text-decoration: underline; }
+
+    /* Future strip */
+    .rp-future-strip {
+      max-width: 780px;
+      margin: 0 auto 1.5rem;
+      padding: 0 1.25rem;
+    }
+    .rp-future-inner {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      background: rgba(139,92,246,0.06);
+      border: 1px solid rgba(139,92,246,0.12);
+      border-radius: 10px;
+    }
+    .rp-future-icon { color: var(--purple); flex-shrink: 0; }
+    .rp-future-inner p {
+      font-size: 0.8rem;
+      color: var(--text-2);
+      line-height: 1.75;
+      margin: 0;
+    }
+    .rp-future-inner strong { color: var(--text); }
+
+    /* ── Back-to-music link ── */
+    .rp-back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      text-decoration: none;
+      padding: 0.5rem 1.25rem;
+      transition: color 0.15s;
+    }
+    .rp-back-link:hover { color: var(--purple-bright); }
+
+    /* ── Modal ── */
+    .rp-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(6px);
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .rp-modal-overlay.rp-modal--open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .rp-modal {
+      background: var(--bg-2);
+      border: 1px solid rgba(139,92,246,0.25);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 400px;
+      overflow: hidden;
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.2s;
+    }
+    .rp-modal-overlay.rp-modal--open .rp-modal { transform: translateY(0) scale(1); }
+    .rp-modal-hdr {
+      padding: 1.5rem 1.5rem 0;
+      position: relative;
+    }
+    .rp-modal-eyebrow {
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--purple-bright);
+      margin: 0 0 0.35rem;
+    }
+    .rp-modal-hdr h3 {
+      font-size: 1.35rem;
+      font-weight: 900;
+      margin: 0;
+    }
+    .rp-modal-x {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      background: rgba(255,255,255,0.07);
+      border: none;
+      color: var(--text-2);
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.78rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .rp-modal-x:hover { background: rgba(255,255,255,0.14); }
+    .rp-modal-bdy { padding: 1.25rem 1.5rem 1.75rem; }
+    .rp-modal-bdy > p { font-size: 0.875rem; color: var(--text-2); line-height: 1.7; margin: 0 0 1.25rem; }
+    .rp-room-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .rp-room-card {
+      padding: 0.6rem 0.8rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-2);
+    }
+    .rp-room-card--yours {
+      background: rgba(139,92,246,0.1);
+      border-color: rgba(139,92,246,0.3);
+      color: var(--purple-bright);
+    }
+
+    /* @keyframes eq-dance already declared in style.css — alias */
+    @keyframes eq-dance {
+      from { transform: scaleY(0.4); }
+      to   { transform: scaleY(1); }
+    }
+  </style>
+</head>
+<body class="radio-page-wrap">
+
+  <!-- ── NAV ── -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="/start.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="games.html">Games</a></li>
+          <li><a href="music.html">Music</a></li>
+          <li><a href="radio.html" aria-current="page" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="wallet.html">Vault</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="/login.html?redirect=%2Fradio.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="games.html">Games</a>
+    <a href="music.html">Music</a>
+    <a href="radio.html" aria-current="page" style="color:var(--purple-bright);">Radio</a>
+    <a href="wallet.html">Vault</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="/login.html?redirect=%2Fradio.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="about.html">About</a>
+  </div>
+
+  <main class="radio-page-main">
+
+    <!-- Back link -->
+    <a href="music.html#radio" class="rp-back-link">← Back to Music</a>
+
+    <!-- Station status strip -->
+    <div class="rp-station-strip">
+      <div class="rp-strip-left">
+        <span class="on-air-badge" role="status">
+          <span class="on-air-dot" aria-hidden="true"></span>
+          On Air
+        </span>
+        <span class="rp-strip-title">DJ Faceless Animal Radio</span>
+        <span class="eq-bars" aria-hidden="true" style="margin-left:0.25rem;">
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+        </span>
+      </div>
+      <div class="rp-strip-right">
+        <span class="rp-live-dot" aria-hidden="true"></span>
+        <span id="rp-listener-num">24</span> listening
+      </div>
+    </div>
+
+    <!-- Player Section -->
+    <div class="rp-player-section">
+      <div class="rp-player-card">
+
+        <!-- Boombox + station identity -->
+        <div class="rp-boombox-header">
+          <img
+            src="assets/boombox.png"
+            class="rp-boombox-img"
+            alt="DJ Faceless Animal Radio — boombox"
+            loading="eager"
+          />
+          <div class="rp-boombox-info">
+            <p class="rp-boombox-name">DJ Faceless Animal Radio</p>
+            <p class="rp-boombox-tagline">Underground hip-hop · Drill · Real blends · No filter</p>
+            <div class="rp-eq-inline" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Station selector -->
+        <div class="rp-stations-bar" role="group" aria-label="Station selector">
+          <button class="rp-station-btn rp-station-btn--active" data-station="1" aria-pressed="true">
+            <span class="rp-station-dot"></span>
+            Station 1 · Original
+          </button>
+          <button class="rp-station-btn" data-station="2" aria-pressed="false">
+            <span class="rp-station-dot"></span>
+            Station 2 · Mix
+          </button>
+          <button class="rp-station-btn" data-station="3" aria-pressed="false">
+            <span class="rp-station-dot rp-station-dot--spotify"></span>
+            Station 3 · Spotify
+          </button>
+          <button class="rp-station-btn" data-station="4" aria-pressed="false">
+            <span class="rp-station-dot"></span>
+            Station 4 · Blends
+          </button>
+          <button class="rp-station-btn" data-station="5" aria-pressed="false">
+            <span class="rp-station-dot"></span>
+            Station 5 · Archives
+          </button>
+          <button class="rp-station-btn rp-station-btn--tv" data-station="tv" aria-pressed="false">
+            <span class="rp-station-dot" style="background:#e63946;animation:none;"></span>
+            📺 FA TV
+          </button>
+        </div>
+
+        <!-- Station 1: Native Audio Player -->
+        <div id="rp-station-1" role="region" aria-label="Station 1 — Original">
+          <audio id="rp-audio-player" preload="metadata" style="display:none;"></audio>
+          <div class="rp-audio-player">
+            <div id="rp-track-list" class="rp-track-list">
+              <p class="rp-no-tracks-msg">Tracks coming soon — drop back in shortly.</p>
+            </div>
+            <div class="rp-audio-seek-row">
+              <span id="rp-audio-current">0:00</span>
+              <input type="range" id="rp-audio-seek" class="rp-audio-seek" min="0" max="100" value="0" aria-label="Seek" />
+              <span id="rp-audio-duration">0:00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Station 2: YouTube Mix Playlist -->
+        <div id="rp-station-2" class="rp-embed-ratio" style="display:none;" role="region" aria-label="Station 2 — Mix Playlist">
+          <iframe
+            id="rp-yt-player-2"
+            src="https://www.youtube.com/embed/videoseries?list=PLuaOk7bBVKJTqt9w6hS_MxjeQHGURWaBN&rel=0&modestbranding=1&enablejsapi=1"
+            title="DJ Faceless Animal — Mix Playlist"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+        </div>
+
+        <!-- Station 3: Spotify Artist -->
+        <div id="rp-station-3" class="rp-embed-ratio" style="display:none;" role="region" aria-label="Station 3 — Spotify">
+          <iframe
+            id="rp-spotify-player"
+            src="https://open.spotify.com/embed/artist/0pO4yejvRakRu8CzXlRwan?utm_source=generator&theme=0"
+            title="DJ Faceless Animal — Spotify"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            style="border-radius:0;"
+          ></iframe>
+        </div>
+
+        <!-- DJ Faceless Animal TV -->
+        <div id="rp-station-tv" style="display:none;" role="region" aria-label="DJ Faceless Animal TV">
+          <!-- TV intro banner -->
+          <div style="background:linear-gradient(135deg,rgba(230,57,70,0.14)0%,rgba(139,92,246,0.08)100%);border-bottom:1px solid rgba(230,57,70,0.2);padding:0.85rem 1.25rem;display:flex;align-items:center;gap:0.85rem;">
+            <span style="font-size:1.3rem;flex-shrink:0;">📺</span>
+            <div>
+              <p style="font-size:0.78rem;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:#e63946;margin:0 0 0.1rem;">DJ Faceless Animal TV</p>
+              <p style="font-size:0.7rem;color:var(--text-3);margin:0;">Live mixes · Visuals · Underground content · Station energy</p>
+            </div>
+            <span style="margin-left:auto;display:inline-flex;align-items:center;gap:0.35rem;font-size:0.65rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#e63946;">
+              <span style="width:6px;height:6px;border-radius:50%;background:#e63946;display:inline-block;animation:radio-pulse 2s ease-in-out infinite;"></span>
+              On Air
+            </span>
+          </div>
+          <div class="rp-embed-ratio">
+            <iframe
+              id="rp-tv-player"
+              src="https://www.youtube.com/embed/videoseries?list=PLuaOk7bBVKJRkxhLb2RYS1wogcPKTvMO_&rel=0&modestbranding=1"
+              title="DJ Faceless Animal TV — Mixes &amp; Visuals"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </div>
+
+        <!-- Playback controls -->
+        <div class="rp-controls" role="group" aria-label="Playback controls">
+          <button class="rp-ctrl-btn rp-ctrl-btn--skip" id="rp-skip-back" aria-label="Previous track" title="Previous track">
+            &#x23EE;
+          </button>
+          <button class="rp-ctrl-btn rp-ctrl-btn--play" id="rp-play-pause" aria-label="Play" title="Play / Pause">
+            &#x25B6;
+          </button>
+          <button class="rp-ctrl-btn rp-ctrl-btn--skip" id="rp-skip-fwd" aria-label="Next track" title="Next track">
+            &#x23ED;
+          </button>
+        </div>
+        <p class="rp-ctrl-now-playing" id="rp-now-playing">DJ Faceless Animal &mdash; Live Playlist</p>
+
+        <!-- Volume control -->
+        <div class="rp-vol-bar" role="group" aria-label="Volume control">
+          <span class="rp-vol-icon" id="rp-vol-icon" title="Toggle mute" role="button" tabindex="0" aria-label="Mute">🔊</span>
+          <input
+            type="range"
+            class="rp-vol-slider"
+            id="rp-vol-slider"
+            min="0"
+            max="100"
+            value="80"
+            aria-label="Volume"
+          />
+          <span class="rp-vol-num" id="rp-vol-num" aria-live="polite">80</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Top Tracks Panel ── -->
+    <div class="rp-top-tracks">
+      <div class="rp-top-tracks-inner">
+        <p class="rp-top-tracks-title">
+          <span>🔥</span> Top Tracks
+        </p>
+        <div id="rp-top-tracks-list" class="rp-top-tracks-list">
+          <p style="font-size:0.8rem;color:var(--text-3);text-align:center;margin:0;">Loading top tracks…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Station 1 Community Upload Section ── -->
+    <div id="rp-submit-section" style="max-width:780px;margin:1.5rem auto 0;padding:0 1.25rem;">
+      <div style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.22);border-radius:16px;padding:1.5rem;">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;margin-bottom:0.5rem;">
+          <div style="display:flex;align-items:center;gap:0.65rem;">
+            <span style="font-size:1.1rem;">&#x1F3B5;</span>
+            <p style="font-size:0.72rem;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--purple-bright);margin:0;">Upload to Station 1 · Members</p>
+          </div>
+          <!-- Quota badge (filled by JS) -->
+          <span id="rp-quota-badge" style="display:none;font-size:0.68rem;font-weight:800;letter-spacing:0.06em;padding:0.25rem 0.65rem;border-radius:20px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--purple-bright);"></span>
+        </div>
+
+        <p style="font-size:0.88rem;color:var(--text-2);line-height:1.7;margin-bottom:1rem;">
+          Active members can upload up to <strong style="color:var(--text);">2 original songs per month</strong> directly to Station 1.
+          Your track goes live in the rotation immediately after uploading.
+        </p>
+
+        <!-- Rules -->
+        <div style="background:rgba(0,0,0,0.25);border-left:3px solid rgba(139,92,246,0.5);border-radius:0 8px 8px 0;padding:0.85rem 1rem;margin-bottom:1.25rem;">
+          <p style="font-size:0.72rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:0.4rem;">Rules</p>
+          <ul style="margin:0;padding-left:1.1rem;display:flex;flex-direction:column;gap:0.3rem;">
+            <li style="font-size:0.8rem;color:var(--text-2);line-height:1.55;">Must be <strong style="color:var(--text);">your original music only</strong> — no covers, samples, or third-party content</li>
+            <li style="font-size:0.8rem;color:var(--text-2);line-height:1.55;">Limit of <strong style="color:var(--text);">2 uploads per calendar month</strong> per member</li>
+            <li style="font-size:0.8rem;color:var(--text-2);line-height:1.55;">Accepted formats: <strong style="color:var(--text);">MP3, WAV, FLAC, OGG, M4A, AAC</strong> — max 30MB</li>
+            <li style="font-size:0.8rem;color:var(--text-2);line-height:1.55;">Tracks can be removed from rotation at any time without notice</li>
+          </ul>
+        </div>
+
+        <!-- Upload form (members only) -->
+        <div id="rp-submit-form-wrap">
+
+          <!-- Drop zone -->
+          <div id="rp-drop-zone"
+            style="border:2px dashed rgba(139,92,246,0.35);border-radius:12px;padding:1.5rem 1rem;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:0.85rem;background:rgba(139,92,246,0.04);"
+            onclick="document.getElementById('rp-file-input').click()"
+            ondragover="event.preventDefault();this.style.borderColor='rgba(139,92,246,0.7)';this.style.background='rgba(139,92,246,0.1)';"
+            ondragleave="this.style.borderColor='rgba(139,92,246,0.35)';this.style.background='rgba(139,92,246,0.04)';"
+            ondrop="rpHandleDrop(event)">
+            <div style="font-size:1.8rem;margin-bottom:0.4rem;">🎵</div>
+            <p style="font-size:0.85rem;font-weight:700;color:var(--text);margin:0 0 0.2rem;">Drop your audio file here</p>
+            <p style="font-size:0.75rem;color:var(--text-3);margin:0;">or click to browse — MP3, WAV, FLAC, OGG, M4A, AAC · max 30MB</p>
+          </div>
+          <input type="file" id="rp-file-input" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/flac,audio/x-m4a,audio/mp4,audio/aac,audio/aiff" style="display:none;" />
+
+          <!-- Selected file preview -->
+          <div id="rp-file-selected" style="display:none;align-items:center;gap:0.6rem;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.22);border-radius:8px;padding:0.55rem 0.85rem;margin-bottom:0.85rem;font-size:0.8rem;color:var(--text-2);">
+            <span style="font-size:1rem;flex-shrink:0;">🎵</span>
+            <span id="rp-file-name" style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+            <span id="rp-file-size" style="font-size:0.72rem;color:var(--text-3);flex-shrink:0;"></span>
+            <button onclick="rpClearFile()" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:1rem;padding:0.1rem 0.2rem;line-height:1;" title="Remove file">×</button>
+          </div>
+
+          <!-- Title field -->
+          <div style="display:flex;flex-direction:column;gap:0.35rem;margin-bottom:0.75rem;">
+            <label for="rp-sub-title" style="font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-3);">Track Title <span style="color:#f87171;">*</span></label>
+            <input id="rp-sub-title" type="text" maxlength="100" placeholder="Name of your track" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:0.6rem 0.85rem;font-size:0.85rem;color:var(--text);font-family:var(--font-body);outline:none;width:100%;box-sizing:border-box;transition:border-color 0.15s;" onfocus="this.style.borderColor='rgba(139,92,246,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'" />
+          </div>
+
+          <!-- Progress bar (hidden until uploading) -->
+          <div id="rp-progress-wrap" style="display:none;margin-bottom:0.75rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
+              <span style="font-size:0.72rem;color:var(--text-3);" id="rp-progress-label">Uploading…</span>
+              <span style="font-size:0.72rem;color:var(--purple-bright);font-weight:700;" id="rp-progress-pct">0%</span>
+            </div>
+            <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+              <div id="rp-progress-bar" style="height:100%;background:var(--purple-bright);border-radius:4px;width:0%;transition:width 0.3s ease;"></div>
+            </div>
+          </div>
+
+          <!-- Error + submit -->
+          <p id="rp-sub-error" style="font-size:0.78rem;color:#f87171;display:none;margin:0 0 0.6rem;padding:0.5rem 0.75rem;background:rgba(248,113,113,0.08);border-radius:6px;border:1px solid rgba(248,113,113,0.2);"></p>
+          <button id="rp-sub-btn" onclick="rpUploadTrack()" class="btn btn-outline-purple" style="font-size:0.82rem;">Upload to Station 1 →</button>
+
+          <!-- Success -->
+          <div id="rp-sub-success" style="display:none;margin-top:1rem;padding:1rem;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;">
+            <p style="font-size:0.88rem;color:#4ade80;font-weight:700;margin:0 0 0.25rem;">Track added to Station 1! 🎶</p>
+            <p style="font-size:0.8rem;color:var(--text-2);margin:0;" id="rp-sub-success-detail">Your track is now in the rotation. Hit play to hear it.</p>
+            <p style="font-size:0.75rem;color:var(--text-3);margin:0.5rem 0 0;" id="rp-sub-remaining-msg"></p>
+          </div>
+
+        </div>
+
+        <!-- Gate: not logged in or free plan -->
+        <div id="rp-submit-gate" style="display:none;text-align:center;padding:0.5rem 0;">
+          <p style="font-size:0.83rem;color:var(--text-2);margin-bottom:0.75rem;" id="rp-gate-msg">You need an active monthly membership to upload tracks.</p>
+          <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+            <a href="/login.html?redirect=%2Fradio.html" class="btn btn-ghost btn-sm" id="rp-gate-signin">Sign In →</a>
+            <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" target="_blank" rel="noopener noreferrer" class="btn btn-outline-purple btn-sm">Get Access — $5/mo →</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+    (function() {
+      var sess = null;
+      try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
+      var PAID_PLANS = ['access', 'starter', 'pro', 'premium'];
+      var isMember = sess && PAID_PLANS.indexOf(sess.plan) !== -1 && sess.status === 'active';
+
+      if (!isMember) {
+        var form = document.getElementById('rp-submit-form-wrap');
+        var gate = document.getElementById('rp-submit-gate');
+        if (form) form.style.display = 'none';
+        if (gate) gate.style.display = '';
+        // Customize gate message based on whether user is logged in at all
+        if (sess && sess.username) {
+          var msg = document.getElementById('rp-gate-msg');
+          var si  = document.getElementById('rp-gate-signin');
+          if (msg) msg.textContent = 'Your current plan does not include Station 1 uploads. Upgrade to any paid plan to get 2 uploads/month.';
+          if (si)  si.style.display = 'none';
+        }
+      } else {
+        // TODO: Load quota from Supabase quota tracking (coming later)
+      }
+    })();
+
+    var rpPendingFile = null;
+
+    function rpFormatBytes(b) {
+      if (!b) return '';
+      if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+      return (b / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function rpSetFile(file) {
+      if (!file) return;
+      var ALLOWED = ['audio/mpeg','audio/mp3','audio/wav','audio/ogg','audio/flac',
+                     'audio/x-m4a','audio/mp4','audio/aac','audio/aiff','audio/x-aiff'];
+      if (ALLOWED.indexOf(file.type) === -1 && !file.type.startsWith('audio/')) {
+        rpShowError('Only audio files are supported (MP3, WAV, OGG, FLAC, M4A, AAC).');
+        return;
+      }
+      if (file.size > 30 * 1024 * 1024) {
+        rpShowError('File too large — max 30MB.');
+        return;
+      }
+      rpPendingFile = file;
+      var nameEl = document.getElementById('rp-file-name');
+      var sizeEl = document.getElementById('rp-file-size');
+      var selEl  = document.getElementById('rp-file-selected');
+      if (nameEl) nameEl.textContent = file.name;
+      if (sizeEl) sizeEl.textContent = rpFormatBytes(file.size);
+      if (selEl)  selEl.style.display = 'flex';
+      // Auto-populate title from filename if empty
+      var titleEl = document.getElementById('rp-sub-title');
+      if (titleEl && !titleEl.value.trim()) {
+        titleEl.value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+      }
+      rpClearError();
+    }
+
+    function rpClearFile() {
+      rpPendingFile = null;
+      var inp = document.getElementById('rp-file-input');
+      if (inp) inp.value = '';
+      var selEl = document.getElementById('rp-file-selected');
+      if (selEl) selEl.style.display = 'none';
+    }
+
+    function rpHandleDrop(e) {
+      e.preventDefault();
+      var dz = document.getElementById('rp-drop-zone');
+      if (dz) { dz.style.borderColor = 'rgba(139,92,246,0.35)'; dz.style.background = 'rgba(139,92,246,0.04)'; }
+      var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) rpSetFile(file);
+    }
+
+    document.getElementById('rp-file-input').addEventListener('change', function(e) {
+      var file = e.target.files && e.target.files[0];
+      if (file) rpSetFile(file);
+    });
+
+    function rpShowError(msg) {
+      var el = document.getElementById('rp-sub-error');
+      if (el) { el.textContent = msg; el.style.display = ''; }
+    }
+    function rpClearError() {
+      var el = document.getElementById('rp-sub-error');
+      if (el) el.style.display = 'none';
+    }
+    function rpSetProgress(pct, label) {
+      var wrap = document.getElementById('rp-progress-wrap');
+      var bar  = document.getElementById('rp-progress-bar');
+      var pctEl  = document.getElementById('rp-progress-pct');
+      var lblEl  = document.getElementById('rp-progress-label');
+      if (wrap) wrap.style.display = '';
+      if (bar)  bar.style.width = pct + '%';
+      if (pctEl) pctEl.textContent = pct + '%';
+      if (lblEl && label) lblEl.textContent = label;
+    }
+    function rpHideProgress() {
+      var wrap = document.getElementById('rp-progress-wrap');
+      if (wrap) wrap.style.display = 'none';
+    }
+
+    async function rpUploadTrack() {
+      rpClearError();
+
+      var sess = null;
+      try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
+      if (!sess || !sess.ph) {
+        rpShowError('Your session has expired. Please sign in again.');
+        return;
+      }
+
+      var titleEl = document.getElementById('rp-sub-title');
+      var title   = titleEl ? titleEl.value.trim() : '';
+      if (!title) { rpShowError('Enter a track title.'); titleEl && titleEl.focus(); return; }
+      if (!rpPendingFile) { rpShowError('Select an audio file to upload.'); return; }
+
+      var btn = document.getElementById('rp-sub-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Uploading…'; }
+      rpSetProgress(10, 'Reading file…');
+
+      // Encode as base64
+      var base64;
+      try {
+        var bytes  = new Uint8Array(await rpPendingFile.arrayBuffer());
+        var binary = '';
+        var CHUNK  = 8192;
+        for (var i = 0; i < bytes.length; i += CHUNK) {
+          binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+        }
+        base64 = btoa(binary);
+      } catch(e) {
+        rpHideProgress();
+        if (btn) { btn.disabled = false; btn.textContent = 'Upload to Station 1 →'; }
+        rpShowError('Could not read file. Try a smaller file or a different format.');
+        return;
+      }
+
+      rpSetProgress(40, 'Uploading to Station 1…');
+
+      var payload = JSON.stringify({
+        username:  (sess.username || sess.display || '').toLowerCase(),
+        ph:        sess.ph,
+        file_b64:  base64,
+        file_type: rpPendingFile.type,
+        file_name: rpPendingFile.name,
+        title:     title,
+        station:   '1',
+      });
+
+      rpSetProgress(70, 'Saving…');
+
+      var resp, data;
+      try {
+        resp = await fetch('/api/radio/community-upload', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    payload,
+        });
+        data = await resp.json();
+      } catch(e) {
+        rpHideProgress();
+        if (btn) { btn.disabled = false; btn.textContent = 'Upload to Station 1 →'; }
+        rpShowError('Network error. Check your connection and try again.');
+        return;
+      }
+
+      rpHideProgress();
+      if (btn) { btn.disabled = false; btn.textContent = 'Upload to Station 1 →'; }
+
+      if (!resp.ok || data.error) {
+        rpShowError(data.error || 'Upload failed (' + resp.status + '). Try again.');
+        return;
+      }
+
+      // Success
+      rpSetProgress(100, 'Done!');
+      setTimeout(rpHideProgress, 1200);
+
+      rpClearFile();
+      if (titleEl) titleEl.value = '';
+
+      var successEl = document.getElementById('rp-sub-success');
+      var detailEl  = document.getElementById('rp-sub-success-detail');
+      var remEl     = document.getElementById('rp-sub-remaining-msg');
+      var badge     = document.getElementById('rp-quota-badge');
+      var remaining = data.remaining ?? data.remaining_this_month ?? null;
+
+      if (detailEl) detailEl.textContent = '"' + title + '" is now live on Station 1. Refresh the player to hear it.';
+      if (remEl) {
+        var rem = remaining;
+        remEl.textContent = rem === 0
+          ? "That was your last upload for this month."
+          : rem + " upload" + (rem === 1 ? '' : 's') + " remaining this month.";
+        if (rem === 0 && btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+      }
+      if (badge) {
+        badge.style.display = '';
+        var rem2 = remaining;
+        if (rem2 === 0) {
+          badge.textContent = '0 uploads left this month';
+          badge.style.background = 'rgba(248,113,113,0.12)';
+          badge.style.borderColor = 'rgba(248,113,113,0.3)';
+          badge.style.color = '#f87171';
+        } else {
+          badge.textContent = rem2 + ' of 2 uploads left';
+        }
+      }
+      if (successEl) successEl.style.display = '';
+
+      // Reload Station 1 track list to include the new track
+    }
+    </script>
+
+    <!-- $5/mo Join Strip — targets non-members listening to the station -->
+    <div id="rp-join-strip" style="max-width:780px;margin:1.5rem auto 0;padding:0 1.25rem;">
+      <div style="background:linear-gradient(135deg,rgba(139,92,246,0.12),rgba(139,92,246,0.04));border:1px solid rgba(139,92,246,0.3);border-radius:16px;padding:1.4rem 1.5rem;display:flex;flex-wrap:wrap;gap:1.25rem;align-items:center;justify-content:space-between;">
+
+        <div style="display:flex;align-items:center;gap:1rem;flex:1;min-width:200px;">
+          <div style="width:42px;height:42px;background:rgba(139,92,246,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">📻</div>
+          <div>
+            <p style="font-size:0.88rem;font-weight:800;color:var(--text);margin-bottom:0.15rem;">Like what you're hearing?</p>
+            <p style="font-size:0.78rem;color:var(--text-2);line-height:1.55;margin:0;">$5/month gets you inside the platform — radio access, games, apps, private DMs, and 2 track submissions/month to Station 1.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:0.5rem;flex-shrink:0;min-width:160px;">
+          <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" target="_blank" rel="noopener noreferrer" class="btn btn-outline-purple" style="text-align:center;font-size:0.82rem;white-space:nowrap;">
+            Join — $5/month →
+          </a>
+          <a href="https://cash.app/$Jamespropane00" target="_blank" rel="noopener noreferrer" style="text-align:center;font-size:0.72rem;color:var(--text-3);text-decoration:none;padding:0.2rem 0;">
+            or pay via Cash App <span style="color:var(--gold-dim);">$Jamespropane00</span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+    (function() {
+      var sess = null;
+      try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
+      var isMember = sess && (sess.plan === 'access' || sess.plan === 'starter' || sess.plan === 'pro' || sess.plan === 'premium') && sess.status === 'active';
+      if (isMember) {
+        var strip = document.getElementById('rp-join-strip');
+        if (strip) strip.style.display = 'none';
+      }
+    })();
+    </script>
+
+    <div class="rp-chat-section">
+
+      <!-- Title row -->
+      <div class="rp-chat-title-row">
+        <h1 class="rp-chat-title">
+          DJ Faceless Animal Radio<br />
+          <em>(Live Chat)</em>
+        </h1>
+        <span class="rp-listener-pill">
+          <span class="rp-live-dot" aria-hidden="true"></span>
+          <span id="rp-listener-pill-num">24</span> in the room
+        </span>
+      </div>
+
+      <section class="rp-vault-chip" id="rp-vault-chip" aria-label="Signal Vault quick panel">
+        <div class="rp-vault-chip-head">
+          <p class="rp-vault-chip-title">Signal Vault</p>
+          <span class="rp-vault-chip-status"><span id="rp-vault-status-dot" class="rp-vault-status-dot" aria-hidden="true"></span><span id="rp-vault-status-text">Idle</span></span>
+        </div>
+        <div class="rp-vault-chip-grid">
+          <div class="rp-vault-chip-cell">
+            <p class="rp-vault-chip-label">Veil Balance</p>
+            <p id="rp-vault-veil-val" class="rp-vault-chip-val">--</p>
+          </div>
+          <div class="rp-vault-chip-cell">
+            <p class="rp-vault-chip-label">Pulse Balance</p>
+            <p id="rp-vault-pulse-val" class="rp-vault-chip-val">--</p>
+          </div>
+        </div>
+        <div class="rp-vault-chip-foot">
+          <p id="rp-vault-note" class="rp-vault-chip-note">Vault snapshot ready.</p>
+          <div class="rp-vault-chip-actions">
+            <a href="miner.html" class="btn btn-ghost btn-sm">Open Miner</a>
+            <a href="wallet.html" class="btn btn-primary btn-sm">Open Wallet</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Room tabs -->
+      <div class="rp-rooms-strip">
+        <div class="rp-rooms-scroll" role="tablist" aria-label="Chat rooms">
+          <button class="rp-room-tab rp-room-tab--active" role="tab" aria-selected="true" data-room="radio" data-count="24">
+            Radio <span class="rp-room-count">24</span>
+          </button>
+          <button class="rp-room-tab" role="tab" aria-selected="false" data-room="underground" data-count="8">
+            Mix Room <span class="rp-room-count">8</span>
+          </button>
+          <button class="rp-room-tab" role="tab" aria-selected="false" data-room="gaming" data-count="12">
+            Gaming <span class="rp-room-count">12</span>
+          </button>
+          <button class="rp-room-tab" role="tab" aria-selected="false" data-room="latenight" data-count="5">
+            Late Night <span class="rp-room-count">5</span>
+          </button>
+        </div>
+        <button class="rp-create-btn" id="rp-create-btn" aria-label="Create a new room">+ Room</button>
+      </div>
+
+      <!-- Active room indicator -->
+      <div class="rp-active-room-bar">
+        <span class="rp-active-dot" aria-hidden="true"></span>
+        <span class="rp-active-name" id="rp-active-name">DJ Faceless Animal Radio</span>
+        <span class="rp-active-count"><span id="rp-active-count-num">24</span> in the room</span>
+      </div>
+
+      <!-- Chat feed -->
+      <div class="rp-chat-feed" id="rp-chat-feed" role="log" aria-label="Live chat" aria-live="polite">
+
+        <div class="rp-msg">
+          <div class="rp-avatar" aria-hidden="true">FA</div>
+          <div class="rp-msg-body">
+            <span class="rp-handle">FacelessFanz1</span>
+            <p class="rp-msg-text">Yo this track go hard 🔥</p>
+          </div>
+        </div>
+
+        <div class="rp-msg">
+          <div class="rp-avatar" aria-hidden="true">LS</div>
+          <div class="rp-msg-body">
+            <span class="rp-handle">LoverOfSoundz</span>
+            <p class="rp-msg-text">This mix is fire — Faceless never misses</p>
+          </div>
+        </div>
+
+        <div class="rp-msg">
+          <div class="rp-avatar" aria-hidden="true">MI</div>
+          <div class="rp-msg-body">
+            <span class="rp-handle">mfiniterlames</span>
+            <p class="rp-msg-text">Tracklist looking sick, can't wait for the uploads 🎧</p>
+          </div>
+        </div>
+
+        <div class="rp-msg">
+          <div class="rp-avatar" aria-hidden="true">NG</div>
+          <div class="rp-msg-body">
+            <span class="rp-handle">NightGroover</span>
+            <p class="rp-msg-text">When's the next drop? Need this in my rotation</p>
+          </div>
+        </div>
+
+        <div class="rp-msg rp-msg--system">
+          <p>Room is open. Move with the mix.</p>
+        </div>
+
+      </div>
+
+      <!-- Chat gate banner — shown when no username in session -->
+      <div class="rp-chat-gate" id="rp-chat-gate" hidden aria-label="Join the chat room">
+        <div class="rp-gate-inner">
+          <span class="rp-gate-icon" aria-hidden="true">◎</span>
+          <p class="rp-gate-title">Who Are You?</p>
+          <p class="rp-gate-sub">Set a handle to jump into the room — no account required.</p>
+          <div class="rp-gate-actions">
+            <button class="btn btn-primary" id="rp-set-handle-btn" style="font-size:0.85rem;padding:0.6rem 1.25rem;">Set Your Handle →</button>
+            <a href="start.html?plan=free" class="btn btn-ghost" style="font-size:0.85rem;padding:0.6rem 1.25rem;">Get a Free Page</a>
+          </div>
+          <p style="font-size:0.7rem;color:var(--text-3);margin:0;">Already have an account? <a href="/login.html?redirect=%2Fradio.html" style="color:var(--gold-dim);text-decoration:underline;">Sign in →</a></p>
+        </div>
+      </div>
+
+      <!-- Input bar -->
+      <div class="rp-input-wrap" id="rp-input-wrap">
+        <input
+          type="text"
+          class="rp-input"
+          id="rp-chat-input"
+          placeholder="Move with the mix…"
+          maxlength="300"
+          autocomplete="off"
+          aria-label="Chat message"
+        />
+        <button class="rp-send" id="rp-send-btn" aria-label="Send message">→</button>
+      </div>
+
+      <p class="rp-phase-note">Phase 1 · Live backend launching soon · <a href="start.html">Get early access</a></p>
+
+    </div>
+
+    <!-- Future direction -->
+    <div class="rp-future-strip">
+      <div class="rp-future-inner">
+        <span class="rp-future-icon" aria-hidden="true">◈</span>
+        <p>Eventually creators will upload tracks, rooms will vote, and the top songs of the week will rise to the front. <strong>The station grows with the platform.</strong></p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="about.html">About</a>
+          <a href="network.html">Network</a>
+          <a href="services.html">Services</a>
+          <a href="music.html">Music</a>
+          <a href="radio.html">Radio</a>
+          <a href="store.html">Supply</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="faq.html">FAQ</a>
+          <a href="artists/djfacelessanimal.html">DJ Faceless</a>
+          <a href="start.html">Get Started Free</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved.</p>
+          <p class="fas-radio-active-badge">
+            <span class="fas-radio-active-badge-dot" aria-hidden="true"></span>
+            Radio Active
+          </p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Create Room Modal -->
+  <div class="rp-modal-overlay" id="rp-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="rp-modal-title">
+    <div class="rp-modal">
+      <div class="rp-modal-hdr">
+        <p class="rp-modal-eyebrow">Coming Soon</p>
+        <h3 id="rp-modal-title">Create Your Room</h3>
+        <button class="rp-modal-x" id="rp-modal-close" aria-label="Close">✕</button>
+      </div>
+      <div class="rp-modal-bdy">
+        <p>Room creation opens up with the live platform launch. Join early and get notified when rooms open for members.</p>
+        <div class="rp-room-cards">
+          <div class="rp-room-card">Underground Mix Room</div>
+          <div class="rp-room-card">Gaming Vibes Room</div>
+          <div class="rp-room-card">Late Night Room</div>
+          <div class="rp-room-card rp-room-card--yours">Your Room →</div>
+        </div>
+        <a href="start.html" class="btn btn-primary" style="width:100%;text-align:center;display:block;">Get My Page — Join Early</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/script.js"></script>
+  <script>
+    (function () {
+
+      function esc(str) {
+        return String(str)
+          .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+
+      /* ── Chat session gate ── */
+      var SESSION_KEY = 'fas_user';
+      function getSession() {
+        try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e) { return null; }
+      }
+      function clearSession() {
+        try {
+          localStorage.removeItem(SESSION_KEY);
+          localStorage.removeItem('fas_member');
+        } catch(e) {}
+      }
+
+      var chatGate    = document.getElementById('rp-chat-gate');
+      var inputWrap   = document.getElementById('rp-input-wrap');
+
+      function showUsernameBar(username) {
+        var existingBar = document.getElementById('rp-username-bar');
+        if (existingBar) return;
+        var bar = document.createElement('div');
+        bar.id = 'rp-username-bar';
+        bar.className = 'rp-chat-username-bar';
+        bar.innerHTML =
+          '<span class="rp-chat-username-dot"></span>' +
+          '<span>Chatting as <strong>@' + esc(username) + '</strong></span>' +
+          '<span class="rp-chat-username-signout" id="rp-signout-btn" role="button" tabindex="0">Sign out</span>';
+        var chatSection = document.querySelector('.rp-chat-section');
+        if (chatSection) {
+          var titleRow = chatSection.querySelector('.rp-chat-title-row');
+          if (titleRow) {
+            chatSection.insertBefore(bar, titleRow.nextSibling);
+          }
+        }
+        var signoutBtn = document.getElementById('rp-signout-btn');
+        if (signoutBtn) {
+          signoutBtn.addEventListener('click', function() {
+            clearSession();
+            window.location.reload();
+          });
+          signoutBtn.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); signoutBtn.click(); }
+          });
+        }
+      }
+
+      function activateChat(username) {
+        if (chatGate)  chatGate.hidden = true;
+        if (inputWrap) inputWrap.style.display = '';
+        showUsernameBar(username);
+      }
+
+      function initChatGate() {
+        var session = getSession();
+        if (session && session.username) {
+          activateChat(session.username);
+        } else {
+          /* Not logged in — show in-page gate form, hide input */
+          if (chatGate)  chatGate.hidden = false;
+          if (inputWrap) inputWrap.style.display = 'none';
+        }
+      }
+
+      /* Gate banner "Set Your Handle" button opens modal (handled in separate script below) */
+      initChatGate();
+
+      var activeNameEl = document.getElementById('rp-active-name');
+
+      /* ── Room name label sync (updates station name bar when tab changes) ── */
+      var roomNames = {
+        radio:       'DJ Faceless Animal Radio',
+        underground: 'Underground Mix Room',
+        gaming:      'Gaming Vibes Room',
+        latenight:   'Late Night Room'
+      };
+      document.querySelectorAll('.rp-room-tab').forEach(function(t) {
+        t.addEventListener('click', function() {
+          var id = t.dataset.room;
+          if (activeNameEl && roomNames[id]) activeNameEl.textContent = roomNames[id];
+        });
+      });
+
+      /* ── Audio player — channel-aware track loader ── */
+      var AUDIO_TRACKS   = [];
+      var activeChannel  = '1';  // tracks which upload-channel is loaded (1, 4, or 5)
+      var lastPlayCountedTrackId = null;
+
+      async function loadTracks(ch) {
+        ch = String(ch || '1');
+        var channelInt = parseInt(ch, 10);
+        window.tracksByChannel = window.tracksByChannel || {};
+        if (Array.isArray(window.tracksByChannel[ch]) && window.tracksByChannel[ch].length) {
+          return window.tracksByChannel[ch];
+        }
+
+        try {
+          var mod = await import('./assets/js/supabase-config.js');
+          var supabase = mod.supabase;
+          var SUPABASE_READY = mod.SUPABASE_READY;
+
+          if (!SUPABASE_READY || !supabase) {
+            console.log('[radio] loadTracks: Supabase not ready');
+            window.tracksByChannel[ch] = [];
+            return window.tracksByChannel[ch];
+          }
+
+          var res = await supabase
+            .from('radio_tracks')
+            .select('id,title,src,storage_path,play_count,upvotes,channel,is_active')
+            .eq('channel', channelInt)
+            .eq('is_active', true)
+            .order('play_count', { ascending: false });
+
+          if (res.error) {
+            console.log('[radio] loadTracks supersabre error', res.error);
+            window.tracksByChannel[ch] = [];
+            return window.tracksByChannel[ch];
+          }
+
+          window.tracksByChannel[ch] = Array.isArray(res.data)
+            ? res.data.filter(function(t) { return String((t && t.channel) || '') === ch; })
+            : [];
+          return window.tracksByChannel[ch];
+        } catch (err) {
+          console.log('[radio] loadTracks failed', err);
+          window.tracksByChannel[ch] = [];
+          return window.tracksByChannel[ch];
+        }
+      }
+
+      async function incrementPlayCount(trackId) {
+        if (!trackId) return;
+
+        try {
+          var mod = await import('./assets/js/supabase-config.js');
+          var supabase = mod.supabase;
+          var SUPABASE_READY = mod.SUPABASE_READY;
+          if (!SUPABASE_READY || !supabase) {
+            console.log('[radio] incrementPlayCount: Supabase not ready');
+            return;
+          }
+
+          // Try RPC first
+          var rpcResult = await supabase.rpc('increment_play', { row_id: trackId });
+          if (rpcResult.error) {
+            console.log('[radio] incrementPlayCount rpc error (falling back)', rpcResult.error);
+            // fallback: read + update
+            var existing = await supabase.from('radio_tracks').select('play_count').eq('id', trackId).single();
+            if (existing.error || !existing.data) {
+              console.log('[radio] incrementPlayCount lookup error', existing.error);
+              return;
+            }
+            var next = (existing.data.play_count || 0) + 1;
+            var upd = await supabase.from('radio_tracks').update({ play_count: next }).eq('id', trackId);
+            if (upd.error) console.log('[radio] incrementPlayCount update error', upd.error);
+            return;
+          }
+
+          return rpcResult;
+        } catch (err) {
+          console.log('[radio] incrementPlayCount failed', err);
+        }
+      }
+
+      async function upvoteTrack(trackId, username) {
+        // Voting temporarily disabled for stability
+        return;
+      }
+
+      async function handleTrackVote(idx) {
+        if (!AUDIO_TRACKS || !AUDIO_TRACKS[idx]) return;
+        var track = AUDIO_TRACKS[idx];
+        if (!track || !track.id || track._voted) return;
+        track._voted = true;
+        track.upvotes = (Number(track.upvotes) || 0) + 1;
+        buildTrackList();
+        updateTrackListActive(audioTrackIdx);
+
+        // Best-effort remote write; no toggle/unvote path.
+        var username = (getSession() && getSession().username) || 'guest';
+        upvoteTrack(track.id, username).catch(function() {});
+      }
+
+      function buildTopTracks() {
+        var container = document.getElementById('rp-top-tracks-list');
+        if (!container) return;
+
+        var sorted = (Array.isArray(AUDIO_TRACKS) ? AUDIO_TRACKS.slice() : [])
+          .map(function(track) {
+            var upvotes = Number(track && track.upvotes) || 0;
+            var playCount = Number(track && track.play_count) || 0;
+            return {
+              track: track || {},
+              score: (upvotes * 4) + playCount,
+            };
+          })
+          .sort(function(a, b) { return b.score - a.score; })
+          .slice(0, 10);
+
+        if (!sorted.length) {
+          container.innerHTML = '<p style="font-size:0.8rem;color:var(--text-3);text-align:center;margin:0;">Top tracks will appear here soon.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        sorted.forEach(function(item, rank) {
+          var div = document.createElement('div');
+          div.className = 'rp-top-track-item';
+          div.innerHTML =
+            '<div class="rp-top-track-rank">#' + (rank + 1) + '</div>' +
+            '<div class="rp-top-track-info">' + escHtml(item.track.title || 'Track') + '</div>' +
+            '<div class="rp-top-track-score">' +
+              '<span>⭐ <span class="rp-top-track-score-val">' + item.score + '</span></span>' +
+            '</div>';
+          container.appendChild(div);
+        });
+      }
+
+      async function loadChannelTracks(ch, cb) {
+        ch = String(ch || '1');
+        activeChannel = ch;
+        try {
+          var fetchedTracks = await loadTracks(ch);
+          AUDIO_TRACKS = (Array.isArray(fetchedTracks) ? fetchedTracks : []).map(function(t) {
+            var directSrc = t && t.src ? String(t.src) : '';
+            var storagePath = t && t.storage_path ? String(t.storage_path) : '';
+            var isAbsolute = /^https?:\/\//i.test(directSrc);
+            var isLocalPath = directSrc.indexOf('/') === 0 || directSrc.indexOf('./') === 0 || directSrc.indexOf('../') === 0;
+            var resolvedSrc = directSrc || '';
+            if (!resolvedSrc && storagePath) {
+              resolvedSrc = 'https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/radio/' + storagePath.replace(/^\/+/, '');
+            } else if (resolvedSrc && !isAbsolute && !isLocalPath && resolvedSrc.indexOf('/storage/v1/object/public/') === -1) {
+              resolvedSrc = 'https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/radio/' + resolvedSrc.replace(/^\/+/, '');
+            }
+            return {
+              id: t.id,
+              title: t.title || t.name || 'Unknown Track',
+              artist: typeof t.artist !== 'undefined' ? t.artist : '',
+              src: resolvedSrc,
+              play_count: t.play_count || 0,
+              upvotes: t.upvotes || 0,
+            };
+          });
+          console.log('[radio] loadChannelTracks mapped', ch, AUDIO_TRACKS);
+
+          if (!AUDIO_TRACKS.length) {
+            // fallback to original endpoint for backwards compatibility
+            throw new Error('No tracks from Supabase');
+          }
+
+          audioTrackIdx = 0;
+          if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
+          buildTrackList();
+          if (cb) cb();
+          return;
+        } catch (err) {
+          console.log('[radio] loadChannelTracks supabase fallback', err);
+          fetch('/api/radio/tracks?channel=' + encodeURIComponent(parseInt(ch, 10)))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              AUDIO_TRACKS = Array.isArray(data.tracks) ? data.tracks : [];
+              console.log('[radio] loadChannelTracks fallback', ch, AUDIO_TRACKS);
+              audioTrackIdx = 0;
+              if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
+              buildTrackList();
+              if (cb) cb();
+            })
+            .catch(function() { AUDIO_TRACKS = []; buildTrackList(); if (cb) cb(); });
+        }
+      }
+
+      loadChannelTracks('1');
+      window.loadChannelTracks = loadChannelTracks;
+
+      var audioEl       = document.getElementById('rp-audio-player');
+      var audioTrackIdx = 0;
+      var seekEl        = document.getElementById('rp-audio-seek');
+      var currentTimeEl = document.getElementById('rp-audio-current');
+      var durationEl    = document.getElementById('rp-audio-duration');
+
+      function fmtTime(s) {
+        if (!isFinite(s) || isNaN(s)) return '0:00';
+        var m = Math.floor(s / 60), sec = Math.floor(s % 60);
+        return m + ':' + (sec < 10 ? '0' : '') + sec;
+      }
+
+      function buildTrackList() {
+        if (typeof buildTopTracks === 'function') buildTopTracks();
+        var list = document.getElementById('rp-track-list');
+        if (!list) return;
+        if (!AUDIO_TRACKS.length) {
+          list.innerHTML = '<p class="rp-no-tracks-msg">Tracks coming soon — drop back in shortly.</p>';
+          return;
+        }
+        list.innerHTML = '';
+        AUDIO_TRACKS.forEach(function(t, i) {
+          var item = document.createElement('div');
+          item.className = 'rp-track-item' + (i === 0 ? ' rp-track-item--active' : '');
+          item.dataset.idx = i;
+
+          var playCount = t.play_count || 0;
+          var upvotes = t.upvotes || 0;
+
+          item.innerHTML =
+            '<span class="rp-track-num">' + (i + 1) + '</span>' +
+            '<span class="rp-track-name">' + escHtml(t.title) + '</span>' +
+            (i === 0 ? '<span class="rp-track-playing-icon">&#x25B6;</span>' : '') +
+            '<div class="rp-track-stats">' +
+              '<div class="rp-track-stat-item"><span>▶</span> <span>' + playCount + '</span></div>' +
+              '<button class="rp-upvote-btn" data-idx="' + i + '" title="Upvote this track">👍 ' + upvotes + '</button>' +
+            '</div>';
+
+          item.addEventListener('click', function(e) {
+            if (e.target.closest('.rp-upvote-btn') || e.target.closest('button')) return;
+            loadAudioTrack(i, true);
+          });
+
+          var upvoteBtn = item.querySelector('.rp-upvote-btn');
+          if (upvoteBtn) {
+            upvoteBtn.addEventListener('click', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              if (upvoteBtn.dataset.voted === '1') return;
+              upvoteBtn.dataset.voted = '1';
+              handleTrackVote(i);
+            });
+          }
+
+          list.appendChild(item);
+        });
+      }
+
+      function escHtml(str) {
+        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+
+      function updateTrackListActive(idx) {
+        document.querySelectorAll('.rp-track-item').forEach(function(el, i) {
+          var on = (i === idx);
+          el.classList.toggle('rp-track-item--active', on);
+          var icon = el.querySelector('.rp-track-playing-icon');
+          if (on && !icon) {
+            var span = document.createElement('span');
+            span.className = 'rp-track-playing-icon';
+            span.innerHTML = '&#x25B6;';
+            el.appendChild(span);
+          } else if (!on && icon) {
+            icon.remove();
+          }
+        });
+      }
+
+      function loadAudioTrack(idx, autoplay) {
+        if (!AUDIO_TRACKS.length) return;
+        idx = ((idx % AUDIO_TRACKS.length) + AUDIO_TRACKS.length) % AUDIO_TRACKS.length;
+        audioTrackIdx = idx;
+        console.log('[radio] selected track', audioTrackIdx, AUDIO_TRACKS[audioTrackIdx]);
+        audioEl.src = AUDIO_TRACKS[idx].src;
+        console.log('[radio] assigned audio src', audioEl.src);
+        if (nowPlaying) nowPlaying.textContent = AUDIO_TRACKS[idx].title || ('Track ' + (idx + 1));
+        updateTrackListActive(idx);
+        if (autoplay) { audioEl.play().catch(function() {}); }
+      }
+
+      function audioPlayPause() {
+        if (!AUDIO_TRACKS.length) return;
+        if (!audioEl.src || audioEl.src === window.location.href) {
+          loadAudioTrack(0, true);
+          return;
+        }
+        if (audioEl.paused) { audioEl.play().catch(function() {}); }
+        else { audioEl.pause(); }
+      }
+
+      if (audioEl) {
+        audioEl.addEventListener('play',    function() { setPlayIcon(true); });
+        audioEl.addEventListener('pause',   function() { setPlayIcon(false); });
+        audioEl.addEventListener('ended',   function() { loadAudioTrack(audioTrackIdx + 1, true); });
+        audioEl.addEventListener('error',   function() { console.log('[radio] audio error on track', audioTrackIdx, AUDIO_TRACKS[audioTrackIdx]); });
+        audioEl.addEventListener('canplay', function() { console.log('[radio] canplay', audioTrackIdx, audioEl.src); });
+        audioEl.addEventListener('timeupdate', function() {
+          if (!audioEl.duration) return;
+          var pct = (audioEl.currentTime / audioEl.duration) * 100;
+          if (seekEl) {
+            seekEl.value = pct;
+            seekEl.style.background =
+              'linear-gradient(to right, var(--purple-bright) ' + pct + '%, rgba(255,255,255,0.12) ' + pct + '%)';
+          }
+          if (currentTimeEl) currentTimeEl.textContent = fmtTime(audioEl.currentTime);
+        });
+        audioEl.addEventListener('loadedmetadata', function() {
+          console.log('[radio] loadedmetadata', audioTrackIdx, audioEl.src, audioEl.duration);
+          if (durationEl) durationEl.textContent = fmtTime(audioEl.duration);
+        });
+      }
+
+      if (seekEl) {
+        seekEl.addEventListener('input', function() {
+          if (audioEl && audioEl.duration) {
+            audioEl.currentTime = (parseFloat(this.value) / 100) * audioEl.duration;
+          }
+        });
+      }
+
+        buildTrackList();
+
+      /* ── Station switching ── */
+      var stationBtns    = document.querySelectorAll('.rp-station-btn');
+      var activeStation  = '1';
+      var controlsEl     = document.querySelector('.rp-controls');
+      var volBarEl       = document.querySelector('.rp-vol-bar');
+      var nowPlayingEl   = document.getElementById('rp-now-playing');
+
+      var stationLabels  = {
+        '1':  'Station 1 · Original',
+        '2':  'Station 2 · Mix Playlist',
+        '3':  'Station 3 · Spotify',
+        '4':  'Station 4 · Blends',
+        '5':  'Station 5 · Archives',
+        'tv': '📺 DJ Faceless Animal TV',
+      };
+
+      // Stations that use the native audio player (rp-station-1 section)
+      var AUDIO_STATIONS = { '1': true, '4': true, '5': true };
+
+      function switchStation(id) {
+        id = String(id);
+        if (id === activeStation) return;
+        var prev = activeStation;
+        activeStation = id;
+
+        // Pause previous audio
+        if (AUDIO_STATIONS[prev] && audioEl) { audioEl.pause(); setPlayIcon(false); }
+        if ((prev === '2' || prev === 'tv') && ytPlayer && ytPlayer.pauseVideo) {
+          try { ytPlayer.pauseVideo(); } catch(e) {} setPlayIcon(false);
+        }
+
+        // Update buttons
+        stationBtns.forEach(function(b) {
+          var on = b.dataset.station === id;
+          b.classList.toggle('rp-station-btn--active', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+
+        // Show/hide player areas
+        // Stations 1, 4, 5 all use rp-station-1 (native audio); 2, 3, tv have their own sections
+        var showNative = !!AUDIO_STATIONS[id];
+        var st1El = document.getElementById('rp-station-1');
+        var st2El = document.getElementById('rp-station-2');
+        var st3El = document.getElementById('rp-station-3');
+        var tvEl  = document.getElementById('rp-station-tv');
+        if (st1El) st1El.style.display = showNative      ? '' : 'none';
+        if (st2El) st2El.style.display = (id === '2')    ? '' : 'none';
+        if (st3El) st3El.style.display = (id === '3')    ? '' : 'none';
+        if (tvEl)  tvEl.style.display  = (id === 'tv')   ? '' : 'none';
+
+        // Controls: show for native audio and station 2; hide for Spotify/TV (own controls)
+        var showControls = showNative || id === '2';
+        if (controlsEl)   controlsEl.style.display   = showControls ? '' : 'none';
+        if (volBarEl)     volBarEl.style.display      = showControls ? '' : 'none';
+        if (nowPlayingEl) nowPlayingEl.textContent    = stationLabels[id] || '';
+
+        // Load tracks when switching to an upload channel
+        if (AUDIO_STATIONS[id] && String(id) !== String(activeChannel)) {
+          activeChannel = String(id);
+          loadChannelTracks(activeChannel);
+        }
+      }
+
+      stationBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() { switchStation(btn.dataset.station); });
+      });
+
+      /* ── Player controls ── */
+      var volSlider  = document.getElementById('rp-vol-slider');
+      var volNum     = document.getElementById('rp-vol-num');
+      var volIcon    = document.getElementById('rp-vol-icon');
+      var playBtn    = document.getElementById('rp-play-pause');
+      var skipBackBtn= document.getElementById('rp-skip-back');
+      var skipFwdBtn = document.getElementById('rp-skip-fwd');
+      var nowPlaying = document.getElementById('rp-now-playing');
+      var ytPlayer   = null;
+      var prevVol    = 80;
+      var muted      = false;
+      var isPlaying  = false;
+
+      var YT_PLAYING = 1, YT_PAUSED = 2, YT_ENDED = 0, YT_BUFFERING = 3;
+
+      function setPlayIcon(playing) {
+        isPlaying = playing;
+        if (playBtn) {
+          playBtn.innerHTML = playing ? '&#x23F8;' : '&#x25B6;';
+          playBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+          playBtn.title = playing ? 'Pause' : 'Play / Pause';
+        }
+      }
+
+      function updateNowPlaying() {
+        if (!ytPlayer || !ytPlayer.getVideoData) return;
+        try {
+          var data = ytPlayer.getVideoData();
+          if (data && data.title && nowPlaying) {
+            nowPlaying.textContent = data.title;
+          }
+        } catch(e) {}
+      }
+
+      /* Update CSS gradient fill on slider */
+      function updateSliderFill(val) {
+        if (volSlider) volSlider.style.setProperty('--vol-pct', val + '%');
+        if (volNum)    volNum.textContent = val;
+      }
+
+      /* YouTube IFrame API callback — attaches to Station 2 iframe */
+      window.onYouTubeIframeAPIReady = function() {
+        var ytIframe = document.getElementById('rp-yt-player-2');
+        if (!ytIframe) return;
+        ytPlayer = new YT.Player('rp-yt-player-2', {
+          events: {
+            onReady: function(e) {
+              e.target.setVolume(80);
+            },
+            onStateChange: function(e) {
+              if (e.data === YT_PLAYING) {
+                setPlayIcon(true);
+                updateNowPlaying();
+              } else if (e.data === YT_PAUSED || e.data === YT_ENDED) {
+                setPlayIcon(false);
+              } else if (e.data === YT_BUFFERING) {
+                if (playBtn) {
+                  playBtn.innerHTML = '&#x23F3;';
+                  playBtn.setAttribute('aria-label', 'Buffering');
+                }
+              }
+            }
+          }
+        });
+      };
+
+      /* Play / Pause button — routes to audio or YouTube */
+      if (playBtn) {
+        playBtn.addEventListener('click', function() {
+          if (AUDIO_STATIONS[activeStation]) {
+            audioPlayPause();
+          } else if (ytPlayer) {
+            if (isPlaying) { ytPlayer.pauseVideo(); } else { ytPlayer.playVideo(); }
+          }
+        });
+      }
+
+      /* Skip back */
+      if (skipBackBtn) {
+        skipBackBtn.addEventListener('click', function() {
+          if (AUDIO_STATIONS[activeStation]) {
+            loadAudioTrack(audioTrackIdx - 1, isPlaying);
+          } else if (ytPlayer && ytPlayer.previousVideo) {
+            ytPlayer.previousVideo();
+            setTimeout(updateNowPlaying, 800);
+          }
+        });
+      }
+
+      /* Skip forward */
+      if (skipFwdBtn) {
+        skipFwdBtn.addEventListener('click', function() {
+          if (AUDIO_STATIONS[activeStation]) {
+            loadAudioTrack(audioTrackIdx + 1, isPlaying);
+          } else if (ytPlayer && ytPlayer.nextVideo) {
+            ytPlayer.nextVideo();
+            setTimeout(updateNowPlaying, 800);
+          }
+        });
+      }
+
+      if (volSlider) {
+        updateSliderFill(80);
+        volSlider.addEventListener('input', function() {
+          var v = parseInt(this.value, 10);
+          updateSliderFill(v);
+          /* Apply to audio or YouTube */
+          if (audioEl) audioEl.volume = Math.max(0, Math.min(1, v / 100));
+          if (ytPlayer && ytPlayer.setVolume) {
+            ytPlayer.setVolume(v);
+            if (v === 0) { muted = true; if (volIcon) volIcon.textContent = '🔇'; }
+            else          { muted = false; if (volIcon) volIcon.textContent = '🔊'; }
+          }
+        });
+      }
+
+      if (volIcon) {
+        volIcon.addEventListener('click', function() {
+          if (!muted) {
+            prevVol = parseInt(volSlider.value, 10) || 80;
+            muted = true;
+            volSlider.value = 0;
+            updateSliderFill(0);
+            volIcon.textContent = '🔇';
+            if (audioEl) audioEl.muted = true;
+            if (ytPlayer && ytPlayer.setVolume) ytPlayer.setVolume(0);
+          } else {
+            muted = false;
+            volSlider.value = prevVol;
+            updateSliderFill(prevVol);
+            volIcon.textContent = '🔊';
+            if (audioEl) audioEl.muted = false;
+            if (ytPlayer && ytPlayer.setVolume) ytPlayer.setVolume(prevVol);
+          }
+        });
+        volIcon.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); volIcon.click(); }
+        });
+      }
+
+      /* ── Modal ── */
+      var modal     = document.getElementById('rp-modal');
+      var openBtn   = document.getElementById('rp-create-btn');
+      var closeBtn  = document.getElementById('rp-modal-close');
+
+      function openModal() {
+        modal.setAttribute('aria-hidden', 'false');
+        modal.classList.add('rp-modal--open');
+        if (closeBtn) closeBtn.focus();
+      }
+      function closeModal() {
+        modal.setAttribute('aria-hidden', 'true');
+        modal.classList.remove('rp-modal--open');
+        if (openBtn) openBtn.focus();
+      }
+      if (openBtn)  openBtn.addEventListener('click', openModal);
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      if (modal) {
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && modal.classList.contains('rp-modal--open')) closeModal();
+        });
+      }
+
+    }());
+  </script>
+  <!-- Load YouTube IFrame API for volume control -->
+  <script src="https://www.youtube.com/iframe_api" async></script>
+
+  <script>
+    (function () {
+      import('./assets/js/radio-vault-entry.js').catch(function () {
+        // Vault enhancer is optional for base radio playback.
+      });
+    }());
+  </script>
+
+  <!-- ── Radio Chat Module (Supabase Realtime + simulation fallback) ── -->
+  <script>
+    (function () {
+      function getSession() {
+        try { return JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch (e) { return null; }
+      }
+
+      var sess = getSession();
+      var plan = (sess && sess.plan) || 'free';
+      var status = (sess && sess.status) || 'free';
+      var isPaid = ['free','none',''].indexOf(plan) === -1 || status === 'active';
+      var tierLimited = !isPaid;
+      var sendDebounceMs = isPaid ? 1200 : 10000;
+
+      import('./assets/js/radio-chat.js')
+        .then(function (mod) {
+          if (!mod || typeof mod.initRadioChat !== 'function') return;
+          mod.initRadioChat({
+            feedEl:        document.getElementById('rp-chat-feed'),
+            inputEl:       document.getElementById('rp-chat-input'),
+            sendBtnEl:     document.getElementById('rp-send-btn'),
+            tabEls:        document.querySelectorAll('.rp-room-tab'),
+            activeCountEl: document.getElementById('rp-active-count-num'),
+            listenerNumEl: document.getElementById('rp-listener-num'),
+            pillNumEl:     document.getElementById('rp-listener-pill-num'),
+            initialRoom:   'radio',
+            getSession:    getSession,
+            sendDebounceMs: sendDebounceMs,
+            tierLimited: tierLimited,
+          });
+        })
+        .catch(function () {
+          // Chat enhancement unavailable; keep player and static layout active.
+        });
+    }());
+  </script>
+
+  <!-- ── Handle picker modal ──────────────────────────────────── -->
+  <div id="rp-handle-modal" class="rp-handle-modal" role="dialog" aria-modal="true" aria-label="Set your chat handle" hidden>
+    <div class="rp-handle-modal-overlay" id="rp-modal-overlay"></div>
+    <div class="rp-handle-modal-card">
+      <p class="rp-gate-title" style="margin:0 0 0.35rem;">Set Your Handle</p>
+      <p class="rp-gate-sub" style="margin:0 0 1rem;">Pick a unique username. Letters, numbers, underscores only.</p>
+      <form id="rp-modal-form" novalidate style="display:flex;flex-direction:column;gap:0.6rem;">
+        <input
+          type="text"
+          id="rp-modal-username"
+          class="rp-gate-input"
+          style="width:100%;box-sizing:border-box;"
+          placeholder="@yourhandle"
+          maxlength="30"
+          autocomplete="off"
+          spellcheck="false"
+          autocorrect="off"
+          autocapitalize="none"
+          aria-label="Choose a username"
+          required
+        />
+        <p id="rp-modal-error" style="font-size:0.75rem;color:#f87171;margin:0;display:none;"></p>
+        <button type="submit" class="btn btn-primary" style="font-size:0.88rem;padding:0.65rem 1rem;">Join the Room →</button>
+        <button type="button" id="rp-modal-cancel" class="btn btn-ghost" style="font-size:0.82rem;padding:0.5rem 1rem;">Cancel</button>
+      </form>
+    </div>
+  </div>
+  <style>
+    .rp-handle-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .rp-handle-modal[hidden] { display: none !important; }
+    .rp-handle-modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+    }
+    .rp-handle-modal-card {
+      position: relative;
+      z-index: 1;
+      background: #111;
+      border: 1px solid rgba(139,92,246,0.28);
+      border-radius: 18px;
+      padding: 2rem 1.5rem;
+      width: 90%;
+      max-width: 360px;
+      box-shadow: 0 0 60px rgba(139,92,246,0.15);
+    }
+  </style>
+  <script>
+    (function() {
+      var modal   = document.getElementById('rp-handle-modal');
+      var overlay = document.getElementById('rp-modal-overlay');
+      var openBtn = document.getElementById('rp-set-handle-btn');
+      var cancelBtn = document.getElementById('rp-modal-cancel');
+      var modalForm = document.getElementById('rp-modal-form');
+      var modalInput = document.getElementById('rp-modal-username');
+      var modalError = document.getElementById('rp-modal-error');
+
+      function openModal() {
+        if (modal) { modal.hidden = false; if (modalInput) setTimeout(function() { modalInput.focus(); }, 80); }
+      }
+      function closeModal() {
+        if (modal) { modal.hidden = true; if (modalError) modalError.style.display = 'none'; }
+      }
+
+      if (openBtn) openBtn.addEventListener('click', openModal);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+      if (overlay) overlay.addEventListener('click', closeModal);
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal && !modal.hidden) closeModal();
+      });
+
+      if (modalForm) {
+        modalForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          if (modalError) modalError.style.display = 'none';
+
+          var raw = (modalInput ? modalInput.value : '').trim().replace(/^@/, '').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 30);
+          if (!raw || raw.length < 3) {
+            if (modalError) { modalError.textContent = 'Pick a handle — at least 3 characters, letters/numbers/underscores.'; modalError.style.display = 'block'; }
+            return;
+          }
+
+          /* Duplicate handle check */
+          var SESSION_KEY = 'fas_user';
+          var accounts = {};
+          try { accounts = JSON.parse(localStorage.getItem('fas_accounts') || '{}'); } catch(x) {}
+          var currentSession = null;
+          try { currentSession = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(x) {}
+          var existingAccount = accounts[raw.toLowerCase()];
+
+          if (existingAccount) {
+            /* Handle is claimed — only allow if it's this session's handle */
+            var sessionUsername = currentSession && currentSession.username ? currentSession.username.toLowerCase() : '';
+            if (sessionUsername !== raw.toLowerCase()) {
+              if (modalError) {
+                modalError.textContent = 'That handle is already taken. Try adding a number or underscore.';
+                modalError.style.display = 'block';
+              }
+              return;
+            }
+          }
+
+          /* All clear — save and activate */
+          var user = { username: raw, display: raw, email: '', ts: Date.now() };
+          try {
+            localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+            localStorage.setItem('fas_member', 'true');
+            if (!existingAccount) {
+              accounts[raw.toLowerCase()] = { username: raw, display: raw, created: Date.now() };
+              localStorage.setItem('fas_accounts', JSON.stringify(accounts));
+            }
+          } catch(x) {}
+
+          closeModal();
+          window.location.reload(); /* reload so initChatGate picks up new session */
+        });
+      }
+    }());
+  </script>
+</body>
+</html>

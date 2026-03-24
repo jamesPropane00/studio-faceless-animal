@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Signal Wallet control center for Faceless Animal Studios. Vault balances, transfer rail, and ledger activity." />
+  <title>Signal Wallet - Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
+  <style>
+    :root {
+      --wallet-bg: #060914;
+      --wallet-panel: rgba(10, 17, 34, 0.8);
+      --wallet-border: rgba(82, 140, 255, 0.31);
+      --wallet-accent: #4fe0ff;
+      --wallet-purple: #7b65ff;
+      --wallet-ok: #25d07f;
+      --wallet-warn: #ffb965;
+      --wallet-text: #eef3ff;
+      --wallet-muted: #9aa7c9;
+    }
+
+    body {
+      min-height: 100dvh;
+      background: radial-gradient(circle at 10% 10%, rgba(79, 224, 255, 0.18), transparent 38%),
+                  radial-gradient(circle at 90% 12%, rgba(123, 101, 255, 0.17), transparent 40%),
+                  linear-gradient(180deg, #060914 0%, #070c1b 52%, #091023 100%);
+      color: var(--wallet-text);
+      font-family: 'Sora', var(--font-body), sans-serif;
+    }
+
+    .wallet-wrap {
+      min-height: 100dvh;
+      padding: 1.2rem 1rem 4.8rem;
+    }
+
+    .wallet-shell {
+      width: min(1160px, 100%);
+      margin: 0 auto;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .wallet-head {
+      border: 1px solid var(--wallet-border);
+      border-radius: 18px;
+      background: linear-gradient(150deg, rgba(10, 17, 35, 0.94), rgba(8, 12, 24, 0.86));
+      box-shadow: inset 0 0 38px rgba(79, 224, 255, 0.06), 0 18px 52px rgba(0, 0, 0, 0.38);
+      padding: 1rem 1.1rem;
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    .wallet-head p {
+      margin: 0;
+    }
+
+    .wallet-kicker {
+      font-size: 0.66rem;
+      color: var(--wallet-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+    }
+
+    .wallet-title {
+      font-size: clamp(1.1rem, 3vw, 1.85rem);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+    }
+
+    .wallet-sub {
+      color: var(--wallet-muted);
+      font-size: 0.82rem;
+      line-height: 1.65;
+      max-width: 68ch;
+    }
+
+    .wallet-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .wallet-card {
+      border: 1px solid var(--wallet-border);
+      border-radius: 16px;
+      background: var(--wallet-panel);
+      box-shadow: inset 0 0 35px rgba(11, 16, 32, 0.72), 0 14px 36px rgba(0, 0, 0, 0.28);
+      padding: 0.9rem;
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .wallet-card h2,
+    .wallet-card h3 {
+      margin: 0;
+      font-family: 'Rajdhani', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-weight: 700;
+      font-size: 0.98rem;
+    }
+
+    .totals-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+    }
+
+    .total-box {
+      border: 1px solid rgba(120, 161, 255, 0.3);
+      border-radius: 14px;
+      padding: 0.7rem;
+      background: rgba(9, 15, 28, 0.78);
+    }
+
+    .total-box p {
+      margin: 0;
+    }
+
+    .total-box .label {
+      color: var(--wallet-muted);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font-weight: 700;
+    }
+
+    .total-box .value {
+      margin-top: 0.25rem;
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: #e9efff;
+      font-family: 'Rajdhani', sans-serif;
+      letter-spacing: 0.03em;
+    }
+
+    .total-box .value--warn {
+      color: var(--wallet-warn);
+      font-size: 0.92rem;
+      font-family: 'Sora', sans-serif;
+      letter-spacing: 0;
+    }
+
+    .status-list {
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.7rem;
+      border-bottom: 1px dashed rgba(141, 171, 242, 0.24);
+      padding-bottom: 0.4rem;
+    }
+
+    .status-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .status-row span {
+      color: var(--wallet-muted);
+      font-size: 0.71rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-weight: 600;
+    }
+
+    .status-row strong {
+      text-align: right;
+      font-size: 0.79rem;
+      font-weight: 700;
+    }
+
+    .transfer-form {
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .wallet-input,
+    .wallet-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 10px;
+      border: 1px solid rgba(138, 170, 242, 0.28);
+      background: rgba(7, 12, 24, 0.76);
+      color: var(--wallet-text);
+      font-family: 'Sora', sans-serif;
+      font-size: 0.82rem;
+      padding: 0.6rem 0.7rem;
+      outline: none;
+    }
+
+    .wallet-input:focus,
+    .wallet-textarea:focus {
+      border-color: rgba(79, 224, 255, 0.42);
+    }
+
+    .wallet-textarea {
+      min-height: 82px;
+      resize: vertical;
+    }
+
+    .preview-box {
+      border: 1px solid rgba(138, 170, 242, 0.24);
+      border-radius: 12px;
+      background: rgba(7, 11, 22, 0.7);
+      padding: 0.64rem;
+      display: grid;
+      gap: 0.3rem;
+    }
+
+    .activity-list {
+      display: grid;
+      gap: 0.5rem;
+      max-height: 320px;
+      overflow: auto;
+      padding-right: 0.15rem;
+    }
+
+    .activity-item {
+      border: 1px solid rgba(127, 152, 220, 0.24);
+      border-radius: 12px;
+      padding: 0.58rem 0.64rem;
+      background: rgba(8, 14, 24, 0.76);
+      display: grid;
+      gap: 0.3rem;
+    }
+
+    .activity-item p,
+    .activity-item small {
+      margin: 0;
+    }
+
+    .activity-item p {
+      font-size: 0.76rem;
+      line-height: 1.45;
+    }
+
+    .activity-item small {
+      color: var(--wallet-muted);
+      font-size: 0.66rem;
+    }
+
+    .trend-bars {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .trend-row {
+      display: grid;
+      gap: 0.2rem;
+    }
+
+    .trend-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      color: var(--wallet-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .trend-track {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .trend-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--wallet-purple), var(--wallet-accent));
+      transition: width 0.38s ease;
+    }
+
+    .wallet-note {
+      margin: 0;
+      min-height: 1.2rem;
+      font-size: 0.72rem;
+      color: var(--wallet-muted);
+      line-height: 1.55;
+    }
+
+    .staged-box {
+      border: 1px dashed rgba(255, 185, 101, 0.42);
+      border-radius: 12px;
+      background: rgba(255, 185, 101, 0.08);
+      padding: 0.65rem;
+      color: #ffd9a8;
+      font-size: 0.74rem;
+      line-height: 1.6;
+    }
+
+    .wallet-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .auth-gate {
+      max-width: 760px;
+      margin: 2rem auto;
+      border: 1px solid rgba(127, 152, 220, 0.3);
+      border-radius: 18px;
+      background: rgba(9, 14, 27, 0.88);
+      padding: 1.2rem;
+      text-align: center;
+    }
+
+    .auth-gate p {
+      color: var(--wallet-muted);
+      margin: 0.6rem 0 0;
+      line-height: 1.65;
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 980px) {
+      .wallet-grid {
+        grid-template-columns: 1fr;
+      }
+      .totals-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="/start.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="miner.html">Miner</a></li>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="network.html">Board</a></li>
+          <li><a href="phone.html">Phone</a></li>
+          <li><a href="/login.html?redirect=%2Fwallet.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="miner.html">Miner</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="network.html">Board</a>
+    <a href="phone.html">Phone</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="/login.html?redirect=%2Fwallet.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+  </div>
+
+  <main class="wallet-wrap">
+    <section id="wallet-gate" class="auth-gate" style="display:none;">
+      <h1 class="wallet-title" style="margin:0;">Wallet Access Required</h1>
+      <p>Your Wallet and Vault controls are private to your signed-in Signal account. Sign in to view balances, transfers, and activity.</p>
+      <div style="margin-top:0.8rem;display:flex;gap:0.6rem;justify-content:center;flex-wrap:wrap;">
+        <a href="/login.html?redirect=%2Fwallet.html" class="btn btn-primary">Sign In</a>
+        <a href="start.html" class="btn btn-ghost">Create Account</a>
+      </div>
+    </section>
+
+    <section id="wallet-app" class="wallet-shell" style="display:none;">
+      <header class="wallet-head">
+        <p class="wallet-kicker">Signal Wallet</p>
+        <p class="wallet-title">Vault Control Center</p>
+        <p class="wallet-sub">Manage your Vault flow rail, transfer credits, inspect wallet activity, and monitor Veil/Pulse system state from one financial terminal.</p>
+      </header>
+
+      <div class="wallet-grid">
+        <article class="wallet-card">
+          <h2>Main Balances</h2>
+          <div class="totals-grid">
+            <div class="total-box">
+              <p class="label">Vault Balance</p>
+              <p id="wallet-sc-balance" class="value">0 SC</p>
+            </div>
+            <div class="total-box">
+              <p class="label">Pulse Balance</p>
+              <p id="wallet-pulse-balance" class="value value--warn">Not exposed yet</p>
+            </div>
+          </div>
+
+          <div class="status-list">
+            <div class="status-row"><span>Identity</span><strong id="wallet-user">@guest</strong></div>
+            <div class="status-row"><span>Veil Tier</span><strong id="wallet-veil-tier">Free</strong></div>
+            <div class="status-row"><span>Flow Rate</span><strong id="wallet-flow-rate">0.00 SC / min</strong></div>
+            <div class="status-row"><span>24h Progress</span><strong id="wallet-daily-progress">0 / 0</strong></div>
+            <div class="status-row"><span>Wallet Engine</span><strong id="wallet-engine-status">Idle</strong></div>
+          </div>
+
+          <h3>Veil</h3>
+          <p class="wallet-note">Veil is your identity posture and engine multiplier layer. It controls flow strength and internal access posture, not a separate visible spend balance.</p>
+
+          <h3>Pulse</h3>
+          <p class="wallet-note">Pulse is the social activity layer. In this build, pulse activity appears in board/message systems, but a dedicated pulse_balance ledger is not exposed yet.</p>
+
+          <div class="wallet-links">
+            <a href="miner.html" class="btn btn-primary btn-sm">Return To Miner</a>
+            <a href="/dashboard" class="btn btn-ghost btn-sm">Dashboard</a>
+            <a href="network.html" class="btn btn-ghost btn-sm">Board</a>
+          </div>
+        </article>
+
+        <article class="wallet-card">
+          <h2>Transfer Rail</h2>
+          <p class="wallet-note">Live now: Signal Credit transfer through Vault route with 30% fee.</p>
+
+          <div class="transfer-form">
+            <input id="wallet-transfer-code" class="wallet-input" type="text" maxlength="13" placeholder="Recipient Signal Code (SIG-XXXX-XXXX)" autocomplete="off" spellcheck="false" />
+            <input id="wallet-transfer-amount" class="wallet-input" type="number" min="0.1" step="0.1" inputmode="decimal" placeholder="Amount" />
+            <textarea id="wallet-transfer-note" class="wallet-textarea" maxlength="240" placeholder="Optional transfer note"></textarea>
+          </div>
+
+          <div class="preview-box">
+            <div class="status-row"><span>You Send</span><strong id="wallet-preview-send">0 SC</strong></div>
+            <div class="status-row"><span>Fee (30%)</span><strong id="wallet-preview-fee">0 SC</strong></div>
+            <div class="status-row"><span>Recipient Gets</span><strong id="wallet-preview-receive">0 SC</strong></div>
+            <div class="status-row"><span>Target</span><strong id="wallet-preview-target">Signal Code required</strong></div>
+          </div>
+
+          <div class="wallet-links" style="margin-top:0.1rem;">
+            <button id="wallet-transfer-btn" type="button" class="btn btn-primary btn-sm">Send Transfer</button>
+            <button id="wallet-refresh-btn" type="button" class="btn btn-ghost btn-sm">Refresh Wallet</button>
+          </div>
+          <p id="wallet-transfer-note-text" class="wallet-note"></p>
+
+          <div class="staged-box">
+            Pulse Transfer is staged. The requested transfer_pulse route is not active in this runtime yet, so only live Vault transfer is enabled.
+          </div>
+        </article>
+      </div>
+
+      <div class="wallet-grid">
+        <article class="wallet-card">
+          <h2>Wallet Activity</h2>
+          <div id="wallet-activity-list" class="activity-list" aria-live="polite">
+            <div class="activity-item">
+              <p>No activity loaded yet.</p>
+              <small>Press Refresh Wallet.</small>
+            </div>
+          </div>
+        </article>
+
+        <article class="wallet-card">
+          <h2>Flow Charts</h2>
+          <div class="trend-bars">
+            <div class="trend-row">
+              <div class="trend-meta"><span>24h Flow</span><span id="wallet-trend-daily-text">0%</span></div>
+              <div class="trend-track"><div id="wallet-trend-daily" class="trend-fill"></div></div>
+            </div>
+            <div class="trend-row">
+              <div class="trend-meta"><span>Transfer Out Volume</span><span id="wallet-trend-out-text">0%</span></div>
+              <div class="trend-track"><div id="wallet-trend-out" class="trend-fill"></div></div>
+            </div>
+            <div class="trend-row">
+              <div class="trend-meta"><span>Transfer In Volume</span><span id="wallet-trend-in-text">0%</span></div>
+              <div class="trend-track"><div id="wallet-trend-in" class="trend-fill"></div></div>
+            </div>
+          </div>
+
+          <h3 style="margin-top:0.4rem;">Cashout</h3>
+          <div class="staged-box">
+            Cashout requests are staged. The requested request_pulse_cashout route is not active in this runtime yet, so no fake request action is shown.
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/script.js?v=20260322"></script>
+  <script src="assets/js/access-gate.js?v=20260322"></script>
+  <script type="module" src="assets/js/wallet.js"></script>
+  <script src="assets/js/radio-widget.js" defer></script>
+</body>
+</html>
