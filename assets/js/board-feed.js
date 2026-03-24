@@ -259,10 +259,10 @@ function renderSignalCard(signal, session) {
       <div style="display:flex;align-items:center;justify-content:space-between;gap:0.65rem;flex-wrap:wrap;margin-top:0.9rem;">
         <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">${roleBadgeHtml(username, session)}</div>
         <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;">
-          <button type="button" class="btn btn-ghost btn-sm signal-boost-btn" data-signal-id="${esc(signal.id)}" style="font-size:0.7rem;padding:0.45rem 0.85rem;">Boost (${Number(signal.boost_count || 0)})</button>
-          <button type="button" class="btn btn-ghost btn-sm signal-share-btn" data-signal-id="${esc(signal.id)}" data-signal-user="${esc(username)}" data-signal-display="${esc(displayName)}" data-signal-content="${esc(signal.content || '')}" style="font-size:0.7rem;padding:0.45rem 0.85rem;">Copy Signal</button>
-          <a href="${profileHref}" class="btn btn-ghost btn-sm" style="font-size:0.7rem;padding:0.45rem 0.85rem;">View Profile</a>
-          <a href="${dmHref}" class="btn btn-ghost btn-sm" style="font-size:0.7rem;padding:0.45rem 0.85rem;">Message</a>
+          <button type="button" class="btn btn-ghost btn-sm signal-boost-btn" data-signal-id="${esc(signal.id)}" style="font-size:0.7rem;padding:0.45rem 0.85rem;">Boost Signal</button>
+          <button type="button" class="btn btn-ghost btn-sm signal-request-btn" data-signal-id="${esc(signal.id)}" data-signal-user="${esc(username)}" data-signal-display="${esc(displayName)}" style="font-size:0.7rem;padding:0.45rem 0.85rem;">Request Signal</button>
+          <a href="${profileHref}" class="btn btn-primary btn-sm" style="font-size:0.7rem;padding:0.45rem 0.85rem;">View Page</a>
+          <button type="button" class="btn btn-ghost btn-sm signal-exchange-btn" data-signal-id="${esc(signal.id)}" data-signal-user="${esc(username)}" data-signal-display="${esc(displayName)}" style="font-size:0.7rem;padding:0.45rem 0.85rem;">Exchange Signal</button>
         </div>
       </div>
     </article>`

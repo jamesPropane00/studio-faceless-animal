@@ -1,354 +1,389 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Work with Faceless Animal Studios — full-stack development, creative branding, music production, custom builds. Real skills, real work. Based in Providence, RI." />
-  <title>Services — Faceless Animal Studios</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css?v=20260322" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Platform Services | Faceless Animal Studios</title>
+  <meta name="description" content="Professional platform services: hosting, storage, builds, and integration for creators and brands inside the Faceless Animal Studios network.">
+  <style>
+    :root {
+      --primary: #181a22;
+      --accent: #e6b800;
+      --border: #eaeaea;
+      --shadow: 0 2px 16px rgba(24,26,34,0.07);
+      --text-main: #181a22;
+      --text-sub: #444;
+      --text-muted: #888;
+      --bg: #fff;
+      --card-bg: #fcfcfd;
+      --card-border: #ececec;
+      --card-shadow: 0 2px 12px rgba(24,26,34,0.06);
+      --radius: 14px;
+    }
+    html, body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      font-size: 17px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    header {
+      padding: 2.5rem 0 1.5rem 0;
+      text-align: center;
+    }
+    .hero-title {
+      font-size: 2.5rem;
+      font-weight: 900;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+    .hero-sub {
+      font-size: 1.25rem;
+      color: var(--text-sub);
+      margin-bottom: 1.2rem;
+    }
+    .hero-desc {
+      color: var(--text-muted);
+      max-width: 540px;
+      margin: 0 auto 2.2rem auto;
+      font-size: 1.08em;
+    }
+    .hero-cta-row {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.7em 1.7em;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 1em;
+      border: 1.5px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      box-shadow: var(--shadow);
+      transition: background 0.15s, color 0.15s;
+      cursor: pointer;
+    }
+    .btn-outline {
+      background: #fff;
+      color: var(--primary);
+      border: 1.5px solid var(--accent);
+    }
+    .btn:active, .btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #ffe9a7;
+    }
+    section {
+      margin: 3.5rem 0;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+    .section-desc {
+      color: var(--text-sub);
+      margin-bottom: 2rem;
+      font-size: 1.08em;
+    }
+    .services-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 2.2rem;
+      margin-bottom: 2.5rem;
+    }
+    .service-block {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      padding: 1.3rem 1.1rem 1.1rem 1.1rem;
+      min-height: 120px;
+    }
+    .service-block h3 {
+      font-size: 1.08em;
+      font-weight: 700;
+      margin: 0 0 0.3rem 0;
+      color: var(--primary);
+    }
+    .service-block p {
+      color: var(--text-sub);
+      font-size: 0.98em;
+      margin: 0;
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2.2rem;
+      margin-bottom: 2.5rem;
+    }
+    .pricing-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      padding: 2.1rem 1.5rem 1.5rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-height: 340px;
+      position: relative;
+    }
+    .pricing-card .tier-title {
+      font-size: 1.18em;
+      font-weight: 800;
+      margin-bottom: 0.2rem;
+      color: var(--primary);
+    }
+    .pricing-card .tier-price {
+      font-size: 2.1em;
+      font-weight: 900;
+      color: var(--accent);
+      margin-bottom: 0.7rem;
+    }
+    .pricing-card .tier-desc {
+      color: var(--text-sub);
+      font-size: 1.01em;
+      margin-bottom: 1.1rem;
+    }
+    .pricing-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1.2rem 0;
+    }
+    .pricing-card ul li {
+      margin-bottom: 0.5rem;
+      color: var(--text-main);
+      font-size: 0.99em;
+      padding-left: 1.1em;
+      position: relative;
+    }
+    .pricing-card ul li:before {
+      content: '•';
+      color: var(--accent);
+      position: absolute;
+      left: 0;
+      font-size: 1.1em;
+      top: 0;
+    }
+    .pricing-card .btn {
+      margin-top: auto;
+      width: 100%;
+      text-align: center;
+    }
+    .infra-section, .integration-section, .custom-section, .trust-section {
+      margin-bottom: 3.5rem;
+    }
+    .footer {
+      background: #f7f7f9;
+      border-top: 1.5px solid #ececec;
+      padding: 2.2rem 0 1.2rem 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.98em;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2.2rem;
+      margin-bottom: 0.7rem;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+    .footer-links a:hover {
+      color: var(--accent);
+    }
+    @media (max-width: 700px) {
+      .pricing-grid, .services-overview {
+        grid-template-columns: 1fr;
+      }
+      .hero-title {
+        font-size: 2rem;
+      }
+    }
+  </style>
 </head>
 <body>
-
-  <nav class="navbar" role="navigation" aria-label="Main navigation">
-    <div class="container">
-      <div class="navbar-inner">
-        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
-        <ul class="navbar-links" role="list">
-          <li><a href="directory.html">Directory</a></li>
-          <li><a href="games.html">Games</a></li>
-          <li><a href="music.html">Music</a></li>
-          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
-          <li><a href="pricing.html">Pricing</a></li>
-          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
-        </ul>
-        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
-          <span></span><span></span><span></span>
-        </button>
-      </div>
+  <header>
+    <h1 class="hero-title">Platform Services</h1>
+    <div class="hero-sub">Build, host, and operate inside the network.</div>
+    <div class="hero-desc">
+      Faceless Animal Studios provides infrastructure and services for creators, projects, and digital systems. From hosted pages and storage to custom builds and platform integration, everything is designed to operate inside a controlled, scalable network environment.
     </div>
-  </nav>
-
-  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
-    <a href="directory.html">Directory</a>
-    <a href="games.html">Games</a>
-    <a href="music.html">Music</a>
-    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
-    <a href="pricing.html">Pricing</a>
-    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="about.html">About</a>
-  </div>
+    <div class="hero-cta-row">
+      <a href="#pricing" class="btn">Get Started</a>
+      <a href="#pricing" class="btn btn-outline">View Plans</a>
+    </div>
+  </header>
 
   <main>
-
-    <!-- ============================================================
-         HERO
-    ============================================================ -->
-    <section class="page-hero" aria-label="Services hero">
-      <div class="page-hero-glow" aria-hidden="true"></div>
-      <img class="mascot-page-img" src="assets/mascot.png" alt="" role="presentation" aria-hidden="true" />
+    <!-- Core Services Overview -->
+    <section>
       <div class="container">
-        <p class="page-hero-eyebrow">
-          <span class="eyebrow-dot" aria-hidden="true"></span>
-          Faceless Animal Studios · Custom Work
+        <h2 class="section-title">Core Services</h2>
+        <div class="section-desc">A full stack of platform services for creators, brands, and digital projects.</div>
+        <div class="services-overview">
+          <div class="service-block">
+            <h3>Hosting</h3>
+            <p>Fast, secure hosting for your pages and projects, fully integrated with the network. Designed for reliability and performance.</p>
+          </div>
+          <div class="service-block">
+            <h3>Storage</h3>
+            <p>Scalable, structured storage for media, assets, and uploads. Used by pages, radio, and platform systems.</p>
+          </div>
+          <div class="service-block">
+            <h3>Page / Presence Builds</h3>
+            <p>Custom profile pages, landing pages, and digital presences built for the platform. Claim your identity and operate inside the network.</p>
+          </div>
+          <div class="service-block">
+            <h3>Platform Integration</h3>
+            <p>Connect your presence to the dashboard, radio, and future systems. Everything is part of one ecosystem.</p>
+          </div>
+          <div class="service-block">
+            <h3>Custom Development</h3>
+            <p>Expand your tools, features, or pages with platform-specific builds and integrations. Flexible and professional.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Tiers -->
+    <section id="pricing">
+      <div class="container">
+        <h2 class="section-title">Pricing & Plans</h2>
+        <div class="section-desc">Choose the right level for your presence, project, or brand. All plans operate inside the network.</div>
+        <div class="pricing-grid">
+          <!-- Tier 1 -->
+          <div class="pricing-card">
+            <div class="tier-title">Starter Presence</div>
+            <div class="tier-price">$0</div>
+            <div class="tier-desc">Entry point into the network. Create a presence, claim a username, and operate inside the platform with limited customization.</div>
+            <ul>
+              <li>Hosted profile page (/username)</li>
+              <li>Basic customization</li>
+              <li>Access to network identity (signal-based presence)</li>
+              <li>Limited storage</li>
+              <li>Platform branding</li>
+            </ul>
+            <a href="free.html" class="btn">Create Username</a>
+          </div>
+          <!-- Tier 2 -->
+          <div class="pricing-card">
+            <div class="tier-title">Hosted Page</div>
+            <div class="tier-price">$5<span style="font-size:0.5em;font-weight:400;">/month</span></div>
+            <div class="tier-desc">Simple hosted page with more control and clean presentation. Ideal for individuals and small creators.</div>
+            <ul>
+              <li>Fully hosted page</li>
+              <li>Custom layout options</li>
+              <li>No platform branding</li>
+              <li>Basic analytics</li>
+              <li>Standard storage</li>
+            </ul>
+            <a href="#" class="btn btn-outline">Start Hosting</a>
+          </div>
+          <!-- Tier 3 -->
+          <div class="pricing-card">
+            <div class="tier-title">Pro Build</div>
+            <div class="tier-price">$25<span style="font-size:0.5em;font-weight:400;"> one-time</span></div>
+            <div class="tier-desc">A professionally structured page built within the platform. Designed for users who want a polished presence without managing design.</div>
+            <ul>
+              <li>One-page professional build</li>
+              <li>Structured layout design</li>
+              <li>Platform integration (dashboard / identity)</li>
+              <li>Priority support</li>
+              <li>Expanded storage</li>
+            </ul>
+            <a href="#" class="btn btn-outline">Request Build</a>
+          </div>
+          <!-- Tier 4 -->
+          <div class="pricing-card">
+            <div class="tier-title">Full Site Build</div>
+            <div class="tier-price">$50–$100</div>
+            <div class="tier-desc">Full site build for brands, creators, or businesses that need a complete digital presence inside the network.</div>
+            <ul>
+              <li>Multi-section or multi-page build</li>
+              <li>Custom layout and structure</li>
+              <li>Advanced platform integration</li>
+              <li>Performance optimization</li>
+              <li>Optional domain connection</li>
+            </ul>
+            <a href="#" class="btn btn-outline">Start Project</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Storage & Infrastructure -->
+    <section class="infra-section">
+      <div class="container">
+        <h2 class="section-title">Storage & Infrastructure</h2>
+        <div class="section-desc">Secure, scalable backend services for media, assets, and platform systems.</div>
+        <p style="color:var(--text-sub);max-width:700px;">
+          Our storage and infrastructure are designed for platform-integrated use. Media, uploads, and assets are stored securely and reliably, powering pages, radio, and all network features. This is not generic file dumping — it’s structured storage for real digital systems, with a focus on reliability and performance.
         </p>
-        <h1 class="page-hero-title">Work With<br /><em>Faceless Animal.</em></h1>
-        <p class="page-hero-sub">
-          Real skills. Real work. Built from the ground up.<br />
-          Development. Music. Branding. Platforms. This is an independent creative operation — not an agency template.
+      </div>
+    </section>
+
+    <!-- Platform Integration -->
+    <section class="integration-section">
+      <div class="container">
+        <h2 class="section-title">Built Into the Network</h2>
+        <div class="section-desc">Services connect directly to your identity and the platform ecosystem.</div>
+        <p style="color:var(--text-sub);max-width:700px;">
+          Every service is integrated with your username and signal. Connect your presence to the dashboard, radio, and future systems — everything operates as part of one controlled environment, not as disconnected tools. Platform integration is a real advantage for users, creators, and brands.
         </p>
-        <div class="page-hero-actions">
-          <a href="#services" class="btn btn-primary btn-lg">See What I Do →</a>
-          <a href="pricing.html#special-request" class="btn btn-ghost btn-lg">Request Work</a>
-        </div>
       </div>
     </section>
 
-
-    <!-- ============================================================
-         DEVELOPMENT / TECH
-    ============================================================ -->
-    <section class="section" id="services" aria-labelledby="dev-heading">
+    <!-- Custom Development -->
+    <section class="custom-section">
       <div class="container">
-
-        <div class="section-header">
-          <p class="section-label">01 · Development / Tech</p>
-          <h2 id="dev-heading">I Build<br /><em>Real Systems.</em></h2>
-          <p class="section-sub">Full-stack development from frontend to backend — deployed and live. I build the infrastructure, not just the interface.</p>
-        </div>
-
-        <div class="divisions-grid" style="margin-top:2.5rem;">
-
-          <article class="division-card">
-            <span class="division-num">—</span>
-            <div class="division-icon" aria-hidden="true">⬡</div>
-            <h3>Full-Stack Web</h3>
-            <p>Frontend + backend. Complete web applications — not templates, not drag-and-drop. Real code, real architecture.</p>
-          </article>
-
-          <article class="division-card">
-            <span class="division-num">—</span>
-            <div class="division-icon" aria-hidden="true">◻</div>
-            <h3>Creator Pages</h3>
-            <p>Custom landing pages and identity pages built for artists, brands, and independent operators. Fast, branded, live.</p>
-          </article>
-
-          <article class="division-card">
-            <span class="division-num">—</span>
-            <div class="division-icon" aria-hidden="true">⌘</div>
-            <h3>Platform Systems</h3>
-            <p>User accounts, dashboards, admin panels, role-based access. The infrastructure that makes a platform actually work.</p>
-          </article>
-
-          <article class="division-card">
-            <span class="division-num">—</span>
-            <div class="division-icon" aria-hidden="true">◈</div>
-            <h3>Supabase Integration</h3>
-            <p>Auth, database, storage, and row-level security. Full Supabase setup for any project — connected and running.</p>
-          </article>
-
-          <article class="division-card">
-            <span class="division-num">—</span>
-            <div class="division-icon" aria-hidden="true">$</div>
-            <h3>Payment Systems</h3>
-            <p>Stripe Payment Links, Cash App flows, checkout integration. Payments that actually go through — no fake buttons.</p>
-          </article>
-
-          <article class="division-card">
-            <span class="division-num">—</span>
-            <div class="division-icon" aria-hidden="true">▶</div>
-            <h3>App &amp; Game Dev</h3>
-            <p>Godot engine builds, multiplayer systems, interactive experiences. Real games and apps — not demos.</p>
-          </article>
-
-          <article class="division-card">
-            <span class="division-num">—</span>
-            <div class="division-icon" aria-hidden="true">⚙</div>
-            <h3>Bug Fixes &amp; Debugging</h3>
-            <p>Something broken? I find it and fix it. Systems, logic, integrations, APIs — whatever it is, I dig in.</p>
-          </article>
-
-          <article class="division-card">
-            <span class="division-num">—</span>
-            <div class="division-icon" aria-hidden="true">⊕</div>
-            <h3>Hosting &amp; Deployment</h3>
-            <p>Replit deployments, domain connections, live app setup. Goes from code to production — no lingering "coming soon" pages.</p>
-          </article>
-
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- ============================================================
-         CREATIVE / BRANDING
-    ============================================================ -->
-    <section class="section section-alt" id="branding" aria-labelledby="brand-heading">
-      <div class="container">
-
-        <div class="section-header">
-          <p class="section-label">02 · Creative / Branding</p>
-          <h2 id="brand-heading">Identity That<br /><em>Hits Different.</em></h2>
-          <p class="section-sub">Branding isn't just a logo. It's how you show up — online, in the room, in the culture. I help you build something that sticks.</p>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-top:2.5rem;" role="list">
-
-          <article style="padding:1.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;transition:border-color 0.2s;" role="listitem">
-            <p style="font-size:1.75rem;margin-bottom:0.75rem;" aria-hidden="true">◎</p>
-            <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:0.5rem;letter-spacing:0.01em;">Artist &amp; Creator Branding</h3>
-            <p style="font-size:0.88rem;color:var(--text-2);line-height:1.75;">Full identity development for artists, creatives, and independent brands. Name, visual direction, tone, positioning.</p>
-          </article>
-
-          <article style="padding:1.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;" role="listitem">
-            <p style="font-size:1.75rem;margin-bottom:0.75rem;" aria-hidden="true">⬚</p>
-            <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:0.5rem;">Page Design &amp; Layout</h3>
-            <p style="font-size:0.88rem;color:var(--text-2);line-height:1.75;">Custom page design — not a theme, not a template. Designed to match who you are and what you're building.</p>
-          </article>
-
-          <article style="padding:1.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;" role="listitem">
-            <p style="font-size:1.75rem;margin-bottom:0.75rem;" aria-hidden="true">◇</p>
-            <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:0.5rem;">Digital Identity Building</h3>
-            <p style="font-size:0.88rem;color:var(--text-2);line-height:1.75;">Online presence from scratch. Establishing who you are digitally — page, links, tone, and consistency across platforms.</p>
-          </article>
-
-          <article style="padding:1.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;" role="listitem">
-            <p style="font-size:1.75rem;margin-bottom:0.75rem;" aria-hidden="true">▣</p>
-            <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:0.5rem;">Platform Presence Setup</h3>
-            <p style="font-size:0.88rem;color:var(--text-2);line-height:1.75;">Get properly set up on the right platforms. Bios, links, visuals — structured and consistent across everything you touch.</p>
-          </article>
-
-          <article style="padding:1.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;" role="listitem">
-            <p style="font-size:1.75rem;margin-bottom:0.75rem;" aria-hidden="true">✦</p>
-            <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:0.5rem;">Custom Visuals &amp; Direction</h3>
-            <p style="font-size:0.88rem;color:var(--text-2);line-height:1.75;">Visual concept, direction, and execution for your brand, release, or platform. Designed with intention — not stock templates.</p>
-          </article>
-
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- ============================================================
-         MUSIC / AUDIO
-    ============================================================ -->
-    <section class="section" id="music-services" aria-labelledby="music-heading">
-      <div class="container">
-
-        <div class="section-header">
-          <p class="section-label">03 · Music / Audio</p>
-          <h2 id="music-heading">Built for<br /><em>Real Sound.</em></h2>
-          <p class="section-sub">From DJ blends to custom beats and audio editing — real production work for real projects. Not AI-generated noise.</p>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-top:2.5rem;" role="list">
-
-          <article style="padding:1.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;" role="listitem">
-            <p style="font-size:1.75rem;margin-bottom:0.75rem;" aria-hidden="true">♪</p>
-            <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:0.5rem;">DJ Blends &amp; Mixes</h3>
-            <p style="font-size:0.88rem;color:var(--text-2);line-height:1.75;">Custom DJ blends built for artists, sets, or content. Hip-hop, drill, underground. High-energy and designed for real listeners.</p>
-          </article>
-
-          <article style="padding:1.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;" role="listitem">
-            <p style="font-size:1.75rem;margin-bottom:0.75rem;" aria-hidden="true">♫</p>
-            <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:0.5rem;">Custom Beats &amp; Instrumentals</h3>
-            <p style="font-size:0.88rem;color:var(--text-2);line-height:1.75;">Original beat production built to fit your sound and vision. Delivered ready to record over.</p>
-          </article>
-
-          <article style="padding:1.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;" role="listitem">
-            <p style="font-size:1.75rem;margin-bottom:0.75rem;" aria-hidden="true">⊡</p>
-            <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:0.5rem;">Audio Editing &amp; Mixing</h3>
-            <p style="font-size:0.88rem;color:var(--text-2);line-height:1.75;">Clean edits, transitions, and mix-downs. Finished audio that sounds like it was done right — because it was.</p>
-          </article>
-
-          <article style="padding:1.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;" role="listitem">
-            <p style="font-size:1.75rem;margin-bottom:0.75rem;" aria-hidden="true">▶</p>
-            <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:0.5rem;">YouTube / Content Audio</h3>
-            <p style="font-size:0.88rem;color:var(--text-2);line-height:1.75;">Background music and audio designed for YouTube videos, content channels, and short-form platforms. Built to set a mood without getting in the way.</p>
-          </article>
-
-          <article style="padding:1.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;" role="listitem">
-            <p style="font-size:1.75rem;margin-bottom:0.75rem;" aria-hidden="true">◉</p>
-            <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:0.5rem;">Creative Direction</h3>
-            <p style="font-size:0.88rem;color:var(--text-2);line-height:1.75;">Collaborative creative direction for music projects. Concept, sound selection, sequence, and rollout strategy.</p>
-          </article>
-
-        </div>
-
-        <div style="margin-top:2rem;text-align:center;">
-          <a href="music.html" class="btn btn-outline" style="display:inline-flex;align-items:center;gap:0.5rem;">Hear the Music — DJ Faceless Animal →</a>
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- ============================================================
-         PLATFORM SERVICES
-    ============================================================ -->
-    <section class="section section-alt" id="platform-services" aria-labelledby="platform-heading">
-      <div class="container">
-
-        <div class="section-header">
-          <p class="section-label">04 · Platform Services</p>
-          <h2 id="platform-heading">Your Page.<br /><em>On the Network.</em></h2>
-          <p class="section-sub">Faceless Animal Studios runs a live creator network. These are the page services offered through the platform itself.</p>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem;margin-top:2.5rem;" role="list">
-
-          <article style="padding:1.5rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;" role="listitem">
-            <h3 style="font-size:0.95rem;font-weight:800;color:var(--gold-dim);margin-bottom:0.4rem;">Creator Pages</h3>
-            <p style="font-size:0.85rem;color:var(--text-2);line-height:1.75;">Identity pages for artists, DJs, producers, creators, and independent businesses. Free or paid — you're on the board from day one.</p>
-          </article>
-
-          <article style="padding:1.5rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;" role="listitem">
-            <h3 style="font-size:0.95rem;font-weight:800;color:var(--gold-dim);margin-bottom:0.4rem;">Page Upgrades</h3>
-            <p style="font-size:0.85rem;color:var(--text-2);line-height:1.75;">Already on the free tier? Upgrade your design, add sections, connect a domain. Your URL and content carry forward — no rebuild required.</p>
-          </article>
-
-          <article style="padding:1.5rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;" role="listitem">
-            <h3 style="font-size:0.95rem;font-weight:800;color:var(--gold-dim);margin-bottom:0.4rem;">Profile Optimization</h3>
-            <p style="font-size:0.85rem;color:var(--text-2);line-height:1.75;">Bio cleanup, link structure, visual tightening. Your page working for you — not just sitting there.</p>
-          </article>
-
-          <article style="padding:1.5rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;" role="listitem">
-            <h3 style="font-size:0.95rem;font-weight:800;color:var(--gold-dim);margin-bottom:0.4rem;">Featured Placement</h3>
-            <p style="font-size:0.85rem;color:var(--text-2);line-height:1.75;">Future-ready. Featured slots inside the network for visibility — coming as the platform grows. Get on the list early.</p>
-          </article>
-
-        </div>
-
-        <div style="margin-top:2rem;text-align:center;">
-          <a href="pricing.html" class="btn btn-primary">See Page Pricing →</a>
-          <a href="start.html" class="btn btn-ghost" style="margin-left:1rem;">Get My Page</a>
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- ============================================================
-         CUSTOM REQUEST CTA
-    ============================================================ -->
-    <section class="section" id="hire" aria-labelledby="hire-heading">
-      <div class="container" style="max-width:700px;text-align:center;">
-
-        <p class="section-label">Need Something Custom?</p>
-        <h2 id="hire-heading" class="page-hero-title" style="font-size:clamp(2rem,5vw,3.5rem);margin-bottom:1rem;">Let's Build<br /><em>Something.</em></h2>
-        <p style="font-size:1rem;color:var(--text-2);line-height:1.85;max-width:560px;margin:0 auto 2.25rem;">
-          If you need something outside the standard packages — development work, a music project, branding, commercial work, or something that just doesn't fit a box — reach out directly. We'll figure it out.
+        <h2 class="section-title">Custom Builds & Development</h2>
+        <div class="section-desc">Expand your presence or tools with custom features and platform-specific builds.</div>
+        <p style="color:var(--text-sub);max-width:700px;">
+          Need something unique? We offer custom development for app-like systems, feature expansions, and tailored builds inside the platform. All work is professional, flexible, and designed to fit the network environment.
         </p>
-
-        <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;align-items:center;">
-          <a href="pricing.html#special-request" class="btn btn-primary btn-lg">Request Work →</a>
-          <a href="mailto:djfacelessanimal@gmail.com" class="btn btn-ghost btn-lg">Email Direct</a>
-        </div>
-
-        <p style="font-size:0.78rem;color:var(--text-3);margin-top:1.5rem;">
-          djfacelessanimal@gmail.com · Providence, Rhode Island · Cash App $Jamespropane00
-        </p>
-
+        <a href="#" class="btn btn-outline">Contact / Request Custom Work</a>
       </div>
     </section>
 
-
+    <!-- Trust / Platform Positioning -->
+    <section class="trust-section">
+      <div class="container">
+        <h2 class="section-title">A Connected Platform, Not Just a Site</h2>
+        <p style="color:var(--text-sub);max-width:700px;">
+          Faceless Animal Studios is not a generic website builder. It’s a controlled platform environment where users, creators, and brands operate inside a real network. Services are designed to connect and scale — not to exist separately. Your presence, tools, and services all work together as part of one system.
+        </p>
+      </div>
+    </section>
   </main>
 
-
-  <footer class="footer" role="contentinfo">
-    <div class="container">
-      <div class="footer-inner">
-        <div class="footer-col">
-          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
-          <p class="footer-location">Providence, Rhode Island</p>
-        </div>
-        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
-          <a href="about.html">About</a>
-          <a href="network.html">Network</a>
-          <a href="services.html">Services</a>
-          <a href="music.html">Music</a>
-          <a href="store.html">Supply</a>
-          <a href="pricing.html">Pricing</a>
-          <a href="drops.html">Drops</a>
-          <a href="faq.html">FAQ</a>
-          <a href="artists/djfacelessanimal.html">DJ Faceless</a>
-          <a href="start.html">Get Started Free</a>
-        </nav>
-        <div class="footer-col footer-col--right">
-          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
-          <p class="footer-copy">All rights reserved. &nbsp;·&nbsp; <a href="admin/index.html" style="color:var(--text-3);text-decoration:none;font-size:inherit;opacity:0.6;" tabindex="-1">Studio Admin</a></p>
-        </div>
-      </div>
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="services.html">Services</a>
+      <a href="index.html">Platform</a>
+      <a href="faq.html">FAQ</a>
+      <a href="contact.html">Contact</a>
+      <a href="terms.html">Terms</a>
     </div>
+    <div>&copy; Faceless Animal Studios. All rights reserved.</div>
   </footer>
-
-  <script src="assets/script.js?v=20260322"></script>
-  <script src="assets/js/radio-widget.js" defer></script>
 </body>
 </html>
