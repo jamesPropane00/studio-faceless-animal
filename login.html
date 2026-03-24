@@ -153,12 +153,16 @@
   <nav class="navbar" role="navigation" aria-label="Main navigation">
     <div class="container">
       <div class="navbar-inner">
-        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <a href="landingpage.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
-          <li><a href="radio.html">Radio</a></li>
+          <li><a href="games.html">Games</a></li>
+          <li><a href="music.html">Music</a></li>
+          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
           <li><a href="pricing.html">Pricing</a></li>
-          <li><a href="start.html">Get Started</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
         </ul>
         <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
           <span></span><span></span><span></span>
@@ -173,205 +177,31 @@
     <a href="music.html">Music</a>
     <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
     <a href="pricing.html">Pricing</a>
-    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
     <a href="dashboard.html">Dashboard</a>
     <a href="about.html">About</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
   </div>
 
   <div class="login-wrap">
     <div class="login-card">
-
-      <a href="javascript:history.back()" class="back-link" aria-label="Go back">← Back</a>
-      <span class="login-logo">Faceless <span>Animal</span> Studios</span>
-
-      <!-- ── Main Login Panel ── -->
-      <div id="login-panel">
-
-        <section class="entry-gate" aria-label="Platform gateway">
-          <p class="entry-gate-eyebrow">FAS Signal · Anonymous Creator Network</p>
-          <h1 class="entry-gate-title">Enter the <em>Signal.</em></h1>
-          <p class="entry-gate-sub">Signal is built for controlled presence. In a world that tracks everything, you move differently here: visible without exposure, reachable by choice, and accessed through Signal Codes.</p>
-          <div class="entry-gate-actions">
-            <button type="button" class="btn btn-primary btn-sm" id="entry-gate-signin">Continue to Sign In →</button>
-            <button type="button" class="btn btn-ghost btn-sm" id="entry-gate-create">Create Account</button>
-          </div>
-          <div class="entry-gate-linkrow">
-            <a href="faq.html">What is Signal?</a>
-            <a href="faq.html#mission-heading">Read the Mission</a>
-            <a href="services.html">Work with the Builder</a>
-            <a href="radio.html">Listen as Guest</a>
-          </div>
-        </section>
-
-        <h1 class="login-title">Sign In.<br /><em>Take Your Seat.</em></h1>
-        <p class="login-sub">Identity is not assigned here. Access is not assumed. Use your handle or Signal ID plus password, then protect your recovery code.</p>
-
-        <!-- Tabs -->
-        <div class="login-tabs" role="tablist">
-          <button class="login-tab login-tab--active" id="tab-signin" role="tab" aria-selected="true" aria-controls="panel-signin">Sign In</button>
-          <button class="login-tab" id="tab-create" role="tab" aria-selected="false" aria-controls="panel-create">Create Account</button>
+      <h1 class="login-title">Sign In.<br /><em>Take Your Seat.</em></h1>
+      <p class="login-sub">Identity is not assigned here. Access is not assumed. Use your handle or Signal ID plus password, then protect your recovery code.</p>
+      <form class="login-form" id="signin-form" novalidate>
+        <div>
+          <label class="lf-label" for="signin-username">Username or Signal ID</label>
+          <input class="lf-input" type="text" id="signin-username" name="username" placeholder="@yourhandle or sig_xxxxxxxx" autocomplete="username" spellcheck="false" autocorrect="off" autocapitalize="none" required />
         </div>
-
-        <!-- ── Sign In Panel ── -->
-        <div id="panel-signin" role="tabpanel" aria-labelledby="tab-signin">
-
-          <!-- Normal sign-in form -->
-          <form class="login-formgit" id="signin-form" novalidate>
-            <div>
-              <label class="lf-label" for="signin-username">Username or Signal ID</label>
-              <input class="lf-input" type="text" id="signin-username" name="username" placeholder="@yourhandle or sig_xxxxxxxx" autocomplete="username" spellcheck="false" autocorrect="off" autocapitalize="none" required />
-            </div>
-            <div>
-              <label class="lf-label" for="signin-password">Password</label>
-              <div class="lf-pw-wrap">
-                <input class="lf-input" type="password" id="signin-password" name="password" placeholder="••••••••" autocomplete="current-password" required />
-                <button type="button" class="lf-pw-toggle" data-target="signin-password" aria-label="Show/hide password">👁</button>
-              </div>
-            </div>
-            <div id="signin-error" class="lf-error" role="alert"></div>
-            <button type="submit" class="lf-submit" id="signin-btn">Sign In →</button>
-          </form>
-
-          <!-- Set-password panel (shown when existing account has no password) -->
-          <div class="lf-set-pw-panel" id="set-pw-panel">
-            <div style="margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid rgba(255,255,255,0.07);">
-              <p class="lf-panel-title">Set Your Password</p>
-              <p class="lf-panel-sub">Your account (@<span id="set-pw-username"></span>) doesn't have a password yet. Set one now to lock it in — first one to claim it owns it.</p>
-            </div>
-            <form class="login-form" id="set-pw-form" novalidate>
-              <div>
-                <label class="lf-label" for="set-pw-new">New Password</label>
-                <div class="lf-pw-wrap">
-                  <input class="lf-input" type="password" id="set-pw-new" placeholder="••••••••" autocomplete="new-password" />
-                  <button type="button" class="lf-pw-toggle" data-target="set-pw-new" aria-label="Show/hide password">👁</button>
-                </div>
-                <p class="lf-hint">At least 8 characters.</p>
-              </div>
-              <div>
-                <label class="lf-label" for="set-pw-confirm">Confirm Password</label>
-                <div class="lf-pw-wrap">
-                  <input class="lf-input" type="password" id="set-pw-confirm" placeholder="••••••••" autocomplete="new-password" />
-                  <button type="button" class="lf-pw-toggle" data-target="set-pw-confirm" aria-label="Show/hide password">👁</button>
-                </div>
-              </div>
-              <div id="set-pw-error" class="lf-error" role="alert"></div>
-              <div id="set-pw-success" class="lf-success" role="status"></div>
-              <button type="submit" class="lf-submit" id="set-pw-btn">Set Password &amp; Sign In →</button>
-              <button type="button" class="btn btn-ghost" id="set-pw-cancel" style="font-size:0.8rem;margin-top:-0.25rem;">← Back to Sign In</button>
-            </form>
-          </div>
-
-        </div><!-- end #panel-signin -->
-
-        <!-- ── Create Account Panel ── -->
-        <div id="panel-create" role="tabpanel" aria-labelledby="tab-create" hidden>
-          <form class="login-form" id="create-form" novalidate>
-
-            <div>
-              <label class="lf-label" for="create-username">Choose a Username</label>
-              <input class="lf-input" type="text" id="create-username" name="username" placeholder="@yourhandle" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="none" maxlength="30" required />
-              <p class="lf-hint">Letters, numbers, underscores. 3–30 characters.</p>
-              <p class="lf-avail" id="create-avail-msg"></p>
-            </div>
-
-            <div>
-              <label class="lf-label" for="create-display">Display Name <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
-              <input class="lf-input" type="text" id="create-display" name="display_name" placeholder="Your Name" autocomplete="name" maxlength="60" />
-            </div>
-
-            <div>
-              <p class="lf-hint" style="margin-top:0;color:var(--text-2);line-height:1.7;">
-                This platform does not use email or real-world identity.
-                Your account belongs to your handle, password, and private recovery code.
-              </p>
-            </div>
-
-            <div>
-              <label class="lf-label" for="create-password">Password</label>
-              <div class="lf-pw-wrap">
-                <input class="lf-input" type="password" id="create-password" name="password" placeholder="••••••••" autocomplete="new-password" required />
-                <button type="button" class="lf-pw-toggle" data-target="create-password" aria-label="Show/hide password">👁</button>
-              </div>
-              <p class="lf-hint">At least 8 characters.</p>
-            </div>
-
-            <div>
-              <label class="lf-label" for="create-confirm">Confirm Password</label>
-              <div class="lf-pw-wrap">
-                <input class="lf-input" type="password" id="create-confirm" name="confirm_password" placeholder="••••••••" autocomplete="new-password" required />
-                <button type="button" class="lf-pw-toggle" data-target="create-confirm" aria-label="Show/hide password">👁</button>
-              </div>
-            </div>
-
-            <div>
-              <label class="lf-label" for="create-recovery">Recovery Code <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;">(leave blank to auto-generate)</span></label>
-              <input class="lf-input" type="text" id="create-recovery" name="recovery_code" placeholder="ABCD-EFGH-IJKL-MNOP" autocomplete="off" maxlength="64" />
-              <p class="lf-hint">Wallet-style recovery: if you lose password and recovery code, this account cannot be restored.</p>
-            </div>
-
-            <label style="display:flex;gap:0.55rem;align-items:flex-start;font-size:0.78rem;color:var(--text-2);line-height:1.5;">
-              <input type="checkbox" id="create-recovery-ack" style="margin-top:0.2rem;" required />
-              <span>I understand this account cannot be recovered without my recovery code.</span>
-            </label>
-
-            <div id="create-error" class="lf-error" role="alert"></div>
-            <button type="submit" class="lf-submit" id="create-btn">Create Account →</button>
-          </form>
-          <p class="login-footer-note">
-            Already have an account? <a href="#" id="switch-to-signin">Sign in →</a>
-          </p>
-        </div><!-- end #panel-create -->
-
-        <div class="lf-divider">or</div>
-
-        <!-- Plans row -->
-        <div id="login-plans" style="margin-bottom:1rem;">
-          <p style="font-size:0.7rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);text-align:center;margin-bottom:0.75rem;">Ready for a paid page?</p>
-          <div style="display:grid;gap:0.5rem;">
-            <a href="https://buy.stripe.com/4gM00jbRRfUGfeo7XK3ZK02" target="_blank" rel="noopener noreferrer" class="lf-plan-btn">
-              <span style="font-weight:800;">Starter</span>
-              <span style="color:var(--text-2);font-size:0.8rem;">Enhanced design, unlimited links</span>
-              <span style="font-weight:900;color:var(--text);">$30 →</span>
-            </a>
-            <a href="https://buy.stripe.com/6oU3cv8FF0ZM1nyfqc3ZK03" target="_blank" rel="noopener noreferrer" class="lf-plan-btn lf-plan-btn--gold">
-              <span style="font-weight:800;color:var(--gold-bright);">Pro</span>
-              <span style="color:var(--text-2);font-size:0.8rem;">Custom domain, music, video</span>
-              <span style="font-weight:900;color:var(--gold-bright);">$55 →</span>
-            </a>
-            <a href="https://buy.stripe.com/5kQ7sL3ll7oa2rC0vi3ZK04" target="_blank" rel="noopener noreferrer" class="lf-plan-btn">
-              <span style="font-weight:800;">Premium</span>
-              <span style="color:var(--text-2);font-size:0.8rem;">Fully custom build, revisions</span>
-              <span style="font-weight:900;color:var(--text);">$105 →</span>
-            </a>
-            <a href="start.html?plan=free" class="lf-plan-btn lf-plan-btn--free">
-              <span style="font-weight:800;color:var(--purple-bright);">Free Page</span>
-              <span style="color:var(--text-2);font-size:0.8rem;">Claim your URL, upgrade anytime</span>
-              <span style="font-weight:700;color:var(--purple-bright);">Start Free →</span>
-            </a>
+        <div>
+          <label class="lf-label" for="signin-password">Password</label>
+          <div class="lf-pw-wrap">
+            <input class="lf-input" type="password" id="signin-password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+            <button type="button" class="lf-pw-toggle" data-target="signin-password" aria-label="Show/hide password">👁</button>
           </div>
         </div>
-
-        <p id="fas-promo-entry" style="margin:0.35rem 0 0;text-align:center;font-size:0.72rem;color:var(--text-3);"></p>
-
-      </div><!-- end #login-panel -->
-
-      <!-- ── Success State ── -->
-      <div class="login-success-card" id="login-success" aria-live="polite">
-        <div class="login-success-icon" aria-hidden="true">✦</div>
-        <p class="login-success-title">You're In.</p>
-        <p class="login-success-handle" id="success-handle">@handle</p>
-        <p class="login-success-sub">You're signed in. The radio chat is open and platform features are unlocked.</p>
-        <p class="login-success-sub" id="success-meta" style="display:none;font-size:0.78rem;line-height:1.7;color:var(--gold-dim);"></p>
-        <div class="login-success-actions">
-          <a href="dashboard.html" class="btn btn-primary">Dashboard →</a>
-          <a href="radio.html" class="btn btn-ghost">Radio</a>
-        </div>
-        <p class="login-footer-note" style="margin-top:0.5rem;">
-          <a href="login.html?switch=1">Not you? Switch account</a>
-        </p>
-      </div>
-
-    </div><!-- end .login-card -->
+        <div id="signin-error" class="lf-error" role="alert"></div>
+        <button type="submit" class="lf-submit" id="signin-btn">Sign In →</button>
+      </form>
+    </div>
   </div>
 
   <script src="assets/script.js?v=20260322"></script>
@@ -422,37 +252,19 @@
     }
 
     // ── Tab switching ─────────────────────────────────────────
-    function showTab(which) {
-      const isSignin = which === 'signin'
-      tabSignin.classList.toggle('login-tab--active', isSignin)
-      tabCreate.classList.toggle('login-tab--active', !isSignin)
-      tabSignin.setAttribute('aria-selected', isSignin ? 'true' : 'false')
-      tabCreate.setAttribute('aria-selected', isSignin ? 'false' : 'true')
-      panelSignin.hidden = !isSignin
-      panelCreate.hidden = isSignin
-    }
-
-    tabSignin.addEventListener('click', () => showTab('signin'))
-    tabCreate.addEventListener('click', () => showTab('create'))
-    document.getElementById('switch-to-signin')?.addEventListener('click', e => { e.preventDefault(); showTab('signin') })
-    document.getElementById('entry-gate-signin')?.addEventListener('click', () => {
-      showTab('signin')
-      document.getElementById('signin-username')?.focus()
-    })
-    document.getElementById('entry-gate-create')?.addEventListener('click', () => {
-      showTab('create')
-      document.getElementById('create-username')?.focus()
-    })
+    // Removed tab switching and entry-gate listeners: elements no longer exist after slimming down the login page.
 
     // ── Password show/hide toggles ────────────────────────────
     document.querySelectorAll('.lf-pw-toggle').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const input = document.getElementById(btn.dataset.target)
-        if (!input) return
-        const isText = input.type === 'text'
-        input.type = isText ? 'password' : 'text'
-        btn.textContent = isText ? '👁' : '🙈'
-      })
+      if (btn) {
+        btn.addEventListener('click', () => {
+          const input = document.getElementById(btn.dataset.target)
+          if (!input) return
+          const isText = input.type === 'text'
+          input.type = isText ? 'password' : 'text'
+          btn.textContent = isText ? '👁' : '🙈'
+        })
+      }
     })
 
     // ── Show success ──────────────────────────────────────────
