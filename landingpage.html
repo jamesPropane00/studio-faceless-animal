@@ -10,72 +10,62 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/style.css?v=20260322" />
 </head>
-<style>
-  .system-doc-bar {
-    --doc-link-color: rgba(255,255,255,0.75);
-    --doc-link-hover: #fff;
-    --doc-link-size: 11.5px;
-    --doc-link-line: 1.28;
-    --doc-link-gap: 0.07rem;
-    --doc-link-col-gap: 0.55rem;
-    --doc-link-row-gap: 0.09rem;
-  }
-  .system-doc-bar .doc-title {
-    font-size: 0.91em;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: var(--gold);
-    opacity: 0.92;
-    margin-bottom: 0.03em;
-  }
-  .system-doc-bar .doc-desc {
-    font-size: 0.89em;
-    color: var(--text-2);
-    opacity: 0.82;
-    line-height: 1.28;
-    margin-bottom: 0.09em;
-  }
-  .system-doc-bar .doc-links {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--doc-link-col-gap);
-    padding: 0.07rem 0 0 0;
-    font-size: var(--doc-link-size);
-    color: var(--doc-link-color);
-    line-height: var(--doc-link-line);
-  }
-  .system-doc-bar .doc-col {
-    display: flex;
-    flex-direction: column;
-    gap: var(--doc-link-row-gap);
-    min-width: 62px;
-    align-items: flex-start;
-  }
-  .system-doc-bar .doc-col a {
-    color: var(--doc-link-color);
-    text-decoration: none;
-    font-size: var(--doc-link-size);
-    line-height: var(--doc-link-line);
-    transition: color 0.13s;
-    padding: 0.04em 0.07em;
-    border-radius: 3px;
-  }
-  .system-doc-bar .doc-col a:hover,
-  .system-doc-bar .doc-col a:focus {
-    color: var(--doc-link-hover);
-    background: rgba(255,255,255,0.07);
-    outline: none;
-  }
-  @media (max-width: 600px) {
-    .system-doc-bar .doc-links {
-      gap: 0.32rem;
+  <style>
+    .signal-entry-btn.primary {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      padding: 0.62em 0;
+      font-size: 0.93em;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: #090909;
+      background: var(--gold);
+      border-radius: 6px;
+      text-align: center;
+      text-decoration: none;
+      margin: 0.4em 0 1em 0;
+      transition: background 0.2s;
     }
-    .system-doc-bar .doc-col {
-      min-width: 54px;
+    .signal-entry-btn.primary:hover {
+      background: var(--gold-bright);
     }
-  }
-</style>
+    .signal-entry-btn.phone-secondary {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      padding: 0.62em 0;
+      font-size: 0.93em;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: var(--gold-bright);
+      background: rgba(24,22,34,0.55);
+      border: 1.5px solid rgba(120,90,255,0.18);
+      border-radius: 6px;
+      box-shadow: 0 2px 12px 0 rgba(80,60,120,0.08);
+      text-align: center;
+      text-decoration: none;
+      backdrop-filter: blur(6px) saturate(1.2);
+      -webkit-backdrop-filter: blur(6px) saturate(1.2);
+      transition: background 0.18s, border-color 0.18s, color 0.18s;
+      position: relative;
+      z-index: 2;
+      margin: 0.18em 0 0.9em 0;
+    }
+    .signal-entry-btn.phone-secondary:hover {
+      background: rgba(120,90,255,0.13);
+      color: var(--purple-bright);
+      border-color: var(--purple-bright);
+    }
+    @media (max-width: 600px) {
+      .signal-entry-btn.primary,
+      .signal-entry-btn.phone-secondary {
+        width: 100%;
+        font-size: 0.93em;
+        padding: 0.62em 0.7em;
+      }
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar" role="navigation" aria-label="Main navigation">
@@ -90,7 +80,6 @@
           <li><a href="pricing.html">Pricing</a></li>
           <li><a href="dashboard.html">Dashboard</a></li>
           <li><a href="about.html">About</a></li>
-          <li><a href="phone.html" class="nav-cta" title="Signal Phone" style="font-size:1.15em;padding:0.42rem 0.95rem;">📞</a></li>
           <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
         </ul>
         <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
@@ -115,12 +104,48 @@
         <!-- Placeholder for Live Globe Widget -->
         <div id="live-globe-widget" style="width:100%;max-width:220px;margin:0 auto 0.7rem auto;"></div>
         <div id="live-globe-count" class="globe-label" style="margin-bottom:0.7rem;"></div>
+
+          <!-- Phone Button: secondary, subtle, glassy, under globe -->
+          <a href="phone.html" class="signal-entry-btn phone-secondary" title="Signal Phone">📞 Signal Phone</a>
+          <style>
+            .signal-entry-btn.phone-secondary {
+              display: inline-block;
+              margin: 0.2em auto 1.1em auto;
+              padding: 0.62em 1.2em;
+              font-size: 1.08em;
+              font-weight: 600;
+              color: var(--gold-bright);
+              background: rgba(24,22,34,0.55);
+              border: 1.5px solid rgba(120,90,255,0.18);
+              border-radius: 18px;
+              box-shadow: 0 2px 12px 0 rgba(80,60,120,0.08);
+              text-align: center;
+              text-decoration: none;
+              backdrop-filter: blur(6px) saturate(1.2);
+              -webkit-backdrop-filter: blur(6px) saturate(1.2);
+              transition: background 0.18s, border-color 0.18s, color 0.18s;
+              position: relative;
+              z-index: 2;
+            }
+            .signal-entry-btn.phone-secondary:hover {
+              background: rgba(120,90,255,0.13);
+              color: var(--purple-bright);
+              border-color: var(--purple-bright);
+            }
+            @media (max-width: 600px) {
+              .signal-entry-btn.phone-secondary {
+                width: 100%;
+                font-size: 1em;
+                padding: 0.62em 0.7em;
+              }
+            }
+          </style>
         <h1 class="app-login-title" style="font-size:1.85rem;font-weight:900;letter-spacing:-0.03em;color:var(--gold);margin-bottom:0.28rem;">Enter the Signal</h1>
         <p class="app-login-sub" style="color:var(--text-2);font-size:0.91em;margin-bottom:0.7rem;max-width:300px;margin-left:auto;margin-right:auto;">
           The network is live. Signals are moving. Claim your identity. Enter the system.
         </p>
         <div class="app-login-actions" style="display:flex;flex-direction:column;gap:0.48rem;margin-bottom:0.38rem;width:100%;">
-          <a href="login.html" class="btn btn-primary btn-lg app-entry-btn" style="display:flex;align-items:center;justify-content:center;font-size:1.01em;letter-spacing:0.01em;padding:0.78em 0;width:100%;max-width:100%;">LOG IN / CREATE USER</a>
+          <a href="login.html" class="signal-entry-btn primary">LOG IN / CREATE USER</a>
         </div>
         <!-- System Documentation / Pre-Entry Knowledge Bar -->
         <section class="system-doc-bar" aria-label="Understand the System" style="margin-bottom:0.7rem;">
