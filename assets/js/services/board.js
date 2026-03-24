@@ -166,6 +166,7 @@ export async function getNetworkCreators(limit = 24) {
     return code === '42703' || msg.includes('column') || msg.includes('does not exist')
   }
 
+  // Guard: Try without is_founder if schema mismatch
   let result = await supabase
     .from('member_accounts')
     .select('id, username, display_name, bio, city, state_abbr, plan_type, member_status, page_slug, page_status, public_listing_enabled, is_founder, founder_label, last_active_at, veil_state, created_at')
@@ -176,11 +177,11 @@ export async function getNetworkCreators(limit = 24) {
     .limit(limit + 80)
 
   if (result.error && isSchemaMismatch(result.error)) {
+    // Try again without is_founder
     result = await supabase
       .from('member_accounts')
-      .select('id, username, display_name, bio, city, state_abbr, plan_type, member_status, page_slug, page_status, is_founder, founder_label, last_active_at, veil_state, created_at')
+      .select('id, username, display_name, bio, city, state_abbr, plan_type, member_status, page_slug, page_status, founder_label, last_active_at, veil_state, created_at')
       .in('member_status', ['active', 'free'])
-      .order('is_founder', { ascending: false })
       .order('last_active_at', { ascending: false })
       .order('created_at',  { ascending: false })
       .limit(limit + 80)
@@ -252,22 +253,29 @@ export async function getBoardPosts({ limit = 20, featuredOnly = false } = {}) {
     return code === '42703' || msg.includes('column') || msg.includes('does not exist')
   }
 
-  let query = supabase
-    .from('signal_posts')
-    .select(`
-      id,
-      username,
-      display_name,
-      content,
-      media_url,
-      signal_type,
-      boost_count,
-      created_at,
-      author_username,
-      body_text,
-      post_type
-    `)
-    .order('created_at',  { ascending: false })
+  // Guard: Only query signal_posts if it exists (try/catch)
+  let query
+  try {
+    query = supabase
+      .from('signal_posts')
+      .select(`
+        id,
+        username,
+        display_name,
+        content,
+        media_url,
+        signal_type,
+        boost_count,
+        created_at,
+        author_username,
+        body_text,
+        post_type
+      `)
+      .order('created_at',  { ascending: false })
+  } catch (err) {
+    console.warn('[FAS] signal_posts table missing or unavailable:', err)
+    return { data: [], error: err }
+  }
     .limit(limit)
 
   if (featuredOnly) query = query.eq('signal_type', 'live')

@@ -227,6 +227,9 @@
   'use strict';
 
   function loadSignalPulse() {
+    // Only load on network.html (main board page)
+    var isNetworkPage = /network\.html(\?|#|$)/.test(window.location.pathname);
+    if (!isNetworkPage) return;
     if (window.__FAS_DISABLE_SIGNAL_PULSE) return;
     if (window.__FAS_SIGNAL_PULSE_LOADING) return;
     window.__FAS_SIGNAL_PULSE_LOADING = true;

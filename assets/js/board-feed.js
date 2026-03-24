@@ -114,7 +114,8 @@ function roleBadgeHtml(username, session) {
     return '<span class="creator-tag creator-tag--business" style="margin-bottom:0;">Founder</span>'
   }
 
-  if (creator && creator.is_founder === true) {
+  // Guard: Only show founder if property exists
+  if (creator && typeof creator.is_founder !== 'undefined' && creator.is_founder === true) {
     return '<span class="creator-tag creator-tag--business" style="margin-bottom:0;">Founder</span>'
   }
 
@@ -358,8 +359,9 @@ function renderFeaturedSection(creators) {
   if (!section || !strip) return
 
   const real = (creators || []).filter(c => c.page_status === 'live')
+  // Guard: Only filter by is_founder if property exists
   const featured = real
-    .filter(c => c.is_founder === true || c.plan_type === 'premium' || c.plan_type === 'pro')
+    .filter(c => (typeof c.is_founder !== 'undefined' && c.is_founder === true) || c.plan_type === 'premium' || c.plan_type === 'pro')
     .slice(0, 4)
 
   if (!featured.length) {
@@ -496,7 +498,8 @@ function applyStats(creators) {
 
   const members = creators || []
   const liveCount = members.filter(c => c.page_status === 'live').length
-  const founderCount = members.filter(c => c.is_founder === true).length
+  // Guard: Only count founders if property exists
+  const founderCount = members.filter(c => typeof c.is_founder !== 'undefined' && c.is_founder === true).length
 
   if (memberEl) memberEl.textContent = String(members.length)
   if (liveEl) liveEl.textContent = String(liveCount)
