@@ -45,44 +45,122 @@
   </div>
   <main>
     <!-- SOCIAL APP LOGIN HERO / ENTRY -->
-    <section class="app-login-hero" aria-label="Network Entry" style="background:radial-gradient(ellipse at 60% 0,#181a22 0%,#0a0b0f 100%);padding-bottom:2.5rem;min-height:60vh;display:flex;align-items:center;justify-content:center;">
-      <div class="container" style="max-width:440px;margin:0 auto;text-align:center;">
-        <div class="network-live-strip" style="display:flex;align-items:center;justify-content:center;gap:0.7rem;margin-bottom:1.2rem;">
-          <span style="display:inline-block;width:10px;height:10px;background:var(--gold);border-radius:50%;box-shadow:0 0 8px var(--gold-bright);margin-right:0.5rem;"></span>
-          <span style="font-size:0.98em;color:var(--gold);font-weight:700;letter-spacing:0.04em;">1,284 signals online</span>
-          <span style="color:var(--text-2);font-size:0.92em;">·</span>
-          <span style="color:var(--purple-bright);font-size:0.92em;">Live Network</span>
+    <section class="app-login-hero" aria-label="Network Entry" style="background:radial-gradient(ellipse at 60% 0,#181a22 0%,#0a0b0f 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:0;">
+      <div class="container" style="max-width:410px;margin:0 auto;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;">
+        <div class="network-live-strip" style="display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-bottom:0.7rem;">
+          <span style="display:inline-block;width:10px;height:10px;background:var(--gold);border-radius:50%;box-shadow:0 0 8px var(--gold-bright);margin-right:0.4rem;"></span>
+          <span style="font-size:0.93em;color:var(--gold);font-weight:700;letter-spacing:0.04em;">1,284 signals online</span>
+          <span style="color:var(--text-2);font-size:0.89em;">·</span>
+          <span style="color:var(--purple-bright);font-size:0.89em;">Live Network</span>
         </div>
-        <h1 class="app-login-title" style="font-size:2.3rem;font-weight:900;letter-spacing:-0.03em;color:var(--gold);margin-bottom:0.7rem;">Enter the Signal</h1>
-        <p class="app-login-sub" style="color:var(--text-2);font-size:1.08em;margin-bottom:2.1rem;max-width:340px;margin-left:auto;margin-right:auto;">
+        <h1 class="app-login-title" style="font-size:2.02rem;font-weight:900;letter-spacing:-0.03em;color:var(--gold);margin-bottom:0.38rem;">Enter the Signal</h1>
+        <p class="app-login-sub" style="color:var(--text-2);font-size:0.97em;margin-bottom:1.1rem;max-width:320px;margin-left:auto;margin-right:auto;">
           The network is live. Signals are moving. Claim your identity. Enter the system.
         </p>
-        <div class="app-login-actions" style="display:flex;flex-direction:column;gap:1.1rem;margin-bottom:1.1rem;">
-          <a href="free.html" class="btn btn-primary btn-lg" style="font-size:1.13em;letter-spacing:0.01em;">Create My Free Username</a>
-          <a href="login.html" class="btn btn-ghost btn-lg" style="font-size:1.13em;letter-spacing:0.01em;">Sign In (Already a Member)</a>
+        <div class="app-login-actions" style="display:flex;flex-direction:column;gap:0.65rem;margin-bottom:0.5rem;width:100%;">
+          <a href="create.html" class="btn btn-primary btn-lg" style="font-size:1.01em;letter-spacing:0.01em;padding:0.78em 0;width:100%;max-width:100%;">Create My Free Username</a>
+          <a href="login.html" class="btn btn-ghost btn-lg" style="font-size:1.01em;letter-spacing:0.01em;padding:0.78em 0;width:100%;max-width:100%;">Sign In (Already a Member)</a>
         </div>
-        <!-- Micro-link / Info Bar -->
-        <div class="micro-info-bar" style="display:flex;flex-wrap:wrap;justify-content:center;gap:1.2rem;margin-bottom:2.2rem;font-size:0.97em;color:var(--text-2);">
-          <a href="faq.html" style="color:var(--text-2);text-decoration:none;">FAQ</a>
-          <a href="how.html" style="color:var(--text-2);text-decoration:none;">How It Works</a>
-          <a href="signal-code.html" style="color:var(--text-2);text-decoration:none;">Signal Code</a>
-          <a href="coins.html" style="color:var(--text-2);text-decoration:none;">Coins</a>
-          <a href="rules.html" style="color:var(--text-2);text-decoration:none;">Network Rules</a>
-          <a href="privacy.html" style="color:var(--text-2);text-decoration:none;">Privacy</a>
-          <a href="signal.html" style="color:var(--text-2);text-decoration:none;">What Signal Means</a>
-          <a href="overview.html" style="color:var(--text-2);text-decoration:none;">Platform Overview</a>
-          <a href="services.html" style="color:var(--text-2);text-decoration:none;">Services</a>
-          <a href="terms.html" style="color:var(--text-2);text-decoration:none;">Terms</a>
-          <a href="contact.html" style="color:var(--text-2);text-decoration:none;">Contact</a>
+        <!-- System Documentation / Pre-Entry Knowledge Bar -->
+        <section class="system-doc-bar" aria-label="Understand the System" style="margin-bottom:0.7rem;">
+          <style>
+            .system-doc-bar {
+              --doc-link-color: rgba(255,255,255,0.75);
+              --doc-link-hover: #fff;
+              --doc-link-size: 12.5px;
+              --doc-link-line: 1.32;
+              --doc-link-gap: 0.09rem;
+              --doc-link-col-gap: 0.7rem;
+              --doc-link-row-gap: 0.13rem;
+            }
+            .system-doc-bar .doc-title {
+              font-size: 0.97em;
+              font-weight: 700;
+              letter-spacing: 0.04em;
+              color: var(--gold);
+              opacity: 0.92;
+              margin-bottom: 0.04em;
+            }
+            .system-doc-bar .doc-desc {
+              font-size: 0.93em;
+              color: var(--text-2);
+              opacity: 0.82;
+              line-height: 1.32;
+              margin-bottom: 0.13em;
+            }
+            .system-doc-bar .doc-links {
+              display: flex;
+              flex-wrap: wrap;
+              justify-content: center;
+              gap: var(--doc-link-col-gap);
+              padding: 0.1rem 0 0 0;
+              font-size: var(--doc-link-size);
+              color: var(--doc-link-color);
+              line-height: var(--doc-link-line);
+            }
+            .system-doc-bar .doc-col {
+              display: flex;
+              flex-direction: column;
+              gap: var(--doc-link-row-gap);
+              min-width: 82px;
+              align-items: flex-start;
+            }
+            .system-doc-bar .doc-col a {
+              color: var(--doc-link-color);
+              text-decoration: none;
+              font-size: var(--doc-link-size);
+              line-height: var(--doc-link-line);
+              transition: color 0.13s;
+              padding: 0.05em 0.08em;
+              border-radius: 3px;
+            }
+            .system-doc-bar .doc-col a:hover,
+            .system-doc-bar .doc-col a:focus {
+              color: var(--doc-link-hover);
+              background: rgba(255,255,255,0.07);
+              outline: none;
+            }
+            @media (max-width: 600px) {
+              .system-doc-bar .doc-links {
+                gap: 0.45rem;
+              }
+              .system-doc-bar .doc-col {
+                min-width: 70px;
+              }
+            }
+          </style>
+          <div style="text-align:center;margin-bottom:0.07rem;">
+            <span class="doc-title">Understand the System</span>
+            <span class="doc-desc">Before you enter, know the rules, economy, and identity structure of this network.</span>
+          </div>
+          <nav class="doc-links" aria-label="System Documentation Links">
+            <div class="doc-col">
+              <a href="faq.html">FAQ</a>
+              <a href="how.html">How It Works</a>
+              <a href="signal-code.html">Signal Code</a>
+              <a href="coins.html">Coins</a>
+            </div>
+            <div class="doc-col">
+              <a href="rules.html">Network Rules</a>
+              <a href="privacy.html">Privacy</a>
+              <a href="signal.html">What Signal Means</a>
+              <a href="overview.html">Platform Overview</a>
+            </div>
+            <div class="doc-col">
+              <a href="services.html">Services</a>
+              <a href="terms.html">Terms</a>
+              <a href="contact.html">Contact</a>
+            </div>
+          </nav>
+        </section>
+        <div class="network-avatars" style="display:flex;justify-content:center;gap:0.13rem;margin-bottom:0.4rem;">
+          <span style="width:28px;height:28px;border-radius:50%;background:#191a22;border:2px solid var(--gold);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar1.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
+          <span style="width:28px;height:28px;border-radius:50%;background:#191a22;border:2px solid var(--purple-bright);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar2.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
+          <span style="width:28px;height:28px;border-radius:50%;background:#191a22;border:2px solid var(--gold-bright);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar3.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
+          <span style="width:28px;height:28px;border-radius:50%;background:#191a22;border:2px solid var(--gold);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar4.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
+          <span style="width:28px;height:28px;border-radius:50%;background:#191a22;border:2px solid var(--purple-bright);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar5.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
         </div>
-        <div class="network-avatars" style="display:flex;justify-content:center;gap:0.18rem;margin-bottom:0.7rem;">
-          <span style="width:32px;height:32px;border-radius:50%;background:#191a22;border:2px solid var(--gold);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar1.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
-          <span style="width:32px;height:32px;border-radius:50%;background:#191a22;border:2px solid var(--purple-bright);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar2.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
-          <span style="width:32px;height:32px;border-radius:50%;background:#191a22;border:2px solid var(--gold-bright);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar3.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
-          <span style="width:32px;height:32px;border-radius:50%;background:#191a22;border:2px solid var(--gold);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar4.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
-          <span style="width:32px;height:32px;border-radius:50%;background:#191a22;border:2px solid var(--purple-bright);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar5.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
-        </div>
-        <div class="network-feed" style="margin-top:0.5rem;font-size:0.97em;color:var(--text-2);font-family:monospace;overflow:hidden;white-space:nowrap;max-width:340px;margin-left:auto;margin-right:auto;">
+        <div class="network-feed" style="margin-top:0.2rem;font-size:0.91em;color:var(--text-2);font-family:monospace;overflow:hidden;white-space:nowrap;max-width:320px;margin-left:auto;margin-right:auto;">
           <span style="animation: networkFeedScroll 18s linear infinite;display:inline-block;">@crypt0wolf joined · @djfacelessanimal is live · @koldvisual posted a track · @samplecreator updated profile · @mysteryuser sent a signal · @underground joined · @signalwave is online · @goldeneye joined · @midnightowl is live · @crypt0wolf joined · @djfacelessanimal is live · @koldvisual posted a track · @samplecreator updated profile · @mysteryuser sent a signal · @underground joined · @signalwave is online · @goldeneye joined · @midnightowl is live</span>
         </div>
         <style>
