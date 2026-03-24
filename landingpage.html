@@ -23,6 +23,7 @@
           <li><a href="pricing.html">Pricing</a></li>
           <li><a href="dashboard.html">Dashboard</a></li>
           <li><a href="about.html">About</a></li>
+          <li><a href="phone.html" class="nav-cta" title="Signal Phone" style="font-size:1.15em;padding:0.42rem 0.95rem;">📞</a></li>
           <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
         </ul>
         <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
@@ -52,20 +53,199 @@
           The network is live. Signals are moving. Claim your identity. Enter the system.
         </p>
         <div class="app-login-actions" style="display:flex;flex-direction:column;gap:0.48rem;margin-bottom:0.38rem;width:100%;">
-          <!-- Main CTA button: matches directory page logic -->
           <a href="login.html" class="btn btn-primary btn-lg app-entry-btn" style="display:flex;align-items:center;justify-content:center;font-size:1.01em;letter-spacing:0.01em;padding:0.78em 0;width:100%;max-width:100%;">LOG IN / CREATE USER</a>
         </div>
         <!-- System Documentation / Pre-Entry Knowledge Bar -->
         <section class="system-doc-bar" aria-label="Understand the System" style="margin-bottom:0.7rem;">
-          <div style="font-size:11.5px;color:rgba(255,255,255,0.75);">
-            <a href="faq.html" style="color:var(--gold-bright);font-weight:700;">FAQ</a> &middot;
-            <a href="about.html">About</a> &middot;
-            <a href="directory.html">Directory</a> &middot;
-            <a href="radio.html">Radio</a>
+          <style>
+            .system-doc-bar {
+              --doc-link-color: rgba(255,255,255,0.75);
+              --doc-link-hover: #fff;
+              --doc-link-size: 11.5px;
+              --doc-link-line: 1.28;
+              --doc-link-gap: 0.07rem;
+              --doc-link-col-gap: 0.55rem;
+              --doc-link-row-gap: 0.09rem;
+            }
+            .system-doc-bar .doc-title {
+              font-size: 0.91em;
+              font-weight: 700;
+              letter-spacing: 0.04em;
+              color: var(--gold);
+              opacity: 0.92;
+              margin-bottom: 0.03em;
+            }
+            .system-doc-bar .doc-desc {
+              font-size: 0.89em;
+              color: var(--text-2);
+              opacity: 0.82;
+              line-height: 1.28;
+              margin-bottom: 0.09em;
+            }
+            .system-doc-bar .doc-links {
+              display: flex;
+              flex-wrap: wrap;
+              justify-content: center;
+              gap: var(--doc-link-col-gap);
+              padding: 0.07rem 0 0 0;
+              font-size: var(--doc-link-size);
+              color: var(--doc-link-color);
+              line-height: var(--doc-link-line);
+            }
+            .system-doc-bar .doc-col {
+              display: flex;
+              flex-direction: column;
+              gap: var(--doc-link-row-gap);
+              min-width: 62px;
+              align-items: flex-start;
+            }
+            .system-doc-bar .doc-col a {
+              color: var(--doc-link-color);
+              text-decoration: none;
+              font-size: var(--doc-link-size);
+              line-height: var(--doc-link-line);
+              transition: color 0.13s;
+              padding: 0.04em 0.07em;
+              border-radius: 3px;
+            }
+            .system-doc-bar .doc-col a:hover,
+            .system-doc-bar .doc-col a:focus {
+              color: var(--doc-link-hover);
+              background: rgba(255,255,255,0.07);
+              outline: none;
+            }
+            @media (max-width: 600px) {
+              .system-doc-bar .doc-links {
+                gap: 0.32rem;
+              }
+              .system-doc-bar .doc-col {
+                min-width: 54px;
+              }
+            }
+          </style>
+          <div style="text-align:center;margin-bottom:0.07rem;">
+            <span class="doc-title">Understand the System</span>
+            <span class="doc-desc">Before you enter, know the rules, economy, and identity structure of this network.</span>
           </div>
+          <nav class="doc-links" aria-label="System Documentation Links">
+            <div class="doc-col">
+              <a href="faq.html">FAQ</a>
+              <a href="how.html">How It Works</a>
+              <a href="signal-code.html">Signal Code</a>
+              <a href="coins.html">Coins</a>
+            </div>
+            <div class="doc-col">
+              <a href="rules.html">Network Rules</a>
+              <a href="privacy.html">Privacy</a>
+              <a href="signal.html">What Signal Means</a>
+              <a href="overview.html">Platform Overview</a>
+            </div>
+            <div class="doc-col">
+              <a href="services.html">Services</a>
+              <a href="terms.html">Terms</a>
+              <a href="contact.html">Contact</a>
+            </div>
+          </nav>
         </section>
+        <div class="network-avatars" style="display:flex;justify-content:center;gap:0.13rem;margin-bottom:0.4rem;">
+          <span style="width:28px;height:28px;border-radius:50%;background:#191a22;border:2px solid var(--gold);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar1.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
+          <span style="width:28px;height:28px;border-radius:50%;background:#191a22;border:2px solid var(--purple-bright);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar2.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
+          <span style="width:28px;height:28px;border-radius:50%;background:#191a22;border:2px solid var(--gold-bright);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar3.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
+          <span style="width:28px;height:28px;border-radius:50%;background:#191a22;border:2px solid var(--gold);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar4.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
+          <span style="width:28px;height:28px;border-radius:50%;background:#191a22;border:2px solid var(--purple-bright);display:inline-block;box-shadow:0 0 0 2px #0a0b0f;"><img src="assets/images/avatar5.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" /></span>
+        </div>
       </div>
     </section>
+    <!-- PLATFORM / NETWORK EXPLAINER -->
+    <section class="section section-alt" id="platform-explainer" aria-labelledby="platform-explainer-heading" style="margin-top:0;">
+      <div class="container" style="max-width:760px;">
+        <h2 id="platform-explainer-heading" style="font-size:2.1rem;font-weight:900;letter-spacing:-0.02em;margin-bottom:0.7rem;color:var(--gold);">A Controlled Network. Not a Feed.</h2>
+        <p style="font-size:1.13em;color:var(--text-2);margin-bottom:1.2rem;">Faceless Animal Studios is a live, identity-driven network. Every user is a signal. Every signal is protected by a unique code. You don’t just join — you enter a system built for privacy, control, and real presence. No noise. No fake engagement. No algorithmic chaos. Just you, your handle, and the network.</p>
+        <div class="platform-info-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2.2rem;margin-top:2.2rem;">
+          <div>
+            <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">Signal Code</h3>
+            <p style="color:var(--text-2);font-size:0.98em;">Your Signal Code is your private key to the network. It protects your identity, controls your access, and keeps your presence compartmentalized. No one can see your real info unless you allow it. Signal Codes are the backbone of user protection and privacy.</p>
+          </div>
+          <div>
+            <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">Coins & Economy</h3>
+            <p style="color:var(--text-2);font-size:0.98em;">Coins are the platform’s internal economy. Earn, spend, and use coins to unlock features, access premium rooms, or boost your signal. Coins are not a gimmick — they’re a real value layer for progression, access, and recognition inside the system.</p>
+          </div>
+          <div>
+            <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">User Protection</h3>
+            <p style="color:var(--text-2);font-size:0.98em;">Your movement is protected. Visibility is controlled. You decide what’s public, what’s private, and who can reach you. The system is designed to reduce noise, confusion, and exposure — so you can move with confidence.</p>
+          </div>
+          <div>
+            <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">How It Works</h3>
+            <p style="color:var(--text-2);font-size:0.98em;">Create your free username, enter the network, and claim your signal. You’ll get a profile, access to the radio, phone, miner, dashboard, and the full ecosystem. Everything is live, controlled, and built for real users — not bots or brands.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- INTEGRATED PLATFORM ENTRY POINTS -->
+    <section class="section" id="ecosystem" aria-label="Ecosystem preview" style="background:rgba(0,0,0,0.82);margin-top:2.5rem;">
+      <div class="container" style="max-width:900px;">
+        <div class="ecosystem-entry-row" style="display:flex;flex-wrap:wrap;gap:2.2rem;justify-content:center;align-items:stretch;">
+          <div class="ecosystem-entry-block" style="flex:1 1 220px;min-width:220px;max-width:270px;background:rgba(24,26,34,0.98);border-radius:18px;padding:1.5rem 1.2rem;box-shadow:0 2px 18px rgba(0,0,0,0.13);display:flex;flex-direction:column;align-items:center;">
+            <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">Directory</h3>
+            <p style="color:var(--text-2);font-size:0.98em;text-align:center;">Browse the network: artists, creators, and businesses. Real pages, real people, all moving through the same live platform.</p>
+            <a href="directory.html" class="btn btn-ghost" style="margin-top:1.1rem;">View Directory</a>
+          </div>
+          <div class="ecosystem-entry-block" style="flex:1 1 220px;min-width:220px;max-width:270px;background:rgba(24,26,34,0.98);border-radius:18px;padding:1.5rem 1.2rem;box-shadow:0 2px 18px rgba(0,0,0,0.13);display:flex;flex-direction:column;align-items:center;">
+            <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">Games</h3>
+            <p style="color:var(--text-2);font-size:0.98em;text-align:center;">Play original games built for the platform. Quick, live, and always evolving.</p>
+            <a href="games.html" class="btn btn-ghost" style="margin-top:1.1rem;">See Games</a>
+          </div>
+          <div class="ecosystem-entry-block" style="flex:1 1 220px;min-width:220px;max-width:270px;background:rgba(24,26,34,0.98);border-radius:18px;padding:1.5rem 1.2rem;box-shadow:0 2px 18px rgba(0,0,0,0.13);display:flex;flex-direction:column;align-items:center;">
+            <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">Music</h3>
+            <p style="color:var(--text-2);font-size:0.98em;text-align:center;">Listen to raw hip-hop, drill, and underground sound. Custom blends, mixes, and audio work from DJ Faceless Animal and more.</p>
+            <a href="music.html" class="btn btn-ghost" style="margin-top:1.1rem;">Explore Music</a>
+          </div>
+          <div class="ecosystem-entry-block" style="flex:1 1 220px;min-width:220px;max-width:270px;background:rgba(24,26,34,0.98);border-radius:18px;padding:1.5rem 1.2rem;box-shadow:0 2px 18px rgba(0,0,0,0.13);display:flex;flex-direction:column;align-items:center;">
+            <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">Radio</h3>
+            <p style="color:var(--text-2);font-size:0.98em;text-align:center;">Live radio, chat, and community. Tune in, join the room, and move through the underground network.</p>
+            <a href="radio.html" class="btn btn-ghost" style="margin-top:1.1rem;">Radio Room</a>
+          </div>
+          <div class="ecosystem-entry-block" style="flex:1 1 220px;min-width:220px;max-width:270px;background:rgba(24,26,34,0.98);border-radius:18px;padding:1.5rem 1.2rem;box-shadow:0 2px 18px rgba(0,0,0,0.13);display:flex;flex-direction:column;align-items:center;">
+            <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">Store</h3>
+            <p style="color:var(--text-2);font-size:0.98em;text-align:center;">Faceless Supply: merch, thrifted streetwear, retro gaming, and digital drops. Culture, identity, and nostalgia in one place.</p>
+            <a href="store.html" class="btn btn-ghost" style="margin-top:1.1rem;">Visit Store</a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- PHONE / IDENTITY LAYER SECTION -->
+    <section class="section" id="phone-section" aria-labelledby="phone-section-heading" style="background:rgba(0,0,0,0.85);margin-top:2.5rem;">
+      <div class="container" style="display:flex;flex-direction:column;align-items:center;gap:2.5rem;">
+        <div style="width:100%;max-width:420px;text-align:center;">
+          <img src="assets/phone.png" alt="Signal Phone" style="width:100%;max-width:220px;margin:0 auto 1.2rem;box-shadow:0 4px 32px rgba(0,0,0,0.18);border-radius:18px;" />
+          <h2 id="phone-section-heading" style="margin-bottom:0.5rem;">Signal Phone: Your Network Entry</h2>
+          <p style="margin-bottom:1.2rem;">
+            <strong>This is not just a visual phone widget.</strong> The Signal Phone is your entry point into the Faceless Animal Studios network. Signing up creates your free account and puts you inside the controlled network.<br><br>
+            <span style="color:var(--text-2);font-size:0.95em;">
+              The phone is your communication layer, identity layer, and system hub. When you enter, you’re not just browsing a website — you’re stepping into a live, controlled environment. Every action, every message, every connection is gated by Signal Codes. This is a network built for privacy, control, and underground movement.<br><br>
+            </span>
+          </p>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:1.2rem;justify-content:center;">
+          <a href="free.html" class="btn btn-primary btn-lg">Create My Free Username</a>
+          <a href="pricing.html" class="btn btn-ghost btn-lg">Compare Plans</a>
+          <a href="login.html" class="btn btn-ghost btn-lg">Sign In / Sign Up</a>
+        </div>
+      </div>
+    </section>
+    <!-- FOOTER / NAVIGATION -->
+    <footer class="footer" style="margin-top:3.5rem;padding:2rem 0 1.2rem;background:rgba(0,0,0,0.92);text-align:center;">
+      <div class="container">
+        <p style="color:var(--text-2);font-size:0.93em;">&copy; Faceless Animal Studios. All rights reserved.</p>
+        <nav style="margin-top:0.7rem;">
+          <a href="about.html" style="margin:0 0.7rem;">About</a>
+          <a href="directory.html" style="margin:0 0.7rem;">Directory</a>
+          <a href="radio.html" style="margin:0 0.7rem;">Radio</a>
+          <a href="store.html" style="margin:0 0.7rem;">Store</a>
+          <a href="contact.html" style="margin:0 0.7rem;">Contact</a>
+        </nav>
+      </div>
+    </footer>
   </main>
   <script>
     // Minimal, clean JS for nav toggle (no legacy logic)
@@ -75,7 +255,7 @@
       this.setAttribute('aria-expanded', !expanded);
       menu.classList.toggle('open');
     });
-    // (Optional) Insert globe widget logic here if needed, but keep it modular and public
   </script>
+  <script src="assets/js/live-globe.js"></script>
 </body>
 </html>
