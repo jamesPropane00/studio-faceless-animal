@@ -10,6 +10,73 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/style.css?v=20260322" />
 </head>
+<style>
+  .system-doc-bar {
+    --doc-link-color: rgba(255,255,255,0.75);
+    --doc-link-hover: #fff;
+    --doc-link-size: 11.5px;
+    --doc-link-line: 1.28;
+    --doc-link-gap: 0.07rem;
+    --doc-link-col-gap: 0.55rem;
+    --doc-link-row-gap: 0.09rem;
+  }
+  .system-doc-bar .doc-title {
+    font-size: 0.91em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--gold);
+    opacity: 0.92;
+    margin-bottom: 0.03em;
+  }
+  .system-doc-bar .doc-desc {
+    font-size: 0.89em;
+    color: var(--text-2);
+    opacity: 0.82;
+    line-height: 1.28;
+    margin-bottom: 0.09em;
+  }
+  .system-doc-bar .doc-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--doc-link-col-gap);
+    padding: 0.07rem 0 0 0;
+    font-size: var(--doc-link-size);
+    color: var(--doc-link-color);
+    line-height: var(--doc-link-line);
+  }
+  .system-doc-bar .doc-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--doc-link-row-gap);
+    min-width: 62px;
+    align-items: flex-start;
+  }
+  .system-doc-bar .doc-col a {
+    color: var(--doc-link-color);
+    text-decoration: none;
+    font-size: var(--doc-link-size);
+    line-height: var(--doc-link-line);
+    transition: color 0.13s;
+    padding: 0.04em 0.07em;
+    border-radius: 3px;
+  }
+  .system-doc-bar .doc-col a:hover,
+  .system-doc-bar .doc-col a:focus {
+    color: var(--doc-link-hover);
+    background: rgba(255,255,255,0.07);
+    outline: none;
+  }
+  @media (max-width: 600px) {
+    .system-doc-bar .doc-links {
+      gap: 0.32rem;
+    }
+    .system-doc-bar .doc-col {
+      min-width: 54px;
+    }
+  }
+</style>
+</head>
 <body>
   <nav class="navbar" role="navigation" aria-label="Main navigation">
     <div class="container">
@@ -57,72 +124,6 @@
         </div>
         <!-- System Documentation / Pre-Entry Knowledge Bar -->
         <section class="system-doc-bar" aria-label="Understand the System" style="margin-bottom:0.7rem;">
-          <style>
-            .system-doc-bar {
-              --doc-link-color: rgba(255,255,255,0.75);
-              --doc-link-hover: #fff;
-              --doc-link-size: 11.5px;
-              --doc-link-line: 1.28;
-              --doc-link-gap: 0.07rem;
-              --doc-link-col-gap: 0.55rem;
-              --doc-link-row-gap: 0.09rem;
-            }
-            .system-doc-bar .doc-title {
-              font-size: 0.91em;
-              font-weight: 700;
-              letter-spacing: 0.04em;
-              color: var(--gold);
-              opacity: 0.92;
-              margin-bottom: 0.03em;
-            }
-            .system-doc-bar .doc-desc {
-              font-size: 0.89em;
-              color: var(--text-2);
-              opacity: 0.82;
-              line-height: 1.28;
-              margin-bottom: 0.09em;
-            }
-            .system-doc-bar .doc-links {
-              display: flex;
-              flex-wrap: wrap;
-              justify-content: center;
-              gap: var(--doc-link-col-gap);
-              padding: 0.07rem 0 0 0;
-              font-size: var(--doc-link-size);
-              color: var(--doc-link-color);
-              line-height: var(--doc-link-line);
-            }
-            .system-doc-bar .doc-col {
-              display: flex;
-              flex-direction: column;
-              gap: var(--doc-link-row-gap);
-              min-width: 62px;
-              align-items: flex-start;
-            }
-            .system-doc-bar .doc-col a {
-              color: var(--doc-link-color);
-              text-decoration: none;
-              font-size: var(--doc-link-size);
-              line-height: var(--doc-link-line);
-              transition: color 0.13s;
-              padding: 0.04em 0.07em;
-              border-radius: 3px;
-            }
-            .system-doc-bar .doc-col a:hover,
-            .system-doc-bar .doc-col a:focus {
-              color: var(--doc-link-hover);
-              background: rgba(255,255,255,0.07);
-              outline: none;
-            }
-            @media (max-width: 600px) {
-              .system-doc-bar .doc-links {
-                gap: 0.32rem;
-              }
-              .system-doc-bar .doc-col {
-                min-width: 54px;
-              }
-            }
-          </style>
           <div style="text-align:center;margin-bottom:0.07rem;">
             <span class="doc-title">Understand the System</span>
             <span class="doc-desc">Before you enter, know the rules, economy, and identity structure of this network.</span>
