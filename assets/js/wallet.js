@@ -47,7 +47,8 @@ function showGate(isOpen) {
 }
 
 async function postMember(path, payload) {
-  const API_BASE = (location.port === '5500' || location.port === '5501') ? 'http://localhost:3000' : ''
+  // Force API_BASE to deployed endpoint (never localhost)
+  const API_BASE = ''
   const res = await fetch(API_BASE + path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

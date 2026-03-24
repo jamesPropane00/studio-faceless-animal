@@ -13,42 +13,52 @@ const FLOW_MAX_ELAPSED_MIN = 10
 
 export async function onRequestPost(context) {
   const { request, env } = context
-
-  const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY
-  const SUPA_URL = env.SUPABASE_URL
-  if (!SERVICE_KEY || !SUPA_URL) {
-    return jsonResponse({ ok: false, error: 'Server credentials not configured.' }, 503)
-  }
-
-  let body
   try {
-    body = await request.json()
-  } catch {
-    return jsonResponse({ ok: false, error: 'Invalid request body.' }, 400)
-  }
+    const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY
+    const SUPA_URL = env.SUPABASE_URL
+    if (!SERVICE_KEY || !SUPA_URL) {
+      console.error('[vault-flow-tick] Missing server credentials:', { SERVICE_KEY, SUPA_URL })
+      return jsonResponse({ ok: false, error: 'Server credentials not configured.' }, 503)
+    }
 
-  const username = String((body && body.username) || '').toLowerCase().trim()
-  const ph = String((body && body.ph) || '').trim()
-  if (!username || !ph) {
-    return jsonResponse({ ok: false, error: 'Missing username/ph.' }, 400)
-  }
+    let body
+    try {
+      body = await request.json()
+    } catch (err) {
+      console.error('[vault-flow-tick] Invalid request body:', err)
+      return jsonResponse({ ok: false, error: 'Invalid request body.' }, 400)
+    }
 
-  const identityOk = await verifyIdentity(SUPA_URL, SERVICE_KEY, username, ph)
-  if (!identityOk) {
-    return jsonResponse({ ok: false, error: 'Authentication failed.' }, 401)
-  }
+    const username = String((body && body.username) || '').toLowerCase().trim()
+    const ph = String((body && body.ph) || '').trim()
+    if (!username || !ph) {
+      console.error('[vault-flow-tick] Missing username/ph:', { username, ph })
+      return jsonResponse({ ok: false, error: 'Missing username/ph.' }, 400)
+    }
 
-  const row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username)
-  if (!row) {
-    return jsonResponse({ ok: false, error: 'Member row not found.' }, 404)
-  }
+    const identityOk = await verifyIdentity(SUPA_URL, SERVICE_KEY, username, ph)
+    if (!identityOk) {
+      console.error('[vault-flow-tick] Authentication failed for:', username)
+      return jsonResponse({ ok: false, error: 'Authentication failed.' }, 401)
+    }
 
-  const tickResult = await tickMemberVaultFlow(SUPA_URL, SERVICE_KEY, row)
-  if (!tickResult.ok) {
-    return jsonResponse({ ok: false, error: tickResult.error || 'Could not persist vault flow tick.' }, 500)
-  }
+    const row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username)
+    if (!row) {
+      console.error('[vault-flow-tick] Member row not found for:', username)
+      return jsonResponse({ ok: false, error: 'Member row not found.' }, 404)
+    }
 
-  return jsonResponse({ ok: true, ...tickResult.snapshot }, 200)
+    const tickResult = await tickMemberVaultFlow(SUPA_URL, SERVICE_KEY, row)
+    if (!tickResult.ok) {
+      console.error('[vault-flow-tick] Tick failed:', tickResult.error)
+      return jsonResponse({ ok: false, error: tickResult.error || 'Could not persist vault flow tick.' }, 500)
+    }
+
+    return jsonResponse({ ok: true, ...tickResult.snapshot }, 200)
+  } catch (err) {
+    console.error('[vault-flow-tick] Uncaught error:', err)
+    return jsonResponse({ ok: false, error: 'Internal server error.' }, 500)
+  }
 }
 
 export async function onRequestOptions() {

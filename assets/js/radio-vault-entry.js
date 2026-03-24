@@ -29,7 +29,8 @@ function setStatus(stateText, dotMode) {
 }
 
 async function fetchVaultSnapshot(session) {
-  var API_BASE = (location.port === '5500' || location.port === '5501') ? 'http://localhost:3000' : ''
+  // Force API_BASE to deployed endpoint (never localhost)
+  var API_BASE = ''
   var res = await fetch(API_BASE + '/api/member/vault-flow-tick', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

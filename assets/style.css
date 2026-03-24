@@ -1,3 +1,16 @@
+/* === Admin Radio Header Flex Fix === */
+.top-bar {
+  display: flex;
+  align-items: center;
+}
+.nav-links {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+.nav-links a {
+  margin-left: 20px;
+}
 /* ================================================================
    FACELESS ANIMAL STUDIOS — Shared Stylesheet
    Covers: index.html + artists/djfacelessanimal.html
@@ -3002,79 +3015,13 @@ p {
 .section-header.text-center .section-label,
 .section-header.text-center h2 { display: block; }
 
-.globe-wrap {
-  position: relative;
+/* Live Globe Widget Styles */
+#live-globe-widget {
   display: flex;
   justify-content: center;
-  margin: 1rem 0 3rem;
-}
-
-.globe {
-  position: relative;
-  width: 100%;
-  max-width: 860px;
-  aspect-ratio: 2 / 1;
-  border-radius: 50%;
-  border: 1px solid rgba(201,169,110,0.15);
-  background:
-    radial-gradient(ellipse 80% 80% at 50% 50%, rgba(201,169,110,0.03) 0%, transparent 70%),
-    var(--bg-3);
-  overflow: hidden;
-}
-
-/* CSS grid lines to simulate a globe wireframe */
-.globe-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent calc(20% - 1px),
-      rgba(201,169,110,0.06) calc(20% - 1px),
-      rgba(201,169,110,0.06) 20%
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent calc(12.5% - 1px),
-      rgba(201,169,110,0.06) calc(12.5% - 1px),
-      rgba(201,169,110,0.06) 12.5%
-    );
-  pointer-events: none;
-}
-
-.globe-pin {
-  position: absolute;
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
+  margin-bottom: 0.2rem;
 }
-
-.globe-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--gold);
-  box-shadow: 0 0 10px rgba(201,169,110,0.7), 0 0 20px rgba(201,169,110,0.3);
-  flex-shrink: 0;
-  animation: globe-pulse 2.5s ease-in-out infinite;
-}
-
-/* Stagger pulse animations so they don't all blink together */
-.globe-pin:nth-child(2) .globe-dot { animation-delay: 0.4s; }
-.globe-pin:nth-child(3) .globe-dot { animation-delay: 0.8s; }
-.globe-pin:nth-child(4) .globe-dot { animation-delay: 1.2s; }
-.globe-pin:nth-child(5) .globe-dot { animation-delay: 1.6s; }
-.globe-pin:nth-child(6) .globe-dot { animation-delay: 0.2s; }
-.globe-pin:nth-child(7) .globe-dot { animation-delay: 1.0s; }
-.globe-pin:nth-child(8) .globe-dot { animation-delay: 1.8s; }
-
-@keyframes globe-pulse {
-  0%, 100% { opacity: 1;   box-shadow: 0 0 10px rgba(201,169,110,0.7), 0 0 20px rgba(201,169,110,0.3); }
-  50%       { opacity: 0.5; box-shadow: 0 0 6px rgba(201,169,110,0.4), 0 0 12px rgba(201,169,110,0.15); }
-}
-
 .globe-label {
   font-size: 0.65rem;
   font-weight: 600;
@@ -3085,6 +3032,8 @@ p {
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   border: 1px solid var(--border-2);
+  display: inline-block;
+}
 }
 
 .global-cta {

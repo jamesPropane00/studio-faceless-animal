@@ -1102,6 +1102,99 @@
     }
 
   </script>
+</script>
+<script type="module">
+import { WebRTCAudioCall } from './assets/js/webrtc-audio.js';
+import { supabase, SUPABASE_READY } from './assets/js/supabase-client.js';
+
+let webrtcCall = null;
+let webrtcChannel = null;
+let localSignalId = null;
+let remoteSignalId = null;
+
+function getSignalIdForUser(user) {
+  // Use platform_id as the unique signal code
+  return user && user.platform_id ? user.platform_id : null;
+}
+
+function setupWebRTCSignaling(callId, localId, remoteId) {
+  if (!SUPABASE_READY || !supabase) return null;
+  const channelName = `webrtc-audio-${callId}`;
+  if (webrtcChannel) supabase.removeChannel(webrtcChannel);
+  webrtcChannel = supabase.channel(channelName);
+  webrtcChannel.on('broadcast', { event: 'signal' }, payload => {
+    if (!webrtcCall) return;
+    const { type, data } = payload.payload;
+    if (type === 'webrtc_offer') webrtcCall.handleOffer(data.offer);
+    if (type === 'webrtc_answer') webrtcCall.handleAnswer(data.answer);
+    if (type === 'ice_candidate') webrtcCall.handleIceCandidate(data.candidate);
+  });
+  webrtcChannel.subscribe();
+  return webrtcChannel;
+}
+
+function startWebRTCAudioCall(isCaller, callId, localId, remoteId) {
+  if (webrtcCall) webrtcCall.end();
+  webrtcCall = new WebRTCAudioCall({
+    callId,
+    localSignalId: localId,
+    remoteSignalId: remoteId,
+    onState: state => {
+      // Optionally update UI with call state
+      console.log('[WebRTC] State:', state);
+    },
+    onRemoteStream: stream => {
+      // Attach remote audio stream to audio element
+      let audio = document.getElementById('webrtc-remote-audio');
+      if (!audio) {
+        audio = document.createElement('audio');
+        audio.id = 'webrtc-remote-audio';
+        audio.autoplay = true;
+        document.body.appendChild(audio);
+      }
+      audio.srcObject = stream;
+    },
+    sendSignal: (type, data) => {
+      if (webrtcChannel) {
+        webrtcChannel.send({ type: 'broadcast', event: 'signal', payload: { type, data } });
+      }
+    }
+  });
+  if (isCaller) webrtcCall.startAsCaller();
+}
+
+// Patch call modal logic to start WebRTC after call is accepted
+const origCallRequestBtn = document.getElementById('call-request-btn');
+if (origCallRequestBtn) {
+  const origHandler = origCallRequestBtn.onclick;
+  origCallRequestBtn.onclick = async function(e) {
+    if (origHandler) await origHandler.call(this, e);
+    // After sending call request DM, start WebRTC signaling
+    if (!window.activePartnerMeta || !window.myUsername) return;
+    localSignalId = getSignalIdForUser({ platform_id: window.activePartnerMeta.platform_id });
+    remoteSignalId = getSignalIdForUser({ platform_id: window.activePartnerMeta.platform_id });
+    // Use a deterministic callId for both parties (e.g., sorted signal IDs)
+    const ids = [localSignalId, remoteSignalId].sort();
+    const callId = ids.join('-');
+    setupWebRTCSignaling(callId, localSignalId, remoteSignalId);
+    startWebRTCAudioCall(true, callId, localSignalId, remoteSignalId);
+  };
+}
+
+// Listen for incoming WebRTC offers (callee side)
+window.addEventListener('DOMContentLoaded', () => {
+  // Only set up if in a thread with a call param
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('call') === '1' && window.activePartnerMeta && window.myUsername) {
+    localSignalId = getSignalIdForUser({ platform_id: window.activePartnerMeta.platform_id });
+    remoteSignalId = getSignalIdForUser({ platform_id: window.activePartnerMeta.platform_id });
+    const ids = [localSignalId, remoteSignalId].sort();
+    const callId = ids.join('-');
+    setupWebRTCSignaling(callId, localSignalId, remoteSignalId);
+    startWebRTCAudioCall(false, callId, localSignalId, remoteSignalId);
+  }
+});
+</script>
   <script src="assets/js/radio-widget.js" defer></script>
 </body>
 </html>
