@@ -52,10 +52,37 @@ export async function onRequestPost(context) {
       return jsonResponse({ ok: false, error: 'Authentication failed.' }, 401)
     }
 
-    const row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username)
+
+    let row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username)
     if (!row) {
-      console.error('[vault-flow-tick] Member row not found for:', username)
-      return jsonResponse({ ok: false, error: 'Member row not found.' }, 404)
+      // Auto-create member row if missing
+      const createRes = await supabaseFetch(
+        SUPA_URL,
+        SERVICE_KEY,
+        'POST',
+        '/rest/v1/member_accounts',
+        {
+          username,
+          display_name: username,
+          credits_balance: 0,
+          veil_level: 1,
+          veil_state: 'active',
+          flow_last_tick_at: new Date().toISOString(),
+          flow_last_day: new Date().toISOString().slice(0, 10),
+          flow_earned_today: 0,
+          flow_rate_per_min: 0.2
+        }
+      );
+      if (!createRes.ok) {
+        console.error('[vault-flow-tick] Failed to auto-create member row for:', username)
+        return jsonResponse({ ok: false, error: 'Failed to auto-create member row.' }, 500)
+      }
+      // Try to fetch again
+      row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username)
+      if (!row) {
+        console.error('[vault-flow-tick] Member row still not found after auto-create:', username)
+        return jsonResponse({ ok: false, error: 'Member row not found after auto-create.' }, 500)
+      }
     }
 
     const tickResult = await tickMemberVaultFlow(SUPA_URL, SERVICE_KEY, row)

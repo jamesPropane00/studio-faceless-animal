@@ -76,7 +76,7 @@ const pulseApi = {
 
 // UI Bindings and State
 
-async function loadPulseBalance() {
+export async function loadPulseBalance() {
   const el = document.getElementById('pulseBalance');
   if (el) el.textContent = '...';
   try {
