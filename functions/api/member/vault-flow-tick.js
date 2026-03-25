@@ -1,4 +1,430 @@
 /**
+ * FACELESS ANIMAL STUDIOS — Simple Vault Flow Tick
+ * Cloudflare Pages Function
+ * POST /api/member/vault-flow-tick
+ */
+
+const FLOW_MAX_ELAPSED_MIN = 10;
+
+export async function onRequestPost(context) {
+  const { request, env } = context;
+
+  try {
+    const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
+    const SUPA_URL = env.SUPABASE_URL;
+
+    if (!SERVICE_KEY || !SUPA_URL) {
+      return jsonResponse(
+        { ok: false, step: 'env', error: 'Server credentials not configured.' },
+        503
+      );
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return jsonResponse(
+        { ok: false, step: 'body', error: 'Invalid request body.' },
+        400
+      );
+    }
+
+    const username = normalizeUsername(body && body.username);
+    const ph = String((body && body.ph) || '').trim();
+
+    if (!username || !ph) {
+      return jsonResponse(
+        { ok: false, step: 'input', error: 'Missing username/ph.' },
+        400
+      );
+    }
+
+    let row = null;
+
+    const lookup = await getMemberRow(SUPA_URL, SERVICE_KEY, username);
+    if (!lookup.ok) {
+      return jsonResponse(
+        {
+          ok: false,
+          step: 'select1',
+          error: lookup.error,
+          detail: lookup.detail || null
+        },
+        lookup.status || 500
+      );
+    }
+    row = lookup.row;
+
+    if (!row) {
+      const created = await createMemberRow(SUPA_URL, SERVICE_KEY, username, ph);
+      if (!created.ok) {
+        return jsonResponse(
+          {
+            ok: false,
+            step: 'insert',
+            error: created.error,
+            detail: created.detail || null
+          },
+          created.status || 500
+        );
+      }
+      row = created.row;
+    }
+
+    const identityOk = await verifyIdentity(SUPA_URL, SERVICE_KEY, username, ph);
+    if (!identityOk) {
+      return jsonResponse(
+        { ok: false, step: 'auth', error: 'Authentication failed.' },
+        401
+      );
+    }
+
+    const result = await claimFlow(SUPA_URL, SERVICE_KEY, row);
+    if (!result.ok) {
+      return jsonResponse(
+        { ok: false, step: 'claim', error: result.error || 'Claim failed.' },
+        500
+      );
+    }
+
+    return jsonResponse({ ok: true, ...result.snapshot }, 200);
+  } catch (err) {
+    return jsonResponse(
+      { ok: false, step: 'catch', error: String(err) },
+      500
+    );
+  }
+}
+
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders()
+  });
+}
+
+function normalizeUsername(value) {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9_-]/g, '');
+}
+
+async function verifyIdentity(supabaseUrl, serviceKey, username, ph) {
+  const u = normalizeUsername(username);
+  if (!u || !ph) return false;
+
+  const filter =
+    `username=eq.${encodeURIComponent(u)}` +
+    `&password_hash=eq.${encodeURIComponent(ph)}` +
+    `&select=id`;
+
+  const res = await supabaseFetch(
+    supabaseUrl,
+    serviceKey,
+    'GET',
+    `/rest/v1/member_accounts?${filter}`,
+    null
+  );
+
+  if (!res.ok) return false;
+
+  try {
+    const rows = await res.json();
+    return Array.isArray(rows) && rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+async function getMemberRow(supabaseUrl, serviceKey, username) {
+  const u = normalizeUsername(username);
+
+  const path =
+    `/rest/v1/member_accounts?username=eq.${encodeURIComponent(u)}` +
+    `&select=id,username,display_name,credits_balance,veil_level,veil_state,flow_earned_today,flow_rate_per_min,flow_last_tick_at,flow_last_day` +
+    `&limit=1`;
+
+  let res;
+  try {
+    res = await supabaseFetch(supabaseUrl, serviceKey, 'GET', path, null);
+  } catch (err) {
+    return {
+      ok: false,
+      status: 500,
+      error: 'Fetch failed',
+      detail: String(err)
+    };
+  }
+
+  if (!res.ok) {
+    let detail = '';
+    try {
+      detail = await res.text();
+    } catch {
+      detail = '';
+    }
+
+    return {
+      ok: false,
+      status: res.status,
+      error: 'Supabase lookup failed',
+      detail
+    };
+  }
+
+  try {
+    const rows = await res.json();
+    return {
+      ok: true,
+      row: Array.isArray(rows) && rows.length > 0 ? rows[0] : null
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      status: 500,
+      error: 'JSON parse error',
+      detail: String(err)
+    };
+  }
+}
+
+async function createMemberRow(supabaseUrl, serviceKey, username, ph) {
+  const now = new Date();
+
+  let res;
+  let text = '';
+
+  try {
+    res = await fetch(`${supabaseUrl}/rest/v1/member_accounts`, {
+      method: 'POST',
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation'
+      },
+      body: JSON.stringify({
+        username,
+        display_name: username,
+        plan_type: 'free',
+        member_status: 'free',
+        password_hash: ph,
+        credits_balance: 0,
+        veil_level: 1,
+        veil_state: 'active',
+        flow_earned_today: 0,
+        flow_rate_per_min: 0.2,
+        flow_last_tick_at: now.toISOString(),
+        flow_last_day: utcDayKey(now)
+      })
+    });
+
+    text = await res.text();
+  } catch (err) {
+    return {
+      ok: false,
+      status: 500,
+      error: 'Create request failed',
+      detail: String(err)
+    };
+  }
+
+  if (!res.ok && res.status !== 409) {
+    return {
+      ok: false,
+      status: res.status,
+      error: 'Auto-create failed',
+      detail: text
+    };
+  }
+
+  if (res.ok) {
+    try {
+      const rows = JSON.parse(text);
+      if (Array.isArray(rows) && rows.length > 0) {
+        return { ok: true, row: rows[0] };
+      }
+    } catch {
+      // ignore parse failure and do readback below
+    }
+  }
+
+  const lookup = await getMemberRow(supabaseUrl, serviceKey, username);
+  if (!lookup.ok) return lookup;
+  if (!lookup.row) {
+    return {
+      ok: false,
+      status: 500,
+      error: 'Member row not found after create',
+      detail: text
+    };
+  }
+
+  return { ok: true, row: lookup.row };
+}
+
+async function claimFlow(supabaseUrl, serviceKey, row) {
+  if (!row || !row.username) {
+    return { ok: false, error: 'Member row not found.' };
+  }
+
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const todayKey = utcDayKey(now);
+
+  const balance = Math.max(0, Number(row.credits_balance || 0));
+  const flowRate = Math.max(0, Number(row.flow_rate_per_min || 0.2));
+
+  let earnedToday = Math.max(0, Number(row.flow_earned_today || 0));
+  const storedDay = String(row.flow_last_day || '').slice(0, 10);
+  if (!storedDay || storedDay !== todayKey) {
+    earnedToday = 0;
+  }
+
+  const lastTickRaw = String(row.flow_last_tick_at || '');
+  const lastTickMs = lastTickRaw ? Date.parse(lastTickRaw) : Date.now();
+  const nowMs = Date.now();
+
+  let elapsedMs = nowMs - (Number.isFinite(lastTickMs) ? lastTickMs : nowMs);
+  if (!Number.isFinite(elapsedMs) || elapsedMs < 0) elapsedMs = 0;
+
+  let elapsedMin = elapsedMs / 60000;
+  elapsedMin = Math.max(0, Math.min(elapsedMin, FLOW_MAX_ELAPSED_MIN));
+
+  const generated = toFixedNumber(flowRate * elapsedMin, 4);
+  const nextBalance = toFixedNumber(balance + generated, 4);
+  const nextEarnedToday = toFixedNumber(earnedToday + generated, 4);
+
+  const patchBody = {
+    credits_balance: nextBalance,
+    flow_last_tick_at: nowIso,
+    flow_last_day: todayKey,
+    flow_earned_today: nextEarnedToday,
+    flow_rate_per_min: flowRate
+  };
+
+  const writePath =
+    `/rest/v1/member_accounts?username=eq.${encodeURIComponent(normalizeUsername(row.username))}`;
+
+  const writeRes = await supabaseFetch(
+    supabaseUrl,
+    serviceKey,
+    'PATCH',
+    writePath,
+    patchBody
+  );
+
+  if (!writeRes.ok) {
+    let detail = '';
+    try {
+      detail = await writeRes.text();
+    } catch {
+      detail = '';
+    }
+
+    return {
+      ok: false,
+      error: `Could not persist wallet update.${detail ? ` ${detail}` : ''}`
+    };
+  }
+
+  const mergedRow = {
+    ...row,
+    ...patchBody
+  };
+
+  return {
+    ok: true,
+    snapshot: {
+      credits_balance: nextBalance,
+      flow_rate_per_min: flowRate,
+      flow_earned_today: nextEarnedToday,
+      daily_cap: null,
+      veil_level: Number(mergedRow.veil_level || 1),
+      veil_label: 'Free',
+      veil_multiplier: 1,
+      vault_tier_label: 'Free',
+      generated,
+      elapsed_minutes: toFixedNumber(elapsedMin, 4),
+      ticked_at: nowIso
+    }
+  };
+}
+
+function toFixedNumber(value, digits) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n)) return 0;
+  const p = Math.pow(10, digits);
+  return Math.round(n * p) / p;
+}
+
+function utcDayKey(date) {
+  const d = date instanceof Date ? date : new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function supabaseFetch(supabaseUrl, serviceKey, method, urlPath, jsonBody) {
+  return fetch(`${supabaseUrl}${urlPath}`, {
+    method,
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: jsonBody != null ? JSON.stringify(jsonBody) : undefined
+  });
+}
+
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders()
+    }
+  });
+}
+
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+  };
+}
+/**
+ * FACELESS ANIMAL STUDIOS — Simple Vault Flow Tick
+ * Cloudflare Pages Function
+ * POST /api/member/vault-flow-tick
+ */
+
+const FLOW_MAX_ELAPSED_MIN = 10;
+
+export async function onRequestPost(context) {
+  const { request, env } = context;
+
+  try {
+    const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
+    const SUPA_URL = env.SUPABASE_URL;
+
+    if (!SERVICE_KEY || !SUPA_URL) {
+      return jsonResponse(
+        { ok: false, step: 'env', error: 'Server credentials not configured.' },
+        503
+      );
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+/**
  * FACELESS ANIMAL STUDIOS — Member Vault Flow Tick
  * Cloudflare Pages Function
  * POST /api/member/vault-flow-tick
