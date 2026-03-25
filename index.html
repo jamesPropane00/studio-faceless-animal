@@ -1,15 +1,132 @@
 
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=/landingpage.html">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Redirecting...</title>
-  <link rel="canonical" href="/landingpage.html">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Faceless Signal</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #000;
+      overflow: hidden;
+      font-family: 'Share Tech Mono', 'Fira Mono', 'Consolas', monospace;
+      color: #ffd700;
+      min-height: 100vh;
+      width: 100vw;
+      position: relative;
+    }
+    canvas {
+      display: block;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .overlay-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #ffd700;
+      font-size: 1.1rem;
+      opacity: 0.88;
+      letter-spacing: 2.5px;
+      pointer-events: none;
+      z-index: 2;
+      text-shadow: 0 0 8px #ffd70044, 0 0 2px #000;
+      transition: filter 0.18s, opacity 0.18s;
+    }
+    .overlay-text span {
+      display: block;
+      margin: 10px 0;
+      font-size: 1.1em;
+      line-height: 1.3;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      opacity: 0.92;
+    }
+    .glitch {
+      animation: flicker 0.18s 1;
+    }
+    @keyframes flicker {
+      0% { opacity: 0.7; filter: blur(0.5px) brightness(1.2); }
+      30% { opacity: 1; filter: blur(1.5px) brightness(1.3); }
+      60% { opacity: 0.8; filter: blur(0.8px) brightness(1.1); }
+      100% { opacity: 0.88; filter: none; }
+    }
+    @media (max-width: 600px) {
+      .overlay-text { font-size: 0.92rem; }
+      .overlay-text span { font-size: 1em; }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
-  <p>Redirecting to <a href="/landingpage.html">landingpage.html</a>...</p>
+  <canvas id="matrix"></canvas>
+  <div class="overlay-text" id="overlayText">
+    <span>YOU ARE BEING WATCHED</span>
+    <span>EVERY MOVE IS LOGGED</span>
+    <span>EVERY ACTION TRACKED</span>
+    <span>SIGNAL DETECTED</span>
+    <span>ENTERING SYSTEM...</span>
+  </div>
+  <script>
+    // Matrix-style falling text
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d");
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener("resize", resize);
+    const letters = "FACELLESSIGNAL0123456789";
+    const fontSize = 18;
+    let columns = Math.floor(canvas.width / fontSize);
+    let drops = Array(columns).fill(1);
+    function draw() {
+      ctx.fillStyle = "rgba(0,0,0,0.08)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ffd700";
+      ctx.font = fontSize + "px 'Share Tech Mono', monospace";
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+    setInterval(draw, 33);
+    // Responsive columns on resize
+    window.addEventListener('resize', () => {
+      columns = Math.floor(canvas.width / fontSize);
+      drops = Array(columns).fill(1);
+    });
+    // Overlay text flicker/glitch effect
+    const overlay = document.getElementById('overlayText');
+    function glitchOverlay() {
+      overlay.classList.remove('glitch');
+      // Force reflow
+      void overlay.offsetWidth;
+      overlay.classList.add('glitch');
+    }
+    setInterval(glitchOverlay, 1700 + Math.random() * 1200);
+    // Redirect after 4 seconds
+    setTimeout(() => {
+      window.location.href = "/landing.html";
+    }, 4000);
+  </script>
 </body>
 </html>
         <div class="about-intro-block">
