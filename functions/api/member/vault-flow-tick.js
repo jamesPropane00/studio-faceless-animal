@@ -91,39 +91,46 @@ export async function onRequestPost(context) {
     }
 
     return jsonResponse({ ok: true, ...tickResult.snapshot }, 200);
-  } catch (err) {
-    console.error("vault-flow-tick error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
-}
-
-export async function onRequestOptions() {
-  return new Response(null, { status: 204, headers: corsHeaders() })
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-async function verifyIdentity(supabaseUrl, serviceKey, username, ph) {
-  if (!username || !ph) return false
-  const u = username.toLowerCase().replace(/[^a-z0-9_-]/g, '')
-  if (!u) return false
-  const filter = `username=eq.${encodeURIComponent(u)}&password_hash=eq.${encodeURIComponent(ph)}&select=username`
-  const res = await supabaseFetch(supabaseUrl, serviceKey, 'GET', `/rest/v1/member_accounts?${filter}`, null)
-  if (!res.ok) return false
-  try {
-    const rows = await res.json()
-    return Array.isArray(rows) && rows.length > 0
-  } catch {
-    return false
-  }
-}
-
-async function getMemberVaultRow(supabaseUrl, serviceKey, username) {
-  const u = String(username || '').toLowerCase().trim()
-  if (!u) return null
+      try {
+        const createRes = await fetch(
+          `${SUPA_URL}/rest/v1/member_accounts`,
+          {
+            method: 'POST',
+            headers: {
+              apikey: SERVICE_KEY,
+              Authorization: `Bearer ${SERVICE_KEY}`,
+              'Content-Type': 'application/json',
+              Prefer: 'return=representation'
+            },
+            body: JSON.stringify({
+              username,
+              display_name: username,
+              credits_balance: 0,
+              veil_level: 1,
+              flow_rate_per_min: 0.2,
+              password_hash: ph,
+              plan_type: 'free',
+              member_status: 'free'
+            })
+          }
+        );
+        const bodyText = await createRes.text();
+        if (!createRes.ok) {
+          return jsonResponse({
+            ok: false,
+            error: "AUTO_CREATE_FAILED",
+            status: createRes.status,
+            statusText: createRes.statusText,
+            body: bodyText
+          }, 500);
+        }
+      } catch (insertError) {
+        return jsonResponse({
+          ok: false,
+          error: "AUTO_CREATE_EXCEPTION",
+          detail: String(insertError)
+        }, 500);
+      }
   const path = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(u)}&select=id,username,display_name,platform_id,veil_level,veil_state,credits_balance,flow_last_tick_at,flow_last_day,flow_earned_today,flow_rate_per_min&limit=1`
   const res = await supabaseFetch(supabaseUrl, serviceKey, 'GET', path, null)
   if (!res.ok) return null
