@@ -19,7 +19,7 @@ const FLOW_MAX_ELAPSED_MIN = 10;
 const FLOW_TICK_INTERVAL_MS = 15000;
 
 // Import centralized Veil config
-const { getVeilTier } = require('./veil-tiers.js');
+import { getVeilTier } from './veil-tiers.js';
 
 export async function onRequestPost(context) {
   console.log("vault-flow-tick hit");
@@ -32,32 +32,28 @@ export async function onRequestPost(context) {
       return jsonResponse({ ok: false, error: 'Server credentials not configured.' }, 503);
     }
 
-    let body;
-    try {
-      body = await request.json();
-    } catch (err) {
-      console.error('[vault-flow-tick] Invalid request body:', err);
-      return jsonResponse({ ok: false, error: 'Invalid request body.' }, 400);
-    }
-
-    const username = String((body && body.username) || '').toLowerCase().trim();
-    const ph = String((body && body.ph) || '').trim();
-    if (!username || !ph) {
-      console.error('[vault-flow-tick] Missing username/ph:', { username, ph });
-      return jsonResponse({ ok: false, error: 'Missing username/ph.' }, 400);
-    }
-
-    const identityOk = await verifyIdentity(SUPA_URL, SERVICE_KEY, username, ph);
-    if (!identityOk) {
-      console.error('[vault-flow-tick] Authentication failed for:', username);
-      return jsonResponse({ ok: false, error: 'Authentication failed.' }, 401);
-    }
-
-    let row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username);
-    if (!row) {
-      // Auto-create member row if missing
       try {
         const createRes = await supabaseFetch(
+          SUPA_URL,
+          SERVICE_KEY,
+          'POST',
+          '/rest/v1/member_accounts',
+          {
+            username,
+            display_name: username,
+            credits_balance: 0,
+            veil_level: 1,
+            flow_rate_per_min: 0.2
+          }
+        );
+        if (!createRes.ok) {
+          let errText = '';
+          try { errText = await createRes.text(); } catch {}
+          console.error('[vault-flow-tick] Failed to auto-create member row for:', username, errText);
+        }
+      } catch (insertError) {
+        console.error("member insert failed:", insertError);
+      }
           SUPA_URL,
           SERVICE_KEY,
           'POST',
