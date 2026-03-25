@@ -145,7 +145,6 @@ export async function onRequestPost(context) {
   } catch (err) {
     return jsonResponse({ ok: false, step: 'catch', error: String(err) }, 500);
   }
-}
   const path = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(u)}&select=id,username,display_name,platform_id,veil_level,veil_state,credits_balance,flow_last_tick_at,flow_last_day,flow_earned_today,flow_rate_per_min&limit=1`
   const res = await supabaseFetch(supabaseUrl, serviceKey, 'GET', path, null)
   if (!res.ok) return null
