@@ -158,15 +158,15 @@ export async function onRequestPost(context) {
       }
       // Step 3: Use returned row if available, else fallback to SELECT
       if (!row) {
-        row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username);
-        if (!row) {
-          return jsonResponse({
-            ok: false,
-            step: 'readback',
-            error: 'Member row not found after auto-create.',
-            detail: { username }
-          }, 500);
-        }
+        // Expose full insert debug info if row is still missing after insert
+        return jsonResponse({
+          ok: false,
+          step: 'insert_debug',
+          status: createRes.status,
+          statusText: createRes.statusText,
+          body: bodyText,
+          note: 'Insert did not produce a usable row'
+        }, 500);
       }
   const path = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(u)}&select=id,username,display_name,platform_id,veil_level,veil_state,credits_balance,flow_last_tick_at,flow_last_day,flow_earned_today,flow_rate_per_min&limit=1`
   const res = await supabaseFetch(supabaseUrl, serviceKey, 'GET', path, null)
