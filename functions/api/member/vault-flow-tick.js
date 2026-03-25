@@ -9,7 +9,7 @@ import { getVeilTier } from './veil-tiers.js';
 const FLOW_MAX_ELAPSED_MIN = 10;
 const FLOW_TICK_INTERVAL_MS = 15000;
 
-export async function onRequestPost(context) {
+export const onRequestPost = async (context) => {
   const { request, env } = context;
 
   try {
