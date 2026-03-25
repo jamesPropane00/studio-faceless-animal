@@ -225,8 +225,8 @@ async function tickFlow(reason) {
       ph: String(session.ph || ''),
     })
     applySnapshot(data)
-    nextTickAt = Date.now() + FLOW_TICK_INTERVAL_MS
     renderSnapshot()
+    nextTickAt = Date.now() + FLOW_TICK_INTERVAL_MS
     if (note) note.textContent = reason || 'Flow Active. Reactor synced.'
     pushFeed('Veil Engine tick complete. ' + fmtSc(data.generated || 0) + ' generated.', 'ok')
   } catch (err) {
