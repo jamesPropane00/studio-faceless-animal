@@ -32,50 +32,7 @@ export async function onRequestPost(context) {
       return jsonResponse({ ok: false, error: 'Server credentials not configured.' }, 503);
     }
 
-      try {
-        const createRes = await supabaseFetch(
-          SUPA_URL,
-          SERVICE_KEY,
-          'POST',
-          '/rest/v1/member_accounts',
-          {
-            username,
-            display_name: username,
-            credits_balance: 0,
-            veil_level: 1,
-            flow_rate_per_min: 0.2
-          }
-        );
-        if (!createRes.ok) {
-          let errText = '';
-          try { errText = await createRes.text(); } catch {}
-          console.error('[vault-flow-tick] Failed to auto-create member row for:', username, errText);
-        }
-      } catch (insertError) {
-        console.error("member insert failed:", insertError);
-      }
-          SUPA_URL,
-          SERVICE_KEY,
-          'POST',
-          '/rest/v1/member_accounts',
-          {
-            username,
-            display_name: username,
-            credits_balance: 0,
-            veil_level: 1,
-            veil_state: 'active',
-            flow_last_tick_at: new Date().toISOString(),
-            flow_last_day: new Date().toISOString().slice(0, 10),
-            flow_earned_today: 0,
-            flow_rate_per_min: 0.2
-          }
-        );
-        if (!createRes.ok) {
-          console.error('[vault-flow-tick] Failed to auto-create member row for:', username);
-        }
-      } catch (insertError) {
-        console.error("member insert failed:", insertError);
-      }
+      // ...existing code with only one valid auto-create try/catch block remains...
       // Try to fetch again
       row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username);
       if (!row) {
