@@ -22,79 +22,85 @@ const FLOW_TICK_INTERVAL_MS = 15000;
 const { getVeilTier } = require('./veil-tiers.js');
 
 export async function onRequestPost(context) {
-  const { request, env } = context
+  console.log("vault-flow-tick hit");
+  const { request, env } = context;
   try {
-    const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY
-    const SUPA_URL = env.SUPABASE_URL
+    const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
+    const SUPA_URL = env.SUPABASE_URL;
     if (!SERVICE_KEY || !SUPA_URL) {
-      console.error('[vault-flow-tick] Missing server credentials:', { SERVICE_KEY, SUPA_URL })
-      return jsonResponse({ ok: false, error: 'Server credentials not configured.' }, 503)
+      console.error('[vault-flow-tick] Missing server credentials:', { SERVICE_KEY, SUPA_URL });
+      return jsonResponse({ ok: false, error: 'Server credentials not configured.' }, 503);
     }
 
-    let body
+    let body;
     try {
-      body = await request.json()
+      body = await request.json();
     } catch (err) {
-      console.error('[vault-flow-tick] Invalid request body:', err)
-      return jsonResponse({ ok: false, error: 'Invalid request body.' }, 400)
+      console.error('[vault-flow-tick] Invalid request body:', err);
+      return jsonResponse({ ok: false, error: 'Invalid request body.' }, 400);
     }
 
-    const username = String((body && body.username) || '').toLowerCase().trim()
-    const ph = String((body && body.ph) || '').trim()
+    const username = String((body && body.username) || '').toLowerCase().trim();
+    const ph = String((body && body.ph) || '').trim();
     if (!username || !ph) {
-      console.error('[vault-flow-tick] Missing username/ph:', { username, ph })
-      return jsonResponse({ ok: false, error: 'Missing username/ph.' }, 400)
+      console.error('[vault-flow-tick] Missing username/ph:', { username, ph });
+      return jsonResponse({ ok: false, error: 'Missing username/ph.' }, 400);
     }
 
-    const identityOk = await verifyIdentity(SUPA_URL, SERVICE_KEY, username, ph)
+    const identityOk = await verifyIdentity(SUPA_URL, SERVICE_KEY, username, ph);
     if (!identityOk) {
-      console.error('[vault-flow-tick] Authentication failed for:', username)
-      return jsonResponse({ ok: false, error: 'Authentication failed.' }, 401)
+      console.error('[vault-flow-tick] Authentication failed for:', username);
+      return jsonResponse({ ok: false, error: 'Authentication failed.' }, 401);
     }
 
-
-    let row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username)
+    let row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username);
     if (!row) {
       // Auto-create member row if missing
-      const createRes = await supabaseFetch(
-        SUPA_URL,
-        SERVICE_KEY,
-        'POST',
-        '/rest/v1/member_accounts',
-        {
-          username,
-          display_name: username,
-          credits_balance: 0,
-          veil_level: 1,
-          veil_state: 'active',
-          flow_last_tick_at: new Date().toISOString(),
-          flow_last_day: new Date().toISOString().slice(0, 10),
-          flow_earned_today: 0,
-          flow_rate_per_min: 0.2
+      try {
+        const createRes = await supabaseFetch(
+          SUPA_URL,
+          SERVICE_KEY,
+          'POST',
+          '/rest/v1/member_accounts',
+          {
+            username,
+            display_name: username,
+            credits_balance: 0,
+            veil_level: 1,
+            veil_state: 'active',
+            flow_last_tick_at: new Date().toISOString(),
+            flow_last_day: new Date().toISOString().slice(0, 10),
+            flow_earned_today: 0,
+            flow_rate_per_min: 0.2
+          }
+        );
+        if (!createRes.ok) {
+          console.error('[vault-flow-tick] Failed to auto-create member row for:', username);
         }
-      );
-      if (!createRes.ok) {
-        console.error('[vault-flow-tick] Failed to auto-create member row for:', username)
-        return jsonResponse({ ok: false, error: 'Failed to auto-create member row.' }, 500)
+      } catch (insertError) {
+        console.error("member insert failed:", insertError);
       }
       // Try to fetch again
-      row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username)
+      row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username);
       if (!row) {
-        console.error('[vault-flow-tick] Member row still not found after auto-create:', username)
-        return jsonResponse({ ok: false, error: 'Member row not found after auto-create.' }, 500)
+        console.error('[vault-flow-tick] Member row still not found after auto-create:', username);
+        return jsonResponse({ ok: false, error: 'Member row not found after auto-create.' }, 500);
       }
     }
 
-    const tickResult = await tickMemberVaultFlow(SUPA_URL, SERVICE_KEY, row)
+    const tickResult = await tickMemberVaultFlow(SUPA_URL, SERVICE_KEY, row);
     if (!tickResult.ok) {
-      console.error('[vault-flow-tick] Tick failed:', tickResult.error)
-      return jsonResponse({ ok: false, error: tickResult.error || 'Could not persist vault flow tick.' }, 500)
+      console.error('[vault-flow-tick] Tick failed:', tickResult.error);
+      return jsonResponse({ ok: false, error: tickResult.error || 'Could not persist vault flow tick.' }, 500);
     }
 
-    return jsonResponse({ ok: true, ...tickResult.snapshot }, 200)
+    return jsonResponse({ ok: true, ...tickResult.snapshot }, 200);
   } catch (err) {
-    console.error('[vault-flow-tick] Uncaught error:', err)
-    return jsonResponse({ ok: false, error: 'Internal server error.' }, 500)
+    console.error("vault-flow-tick error:", err);
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
 }
 
