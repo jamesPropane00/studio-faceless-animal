@@ -178,7 +178,11 @@ async function tickMemberVaultFlow(supabaseUrl, serviceKey, row) {
   // Enforce tick interval: must be >= 15s
   if (elapsedMs < FLOW_TICK_INTERVAL_MS) {
     return { ok: false, error: 'Tick too soon. Wait at least 15 seconds between ticks.' };
-  }
+          const lookup = await getMemberVaultRowMaybeSingle(SUPA_URL, SERVICE_KEY, username);
+          if (!lookup.ok) {
+            return jsonResponse({ ok: false, step: 'select1', error: lookup.error, detail: lookup, status: lookup.status || 500 }, lookup.status || 500);
+          }
+          row = lookup.row;
   let elapsedMin = Math.max(0, elapsedMs / 60000);
   elapsedMin = Math.min(elapsedMin, FLOW_MAX_ELAPSED_MIN);
 
