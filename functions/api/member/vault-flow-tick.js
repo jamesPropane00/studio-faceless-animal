@@ -32,22 +32,29 @@ export async function onRequestPost(context) {
       return jsonResponse({ ok: false, error: 'Server credentials not configured.' }, 503);
     }
 
-      // ...existing code with only one valid auto-create try/catch block remains...
-      // Try to fetch again
+    // Parse request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (err) {
+      return jsonResponse({ ok: false, step: 'body', error: 'Invalid request body.' }, 400);
+    }
+
+    const usernameRaw = body && body.username;
+    const ph = String((body && body.ph) || '').trim();
+    const username = String(usernameRaw || '').toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
+    if (!username || !ph) {
+      return jsonResponse({ ok: false, step: 'input', error: 'Missing username/ph.' }, 400);
+    }
+
+    // Step 1: Try to fetch member row
+    let row = null;
+    try {
       row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username);
-      if (!row) {
-        console.error('[vault-flow-tick] Member row still not found after auto-create:', username);
-        return jsonResponse({ ok: false, error: 'Member row not found after auto-create.' }, 500);
-      }
+    } catch (err) {
+      return jsonResponse({ ok: false, step: 'select1', error: 'Initial select failed', detail: String(err) }, 500);
     }
-
-    const tickResult = await tickMemberVaultFlow(SUPA_URL, SERVICE_KEY, row);
-    if (!tickResult.ok) {
-      console.error('[vault-flow-tick] Tick failed:', tickResult.error);
-      return jsonResponse({ ok: false, error: tickResult.error || 'Could not persist vault flow tick.' }, 500);
-    }
-
-    return jsonResponse({ ok: true, ...tickResult.snapshot }, 200);
+    if (!row) {
       // Step 2: Insert minimal valid row
       let createRes, bodyText, insertRow;
       try {
@@ -125,6 +132,20 @@ export async function onRequestPost(context) {
           note: 'Insert did not produce a usable row'
         }, 500);
       }
+    }
+
+    // Step 4: Tick business logic
+    const tickResult = await tickMemberVaultFlow(SUPA_URL, SERVICE_KEY, row);
+    if (!tickResult.ok) {
+      console.error('[vault-flow-tick] Tick failed:', tickResult.error);
+      return jsonResponse({ ok: false, error: tickResult.error || 'Could not persist vault flow tick.' }, 500);
+    }
+
+    return jsonResponse({ ok: true, ...tickResult.snapshot }, 200);
+  } catch (err) {
+    return jsonResponse({ ok: false, step: 'catch', error: String(err) }, 500);
+  }
+}
   const path = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(u)}&select=id,username,display_name,platform_id,veil_level,veil_state,credits_balance,flow_last_tick_at,flow_last_day,flow_earned_today,flow_rate_per_min&limit=1`
   const res = await supabaseFetch(supabaseUrl, serviceKey, 'GET', path, null)
   if (!res.ok) return null
