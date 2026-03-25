@@ -26,8 +26,8 @@ function qs(id) {
 
 function fmtSc(v) {
   const n = Number(v || 0)
-  if (!Number.isFinite(n)) return '0 SC'
-  return n.toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' SC'
+  if (!Number.isFinite(n)) return '0 Signal Coin (SC)'
+  return n.toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' Signal Coin (SC)'
 }
 
 function normalizeSignalCode(raw) {
@@ -77,9 +77,18 @@ function applySnapshot(data) {
   if (Object.prototype.hasOwnProperty.call(data, 'daily_cap')) {
     snapshot.daily_cap = data.daily_cap == null ? null : Math.max(0, Number(data.daily_cap || 0))
   }
-  if (Object.prototype.hasOwnProperty.call(data, 'vault_tier_label')) {
-    snapshot.vault_tier_label = String(data.vault_tier_label || 'Free')
-  }
+    if (Object.prototype.hasOwnProperty.call(data, 'vault_tier_label')) {
+      snapshot.vault_tier_label = String(data.vault_tier_label || 'Free');
+    }
+    if (Object.prototype.hasOwnProperty.call(data, 'veil_level')) {
+      snapshot.veil_level = Number(data.veil_level || 0);
+    }
+    if (Object.prototype.hasOwnProperty.call(data, 'veil_label')) {
+      snapshot.veil_label = String(data.veil_label || '');
+    }
+    if (Object.prototype.hasOwnProperty.call(data, 'veil_multiplier')) {
+      snapshot.veil_multiplier = Number(data.veil_multiplier || 1);
+    }
 }
 
 function renderTransferPreview() {

@@ -384,11 +384,11 @@
           <div class="totals-grid">
             <div class="total-box">
               <p class="label">Vault Balance</p>
-              <p id="wallet-sc-balance" class="value">0 SC</p>
+              <p id="wallet-sc-balance" class="value">0 Signal Coin (SC)</p>
             </div>
             <div class="total-box">
               <p class="label">Pulse Balance</p>
-              <p id="wallet-pulse-balance" class="value value--warn">Not exposed yet</p>
+              <p id="wallet-pulse-balance" class="value value--warn">Not exposed yet (Staged)</p>
             </div>
           </div>
 
@@ -401,7 +401,7 @@
           </div>
 
           <h3>Veil</h3>
-          <p class="wallet-note">Veil is your identity posture and engine multiplier layer. It controls flow strength and internal access posture, not a separate visible spend balance.</p>
+          <p class="wallet-note">Veil is your identity posture and engine multiplier layer. It controls flow strength and internal access posture, not a spendable balance or currency.</p>
 
           <h3>Pulse</h3>
           <p class="wallet-note">Pulse is the social activity layer. In this build, pulse activity appears in board/message systems, but a dedicated pulse_balance ledger is not exposed yet.</p>
@@ -483,5 +483,23 @@
   <script src="assets/js/access-gate.js?v=20260322"></script>
   <script type="module" src="assets/js/wallet.js"></script>
   <script src="assets/js/radio-widget.js" defer></script>
+  <!-- Pulse UI Minimal Elements (add only if missing) -->
+  <div>
+    <label>Pulse Balance: <span id="pulseBalance">0.00</span></label>
+  </div>
+  <div>
+    <input id="pulseAmountInput" type="number" min="0.01" step="0.01" placeholder="Amount (USD)">
+    <input id="pulseRecipientInput" type="text" placeholder="Recipient ID">
+  </div>
+  <div>
+    <button id="depositBtn">Deposit</button>
+    <button id="transferBtn">Transfer</button>
+    <button id="withdrawBtn">Withdraw</button>
+  </div>
+  <div id="pulseStatus"></div>
+  <script type="module">
+    import { initPulseUI } from '/assets/js/pulse.js';
+    initPulseUI();
+  </script>
 </body>
 </html>

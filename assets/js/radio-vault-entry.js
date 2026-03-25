@@ -13,8 +13,8 @@ function byId(id) {
 
 function formatSc(value) {
   var n = Number(value || 0)
-  if (!Number.isFinite(n)) return '0 SC'
-  return n.toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' SC'
+  if (!Number.isFinite(n)) return '0 Signal Coin (SC)'
+  return n.toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' Signal Coin (SC)'
 }
 
 function setStatus(stateText, dotMode) {
@@ -72,8 +72,8 @@ async function initRadioVaultEntry() {
 
   try {
     var snapshot = await fetchVaultSnapshot(session)
-    veilEl.textContent = formatSc(snapshot.credits_balance)
-    pulseEl.textContent = 'Not exposed yet'
+    veilEl.textContent = formatSc(snapshot.credits_balance) // Signal Coin (SC)
+    pulseEl.textContent = 'Not exposed yet (Staged)'
 
     var generated = Number(snapshot.generated || 0)
     var flowRate = Number(snapshot.flow_rate_per_min || 0)

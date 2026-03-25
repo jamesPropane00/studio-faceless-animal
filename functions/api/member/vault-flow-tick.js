@@ -5,11 +5,21 @@
  *
  *  Handles POST /api/member/vault-flow-tick
  *  Body: { username, ph }
+ *
+ *  Economy model:
+ *    - credits_balance is the real Signal Coin (SC) balance
+ *    - veil is a progression/tier/rate, not a spendable balance
+ *    - pulse is staged/not implemented
  * ============================================================
  */
 
-const FLOW_BASE_SC_PER_MIN = 0.2
-const FLOW_MAX_ELAPSED_MIN = 10
+
+const FLOW_BASE_SC_PER_MIN = 0.2;
+const FLOW_MAX_ELAPSED_MIN = 10;
+const FLOW_TICK_INTERVAL_MS = 15000;
+
+// Import centralized Veil config
+const { getVeilTier } = require('./veil-tiers.js');
 
 export async function onRequestPost(context) {
   const { request, env } = context
@@ -99,32 +109,43 @@ async function getMemberVaultRow(supabaseUrl, serviceKey, username) {
 async function tickMemberVaultFlow(supabaseUrl, serviceKey, row) {
   if (!row || !row.username) return { ok: false, error: 'Member row not found.' }
 
-  const profile = vaultProfileForMember(row)
-  const now = new Date()
-  const nowIso = now.toISOString()
-  const todayKey = utcDayKey(now)
+  // Centralized veil tier
+  const veilLevel = Number(row && row.veil_level);
+  const veilTier = getVeilTier(veilLevel);
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const todayKey = utcDayKey(now);
 
-  const balance = Math.max(0, Number(row.credits_balance || 0) || 0)
-  let earnedToday = Math.max(0, Number(row.flow_earned_today || 0) || 0)
-  const storedDay = String(row.flow_last_day || '').slice(0, 10)
-  if (!storedDay || storedDay !== todayKey) earnedToday = 0
+  const balance = Math.max(0, Number(row.credits_balance || 0) || 0);
+  let earnedToday = Math.max(0, Number(row.flow_earned_today || 0) || 0);
+  const storedDay = String(row.flow_last_day || '').slice(0, 10);
+  if (!storedDay || storedDay !== todayKey) earnedToday = 0;
 
-  const lastTickRaw = String(row.flow_last_tick_at || '')
-  const lastTickMs = lastTickRaw ? Date.parse(lastTickRaw) : Date.now()
-  const nowMs = Date.now()
-  let elapsedMin = Math.max(0, (nowMs - (Number.isFinite(lastTickMs) ? lastTickMs : nowMs)) / 60000)
-  elapsedMin = Math.min(elapsedMin, FLOW_MAX_ELAPSED_MIN)
+  const lastTickRaw = String(row.flow_last_tick_at || '');
+  const lastTickMs = lastTickRaw ? Date.parse(lastTickRaw) : Date.now();
+  const nowMs = Date.now();
+  const elapsedMs = nowMs - (Number.isFinite(lastTickMs) ? lastTickMs : nowMs);
+  // Enforce tick interval: must be >= 15s
+  if (elapsedMs < FLOW_TICK_INTERVAL_MS) {
+    return { ok: false, error: 'Tick too soon. Wait at least 15 seconds between ticks.' };
+  }
+  let elapsedMin = Math.max(0, elapsedMs / 60000);
+  elapsedMin = Math.min(elapsedMin, FLOW_MAX_ELAPSED_MIN);
 
-  const flowRate = toFixedNumber(FLOW_BASE_SC_PER_MIN * profile.multiplier, 4)
-  let generated = toFixedNumber(elapsedMin * flowRate, 4)
+  // Earning formula: (flow_rate_per_min / 60) * tick_seconds * veil_multiplier
+  const flowRate = toFixedNumber(Number(row.flow_rate_per_min || 0), 4);
+  const tickSeconds = elapsedMs / 1000;
+  const generated = toFixedNumber((flowRate / 60) * tickSeconds * veilTier.multiplier, 4);
 
-  if (profile.dailyCap != null) {
-    const remaining = Math.max(0, Number(profile.dailyCap) - earnedToday)
-    generated = Math.min(generated, remaining)
+  // Daily cap enforcement
+  let cappedGenerated = generated;
+  if (veilTier.cap != null) {
+    const remaining = Math.max(0, Number(veilTier.cap) - earnedToday);
+    cappedGenerated = Math.min(generated, remaining);
   }
 
-  const nextEarned = toFixedNumber(earnedToday + generated, 4)
-  const nextBalance = toFixedNumber(balance + generated, 4)
+  const nextEarned = toFixedNumber(earnedToday + cappedGenerated, 4);
+  const nextBalance = toFixedNumber(balance + cappedGenerated, 4);
   const mergedRow = {
     ...row,
     credits_balance: nextBalance,
@@ -132,7 +153,7 @@ async function tickMemberVaultFlow(supabaseUrl, serviceKey, row) {
     flow_last_day: todayKey,
     flow_earned_today: nextEarned,
     flow_rate_per_min: flowRate,
-  }
+  };
 
   const patchBody = {
     credits_balance: nextBalance,
@@ -140,48 +161,39 @@ async function tickMemberVaultFlow(supabaseUrl, serviceKey, row) {
     flow_last_day: todayKey,
     flow_earned_today: nextEarned,
     flow_rate_per_min: flowRate,
-  }
+  };
 
-  const writePath = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(String(row.username || '').toLowerCase())}`
-  const writeRes = await supabaseFetch(supabaseUrl, serviceKey, 'PATCH', writePath, patchBody)
+  const writePath = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(String(row.username || '').toLowerCase())}`;
+  const writeRes = await supabaseFetch(supabaseUrl, serviceKey, 'PATCH', writePath, patchBody);
   if (!writeRes.ok) {
-    return { ok: false, error: 'Could not persist vault flow tick.' }
+    return { ok: false, error: 'Could not persist vault flow tick.' };
   }
 
   return {
     ok: true,
     row: mergedRow,
-    snapshot: vaultSnapshotFromRow(mergedRow, profile, generated, elapsedMin, nowIso),
-  }
+    snapshot: vaultSnapshotFromRow(mergedRow, veilTier, cappedGenerated, elapsedMin, nowIso),
+  };
 }
 
-function vaultProfileForMember(row) {
-  const level = Number(row && row.veil_level)
-  if (Number.isFinite(level)) {
-    if (level <= 0) return { tier: 'Veil IV', multiplier: 5, dailyCap: null }
-    if (level === 1) return { tier: 'Veil III', multiplier: 3, dailyCap: 1000 }
-    if (level === 2) return { tier: 'Veil II', multiplier: 2, dailyCap: 400 }
-    if (level === 3) return { tier: 'Veil I', multiplier: 1.5, dailyCap: 150 }
-    return { tier: 'Free', multiplier: 1, dailyCap: 50 }
-  }
-  const state = String((row && row.veil_state) || '').toLowerCase().trim()
-  if (state === 'deep') return { tier: 'Veil III', multiplier: 3, dailyCap: 1000 }
-  if (state === 'veiled') return { tier: 'Veil I', multiplier: 1.5, dailyCap: 150 }
-  return { tier: 'Free', multiplier: 1, dailyCap: 50 }
-}
 
-function vaultSnapshotFromRow(row, profile, generated, elapsedMinutes, tickedAt) {
-  const activeProfile = profile || vaultProfileForMember(row)
+// No longer needed: veil logic is now in veil-tiers.js
+
+
+function vaultSnapshotFromRow(row, veilTier, generated, elapsedMinutes, tickedAt) {
   return {
     credits_balance: toFixedNumber(Math.max(0, Number(row && row.credits_balance || 0) || 0), 4),
-    flow_rate_per_min: toFixedNumber(Math.max(0, Number(row && row.flow_rate_per_min || (FLOW_BASE_SC_PER_MIN * activeProfile.multiplier)) || 0), 4),
+    flow_rate_per_min: toFixedNumber(Math.max(0, Number(row && row.flow_rate_per_min || 0)), 4),
     flow_earned_today: toFixedNumber(Math.max(0, Number(row && row.flow_earned_today || 0) || 0), 4),
-    daily_cap: activeProfile.dailyCap,
-    vault_tier_label: activeProfile.tier,
+    daily_cap: veilTier.cap,
+    veil_level: row && row.veil_level,
+    veil_label: veilTier.label,
+    veil_multiplier: veilTier.multiplier,
+    vault_tier_label: veilTier.label,
     generated: toFixedNumber(generated || 0, 4),
     elapsed_minutes: toFixedNumber(elapsedMinutes || 0, 4),
     ticked_at: tickedAt || new Date().toISOString(),
-  }
+  };
 }
 
 function toFixedNumber(value, digits) {

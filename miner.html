@@ -466,8 +466,8 @@
             <div class="status-row"><span>Signal Account</span><strong id="miner-user">@guest</strong></div>
             <div class="status-row"><span>Vault Balance</span><strong id="miner-sc-balance">0 SC</strong></div>
             <div class="status-row"><span>Veil Layer</span><strong id="miner-veil-layer">Free</strong></div>
-            <div class="status-row"><span>Veil Balance</span><strong id="miner-veil-balance" class="status-warn">No standalone veil_balance field</strong></div>
-            <div class="status-row"><span>Pulse Balance</span><strong id="miner-pulse-balance" class="status-warn">Not exposed</strong></div>
+            <div class="status-row"><span>Veil Layer</span><strong id="miner-veil-balance" class="status-warn">No standalone veil_balance field (Veil is a tier, not a balance)</strong></div>
+            <div class="status-row"><span>Pulse (Staged)</span><strong id="miner-pulse-balance" class="status-warn">Not exposed</strong></div>
             <div class="status-row"><span>Flow Rate</span><strong id="miner-flow-rate">0.00 SC / min</strong></div>
             <div class="status-row"><span>24h Cycle</span><strong id="miner-daily-cap">0 / 0</strong></div>
             <div class="status-row"><span>Daily Reset (UTC)</span><strong id="miner-reset-timer">--:--:--</strong></div>
@@ -497,5 +497,13 @@
   <script src="assets/js/access-gate.js?v=20260322"></script>
   <script type="module" src="assets/js/miner.js"></script>
   <script src="assets/js/radio-widget.js" defer></script>
+  <!-- Pulse Balance Display (add only if missing) -->
+  <div>
+    <label>Pulse Balance: <span id="pulseBalance">0.00</span></label>
+  </div>
+  <script type="module">
+    import { loadPulseBalance } from '/assets/js/pulse.js';
+    loadPulseBalance();
+  </script>
 </body>
 </html>

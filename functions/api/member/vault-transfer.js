@@ -5,6 +5,12 @@
  *
  *  Handles POST /api/member/vault-transfer
  *  Body: { username, ph, recipient_code, send_amount, note? }
+ *
+ *  Economy model:
+ *    - credits_balance is the real Signal Coin (SC) balance
+ *    - veil is a progression/tier/rate, not a spendable balance
+ *    - pulse is staged/not implemented
+ *  Note: transfer_veil is a legacy RPC name; it transfers Signal Coin (credits_balance), not veil as a currency.
  * ============================================================
  */
 

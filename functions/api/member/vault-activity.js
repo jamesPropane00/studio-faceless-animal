@@ -6,6 +6,11 @@
  *  Handles POST /api/member/vault-activity
  *  Body: { username, ph }
  *  Returns last 40 combined transfer + spend events.
+ *
+ *  Economy model:
+ *    - credits_balance is the real Signal Coin (SC) balance
+ *    - veil is a progression/tier/rate, not a spendable balance
+ *    - pulse is staged/not implemented
  * ============================================================
  */
 

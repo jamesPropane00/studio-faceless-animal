@@ -2,14 +2,14 @@
 --  FACELESS ANIMAL STUDIOS — VAULT TRANSFER SYSTEM
 --  supabase/migrations/033_vault_transfer_system.sql
 --
---  Purpose:
 --    Add a private transfer ledger and a server-callable transfer RPC
 --    for the existing Signal Vault balance stored in member_accounts.
 --
---  Notes:
---    - Uses credits_balance as the canonical Vault currency field.
---    - Keeps the transfer_veil RPC name for compatibility.
---    - Applies a 30% system fee to every transfer.
+--    Economy model:
+--      - credits_balance is the real Signal Coin (SC) balance
+--      - veil is a progression/tier/rate, not a spendable balance
+--      - pulse is staged/not implemented
+--      - transfer_veil is a legacy RPC name; it transfers Signal Coin (credits_balance), not veil as a currency.
 --    - Locks sender/recipient rows to prevent concurrent balance races.
 -- ============================================================
 

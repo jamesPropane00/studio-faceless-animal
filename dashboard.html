@@ -5715,5 +5715,13 @@ GRANT EXECUTE ON FUNCTION admin_fix_missing_signal_codes(TEXT, TEXT) TO anon, au
       return human ? human.charAt(0).toUpperCase() + human.slice(1) : 'Activity'
     }
   </script>
+  <!-- Pulse Balance Display (add only if missing) -->
+  <div>
+    <label>Pulse Balance: <span id="pulseBalance">0.00</span></label>
+  </div>
+  <script type="module">
+    import { loadPulseBalance } from '/assets/js/pulse.js';
+    loadPulseBalance();
+  </script>
 </body>
 </html>

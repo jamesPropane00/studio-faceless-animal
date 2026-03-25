@@ -6,6 +6,11 @@
  *  Handles POST /api/member/vault-spend
  *  Body: { username, ph, spend_type }
  *  spend_type: 'boost_signal' (25 SC) | 'visibility_burst' (50 SC) | 'featured_highlight' (100 SC)
+ *
+ *  Economy model:
+ *    - credits_balance is the real Signal Coin (SC) balance
+ *    - veil is a progression/tier/rate, not a spendable balance
+ *    - pulse is staged/not implemented
  * ============================================================
  */
 
