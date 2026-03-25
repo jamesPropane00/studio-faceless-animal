@@ -166,18 +166,21 @@ function renderSnapshot() {
 
 async function postMember(path, payload) {
   // Force API_BASE to deployed endpoint (never localhost)
-  const API_BASE = ''
+  const API_BASE = '';
   const res = await fetch(API_BASE + path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
-  })
-  let data = null
-  try { data = await res.json() } catch { data = null }
-  if (!res.ok || !data || data.ok !== true) {
-    throw new Error((data && data.error) || 'Request failed.')
+  });
+  const status = res.status;
+  const raw = await res.text();
+  let parsed = null;
+  try { parsed = JSON.parse(raw); } catch { parsed = null; }
+  console.log('[miner] postMember', { path, status, raw, parsed });
+  if (!res.ok || !parsed || parsed.ok !== true) {
+    throw new Error(`API ${path} failed (status ${status}): ${(parsed && parsed.error) || raw || 'Unknown error'}`);
   }
-  return data
+  return parsed;
 }
 
 function applySnapshot(data) {
@@ -227,8 +230,9 @@ async function tickFlow(reason) {
     if (note) note.textContent = reason || 'Flow Active. Reactor synced.'
     pushFeed('Veil Engine tick complete. ' + fmtSc(data.generated || 0) + ' generated.', 'ok')
   } catch (err) {
-    if (note) note.textContent = String((err && err.message) || 'Flow tick failed.')
-    pushFeed('Veil Engine tick failed: ' + String((err && err.message) || 'Unknown error'), 'bad')
+    nextTickAt = Date.now() + 5000;
+    if (note) note.textContent = String((err && err.message) || 'Flow tick failed.');
+    pushFeed('Veil Engine tick failed: ' + String((err && err.message) || 'Unknown error'), 'bad');
   }
 }
 
