@@ -91,8 +91,10 @@ export async function onRequestPost(context) {
     }
 
     return jsonResponse({ ok: true, ...tickResult.snapshot }, 200);
+      // Step 2: Insert minimal valid row
+      let createRes, bodyText, insertRow;
       try {
-        const createRes = await fetch(
+        createRes = await fetch(
           `${SUPA_URL}/rest/v1/member_accounts`,
           {
             method: 'POST',
@@ -114,10 +116,32 @@ export async function onRequestPost(context) {
             })
           }
         );
-        const bodyText = await createRes.text();
-        if (!createRes.ok) {
+        bodyText = await createRes.text();
+        if (createRes.ok) {
+          // Try to parse the returned row
+          try {
+            const parsed = JSON.parse(bodyText);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              insertRow = parsed[0];
+              row = insertRow;
+            }
+          } catch (parseErr) {
+            // Parsing failed, surface error for debug
+            return jsonResponse({
+              ok: false,
+              step: 'insert_return_parse',
+              error: 'Could not parse insert return row',
+              detail: String(parseErr),
+              body: bodyText
+            }, 500);
+          }
+        } else if (createRes.status === 409) {
+          // Duplicate conflict: row likely exists, continue to readback
+          // (do not return error, proceed to next step)
+        } else {
           return jsonResponse({
             ok: false,
+            step: 'insert',
             error: "AUTO_CREATE_FAILED",
             status: createRes.status,
             statusText: createRes.statusText,
@@ -127,9 +151,22 @@ export async function onRequestPost(context) {
       } catch (insertError) {
         return jsonResponse({
           ok: false,
+          step: 'insert',
           error: "AUTO_CREATE_EXCEPTION",
           detail: String(insertError)
         }, 500);
+      }
+      // Step 3: Use returned row if available, else fallback to SELECT
+      if (!row) {
+        row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username);
+        if (!row) {
+          return jsonResponse({
+            ok: false,
+            step: 'readback',
+            error: 'Member row not found after auto-create.',
+            detail: { username }
+          }, 500);
+        }
       }
   const path = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(u)}&select=id,username,display_name,platform_id,veil_level,veil_state,credits_balance,flow_last_tick_at,flow_last_day,flow_earned_today,flow_rate_per_min&limit=1`
   const res = await supabaseFetch(supabaseUrl, serviceKey, 'GET', path, null)
