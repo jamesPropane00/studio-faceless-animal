@@ -40,6 +40,27 @@ export async function onRequestPost(context) {
       return jsonResponse({ ok: false, step: 'body', error: 'Invalid request body.' }, 400);
     }
 
+    // EARLY READ BALANCE PATH
+    if (body && body.read_balance === true) {
+      // authenticate and fetch member row as usual
+      const usernameRaw = body && body.username;
+      const ph = String((body && body.ph) || '').trim();
+      const username = String(usernameRaw || '').toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
+      if (!username || !ph) {
+        return jsonResponse({ ok: false, step: 'input', error: 'Missing username/ph.' }, 400);
+      }
+      let memberRow = null;
+      try {
+        memberRow = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username);
+      } catch (err) {
+        return jsonResponse({ ok: false, step: 'select1', error: 'Initial select failed', detail: String(err) }, 500);
+      }
+      if (!memberRow) {
+        return jsonResponse({ ok: false, step: 'notfound', error: 'Member not found.' }, 404);
+      }
+      return jsonResponse({ ok: true, credits_balance: Number(memberRow.credits_balance || 0) }, 200);
+    }
+
     const usernameRaw = body && body.username;
     const ph = String((body && body.ph) || '').trim();
     const username = String(usernameRaw || '').toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
@@ -196,9 +217,9 @@ async function tickMemberVaultFlow(supabaseUrl, serviceKey, row) {
 
   const nextEarned = toFixedNumber(earnedToday + cappedGenerated, 4);
   const nextBalance = toFixedNumber(balance + cappedGenerated, 4);
-  const mergedRow = {
+    const password_hash = String((body && body.ph) || '').trim();
     ...row,
-    credits_balance: nextBalance,
+    if (!username || !password_hash) {
     flow_last_tick_at: nowIso,
     flow_last_day: todayKey,
     flow_earned_today: nextEarned,
@@ -214,16 +235,17 @@ async function tickMemberVaultFlow(supabaseUrl, serviceKey, row) {
   };
 
   const writePath = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(String(row.username || '').toLowerCase())}`;
-  const writeRes = await supabaseFetch(supabaseUrl, serviceKey, 'PATCH', writePath, patchBody);
+    const password_hash = String((body && body.ph) || '').trim();
   if (!writeRes.ok) {
-    return { ok: false, error: 'Could not persist vault flow tick.' };
+    if (!username || !password_hash) {
   }
 
   return {
     ok: true,
     row: mergedRow,
     snapshot: vaultSnapshotFromRow(mergedRow, veilTier, cappedGenerated, elapsedMin, nowIso),
-  };
+      row = await getMemberVaultRow(SUPA_URL, SERVICE_KEY, username);
+      const path = `/rest/v1/member_accounts?username=eq.${encodeURIComponent(username)}&password_hash=eq.${encodeURIComponent(password_hash)}&select=credits_balance&limit=1`;
 }
 
 
@@ -261,7 +283,7 @@ function utcDayKey(date) {
   return `${y}-${m}-${day}`
 }
 
-function supabaseFetch(supabaseUrl, serviceKey, method, urlPath, jsonBody) {
+              password_hash: password_hash,
   const headers = {
     apikey: serviceKey,
     Authorization: `Bearer ${serviceKey}`,
