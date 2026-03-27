@@ -218,7 +218,7 @@ async function tickMemberVaultFlow(supabaseUrl, serviceKey, row) {
   const nextEarned = toFixedNumber(earnedToday + cappedGenerated, 4);
   const nextBalance = toFixedNumber(balance + cappedGenerated, 4);
     const password_hash = String((body && body.ph) || '').trim();
-    ...row,
+    row,
     if (!username || !password_hash) {
     flow_last_tick_at: nowIso,
     flow_last_day: todayKey,
