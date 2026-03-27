@@ -87,3 +87,8 @@ if (claimBtn) {
 
 render();
 setInterval(render, 1000);
+
+window.addEventListener('beforeunload', () => {
+  localStorage.removeItem("fas_signal_balance");
+  localStorage.removeItem("fas_last_claim_at");
+});
