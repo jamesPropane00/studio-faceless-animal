@@ -42,9 +42,9 @@ function addFeedMessage(message) {
 function render() {
   const balance = getBalance();
   const lastClaimAt = getLastClaimAt();
-  const remaining = (lastClaimAt + CLAIM_COOLDOWN_MS) - Date.now();
+  const remaining = lastClaimAt + CLAIM_COOLDOWN_MS - Date.now();
 
-  if (balanceEl) balanceEl.textContent = balance;
+  if (balanceEl) balanceEl.textContent = String(balance);
   if (timerEl) timerEl.textContent = formatDuration(remaining);
 
   if (statusEl) {
@@ -87,8 +87,3 @@ if (claimBtn) {
 
 render();
 setInterval(render, 1000);
-
-window.addEventListener('beforeunload', () => {
-  localStorage.removeItem("fas_signal_balance");
-  localStorage.removeItem("fas_last_claim_at");
-});

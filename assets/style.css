@@ -1,4 +1,6 @@
-/* Minimal miner telemetry warning effect */
+n(32ch, 100%);
+  margin-left: auto;
+}/* Minimal miner telemetry warning effect */
 #engineTelemetry.warning-mode {
   background: #ff2d2d;
   color: #fff;
@@ -48,37 +50,10 @@
   opacity: 0.7;
 }
 /* --- Manual Signal Collection: Warning Mode & Feed --- */
-.miner-warning-mode .reactor-card {
-  border-color: #ff3b3b !important;
-  box-shadow: 0 0 18px rgba(255, 59, 59, 0.45) !important;
-  position: relative;
-}
-.miner-warning-mode .reactor-card::after {
-  content: "OUT OF ORDER";
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  color: #ff4d4d;
-  border: 1px solid #ff4d4d;
-  padding: 4px 8px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  transform: rotate(-8deg);
-  background: rgba(20, 0, 0, 0.85);
-}
-.feed-item {
-  padding: 12px;
-  margin-bottom: 10px;
-  border: 1px solid rgba(120, 120, 255, 0.18);
-  border-radius: 14px;
-  background: rgba(8, 10, 30, 0.7);
-}
-.feed-time {
-  margin-top: 6px;
-  font-size: 12px;
-  opacity: 0.7;
-}
+
+
+
+
 /* --- Manual Signal Extraction: Telemetry Chaos Glitch --- */
 .error-mode {
   animation: glitch 0.2s infinite;
@@ -87,7 +62,7 @@
   position: relative;
 }
 .error-mode::after {
-  content: "\26A0 SYSTEM OVERRIDE \26A0";
+  content: "⚠SYSTEM OVERRIDE ⚠";
   position: absolute;
   top: 10px;
   left: 10px;
@@ -152,7 +127,7 @@
   --gold-glow:   rgba(201, 169, 110, 0.07);
 
   /* Typography */
-  --font: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font: "Inter", "Helvetica Neue", Arial, sans-serif;
 
   /* Radii */
   --r-sm: 6px;
@@ -577,9 +552,7 @@ p {
 
 /* Native services promo: keep it contained in the right footer column */
 #fas-footer-promo {
-  max-width: min(32ch, 100%);
-  margin-left: auto;
-}
+  max-width: mi
 #fas-footer-promo a {
   overflow-wrap: anywhere;
   word-break: normal;
@@ -704,7 +677,7 @@ p {
 }
 /* Subtle top-border accent that reveals on hover */
 .division-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 2px;
@@ -781,7 +754,7 @@ p {
   overflow: hidden;
 }
 .project-card-thumb::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(135deg, rgba(201,169,110,0.05) 0%, transparent 55%);
@@ -900,7 +873,7 @@ p {
 }
 /* Layered gold glows in corners */
 .contact-block::before {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -100px;
   left: -60px;
@@ -910,7 +883,7 @@ p {
   pointer-events: none;
 }
 .contact-block::after {
-  content: '';
+  content: "";
   position: absolute;
   top: -80px;
   right: -80px;
@@ -1369,7 +1342,7 @@ p {
   border-top: 2px solid rgba(201,169,110,0.5);
 }
 .music-type-card--featured::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0; right: 0;
   width: 140px; height: 140px;
@@ -1459,7 +1432,7 @@ p {
 }
 /* Subtle tint overlay */
 .video-thumb::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(to bottom, transparent 50%, rgba(9,9,9,0.5) 100%);
@@ -2186,7 +2159,7 @@ p {
 
 /* Checkmark before each feature */
 .pricing-features li::before {
-  content: '✓';
+  content: "✓";
   color: var(--gold);
   font-size: 0.78rem;
   font-weight: 700;
@@ -2201,7 +2174,7 @@ p {
   font-style: italic;
 }
 .pricing-feature--note::before {
-  content: '·' !important;
+  content: "·" !important;
   color: var(--text-3) !important;
   font-style: normal;
 }
@@ -2608,7 +2581,7 @@ p {
   background: linear-gradient(145deg, var(--bg-4) 0%, rgba(201,169,110,0.03) 100%);
 }
 .example-card-visual--grid::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background-image:
@@ -2619,7 +2592,7 @@ p {
 
 /* Centered "+" placeholder mark on sample cards */
 .example-card-visual--grid::after {
-  content: '+';
+  content: "+";
   position: absolute;
   inset: 0;
   display: flex;
@@ -2778,7 +2751,7 @@ p {
 
 /* Plus icon that rotates to × when open */
 .faq-question::after {
-  content: '+';
+  content: "+";
   font-size: 1.35rem;
   font-weight: 300;
   color: var(--gold);
@@ -2845,7 +2818,7 @@ p {
   align-items: center;
   gap: 0;
   font-size: 0.8rem;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-weight: 600;
   background: rgba(201,169,110,0.06);
   border: 1px solid rgba(201,169,110,0.22);
@@ -2906,7 +2879,7 @@ p {
   overflow: hidden;
 }
 .pricing-card-free::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -60px;
   right: -60px;
@@ -2943,7 +2916,7 @@ p {
 .pricing-free-url {
   display: inline-block;
   font-size: 0.75rem;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-weight: 600;
   color: var(--text-3);
   margin-top: 1.25rem;
@@ -3182,7 +3155,7 @@ p {
   .creator-card             { grid-template-columns: 3rem 1fr; grid-template-rows: auto auto; gap: 0.75rem 1rem; }
   .creator-link             { grid-column: 2; }
   .globe                    { aspect-ratio: 1 / 1; }
-  .globe-pin:nth-child(n+5) { display: none; }
+  .globe-pin:nth-child(n/**/+5) { display: none; }
 }
 
 
@@ -3341,7 +3314,7 @@ p {
   font-weight: 900;
   letter-spacing: -0.04em;
   color: rgba(255,255,255,0.07);
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   user-select: none;
 }
 
@@ -3480,14 +3453,14 @@ p {
   font-size: 1.6rem;
   font-weight: 900;
   letter-spacing: -0.02em;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   color: rgba(255,255,255,0.06);
   user-select: none;
 }
 
 /* Subtle scan-line texture on product images */
 .product-img::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(
@@ -3589,7 +3562,7 @@ p {
 }
 
 .supply-digital-banner::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -80px;
   right: -80px;
@@ -3649,7 +3622,7 @@ p {
 }
 
 .supply-digital-list li::before {
-  content: '→';
+  content: "→";
   position: absolute;
   left: 0;
   color: #a06ae0;
@@ -3831,7 +3804,7 @@ p {
 }
 
 .check-list li::before {
-  content: '✓';
+  content: "✓";
   flex-shrink: 0;
   width: 1.4rem;
   height: 1.4rem;
@@ -4010,7 +3983,7 @@ p {
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   padding: 0.75rem 1rem;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-size: 0.8rem;
   color: var(--text-3);
   margin-bottom: 2rem;
@@ -4048,7 +4021,7 @@ p {
   justify-content: center;
   font-size: 2rem;
   font-weight: 900;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   color: rgba(255,255,255,0.05);
   position: relative;
   overflow: hidden;
@@ -4061,7 +4034,7 @@ p {
 .drop-img--coming { background: var(--bg-4); }
 
 .drop-img::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(
@@ -4420,7 +4393,7 @@ p {
 }
 
 .dimension-label::before {
-  content: '';
+  content: "";
   display: block;
   width: 0.5rem;
   height: 0.5rem;
@@ -4470,7 +4443,7 @@ p {
 }
 
 .dimension-traits li::before {
-  content: '—';
+  content: "—";
   flex-shrink: 0;
   color: var(--text-3);
   font-weight: 700;
@@ -4595,7 +4568,7 @@ p {
 }
 
 .reject-item::before {
-  content: '✕';
+  content: "✕";
   flex-shrink: 0;
   font-size: 0.65rem;
   color: rgba(201,169,110,0.5);
@@ -4762,7 +4735,7 @@ p {
   padding: 0.25rem 0.65rem;
   font-size: 0.62rem;
   color: var(--text-3);
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4983,7 +4956,7 @@ p {
 }
 
 .upgrade-step-features li::before {
-  content: '·';
+  content: "·";
   position: absolute;
   left: 0;
   color: var(--gold-dim);
@@ -5161,7 +5134,7 @@ p {
 }
 
 .comp-tier-col--featured::before {
-  content: 'Most Popular';
+  content: "Most Popular";
   position: absolute;
   top: -1px;
   left: 50%;
@@ -5369,7 +5342,7 @@ p {
 }
 
 .tier-deep-unlock::before {
-  content: '↑ ';
+  content: "↑ ";
   color: var(--gold);
 }
 
@@ -5524,7 +5497,7 @@ p {
   font-size: 3.5rem;
   font-weight: 900;
   letter-spacing: -0.05em;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   color: rgba(255,255,255,0.05);
   user-select: none;
   line-height: 1;
@@ -5668,7 +5641,7 @@ p {
   font-weight: 900;
   letter-spacing: 0.04em;
   flex-shrink: 0;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 .board-card-meta {}
@@ -5752,7 +5725,7 @@ p {
   font-weight: 900;
   letter-spacing: 0.04em;
   color: var(--gold);
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   flex-shrink: 0;
 }
 
@@ -5940,7 +5913,7 @@ p {
 
 /* Connector line between steps */
 .intake-step:not(:last-child)::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 1.1rem;
   left: calc(50% + 1.1rem);
@@ -6022,7 +5995,7 @@ p {
   opacity: 0.85;
 }
 
-.intake-legend::after { content: ''; display: block; clear: both; }
+.intake-legend::after { content: ""; display: block; clear: both; }
 
 .intake-fields {
   display: flex;
@@ -6432,7 +6405,7 @@ p {
 }
 
 .faq-check-list li::before {
-  content: '✓';
+  content: "✓";
   color: var(--gold);
   font-size: 0.7rem;
   font-weight: 800;
@@ -6524,7 +6497,7 @@ p {
 }
 
 .drop-featured-art::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse at 60% 40%, rgba(160,106,224,0.18) 0%, transparent 65%);
@@ -6902,7 +6875,7 @@ p {
 }
 
 .ap-proof-feat::before {
-  content: '✓';
+  content: "✓";
   color: var(--gold);
   font-size: 0.65rem;
   font-weight: 800;
@@ -7165,7 +7138,7 @@ p {
 }
 
 .sc-hero-avatar::after {
-  content: 'Add Photo';
+  content: "Add Photo";
   position: absolute;
   bottom: -2rem;
   left: 50%;
@@ -7220,7 +7193,7 @@ p {
 }
 
 .sc-work-img::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse at 50% 40%, rgba(220,100,80,0.08) 0%, transparent 65%);
@@ -7431,7 +7404,7 @@ p {
 }
 
 .biz-hero-monogram::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -8118,7 +8091,7 @@ p {
 }
 
 .status-pill::before {
-  content: '';
+  content: "";
   width: 5px;
   height: 5px;
   border-radius: 50%;
@@ -8192,14 +8165,14 @@ p {
 /* ---- Responsive ---- */
 @media (max-width: 900px) {
   .pipeline-grid { grid-template-columns: repeat(3, 1fr); }
-  .sub-table th:nth-child(n+5),
-  .sub-table td:nth-child(n+5) { display: none; }
+  .sub-table th:nth-child(n/**/+5),
+  .sub-table td:nth-child(n/**/+5) { display: none; }
 }
 
 @media (max-width: 600px) {
   .pipeline-grid { grid-template-columns: repeat(2, 1fr); }
-  .sub-table th:nth-child(n+4),
-  .sub-table td:nth-child(n+4) { display: none; }
+  .sub-table th:nth-child(n/**/+4),
+  .sub-table td:nth-child(n/**/+4) { display: none; }
   .admin-topbar-links { display: none; }
 }
 
@@ -8731,7 +8704,7 @@ p {
 }
 
 .paid-success-checklist li::before {
-  content: '→';
+  content: "→";
   color: var(--gold-dim);
   font-weight: 700;
   flex-shrink: 0;
@@ -11632,7 +11605,7 @@ body[data-plan="free"] .fas-free-badge {
   overflow: hidden;
 }
 .game-card-thumb::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(0,0,0,0.3));
@@ -12086,7 +12059,7 @@ body[data-plan="free"] .fas-free-badge {
   position: relative;
 }
 .tier-deep-feature-list li::before {
-  content: '·';
+  content: "·";
   position: absolute;
   left: 0;
   color: var(--purple-bright);
@@ -12391,7 +12364,7 @@ body[data-plan="free"] .fas-free-badge {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
-#fas-rw-panel.fas-rw-panel--open { display: flex; }
+
 
 /* ── Bar layout ─────────────────────────────────────────────────── */
 #fas-rw-bar {

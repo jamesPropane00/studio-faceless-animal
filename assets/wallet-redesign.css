@@ -1,0 +1,132 @@
+/* Wallet Redesign — Matches Miner Style */
+:root {
+  --wallet-bg: #18142a;
+  --wallet-card: rgba(28, 22, 40, 0.92);
+  --wallet-glow-purple: #7b65ff;
+  --wallet-glow-green: #25d07f;
+  --wallet-text: #eef3ff;
+  --wallet-muted: #9aa7c9;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #18142a 0%, #1a1d2e 100%);
+  color: var(--wallet-text);
+  font-family: 'Sora', 'Inter', Arial, sans-serif;
+}
+
+.wallet-app-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #18142a 0%, #1a1d2e 100%);
+}
+
+.wallet-app-card {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  background: var(--wallet-card);
+  border-radius: 22px;
+  box-shadow: 0 8px 36px 0 #000a, 0 1.5px 0 #1a1a1a, 0 0 0 2px var(--wallet-glow-purple, #7b65ff33);
+  backdrop-filter: blur(12px);
+  padding: 2.1rem 1.2rem 1.4rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.wallet-balance-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wallet-balance-label {
+  font-size: 0.92rem;
+  color: var(--wallet-glow-purple);
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.wallet-balance-value {
+  font-size: 2.5rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 800;
+  color: #4fe0ff;
+  text-shadow: 0 0 18px #4fe0ff44, 0 2px 8px #7b65ff44;
+  margin-bottom: 0.2rem;
+}
+
+.wallet-balance-sub {
+  font-size: 1rem;
+  color: var(--wallet-muted);
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.wallet-stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-bottom: 0.7rem;
+}
+
+.wallet-stat-card {
+  background: rgba(44, 36, 60, 0.82);
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 var(--wallet-glow-purple, #7b65ff22);
+  padding: 0.7rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 90px;
+}
+
+.wallet-stat-label {
+  font-size: 0.72rem;
+  color: var(--wallet-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.wallet-stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--wallet-text);
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.wallet-actions {
+  display: flex;
+  gap: 0.7rem;
+  margin-top: 0.7rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.wallet-history {
+  width: 100%;
+  margin-top: 1.2rem;
+  background: rgba(44, 36, 60, 0.82);
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 var(--wallet-glow-purple, #7b65ff22);
+  padding: 1.1rem 1rem;
+  min-height: 120px;
+}
+
+@media (max-width: 600px) {
+  .wallet-app-card {
+    padding: 1.2rem 0.5rem 1.1rem 0.5rem;
+  }
+  .wallet-stats-row {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+}

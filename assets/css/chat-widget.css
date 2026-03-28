@@ -1,0 +1,196 @@
+/* Floating Chat Widget Styles — Faceless Animal Studios */
+.chat-widget-float {
+  position: fixed;
+  bottom: 2.2rem;
+  right: 2.2rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+}
+.chat-widget-float.closed .chat-widget-card { display: none; }
+.chat-widget-float .chat-widget-toggle {
+  background: linear-gradient(90deg, #7b65ff, #25d07f);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 2rem;
+  box-shadow: 0 4px 24px #7b65ff44, 0 2px 8px #25d07f44;
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s;
+}
+.chat-widget-float .chat-widget-toggle:hover {
+  box-shadow: 0 0 0 4px #25d07f33, 0 4px 24px #7b65ff44;
+}
+.chat-widget-float .chat-widget-card {
+  margin-bottom: 1.1rem;
+  width: 340px;
+  max-width: 96vw;
+  background: rgba(28,22,40,0.97);
+  border-radius: 22px;
+  box-shadow: 0 0 32px #7b65ff55, 0 8px 36px #25d07f33;
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  animation: chatWidgetIn 0.32s cubic-bezier(.4,1.6,.6,1) 1;
+}
+@keyframes chatWidgetIn {
+  from { opacity: 0; transform: translateY(40px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+.chat-widget-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 1.1rem 1.2rem 0.7rem 1.2rem;
+  border-bottom: 1px solid rgba(127,152,220,0.08);
+}
+.chat-widget-title {
+  font-size: 1.1rem;
+  color: #25d07f;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  flex: 1;
+}
+.chat-widget-room {
+  background: rgba(44,36,60,0.82);
+  color: #eef3ff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  margin-right: 0.7rem;
+}
+.chat-widget-close {
+  background: none;
+  border: none;
+  color: #9aa7c9;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.1rem 0.5rem;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.chat-widget-close:hover {
+  background: rgba(127,152,220,0.08);
+  color: #fff;
+}
+.chat-widget-feed {
+  flex: 1;
+  min-height: 120px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 1.1rem 1.2rem 0.7rem 1.2rem;
+  font-size: 0.98rem;
+  color: #eef3ff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.chat-widget-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.2rem 1.1rem 1.2rem;
+  border-top: 1px solid rgba(127,152,220,0.08);
+}
+.chat-widget-input {
+  flex: 1;
+  background: rgba(44,36,60,0.82);
+  color: #eef3ff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.02rem;
+  font-weight: 500;
+  padding: 0.6rem 1rem;
+  outline: none;
+}
+.chat-widget-send {
+  background: linear-gradient(90deg,#7b65ff,#25d07f);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  font-size: 1.2rem;
+  box-shadow: 0 0 8px #7b65ff77;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s;
+}
+.chat-widget-send:hover {
+  box-shadow: 0 0 0 3px #25d07f33;
+}
+
+/* Chat message bubbles (reuse radio-chat.js DOM structure) */
+.chat-widget-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-bottom: 0.2rem;
+}
+.chat-widget-msg--self {
+  flex-direction: row-reverse;
+}
+.chat-widget-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#7b65ff33,#25d07f33);
+  color: #7b65ff;
+  font-weight: 800;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px #7b65ff22;
+}
+.chat-widget-msg-body {
+  background: rgba(44,36,60,0.82);
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  color: #eef3ff;
+  font-size: 0.98rem;
+  font-weight: 500;
+  box-shadow: 0 1px 4px #7b65ff11;
+}
+.chat-widget-handle {
+  font-size: 0.82rem;
+  color: #25d07f;
+  font-weight: 700;
+  margin-bottom: 0.1rem;
+  display: block;
+}
+.chat-widget-msg-text {
+  margin: 0;
+  color: #eef3ff;
+  word-break: break-word;
+}
+.chat-widget-msg--system .chat-widget-msg-body {
+  background: rgba(127,152,220,0.13);
+  color: #9aa7c9;
+  font-style: italic;
+}
+
+@media (max-width: 600px) {
+  .chat-widget-float {
+    right: 1.1rem;
+    bottom: 1.1rem;
+  }
+  .chat-widget-float .chat-widget-card {
+    width: 98vw;
+    max-width: 98vw;
+    min-width: 0;
+  }
+}
