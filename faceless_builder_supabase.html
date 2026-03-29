@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Faceless Builder + Supabase</title>
+  <link href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" rel="stylesheet"/>
+  <script src="https://unpkg.com/grapesjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { margin:0; background:#111; color:#fff; font-family:Arial; }
+    #topbar { padding:10px; background:#000; display:flex; gap:10px; }
+    button { padding:8px 12px; background:#222; color:#fff; border:none; cursor:pointer; }
+    #editor { height: calc(100vh - 50px); }
+  </style>
+</head>
+<body>
+
+<div id="topbar">
+  <button onclick="savePage()">Save</button>
+  <button onclick="loadPage()">Load</button>
+</div>
+
+<div id="editor"></div>
+
+<script>
+const editor = grapesjs.init({
+  container: '#editor',
+  height: '100%',
+  storageManager: false
+});
+
+
+
+// --- Automated Supabase config ---
+let supabaseUrl = "https://YOUR_PROJECT.supabase.co";
+let supabaseKey = "YOUR_ANON_KEY";
+if (window.__FAS_CONFIG && window.__FAS_CONFIG.ready) {
+  supabaseUrl = window.__FAS_CONFIG.supabaseUrl;
+  supabaseKey = window.__FAS_CONFIG.supabaseAnonKey;
+}
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// Helper: Show SQL to create builder_pages table
+function showTableSQL() {
+  const sql = `create table builder_pages (\n  id uuid primary key default gen_random_uuid(),\n  project_data jsonb,\n  html text,\n  css text,\n  created_at timestamptz default now()\n);`;
+  prompt("Run this SQL in Supabase SQL editor to create the table:", sql);
+}
+
+let currentId = null;
+
+async function savePage() {
+  const data = {
+    id: currentId,
+    project_data: editor.getProjectData(),
+    html: editor.getHtml(),
+    css: editor.getCss()
+  };
+
+  const { data: res, error } = await supabase
+    .from('builder_pages')
+    .upsert(data)
+    .select()
+    .single();
+
+  if (error) return alert("Save failed");
+
+  currentId = res.id;
+  alert("Saved");
+}
+
+async function loadPage() {
+  const { data, error } = await supabase
+    .from('builder_pages')
+    .select('*')
+    .limit(1)
+    .single();
+
+  if (error) return alert("Load failed");
+
+  currentId = data.id;
+  editor.loadProjectData(data.project_data);
+}
+</script>
+
+</body>
+</html>
