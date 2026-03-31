@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Presence — Faceless Animal Studios</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
+</head>
+<body>
+  <!-- Canonical session check at the top -->
+  <script>
+    const fasUser = JSON.parse(localStorage.getItem("fas_user") || "null");
+    if (!fasUser || !fasUser.account_id) {
+      window.location.replace("login.html");
+    }
+  </script>
+
+  <!-- Use the same nav and shell as dashboard.html -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
+          <li><a href="wallet.html">Vault</a></li>
+          <li><a href="games.html">Games</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="games.html">Games</a>
+    <a href="music.html">Music</a>
+    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
+    <a href="wallet.html">Vault</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="about.html">About</a>
+  </div>
+
+  <div class="dash-wrap">
+    <div class="dash-container">
+      <div class="dash-section" style="margin-top:2.5rem;">
+        <h1 class="dash-section-title" style="font-size:2rem;font-weight:900;">Build Your Page</h1>
+        <p style="font-size:1.1rem;color:var(--text-2);margin-bottom:2.2rem;">Choose how you want to build</p>
+        <div style="display:flex;flex-direction:column;gap:1.5rem;max-width:340px;margin:0 auto;">
+          <button id="visualBuilderBtn" class="btn btn-primary" style="font-size:1.1rem;">Visual Builder</button>
+          <button id="quickTemplateBtn" class="btn btn-ghost" style="font-size:1.1rem;">Quick Template</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById("visualBuilderBtn")?.addEventListener("click", () => {
+      window.location.href = "faceless_builder_fullstack.html";
+    });
+    document.getElementById("quickTemplateBtn")?.addEventListener("click", () => {
+      window.location.href = "quick-template.html";
+    });
+  </script>
+</body>
+</html>

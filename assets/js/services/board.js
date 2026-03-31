@@ -253,96 +253,26 @@ export async function getBoardPosts({ limit = 20, featuredOnly = false } = {}) {
     return code === '42703' || msg.includes('column') || msg.includes('does not exist')
   }
 
-  // Guard: Only query signal_posts if it exists (try/catch)
-  let query
-  try {
-    query = supabase
-      .from('signal_posts')
-      .select(`
-        id,
-        username,
-        display_name,
-        content,
-        media_url,
-        signal_type,
-        boost_count,
-        created_at,
-        author_username,
-        body_text,
-        post_type
-      `)
-      .order('created_at',  { ascending: false })
-  } catch (err) {
-    console.warn('[FAS] signal_posts table missing or unavailable:', err)
-    return { data: [], error: err }
-  }
+  // Only use board_posts as the canonical source for posts
+  const { data: rows, error } = await supabase
+    .from('board_posts')
+    .select('id, username, post_text, image_url, category, created_at')
+    .eq('is_approved', true)
+    .eq('visibility_status', 'visible')
+    .order('created_at', { ascending: false })
     .limit(limit)
-
-  if (featuredOnly) query = query.eq('signal_type', 'live')
-
-  const { data: rows, error } = await query
-  if (error) console.error('[FAS] getBoardPosts error (canonical):', error.message)
 
   let data = (rows || []).map(row => ({
     id: row.id,
-    username: row.username || row.author_username || '',
-    display_name: row.display_name || row.username || row.author_username || '',
+    username: row.username || '',
+    display_name: row.username || '',
     platform_id: '',
-    content: row.content || row.body_text || '',
-    media_url: row.media_url || null,
-    signal_type: row.signal_type || row.post_type || 'drop',
+    content: row.post_text || '',
+    media_url: row.image_url || null,
+    signal_type: row.category || 'drop',
     created_at: row.created_at,
-    boost_count: Number(row.boost_count || 0),
+    boost_count: 0,
   }))
-
-  // Fallback: signal_posts exists but columns differ from the canonical schema.
-  if (!data.length && error && isSchemaMismatch(error)) {
-    const { data: legacySignalRows, error: legacySignalErr } = await supabase
-      .from('signal_posts')
-      .select('id, author_username, body_text, post_type, media_url, created_at')
-      .order('created_at', { ascending: false })
-      .limit(limit)
-
-    if (!legacySignalErr && legacySignalRows && legacySignalRows.length) {
-      data = legacySignalRows.map(row => ({
-        id: row.id,
-        username: row.author_username || '',
-        display_name: row.author_username || '',
-        platform_id: '',
-        content: row.body_text || '',
-        media_url: row.media_url || null,
-        signal_type: row.post_type || 'drop',
-        created_at: row.created_at,
-        boost_count: 0,
-      }))
-    } else if (legacySignalErr) {
-      console.error('[FAS] getBoardPosts error (legacy signal_posts):', legacySignalErr.message)
-    }
-  }
-
-  if ((!data.length || (error && String(error.code || '') === '42P01'))) {
-    const { data: legacyRows, error: legacyError } = await supabase
-      .from('board_posts')
-      .select('id, username, post_text, image_url, category, created_at')
-      .eq('is_approved', true)
-      .eq('visibility_status', 'visible')
-      .order('created_at', { ascending: false })
-      .limit(limit)
-
-    if (!legacyError && legacyRows && legacyRows.length) {
-      data = legacyRows.map(row => ({
-        id: row.id,
-        username: row.username || '',
-        display_name: row.username || '',
-        platform_id: '',
-        content: row.post_text || '',
-        media_url: row.image_url || null,
-        signal_type: row.category || 'drop',
-        created_at: row.created_at,
-        boost_count: 0,
-      }))
-    }
-  }
 
   return { data, error }
 }
@@ -435,72 +365,7 @@ export async function createBoardPost(data) {
     return code === '42703' || msg.includes('column') || msg.includes('does not exist')
   }
 
-  const payload = {
-    username: data.username,
-    display_name: data.display_name || data.username,
-    platform_id: data.platform_id || null,
-    content: cleanContent,
-    media_url: data.media_url || null,
-    signal_type: data.signal_type || 'drop',
-
-    // Compatibility with older signal_posts schema columns.
-    author_username: data.username,
-    author_platform_id: data.platform_id || null,
-    body_text: cleanContent,
-    post_type: data.signal_type || 'drop',
-    visibility: 'public',
-    moderation_state: 'approved',
-  }
-
-  const { data: row, error } = await supabase
-    .from('signal_posts')
-    .insert([{
-      ...payload,
-    }])
-    .select('id, username, display_name, platform_id, content, media_url, signal_type, created_at, boost_count')
-    .single()
-
-  if (!error && row) return { data: row, error: null }
-
-  if (error) console.error('[FAS] createBoardPost error (canonical):', error.message)
-
-  // Fallback A: signal_posts exists but lacks canonical columns.
-  if (error && isSchemaMismatch(error)) {
-    const { data: legacyRow, error: legacyErr } = await supabase
-      .from('signal_posts')
-      .insert([{
-        author_username: data.username,
-        author_platform_id: data.platform_id || null,
-        body_text: cleanContent,
-        post_type: data.signal_type || 'drop',
-        media_url: data.media_url || null,
-        visibility: 'public',
-        moderation_state: 'approved',
-      }])
-      .select('id, author_username, author_platform_id, body_text, post_type, media_url, created_at')
-      .single()
-
-    if (!legacyErr && legacyRow) {
-      return {
-        data: {
-          id: legacyRow.id,
-          username: legacyRow.author_username || data.username,
-          display_name: data.display_name || data.username,
-          platform_id: legacyRow.author_platform_id || data.platform_id || '',
-          content: legacyRow.body_text || cleanContent,
-          media_url: legacyRow.media_url || null,
-          signal_type: legacyRow.post_type || data.signal_type || 'drop',
-          created_at: legacyRow.created_at,
-          boost_count: 0,
-        },
-        error: null,
-      }
-    }
-
-    if (legacyErr) console.error('[FAS] createBoardPost error (legacy signal_posts):', legacyErr.message)
-  }
-
-  // Fallback B: legacy board_posts path.
+  // Only use board_posts for post creation
   const { data: boardRow, error: boardErr } = await supabase
     .from('board_posts')
     .insert([{
@@ -531,8 +396,8 @@ export async function createBoardPost(data) {
     }
   }
 
-  if (boardErr) console.error('[FAS] createBoardPost error (board_posts fallback):', boardErr.message)
-  return { data: null, error: boardErr || error }
+  if (boardErr) console.error('[FAS] createBoardPost error (board_posts):', boardErr.message)
+  return { data: null, error: boardErr }
 }
 
 

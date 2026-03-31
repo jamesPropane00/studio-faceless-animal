@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Page — Faceless Animal Studios</title>
+  <link rel="stylesheet" href="assets/style.css"/>
+</head>
+<body>
+  <div class="auth-bg">
+    <div class="auth-flex">
+      <div class="auth-card">
+        <!-- Session Protection -->
+        <script>
+          const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+          if (!fasUser || !fasUser.account_id) {
+            window.location.replace('login.html');
+          }
+        </script>
+        <div class="auth-brand">
+          <img src="assets/images/radio.png" alt="Faceless Brand" />
+        </div>
+        <h1 class="auth-title">Build Your Page<span>Share your work. Stay faceless.</span></h1>
+        <div style="display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.5rem;">
+          <div style="flex:1;min-width:180px;max-width:220px;background:rgba(124,58,237,0.08);border-radius:16px;padding:1.2rem 1rem;box-shadow:0 2px 12px 0 rgba(124,58,237,0.08);">
+            <h3 style="color:#a78bfa;font-size:1.1rem;font-weight:700;margin-bottom:0.7rem;">Quick Start Template</h3>
+            <form id="qs-form">
+              <label class="auth-label">Page Type</label>
+              <select id="qs-type" required class="auth-input">
+                <option value="">Choose type…</option>
+                <option>Artist</option>
+                <option>Business</option>
+                <option>Links</option>
+                <option>Personal</option>
+                <option>Promo</option>
+              </select>
+              <label class="auth-label">Title</label>
+              <input type="text" id="qs-title" placeholder="Page Title" required class="auth-input"/>
+              <label class="auth-label">Profile Image</label>
+              <input type="url" id="qs-profile-img" placeholder="Image URL (for now)" class="auth-input" />
+              <label class="auth-label">Header Image</label>
+              <input type="url" id="qs-header-img" placeholder="Image URL (for now)" class="auth-input" />
+              <label class="auth-label">Bio</label>
+              <textarea id="qs-bio" placeholder="Tell your story…" rows="2" class="auth-input"></textarea>
+              <label class="auth-label">Links</label>
+              <input type="text" id="qs-links" placeholder="Links (comma separated)" class="auth-input" />
+              <label class="auth-label">Contact</label>
+              <input type="text" id="qs-contact" placeholder="Contact info" class="auth-input" />
+              <label class="auth-label">Featured Content</label>
+              <input type="text" id="qs-featured" placeholder="Featured content" class="auth-input" />
+              <button type="submit" class="auth-btn">Save Draft</button>
+              <button type="button" class="auth-btn alt" style="margin-top:0.5rem;" onclick="publishPage()">Publish</button>
+            </form>
+          </div>
+          <div style="flex:1;min-width:180px;max-width:220px;background:rgba(124,58,237,0.08);border-radius:16px;padding:1.2rem 1rem;box-shadow:0 2px 12px 0 rgba(124,58,237,0.08);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+            <h3 style="color:#a78bfa;font-size:1.1rem;font-weight:700;margin-bottom:0.7rem;">Visual Builder</h3>
+            <a href="faceless_builder_app.html" class="auth-btn" style="width:100%;margin-bottom:0.7rem;">Open Visual Builder</a>
+            <button class="auth-btn alt" style="width:100%;" onclick="window.open('creator.html?u=exampleuser','_blank')">See Example Page</button>
+          </div>
+        </div>
+        <div class="auth-sub" style="margin-top:1.2rem;">Your Pages</div>
+        <div id="my-pages-list" style="margin-bottom:1.2rem;">
+          <div style="color:#bdbde6;font-size:1.01rem;">(You have no pages yet. Pages you create will appear here.)</div>
+        </div>
+        <div class="auth-sub" style="margin-top:1.2rem;">Your Posts</div>
+        <div id="my-page-recent" style="margin-bottom:1.2rem;">
+          <div style="color:#bdbde6;font-size:1.01rem;">(No posts yet. Your recent activity will show here.)</div>
+        </div>
+        <div id="qs-preview" style="margin-top:1.2rem;"></div>
+        <div class="auth-sub" style="margin-top:1.2rem;">Page Status</div>
+        <div id="my-page-status"></div>
+        <a id="my-page-view-live" href="#" class="auth-btn alt" target="_blank" style="display:none;margin-top:0.7rem;">View Live</a>
+      </div>
+      <div class="auth-explain">
+        <h2>What is My Page?</h2>
+        <p>
+          Your public page is your home base on Faceless Animal Studios. Share your work, links, and story with the world. Use Quick Start for a simple setup, or the Advanced Editor for full control.
+        </p>
+        <ul style="color:#bdbde6;font-size:1.01rem;line-height:1.7;margin-top:1.2rem;">
+          <li>• No coding required</li>
+          <li>• Mobile-friendly</li>
+          <li>• Share your Signal Code for easy contact</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <script>
+    function showQuickStart() {
+      document.getElementById('quick-start-section').style.display = '';
+      window.scrollTo({ top: document.getElementById('quick-start-section').offsetTop - 20, behavior: 'smooth' });
+    }
+    document.getElementById('qs-form').onsubmit = function(e) {
+      e.preventDefault();
+      alert('Draft saved! (Demo)');
+    };
+    function publishPage() {
+      alert('Page published! (Demo)');
+    }
+    // Page status logic (replace with your real check)
+    const statusEl = document.getElementById('my-page-status');
+    const viewLiveBtn = document.getElementById('my-page-view-live');
+    const fasUser2 = JSON.parse(localStorage.getItem('fas_user') || 'null');
+    const hasPage = fasUser2 && fasUser2.page_published;
+    if (hasPage) {
+      statusEl.textContent = 'Live at:';
+      viewLiveBtn.style.display = '';
+      viewLiveBtn.href = 'creator.html?u=' + encodeURIComponent(fasUser2.username);
+      viewLiveBtn.textContent = 'View Live';
+    } else {
+      statusEl.textContent = 'Not published yet';
+      viewLiveBtn.style.display = 'none';
+    }
+  </script>
+</body>
+</html>

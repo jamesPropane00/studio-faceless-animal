@@ -1063,6 +1063,8 @@
 
   /* ── Init ───────────────────────────────────────────────────── */
   function init() {
+    // Only run radio widget on pages with .radio-page class
+    if (!document.body.classList.contains('radio-page')) return;
     if (sessionStorage.getItem('fas_rw_dismissed') === '1') { injectFooterBadge(); return; }
     injectWidget();
     injectFooterBadge();

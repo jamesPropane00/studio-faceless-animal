@@ -186,8 +186,11 @@ BEGIN
 END;
 $$;
 
--- One-time pass as part of migration.
-PERFORM fas_backfill_missing_signal_codes();
+DO $$
+BEGIN
+  PERFORM fas_backfill_missing_signal_codes();
+END;
+$$;
 
 GRANT EXECUTE ON FUNCTION fas_signal_code_is_valid(TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION fas_generate_signal_code() TO anon, authenticated;

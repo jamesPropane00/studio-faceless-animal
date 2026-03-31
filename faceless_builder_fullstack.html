@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Faceless Builder — Faceless Animal Studios</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="assets/vendor/grapes.min.css" />
+</head>
+<body>
+  <script>
+    // Canonical session check: fas_user only
+    document.addEventListener('DOMContentLoaded', function() {
+      var fasUser = null;
+      try { fasUser = JSON.parse(localStorage.getItem('fas_user')); } catch(e) {}
+      if (!fasUser || !fasUser.account_id) {
+        location.replace('login.html');
+      }
+    });
+  </script>
+</head>
+<body>
+    <!-- Dashboard shell nav (copied from dashboard.html) -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="container">
+        <div class="navbar-inner">
+          <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+          <ul class="navbar-links" role="list">
+            <li><a href="directory.html">Directory</a></li>
+            <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
+            <li><a href="wallet.html">Vault</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+          </ul>
+          <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+    </nav>
+    <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+      <a href="directory.html">Directory</a>
+      <a href="games.html">Games</a>
+      <a href="music.html">Music</a>
+      <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
+      <a href="wallet.html">Vault</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="about.html">About</a>
+    </div>
+
+    <div class="dash-wrap">
+      <div class="dash-container">
+        <!-- Builder topbar actions -->
+        <div id="topbar" style="margin-bottom:1.2rem; display: flex; gap: 0.5rem; align-items: center;">
+          <button id="saveBtn">Save</button>
+          <button id="loadBtn">Load</button>
+          <button id="insertImageBtn" type="button" style="background: var(--purple-bright); color: #fff; border-radius: 0.5em; padding: 0.38em 1.1em; font-weight: 700;">Insert Image</button>
+        </div>
+        <div id="editor"></div>
+      </div>
+    </div>
+  <!-- Mobile nav toggle logic (copied from dashboard.html) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const navToggle = document.querySelector('.nav-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+      if (navToggle && mobileMenu) {
+        navToggle.addEventListener('click', function() {
+          const open = navToggle.classList.toggle('open');
+          mobileMenu.classList.toggle('open', open);
+          navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+      }
+    });
+  </script>
+  </script>
+
+  <!-- Auth UI removed: builder now uses platform session only -->
+
+  <div id="page-list">
+    <h2>My Pages</h2>
+    <ul id="pagesUl"></ul>
+    <button id="closeListBtn">Close</button>
+  </div>
+
+  <div id="page-editor">
+    <input id="pageTitle" placeholder="Page Title" />
+    <input id="pageSlug" placeholder="Slug (url-name)" />
+    <div style="margin:0.5rem 0 1rem 0;">
+      <span id="pageStatus" style="font-weight:700;font-size:0.9em;color:var(--gold-bright);">Draft</span>
+    </div>
+    <button id="saveDraftBtn">Save Draft</button>
+    <button id="publishPageBtn">Publish</button>
+    <button id="unpublishPageBtn">Unpublish</button>
+    <button id="viewLivePageBtn">View Live Page</button>
+    <button id="backToListBtn">Back to List</button>
+    <div id="editor"></div>
+  </div>
+
+  <div id="public-view">
+    <h2 id="publicTitle"></h2>
+    <div id="publicHtml"></div>
+    <style id="publicCss"></style>
+  <script type="module">
+    import { openMediaPicker } from './assets/js/media-picker.js';
+
+    // Hide topbar if loaded in an iframe (dashboard shell)
+    if (window.self !== window.top) {
+      const topbar = document.getElementById('topbar');
+      if (topbar) topbar.style.display = 'none';
+      document.body.style.background = 'transparent';
+    }
+
+    // Minimal builder logic (no Supabase, just local editing)
+    let editor = null;
+    function initEditor() {
+      editor = grapesjs.init({
+        container: '#editor',
+        height: '60vh',
+        storageManager: false,
+        blockManager: { appendTo: null },
+      });
+
+      // Add Insert Image button logic
+      const insertImageBtn = document.getElementById('insertImageBtn');
+      if (insertImageBtn) {
+        insertImageBtn.onclick = () => {
+          openMediaPicker({
+            onSelect: (media) => {
+              if (!media || !media.url) return;
+              // Insert image at current selection or as a new block
+              const imageComponent = editor.addComponents({
+                type: 'image',
+                src: media.url,
+                alt: media.alt || '',
+                style: 'max-width:100%;height:auto;border-radius:0.5em;box-shadow:0 2px 8px rgba(0,0,0,0.07);margin:0.5em auto;display:block;'
+              });
+              if (imageComponent && imageComponent.length && editor.select) {
+                editor.select(imageComponent[0]);
+              }
+            }
+          });
+        };
+      }
+    }
+
+    document.getElementById('saveBtn').onclick = function() {
+      if (!editor) initEditor();
+      const html = editor.getHtml();
+      const css = editor.getCss();
+      let fasUser = null;
+      try { fasUser = JSON.parse(localStorage.getItem('fas_user')); } catch(e) {}
+      const data = {
+        html,
+        css,
+        updated_at: new Date().toISOString(),
+        account_id: fasUser && fasUser.account_id ? fasUser.account_id : null,
+        signal_id: fasUser && fasUser.signal_id ? fasUser.signal_id : null,
+        username: fasUser && fasUser.username ? fasUser.username : null
+      };
+      localStorage.setItem('faceless-builder-project', JSON.stringify(data));
+      alert('Page saved locally!');
+    };
+    document.getElementById('loadBtn').onclick = function() {
+      if (!editor) initEditor();
+      const raw = localStorage.getItem('faceless-builder-project');
+      if (!raw) return alert('No local project found');
+      const data = JSON.parse(raw);
+      editor.setComponents(data.html);
+      editor.setStyle(data.css);
+      alert('Loaded from local storage!');
+    };
+    initEditor();
+
+    // --- Page state and actions (save, publish, etc.) ---
+    let pageState = {
+      is_published: false,
+      slug: '',
+      updated_at: null
+    };
+
+    function updatePageStatusUI() {
+      const statusEl = document.getElementById('pageStatus');
+      const viewBtn = document.getElementById('viewLivePageBtn');
+      if (pageState.is_published) {
+        statusEl.textContent = 'Published';
+        statusEl.style.color = '#22c55e';
+        viewBtn.disabled = false;
+        viewBtn.textContent = 'View Live Page';
+      } else {
+        statusEl.textContent = 'Draft';
+        statusEl.style.color = 'var(--gold-bright)';
+        viewBtn.disabled = true;
+        viewBtn.textContent = 'Publish first';
+      }
+    }
+
+    document.getElementById('saveDraftBtn').onclick = async () => {
+      if (!editor) initEditor();
+      const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+      const html = editor.getHtml();
+      const css = editor.getCss();
+      const slug = document.getElementById('pageSlug').value.trim();
+      const title = document.getElementById('pageTitle').value.trim();
+      const data = {
+        html, css, title, slug,
+        is_published: false,
+        updated_at: new Date().toISOString(),
+        account_id: fasUser && fasUser.account_id ? fasUser.account_id : null,
+        signal_id: fasUser && fasUser.signal_id ? fasUser.signal_id : null,
+        username: fasUser && fasUser.username ? fasUser.username : null
+      };
+      localStorage.setItem('faceless-builder-project', JSON.stringify(data));
+      pageState = { is_published: false, slug, updated_at: data.updated_at };
+      updatePageStatusUI();
+      alert('Draft saved!');
+    };
+
+    document.getElementById('publishPageBtn').onclick = async () => {
+      if (!editor) initEditor();
+      const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+      const html = editor.getHtml();
+      const css = editor.getCss();
+      const slug = document.getElementById('pageSlug').value.trim();
+      const title = document.getElementById('pageTitle').value.trim();
+      const data = {
+        html, css, title, slug,
+        is_published: true,
+        updated_at: new Date().toISOString(),
+        account_id: fasUser && fasUser.account_id ? fasUser.account_id : null,
+        signal_id: fasUser && fasUser.signal_id ? fasUser.signal_id : null,
+        username: fasUser && fasUser.username ? fasUser.username : null
+      };
+      localStorage.setItem('faceless-builder-project', JSON.stringify(data));
+      pageState = { is_published: true, slug, updated_at: data.updated_at };
+      updatePageStatusUI();
+      alert('Page published!');
+    };
+
+    document.getElementById('unpublishPageBtn').onclick = async () => {
+      const raw = localStorage.getItem('faceless-builder-project');
+      if (!raw) return alert('No project found');
+      const data = JSON.parse(raw);
+      data.is_published = false;
+      data.updated_at = new Date().toISOString();
+      localStorage.setItem('faceless-builder-project', JSON.stringify(data));
+      pageState = { is_published: false, slug: data.slug, updated_at: data.updated_at };
+      updatePageStatusUI();
+      alert('Page unpublished.');
+    };
+
+    document.getElementById('viewLivePageBtn').onclick = () => {
+      if (!pageState.is_published) return;
+      const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+      if (!fasUser || !fasUser.account_id) {
+        window.location.replace('login.html');
+        return;
+      }
+      const publicHandle = fasUser.username || fasUser.signal_id;
+      let url = `/${publicHandle}`;
+      if (pageState.slug) url = `/${publicHandle}/${pageState.slug}`;
+      window.open(url, '_blank');
+    };
+
+    function loadPageStateFromStorage() {
+      const raw = localStorage.getItem('faceless-builder-project');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      pageState = {
+        is_published: !!data.is_published,
+        slug: data.slug || '',
+        updated_at: data.updated_at || null
+      };
+      updatePageStatusUI();
+    }

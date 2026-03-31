@@ -72,6 +72,13 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_member_accounts_platform_id_upper_unique
 ALTER TABLE member_accounts
   DROP CONSTRAINT IF EXISTS chk_member_accounts_platform_id_format;
 
+
+-- Null out any invalid platform_id values before adding the constraint
+UPDATE member_accounts
+SET platform_id = NULL
+WHERE platform_id IS NOT NULL
+  AND NOT fas_signal_code_is_valid(platform_id);
+
 ALTER TABLE member_accounts
   ADD CONSTRAINT chk_member_accounts_platform_id_format
   CHECK (platform_id IS NULL OR fas_signal_code_is_valid(platform_id));
@@ -148,7 +155,11 @@ END;
 $$;
 
 -- One-time migration pass for existing rows.
-PERFORM fas_backfill_missing_signal_codes();
+DO $$
+BEGIN
+  PERFORM fas_backfill_missing_signal_codes();
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION admin_regenerate_signal_code(
   p_actor_username TEXT,

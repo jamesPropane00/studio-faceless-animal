@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+      // Canonical member session gate
+      const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+      if (!fasUser || !fasUser.account_id) {
+        window.location.replace('../login.html');
+      }
+    </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Creator page — Faceless Animal Studios" />
@@ -42,6 +49,14 @@
   data-page-type="creator"
   data-loading="true"
 >
+  <div id="template-editor-controls" style="margin:2rem auto 1rem auto;max-width:600px;display:flex;gap:0.5rem;align-items:center;justify-content:center;">
+    <span id="templatePageStatus" style="font-weight:700;font-size:0.9em;color:var(--gold-bright);">Draft</span>
+    <button id="templateSaveDraftBtn" class="btn btn-ghost btn-sm">Save Draft</button>
+    <button id="templatePublishBtn" class="btn btn-primary btn-sm">Publish</button>
+    <button id="templateUnpublishBtn" class="btn btn-ghost btn-sm">Unpublish</button>
+    <button id="templateViewLiveBtn" class="btn btn-ghost btn-sm">View Live Page</button>
+    <button id="insertImageBtn" class="btn btn-primary btn-sm" style="background:var(--purple-bright);color:#fff;">Insert Image</button>
+  </div>
 
   <!-- Loading overlay -->
   <div id="page-loading-overlay" role="status" aria-live="polite">
@@ -336,7 +351,128 @@
 
 
   <script src="../assets/js/env.js"></script>
+  <script>
+  // Quick Template editor: page status and publish logic
+  let templatePageState = {
+    is_published: false,
+    slug: '',
+    updated_at: null
+  };
+  function updateTemplatePageStatusUI() {
+    const statusEl = document.getElementById('templatePageStatus');
+    const viewBtn = document.getElementById('templateViewLiveBtn');
+    if (templatePageState.is_published) {
+      statusEl.textContent = 'Published';
+      statusEl.style.color = '#22c55e';
+      viewBtn.disabled = false;
+      viewBtn.textContent = 'View Live Page';
+    } else {
+      statusEl.textContent = 'Draft';
+      statusEl.style.color = 'var(--gold-bright)';
+      viewBtn.disabled = true;
+      viewBtn.textContent = 'Publish first';
+    }
+  }
+  function getTemplateSlug() {
+    // You may want to get this from an input or the current page context
+    // For now, use fas_user.username as the slug
+    const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+    return fasUser && fasUser.username ? fasUser.username : '';
+  }
+  document.getElementById('templateSaveDraftBtn').onclick = function() {
+    const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+    const slug = getTemplateSlug();
+    const data = {
+      is_published: false,
+      slug,
+      updated_at: new Date().toISOString(),
+      account_id: fasUser && fasUser.account_id ? fasUser.account_id : null,
+      signal_id: fasUser && fasUser.signal_id ? fasUser.signal_id : null,
+      username: fasUser && fasUser.username ? fasUser.username : null
+    };
+    localStorage.setItem('faceless-template-project', JSON.stringify(data));
+    templatePageState = { is_published: false, slug, updated_at: data.updated_at };
+    updateTemplatePageStatusUI();
+    alert('Draft saved!');
+  };
+  document.getElementById('templatePublishBtn').onclick = function() {
+    const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+    const slug = getTemplateSlug();
+    const data = {
+      is_published: true,
+      slug,
+      updated_at: new Date().toISOString(),
+      account_id: fasUser && fasUser.account_id ? fasUser.account_id : null,
+      signal_id: fasUser && fasUser.signal_id ? fasUser.signal_id : null,
+      username: fasUser && fasUser.username ? fasUser.username : null
+    };
+    localStorage.setItem('faceless-template-project', JSON.stringify(data));
+    templatePageState = { is_published: true, slug, updated_at: data.updated_at };
+    updateTemplatePageStatusUI();
+    alert('Page published!');
+  };
+  document.getElementById('templateUnpublishBtn').onclick = function() {
+    const raw = localStorage.getItem('faceless-template-project');
+    if (!raw) return alert('No project found');
+    const data = JSON.parse(raw);
+    data.is_published = false;
+    data.updated_at = new Date().toISOString();
+    localStorage.setItem('faceless-template-project', JSON.stringify(data));
+    templatePageState = { is_published: false, slug: data.slug, updated_at: data.updated_at };
+    updateTemplatePageStatusUI();
+    alert('Page unpublished.');
+  };
+  document.getElementById('templateViewLiveBtn').onclick = function() {
+    if (!templatePageState.is_published) return;
+    const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+    if (!fasUser || !fasUser.account_id) {
+      window.location.replace('../login.html');
+      return;
+    }
+    const publicHandle = fasUser.username || fasUser.signal_id;
+    let url = `/${publicHandle}`;
+    if (templatePageState.slug) url = `/${publicHandle}/${templatePageState.slug}`;
+    window.open(url, '_blank');
+  };
+  function loadTemplatePageStateFromStorage() {
+    const raw = localStorage.getItem('faceless-template-project');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    templatePageState = {
+      is_published: !!data.is_published,
+      slug: data.slug || '',
+      updated_at: data.updated_at || null
+    };
+    updateTemplatePageStatusUI();
+  }
+  // On load, initialize status UI
+  loadTemplatePageStateFromStorage();
+  </script>
   <script src="../assets/script.js?v=20260322" defer></script>
+  <script type="module">
+    import { openMediaPicker } from '../assets/js/media-picker.js';
+    // Insert Image button logic
+    const insertImageBtn = document.getElementById('insertImageBtn');
+    if (insertImageBtn) {
+      insertImageBtn.onclick = () => {
+        openMediaPicker({
+          onSelect: (media) => {
+            if (!media || !media.url) return;
+            // Insert image at cursor in main content area (about section)
+            const aboutSection = document.querySelector('.ap-bio-text div[data-slot="bio"]');
+            if (aboutSection) {
+              // Insert an <img> at the end for demo; in production, insert at cursor
+              const img = document.createElement('img');
+              img.src = media.url;
+              img.alt = media.alt || '';
+              img.style = 'max-width:100%;height:auto;border-radius:0.5em;box-shadow:0 2px 8px rgba(0,0,0,0.07);margin:0.5em auto;display:block;';
+              aboutSection.appendChild(img);
+            }
+          }
+        });
+      };
+    }
+  </script>
   <script type="module" src="../assets/js/page-renderer.js"></script>
 </body>
 </html>

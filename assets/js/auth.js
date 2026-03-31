@@ -252,6 +252,8 @@ export async function signIn(loginId, password) {
     username: u,
     display:  member?.display_name || u,
     platform_id: member?.platform_id || '',
+    account_id: member?.account_id || member?.id || '',
+    signal_id: member?.signal_id || '',
     plan:     member?.plan_type || 'free',
     status:   member?.member_status || 'free',
     role:     member?.role || 'user',

@@ -4,5 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --filter @workspace/studio run dev"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
   }
 }

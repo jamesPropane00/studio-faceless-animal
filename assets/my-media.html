@@ -1,0 +1,36 @@
+<!-- Shared Media Picker Modal -->
+<style>
+#mediaPickerModal {
+  display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.8); align-items: center; justify-content: center;
+}
+#mediaPickerSheet {
+  background: #fff; border-radius: 16px; max-width: 480px; width: 96vw; max-height: 90vh; overflow: auto;
+  padding: 1.5em; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  display: flex; flex-direction: column; gap: 1em;
+}
+@media (max-width: 600px) {
+  #mediaPickerSheet { width: 100vw; height: 100vh; border-radius: 0; max-width: none; max-height: none; }
+}
+#mediaPickerGrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1em;
+}
+.media-thumb {
+  display: flex; flex-direction: column; align-items: center; cursor: pointer; border: 2px solid #eee; border-radius: 8px; padding: 0.5em; background: #fafafa;
+  transition: border 0.2s;
+}
+.media-thumb:hover { border: 2px solid #0078ff; }
+.media-thumb img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; margin-bottom: 0.5em; }
+#mediaPickerUploadBtn { background: #0078ff; color: #fff; border: none; border-radius: 6px; padding: 0.5em 1em; font-size: 1em; cursor: pointer; }
+#mediaPickerClose { position: absolute; top: 1em; right: 1em; background: none; border: none; color: #fff; font-size: 2em; cursor: pointer; }
+</style>
+<div id="mediaPickerModal">
+  <div id="mediaPickerSheet">
+    <button id="mediaPickerClose">&times;</button>
+    <h2>Choose Image</h2>
+    <input type="file" id="mediaPickerUpload" accept="image/*" style="display:none" />
+    <button id="mediaPickerUploadBtn" onclick="document.getElementById('mediaPickerUpload').click()">Upload Image</button>
+    <div id="mediaPickerGrid"></div>
+  </div>
+</div>
+<script src="assets/js/media-picker.js"></script>

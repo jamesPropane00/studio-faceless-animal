@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="My Pages — Faceless Animal Studios" />
+  <title>My Pages — Faceless Animal Studios</title>
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
+  <style>
+    body { background: var(--bg); }
+    .page-manager-wrap { max-width: 700px; margin: 0 auto; padding: 2rem 1rem 6rem 1rem; }
+    .page-manager-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .page-manager-title { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.02em; }
+    .page-manager-new { font-size: 0.95rem; font-weight: 700; color: var(--gold-bright); background: none; border: none; cursor: pointer; }
+    .page-card-list { display: flex; flex-direction: column; gap: 1.2rem; }
+    .page-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 1.1rem; padding: 1.2rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 0.7rem; }
+    .page-card-header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    .page-card-title { font-size: 1.1rem; font-weight: 800; color: var(--text); }
+    .page-card-meta { font-size: 0.85rem; color: var(--text-3); }
+    .page-card-status { font-size: 0.85rem; font-weight: 700; border-radius: 999px; padding: 0.18em 0.8em; }
+    .page-card-status--draft { background: var(--bg-3); color: var(--gold-bright); }
+    .page-card-status--published { background: #e6fbe9; color: #22c55e; }
+    .page-card-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.2rem; }
+    .page-card-actions button { font-size: 0.85rem; font-weight: 700; border-radius: 0.7em; padding: 0.38em 1.1em; border: none; cursor: pointer; }
+    .page-card-actions .edit { background: var(--purple-bright); color: #fff; }
+    .page-card-actions .view { background: var(--bg-3); color: var(--text-2); }
+    .page-card-actions .publish { background: #22c55e; color: #fff; }
+    .page-card-actions .unpublish { background: var(--gold-bright); color: #fff; }
+    .page-card-actions .duplicate { background: var(--bg-3); color: var(--text-2); }
+    .page-card-actions .delete { background: #e11d48; color: #fff; }
+    @media (max-width: 600px) {
+      .page-manager-wrap { padding: 1.2rem 0.2rem 5rem 0.2rem; }
+      .page-card { padding: 1rem 0.7rem; }
+      .page-card-title { font-size: 1rem; }
+      .page-card-actions button { font-size: 0.82rem; padding: 0.32em 0.8em; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="dashboard.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="presence.html">Presence</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="logout.html">Sign Out</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="presence.html">Presence</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="logout.html">Sign Out</a>
+  </div>
+  <main>
+    <div class="page-manager-wrap">
+      <div class="page-manager-header">
+        <span class="page-manager-title">My Pages</span>
+        <button class="page-manager-new" id="newPageBtn">+ New Page</button>
+      </div>
+      <div id="pageCardList" class="page-card-list"></div>
+    </div>
+  </main>
+  <script type="module">
+    // Canonical session check
+    const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+    if (!fasUser || !fasUser.account_id) {
+      window.location.replace('login.html');
+    }
+    // Simulated page storage (replace with Supabase fetch in production)
+    function getAllPages() {
+      // For demo: use localStorage array 'fas_pages' (real: fetch from Supabase by account_id)
+      const raw = localStorage.getItem('fas_pages');
+      if (!raw) return [];
+      try {
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.filter(p => p.account_id === fasUser.account_id) : [];
+      } catch { return []; }
+    }
+    function saveAllPages(pages) {
+      localStorage.setItem('fas_pages', JSON.stringify(pages));
+    }
+    function renderPages() {
+      const list = document.getElementById('pageCardList');
+      const pages = getAllPages();
+      list.innerHTML = '';
+      if (!pages.length) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-3);padding:2.5rem 0;">No pages yet. Click <b>New Page</b> to get started.</div>';
+        return;
+      }
+      pages.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+      for (const page of pages) {
+        const card = document.createElement('div');
+        card.className = 'page-card';
+        card.innerHTML = `
+          <div class="page-card-header">
+            <span class="page-card-title">${page.title || 'Untitled Page'}</span>
+            <span class="page-card-status page-card-status--${page.is_published ? 'published' : 'draft'}">${page.is_published ? 'Published' : 'Draft'}</span>
+          </div>
+          <div class="page-card-meta">/${page.slug || 'untitled'} &middot; ${page.page_type || 'unknown'} &middot; Last updated: ${page.updated_at ? new Date(page.updated_at).toLocaleString() : '—'}</div>
+          <div class="page-card-actions">
+            <button class="edit">Edit</button>
+            <button class="view" ${!page.is_published ? 'disabled' : ''}>View Live</button>
+            <button class="${page.is_published ? 'unpublish' : 'publish'}">${page.is_published ? 'Unpublish' : 'Publish'}</button>
+            <button class="duplicate">Duplicate</button>
+            <button class="delete">Delete</button>
+          </div>
+        `;
+        // Action handlers
+        card.querySelector('.edit').onclick = () => {
+          if (page.page_type === 'visual') {
+            window.location.href = `faceless_builder_fullstack.html?page=${page.id}`;
+          } else {
+            window.location.href = `templates/creator.html?edit=1&page=${page.id}`;
+          }
+        };
+        card.querySelector('.view').onclick = () => {
+          if (!page.is_published) return;
+          const publicHandle = fasUser.username || fasUser.signal_id;
+          let url = `/${publicHandle}`;
+          if (page.slug) url = `/${publicHandle}/${page.slug}`;
+          window.open(url, '_blank');
+        };
+        card.querySelector('.publish').onclick = () => {
+          page.is_published = true;
+          page.updated_at = new Date().toISOString();
+          saveAllPages(pages);
+          renderPages();
+        };
+        card.querySelector('.unpublish').onclick = () => {
+          page.is_published = false;
+          page.updated_at = new Date().toISOString();
+          saveAllPages(pages);
+          renderPages();
+        };
+        card.querySelector('.duplicate').onclick = () => {
+          const newPage = { ...page, id: crypto.randomUUID(), title: page.title + ' (Copy)', slug: page.slug + '-copy', is_published: false, updated_at: new Date().toISOString() };
+          pages.unshift(newPage);
+          saveAllPages(pages);
+          renderPages();
+        };
+        card.querySelector('.delete').onclick = () => {
+          if (confirm('Delete this page? This cannot be undone.')) {
+            const idx = pages.findIndex(p => p.id === page.id);
+            if (idx !== -1) pages.splice(idx, 1);
+            saveAllPages(pages);
+            renderPages();
+          }
+        };
+        list.appendChild(card);
+      }
+    }
+    document.getElementById('newPageBtn').onclick = () => {
+      window.location.href = 'presence.html';
+    };
+    renderPages();
+  </script>
+</body>
+</html>

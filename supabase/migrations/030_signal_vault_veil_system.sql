@@ -18,7 +18,12 @@
 --  Safe to run multiple times (idempotent).
 -- ============================================================
 
+
 BEGIN;
+
+-- Ensure veil_state column exists before referencing it
+ALTER TABLE member_accounts
+  ADD COLUMN IF NOT EXISTS veil_state TEXT;
 
 -- ── 1. Add veil_level column ─────────────────────────────────
 ALTER TABLE member_accounts

@@ -33,11 +33,9 @@
     }
 
     .wallet-wrap {
-      min-height: 100dvh;
-      padding: 1.2rem 1rem 4.8rem;
-    }
-      gap: 0.5rem;
-    }
+    min-height: 100dvh;
+    padding: 1.2rem 1rem 4.8rem;
+}
 
     .trend-row {
       display: grid;
@@ -156,6 +154,12 @@
       </div>
     </section>
 
+    <!-- Demo: Media Picker Integration -->
+    <section style="margin:2em auto;max-width:420px;text-align:center;">
+      <button id="openMediaPickerDemo" class="btn btn-primary" type="button">Choose Wallet Image</button>
+      <div id="walletMediaPreview" style="margin-top:1em;"></div>
+    </section>
+
     <section id="wallet-app" class="wallet-shell wallet-glass">
       <div class="wallet-crypto-card" style="background:rgba(28,22,40,0.97);border-radius:22px;box-shadow:0 0 32px #7b65ff55,0 8px 36px #25d07f33;backdrop-filter:blur(14px);padding:2.2rem 1.3rem 1.7rem 1.3rem;display:flex;flex-direction:column;align-items:center;gap:1.3rem;max-width:420px;margin:0 auto;">
         <div style="display:flex;flex-direction:column;align-items:center;gap:0.7rem;">
@@ -178,6 +182,20 @@
   <script src="assets/js/access-gate.js?v=20260322"></script>
   <script type="module" src="assets/js/wallet.js"></script>
   <script src="assets/js/radio-widget.js" defer></script>
+    <script type="module">
+      import { openMediaPicker } from './assets/js/media-picker.js';
+      const btn = document.getElementById('openMediaPickerDemo');
+      const preview = document.getElementById('walletMediaPreview');
+      if (btn) {
+        btn.onclick = () => {
+          openMediaPicker({ onSelect: file => {
+            if (file && file.url) {
+              preview.innerHTML = `<img src="${file.url}" alt="" style="max-width:180px;border-radius:1em;box-shadow:0 2px 12px #0002;" />`;
+            }
+          }});
+        };
+      }
+    </script>
   <!-- Pulse UI Minimal Elements (add only if missing) -->
   <div>
     <label>Pulse Balance: <span id="pulseBalance">0.00</span></label>

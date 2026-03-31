@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -9,511 +10,160 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/style.css?v=20260322" />
-  <style>
-    .login-wrap {
-      min-height: 100dvh;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 2rem 1.25rem 4rem;
-      background: var(--bg);
-    }
-    .login-card {
-      width: 100%; max-width: 440px;
-      background: rgba(255,255,255,0.025);
-      border: 1px solid rgba(139,92,246,0.22);
-      border-radius: 20px; padding: 2.5rem 2rem;
-      box-shadow: 0 0 60px rgba(139,92,246,0.06);
-    }
-    .login-logo { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-3); margin-bottom: 1.75rem; display: block; }
-    .login-logo span { color: var(--purple-bright); }
-    .login-title { font-size: clamp(1.6rem,4vw,2rem); font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; color: var(--text); margin-bottom: 0.5rem; }
-    .login-title em { color: var(--purple-bright); font-style: normal; }
-    .login-sub { font-size: 0.85rem; color: var(--text-2); line-height: 1.7; margin-bottom: 2rem; }
-
-    .entry-gate {
-      margin-bottom: 1.35rem;
-      padding: 1rem 1rem 0.95rem;
-      border: 1px solid rgba(139,92,246,0.26);
-      border-radius: 14px;
-      background: linear-gradient(135deg, rgba(139,92,246,0.14), rgba(255,255,255,0.02));
-    }
-    .entry-gate-eyebrow {
-      margin: 0 0 0.35rem;
-      font-size: 0.62rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--purple-bright);
-      font-weight: 800;
-    }
-    .entry-gate-title {
-      margin: 0;
-      font-size: clamp(1.25rem, 3.3vw, 1.7rem);
-      line-height: 1.15;
-      letter-spacing: -0.03em;
-      font-weight: 900;
-      color: var(--text);
-    }
-    .entry-gate-title em { color: var(--purple-bright); font-style: normal; }
-    .entry-gate-sub {
-      margin: 0.55rem 0 0;
-      font-size: 0.81rem;
-      color: var(--text-2);
-      line-height: 1.72;
-    }
-    .entry-gate-actions {
-      margin-top: 0.75rem;
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-    .entry-gate-linkrow {
-      margin-top: 0.5rem;
-      display: flex;
-      gap: 0.85rem;
-      flex-wrap: wrap;
-    }
-    .entry-gate-linkrow a {
-      font-size: 0.72rem;
-      color: var(--text-3);
-      text-decoration: underline;
-      text-underline-offset: 2px;
-    }
-    .entry-gate-linkrow a:hover { color: var(--text-2); }
-
-    .login-tabs { display: flex; gap: 0; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; margin-bottom: 1.75rem; }
-    .login-tab { flex: 1; padding: 0.6rem 1rem; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); background: transparent; border: none; cursor: pointer; transition: background 0.15s, color 0.15s; }
-    .login-tab--active { background: rgba(139,92,246,0.2); color: var(--purple-bright); }
-
-    .login-form { display: flex; flex-direction: column; gap: 1rem; }
-    .lf-label { display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 0.4rem; }
-    .lf-input { width: 100%; padding: 0.75rem 1rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: var(--text); font-size: 0.95rem; font-family: inherit; outline: none; transition: border-color 0.15s; box-sizing: border-box; }
-    .lf-input::placeholder { color: var(--text-3); }
-    .lf-input:focus { border-color: rgba(139,92,246,0.5); }
-    .lf-hint { font-size: 0.71rem; color: var(--text-3); margin-top: 0.3rem; line-height: 1.5; }
-
-    /* Password input wrapper with show/hide toggle */
-    .lf-pw-wrap { position: relative; }
-    .lf-pw-wrap .lf-input { padding-right: 2.75rem; }
-    .lf-pw-toggle { position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 0.85rem; padding: 0.25rem; line-height: 1; }
-    .lf-pw-toggle:hover { color: var(--text-2); }
-
-    .lf-error { color: #f87171; font-size: 0.78rem; font-weight: 600; padding: 0.65rem 0.85rem; background: rgba(248,113,113,0.07); border: 1px solid rgba(248,113,113,0.2); border-radius: 8px; display: none; line-height: 1.5; }
-    .lf-error.visible { display: block; }
-    .lf-success { color: #22c55e; font-size: 0.78rem; font-weight: 600; padding: 0.65rem 0.85rem; background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); border-radius: 8px; display: none; line-height: 1.5; }
-    .lf-success.visible { display: block; }
-    .lf-info { color: var(--text-2); font-size: 0.78rem; padding: 0.65rem 0.85rem; background: rgba(139,92,246,0.07); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; display: none; line-height: 1.55; }
-    .lf-info.visible { display: block; }
-
-    .lf-submit { width: 100%; padding: 0.85rem 1rem; background: linear-gradient(135deg, var(--purple), var(--purple-bright)); border: none; border-radius: 10px; color: #fff; font-family: inherit; font-size: 0.95rem; font-weight: 800; letter-spacing: 0.04em; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
-    .lf-submit:hover { opacity: 0.92; }
-    .lf-submit:active { transform: scale(0.98); }
-    .lf-submit:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
-
-    .lf-divider { display: flex; align-items: center; gap: 0.75rem; margin: 1.5rem 0; color: var(--text-3); font-size: 0.72rem; }
-    .lf-divider::before, .lf-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
-
-    .lf-plan-btn { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.7rem 0.9rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; text-decoration: none; color: var(--text); font-size: 0.82rem; transition: border-color 0.15s, background 0.15s; }
-    .lf-plan-btn:hover { border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.05); }
-    .lf-plan-btn--gold { border-color: rgba(212,175,55,0.2); }
-    .lf-plan-btn--gold:hover { border-color: rgba(212,175,55,0.45); background: rgba(212,175,55,0.04); }
-    .lf-plan-btn--free { border-color: rgba(139,92,246,0.2); }
-
-    .login-footer-note { text-align: center; font-size: 0.75rem; color: var(--text-3); margin-top: 1rem; }
-    .login-footer-note a { color: var(--purple-bright); font-weight: 700; text-decoration: none; }
-    .login-footer-note a:hover { text-decoration: underline; }
-
-    /* Success card */
-    .login-success-card { display: none; text-align: center; padding: 1.5rem 0; }
-    .login-success-card.visible { display: block; }
-    .login-success-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-    .login-success-title { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 0.35rem; }
-    .login-success-handle { font-size: 1.1rem; color: var(--purple-bright); font-weight: 700; margin-bottom: 0.6rem; }
-    .login-success-sub { font-size: 0.85rem; color: var(--text-2); line-height: 1.65; margin-bottom: 1.5rem; max-width: 320px; margin-left: auto; margin-right: auto; }
-    .login-success-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
-
-    /* Set-password panel (for existing users without a password) */
-    .lf-set-pw-panel { display: none; }
-    .lf-set-pw-panel.visible { display: block; }
-    .lf-panel-title { font-size: 0.95rem; font-weight: 800; margin-bottom: 0.35rem; color: var(--text); }
-    .lf-panel-sub { font-size: 0.8rem; color: var(--text-2); line-height: 1.6; margin-bottom: 1rem; }
-
-    /* Username available indicator */
-    .lf-avail { font-size: 0.7rem; margin-top: 0.3rem; font-weight: 700; }
-    .lf-avail--ok  { color: #22c55e; }
-    .lf-avail--no  { color: #f87171; }
-    .lf-avail--checking { color: var(--text-3); }
-
-    /* Spinner */
-    .lf-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(139,92,246,0.25); border-top-color: var(--purple-bright); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
 </head>
 <body>
-
-  <nav class="navbar" role="navigation" aria-label="Main navigation">
-    <div class="container">
-      <div class="navbar-inner">
-        <a href="landingpage.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
-        <ul class="navbar-links" role="list">
-          <li><a href="directory.html">Directory</a></li>
-          <li><a href="games.html">Games</a></li>
-          <li><a href="music.html">Music</a></li>
-          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
-          <li><a href="pricing.html">Pricing</a></li>
-          <li><a href="dashboard.html">Dashboard</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
-        </ul>
-        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
-          <span></span><span></span><span></span>
-        </button>
-      </div>
-    </div>
-  </nav>
-
-  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
-    <a href="directory.html">Directory</a>
-    <a href="games.html">Games</a>
-    <a href="music.html">Music</a>
-    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
-    <a href="pricing.html">Pricing</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="about.html">About</a>
-    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
-  </div>
-
-  <div class="login-wrap">
-    <div class="login-card">
-      <h1 class="login-title">Sign In.<br /><em>Take Your Seat.</em></h1>
-      <p class="login-sub">Identity is not assigned here. Access is not assumed. Use your handle or Signal ID plus password, then protect your recovery code.</p>
-      <div id="login-panel">
-        <form class="login-form" id="signin-form" novalidate>
-          <div>
-            <label class="lf-label" for="signin-username">Username or Signal ID</label>
-            <input class="lf-input" type="text" id="signin-username" name="username" placeholder="@yourhandle or sig_xxxxxxxx" autocomplete="username" spellcheck="false" autocorrect="off" autocapitalize="none" required />
+  <div class="auth-bg">
+    <div class="auth-flex">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <img src="assets/images/radio.png" alt="Faceless Brand" />
+        </div>
+        <h1 class="auth-title">Enter Signal.<span>Stay faceless. Move freely.</span></h1>
+        <form id="signin-form" novalidate>
+          <label for="signin-username" class="auth-label">Username or Signal ID</label>
+          <input
+            id="signin-username"
+            name="username"
+            type="text"
+            placeholder="your_id"
+            autocomplete="username"
+            spellcheck="false"
+            autocorrect="off"
+            autocapitalize="none"
+            required
+            class="auth-input"
+          />
+          <label for="signin-password" class="auth-label">Password</label>
+          <div class="auth-pw-wrap">
+            <input
+              id="signin-password"
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+              class="auth-input"
+            />
+            <button type="button" class="auth-pw-toggle" data-target="signin-password" aria-label="Show/hide password">👁</button>
           </div>
-          <div>
-            <label class="lf-label" for="signin-password">Password</label>
-            <div class="lf-pw-wrap">
-              <input class="lf-input" type="password" id="signin-password" name="password" placeholder="••••••••" autocomplete="current-password" required />
-              <button type="button" class="lf-pw-toggle" data-target="signin-password" aria-label="Show/hide password">👁</button>
-            </div>
-          </div>
-          <div id="signin-error" class="lf-error" role="alert"></div>
-          <button type="submit" class="lf-submit" id="signin-btn">Sign In →</button>
+          <div id="signin-error" class="auth-error" role="alert"></div>
+          <button type="submit" id="signin-btn" class="auth-btn">Enter →</button>
         </form>
-        <!-- Set-password panel (shown when existing account has no password) -->
-        <div class="lf-set-pw-panel" id="set-pw-panel">
-          <div style="margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid rgba(255,255,255,0.07);">
-            <p class="lf-panel-title">Set Your Password</p>
-            <p class="lf-panel-sub">Your account (@<span id="set-pw-username"></span>) doesn't have a password yet. Set one now to lock it in — first one to claim it owns it.</p>
-          </div>
-          <form class="login-form" id="set-pw-form" novalidate>
-            <div>
-              <label class="lf-label" for="set-pw-new">New Password</label>
-              <div class="lf-pw-wrap">
-                <input class="lf-input" type="password" id="set-pw-new" placeholder="••••••••" autocomplete="new-password" />
-                <button type="button" class="lf-pw-toggle" data-target="set-pw-new" aria-label="Show/hide password">👁</button>
-              </div>
-              <p class="lf-hint">At least 8 characters.</p>
-            </div>
-            <div>
-              <label class="lf-label" for="set-pw-confirm">Confirm Password</label>
-              <div class="lf-pw-wrap">
-                <input class="lf-input" type="password" id="set-pw-confirm" placeholder="••••••••" autocomplete="new-password" />
-                <button type="button" class="lf-pw-toggle" data-target="set-pw-confirm" aria-label="Show/hide password">👁</button>
-              </div>
-            </div>
-            <div id="set-pw-error" class="lf-error" role="alert"></div>
-            <div id="set-pw-success" class="lf-success" role="status"></div>
-            <button type="submit" class="lf-submit" id="set-pw-btn">Set Password &amp; Sign In →</button>
-            <button type="button" class="btn btn-ghost" id="set-pw-cancel" style="font-size:0.8rem;margin-top:-0.25rem;">← Back to Sign In</button>
-          </form>
-        </div>
+        <button id="open-create" class="auth-btn alt">Create Account</button>
       </div>
-      <!-- Success State -->
-      <div class="login-success-card" id="login-success" aria-live="polite">
-        <div class="login-success-icon" aria-hidden="true">✦</div>
-        <p class="login-success-title">You're In.</p>
-        <p class="login-success-handle" id="success-handle">@handle</p>
-        <p class="login-success-sub">You're signed in. The radio chat is open and platform features are unlocked.</p>
-        <p class="login-success-sub" id="success-meta" style="display:none;font-size:0.78rem;line-height:1.7;color:var(--gold-dim);"></p>
-        <div class="login-success-actions">
-          <a href="dashboard.html" class="btn btn-primary">Dashboard →</a>
-          <a href="radio.html" class="btn btn-ghost">Radio</a>
-        </div>
-        <p class="login-footer-note" style="margin-top:0.5rem;">
-          <a href="login.html?switch=1">Not you? Switch account</a>
+      <div class="auth-explain">
+        <h2>Welcome to Faceless Animal Studios</h2>
+        <p>
+          Faceless Animal Studios is a secure, privacy-first platform for creators, listeners, and explorers. Sign in to access radio, games, music, and the global directory. <br><br>
+          <strong>New here?</strong> Creating an account is fast and easy. Your identity is yours—no email required. Protect your handle and recovery code!
         </p>
+        <button id="open-create-2" class="auth-btn alt">Create Account</button>
+      </div>
+    </div>
+    <div id="create-modal" class="auth-modal" style="display:none;">
+      <div class="auth-modal-content">
+        <span id="close-create" class="auth-modal-close">&times;</span>
+        <h2>Create Your Account</h2>
+        <form id="create-form" novalidate>
+          <label for="create-username" class="auth-label">Choose a Username</label>
+          <input id="create-username" name="username" type="text" placeholder="your_id" required class="auth-input" />
+          <label for="create-password" class="auth-label">Password</label>
+          <input id="create-password" name="password" type="password" placeholder="••••••••" required class="auth-input" />
+          <div id="create-error" class="auth-error" role="alert"></div>
+          <button type="submit" class="auth-btn">Create Account</button>
+        </form>
       </div>
     </div>
   </div>
-
   <script src="assets/script.js?v=20260322"></script>
   <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
   <script src="assets/js/env.js" onerror="void 0"></script>
   <script src="assets/js/radio-widget.js" defer></script>
   <script type="module">
-    import { signIn, createAccount, setInitialPassword, isUsernameAvailable, cleanUsername, validatePassword, getStoredSession, clearStoredSession } from './assets/js/auth.js'
-    import { trackMemberActivity } from './assets/js/member-db.js'
+    import { signIn, cleanUsername } from './assets/js/auth.js'
+    // --- Login form handler ---
+    const signinForm = document.getElementById('signin-form');
+    const signinError = document.getElementById('signin-error');
+    const signinBtn = document.getElementById('signin-btn');
+    const pwToggle = document.querySelector('.auth-pw-toggle');
 
-    // ── DOM refs ──────────────────────────────────────────────
-    const loginPanel  = document.getElementById('login-panel')
-    const successCard = document.getElementById('login-success')
-    const tabSignin   = document.getElementById('tab-signin')
-    const tabCreate   = document.getElementById('tab-create')
-    const panelSignin = document.getElementById('panel-signin')
-    const panelCreate = document.getElementById('panel-create')
-
-    // ── Already signed in? ────────────────────────────────────
-    const existing = getStoredSession()
-    const params   = new URLSearchParams(window.location.search)
-
-    function resolvePostIntentDestination() {
-      const intent = (params.get('intent') || '').toLowerCase()
-      const redirect = params.get('redirect')
-      if (intent === 'post') {
-        try {
-          const draft = JSON.parse(localStorage.getItem('signal_draft') || 'null')
-          if (draft && String(draft.text || '').trim()) return 'network.html?intent=post'
-        } catch (_) {}
-      }
-      return redirect ? decodeURIComponent(redirect) : 'dashboard.html'
+    // Password show/hide toggle
+    if (pwToggle) {
+      pwToggle.addEventListener('click', () => {
+        const pwInput = document.getElementById(pwToggle.dataset.target);
+        if (pwInput) {
+          pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
+        }
+      });
     }
 
-    // Only auto-redirect if NOT explicitly visiting to switch accounts
-    if (existing && existing.username && !params.get('switch')) {
-      // Show success but don't auto-redirect — let user choose
-      loginPanel.style.display = 'none'
-      successCard.classList.add('visible')
-      document.getElementById('success-handle').textContent = '@' + existing.username
-      const dest = resolvePostIntentDestination()
-      setTimeout(() => { window.location.href = dest }, 1200)
-    } else if (params.get('tab') === 'create') {
-      showTab('create')
-    } else if (params.get('switch')) {
-      // Clear session so user can sign in fresh
-      clearStoredSession()
-    }
-
-    // ── Tab switching ─────────────────────────────────────────
-    // Removed tab switching and entry-gate listeners: elements no longer exist after slimming down the login page.
-
-    // ── Password show/hide toggles ────────────────────────────
-    document.querySelectorAll('.lf-pw-toggle').forEach(btn => {
-      if (btn) {
-        btn.addEventListener('click', () => {
-          const input = document.getElementById(btn.dataset.target)
-          if (!input) return
-          const isText = input.type === 'text'
-          input.type = isText ? 'password' : 'text'
-          btn.textContent = isText ? '👁' : '🙈'
-        })
-      }
-    })
-
-    // ── Show success ──────────────────────────────────────────
-    function showSuccess(username, meta = null) {
-      loginPanel.style.display = 'none'
-      successCard.classList.add('visible')
-      document.getElementById('success-handle').textContent = '@' + username
-      const metaEl = document.getElementById('success-meta')
-      if (metaEl) {
-        if (meta && meta.recoveryCode) {
-          const platformLine = meta.platformId ? ('Signal ID: <strong>' + meta.platformId + '</strong><br>') : ''
-          metaEl.innerHTML = platformLine + 'Recovery code: <strong>' + meta.recoveryCode + '</strong><br>Save this now. It cannot be recovered later.'
-          metaEl.style.display = ''
+    if (signinForm) {
+      signinForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        signinError.textContent = '';
+        signinBtn.disabled = true;
+        const username = document.getElementById('signin-username').value;
+        const password = document.getElementById('signin-password').value;
+        const cleaned = cleanUsername(username) || username;
+        const { success, error } = await signIn(cleaned, password);
+        if (success) {
+          window.location.href = 'dashboard.html';
         } else {
-          metaEl.style.display = 'none'
-          metaEl.textContent = ''
+          signinError.textContent = error || 'Login failed.';
+          signinBtn.disabled = false;
         }
-      }
-      const dest = resolvePostIntentDestination()
-      setTimeout(() => { window.location.href = dest }, 1200)
+      });
     }
 
-    // ── Sign In form ──────────────────────────────────────────
-    const signinForm = document.getElementById('signin-form')
-    const signinErr  = document.getElementById('signin-error')
-    const signinBtn  = document.getElementById('signin-btn')
+    // --- Create Account Modal Logic ---
+    const openCreate = document.getElementById('open-create');
+    const openCreate2 = document.getElementById('open-create-2');
+    const createModal = document.getElementById('create-modal');
+    const closeCreate = document.getElementById('close-create');
+    const createForm = document.getElementById('create-form');
+    const createError = document.getElementById('create-error');
 
-    signinForm.addEventListener('submit', async e => {
-      e.preventDefault()
-      signinErr.classList.remove('visible')
+    function showCreateModal() {
+      createModal.style.display = 'flex';
+    }
+    function hideCreateModal() {
+      createModal.style.display = 'none';
+      createError.textContent = '';
+      createForm.reset();
+    }
+    if (openCreate) openCreate.onclick = showCreateModal;
+    if (openCreate2) openCreate2.onclick = showCreateModal;
+    if (closeCreate) closeCreate.onclick = hideCreateModal;
+    window.onclick = function(event) {
+      if (event.target === createModal) hideCreateModal();
+    }
 
-      const rawUsername = document.getElementById('signin-username').value
-      const password    = document.getElementById('signin-password').value
-      const username    = cleanUsername(rawUsername)
-
-      if (!username) {
-        showErr(signinErr, 'Enter a valid username — letters, numbers, underscores, hyphens, 3–40 characters.')
-        return
-      }
-      if (!password) {
-        showErr(signinErr, 'Enter your password.')
-        return
-      }
-
-      setLoading(signinBtn, true, 'Signing In…')
-
-      const { success, error, errorCode } = await signIn(username, password)
-
-      if (success) {
-        trackMemberActivity(username, 'login', {
-          source: 'client',
-          pagePath: window.location.pathname,
-          momentumDelta: 1,
-        })
-        showSuccess(username)
-        return
-      }
-
-      setLoading(signinBtn, false, 'Sign In →')
-
-      if (errorCode === 'no_password') {
-        // Existing account without a password — show set-password panel
-        signinForm.style.display = 'none'
-        const setPwPanel = document.getElementById('set-pw-panel')
-        setPwPanel.classList.add('visible')
-        document.getElementById('set-pw-username').textContent = username
-        setPwPanel.dataset.username = username
-      } else {
-        showErr(signinErr, error || 'Sign in failed. Try again.')
-      }
-    })
-
-    // ── Set-password panel (for existing accounts) ────────────
-    const setPwForm = document.getElementById('set-pw-form')
-    const setPwErr  = document.getElementById('set-pw-error')
-    const setPwOk   = document.getElementById('set-pw-success')
-    const setPwBtn  = document.getElementById('set-pw-btn')
-
-    document.getElementById('set-pw-cancel')?.addEventListener('click', () => {
-      document.getElementById('set-pw-panel').classList.remove('visible')
-      signinForm.style.display = ''
-      setPwErr.classList.remove('visible')
-      setPwOk.classList.remove('visible')
-    })
-
-    setPwForm?.addEventListener('submit', async e => {
-      e.preventDefault()
-      setPwErr.classList.remove('visible')
-      setPwOk.classList.remove('visible')
-
-      const username = document.getElementById('set-pw-panel').dataset.username
-      const pw1      = document.getElementById('set-pw-new').value
-      const pw2      = document.getElementById('set-pw-confirm').value
-
-      const pwErr = validatePassword(pw1)
-      if (pwErr) { showErr(setPwErr, pwErr); return }
-      if (pw1 !== pw2) { showErr(setPwErr, 'Passwords do not match.'); return }
-
-      setLoading(setPwBtn, true, 'Setting Password…')
-
-      const { success, error } = await setInitialPassword(username, pw1)
-
-      if (!success) {
-        setLoading(setPwBtn, false, 'Set Password & Sign In →')
-        showErr(setPwErr, error || 'Failed to set password.')
-        return
-      }
-
-      // Password set — now sign them in
-      const { success: signinOk, error: signinErr2 } = await signIn(username, pw1)
-      if (signinOk) {
-        trackMemberActivity(username, 'login', {
-          source: 'client',
-          pagePath: window.location.pathname,
-          momentumDelta: 1,
-        })
-        showSuccess(username)
-      } else {
-        setLoading(setPwBtn, false, 'Set Password & Sign In →')
-        showErr(setPwErr, 'Password saved, but sign-in failed. Try signing in manually.')
-      }
-    })
-
-    // ── Create Account form ───────────────────────────────────
-    const createForm = document.getElementById('create-form')
-    const createErr  = document.getElementById('create-error')
-    const createBtn  = document.getElementById('create-btn')
-    const availMsg   = document.getElementById('create-avail-msg')
-
-    // Username availability check on input (debounced)
-    let availTimer = null
-    document.getElementById('create-username')?.addEventListener('input', e => {
-      clearTimeout(availTimer)
-      const raw = e.target.value
-      const u   = cleanUsername(raw)
-      if (!u) { availMsg.textContent = ''; return }
-      availMsg.textContent = 'Checking…'
-      availMsg.className   = 'lf-avail lf-avail--checking'
-      availTimer = setTimeout(async () => {
-        const { available, error } = await isUsernameAvailable(u)
-        if (error && error !== 'offline') {
-          availMsg.textContent = ''; return
+    import { createAccount } from './assets/js/auth.js';
+    createForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      createError.textContent = '';
+      const username = document.getElementById('create-username').value;
+      const password = document.getElementById('create-password').value;
+      try {
+        const { success, error, recoveryCode, errorCode, supabaseError } = await createAccount(username, password);
+        if (success) {
+          createError.style.color = '#a78bfa';
+          createError.textContent = `Account created! Your recovery code: ${recoveryCode}`;
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1800);
+        } else {
+          createError.style.color = '#ff4d4d';
+          let msg = error || 'Account creation failed.';
+          if (errorCode) msg += ` [${errorCode}]`;
+          if (supabaseError) msg += `\nSupabase: ${supabaseError}`;
+          createError.textContent = msg;
         }
-        availMsg.textContent = available ? '✓ @' + u + ' is available' : '✗ @' + u + ' is taken'
-        availMsg.className   = 'lf-avail ' + (available ? 'lf-avail--ok' : 'lf-avail--no')
-      }, 500)
-    })
-
-    createForm.addEventListener('submit', async e => {
-      e.preventDefault()
-      createErr.classList.remove('visible')
-
-      const rawUsername = document.getElementById('create-username').value
-      const displayRaw  = document.getElementById('create-display').value.trim()
-      const recoveryRaw = document.getElementById('create-recovery').value.trim()
-      const recoveryAck = !!document.getElementById('create-recovery-ack')?.checked
-      const password    = document.getElementById('create-password').value
-      const confirm     = document.getElementById('create-confirm').value
-      const username    = cleanUsername(rawUsername)
-
-      if (!username) {
-        showErr(createErr, 'Choose a username — letters, numbers, underscores, 3–30 characters.')
-        return
+      } catch (err) {
+        createError.style.color = '#ff4d4d';
+        createError.textContent = 'Unexpected error: ' + (err?.message || err);
       }
-      const pwErr = validatePassword(password)
-      if (pwErr) { showErr(createErr, pwErr); return }
-      if (password !== confirm) {
-        showErr(createErr, 'Passwords do not match. Re-enter them.')
-        return
-      }
-      if (!recoveryAck) {
-        showErr(createErr, 'You must confirm the recovery-code warning to continue.')
-        return
-      }
-
-      setLoading(createBtn, true, 'Creating Account…')
-
-      const { success, error, recoveryCode, platformId } = await createAccount(username, password, displayRaw, recoveryRaw)
-
-      if (success) {
-        trackMemberActivity(username, 'login', {
-          source: 'client',
-          pagePath: window.location.pathname,
-          momentumDelta: 1,
-        })
-        showSuccess(username, { recoveryCode, platformId })
-        return
-      }
-
-      setLoading(createBtn, false, 'Create Account →')
-      showErr(createErr, error || 'Could not create account. Try again.')
-    })
-
-    // ── Helpers ───────────────────────────────────────────────
-    function showErr(el, msg) {
-      el.textContent = msg
-      el.classList.add('visible')
-    }
-
-    function setLoading(btn, loading, label) {
-      btn.disabled     = loading
-      btn.innerHTML    = loading ? `<span class="lf-spinner"></span> ${label}` : label
-    }
-
+    });
   </script>
 </body>
 </html>

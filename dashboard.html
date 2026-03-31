@@ -414,6 +414,24 @@
     <!-- Dashboard: signed in -->
     <div class="dash-container" id="dash-main" style="display:none;">
 
+      <!-- My Page Card: Single Doorway to Page Creation -->
+      <section class="dash-section" id="my-page-section">
+        <div class="dash-card dash-card--purple" style="margin-bottom:1.2rem;">
+          <h2 style="font-size:1.18rem;font-weight:900;margin:0 0 0.5rem;">My Page</h2>
+          <p style="font-size:0.89rem;color:var(--text-2);margin:0 0 1rem;">Your public profile and landing page. Build it your way, share it anywhere.</p>
+          <div class="dash-status-row" style="margin-bottom:0.7rem;">
+            <span class="dash-status-label">Page Status</span>
+            <span class="dash-status-val dash-status-val--none" id="my-page-status">Checking…</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <a href="my-page.html" class="btn btn-primary">Open My Page</a>
+            <a id="my-page-view-live" href="#" class="btn btn-secondary" target="_blank" style="display:none;">View Live</a>
+            <a href="my-page.html" class="btn btn-secondary">Edit</a>
+          </div>
+        </div>
+      </section>
+
+
       <!-- Header -->
       <div class="dash-header">
         <div class="dash-avatar" id="dash-avatar"><span id="dash-avatar-initial">?</span></div>
@@ -424,6 +442,31 @@
         </div>
         <span class="dash-plan-badge dash-plan-badge--free" id="dash-plan-badge">Free</span>
       </div>
+
+      <script>
+      // Session check (if not already present)
+      (function() {
+        const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+        if (!fasUser || !fasUser.account_id) {
+          window.location.replace('login.html');
+        }
+        // Page status logic (replace with your real check)
+        const statusEl = document.getElementById('my-page-status');
+        const viewLiveBtn = document.getElementById('my-page-view-live');
+        // Example: check if user has a published page (replace with real logic)
+        const hasPage = fasUser && fasUser.page_published; // or your real flag
+        if (hasPage) {
+          statusEl.textContent = 'Live at:';
+          viewLiveBtn.style.display = '';
+          // Use your real public route pattern here:
+          viewLiveBtn.href = 'creator.html?u=' + encodeURIComponent(fasUser.username);
+          viewLiveBtn.textContent = 'View Live';
+        } else {
+          statusEl.textContent = 'Not published yet';
+          viewLiveBtn.style.display = 'none';
+        }
+      })();
+      </script>
 
       <div class="dash-moment" id="dash-moment" style="display:none;">
         <p class="dash-moment-eyebrow" id="dash-moment-title">Signal Active</p>
@@ -1332,7 +1375,7 @@
             <div class="dash-status-row"><span class="dash-status-label">Role Model</span><span class="dash-status-val">member_accounts.role</span></div>
             <div class="dash-status-row"><span class="dash-status-label">Identity Model</span><span class="dash-status-val">Handle / Signal ID / Password / Recovery Code</span></div>
             <div class="dash-status-row"><span class="dash-status-label">Enforcement</span><span class="dash-status-val">warn / suspend / ban / soft delete</span></div>
-            <div style="margin-top:0.8rem;"><a class="btn btn-ghost btn-sm" href="admin/index.html" aria-label="Admin Only">Open Standalone Admin Surface →</a></div>
+            <div style="margin-top:0.8rem;"><a class="btn btn-ghost btn-sm" href="admin/index.html">Open Standalone Admin Surface →</a></div>
           </div>
         </div>
 
@@ -1576,7 +1619,7 @@
   <script type="module">
     import { supabase, SUPABASE_READY } from './assets/js/supabase-client.js'
     import { getSession, getMember, syncMember, updateMember, touchActive, clearSession, getPlanMeta, getStatusMeta, getPublicProfile } from './assets/js/member-db.js'
-    // import { createBoardPost } from './assets/js/services/board.js' // Disabled unfinished board logic
+    import { createBoardPost } from './assets/js/services/board.js'
     import { loadThreads, formatDMTime, DM_READY } from './assets/js/dm.js'
     import { getUserRole } from './assets/js/admin-permissions.js'
     import { generateRecoveryCode, cleanRecoveryCode, hashRecoveryCode } from './assets/js/auth.js'
@@ -5714,14 +5757,6 @@ GRANT EXECUTE ON FUNCTION admin_fix_missing_signal_codes(TEXT, TEXT) TO anon, au
       const human = raw.replace(/[_-]+/g, ' ').trim()
       return human ? human.charAt(0).toUpperCase() + human.slice(1) : 'Activity'
     }
-  </script>
-  <!-- Pulse Balance Display (add only if missing) -->
-  <div>
-    <label>Pulse Balance: <span id="pulseBalance">0.00</span></label>
-  </div>
-  <script type="module">
-    import { loadPulseBalance } from '/assets/js/pulse.js';
-    loadPulseBalance();
   </script>
 </body>
 </html>

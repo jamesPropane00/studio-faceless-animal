@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Quick Template — Faceless Animal Studios" />
+  <title>Quick Template — Faceless Animal Studios</title>
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
+  <style>
+    body { background: var(--bg); }
+    .qt-shell { max-width: 480px; margin: 0 auto; padding: 2rem 0.5rem 6rem 0.5rem; }
+    .qt-step { margin-bottom: 2.2rem; }
+    .qt-step-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 0.7rem; }
+    .qt-choices { display: flex; flex-direction: column; gap: 1rem; }
+    .qt-choice-btn { font-size: 1.1rem; font-weight: 700; border-radius: 0.7em; padding: 0.7em 1.1em; border: none; cursor: pointer; background: var(--bg-2); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .qt-choice-btn.selected, .qt-choice-btn:active { background: var(--purple-bright); color: #fff; }
+    .qt-preview { border: 1.5px solid var(--border); border-radius: 1.1rem; background: var(--bg-2); margin: 1.5rem 0; padding: 1.2rem 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .qt-form-group { margin-bottom: 1.2rem; }
+    .qt-label { font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; display: block; }
+    .qt-input, .qt-textarea { width: 100%; border-radius: 0.5em; border: 1px solid var(--border); padding: 0.6em 0.9em; font-size: 1rem; background: var(--bg-1); color: var(--text); }
+    .qt-textarea { min-height: 80px; resize: vertical; }
+    .qt-img-picker { display: flex; gap: 0.7rem; align-items: center; }
+    .qt-img-thumb { width: 56px; height: 56px; border-radius: 0.7em; object-fit: cover; background: var(--bg-3); border: 1.5px solid var(--border); }
+    .qt-img-btn { font-size: 0.95rem; font-weight: 700; color: var(--gold-bright); background: none; border: none; cursor: pointer; }
+    .qt-actions { display: flex; gap: 0.7rem; margin-top: 2.2rem; }
+    .qt-actions button { font-size: 1.1rem; font-weight: 700; border-radius: 0.7em; padding: 0.7em 1.1em; border: none; cursor: pointer; }
+    .qt-actions .save { background: var(--bg-3); color: var(--text-2); }
+    .qt-actions .publish { background: var(--purple-bright); color: #fff; }
+    .qt-actions .view { background: var(--gold-bright); color: #fff; }
+    @media (max-width: 600px) {
+      .qt-shell { padding: 1.2rem 0.2rem 5rem 0.2rem; }
+      .qt-step-title { font-size: 1.1rem; }
+      .qt-actions button { font-size: 1rem; padding: 0.5em 0.8em; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="dashboard.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="presence.html">Presence</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="logout.html">Sign Out</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="presence.html">Presence</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="logout.html">Sign Out</a>
+  </div>
+  <main>
+    <div class="qt-shell">
+      <div id="qtStep1" class="qt-step">
+        <div class="qt-step-title">1. Choose Page Type</div>
+        <div class="qt-choices" id="qtPageTypeChoices"></div>
+      </div>
+      <div id="qtStep2" class="qt-step" style="display:none;">
+        <div class="qt-step-title">2. Choose Starter Style</div>
+        <div class="qt-choices" id="qtTemplateChoices"></div>
+      </div>
+      <div id="qtStep3" class="qt-step" style="display:none;">
+        <div class="qt-step-title">3. Edit Your Page</div>
+        <form id="qtEditForm"></form>
+      </div>
+      <div id="qtStep4" class="qt-step" style="display:none;">
+        <div class="qt-step-title">4. Mobile Preview</div>
+        <div class="qt-preview" id="qtPreview"></div>
+      </div>
+      <div class="qt-actions" id="qtActions" style="display:none;">
+        <button type="button" class="save" id="qtSaveBtn">Save Draft</button>
+        <button type="button" class="publish" id="qtPublishBtn">Publish</button>
+        <button type="button" class="view" id="qtViewBtn">View Live</button>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="assets/js/quick-template.js"></script>
+</body>
+</html>

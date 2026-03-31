@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="My Media — Faceless Animal Studios" />
+  <title>My Media — Faceless Animal Studios</title>
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
+  <style>
+    body { background: var(--bg); }
+    .media-wrap { max-width: 700px; margin: 0 auto; padding: 2rem 1rem 6rem 1rem; }
+    .media-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .media-title { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.02em; }
+    .media-upload { font-size: 0.95rem; font-weight: 700; color: var(--gold-bright); background: none; border: none; cursor: pointer; }
+    .media-grid { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .media-thumb { width: 110px; height: 110px; border-radius: 1rem; background: var(--bg-2); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
+    .media-thumb.selected { border-color: var(--gold-bright); box-shadow: 0 0 0 2px var(--gold-bright); }
+    .media-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .media-thumb .media-check { position: absolute; top: 6px; right: 8px; background: #fff; color: var(--gold-bright); border-radius: 50%; font-size: 1.2em; padding: 0.1em 0.2em; }
+    .media-empty { color: var(--text-3); text-align: center; padding: 2.5rem 0; }
+    .media-actions { margin-top: 1.5rem; text-align: right; }
+    .media-actions button { font-size: 1rem; font-weight: 700; border-radius: 0.7em; padding: 0.38em 1.1em; border: none; cursor: pointer; background: var(--purple-bright); color: #fff; }
+    @media (max-width: 600px) {
+      .media-wrap { padding: 1.2rem 0.2rem 5rem 0.2rem; }
+      .media-thumb { width: 90px; height: 90px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="dashboard.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="presence.html">Presence</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="logout.html">Sign Out</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+  <main>
+    <div class="media-wrap">
+      <div class="media-header">
+        <span class="media-title">My Media</span>
+        <button class="media-upload" id="uploadBtn">+ Upload Photo</button>
+      </div>
+      <div id="mediaGrid" class="media-grid"></div>
+      <div class="media-empty" id="mediaEmpty" style="display:none;">No images yet. Click <b>Upload Photo</b> to add one.</div>
+      <div class="media-actions">
+        <button id="mediaConfirmBtn" style="display:none;">Select</button>
+      </div>
+    </div>
+  </main>
+  <input type="file" id="mediaFileInput" accept="image/*" style="display:none;" />
+  <script>
+    // Canonical session check
+    const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+    if (!fasUser || !fasUser.account_id) {
+      window.location.replace('login.html');
+    }
+    function getMedia() {
+      const raw = localStorage.getItem('fas_media');
+      if (!raw) return [];
+      try {
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.filter(m => m.account_id === fasUser.account_id) : [];
+      } catch { return []; }
+    }
+    function saveMedia(media) {
+      localStorage.setItem('fas_media', JSON.stringify(media));
+    }
+    function renderMedia(selectedId) {
+      const grid = document.getElementById('mediaGrid');
+      const empty = document.getElementById('mediaEmpty');
+      const confirmBtn = document.getElementById('mediaConfirmBtn');
+      const media = getMedia();
+      grid.innerHTML = '';
+      if (!media.length) {
+        empty.style.display = '';
+        confirmBtn.style.display = 'none';
+        return;
+      }
+      empty.style.display = 'none';
+      for (const m of media) {
+        const thumb = document.createElement('div');
+        thumb.className = 'media-thumb' + (selectedId === m.id ? ' selected' : '');
+        thumb.innerHTML = `<img src="${m.url}" alt="" />` + (selectedId === m.id ? '<span class="media-check">✔</span>' : '');
+        thumb.onclick = () => {
+          renderMedia(m.id);
+          confirmBtn.style.display = '';
+          confirmBtn.onclick = () => {
+            if (window.opener && window.opener.__mediaPickerCallback) {
+              window.opener.__mediaPickerCallback(m);
+              window.close();
+            } else if (window.__mediaPickerCallback) {
+              window.__mediaPickerCallback(m);
+            }
+          };
+        };
+        grid.appendChild(thumb);
+      }
+    }
+    document.getElementById('uploadBtn').onclick = () => {
+      document.getElementById('mediaFileInput').click();
+    };
+    document.getElementById('mediaFileInput').onchange = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const url = evt.target.result;
+        const media = getMedia();
+        media.unshift({ id: crypto.randomUUID(), url, account_id: fasUser.account_id, uploaded_at: new Date().toISOString() });
+        saveMedia(media);
+        renderMedia();
+      };
+      reader.readAsDataURL(file);
+    };
+    renderMedia();
+  </script>
+</body>
+</html>
