@@ -1,2 +1,6 @@
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh https://www.youtube.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src https://www.youtube.com; connect-src 'self' https://*.supabase.co; img-src 'self' data: https:; media-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';
+  Content-Security-Policy: 
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' https://unpkg.com https://esm.sh;
+    style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
