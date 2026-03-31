@@ -236,3 +236,73 @@ clearBtn.addEventListener('click', () => {
   editor.setComponents('');
   editor.setStyle('');
 });
+
+// --- Save to Web Handler ---
+const saveWebBtn = document.getElementById('saveWebBtn');
+
+function slugify(value) {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'faceless-page';
+}
+
+function getSession() {
+  try {
+    return JSON.parse(localStorage.getItem('fas_user') || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function buildFullDocument(title, html, css) {
+  return `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="utf-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1" />\n  <title>${title}</title>\n  <style>${css}</style>\n</head>\n<body>\n${html}\n</body>\n</html>`;
+}
+
+if (saveWebBtn) {
+  saveWebBtn.addEventListener('click', async () => {
+    const session = getSession();
+
+    if (!session || !session.username) {
+      alert('You need to be signed in first.');
+      return;
+    }
+
+    const title = 'Faceless Page'; // later this can come from an input
+    const html = editor.getHtml();
+    const css = editor.getCss();
+    const slug = slugify(title);
+    const full_document = buildFullDocument(title, html, css);
+
+    const payload = {
+      account_id: session.account_id || null,
+      signal_id: session.signal_id || null,
+      username: session.username,
+      title,
+      slug,
+      html,
+      css,
+      full_document,
+      route_hint: `/${session.username}`
+    };
+
+    try {
+      const res = await fetch(window.__FAS_BUILDER_SAVE_ENDPOINT || '/api/member/page-builder/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        throw new Error(`Save failed: ${res.status}`);
+      }
+
+      const data = await res.json();
+      alert(`Saved to web: ${data.live_url || '/' + session.username}`);
+    } catch (err) {
+      console.error(err);
+      alert('Save failed.');
+    }
+  });
+}

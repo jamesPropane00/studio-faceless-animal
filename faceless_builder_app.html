@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src * blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; connect-src *; img-src * data: blob:; font-src * data:;">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src * blob: data:;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://esm.sh https://www.youtube.com https://static.cloudflareinsights.com;
+    style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com;
+    connect-src *;
+    img-src * data: blob:;
+    font-src * data:;">
   <title>Faceless Builder App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" />

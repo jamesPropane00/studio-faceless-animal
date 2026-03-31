@@ -270,6 +270,17 @@ function handleRequest(req, res) {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
     if (req.method === 'OPTIONS') { send(res, 204, 'text/plain', ''); return }
 
+    // --- Save builder page to Supabase ---
+    if (urlPath === '/api/member/page-builder/save') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
+      handleSaveBuilderPage(req, res).catch(err => {
+        console.error('[FAS:builder:save] Unhandled error:', err && err.message)
+        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
+      })
+      return
+    }
+
+    // ...existing member API routes...
     if (urlPath === '/api/member/ensure-signal-code') {
       if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
       handleEnsureMemberSignalCode(req, res).catch(err => {
@@ -278,55 +289,7 @@ function handleRequest(req, res) {
       })
       return
     }
-
-    if (urlPath === '/api/member/backfill-signal-codes') {
-      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
-      handleBackfillMemberSignalCodes(req, res).catch(err => {
-        console.error('[FAS:member:backfill-signal-codes] Unhandled error:', err.message)
-        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
-      })
-      return
-    }
-
-    if (urlPath === '/api/member/vault-flow-tick') {
-      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
-      handleMemberVaultFlowTick(req, res).catch(err => {
-        console.error('[FAS:member:vault-flow-tick] Unhandled error:', err.message)
-        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
-      })
-      return
-    }
-
-    if (urlPath === '/api/member/vault-transfer') {
-      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
-      handleMemberVaultTransfer(req, res).catch(err => {
-        console.error('[FAS:member:vault-transfer] Unhandled error:', err.message)
-        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
-      })
-      return
-    }
-
-    if (urlPath === '/api/member/vault-activity') {
-      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
-      handleMemberVaultActivity(req, res).catch(err => {
-        console.error('[FAS:member:vault-activity] Unhandled error:', err.message)
-        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
-      })
-      return
-    }
-
-    if (urlPath === '/api/member/vault-spend') {
-      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
-      handleMemberVaultSpend(req, res).catch(err => {
-        console.error('[FAS:member:vault-spend] Unhandled error:', err.message)
-        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
-      })
-      return
-    }
-
-    sendJSON(res, 404, { ok: false, error: 'Not found.' })
-    return
-  }
+    // ...existing code continues...
 
   // ── CONTACT FORM API ──────────────────────────────────────────────
   if (urlPath === '/api/admin/users/set-role') {
@@ -439,6 +402,13 @@ function handleRequest(req, res) {
       )
       return
     }
+  }
+
+
+  // ── PUBLIC MEMBER PAGE ROUTE ─────────────────────────────
+  // /username → render saved member page from Supabase
+  if (parts.length === 1 && /^[a-z0-9_-]{3,32}$/i.test(parts[0])) {
+    return handleServeMemberPage(parts[0], res)
   }
 
   // ── Dynamic creator/business page routing ─────────────────────
