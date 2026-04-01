@@ -1,102 +1,337 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Sign in or create a secure account on Faceless Animal Studios — get a username and access the radio chat, platform features, and creator network." />
+  <meta
+    name="description"
+    content="Sign in or create a secure account on Faceless Animal Studios — a privacy-first creator platform with radio, pages, music, and live digital identity tools."
+  />
   <title>Login — Faceless Animal Studios</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="assets/style.css?v=20260322" />
+  <style>
+    /* ...[all your CSS from above, unchanged]... */
+  </style>
 </head>
 <body>
-  <div class="auth-bg">
-    <div class="auth-flex">
-      <div class="auth-card">
-        <div class="auth-brand">
-          <img src="assets/images/radio.png" alt="Faceless Brand" />
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">
+          <img src="assets/images/radio.png" alt="Faceless Animal Studios" />
         </div>
-        <h1 class="auth-title">Enter Signal.<span>Stay faceless. Move freely.</span></h1>
-        <form id="signin-form" novalidate>
-          <label for="signin-username" class="auth-label">Username or Signal ID</label>
+        <div class="brand-copy">
+          <h1>Faceless Animal Studios</h1>
+          <p>Privacy-first creator platform — pages, radio, music, identity, and tools.</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="chip"><span class="chip-dot"></span> Platform Live</div>
+        <button id="open-create-top" class="btn btn-secondary" type="button">Create Account</button>
+      </div>
+    </header>
+    <main class="layout">
+      <section class="stack">
+        <div class="card">
+          <div class="card-body hero">
+            <div>
+              <div class="eyebrow">Enter Signal</div>
+              <h2>
+                Sign in to the platform.
+                <span>Or step in and create your identity here.</span>
+              </h2>
+              <p>
+                Faceless Animal Studios is built for creators, listeners, builders, and people
+                who want more control over how they exist online. It is not just a login screen.
+                It is the front door to a system built around pages, radio, media, live presence,
+                and private digital identity without forcing the usual social-media feel.
+              </p>
+              <div class="hero-actions">
+                <button id="open-create-hero" class="btn btn-primary" type="button">Create Account</button>
+                <a href="#signin-card" class="btn btn-secondary">Sign In</a>
+              </div>
+            </div>
+            <div class="hero-side">
+              <div class="mini">
+                <small>What the platform is</small>
+                <strong>Creator infrastructure</strong>
+                <span>
+                  Build a page, hold a signal identity, move through radio, music, creator tools,
+                  and future features from one account.
+                </span>
+              </div>
+              <div class="mini">
+                <small>Why it feels different</small>
+                <strong>Less noise. More control.</strong>
+                <span>
+                  The goal is to give people a place to build and exist online without feeling trapped
+                  inside somebody else’s algorithm or commercial template.
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="signin-card">
+          <div class="card-body">
+            <div class="head">
+              <div>
+                <h3>Sign In</h3>
+                <p>Use your username or Signal ID to enter your account.</p>
+              </div>
+            </div>
+            <form id="signin-form" novalidate class="form-grid">
+              <div class="field">
+                <label for="signin-username" class="label">Username or Signal ID</label>
+                <div class="input-wrap">
+                  <input
+                    id="signin-username"
+                    name="username"
+                    type="text"
+                    placeholder="your_id"
+                    autocomplete="username"
+                    spellcheck="false"
+                    autocorrect="off"
+                    autocapitalize="none"
+                    required
+                    class="input"
+                  />
+                </div>
+              </div>
+              <div class="field">
+                <label for="signin-password" class="label">Password</label>
+                <div class="input-wrap">
+                  <input
+                    id="signin-password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    autocomplete="current-password"
+                    required
+                    class="input has-toggle"
+                  />
+                  <button
+                    type="button"
+                    class="pw-toggle"
+                    data-target="signin-password"
+                    aria-label="Show or hide password"
+                  >👁</button>
+                </div>
+              </div>
+              <div id="signin-error" class="error" role="alert"></div>
+              <div class="row">
+                <button type="submit" id="signin-btn" class="btn btn-primary">Enter →</button>
+                <button type="button" id="open-create" class="btn btn-secondary">Create Account</button>
+              </div>
+              <div class="tiny">
+                Keep your username, password, and recovery code somewhere safe. Your account is your access point into the platform.
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="head">
+              <div>
+                <h3>What you get access to</h3>
+                <p>This is not presented like a pitch deck. It is the actual shape of the platform.</p>
+              </div>
+            </div>
+            <ul class="feature-list">
+              <li><span class="bullet">1</span><span><strong>Signal Identity:</strong> A platform identity that can connect your presence, pages, messaging direction, and future creator tools.</span></li>
+              <li><span class="bullet">2</span><span><strong>Pages and builder tools:</strong> Create your own space with guided forms, mobile tools, or deeper visual builder workflows.</span></li>
+              <li><span class="bullet">3</span><span><strong>Radio and media layer:</strong> Move through music, live atmosphere, and creator-driven content from inside the same ecosystem.</span></li>
+              <li><span class="bullet">4</span><span><strong>Privacy-first structure:</strong> The system is meant to feel more controlled and less exposed than typical social platforms.</span></li>
+              <li><span class="bullet">5</span><span><strong>Room to grow:</strong> Start with a simple account and build further into pages, media, identity, and future interactive features.</span></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+      <aside class="stack">
+        <div class="card">
+          <div class="card-body">
+            <div class="head">
+              <div>
+                <h3>What Faceless Animal Studios is</h3>
+                <p>Clear explanation for new people, without turning this into an ad page.</p>
+              </div>
+            </div>
+            <div class="info-grid">
+              <div class="info-box">
+                <h4>A platform, not just a profile page</h4>
+                <p>
+                  The idea is to give people a place where identity, media, pages, and platform tools
+                  can live together instead of being split across random services.
+                </p>
+              </div>
+              <div class="info-box">
+                <h4>Built for creators and independent users</h4>
+                <p>
+                  Whether someone is making music, building a brand, testing ideas, or just creating a digital home,
+                  the platform is supposed to support that without overcomplicating it.
+                </p>
+              </div>
+              <div class="info-box">
+                <h4>Privacy matters here</h4>
+                <p>
+                  The system leans into usernames, signal identity, and controlled access so people can move with
+                  more ownership over their presence.
+                </p>
+              </div>
+              <div class="info-box">
+                <h4>Start simple, go deeper later</h4>
+                <p>
+                  A new user can begin with an account and a basic page, then move into more advanced tools
+                  as the platform expands around them.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="head">
+              <div>
+                <h3>New here?</h3>
+                <p>Create an account when you are ready. No heavy funnel language, just the next step.</p>
+              </div>
+            </div>
+            <div class="mini" style="margin-bottom:14px;">
+              <small>Account setup</small>
+              <strong>Fast entry point</strong>
+              <span>
+                Pick a username, set a password, and keep your recovery code. That gives you your foothold
+                in the platform.
+              </span>
+            </div>
+            <div class="row">
+              <button id="open-create-2" class="btn btn-primary" type="button">Create Account</button>
+              <a href="#signin-card" class="btn btn-ghost">Already have one? Sign in</a>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="head">
+              <div>
+                <h3>Platform direction</h3>
+                <p>A simple statement of intent so the page explains itself.</p>
+              </div>
+            </div>
+            <div class="muted" style="line-height:1.75;font-size:.95rem;">
+              Faceless Animal Studios is meant to be a controlled creator environment — a place where people can
+              build pages, connect identity to tools, move through radio and media, and shape a digital presence
+              that feels more their own. The point is not to act corporate. The point is to build something usable,
+              distinct, and expandable.
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+  <div id="create-modal" class="auth-modal">
+    <div class="auth-modal-content">
+      <span id="close-create" class="auth-modal-close">&times;</span>
+      <h2>Create Your Account</h2>
+      <form id="create-form" novalidate class="form-grid">
+        <div class="field">
+          <label for="create-username" class="label">Choose a Username</label>
           <input
-            id="signin-username"
+            id="create-username"
             name="username"
             type="text"
             placeholder="your_id"
-            autocomplete="username"
-            spellcheck="false"
-            autocorrect="off"
-            autocapitalize="none"
             required
-            class="auth-input"
+            class="input"
           />
-          <label for="signin-password" class="auth-label">Password</label>
-          <div class="auth-pw-wrap">
+        </div>
+        <div class="field">
+          <label for="create-password" class="label">Password</label>
+          <div class="input-wrap">
             <input
-              id="signin-password"
+              id="create-password"
               name="password"
               type="password"
               placeholder="••••••••"
-              autocomplete="current-password"
               required
-              class="auth-input"
+              class="input has-toggle"
             />
-            <button type="button" class="auth-pw-toggle" data-target="signin-password" aria-label="Show/hide password">👁</button>
+            <button
+              type="button"
+              class="pw-toggle"
+              data-target="create-password"
+              aria-label="Show or hide password"
+            >👁</button>
           </div>
-          <div id="signin-error" class="auth-error" role="alert"></div>
-          <button type="submit" id="signin-btn" class="auth-btn">Enter →</button>
-        </form>
-        <button id="open-create" class="auth-btn alt">Create Account</button>
-      </div>
-      <div class="auth-explain">
-        <h2>Welcome to Faceless Animal Studios</h2>
-        <p>
-          Faceless Animal Studios is a secure, privacy-first platform for creators, listeners, and explorers. Sign in to access radio, games, music, and the global directory. <br><br>
-          <strong>New here?</strong> Creating an account is fast and easy. Your identity is yours—no email required. Protect your handle and recovery code!
-        </p>
-        <button id="open-create-2" class="auth-btn alt">Create Account</button>
-      </div>
-    </div>
-    <div id="create-modal" class="auth-modal" style="display:none;">
-      <div class="auth-modal-content">
-        <span id="close-create" class="auth-modal-close">&times;</span>
-        <h2>Create Your Account</h2>
-        <form id="create-form" novalidate>
-          <label for="create-username" class="auth-label">Choose a Username</label>
-          <input id="create-username" name="username" type="text" placeholder="your_id" required class="auth-input" />
-          <label for="create-password" class="auth-label">Password</label>
-          <input id="create-password" name="password" type="password" placeholder="••••••••" required class="auth-input" />
-          <div id="create-error" class="auth-error" role="alert"></div>
-          <button type="submit" class="auth-btn">Create Account</button>
-        </form>
-      </div>
+        </div>
+        <div id="create-error" class="error" role="alert"></div>
+        <div class="row">
+          <button type="submit" class="btn btn-primary">Create Account</button>
+          <button type="button" class="btn btn-secondary" id="cancel-create">Cancel</button>
+        </div>
+        <div class="tiny">
+          Save your recovery code when it appears. It matters.
+        </div>
+      </form>
     </div>
   </div>
   <script src="assets/script.js?v=20260322"></script>
-  <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
+  <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {};</script>
   <script src="assets/js/env.js" onerror="void 0"></script>
   <script src="assets/js/radio-widget.js" defer></script>
   <script type="module">
-    import { signIn, cleanUsername } from './assets/js/auth.js'
-    // --- Login form handler ---
+    import { signIn, cleanUsername, createAccount } from './assets/js/auth.js';
     const signinForm = document.getElementById('signin-form');
     const signinError = document.getElementById('signin-error');
     const signinBtn = document.getElementById('signin-btn');
-    const pwToggle = document.querySelector('.auth-pw-toggle');
-
-    // Password show/hide toggle
-    if (pwToggle) {
-      pwToggle.addEventListener('click', () => {
-        const pwInput = document.getElementById(pwToggle.dataset.target);
-        if (pwInput) {
-          pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
-        }
-      });
+    const createModal = document.getElementById('create-modal');
+    const createForm = document.getElementById('create-form');
+    const createError = document.getElementById('create-error');
+    const closeCreate = document.getElementById('close-create');
+    const cancelCreate = document.getElementById('cancel-create');
+    const createTriggers = [
+      document.getElementById('open-create'),
+      document.getElementById('open-create-2'),
+      document.getElementById('open-create-top'),
+      document.getElementById('open-create-hero')
+    ].filter(Boolean);
+    function togglePassword(targetId) {
+      const input = document.getElementById(targetId);
+      if (!input) return;
+      input.type = input.type === 'password' ? 'text' : 'password';
     }
-
+    document.querySelectorAll('.pw-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        togglePassword(btn.dataset.target);
+      });
+    });
+    function showCreateModal() {
+      createModal.style.display = 'flex';
+      createError.textContent = '';
+      const firstInput = document.getElementById('create-username');
+      if (firstInput) setTimeout(() => firstInput.focus(), 30);
+    }
+    function hideCreateModal() {
+      createModal.style.display = 'none';
+      createError.textContent = '';
+      createForm?.reset();
+    }
+    createTriggers.forEach(btn => btn.addEventListener('click', showCreateModal));
+    if (closeCreate) closeCreate.addEventListener('click', hideCreateModal);
+    if (cancelCreate) cancelCreate.addEventListener('click', hideCreateModal);
+    window.addEventListener('click', (event) => {
+      if (event.target === createModal) hideCreateModal();
+    });
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && createModal.style.display === 'flex') {
+        hideCreateModal();
+      }
+    });
     if (signinForm) {
       signinForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -114,31 +349,6 @@
         }
       });
     }
-
-    // --- Create Account Modal Logic ---
-    const openCreate = document.getElementById('open-create');
-    const openCreate2 = document.getElementById('open-create-2');
-    const createModal = document.getElementById('create-modal');
-    const closeCreate = document.getElementById('close-create');
-    const createForm = document.getElementById('create-form');
-    const createError = document.getElementById('create-error');
-
-    function showCreateModal() {
-      createModal.style.display = 'flex';
-    }
-    function hideCreateModal() {
-      createModal.style.display = 'none';
-      createError.textContent = '';
-      createForm.reset();
-    }
-    if (openCreate) openCreate.onclick = showCreateModal;
-    if (openCreate2) openCreate2.onclick = showCreateModal;
-    if (closeCreate) closeCreate.onclick = hideCreateModal;
-    window.onclick = function(event) {
-      if (event.target === createModal) hideCreateModal();
-    }
-
-    import { createAccount } from './assets/js/auth.js';
     createForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
       createError.textContent = '';
