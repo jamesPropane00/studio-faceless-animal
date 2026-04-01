@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile Builder | Faceless Animal Studios</title>
+  <link rel="stylesheet" href="assets/css/mobile-builder-app.css">
+  <style>
+    body { background: #181828; color: #fff; font-family: 'Inter', Arial, sans-serif; margin: 0; }
+    .mb-header { padding: 1.5rem 1rem 1rem; text-align: center; background: #1e1e2f; box-shadow: 0 2px 8px #0002; }
+    .mb-header h1 { margin: 0 0 0.5rem; font-size: 2rem; color: #b48cff; }
+    .mb-header p { margin: 0 0 0.5rem; color: #aaa; font-size: 1rem; }
+    .mb-username { color: #b48cff; font-weight: bold; }
+    .mb-route { font-size: 0.95rem; color: #fff; background: #2a2a3d; border-radius: 6px; padding: 0.2rem 0.7rem; display: inline-block; margin-bottom: 0.5rem; }
+    .mb-card { background: #23233a; border-radius: 12px; box-shadow: 0 2px 8px #0003; margin: 1rem 0; padding: 1.2rem 1rem; }
+    .mb-section-title { color: #b48cff; font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .mb-templates { display: flex; gap: 0.5rem; overflow-x: auto; margin-bottom: 1rem; }
+    .mb-template-btn { flex: 1 0 120px; background: #23233a; border: 2px solid #444; border-radius: 10px; color: #fff; padding: 0.7rem 0.5rem; text-align: center; cursor: pointer; transition: border 0.2s, box-shadow 0.2s; margin-bottom: 0.5rem; }
+    .mb-template-btn.selected, .mb-template-btn:focus { border: 2px solid #b48cff; box-shadow: 0 0 0 2px #b48cff44; }
+    .mb-form-group { margin-bottom: 1rem; }
+    .mb-form-label { display: block; font-weight: 500; margin-bottom: 0.3rem; }
+    .mb-form-input, .mb-form-textarea { width: 100%; padding: 0.7rem; border-radius: 7px; border: 1px solid #333; background: #181828; color: #fff; font-size: 1rem; }
+    .mb-form-textarea { min-height: 60px; resize: vertical; }
+    .mb-links-list { margin: 0; padding: 0; list-style: none; }
+    .mb-link-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .mb-link-row input { flex: 1; }
+    .mb-link-remove { background: #b48cff; color: #181828; border: none; border-radius: 5px; padding: 0.2rem 0.7rem; cursor: pointer; }
+    .mb-add-link { background: #23233a; color: #b48cff; border: 1px solid #b48cff; border-radius: 7px; padding: 0.4rem 1rem; cursor: pointer; margin-top: 0.5rem; }
+    .mb-toggle-group { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .mb-toggle-card { flex: 1 0 120px; background: #23233a; border: 2px solid #444; border-radius: 10px; color: #fff; padding: 0.7rem 0.5rem; text-align: center; cursor: pointer; transition: border 0.2s, box-shadow 0.2s; }
+    .mb-toggle-card.selected { border: 2px solid #b48cff; box-shadow: 0 0 0 2px #b48cff44; }
+    .mb-preview-card { background: #181828; border: 2px solid #b48cff; border-radius: 18px; box-shadow: 0 4px 16px #0005; margin: 1rem auto; max-width: 370px; min-height: 400px; padding: 1rem; }
+    .mb-btn-row { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; }
+    .mb-btn { background: #b48cff; color: #181828; border: none; border-radius: 8px; padding: 0.8rem 1.5rem; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .mb-btn.secondary { background: #23233a; color: #b48cff; border: 1px solid #b48cff; }
+    .mb-advanced-link { display: block; text-align: center; margin: 2rem 0 0.5rem; color: #b48cff; text-decoration: underline; font-size: 1rem; }
+    @media (min-width: 600px) { .mb-card, .mb-preview-card { padding: 2rem 2rem; } }
+  </style>
+</head>
+<body>
+  <div class="mb-app-shell">
+    <div id="mb-edit-banner" style="display:none;background:#b48cff;color:#181828;padding:0.7rem 1rem;text-align:center;font-weight:bold;font-size:1.08rem;">EDITING PUBLISHED PAGE</div>
+    <div class="mb-header">
+      <h1>Mobile Builder</h1>
+      <div class="mb-encourage">Build fast. Publish clean.</div>
+      <p>Welcome to your creator studio. Pick a template, fill in your content, preview, and publish your public page.</p>
+      <div id="mb-username-row" style="margin-bottom:0.5rem;"></div>
+      <div class="mb-status-chip" id="mb-route-preview"></div>
+    </div>
+    <form id="mb-form" autocomplete="off">
+    <!-- Pages Selector (Multipage Support) -->
+    <div class="mb-card" id="mb-pages-card">
+      <div class="mb-section-title"><span class="mb-icon">📄</span> Pages</div>
+      <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+        <select id="mb-page-select" class="mb-form-input" style="max-width:220px;"></select>
+        <button type="button" class="mb-btn secondary" id="mb-new-page">New Page</button>
+        <button type="button" class="mb-btn secondary" id="mb-delete-page">Delete</button>
+        <button type="button" class="mb-btn secondary" id="mb-set-homepage">Set as Homepage</button>
+      </div>
+      <div id="mb-pages-status" style="margin-top:0.5rem;font-size:0.97rem;color:#b9aaff;"></div>
+    </div>
+    <!-- Template Picker -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">🎨</span> Choose a Template</div>
+      <div class="mb-templates" id="mb-templates">
+        <div class="mb-template-btn" data-template="artist">
+          <div class="mb-template-icon">🎤</div>
+          <div class="mb-template-title">Artist</div>
+          <div class="mb-template-desc">For musicians, performers, and creators</div>
+        </div>
+        <div class="mb-template-btn" data-template="business">
+          <div class="mb-template-icon">💼</div>
+          <div class="mb-template-title">Business</div>
+          <div class="mb-template-desc">For brands, shops, and services</div>
+        </div>
+        <div class="mb-template-btn" data-template="creator">
+          <div class="mb-template-icon">🧑‍💻</div>
+          <div class="mb-template-title">Creator</div>
+          <div class="mb-template-desc">For digital creators and influencers</div>
+        </div>
+        <div class="mb-template-btn" data-template="clean-white">
+          <div class="mb-template-icon">⚪</div>
+          <div class="mb-template-title">Clean White</div>
+          <div class="mb-template-desc">Minimal, bright, and modern</div>
+        </div>
+        <div class="mb-template-btn" data-template="clean-black">
+          <div class="mb-template-icon">⚫</div>
+          <div class="mb-template-title">Clean Black</div>
+          <div class="mb-template-desc">Minimal, dark, and bold</div>
+        </div>
+        <div class="mb-template-btn" data-template="minimal">
+          <div class="mb-template-icon">📄</div>
+          <div class="mb-template-title">Minimal</div>
+          <div class="mb-template-desc">Simple, no distractions</div>
+        </div>
+      </div>
+      <div class="mb-form-group" style="margin-top:0.5rem;">
+        <small style="color:#b9aaff;">Tap a card to start. Each template has a unique vibe. You can also pick a clean or minimal look.</small>
+      </div>
+    </div>
+    <!-- Content Sections -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">📝</span> Page Content</div>
+      <div class="mb-form-group"><label class="mb-form-label">Page Title</label><input class="mb-form-input" name="title" maxlength="60" required placeholder="What should people call this page?"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Subtitle</label><input class="mb-form-input" name="tagline" maxlength="80" placeholder="Short subtitle or tagline"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Bio <span id="mb-bio-count"></span></label><textarea class="mb-form-textarea" name="bio" maxlength="300" placeholder="Tell your story or describe your page"></textarea></div>
+      <div class="mb-form-group"><label class="mb-form-label">Profile Image URL</label><input class="mb-form-input" name="profile_img" placeholder="Paste your profile image link"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Banner Image URL</label><input class="mb-form-input" name="banner_img" placeholder="Paste your banner image link"></div>
+      <div class="mb-form-group"><label class="mb-form-label">CTA 1 Text</label><input class="mb-form-input" name="cta1_text" placeholder="Main button text"></div>
+      <div class="mb-form-group"><label class="mb-form-label">CTA 1 Link</label><input class="mb-form-input" name="cta1_link" placeholder="Main button link"></div>
+      <div class="mb-form-group"><label class="mb-form-label">CTA 2 Text</label><input class="mb-form-input" name="cta2_text" placeholder="Second button text"></div>
+      <div class="mb-form-group"><label class="mb-form-label">CTA 2 Link</label><input class="mb-form-input" name="cta2_link" placeholder="Second button link"></div>
+      <div class="mb-form-group"><label class="mb-form-label">CTA 3 Text</label><input class="mb-form-input" name="cta3_text" placeholder="Third button text"></div>
+      <div class="mb-form-group"><label class="mb-form-label">CTA 3 Link</label><input class="mb-form-input" name="cta3_link" placeholder="Third button link"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Announcement Banner Text</label><input class="mb-form-input" name="announcement" placeholder="Show a banner at the top"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Testimonial / Quote</label><input class="mb-form-input" name="testimonial" placeholder="Add a quote or testimonial"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Footer Text</label><input class="mb-form-input" name="footer" placeholder="Footer or copyright"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Location</label><input class="mb-form-input" name="location" placeholder="Where are you based? (optional)"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Event Date</label><input class="mb-form-input" name="event_date" placeholder="Event date (optional)"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Pricing / Offer</label><input class="mb-form-input" name="pricing" placeholder="Pricing or offer (optional)"></div>
+    </div>
+    <!-- Links Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">🔗</span> Links</div>
+      <ul class="mb-links-list" id="mb-links-list"></ul>
+      <button type="button" class="mb-add-link" id="mb-add-link">+ Add Link</button>
+      <small style="color:#b9aaff;">Add as many links as you want. Great for music, stores, socials, and more.</small>
+    </div>
+    <!-- Featured Media Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">🎵</span> Featured Media</div>
+      <div class="mb-form-group"><label class="mb-form-label">Featured Track Title</label><input class="mb-form-input" name="track_title" placeholder="Track title"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Featured Track Embed/Link</label><input class="mb-form-input" name="track_link" placeholder="Track embed or link"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Featured Video Title</label><input class="mb-form-input" name="video_title" placeholder="Video title"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Featured Video Embed/Link</label><input class="mb-form-input" name="video_link" placeholder="Video embed or link"></div>
+      <div style="margin-top:1.2rem;text-align:center;">
+        <button type="button" class="mb-btn" id="mb-open-media-library" style="background:#7c3aed;color:#fff;font-size:1.05rem;padding:0.7rem 1.5rem;margin-top:0.5rem;">📁 Media Library</button>
+        <div style="color:#b9aaff;font-size:0.97rem;margin-top:0.5rem;">Browse, embed, and manage all your files.</div>
+      </div>
+    </div>
+    <!-- Social / Contact Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">💬</span> Social / Contact</div>
+      <div class="mb-form-group"><label class="mb-form-label">Instagram</label><input class="mb-form-input" name="instagram" placeholder="@yourhandle"></div>
+      <div class="mb-form-group"><label class="mb-form-label">TikTok</label><input class="mb-form-input" name="tiktok" placeholder="@yourhandle"></div>
+      <div class="mb-form-group"><label class="mb-form-label">YouTube</label><input class="mb-form-input" name="youtube" placeholder="Channel or link"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Spotify</label><input class="mb-form-input" name="spotify" placeholder="Profile or link"></div>
+      <div class="mb-form-group"><label class="mb-form-label">X / Twitter</label><input class="mb-form-input" name="twitter" placeholder="@yourhandle"></div>
+      <div class="mb-form-group"><label class="mb-form-label">SoundCloud</label><input class="mb-form-input" name="soundcloud" placeholder="Profile or link"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Website</label><input class="mb-form-input" name="website" placeholder="yourwebsite.com"></div>
+      <div class="mb-form-group"><label class="mb-form-label">Email / Contact</label><input class="mb-form-input" name="contact" placeholder="Email or contact info"></div>
+    </div>
+    <!-- Style / Theme Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">🎨</span> Appearance & Options</div>
+      <div class="mb-form-group"><label class="mb-form-label">Accent Color</label>
+        <input class="mb-form-input" name="accent_color" type="color" value="#b48cff" style="width: 60px; height: 40px; padding: 0; border: none;">
+        <input class="mb-form-input" name="accent_color_custom" type="text" placeholder="Or paste any HEX/RGB color" style="margin-top:0.5rem;" maxlength="16">
+        <div style="margin-top:0.5rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <button type="button" class="mb-btn secondary mb-accent-swatch" style="background:#b48cff;color:#181828;" data-color="#b48cff">Purple</button>
+          <button type="button" class="mb-btn secondary mb-accent-swatch" style="background:#6e4cff;color:#fff;" data-color="#6e4cff">Indigo</button>
+          <button type="button" class="mb-btn secondary mb-accent-swatch" style="background:#ff4fd8;color:#fff;" data-color="#ff4fd8">Pink</button>
+          <button type="button" class="mb-btn secondary mb-accent-swatch" style="background:#00e0ff;color:#181828;" data-color="#00e0ff">Cyan</button>
+          <button type="button" class="mb-btn secondary mb-accent-swatch" style="background:#00ff7f;color:#181828;" data-color="#00ff7f">Green</button>
+          <button type="button" class="mb-btn secondary mb-accent-swatch" style="background:#ffd700;color:#181828;" data-color="#ffd700">Gold</button>
+          <button type="button" class="mb-btn secondary mb-accent-swatch" style="background:#ff4500;color:#fff;" data-color="#ff4500">Orange</button>
+          <button type="button" class="mb-btn secondary mb-accent-swatch" style="background:#222;color:#fff;" data-color="#222">Black</button>
+          <button type="button" class="mb-btn secondary mb-accent-swatch" style="background:#fff;color:#181828;" data-color="#fff">White</button>
+        </div>
+        <small style="color:#b9aaff;display:block;margin-top:0.5rem;">Pick, paste, or type any color. Try gradients (e.g. linear-gradient(...)) for advanced users!</small>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Background Color</label>
+        <input class="mb-form-input" name="background_color" type="color" value="#181828" style="width: 60px; height: 40px; padding: 0; border: none;">
+        <input class="mb-form-input" name="background_color_custom" type="text" placeholder="Or paste any HEX/RGB/gradient" style="margin-top:0.5rem;" maxlength="32">
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Font Family</label>
+        <select class="mb-form-input" name="font_family">
+          <option value="Inter, Arial, sans-serif">Inter (Default)</option>
+          <option value="Roboto, Arial, sans-serif">Roboto</option>
+          <option value="Montserrat, Arial, sans-serif">Montserrat</option>
+          <option value="Poppins, Arial, sans-serif">Poppins</option>
+          <option value="Lato, Arial, sans-serif">Lato</option>
+          <option value="Merriweather, serif">Merriweather</option>
+          <option value="Oswald, Arial, sans-serif">Oswald</option>
+          <option value="Comic Sans MS, cursive, sans-serif">Comic Sans</option>
+          <option value="Custom">Custom (paste below)</option>
+        </select>
+        <input class="mb-form-input" name="font_family_custom" type="text" placeholder="Paste any font stack or Google Fonts link" style="margin-top:0.5rem;" maxlength="128">
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Border Radius</label>
+        <input class="mb-form-input" name="border_radius" type="range" min="0" max="48" value="12" style="width:100px;display:inline-block;vertical-align:middle;">
+        <span id="mb-border-radius-value" style="margin-left:0.7rem;color:#b48cff;">12px</span>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Box Shadow</label>
+        <select class="mb-form-input" name="box_shadow">
+          <option value="none">None</option>
+          <option value="0 2px 8px #0002">Soft</option>
+          <option value="0 4px 16px #0005">Medium</option>
+          <option value="0 8px 32px #0008">Strong</option>
+        </select>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Custom CSS</label>
+        <textarea class="mb-form-textarea" name="custom_css" maxlength="2000" placeholder="Add any extra CSS for advanced design (optional)"></textarea>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Card Style</label>
+        <select class="mb-form-input" name="card_style">
+          <option value="glass">Soft Glass</option>
+          <option value="dark">Hard Dark</option>
+          <option value="neon">Neon Edge</option>
+        </select>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Font Vibe</label>
+        <select class="mb-form-input" name="font_vibe">
+          <option value="clean">Clean</option>
+          <option value="bold">Bold</option>
+          <option value="cinematic">Cinematic</option>
+        </select>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Layout</label>
+        <select class="mb-form-input" name="layout">
+          <option value="centered">Centered</option>
+          <option value="stacked">Stacked</option>
+          <option value="spotlight">Spotlight</option>
+        </select>
+      </div>
+      <div class="mb-toggle-group">
+        <div class="mb-toggle-card" data-toggle="show_banner">Show Banner</div>
+        <div class="mb-toggle-card" data-toggle="show_profile_img">Show Avatar</div>
+        <div class="mb-toggle-card" data-toggle="show_cta">Show CTA Buttons</div>
+        <div class="mb-toggle-card" data-toggle="show_links">Show Links</div>
+        <div class="mb-toggle-card" data-toggle="show_featured_media">Show Featured Media</div>
+        <div class="mb-toggle-card" data-toggle="show_social">Show Social</div>
+        <div class="mb-toggle-card" data-toggle="show_footer">Show Footer</div>
+        <div class="mb-toggle-card" data-toggle="show_announcement">Show Announcement Bar</div>
+      </div>
+    </div>
+    <!-- Domain & Subdomain Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">🌐</span> Domain & Subdomain</div>
+      <div class="mb-form-group"><label class="mb-form-label">Free Subdomain</label>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <input class="mb-form-input" name="subdomain" id="mb-subdomain-input" maxlength="32" placeholder="yourname" style="max-width:160px;">
+          <span style="color:#b48cff;font-weight:bold;">.facelessanimal.com</span>
+          <button type="button" class="mb-btn secondary" id="mb-claim-subdomain" style="margin-left:0.5rem;">Claim</button>
+        </div>
+        <div id="mb-subdomain-status" style="margin-top:0.5rem;font-size:0.97rem;color:#b9aaff;"></div>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Custom Domain</label>
+        <input class="mb-form-input" name="custom_domain" id="mb-custom-domain-input" maxlength="64" placeholder="yourdomain.com">
+        <button type="button" class="mb-btn secondary" id="mb-connect-domain" style="margin-top:0.5rem;">Connect</button>
+        <div id="mb-domain-status" style="margin-top:0.5rem;font-size:0.97rem;color:#b9aaff;"></div>
+        <div id="mb-domain-instructions" style="margin-top:0.5rem;display:none;background:#23233a;padding:0.7rem 1rem;border-radius:8px;color:#fff;"></div>
+      </div>
+      <small style="color:#b9aaff;display:block;margin-top:0.5rem;">Claim a free subdomain or connect your own domain. Custom domains require updating DNS records.</small>
+    </div>
+    <!-- SEO & Social Sharing Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">🔍</span> SEO & Social Sharing</div>
+      <div class="mb-form-group"><label class="mb-form-label">SEO Title</label>
+        <input class="mb-form-input" name="seo_title" maxlength="70" placeholder="Page title for search engines and social cards">
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">SEO Description</label>
+        <textarea class="mb-form-textarea" name="seo_description" maxlength="160" placeholder="Short description for search and social (max 160 chars)"></textarea>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Social Image URL</label>
+        <input class="mb-form-input" name="social_image" maxlength="300" placeholder="Paste image link for social sharing (1200x630 recommended)">
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Twitter Card Type</label>
+        <select class="mb-form-input" name="twitter_card">
+          <option value="summary_large_image">Large Image</option>
+          <option value="summary">Summary</option>
+        </select>
+      </div>
+      <small style="color:#b9aaff;display:block;margin-top:0.5rem;">Set how your site appears in search results and when shared on social media.</small>
+    </div>
+    <!-- Analytics Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">📊</span> Analytics</div>
+      <div style="text-align:center;color:#b9aaff;margin:1.2rem 0 0.7rem;">
+        <span style="font-size:2.2rem;">👀</span>
+        <div style="margin-top:0.7rem;font-size:1.1rem;">Track your page views, traffic sources, and engagement here soon!</div>
+        <div style="margin-top:1.2rem;font-size:0.97rem;">Analytics will appear after you publish and share your site.</div>
+      </div>
+    </div>
+    <!-- Media Uploads Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">🗂️</span> Media Uploads</div>
+      <div class="mb-form-group"><label class="mb-form-label">Profile Image Upload</label>
+        <input class="mb-form-input" type="file" accept="image/*" id="mb-upload-profile-img">
+        <div id="mb-upload-profile-img-status" style="margin-top:0.5rem;font-size:0.97rem;color:#b9aaff;"></div>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Banner Image Upload</label>
+        <input class="mb-form-input" type="file" accept="image/*" id="mb-upload-banner-img">
+        <div id="mb-upload-banner-img-status" style="margin-top:0.5rem;font-size:0.97rem;color:#b9aaff;"></div>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Audio Upload</label>
+        <input class="mb-form-input" type="file" accept="audio/*" id="mb-upload-audio">
+        <div id="mb-upload-audio-status" style="margin-top:0.5rem;font-size:0.97rem;color:#b9aaff;"></div>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Video Upload</label>
+        <input class="mb-form-input" type="file" accept="video/*" id="mb-upload-video">
+        <div id="mb-upload-video-status" style="margin-top:0.5rem;font-size:0.97rem;color:#b9aaff;"></div>
+      </div>
+      <small style="color:#b9aaff;display:block;margin-top:0.5rem;">Upload images, audio, or video to use in your site. (Coming soon!)</small>
+    </div>
+    <!-- Section Presets & Block Library -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">🧩</span> Section Presets & Block Library</div>
+      <div style="display:flex;gap:0.7rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <button type="button" class="mb-btn secondary" disabled>Hero + CTA</button>
+        <button type="button" class="mb-btn secondary" disabled>Gallery</button>
+        <button type="button" class="mb-btn secondary" disabled>Testimonials</button>
+        <button type="button" class="mb-btn secondary" disabled>FAQ</button>
+        <button type="button" class="mb-btn secondary" disabled>Contact Form</button>
+        <button type="button" class="mb-btn secondary" disabled>Music Player</button>
+        <button type="button" class="mb-btn secondary" disabled>Events</button>
+      </div>
+      <div style="color:#b9aaff;font-size:0.97rem;">Drag and drop (coming soon): Add reusable blocks and section presets to your page for more flexibility.</div>
+    </div>
+    <!-- Form Builder Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">✉️</span> Form Builder</div>
+      <div class="mb-form-group"><label class="mb-form-label">Contact Form</label>
+        <input class="mb-form-input" type="checkbox" name="enable_contact_form" id="mb-enable-contact-form">
+        <label for="mb-enable-contact-form" style="color:#b9aaff;margin-left:0.5rem;font-weight:400;">Enable contact form on your site</label>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Newsletter Signup</label>
+        <input class="mb-form-input" type="checkbox" name="enable_newsletter_form" id="mb-enable-newsletter-form">
+        <label for="mb-enable-newsletter-form" style="color:#b9aaff;margin-left:0.5rem;font-weight:400;">Enable newsletter signup form</label>
+      </div>
+      <div class="mb-form-group"><label class="mb-form-label">Form Email Destination</label>
+        <input class="mb-form-input" name="form_email" maxlength="80" placeholder="Where should form submissions go?">
+      </div>
+      <small style="color:#b9aaff;display:block;margin-top:0.5rem;">Add a contact or newsletter form to your site. (Coming soon!)</small>
+    </div>
+    <!-- Theme Marketplace Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">🎨</span> Theme Marketplace</div>
+      <div style="display:flex;gap:0.7rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <button type="button" class="mb-btn secondary" disabled>Modern Purple</button>
+        <button type="button" class="mb-btn secondary" disabled>Neon Night</button>
+        <button type="button" class="mb-btn secondary" disabled>Minimal White</button>
+        <button type="button" class="mb-btn secondary" disabled>Retro Wave</button>
+        <button type="button" class="mb-btn secondary" disabled>Business Pro</button>
+        <button type="button" class="mb-btn secondary" disabled>Custom Upload</button>
+      </div>
+      <div style="color:#b9aaff;font-size:0.97rem;">Browse and apply new themes to your site. (Coming soon!)</div>
+    </div>
+    <!-- PWA Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">📱</span> Add to Home Screen (PWA)</div>
+      <div style="color:#b9aaff;font-size:0.97rem;">Let users install your site as an app on their phone or tablet. (Coming soon!)</div>
+    </div>
+    <!-- Accessibility & Internationalization Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">🌍</span> Accessibility & Internationalization</div>
+      <div style="color:#b9aaff;font-size:0.97rem;">Your site and the builder will be usable by everyone, in any language. (Coming soon!)</div>
+    </div>
+    <!-- Onboarding Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">🚀</span> Onboarding & Guided Tour</div>
+      <div style="color:#b9aaff;font-size:0.97rem;">New users will be guided to <a href="login.html" style="color:#b48cff;text-decoration:underline;">create an account</a> and shown how to use the builder step by step. (Coming soon!)</div>
+    </div>
+    <!-- Live Preview Section -->
+    <div class="mb-card">
+      <div class="mb-section-title"><span class="mb-icon">📱</span> Live Preview
+        <button type="button" id="mb-preview-toggle" style="float:right;background:#23233a;color:#b48cff;border:none;border-radius:7px;padding:0.3rem 1rem;font-size:0.97rem;cursor:pointer;">Collapse</button>
+      </div>
+      <div class="mb-preview-card" id="mb-preview-card" style="position:sticky;top:0.5rem;z-index:20;"><div class="mb-phone-frame" id="mb-preview"></div></div>
+      <script>
+      // Collapsible sticky preview and swipe gesture
+      (function() {
+        const card = document.getElementById('mb-preview-card');
+        const btn = document.getElementById('mb-preview-toggle');
+        let collapsed = false;
+        function setCollapsed(state) {
+          collapsed = state;
+          if (collapsed) {
+            card.style.maxHeight = '54px';
+            card.style.overflow = 'hidden';
+            btn.textContent = 'Expand';
+          } else {
+            card.style.maxHeight = '';
+            card.style.overflow = '';
+            btn.textContent = 'Collapse';
+          }
+        }
+        btn.onclick = () => setCollapsed(!collapsed);
+        // Swipe up/down to collapse/expand
+        let startY = null;
+        card.addEventListener('touchstart', e => { if (e.touches[0]) startY = e.touches[0].clientY; });
+        card.addEventListener('touchend', e => {
+          if (startY !== null && e.changedTouches[0]) {
+            const dy = e.changedTouches[0].clientY - startY;
+            if (dy < -40) setCollapsed(true); // swipe up
+            if (dy > 40) setCollapsed(false); // swipe down
+          }
+          startY = null;
+        });
+      })();
+      </script>
+    </div>
+    <!-- Save / Publish Section -->
+    <div class="mb-card">
+      <div class="mb-btn-row">
+        <!-- Undo and Redo buttons (single set) -->
+        <button type="button" class="mb-btn secondary" id="mb-undo">Undo</button>
+        <button type="button" class="mb-btn secondary" id="mb-redo">Redo</button>
+        <button type="button" class="mb-btn secondary" id="mb-save-draft">Save Draft</button>
+        <button type="submit" class="mb-btn" id="mb-publish">Save to Web / Publish</button>
+        <button type="button" class="mb-btn secondary" id="mb-reset">Reset</button>
+        <button type="button" class="mb-btn secondary" id="mb-load-published">Edit Published Page</button>
+      </div>
+      <div style="text-align:center;margin-top:0.5rem;color:#b9aaff;font-size:0.97rem;">
+        <span id="mb-edit-status"></span>
+      </div>
+    </div>
+    </form>
+    <div id="mb-toast-container" style="position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:0.7rem;align-items:center;pointer-events:none;"></div>
+    <a class="mb-advanced-link" href="faceless_builder_app.html">Need more control? Open Advanced Builder</a>
+
+    <!-- Publish Success Modal -->
+    <div id="mb-publish-modal" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(24,24,40,0.92);align-items:center;justify-content:center;">
+      <div style="background:#23233a;padding:2rem 1.5rem 1.5rem;border-radius:18px;max-width:95vw;width:350px;text-align:center;box-shadow:0 4px 32px #0008;position:relative;">
+        <button id="mb-publish-modal-close" style="position:absolute;top:0.7rem;right:1rem;background:none;border:none;color:#b48cff;font-size:1.5rem;cursor:pointer;">&times;</button>
+        <h2 style="color:#b48cff;margin-bottom:0.7rem;">Your Site is Live!</h2>
+        <div id="mb-publish-link-row" style="margin-bottom:1.2rem;"></div>
+        <button id="mb-copy-link" class="mb-btn" style="margin-bottom:1.2rem;">Copy Link</button>
+        <div id="mb-qr-code"></div>
+        <div style="margin-top:1.2rem;color:#aaa;font-size:0.97rem;">Share your link or scan the QR code to open your new site instantly.</div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="assets/js/mobile-builder-app.js"></script>
+</body>
+</html>

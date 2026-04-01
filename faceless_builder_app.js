@@ -1,7 +1,9 @@
+// Patch: Use new backend API endpoints
+window.__FAS_API_BASE = "/api/member/pages";
 // faceless_builder_app.js
 // Shared builder logic for Faceless Builder App
 
-window.__FAS_BUILDER_SAVE_ENDPOINT = "/api/member/page-builder/save";
+// Local builder mode: No backend API endpoints
 
 const editor = grapesjs.init({
   container: '#gjs',
@@ -22,6 +24,7 @@ const editor = grapesjs.init({
   }
 });
 
+window.editor = editor;
 const bm = editor.BlockManager;
 
 bm.add('site-navbar', {
@@ -239,6 +242,183 @@ clearBtn.addEventListener('click', () => {
 
 // --- Save to Web Handler ---
 const saveWebBtn = document.getElementById('saveWebBtn');
+const undoBtn = document.getElementById('undoBtn');
+const redoBtn = document.getElementById('redoBtn');
+const saveDraftBtn = document.getElementById('saveDraftBtn');
+const resetBtn = document.getElementById('resetBtn');
+const editPublishedBtn = document.getElementById('editPublishedBtn');
+
+// Undo/Redo
+if (undoBtn) undoBtn.addEventListener('click', () => editor.UndoManager.undo());
+if (redoBtn) redoBtn.addEventListener('click', () => editor.UndoManager.redo());
+
+
+// Save Draft (to backend, is_published: false)
+if (saveDraftBtn) saveDraftBtn.addEventListener('click', async () => {
+  const session = getSession();
+  if (!session || !session.username) {
+    alert('You need to be signed in first.');
+    return;
+  }
+  const title = 'Faceless Page';
+  const html = editor.getHtml();
+  const css = editor.getCss();
+  const slug = slugify(title);
+  const full_document = buildFullDocument(title, html, css);
+  const payload = {
+    page_title: title,
+    page_slug: slug,
+    html,
+    css,
+    full_document,
+    is_published: false
+  };
+  try {
+    const res = await fetch(`${window.__FAS_API_BASE}/save`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-fas-user': JSON.stringify(session)
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`Draft save failed: ${res.status}`);
+    alert('Draft saved to your account.');
+  } catch (err) {
+    console.error(err);
+    alert('Draft save failed.');
+  }
+});
+
+// Reset (clear editor)
+if (resetBtn) resetBtn.addEventListener('click', () => {
+  if (!confirm('Reset the builder? This will clear your work.')) return;
+  editor.setComponents('');
+  editor.setStyle('');
+});
+
+
+// Edit Published Page (load homepage from backend)
+if (editPublishedBtn) editPublishedBtn.addEventListener('click', async () => {
+  const session = getSession();
+  if (!session || !session.username) {
+    alert('You need to be signed in first.');
+    return;
+  }
+  try {
+    // Load homepage (is_homepage=true)
+    const res = await fetch(`${window.__FAS_API_BASE}/list`, {
+      method: 'GET',
+      headers: { 'x-fas-user': JSON.stringify(session) }
+    });
+    if (!res.ok) throw new Error('Failed to load pages');
+    const pages = await res.json();
+    const homepage = Array.isArray(pages) ? pages.find(p => p.is_homepage) : null;
+    if (!homepage) throw new Error('No homepage found');
+    // Load homepage content
+    const loadRes = await fetch(`${window.__FAS_API_BASE}/load?slug=${encodeURIComponent(homepage.page_slug)}`, {
+      method: 'GET',
+      headers: { 'x-fas-user': JSON.stringify(session) }
+    });
+    if (!loadRes.ok) throw new Error('Failed to load homepage');
+    const page = await loadRes.json();
+    editor.setComponents(page.html || '');
+    editor.setStyle(page.css || '');
+    alert('Loaded your published homepage.');
+  } catch (err) {
+    console.error(err);
+    alert('No published homepage found.');
+  }
+});
+
+
+// Save to Web (publish page, is_published: true)
+if (saveWebBtn) {
+  saveWebBtn.addEventListener('click', async () => {
+    const session = getSession();
+    if (!session || !session.username) {
+      alert('You need to be signed in first.');
+      return;
+    }
+    const title = 'Faceless Page';
+    const html = editor.getHtml();
+    const css = editor.getCss();
+    const slug = slugify(title);
+    const full_document = buildFullDocument(title, html, css);
+    const payload = {
+      page_title: title,
+      page_slug: slug,
+      html,
+      css,
+      full_document,
+      is_published: true
+    };
+    try {
+      const res = await fetch(`${window.__FAS_API_BASE}/save`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-fas-user': JSON.stringify(session)
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`Save failed: ${res.status}`);
+      // Optionally set as homepage if first publish
+      // (future: add UI for homepage selection)
+      alert('Published to your site!');
+    } catch (err) {
+      console.error(err);
+      alert('Publish failed.');
+    }
+  });
+}
+
+const downloadHtmlBtn = document.getElementById('downloadHtmlBtn');
+if (downloadHtmlBtn) {
+  downloadHtmlBtn.addEventListener('click', () => {
+    const title = 'Faceless Page';
+    const html = editor.getHtml();
+    const css = editor.getCss();
+    const fullDoc = buildFullDocument(title, html, css);
+    const blob = new Blob([fullDoc], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.replace(/\s+/g, '_').toLowerCase()}.html`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  });
+}
+
+const exportZipBtn = document.getElementById('exportZipBtn');
+if (exportZipBtn && window.JSZip) {
+  exportZipBtn.addEventListener('click', async () => {
+    const zip = new JSZip();
+    const title = 'Faceless Page';
+    const html = editor.getHtml();
+    const css = editor.getCss();
+    // Add HTML and CSS files
+    zip.file('index.html', `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="utf-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1" />\n  <title>${title}</title>\n  <link rel="stylesheet" href="style.css" />\n</head>\n<body>\n${html}\n</body>\n</html>`);
+    zip.file('style.css', css);
+    // Optionally, add assets (images, etc.) here if you want to parse and fetch them
+    // Generate ZIP and trigger download
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'faceless_site.zip';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  });
+}
 
 function slugify(value) {
   return String(value || '')
@@ -258,51 +438,4 @@ function getSession() {
 
 function buildFullDocument(title, html, css) {
   return `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="utf-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1" />\n  <title>${title}</title>\n  <style>${css}</style>\n</head>\n<body>\n${html}\n</body>\n</html>`;
-}
-
-if (saveWebBtn) {
-  saveWebBtn.addEventListener('click', async () => {
-    const session = getSession();
-
-    if (!session || !session.username) {
-      alert('You need to be signed in first.');
-      return;
-    }
-
-    const title = 'Faceless Page'; // later this can come from an input
-    const html = editor.getHtml();
-    const css = editor.getCss();
-    const slug = slugify(title);
-    const full_document = buildFullDocument(title, html, css);
-
-    const payload = {
-      account_id: session.account_id || null,
-      signal_id: session.signal_id || null,
-      username: session.username,
-      title,
-      slug,
-      html,
-      css,
-      full_document,
-      route_hint: `/${session.username}`
-    };
-
-    try {
-      const res = await fetch(window.__FAS_BUILDER_SAVE_ENDPOINT || '/api/member/page-builder/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        throw new Error(`Save failed: ${res.status}`);
-      }
-
-      const data = await res.json();
-      alert(`Saved to web: ${data.live_url || '/' + session.username}`);
-    } catch (err) {
-      console.error(err);
-      alert('Save failed.');
-    }
-  });
 }

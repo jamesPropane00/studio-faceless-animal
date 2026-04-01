@@ -120,6 +120,62 @@ function handleRequest(req, res) {
   }
 
   // ── API ROUTES (server-side, not static files) ─────────────
+  // ── MEDIA DOWNLOAD TRACKING ENDPOINT ──────────────────────
+  if (urlPath.startsWith('/media/download')) {
+    // CORS headers for browser fetches
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-fas-user')
+    if (req.method === 'OPTIONS') { send(res, 204, 'text/plain', ''); return }
+    if (req.method !== 'GET') { sendJSON(res, 405, { error: 'Method not allowed.' }); return }
+
+    // Parse query: /media/download?file=...&bucket=...&user_id=...
+    try {
+      const u = new URL(req.url, 'http://localhost')
+      const file = u.searchParams.get('file')
+      const bucket = u.searchParams.get('bucket') || 'user-storage'
+      const user_id = u.searchParams.get('user_id') || null
+      if (!file) return sendJSON(res, 400, { error: 'Missing file parameter.' })
+
+      // Log download event to media_analytics
+      let creds
+      try { creds = getServiceCreds() } catch { creds = null }
+      if (creds && user_id) {
+        // Log event (non-blocking)
+        sbRequest(
+          creds.host,
+          creds.key,
+          'POST',
+          '/rest/v1/media_analytics',
+          JSON.stringify([{ user_id, file_name: file, event_type: 'download', ts: new Date().toISOString() }])
+        ).catch(() => {})
+      }
+
+      // Generate signed URL for the file (valid 2 min)
+      let signedUrl = null
+      if (creds) {
+        try {
+          const signRes = await sbRequest(
+            creds.host,
+            creds.key,
+            'POST',
+            `/storage/v1/object/sign/${bucket}/${encodeURIComponent(file)}`,
+            JSON.stringify({ expiresIn: 120 })
+          )
+          const signData = JSON.parse(signRes.body.toString())
+          const raw = signData.signedURL || signData.signedUrl || ''
+          signedUrl = raw.startsWith('http') ? raw : `${process.env.SUPABASE_URL}/storage/v1${raw}`
+        } catch (e) {}
+      }
+      if (!signedUrl) return sendJSON(res, 500, { error: 'Could not generate download link.' })
+      // Redirect to signed URL
+      res.writeHead(302, { Location: signedUrl })
+      res.end()
+      return
+    } catch (e) {
+      return sendJSON(res, 500, { error: 'Internal error.' })
+    }
+  }
   // ── RADIO API ROUTES ───────────────────────────────────────────────
   if (urlPath.startsWith('/api/radio/')) {
     res.setHeader('Access-Control-Allow-Origin', '*')

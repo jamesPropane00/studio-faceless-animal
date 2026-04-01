@@ -1,18 +1,13 @@
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src * blob: data:;
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://esm.sh https://www.youtube.com https://static.cloudflareinsights.com;
-    style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com;
-    connect-src *;
-    img-src * data: blob:;
-    font-src * data:;">
   <title>Faceless Builder App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" />
   <style>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
@@ -36,455 +31,436 @@
       background: linear-gradient(180deg, #141414 0%, #0d0d0d 100%);
       border-bottom: 1px solid #262626;
       box-shadow: 0 8px 24px rgba(0,0,0,.3);
-    /* ...existing code... */
-          background: linear-gradient(180deg, #141414 0%, #0d0d0d 100%);
-          border-bottom: 1px solid #262626;
-          box-shadow: 0 8px 24px rgba(0,0,0,.3);
-        }
-        #brand-wrap {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        #brand-mark {
-          width: 12px;
-          height: 12px;
-          border-radius: 3px;
-          background: linear-gradient(135deg, #fff, #666);
-          box-shadow: 0 0 12px rgba(255,255,255,.15);
-        }
-        #brand {
-          font-size: 15px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: .08em;
-        }
-        #subbrand {
-          font-size: 11px;
-          color: #8c8c8c;
-          text-transform: uppercase;
-          letter-spacing: .08em;
-          margin-top: 2px;
-        }
-        #topbar-meta {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          flex: 1;
-          min-width: 220px;
-        }
-        #pageTitle {
-          width: 100%;
-          max-width: 360px;
-          padding: 9px 12px;
-          border: 1px solid #343434;
-          border-radius: 8px;
-          background: #111;
-          color: #fff;
-          font-weight: 700;
-          outline: none;
-        }
-        #pageTitle::placeholder { color: #888; }
-        #saveStatus {
-          font-size: 12px;
-          color: #8c8c8c;
-          white-space: nowrap;
-        }
-        #topbar-actions {
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-        .top-btn {
-          padding: 9px 14px;
-          border: 1px solid #343434;
-          border-radius: 8px;
-          background: linear-gradient(180deg, #222, #151515);
-          color: #fff;
-          font-weight: 700;
-          cursor: pointer;
-        }
-        .top-btn:hover {
-          background: linear-gradient(180deg, #2a2a2a, #1b1b1b);
-        }
-        .top-btn--primary {
-          background: linear-gradient(180deg, #8b5cf6, #6d28d9);
-          border-color: #7c3aed;
-        }
-        .top-btn--primary:hover {
-          background: linear-gradient(180deg, #9b6bff, #7c3aed);
-        }
-        #editor-shell {
-          display: grid;
-          grid-template-columns: 250px 1fr 300px;
-          height: calc(100vh - 56px);
-        }
-        #left-panel, #right-panel {
-          background: linear-gradient(180deg, #161616, #101010);
-          overflow: auto;
-        }
-        #left-panel { border-right: 1px solid #262626; }
-        #right-panel { border-left: 1px solid #262626; }
-        #canvas-wrap {
-          position: relative;
-          background:
-            linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0)),
-            #1b1b1b;
-          overflow: hidden;
-        }
-        #canvas-wrap::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background-image:
-            linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
-          background-size: 28px 28px;
-          opacity: .35;
-        }
-        #gjs {
-          position: relative;
-          z-index: 1;
-          height: 100%;
-        }
-        .panel-head {
-          padding: 12px 14px;
-          border-bottom: 1px solid #262626;
-          position: sticky;
-          top: 0;
-          z-index: 4;
-          background: rgba(16,16,16,.94);
-          backdrop-filter: blur(8px);
-        }
-        .panel-title {
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: .08em;
-          text-transform: uppercase;
-          color: #d8d8d8;
-        }
-        .panel-note {
-          margin-top: 4px;
-          font-size: 11px;
-          color: #7c7c7c;
-        }
-        #blocks {
-          padding: 10px;
-        }
-        #panel-tabs {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          border-bottom: 1px solid #262626;
-          position: sticky;
-          top: 0;
-          z-index: 4;
-          background: rgba(16,16,16,.94);
-          backdrop-filter: blur(8px);
-        }
-        .panel-tab {
-          padding: 12px 8px;
-          border: 0;
-          border-right: 1px solid #262626;
-          background: transparent;
-          color: #989898;
-          font-weight: 800;
-          font-size: 12px;
-          text-transform: uppercase;
-          letter-spacing: .04em;
-          cursor: pointer;
-        }
-        .panel-tab:last-child { border-right: 0; }
-        .panel-tab.active {
-          background: linear-gradient(180deg, #212121, #181818);
-          color: #fff;
-        }
-        .side-panel { display: none; padding: 10px; }
-        .active-panel { display: block; }
-        #exportModal {
-          position: fixed;
-          inset: 0;
-          display: none;
-          align-items: center;
-          justify-content: center;
-          background: rgba(0,0,0,.8);
-          z-index: 99999;
-          padding: 20px;
-        }
-        #exportModal.active { display: flex; }
-        #exportPanel {
-          width: min(1100px, 100%);
-          max-height: 90vh;
-          background: #101010;
-          border: 1px solid #2b2b2b;
-          border-radius: 14px;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          box-shadow: 0 20px 60px rgba(0,0,0,.5);
-        }
-        #exportHeader {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 12px 14px;
-          border-bottom: 1px solid #222;
-          background: #151515;
-        }
-        #codeOutput {
-          width: 100%;
-          min-height: 440px;
-          resize: vertical;
-          border: 0;
-          outline: none;
-          padding: 16px;
-          background: #0b0b0b;
-          color: #d7d7d7;
-          font-family: Consolas, Monaco, monospace;
-          font-size: 13px;
-          line-height: 1.5;
-        }
-        .gjs-one-bg { background-color: #141414 !important; }
-        .gjs-two-color { color: #d3d3d3 !important; }
-        .gjs-three-bg { background: #1d1d1d !important; color: #fff !important; }
-        .gjs-four-color, .gjs-four-color-h:hover { color: #fff !important; }
-        .gjs-cv-canvas { background: transparent !important; }
-        .gjs-pn-panel { box-shadow: none !important; }
-        .gjs-block-category {
-          background: #151515 !important;
-          border: 1px solid #272727 !important;
-          border-radius: 12px !important;
-          margin-bottom: 12px !important;
-          overflow: hidden !important;
-          box-shadow: 0 10px 24px rgba(0,0,0,.2);
-        }
-        .gjs-blocks-c .gjs-title {
-          background: linear-gradient(180deg, #1c1c1c, #171717) !important;
-          color: #fff !important;
-          padding: 12px 14px !important;
-          font-weight: 800 !important;
-          font-size: 12px !important;
-          text-transform: uppercase !important;
-          letter-spacing: .08em !important;
-          border-bottom: 1px solid #262626 !important;
-        }
-        .gjs-blocks-c .gjs-block {
-          width: calc(50% - 10px) !important;
-          min-height: 82px !important;
-          margin: 10px 5px 0 !important;
-          border-radius: 12px !important;
-          border: 1px solid #2f2f2f !important;
-          background: linear-gradient(180deg, #1a1a1a, #131313) !important;
-          color: #fff !important;
-          box-shadow: 0 8px 16px rgba(0,0,0,.22);
-          transition: .15s ease;
-          overflow: hidden !important;
-        }
-        .gjs-blocks-c .gjs-block:hover {
-          transform: translateY(-1px);
-          border-color: #4c4c4c !important;
-          background: linear-gradient(180deg, #232323, #171717) !important;
-        }
-        .gjs-block-label {
-          color: #ececec !important;
-          font-size: 12px !important;
-          font-weight: 700 !important;
-          line-height: 1.25 !important;
-          padding: 10px !important;
-        }
-        .gjs-field,
-        .gjs-input-holder input,
-        .gjs-input-holder select,
-        .gjs-input-holder textarea {
-          background: #181818 !important;
-          color: #fff !important;
-          border: 1px solid #303030 !important;
-        }
-      </style>
-    </head>
-    <body>
-      <div id="topbar">
-        <div id="brand-wrap">
-          <div id="brand-mark"></div>
-          <div>
-            <div id="brand">Faceless Editor</div>
-            <div id="subbrand">Visual Builder</div>
-          </div>
-        </div>
-        <div id="topbar-meta">
-          <input id="pageTitle" type="text" value="Faceless Page" placeholder="Page title" />
-          <div id="saveStatus">Ready</div>
-        </div>
-        <div id="topbar-actions">
-          <button class="top-btn top-btn--primary" id="saveWebBtn">Save to Web</button>
-          <button class="top-btn" id="downloadHtmlBtn">Download HTML</button>
-          <button class="top-btn" id="clearBtn">Clear Page</button>
-          <button class="top-btn" id="exportBtn">Export Code</button>
-        </div>
-      </div>
-
-      <div id="editor-shell">
-        <aside id="left-panel">
-          <div class="panel-head">
-            <div class="panel-title">Blocks</div>
-            <div class="panel-note">Drag sections into the canvas</div>
-          </div>
-          <div id="blocks"></div>
-        </aside>
-
-        <main id="canvas-wrap">
-          <div id="gjs"></div>
-        </main>
-
-        <aside id="right-panel">
-          <div id="panel-tabs">
-            <button class="panel-tab active" data-panel="styles-panel">Styles</button>
-            <button class="panel-tab" data-panel="layers-panel">Layers</button>
-            <button class="panel-tab" data-panel="traits-panel">Settings</button>
-          </div>
-          <div id="styles-panel" class="side-panel active-panel"><div class="gjs-sm-sectors"></div></div>
-          <div id="layers-panel" class="side-panel"><div class="gjs-layers-container"></div></div>
-          <div id="traits-panel" class="side-panel"><div class="gjs-traits-container"></div></div>
-        </aside>
-      </div>
-
-      <div id="exportModal">
-        <div id="exportPanel">
-          <div id="exportHeader">
-            <strong>Exported HTML + CSS</strong>
-            <div style="display:flex; gap:10px;">
-              <button class="top-btn" id="copyExport">Copy Code</button>
-              <button class="top-btn" id="closeExport">Close</button>
-            </div>
-          </div>
-          <textarea id="codeOutput" readonly></textarea>
-        </div>
-      </div>
-
-      <script src="https://unpkg.com/grapesjs"></script>
-      <script src="faceless_builder_app.js"></script>
-    </body>
-    </html>
-        console.error(err);
-        setStatus('Save failed', 'error');
-        alert('Save to web is wired on the editor, but your backend still needs a POST route at ' + SAVE_ENDPOINT + '.');
-      }
+    }
+    #brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #brand-mark {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      background: linear-gradient(135deg, #fff, #666);
+      box-shadow: 0 0 12px rgba(255,255,255,.15);
+    }
+    #brand {
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    #subbrand {
+      font-size: 11px;
+      color: #8c8c8c;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-top: 2px;
+    }
+    #topbar-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 220px;
+    }
+    #pageTitle {
+      width: 100%;
+      max-width: 360px;
+      padding: 9px 12px;
+      border: 1px solid #343434;
+      border-radius: 8px;
+      background: #111;
+      color: #fff;
+      font-weight: 700;
+      outline: none;
+    }
+    #pageTitle::placeholder { color: #888; }
+    #saveStatus {
+      font-size: 12px;
+      color: #8c8c8c;
+      white-space: nowrap;
+    }
+    #topbar-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .top-btn {
+      padding: 2.5px 5px;
+      border: 1px solid #343434;
+      border-radius: 5px;
+      background: linear-gradient(180deg, #222, #151515);
+      color: #fff;
+      font-weight: 700;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .top-btn:hover {
+      background: linear-gradient(180deg, #2a2a2a, #1b1b1b);
+    }
+    .top-btn--primary {
+      background: linear-gradient(180deg, #8b5cf6, #6d28d9);
+      border-color: #7c3aed;
+    }
+    .top-btn--primary:hover {
+      background: linear-gradient(180deg, #9b6bff, #7c3aed);
     }
 
-    exportBtn.addEventListener('click', () => {
-      const snapshot = buildFullDocument();
-      codeOutput.value = snapshot.fullDocument;
-      exportModal.classList.add('active');
-      setStatus('Code exported', 'success');
-    });
+    #editor-shell {
+      display: grid;
+      grid-template-columns: 250px 1fr 300px;
+      height: calc(100vh - 56px);
+    }
+    #left-panel, #right-panel {
+      background: linear-gradient(180deg, #161616, #101010);
+      overflow: auto;
+    }
+    #left-panel { border-right: 1px solid #262626; }
+    #right-panel { border-left: 1px solid #262626; }
+    #canvas-wrap {
+      position: relative;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0)),
+        #1b1b1b;
+      overflow: hidden;
+    }
+    #canvas-wrap::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: .35;
+    }
+    #gjs {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+    }
 
-    copyExport.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(codeOutput.value || '');
-        setStatus('Code copied', 'success');
-      } catch (err) {
-        console.error(err);
-        setStatus('Copy failed', 'error');
-      }
-    });
+    .panel-head {
+      padding: 12px 14px;
+      border-bottom: 1px solid #262626;
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: rgba(16,16,16,.94);
+      backdrop-filter: blur(8px);
+    }
+    .panel-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #d8d8d8;
+    }
+    .panel-note {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #7c7c7c;
+    }
+    #blocks {
+      padding: 10px;
+    }
 
-    closeExport.addEventListener('click', () => exportModal.classList.remove('active'));
-    exportModal.addEventListener('click', e => {
-      if (e.target === exportModal) exportModal.classList.remove('active');
-    });
+    #panel-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid #262626;
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: rgba(16,16,16,.94);
+      backdrop-filter: blur(8px);
+    }
+    .panel-tab {
+      padding: 12px 8px;
+      border: 0;
+      border-right: 1px solid #262626;
+      background: transparent;
+      color: #989898;
+      font-weight: 800;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      cursor: pointer;
+    }
+    .panel-tab:last-child { border-right: 0; }
+    .panel-tab.active {
+      background: linear-gradient(180deg, #212121, #181818);
+      color: #fff;
+    }
+    .side-panel { display: none; padding: 10px; }
+    .active-panel { display: block; }
 
-    downloadHtmlBtn.addEventListener('click', downloadCurrentPage);
-    saveWebBtn.addEventListener('click', saveCurrentPageToWeb);
+    #exportModal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.8);
+      z-index: 99999;
+      padding: 20px;
+    }
+    #exportModal.active { display: flex; }
+    #exportPanel {
+      width: min(1100px, 100%);
+      max-height: 90vh;
+      background: #101010;
+      border: 1px solid #2b2b2b;
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    #exportHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid #222;
+      background: #151515;
+    }
+    #codeOutput {
+      width: 100%;
+      min-height: 440px;
+      resize: vertical;
+      border: 0;
+      outline: none;
+      padding: 16px;
+      background: #0b0b0b;
+      color: #d7d7d7;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
 
-    clearBtn.addEventListener('click', () => {
-      if (!confirm('Clear the current page?')) return;
-      editor.setComponents('');
-      editor.setStyle('');
-      setStatus('Page cleared', 'neutral');
-    });
-  </script>
-<!-- End of file: structure now matches the working original -->
-      styleManager: { appendTo: '.gjs-sm-sectors' },
-      layerManager: { appendTo: '.gjs-layers-container' },
-      traitManager: { appendTo: '.gjs-traits-container' },
-      deviceManager: {
-        devices: [
-          { id: 'desktop', name: 'Desktop', width: '' },
-          { id: 'tablet', name: 'Tablet', width: '768px', widthMedia: '992px' },
-          { id: 'mobile', name: 'Mobile', width: '375px', widthMedia: '575px' }
-        ]
-      }
-    });
+    /* GrapesJS UI tuning */
+    .gjs-one-bg { background-color: #141414 !important; }
+    .gjs-two-color { color: #d3d3d3 !important; }
+    .gjs-three-bg { background: #1d1d1d !important; color: #fff !important; }
+    .gjs-four-color, .gjs-four-color-h:hover { color: #fff !important; }
+    .gjs-cv-canvas { background: transparent !important; }
+    .gjs-pn-panel { box-shadow: none !important; }
 
-    const bm = editor.BlockManager;
+    .gjs-block-category {
+      background: #151515 !important;
+      border: 1px solid #272727 !important;
+      border-radius: 12px !important;
+      margin-bottom: 12px !important;
+      overflow: hidden !important;
+      box-shadow: 0 10px 24px rgba(0,0,0,.2);
+    }
+    .gjs-blocks-c .gjs-title {
+      background: linear-gradient(180deg, #1c1c1c, #171717) !important;
+      color: #fff !important;
+      padding: 12px 14px !important;
+      font-weight: 800 !important;
+      font-size: 12px !important;
+      text-transform: uppercase !important;
+      letter-spacing: .08em !important;
+      border-bottom: 1px solid #262626 !important;
+    }
+    .gjs-blocks-c .gjs-block {
+      width: calc(50% - 10px) !important;
+      min-height: 82px !important;
+      margin: 10px 5px 0 !important;
+      border-radius: 12px !important;
+      border: 1px solid #2f2f2f !important;
+      background: linear-gradient(180deg, #1a1a1a, #131313) !important;
+      color: #fff !important;
+      box-shadow: 0 8px 16px rgba(0,0,0,.22);
+      transition: .15s ease;
+      overflow: hidden !important;
+    }
+    .gjs-blocks-c .gjs-block:hover {
+      transform: translateY(-1px);
+      border-color: #4c4c4c !important;
+      background: linear-gradient(180deg, #232323, #171717) !important;
+    }
+    .gjs-block-label {
+      color: #ececec !important;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      line-height: 1.25 !important;
+      padding: 10px !important;
+    }
+    .gjs-field,
+    .gjs-input-holder input,
+    .gjs-input-holder select,
+    .gjs-input-holder textarea {
+      background: #181818 !important;
+      color: #fff !important;
+      border: 1px solid #303030 !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <div id="toast" style="display:none;position:fixed;top:18px;right:18px;z-index:99999;background:linear-gradient(90deg,#232,#181);color:#fff;padding:12px 22px;border-radius:8px;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.18);font-size:15px;transition:opacity .2s;opacity:0;">Download complete!</div>
+      <script>
+        function showToast(msg) {
+          const toast = document.getElementById('toast');
+          if (!toast) return;
+          toast.textContent = msg || 'Download complete!';
+          toast.style.display = 'block';
+          toast.style.opacity = '1';
+          setTimeout(() => { toast.style.opacity = '0'; }, 2200);
+          setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+      </script>
+    <div id="brand-wrap">
+      <div id="brand-mark"></div>
+      <div>
+        <div id="brand">Faceless Editor</div>
+        <div id="subbrand">Visual Builder</div>
+      </div>
+    </div>
+    <div id="topbar-meta">
+      <input id="pageTitle" name="pageTitle" type="text" value="Faceless Page" placeholder="Page title" />
+      <div id="saveStatus">Ready</div>
+    </div>
+    <div id="topbar-actions">
+        <button class="top-btn" id="loadFileBtn">Load File</button>
+        <button class="top-btn" id="mediaLibraryBtn">Media Library</button>
+      <button class="top-btn top-btn--primary" id="saveWebBtn">Save to Web</button>
+      <button class="top-btn" id="downloadHtmlBtn">Download HTML</button>
+      <button class="top-btn" id="saveDraftBtn">Save Draft</button>
+      <button class="top-btn" id="loadDraftBtn">Load Draft</button>
+      <button class="top-btn" id="undoBtn" title="Undo (Ctrl+Z)">Undo</button>
+      <button class="top-btn" id="redoBtn" title="Redo (Ctrl+Y)">Redo</button>
+      <button class="top-btn" id="clearBtn">Clear Page</button>
+      <button class="top-btn" id="exportBtn">Export Code</button>
+    </div>
+  </div>
 
-    bm.add('site-navbar', {
-      label: 'Navbar',
-      category: 'Layout',
-      content: `
-        <header style="padding:18px 24px; background:#111; color:#fff; border-bottom:1px solid #222;">
-          <div style="max-width:1180px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;">
-            <div style="font-size:20px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;">Brand</div>
-            <nav style="display:flex; gap:18px; flex-wrap:wrap;">
-              <a href="#" style="color:#d4d4d4; text-decoration:none;">Home</a>
-              <a href="#" style="color:#d4d4d4; text-decoration:none;">About</a>
-              <a href="#" style="color:#d4d4d4; text-decoration:none;">Work</a>
-              <a href="#" style="color:#d4d4d4; text-decoration:none;">Contact</a>
-            </nav>
-          </div>
-        </header>
-      `
-    });
+  <div id="editor-shell">
+    <aside id="left-panel">
+      <div class="panel-head">
+        <div class="panel-title">Blocks</div>
+        <div class="panel-note">Drag sections into the canvas</div>
+      </div>
+      <div id="blocks"></div>
+    </aside>
 
-    bm.add('hero-banner', {
-      label: 'Hero Banner',
-      category: 'Layout',
-      content: `
-        <section style="padding:110px 24px; background:linear-gradient(135deg,#111,#1f1f1f); color:#fff; text-align:center;">
-          <div style="max-width:980px; margin:0 auto;">
-            <div style="display:inline-block; padding:6px 12px; border:1px solid rgba(255,255,255,.18); border-radius:999px; color:#c9c9c9; font-size:12px; letter-spacing:.08em; text-transform:uppercase; margin-bottom:18px;">Faceless Brand</div>
-            <h1 style="margin:0 0 18px; font-size:58px; line-height:1.05;">Build Your Presence</h1>
-            <p style="margin:0 auto 28px; max-width:720px; font-size:18px; color:#b7b7b7;">Launch a sharp, modern page with a dark premium look and strong call to action.</p>
-            <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-              <a href="#" style="display:inline-block; padding:14px 24px; background:#fff; color:#111; text-decoration:none; border-radius:8px; font-weight:700;">Get Started</a>
-              <a href="#" style="display:inline-block; padding:14px 24px; background:transparent; color:#fff; border:1px solid rgba(255,255,255,.2); text-decoration:none; border-radius:8px; font-weight:700;">See More</a>
-            </div>
-          </div>
-        </section>
-      `
-    });
+    <main id="canvas-wrap">
+      <div id="gjs"></div>
+    </main>
 
-    bm.add('section-block', {
-      label: 'Section',
-      category: 'Layout',
-      content: `
-        <section style="padding:70px 24px; background:#101010; color:#fff;">
-          <div style="max-width:1100px; margin:0 auto;">
-            <h2 style="margin:0 0 16px; font-size:38px;">New Section</h2>
-            <p style="margin:0; font-size:16px; color:#bcbcbc;">Add your content here and shape the section however you want.</p>
-          </div>
-        </section>
-      `
-    });
+    <aside id="right-panel">
+      <div id="panel-tabs">
+        <button class="panel-tab active" data-panel="styles-panel">Styles</button>
+        <button class="panel-tab" data-panel="layers-panel">Layers</button>
+        <button class="panel-tab" data-panel="traits-panel">Settings</button>
+      </div>
+      <div id="styles-panel" class="side-panel active-panel"><div class="gjs-sm-sectors"></div></div>
+      <div id="layers-panel" class="side-panel"><div class="gjs-layers-container"></div></div>
+      <div id="traits-panel" class="side-panel"><div class="gjs-traits-container"></div></div>
+    </aside>
+  </div>
 
-    bm.add('two-columns', {
-      label: '2 Columns',
-      category: 'Layout',
-      content: `
-        <section style="padding:70px 24px; background:#0f0f0f; color:#fff;">
-          <div style="max-width:1100px; margin:0 auto; display:flex; gap:24px; flex-wrap:wrap;">
-            <div style="flex:1 1 320px; min-height:200px; padding:26px; background:#181818; border:1px solid #2a2a2a; border-radius:14px;">
-              <h3 style="margin-top:0;">Left Column</h3>
-              <p style="color:#b9b9b9;">Use this side for text, images, embeds, or buttons.</p>
-            </div>
-            <div style="flex:1 1 320px; min-height:200px; padding:26px; background:#181818; border:1px solid #2a2a2a; border-radius:14px;">
-              <h3 style="margin-top:0;">Right Column</h3>
-              <p style="color:#b9b9b9;">Perfect for split layouts and side-by-side content.</p>
-            </div>
-          </div>
-        </section>
-      `
-    });
+  <div id="exportModal">
+    <div id="exportPanel">
+      <div id="exportHeader">
+        <script src="https://unpkg.com/grapesjs"></script>
+        <script src="faceless_builder_app.js"></script>
+        <script type="module" src="faceless_builder_media.js"></script>
+                  <input type="file" id="fileLoaderInput" style="display:none" accept=".html,.htm,.css,.js,.json,.txt" />
+                  <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                      const loadFileBtn = document.getElementById('loadFileBtn');
+                      const fileInput = document.getElementById('fileLoaderInput');
+                      if (loadFileBtn && fileInput) {
+                        loadFileBtn.addEventListener('click', function() {
+                          fileInput.value = '';
+                          fileInput.click();
+                        });
+                        fileInput.addEventListener('change', function(e) {
+                          const file = e.target.files && e.target.files[0];
+                          if (!file) return;
+                          const ext = file.name.split('.').pop().toLowerCase();
+                          const reader = new FileReader();
+                          reader.onload = function(evt) {
+                            const content = evt.target.result;
+                            if (!window.editor) return;
+                            if (ext === 'html' || ext === 'htm') {
+                              window.editor.setComponents(content);
+                              showToast('HTML loaded!');
+                            } else if (ext === 'css') {
+                              window.editor.setStyle(content);
+                              showToast('CSS loaded!');
+                            } else if (ext === 'js') {
+                              // Add JS as an asset (not executed, just stored)
+                              if (window.editor.AssetManager) {
+                                window.editor.AssetManager.add({ type: 'script', src: URL.createObjectURL(new Blob([content], {type:'text/javascript'})), name: file.name });
+                                showToast('JS file added as asset!');
+                              } else {
+                                showToast('JS file loaded (not executed)');
+                              }
+                            } else if (ext === 'json' || ext === 'txt') {
+                              // For JSON/TXT, just show in a modal or toast
+                              showToast(file.name + ' loaded!');
+                            } else {
+                              showToast('File type not supported for loading.');
+                            }
+                          };
+                          reader.readAsText(file);
+                        });
+                      }
+                    });
+                  </script>
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                const saveDraftBtn = document.getElementById('saveDraftBtn');
+                const loadDraftBtn = document.getElementById('loadDraftBtn');
+                if (saveDraftBtn) {
+                  saveDraftBtn.addEventListener('click', function() {
+                    if (!window.editor) return;
+                    const html = window.editor.getHtml();
+                    const css = window.editor.getCss();
+                    localStorage.setItem('fas_draft_html', html);
+                    localStorage.setItem('fas_draft_css', css);
+                    showToast('Draft saved locally!');
+                  });
+                }
+                if (loadDraftBtn) {
+                  loadDraftBtn.addEventListener('click', function() {
+                    if (!window.editor) return;
+                    const html = localStorage.getItem('fas_draft_html');
+                    const css = localStorage.getItem('fas_draft_css');
+                    if (html && css) {
+                      window.editor.setComponents(html);
+                      window.editor.setStyle(css);
+                      showToast('Draft loaded!');
+                    } else {
+                      showToast('No draft found.');
+                    }
+                  });
+                }
+              });
+            </script>
+      // ...existing code...
+      // Undo/Redo/Download HTML button logic
+      document.addEventListener('DOMContentLoaded', function() {
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        const downloadHtmlBtn = document.getElementById('downloadHtmlBtn');
+        if (undoBtn) undoBtn.addEventListener('click', function() {
+          if (window.editor && window.editor.UndoManager) window.editor.UndoManager.undo();
+        });
+        if (redoBtn) redoBtn.addEventListener('click', function() {
+          if (window.editor && window.editor.UndoManager) window.editor.UndoManager.redo();
+        });
+        if (downloadHtmlBtn) downloadHtmlBtn.addEventListener('click', function() {
+          if (typeof downloadCurrentPage === 'function') downloadCurrentPage();
+        });
+      });
 
     bm.add('feature-cards', {
       label: 'Feature Cards',
@@ -523,10 +499,10 @@
           <div style="max-width:1100px; margin:0 auto;">
             <h2 style="margin:0 0 22px; font-size:40px;">Gallery</h2>
             <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px;">
-              <img src="https://picsum.photos/600/500?random=1" style="width:100%; display:block; border-radius:14px;" />
-              <img src="https://picsum.photos/600/500?random=2" style="width:100%; display:block; border-radius:14px;" />
-              <img src="https://picsum.photos/600/500?random=3" style="width:100%; display:block; border-radius:14px;" />
-              <img src="https://picsum.photos/600/500?random=4" style="width:100%; display:block; border-radius:14px;" />
+              <img src="assets/placeholder.png" style="width:100%; display:block; border-radius:14px;" />
+              <img src="assets/placeholder.png" style="width:100%; display:block; border-radius:14px;" />
+              <img src="assets/placeholder.png" style="width:100%; display:block; border-radius:14px;" />
+              <img src="assets/placeholder.png" style="width:100%; display:block; border-radius:14px;" />
             </div>
           </div>
         </section>
@@ -588,7 +564,7 @@
     bm.add('image-block', {
       label: 'Image',
       category: 'Basic',
-      content: `<div style="padding:20px; text-align:center;"><img src="https://picsum.photos/900/500?random=5" style="max-width:100%; height:auto; display:inline-block; border-radius:12px;" /></div>`
+      content: `<div style="padding:20px; text-align:center;"><img src="assets/placeholder.png" style="max-width:100%; height:auto; display:inline-block; border-radius:12px;" /></div>`
     });
 
     bm.add('button-block', {
@@ -596,16 +572,6 @@
       category: 'Basic',
       content: `<div style="padding:20px;"><a href="#" style="display:inline-block; padding:12px 22px; background:#fff; color:#111; text-decoration:none; border-radius:8px; font-weight:700;">Click Here</a></div>`
     });
-
-    // Debug block
-    bm.add('debug-block', {
-      label: 'DEBUG',
-      category: 'Basic',
-      content: `<div style="padding:20px; color:#fff; background:#e11d48;">If you see this, blocks are registering!</div>`
-    });
-
-    // Log all registered blocks to the console
-    console.log('Registered blocks:', bm.getAll().map(b => b.id));
 
     editor.setComponents(`
       <section style="padding:110px 24px; background:linear-gradient(135deg,#111,#202020); color:#fff; text-align:center;">
@@ -663,40 +629,185 @@
     }
 
     function buildFullDocument() {
-      const html = editor.getHtml();
-      const css = editor.getCss();
+      let htmlContent = editor.getHtml();
+      let cssContent = editor.getCss();
+      // Escape backticks to prevent breaking the template literal
+      htmlContent = htmlContent.replace(/`/g, '\x60');
+      cssContent = cssContent.replace(/`/g, '\x60');
       const pageTitle = pageTitleInput.value.trim() || 'Faceless Page';
       const safeTitle = pageTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const fullDocument = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${safeTitle}</title>
-  <style>
-${css}
-  </style>
-</head>
-<body>
-${html}
-</body>
-</html>`;
-      return { pageTitle, slug: slugify(pageTitle), html, css, fullDocument };
+      const liveServerScript = `<!-- Code injected by live-server -->\n<script>\n// <![CDATA[  <-- For SVG support\nif ('WebSocket' in window) {\n  (function () {\n    function refreshCSS() {\n      var sheets = [].slice.call(document.getElementsByTagName('link'));\n      var head = document.getElementsByTagName('head')[0];\n      for (var i = 0; i < sheets.length; ++i) {\n        var elem = sheets[i];\n        var parent = elem.parentElement || head;\n        parent.removeChild(elem);\n        var rel = elem.rel;\n        if (elem.href && typeof rel != 'string' || rel.length == 0 || rel.toLowerCase() == 'stylesheet') {\n          var url = elem.href.replace(/(&|\\?)_cacheOverride=\\d+/, '');\n          elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());\n        }\n        parent.appendChild(elem);\n      }\n    }\n    var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';\n    var address = protocol + window.location.host + window.location.pathname + '/ws';\n    var socket = new WebSocket(address);\n    socket.onmessage = function (msg) {\n      if (msg.data == 'reload') window.location.reload();\n      else if (msg.data == 'refreshcss') refreshCSS();\n    };\n    if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {\n      console.log('Live reload enabled.');\n      sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);\n    }\n  })();\n}\nelse {\n  console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');\n}\n// ]]>\n</script>`;
+        const fullDocument = '<!DOCTYPE html>\n'
+          + '<html lang="en">\n'
+          + '<head>\n'
+          + '  <meta charset="UTF-8" />\n'
+          + '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n'
+          + '  <title>' + safeTitle + '</title>\n'
+          + '  <style>\n' + cssContent + '\n  </style>\n'
+          + '</head>\n'
+          + '<body>\n'
+          + htmlContent + '\n'
+          + liveServerScript + '\n'
+          + '</body>\n'
+          + '</html>';
+      return { pageTitle, slug: slugify(pageTitle), html: htmlContent, css: cssContent, fullDocument };
     }
 
     function downloadCurrentPage() {
       const snapshot = buildFullDocument();
-      const fileName = `${snapshot.slug}.html`;
-      const blob = new Blob([snapshot.fullDocument], { type: 'text/html;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setStatus(`Downloaded ${fileName}`, 'success');
+      let defaultName = `${snapshot.slug}`;
+      let fileName = prompt('Enter file name for download (no extension):', defaultName);
+      if (!fileName) {
+        setStatus('Download cancelled', 'neutral');
+        return;
+      }
+      // Ask user if they want .html or .zip
+      // Ask user for format
+      let format = prompt('Download format: html, pdf, md, or zip? (Type one)', 'html');
+      if (!format) {
+        setStatus('Download cancelled', 'neutral');
+        return;
+      }
+      format = format.trim().toLowerCase();
+      if (format === 'html') {
+        let htmlName = fileName.endsWith('.html') ? fileName : fileName + '.html';
+        const blob = new Blob([snapshot.fullDocument], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = htmlName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setStatus(`Downloaded ${htmlName}`, 'success');
+        showToast('Download complete!');
+        return;
+      } else if (format === 'pdf') {
+        // Use html2pdf to export the HTML as PDF
+        const element = document.createElement('div');
+        element.innerHTML = snapshot.fullDocument;
+        document.body.appendChild(element);
+        html2pdf().from(element).set({ filename: fileName + '.pdf' }).save().then(() => {
+          setStatus(`Downloaded ${fileName}.pdf`, 'success');
+          showToast('Download complete!');
+          document.body.removeChild(element);
+        });
+        return;
+      } else if (format === 'md' || format === 'markdown') {
+        // Basic HTML to Markdown conversion (simple, not perfect)
+        function htmlToMarkdown(html) {
+          return html
+            .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n')
+            .replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n')
+            .replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n\n')
+            .replace(/<h4[^>]*>(.*?)<\/h4>/gi, '#### $1\n\n')
+            .replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n')
+            .replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\n')
+            .replace(/<ul[^>]*>|<\/ul>/gi, '')
+            .replace(/<ol[^>]*>|<\/ol>/gi, '')
+            .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**')
+            .replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*')
+            .replace(/<a [^>]*href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi, '[$2]($1)')
+            .replace(/<br\s*\/?>(\s*)/gi, '\n')
+            .replace(/<[^>]+>/g, '');
+        }
+        let md = htmlToMarkdown(snapshot.html);
+        let mdName = fileName.endsWith('.md') ? fileName : fileName + '.md';
+        const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = mdName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setStatus(`Downloaded ${mdName}`, 'success');
+        showToast('Download complete!');
+        return;
+      }
+      // Download as zip with options
+      if (typeof JSZip === 'undefined') {
+        alert('JSZip library not loaded.');
+        setStatus('JSZip not loaded', 'error');
+        return;
+      }
+      // Ask user what to include
+      let includeCSS = confirm('Include CSS file in zip? (OK = Yes, Cancel = No)');
+      let includeImages = confirm('Include image assets in zip? (OK = Yes, Cancel = No)');
+      let includeJS = confirm('Include JS files in zip? (OK = Yes, Cancel = No)');
+      const zip = new JSZip();
+      zip.file(fileName + '.html', snapshot.fullDocument);
+      if (includeCSS) zip.file(fileName + '.css', snapshot.css);
+      // Try to collect image assets from the HTML (basic)
+      if (includeImages) {
+        const imgRegex = /<img[^>]+src=["']([^"'>]+)["']/g;
+        let match;
+        let imgCount = 0;
+        let imgPromises = [];
+        while ((match = imgRegex.exec(snapshot.fullDocument))) {
+          let imgUrl = match[1];
+          if (imgUrl.startsWith('data:')) continue; // skip inline
+          // Only fetch relative assets
+          if (!/^https?:\/\//.test(imgUrl)) {
+            try {
+              // Fetch as blob and add to zip
+              let p = fetch(imgUrl).then(resp => {
+                if (resp.ok) return resp.blob();
+                return null;
+              }).then(blob => {
+                if (blob) zip.file('assets/' + (imgUrl.split('/').pop() || `image${++imgCount}.png`), blob);
+              }).catch(() => {});
+              imgPromises.push(p);
+            } catch (e) {}
+          }
+        }
+        Promise.all(imgPromises).then(() => finalizeZip());
+      } else {
+        finalizeZip();
+      }
+      function finalizeZip() {
+        // Optionally add JS files (basic: look for <script src="...")
+        if (includeJS) {
+          const jsRegex = /<script[^>]+src=["']([^"'>]+)["']/g;
+          let match;
+          let jsCount = 0;
+          let jsPromises = [];
+          while ((match = jsRegex.exec(snapshot.fullDocument))) {
+            let jsUrl = match[1];
+            if (!/^https?:\/\//.test(jsUrl)) {
+              try {
+                let p = fetch(jsUrl).then(resp => {
+                  if (resp.ok) return resp.blob();
+                  return null;
+                }).then(blob => {
+                  if (blob) zip.file('assets/' + (jsUrl.split('/').pop() || `script${++jsCount}.js`), blob);
+                }).catch(() => {});
+                jsPromises.push(p);
+              } catch (e) {}
+            }
+          }
+          Promise.all(jsPromises).then(() => generateAndDownloadZip());
+        } else {
+          generateAndDownloadZip();
+        }
+      }
+      function generateAndDownloadZip() {
+        zip.generateAsync({type:'blob'}).then(function(content) {
+          const zipName = fileName + '.zip';
+          const url = URL.createObjectURL(content);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = zipName;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          setStatus(`Downloaded ${zipName}`, 'success');
+          showToast('Download complete!');
+        });
+      }
     }
 
     async function saveCurrentPageToWeb() {
@@ -712,297 +823,68 @@ ${html}
         account_id: session.account_id || null,
         signal_id: session.signal_id || null,
         username: session.username,
-      <div id="topbar">
-        <div id="brand-wrap">
-          <div id="brand-mark"></div>
-          <div>
-            <div id="brand">Faceless Editor</div>
-            <div id="subbrand">Visual Builder</div>
-          </div>
-        </div>
-        <div id="topbar-actions">
-          <button class="top-btn" id="clearBtn">Clear Page</button>
-          <button class="top-btn" id="exportBtn">Export Code</button>
-        </div>
-      </div>
+        title: snapshot.pageTitle,
+        slug: snapshot.slug,
+        html: snapshot.html,
+        css: snapshot.css,
+        full_document: snapshot.fullDocument,
+        route_hint: `/${session.username}`
+      };
 
-      <div id="editor-shell">
-        <aside id="left-panel">
-          <div class="panel-head">
-            <div class="panel-title">Blocks</div>
-            <div class="panel-note">Drag sections into the canvas</div>
-          </div>
-          <div id="blocks"></div>
-        </aside>
-
-        <main id="canvas-wrap">
-          <div id="gjs"></div>
-        </main>
-
-        <aside id="right-panel">
-          <div id="panel-tabs">
-            <button class="panel-tab active" data-panel="styles-panel">Styles</button>
-            <button class="panel-tab" data-panel="layers-panel">Layers</button>
-            <button class="panel-tab" data-panel="traits-panel">Settings</button>
-          </div>
-          <div id="styles-panel" class="side-panel active-panel"><div class="gjs-sm-sectors"></div></div>
-          <div id="layers-panel" class="side-panel"><div class="gjs-layers-container"></div></div>
-          <div id="traits-panel" class="side-panel"><div class="gjs-traits-container"></div></div>
-        </aside>
-      </div>
-
-      <div id="exportModal">
-        <div id="exportPanel">
-          <div id="exportHeader">
-            <strong>Exported HTML + CSS</strong>
-            <button class="top-btn" id="closeExport">Close</button>
-          </div>
-          <textarea id="codeOutput" readonly></textarea>
-        </div>
-      </div>
-
-      <script src="https://unpkg.com/grapesjs"></script>
-      <script>
-        const editor = grapesjs.init({
-          container: '#gjs',
-          height: '100%',
-          fromElement: false,
-          storageManager: false,
-          selectorManager: { componentFirst: true },
-          blockManager: { appendTo: '#blocks' },
-          styleManager: { appendTo: '.gjs-sm-sectors' },
-          layerManager: { appendTo: '.gjs-layers-container' },
-          traitManager: { appendTo: '.gjs-traits-container' },
-          deviceManager: {
-            devices: [
-              { id: 'desktop', name: 'Desktop', width: '' },
-              { id: 'tablet', name: 'Tablet', width: '768px', widthMedia: '992px' },
-              { id: 'mobile', name: 'Mobile', width: '375px', widthMedia: '575px' }
-            ]
-          }
+      setStatus('Saving to web…', 'working');
+      try {
+        const response = await fetch(SAVE_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
+        if (!response.ok) {
+          const text = await response.text().catch(() => '');
+          throw new Error(`Save endpoint failed (${response.status}) ${text}`.trim());
+        }
+        let result = null;
+        try { result = await response.json(); } catch (_) {}
+        const liveUrl = result && (result.live_url || result.url) ? (result.live_url || result.url) : `/${session.username}`;
+        setStatus('Saved to web', 'success');
+        alert(`Saved to web successfully. Live route: ${liveUrl}`);
+      } catch (err) {
+        console.error(err);
+        setStatus('Save failed', 'error');
+        alert('Save to web is wired on the editor, but your backend still needs a POST route at ' + SAVE_ENDPOINT + '.');
+      }
+    }
 
-        const bm = editor.BlockManager;
+    exportBtn.addEventListener('click', () => {
+      const snapshot = buildFullDocument();
+      codeOutput.value = snapshot.fullDocument;
+      exportModal.classList.add('active');
+      setStatus('Code exported', 'success');
+    });
 
-        bm.add('site-navbar', {
-          label: 'Navbar',
-          category: 'Layout',
-          content: `
-            <header style="padding:18px 24px; background:#111; color:#fff; border-bottom:1px solid #222;">
-              <div style="max-width:1180px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;">
-                <div style="font-size:20px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;">Brand</div>
-                <nav style="display:flex; gap:18px; flex-wrap:wrap;">
-                  <a href="#" style="color:#d4d4d4; text-decoration:none;">Home</a>
-                  <a href="#" style="color:#d4d4d4; text-decoration:none;">About</a>
-                  <a href="#" style="color:#d4d4d4; text-decoration:none;">Work</a>
-                  <a href="#" style="color:#d4d4d4; text-decoration:none;">Contact</a>
-                </nav>
-              </div>
-            </header>
-          `
-        });
+    copyExport.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(codeOutput.value || '');
+        setStatus('Code copied', 'success');
+      } catch (err) {
+        console.error(err);
+        setStatus('Copy failed', 'error');
+      }
+    });
 
-        bm.add('hero-banner', {
-          label: 'Hero Banner',
-          category: 'Layout',
-          content: `
-            <section style="padding:110px 24px; background:linear-gradient(135deg,#111,#1f1f1f); color:#fff; text-align:center;">
-              <div style="max-width:980px; margin:0 auto;">
-                <div style="display:inline-block; padding:6px 12px; border:1px solid rgba(255,255,255,.18); border-radius:999px; color:#c9c9c9; font-size:12px; letter-spacing:.08em; text-transform:uppercase; margin-bottom:18px;">Faceless Brand</div>
-                <h1 style="margin:0 0 18px; font-size:58px; line-height:1.05;">Build Your Presence</h1>
-                <p style="margin:0 auto 28px; max-width:720px; font-size:18px; color:#b7b7b7;">Launch a sharp, modern page with a dark premium look and strong call to action.</p>
-                <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-                  <a href="#" style="display:inline-block; padding:14px 24px; background:#fff; color:#111; text-decoration:none; border-radius:8px; font-weight:700;">Get Started</a>
-                  <a href="#" style="display:inline-block; padding:14px 24px; background:transparent; color:#fff; border:1px solid rgba(255,255,255,.2); text-decoration:none; border-radius:8px; font-weight:700;">See More</a>
-                </div>
-              </div>
-            </section>
-          `
-        });
+    closeExport.addEventListener('click', () => exportModal.classList.remove('active'));
+    exportModal.addEventListener('click', e => {
+      if (e.target === exportModal) exportModal.classList.remove('active');
+    });
 
-        bm.add('section-block', {
-          label: 'Section',
-          category: 'Layout',
-          content: `
-            <section style="padding:70px 24px; background:#101010; color:#fff;">
-              <div style="max-width:1100px; margin:0 auto;">
-                <h2 style="margin:0 0 16px; font-size:38px;">New Section</h2>
-                <p style="margin:0; font-size:16px; color:#bcbcbc;">Add your content here and shape the section however you want.</p>
-              </div>
-            </section>
-          `
-        });
+    downloadHtmlBtn.addEventListener('click', downloadCurrentPage);
+    saveWebBtn.addEventListener('click', saveCurrentPageToWeb);
 
-        bm.add('two-columns', {
-          label: '2 Columns',
-          category: 'Layout',
-          content: `
-            <section style="padding:70px 24px; background:#0f0f0f; color:#fff;">
-              <div style="max-width:1100px; margin:0 auto; display:flex; gap:24px; flex-wrap:wrap;">
-                <div style="flex:1 1 320px; min-height:200px; padding:26px; background:#181818; border:1px solid #2a2a2a; border-radius:14px;">
-                  <h3 style="margin-top:0;">Left Column</h3>
-                  <p style="color:#b9b9b9;">Use this side for text, images, embeds, or buttons.</p>
-                </div>
-                <div style="flex:1 1 320px; min-height:200px; padding:26px; background:#181818; border:1px solid #2a2a2a; border-radius:14px;">
-                  <h3 style="margin-top:0;">Right Column</h3>
-                  <p style="color:#b9b9b9;">Perfect for split layouts and side-by-side content.</p>
-                </div>
-              </div>
-            </section>
-          `
-        });
-
-        bm.add('feature-cards', {
-          label: 'Feature Cards',
-          category: 'Sections',
-          content: `
-            <section style="padding:80px 24px; background:#0d0d0d; color:#fff;">
-              <div style="max-width:1100px; margin:0 auto;">
-                <div style="margin-bottom:26px;">
-                  <h2 style="margin:0 0 12px; font-size:42px;">What You Offer</h2>
-                  <p style="margin:0; color:#b9b9b9;">Highlight your strongest features in a clean card layout.</p>
-                </div>
-                <div style="display:flex; flex-wrap:wrap; gap:20px;">
-                  <div style="flex:1 1 260px; padding:24px; background:#171717; border:1px solid #292929; border-radius:16px;">
-                    <h3 style="margin-top:0;">Fast Setup</h3>
-                    <p style="color:#bababa;">Get online quickly with a sleek starter layout.</p>
-                  </div>
-                  <div style="flex:1 1 260px; padding:24px; background:#171717; border:1px solid #292929; border-radius:16px;">
-                    <h3 style="margin-top:0;">Strong Branding</h3>
-                    <p style="color:#bababa;">Shape the page around your tone, image, and offer.</p>
-                  </div>
-                  <div style="flex:1 1 260px; padding:24px; background:#171717; border:1px solid #292929; border-radius:16px;">
-                    <h3 style="margin-top:0;">Flexible Layout</h3>
-                    <p style="color:#bababa;">Rearrange sections easily without rebuilding the page.</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-          `
-        });
-
-        bm.add('gallery-grid', {
-          label: 'Gallery Grid',
-          category: 'Media',
-          content: `
-            <section style="padding:80px 24px; background:#101010; color:#fff;">
-              <div style="max-width:1100px; margin:0 auto;">
-                <h2 style="margin:0 0 22px; font-size:40px;">Gallery</h2>
-                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px;">
-                  <img src="https://via.placeholder.com/600x500?text=Image+1" style="width:100%; display:block; border-radius:14px;" />
-                  <img src="https://via.placeholder.com/600x500?text=Image+2" style="width:100%; display:block; border-radius:14px;" />
-                  <img src="https://via.placeholder.com/600x500?text=Image+3" style="width:100%; display:block; border-radius:14px;" />
-                  <img src="https://via.placeholder.com/600x500?text=Image+4" style="width:100%; display:block; border-radius:14px;" />
-                </div>
-              </div>
-            </section>
-          `
-        });
-
-        bm.add('social-links', {
-          label: 'Social Links',
-          category: 'Media',
-          content: `
-            <section style="padding:40px 24px; background:#111; color:#fff;">
-              <div style="max-width:1100px; margin:0 auto; display:flex; gap:14px; flex-wrap:wrap;">
-                <a href="#" style="padding:12px 18px; border:1px solid #2d2d2d; border-radius:999px; color:#fff; text-decoration:none;">Instagram</a>
-                <a href="#" style="padding:12px 18px; border:1px solid #2d2d2d; border-radius:999px; color:#fff; text-decoration:none;">YouTube</a>
-                <a href="#" style="padding:12px 18px; border:1px solid #2d2d2d; border-radius:999px; color:#fff; text-decoration:none;">Spotify</a>
-                <a href="#" style="padding:12px 18px; border:1px solid #2d2d2d; border-radius:999px; color:#fff; text-decoration:none;">TikTok</a>
-              </div>
-            </section>
-          `
-        });
-
-        bm.add('contact-block', {
-          label: 'Contact Block',
-          category: 'Sections',
-          content: `
-            <section style="padding:80px 24px; background:#0e0e0e; color:#fff;">
-              <div style="max-width:900px; margin:0 auto;">
-                <h2 style="margin:0 0 14px; font-size:42px;">Contact</h2>
-                <p style="margin:0 0 24px; color:#b8b8b8;">Add your call to action and contact info here.</p>
-                <div style="display:grid; gap:14px;">
-                  <div style="padding:18px 20px; background:#181818; border:1px solid #2a2a2a; border-radius:12px;">Email: yourname@example.com</div>
-                  <div style="padding:18px 20px; background:#181818; border:1px solid #2a2a2a; border-radius:12px;">Phone: (000) 000-0000</div>
-                  <div style="padding:18px 20px; background:#181818; border:1px solid #2a2a2a; border-radius:12px;">Location: Your City</div>
-                </div>
-              </div>
-            </section>
-          `
-        });
-
-        bm.add('site-footer', {
-          label: 'Footer',
-          category: 'Layout',
-          content: `
-            <footer style="padding:34px 24px; background:#0a0a0a; color:#8f8f8f; border-top:1px solid #1f1f1f;">
-              <div style="max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;">
-                <div style="font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#fff;">Brand</div>
-                <div>© 2026 All rights reserved</div>
-              </div>
-            </footer>
-          `
-        });
-
-        bm.add('text-block', {
-          label: 'Text',
-          category: 'Basic',
-          content: `<div style="padding:22px; color:#fff; font-size:16px;">Insert your text here</div>`
-        });
-
-        bm.add('image-block', {
-          label: 'Image',
-          category: 'Basic',
-          content: `<div style="padding:20px; text-align:center;"><img src="https://via.placeholder.com/900x500?text=Your+Image" style="max-width:100%; height:auto; display:inline-block; border-radius:12px;" /></div>`
-        });
-
-        bm.add('button-block', {
-          label: 'Button',
-          category: 'Basic',
-          content: `<div style="padding:20px;"><a href="#" style="display:inline-block; padding:12px 22px; background:#fff; color:#111; text-decoration:none; border-radius:8px; font-weight:700;">Click Here</a></div>`
-        });
-
-        editor.setComponents(`
-          <section style="padding:110px 24px; background:linear-gradient(135deg,#111,#202020); color:#fff; text-align:center;">
-            <div style="max-width:960px; margin:0 auto;">
-              <div style="display:inline-block; padding:6px 12px; border:1px solid rgba(255,255,255,.18); border-radius:999px; color:#cfcfcf; font-size:12px; letter-spacing:.08em; text-transform:uppercase; margin-bottom:18px;">Faceless Visual Builder</div>
-              <h1 style="margin:0 0 18px; font-size:62px; line-height:1.05;">Build Your Page</h1>
-              <p style="margin:0 auto; max-width:720px; font-size:18px; color:#b8b8b8;">Drag layout blocks, drop in content, and shape the site visually.</p>
-            </div>
-          </section>
-        `);
-
-        document.querySelectorAll('.panel-tab').forEach(btn => {
-          btn.addEventListener('click', () => {
-            document.querySelectorAll('.panel-tab').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.side-panel').forEach(p => p.classList.remove('active-panel'));
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.panel).classList.add('active-panel');
-          });
-        });
-
-        const exportBtn = document.getElementById('exportBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const exportModal = document.getElementById('exportModal');
-        const closeExport = document.getElementById('closeExport');
-        const codeOutput = document.getElementById('codeOutput');
-
-        exportBtn.addEventListener('click', () => {
-          const html = editor.getHtml();
-          const css = editor.getCss();
-          codeOutput.value = `<style>\n${css}\n</style>\n\n${html}`;
-          exportModal.classList.add('active');
-        });
-
-        closeExport.addEventListener('click', () => exportModal.classList.remove('active'));
-        exportModal.addEventListener('click', e => {
-          if (e.target === exportModal) exportModal.classList.remove('active');
-        });
-
-        clearBtn.addEventListener('click', () => {
-          if (!confirm('Clear the current page?')) return;
-          editor.setComponents('');
-          editor.setStyle('');
-        });
-      </script>
+    clearBtn.addEventListener('click', () => {
+      if (!confirm('Clear the current page?')) return;
+      editor.setComponents('');
+      editor.setStyle('');
+      setStatus('Page cleared', 'neutral');
+    });
+  </script>
+</body>
+</html>

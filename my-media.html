@@ -7,23 +7,29 @@
   <title>My Media — Faceless Animal Studios</title>
   <link rel="stylesheet" href="assets/style.css?v=20260322" />
   <style>
-    body { background: var(--bg); }
-    .media-wrap { max-width: 700px; margin: 0 auto; padding: 2rem 1rem 6rem 1rem; }
-    .media-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-    .media-title { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.02em; }
-    .media-upload { font-size: 0.95rem; font-weight: 700; color: var(--gold-bright); background: none; border: none; cursor: pointer; }
-    .media-grid { display: flex; flex-wrap: wrap; gap: 1rem; }
-    .media-thumb { width: 110px; height: 110px; border-radius: 1rem; background: var(--bg-2); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
-    .media-thumb.selected { border-color: var(--gold-bright); box-shadow: 0 0 0 2px var(--gold-bright); }
-    .media-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .media-thumb .media-check { position: absolute; top: 6px; right: 8px; background: #fff; color: var(--gold-bright); border-radius: 50%; font-size: 1.2em; padding: 0.1em 0.2em; }
-    .media-empty { color: var(--text-3); text-align: center; padding: 2.5rem 0; }
-    .media-actions { margin-top: 1.5rem; text-align: right; }
-    .media-actions button { font-size: 1rem; font-weight: 700; border-radius: 0.7em; padding: 0.38em 1.1em; border: none; cursor: pointer; background: var(--purple-bright); color: #fff; }
-    @media (max-width: 600px) {
-      .media-wrap { padding: 1.2rem 0.2rem 5rem 0.2rem; }
-      .media-thumb { width: 90px; height: 90px; }
-    }
+    body { background: var(--bg-2,#0e1220); }
+    .shell { width:min(1400px, calc(100% - 28px)); margin:0 auto; padding:18px 0 34px; }
+    .grid { display:grid; grid-template-columns:1.1fr .9fr; gap:18px; align-items:start; }
+    .stack { display:grid; gap:18px; }
+    .card { position:relative; border-radius:22px; border:1px solid rgba(255,255,255,.06); background:linear-gradient(180deg, rgba(22,27,46,.82), rgba(13,17,29,.9)); backdrop-filter:blur(18px); box-shadow:0 18px 60px rgba(0,0,0,.45); overflow:hidden; }
+    .card-body { position:relative; padding:20px; }
+    .card-head { display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px; }
+    .card-title { margin:0;font-size:1.08rem;font-weight:800;letter-spacing:.01em; }
+    .card-desc { margin:6px 0 0;color:var(--muted,#b7bfd8);font-size:.94rem;line-height:1.55; }
+    .media-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:18px; }
+    .media-item { background:rgba(255,255,255,.03); border-radius:16px; border:1px solid rgba(255,255,255,.06); padding:16px; display:flex; flex-direction:column; align-items:center; gap:10px; position:relative; }
+    .media-preview { width:100%; max-width:140px; min-height:90px; display:flex; align-items:center; justify-content:center; background:rgba(20,24,40,.12); border-radius:12px; overflow:hidden; }
+    .media-preview img, .media-preview video, .media-preview audio { max-width:100%; max-height:90px; border-radius:10px; }
+    .media-name { font-size:.97em; color:var(--muted,#b7bfd8); word-break:break-all; text-align:center; }
+    .media-actions { display:flex; gap:10px; margin-top:8px; }
+    .btn { appearance:none; border:0; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:38px; padding:0 14px; border-radius:12px; font-weight:800; font-size:.93rem; letter-spacing:.01em; transition:.2s ease transform,.2s ease opacity,.2s ease border-color,.2s ease background; }
+    .btn-primary { color:white; background:linear-gradient(135deg, #7c3aed, #2563eb); box-shadow:0 10px 30px rgba(71,85,255,.18); }
+    .btn-secondary { color:var(--text,#eef2ff); border:1px solid rgba(167,139,250,.22); background:rgba(255,255,255,.04); }
+    .btn-danger { color:#fff; background:linear-gradient(135deg, #fb7185, #a78bfa); }
+    .btn-ghost { color:var(--blue,#60a5fa); background:transparent; border:1px dashed rgba(96,165,250,.28); }
+    .media-empty { color:var(--muted,#b7bfd8); text-align:center; padding:2.5rem 0; }
+    @media (max-width: 1120px){ .grid{grid-template-columns:1fr} }
+    @media (max-width: 760px){ .shell{width:min(100%, calc(100% - 16px));padding-top:12px} .grid{grid-template-columns:1fr} .card-body{padding:16px} }
   </style>
 </head>
 <body>
@@ -42,84 +48,467 @@
       </div>
     </div>
   </nav>
-  <main>
-    <div class="media-wrap">
-      <div class="media-header">
-        <span class="media-title">My Media</span>
-        <button class="media-upload" id="uploadBtn">+ Upload Photo</button>
-      </div>
-      <div id="mediaGrid" class="media-grid"></div>
-      <div class="media-empty" id="mediaEmpty" style="display:none;">No images yet. Click <b>Upload Photo</b> to add one.</div>
-      <div class="media-actions">
-        <button id="mediaConfirmBtn" style="display:none;">Select</button>
-      </div>
-    </div>
-  </main>
-  <input type="file" id="mediaFileInput" accept="image/*" style="display:none;" />
+  <div class="shell">
+    <main class="grid">
+      <section class="stack">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-head">
+              <div>
+                <div class="section-label">Media Dashboard</div>
+                <h2 class="card-title">Manage Your Media Files</h2>
+                <p class="card-desc">Upload, preview, delete, and share your files. All files are stored securely in your private User Storage bucket. Sharing generates a temporary, masked link.</p>
+              </div>
+            </div>
+            <div class="hero-actions" style="margin-bottom:12px;">
+              <button class="btn btn-primary" id="uploadBtn">Upload File</button>
+              <input type="file" id="mediaFileInput" multiple webkitdirectory directory style="display:none;" />
+              <div id="dropZone" style="margin-top:14px;padding:32px 0;border:2px dashed #7c3aed;border-radius:16px;text-align:center;color:#a78bfa;background:rgba(124,58,237,.04);font-weight:700;cursor:pointer;transition:.2s border-color;">Drag & Drop Files or Folders Here</div>
+            </div>
+            <div style="margin-bottom:18px;display:flex;gap:10px;align-items:center;">
+              <input id="mediaSearch" class="input" style="max-width:260px;" type="text" placeholder="Search files, tags, or description..." />
+            </div>
+            <div id="mediaGrid" class="media-grid"></div>
+            <div class="media-empty" id="mediaEmpty" style="display:none;">No files yet. Click <b>Upload File</b> to add one.</div>
+          </div>
+        </div>
+      </section>
+      <aside class="stack right-col">
+        <div class="card">
+          <div class="card-body">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">How Sharing Works</h2>
+                <p class="card-desc">When you share a file, a temporary signed link is generated. This link is masked and expires after 1 hour for security.</p>
+              </div>
+            </div>
+            <ul class="feature-list">
+              <li><span class="feature-bullet">1</span><span><strong>Upload:</strong> Add any file type to your private storage.</span></li>
+              <li><span class="feature-bullet">2</span><span><strong>Delete:</strong> Remove files you no longer need.</span></li>
+              <li><span class="feature-bullet">3</span><span><strong>Share:</strong> Generate a secure, expiring link for others to access your file.</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">About My Media</h2>
+                <p class="card-desc">A secure, all-in-one dashboard for managing, sharing, and collaborating on your files—designed for creators, teams, and power users.</p>
+              </div>
+            </div>
+            <div class="list">
+              <div class="list-item">
+                <b>Universal Uploads:</b> Add any file type—images, audio, video, documents, code, and more. Drag & drop, progress bars, and smart previews make uploads seamless.
+              </div>
+              <div class="list-item">
+                <b>Instant Previews:</b> View images, play audio/video, read PDFs and text, or see file icons for everything else—right in your dashboard.
+              </div>
+              <div class="list-item">
+                <b>Metadata & Search:</b> Tag files, add descriptions, and search by name, tag, or content for fast organization.
+              </div>
+              <div class="list-item">
+                <b>One-Click Sharing:</b> Generate secure, expiring links for any file. Share with individuals or groups, set permissions, and track access.
+              </div>
+              <div class="list-item">
+                <b>Collaboration:</b> Invite others to view, comment, or edit files. Manage collaborators and see real-time comments on each file.
+              </div>
+              <div class="list-item">
+                <b>Analytics:</b> Track uploads, shares, and downloads for every file. See at-a-glance stats to monitor engagement and activity.
+              </div>
+              <div class="list-item">
+                <b>Embed Anywhere:</b> Instantly copy direct links, HTML, or Markdown to embed your files in sites, docs, or apps.
+              </div>
+              <div class="list-item">
+                <b>Secure Storage:</b> All files are stored in your private User Storage bucket with expiring signed URLs for maximum privacy and control.
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+  <!-- Supabase JS client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
   <script>
-    // Canonical session check
+    // === CONFIGURATION ===
+    const SUPABASE_URL = "https://ghufaozjwondqcrcucjs.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_kixI74nB7Drt6mQKooaXHg_nPoE0h_-";
+    const BUCKET = "User Storage";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
     if (!fasUser || !fasUser.account_id) {
       window.location.replace('login.html');
     }
-    function getMedia() {
-      const raw = localStorage.getItem('fas_media');
-      if (!raw) return [];
+    function getUserFolder() {
+      return `${fasUser.account_id}`;
+    }
+    function getFileTypeIcon(type, name) {
+      if (!type && name) {
+        if (name.match(/\.(mp3|wav|ogg)$/i)) return '🎵';
+        if (name.match(/\.(mp4|mov|webm)$/i)) return '🎬';
+        if (name.match(/\.(exe|msi|zip|rar|7z)$/i)) return '🗃️';
+        if (name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) return '🖼️';
+      }
+      if (!type) return '📄';
+      if (type.startsWith('image/')) return '🖼️';
+      if (type.startsWith('audio/')) return '🎵';
+      if (type.startsWith('video/')) return '🎬';
+      if (type.includes('zip') || type.includes('exe')) return '🗃️';
+      return '📄';
+    }
+    // Metadata storage (localStorage for demo; for production, use a DB or Supabase table)
+    function getMetaKey() {
+      return 'fas_media_meta_' + fasUser.account_id;
+    }
+    function getAllMetadata() {
       try {
-        const arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr.filter(m => m.account_id === fasUser.account_id) : [];
-      } catch { return []; }
+        return JSON.parse(localStorage.getItem(getMetaKey()) || '{}');
+      } catch { return {}; }
     }
-    function saveMedia(media) {
-      localStorage.setItem('fas_media', JSON.stringify(media));
+    function saveAllMetadata(meta) {
+      localStorage.setItem(getMetaKey(), JSON.stringify(meta));
     }
-    function renderMedia(selectedId) {
+    function getFileMetadata(name) {
+      return getAllMetadata()[name] || { tags: '', desc: '' };
+    }
+    function setFileMetadata(name, meta) {
+      const all = getAllMetadata();
+      all[name] = meta;
+      saveAllMetadata(all);
+    }
+    async function listMedia() {
+      const folder = getUserFolder();
+      const { data, error } = await supabase.storage.from(BUCKET).list(folder, { limit: 100, offset: 0 });
+      if (error) return [];
+      return (data || []).map(obj => {
+        const meta = getFileMetadata(obj.name);
+        return {
+          name: obj.name,
+          id: obj.id || obj.name,
+          type: obj.metadata && obj.metadata.mimetype ? obj.metadata.mimetype : null,
+          tags: meta.tags,
+          desc: meta.desc
+        };
+      });
+    }
+    async function getSignedUrl(path) {
+      // 1 hour expiry
+      const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, 3600);
+      if (error) return null;
+      return data.signedUrl;
+    }
+    async function deleteFile(path) {
+      await supabase.storage.from(BUCKET).remove([path]);
+    }
+    async function renderMedia(uploading = []) {
       const grid = document.getElementById('mediaGrid');
       const empty = document.getElementById('mediaEmpty');
-      const confirmBtn = document.getElementById('mediaConfirmBtn');
-      const media = getMedia();
+      const search = (document.getElementById('mediaSearch')?.value || '').toLowerCase();
+      grid.innerHTML = '<div style="color:#b7bfd8;">Loading...</div>';
+      const folder = getUserFolder();
+      let media = await listMedia();
+      // Filter by search
+      if (search) {
+        media = media.filter(m =>
+          m.name.toLowerCase().includes(search) ||
+          (m.tags && m.tags.toLowerCase().includes(search)) ||
+          (m.desc && m.desc.toLowerCase().includes(search))
+        );
+      }
       grid.innerHTML = '';
-      if (!media.length) {
+      // Show uploading files (if any)
+      for (const up of uploading) {
+        const item = document.createElement('div');
+        item.className = 'media-item';
+        item.innerHTML = `
+          <div class="media-preview"><div style="width:100px;height:90px;display:flex;align-items:center;justify-content:center;background:#181c2a;border-radius:10px;">
+            <span style="color:#a78bfa;font-size:2em;">⬆️</span>
+          </div></div>
+          <div class="media-name">${up.name}</div>
+          <div style="width:100%;margin-top:8px;">
+            <div style="background:#23263a;border-radius:8px;height:8px;width:100%;overflow:hidden;">
+              <div style="background:linear-gradient(90deg,#7c3aed,#2563eb);height:100%;width:${up.progress}%;transition:width .2s;"></div>
+            </div>
+            <div style="font-size:.8em;color:#b7bfd8;margin-top:2px;">${up.progress < 100 ? `Uploading... ${up.progress}%` : 'Processing...'}</div>
+          </div>
+        `;
+        grid.appendChild(item);
+      }
+      if (!media.length && uploading.length === 0) {
         empty.style.display = '';
-        confirmBtn.style.display = 'none';
         return;
       }
       empty.style.display = 'none';
       for (const m of media) {
-        const thumb = document.createElement('div');
-        thumb.className = 'media-thumb' + (selectedId === m.id ? ' selected' : '');
-        thumb.innerHTML = `<img src="${m.url}" alt="" />` + (selectedId === m.id ? '<span class="media-check">✔</span>' : '');
-        thumb.onclick = () => {
-          renderMedia(m.id);
-          confirmBtn.style.display = '';
-          confirmBtn.onclick = () => {
-            if (window.opener && window.opener.__mediaPickerCallback) {
-              window.opener.__mediaPickerCallback(m);
-              window.close();
-            } else if (window.__mediaPickerCallback) {
-              window.__mediaPickerCallback(m);
-            }
-          };
+        const path = `${folder}/${m.name}`;
+        let preview = '';
+        // Use /media/download endpoint for download tracking
+        const downloadUrl = `/media/download?file=${encodeURIComponent(path)}&bucket=User%20Storage&user_id=${encodeURIComponent(fasUser.account_id)}`;
+        let url = await getSignedUrl(path);
+        // Embed modal logic
+        function showEmbedModal() {
+          const modal = document.createElement('div');
+          modal.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(20,24,40,.82);z-index:9999;display:flex;align-items:center;justify-content:center;';
+          modal.innerHTML = `<div style='background:#181c2a;padding:32px 28px 24px 28px;border-radius:18px;max-width:420px;width:100%;box-shadow:0 8px 40px #0006;'>
+            <h3 style='margin-top:0;font-size:1.2em;color:#fff;'>Embed Media</h3>
+            <div style='margin-bottom:10px;font-size:.98em;color:#b7bfd8;'>Copy and paste the code below to embed this file in your site, docs, or editor.</div>
+            <div style='margin-bottom:8px;'><b>Direct Link:</b><br><input type='text' value='${url}' style='width:100%;padding:6px 8px;border-radius:6px;border:1px solid #23263a;background:#23263a;color:#fff;font-size:.97em;' readonly onclick='this.select()'></div>
+            <div style='margin-bottom:8px;'><b>HTML:</b><br><input type='text' value='${m.type && m.type.startsWith('image/') ? `<img src=\"${url}\" alt=\"${m.name}\">` : `<a href=\"${url}\">Download</a>`}' style='width:100%;padding:6px 8px;border-radius:6px;border:1px solid #23263a;background:#23263a;color:#fff;font-size:.97em;' readonly onclick='this.select()'></div>
+            <div style='margin-bottom:8px;'><b>Markdown:</b><br><input type='text' value='${m.type && m.type.startsWith('image/') ? `![${m.name}](${url})` : `[Download ${m.name}](${url})`}' style='width:100%;padding:6px 8px;border-radius:6px;border:1px solid #23263a;background:#23263a;color:#fff;font-size:.97em;' readonly onclick='this.select()'></div>
+            <button class='btn btn-secondary' id='close-embed-modal' style='margin-top:10px;'>Close</button>
+          </div>`;
+          document.body.appendChild(modal);
+          modal.querySelector('#close-embed-modal').onclick = () => modal.remove();
+        }
+        if (m.type && m.type.startsWith('image/')) {
+          preview = `<img src="${url}" alt="" />`;
+        } else if (m.type && m.type.startsWith('audio/')) {
+          preview = `<audio controls src="${url}" style="width:120px;"></audio>`;
+        } else if (m.type && m.type.startsWith('video/')) {
+          preview = `<video controls src="${url}" style="width:120px;height:80px;"></video>`;
+        } else if (m.type === 'application/pdf' || m.name.match(/\.pdf$/i)) {
+          preview = `<iframe src="${url}#toolbar=0" style="width:120px;height:90px;border:none;background:#181c2a;" title="PDF preview"></iframe>`;
+        } else if (m.type && (m.type.startsWith('text/') || m.name.match(/\.(txt|md|csv|json|js|ts|py|html|css)$/i))) {
+          // Fetch a text snippet for preview
+          let snippet = '';
+          try {
+            const resp = await fetch(url);
+            snippet = await resp.text();
+            if (snippet.length > 180) snippet = snippet.slice(0,180) + '...';
+            snippet = snippet.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          } catch {}
+          preview = `<div style="font-size:.92em;max-width:120px;max-height:90px;overflow:auto;background:#181c2a;padding:6px 8px;border-radius:8px;">${snippet || 'Text file'}</div>`;
+        } else {
+          preview = `<div style="font-size:2.2em;">${getFileTypeIcon(m.type, m.name)}</div><a href="${downloadUrl}" download style="display:block;font-size:.8em;margin-top:4px;color:#60a5fa;">Download</a>`;
+        }
+        const item = document.createElement('div');
+        item.className = 'media-item';
+        item.innerHTML = `
+          <div class="media-preview">${preview}</div>
+          <div class="media-name">${m.name}</div>
+          <div style="font-size:.85em;color:#b7bfd8;margin:4px 0 2px;">
+            <span><b>Tags:</b> <span class="media-tags">${m.tags || ''}</span></span><br/>
+            <span><b>Description:</b> <span class="media-desc">${m.desc || ''}</span></span>
+          </div>
+          <div class="media-analytics" style="margin:6px 0 2px;font-size:.85em;color:#7c3aed;">
+            <span class="media-uploads">⬆️ <span>0</span></span>
+            <span class="media-shares" style="margin-left:10px;">🔗 <span>0</span></span>
+            <span class="media-downloads" style="margin-left:10px;">⬇️ <span>0</span></span>
+          </div>
+          <div class="media-actions">
+            <button class="btn btn-secondary" data-action="editmeta" data-name="${m.name}">✏️</button>
+            <button class="btn btn-secondary" data-action="collab" data-name="${m.name}">👥</button>
+            <button class="btn btn-secondary" data-action="share" data-path="${path}">Share</button>
+            <button class="btn btn-secondary" data-action="embed" data-path="${path}">Embed</button>
+            <button class="btn btn-danger" data-action="delete" data-path="${path}">Delete</button>
+          </div>
+          <div class="media-collab" style="margin-top:10px;display:none;"></div>
+          <div class="media-comments" style="margin-top:10px;display:none;"></div>
+        `;
+        // Edit metadata
+        item.querySelector('[data-action="editmeta"]').onclick = function() {
+          const meta = getFileMetadata(m.name);
+          const tags = prompt('Edit tags (comma separated):', meta.tags || '');
+          if (tags === null) return;
+          const desc = prompt('Edit description:', meta.desc || '');
+          if (desc === null) return;
+          setFileMetadata(m.name, { tags, desc });
+          renderMedia();
         };
-        grid.appendChild(thumb);
+        // Analytics: fetch and display stats
+        (async function renderAnalytics() {
+          const { data: stats } = await supabase.from('media_analytics').select('event_type, count').eq('file_name', m.name).group('event_type');
+          let uploads = 0, shares = 0, downloads = 0;
+          if (stats && stats.length) {
+            for (const s of stats) {
+              if (s.event_type === 'upload') uploads = s.count;
+              if (s.event_type === 'share') shares = s.count;
+              if (s.event_type === 'download') downloads = s.count;
+            }
+          }
+          item.querySelector('.media-uploads span').textContent = uploads;
+          item.querySelector('.media-shares span').textContent = shares;
+          item.querySelector('.media-downloads span').textContent = downloads;
+        })();
+
+        // Collaboration: share with user, set access, show comments
+          // Embed button handler
+          item.querySelector('[data-action="embed"]').onclick = showEmbedModal;
+        item.querySelector('[data-action="collab"]').onclick = async function() {
+          const collabDiv = item.querySelector('.media-collab');
+          collabDiv.style.display = collabDiv.style.display === 'none' ? '' : 'none';
+          if (collabDiv.innerHTML) return;
+          collabDiv.innerHTML = `<div style='margin-bottom:8px;'><b>Share with user:</b></div>
+            <input type='email' placeholder='User email' class='input' style='max-width:180px;margin-right:6px;' id='collab-email-${m.name}' />
+            <select class='input' style='max-width:110px;' id='collab-access-${m.name}'>
+              <option value='read'>Read</option>
+              <option value='write'>Write</option>
+              <option value='comment'>Comment</option>
+            </select>
+            <button class='btn btn-primary' id='collab-add-${m.name}'>Add</button>
+            <div id='collab-list-${m.name}' style='margin-top:10px;font-size:.92em;'></div>`;
+          // Add share
+          collabDiv.querySelector(`#collab-add-${m.name}`).onclick = async function() {
+            const email = collabDiv.querySelector(`#collab-email-${m.name}`).value.trim();
+            const access = collabDiv.querySelector(`#collab-access-${m.name}`).value;
+            if (!email) return alert('Enter user email.');
+            // Lookup user by email
+            const { data: user, error } = await supabase.auth.admin.getUserByEmail(email);
+            if (error || !user || !user.user) return alert('User not found.');
+            const shared_user_id = user.user.id;
+            // Insert permission
+            await supabase.from('media_permissions').insert({
+              owner_id: fasUser.id,
+              file_name: m.name,
+              shared_user_id,
+              access_level: access
+            });
+            alert('User added!');
+            renderCollabList();
+          };
+          // List current shares
+          async function renderCollabList() {
+            const { data: perms } = await supabase.from('media_permissions').select('*').eq('file_name', m.name).eq('owner_id', fasUser.id);
+            const listDiv = collabDiv.querySelector(`#collab-list-${m.name}`);
+            if (!perms || !perms.length) { listDiv.textContent = 'No collaborators.'; return; }
+            listDiv.innerHTML = perms.map(p => `<div>${p.shared_user_id} — <b>${p.access_level}</b></div>`).join('');
+          }
+          renderCollabList();
+          // Show comments UI
+          const commentsDiv = item.querySelector('.media-comments');
+          commentsDiv.style.display = '';
+          commentsDiv.innerHTML = `<div style='margin-bottom:6px;'><b>Comments:</b></div>
+            <div id='comments-list-${m.name}' style='max-height:80px;overflow:auto;margin-bottom:6px;'></div>
+            <input type='text' class='input' style='max-width:220px;' id='comment-input-${m.name}' placeholder='Add a comment...' />
+            <button class='btn btn-secondary' id='comment-add-${m.name}'>Post</button>`;
+          async function renderComments() {
+            const { data: comments } = await supabase.from('media_comments').select('*').eq('file_name', m.name).order('created_at', { ascending: false });
+            const listDiv = commentsDiv.querySelector(`#comments-list-${m.name}`);
+            if (!comments || !comments.length) { listDiv.textContent = 'No comments.'; return; }
+            listDiv.innerHTML = comments.map(c => `<div style='margin-bottom:4px;'><b>${c.user_id.slice(0,8)}</b>: ${c.comment}</div>`).join('');
+          }
+          commentsDiv.querySelector(`#comment-add-${m.name}`).onclick = async function() {
+            const val = commentsDiv.querySelector(`#comment-input-${m.name}`).value.trim();
+            if (!val) return;
+            await supabase.from('media_comments').insert({
+              file_name: m.name,
+              user_id: fasUser.id,
+              comment: val
+            });
+            commentsDiv.querySelector(`#comment-input-${m.name}`).value = '';
+            renderComments();
+          };
+          renderComments();
+        };
+        // Share (signed link)
+        item.querySelector('[data-action="share"]').onclick = async function() {
+          const shareUrl = await getSignedUrl(path);
+          if (shareUrl) {
+            navigator.clipboard.writeText(shareUrl);
+            // Log share event
+            await supabase.from('media_analytics').insert({
+              file_name: m.name,
+              user_id: fasUser.id,
+              event_type: 'share'
+            });
+            this.textContent = 'Copied!';
+            setTimeout(()=>{ this.textContent = 'Share'; }, 1200);
+            renderMedia();
+          } else {
+            alert('Could not generate share link.');
+          }
+        };
+        // Delete
+        item.querySelector('[data-action="delete"]').onclick = async function() {
+          if (confirm('Delete this file?')) {
+            await deleteFile(path);
+            renderMedia();
+          }
+        };
+        grid.appendChild(item);
       }
     }
-    document.getElementById('uploadBtn').onclick = () => {
-      document.getElementById('mediaFileInput').click();
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileInput = document.getElementById('mediaFileInput');
+    const dropZone = document.getElementById('dropZone');
+    uploadBtn.onclick = () => fileInput.click();
+
+    // Drag-and-drop support
+    dropZone.ondragover = dropZone.ondragenter = function(e) {
+      e.preventDefault();
+      dropZone.style.borderColor = '#34d399';
+      dropZone.style.background = 'rgba(52,211,153,.08)';
     };
-    document.getElementById('mediaFileInput').onchange = function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const url = evt.target.result;
-        const media = getMedia();
-        media.unshift({ id: crypto.randomUUID(), url, account_id: fasUser.account_id, uploaded_at: new Date().toISOString() });
-        saveMedia(media);
-        renderMedia();
-      };
-      reader.readAsDataURL(file);
+    dropZone.ondragleave = function(e) {
+      dropZone.style.borderColor = '#7c3aed';
+      dropZone.style.background = 'rgba(124,58,237,.04)';
     };
+    dropZone.ondrop = function(e) {
+      e.preventDefault();
+      dropZone.style.borderColor = '#7c3aed';
+      dropZone.style.background = 'rgba(124,58,237,.04)';
+      let files = [];
+      if (e.dataTransfer.items) {
+        for (let i = 0; i < e.dataTransfer.items.length; i++) {
+          const item = e.dataTransfer.items[i];
+          if (item.kind === 'file') {
+            const file = item.getAsFile();
+            if (file) files.push(file);
+          }
+        }
+      } else {
+        files = Array.from(e.dataTransfer.files);
+      }
+      if (files.length) handleFiles(files);
+    };
+
+    // Folder upload support (webkitdirectory)
+    fileInput.onchange = function(e) {
+      const files = Array.from(e.target.files);
+      if (files.length) handleFiles(files);
+    };
+
+    // Unified upload handler
+    async function handleFiles(files) {
+      let uploading = files.map(f => ({ name: f.webkitRelativePath || f.name, progress: 0 }));
+      renderMedia(uploading);
+      await Promise.all(files.map((file, idx) => new Promise(async (resolve) => {
+        const folder = getUserFolder();
+        // If folder upload, preserve relative path
+        const relPath = file.webkitRelativePath ? file.webkitRelativePath.replace(/^\/?[^/]+\//, '') : file.name;
+        const path = `${folder}/${relPath}`;
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encodeURIComponent(path)}?upsert=true`);
+        xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_ANON_KEY}`);
+        xhr.upload.onprogress = function(evt) {
+          if (evt.lengthComputable) {
+            uploading[idx].progress = Math.round((evt.loaded / evt.total) * 100);
+            renderMedia(uploading);
+          }
+        };
+        xhr.onload = async function() {
+          uploading[idx].progress = 100;
+          renderMedia(uploading);
+          // Log upload event
+          await supabase.from('media_analytics').insert({
+            file_name: relPath,
+            user_id: fasUser.id,
+            event_type: 'upload'
+          });
+          resolve();
+        };
+        xhr.onerror = function() {
+          alert(`Upload failed: ${file.name}`);
+          resolve();
+        };
+        xhr.send(file);
+      })));
+      renderMedia();
+    }
+    // (Replaced by handleFiles above)
+    // Search bar event
+    document.getElementById('mediaSearch').oninput = () => renderMedia();
     renderMedia();
   </script>
 </body>

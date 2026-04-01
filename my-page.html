@@ -2,114 +2,591 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Page — Faceless Animal Studios</title>
-  <link rel="stylesheet" href="assets/style.css"/>
+  <link rel="stylesheet" href="assets/style.css" />
+  <style>
+    :root{
+      --bg-1:#07080d;
+      --bg-2:#0e1220;
+      --card:rgba(20,24,40,.82);
+      --card-2:rgba(17,21,36,.88);
+      --line:rgba(167,139,250,.16);
+      --line-2:rgba(59,130,246,.16);
+      --text:#eef2ff;
+      --muted:#b7bfd8;
+      --muted-2:#8e96b2;
+      --purple:#a78bfa;
+      --purple-2:#7c3aed;
+      --blue:#60a5fa;
+      --blue-2:#2563eb;
+      --green:#34d399;
+      --danger:#fb7185;
+      --shadow:0 18px 60px rgba(0,0,0,.45);
+      --radius:22px;
+      --radius-sm:16px;
+      --blur:blur(18px);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      min-height:100vh;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(124,58,237,.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(37,99,235,.18), transparent 30%),
+        radial-gradient(circle at bottom center, rgba(52,211,153,.08), transparent 24%),
+        linear-gradient(180deg, #06070b 0%, #0a0d16 40%, #080a12 100%);
+      overflow-x:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+      background-size:28px 28px;
+      mask-image:linear-gradient(to bottom, rgba(0,0,0,.85), transparent);
+      opacity:.25;
+    }
+    .shell{
+      width:min(1400px, calc(100% - 28px));
+      margin:0 auto;
+      padding:18px 0 34px;
+    }
+    .topbar{
+      position:sticky;
+      top:12px;
+      z-index:30;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:14px 16px;
+      margin-bottom:18px;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(10,12,20,.72);
+      backdrop-filter:var(--blur);
+      -webkit-backdrop-filter:var(--blur);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+    }
+    .brand-wrap{display:flex;align-items:center;gap:12px;min-width:0}
+    .brand-mark{
+      width:46px;height:46px;border-radius:14px;overflow:hidden;flex:0 0 auto;
+      border:1px solid rgba(167,139,250,.24);
+      background:linear-gradient(135deg, rgba(124,58,237,.24), rgba(37,99,235,.18));
+      display:grid;place-items:center;
+      box-shadow:0 0 24px rgba(124,58,237,.18);
+    }
+    .brand-mark img{width:100%;height:100%;object-fit:cover}
+    .brand-copy{min-width:0}
+    .brand-copy h1{
+      margin:0;
+      font-size:1rem;
+      font-weight:800;
+      letter-spacing:.01em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .brand-copy p{
+      margin:3px 0 0;
+      color:var(--muted-2);
+      font-size:.83rem;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .topbar-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 14px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      font-size:.88rem;font-weight:700;
+    }
+    .chip-dot{
+      width:8px;height:8px;border-radius:50%;
+      background:var(--green);box-shadow:0 0 12px rgba(52,211,153,.7);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:18px;
+      align-items:start;
+    }
+    .stack{display:grid;gap:18px}
+    .card{
+      position:relative;
+      border-radius:var(--radius);
+      border:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(22,27,46,.82), rgba(13,17,29,.9));
+      backdrop-filter:var(--blur);
+      -webkit-backdrop-filter:var(--blur);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), transparent 28%);
+      opacity:.65;
+    }
+    .card-body{position:relative;padding:20px}
+    .card-head{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px;
+    }
+    .card-title{
+      margin:0;font-size:1.08rem;font-weight:800;letter-spacing:.01em;
+    }
+    .card-desc{
+      margin:6px 0 0;color:var(--muted);font-size:.94rem;line-height:1.55;
+    }
+    .hero{
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:18px;
+      min-height:230px;
+    }
+    .hero-copy{
+      display:flex;flex-direction:column;justify-content:space-between;gap:18px;
+    }
+    .hero h2{
+      margin:0;
+      font-size:clamp(1.5rem, 2.4vw, 2.45rem);
+      line-height:1.05;
+      font-weight:900;
+      letter-spacing:-.03em;
+    }
+    .hero h2 span{
+      display:block;
+      margin-top:8px;
+      color:var(--purple);
+      text-shadow:0 0 22px rgba(167,139,250,.18);
+    }
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.7;
+      max-width:720px;
+    }
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px}
+    .btn{
+      appearance:none;border:0;cursor:pointer;text-decoration:none;
+      display:inline-flex;align-items:center;justify-content:center;gap:10px;
+      min-height:48px;padding:0 18px;border-radius:15px;
+      font-weight:800;font-size:.96rem;letter-spacing:.01em;
+      transition:.2s ease transform,.2s ease opacity,.2s ease border-color,.2s ease background;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{
+      color:white;
+      background:linear-gradient(135deg, var(--purple-2), var(--blue-2));
+      box-shadow:0 10px 30px rgba(71,85,255,.26);
+    }
+    .btn-secondary{
+      color:var(--text);
+      border:1px solid rgba(167,139,250,.22);
+      background:rgba(255,255,255,.04);
+    }
+    .btn-ghost{
+      color:var(--blue);
+      background:transparent;
+      border:1px dashed rgba(96,165,250,.28);
+    }
+    .btn.full{width:100%}
+    .hero-side{
+      display:grid;
+      gap:12px;
+      align-content:start;
+    }
+    .mini-stat{
+      padding:16px;border-radius:18px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .mini-stat small{display:block;color:var(--muted-2);font-size:.78rem;margin-bottom:8px}
+    .mini-stat strong{display:block;font-size:1.35rem;font-weight:900}
+    .mini-stat span{display:block;color:var(--muted);margin-top:6px;font-size:.9rem;line-height:1.45}
+    .panel-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:14px;
+    }
+    .panel{
+      padding:16px;border-radius:18px;
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.06);
+      display:flex;flex-direction:column;gap:12px;
+      min-height:170px;
+    }
+    .panel-icon{
+      width:40px;height:40px;border-radius:12px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg, rgba(124,58,237,.24), rgba(37,99,235,.16));
+      border:1px solid rgba(167,139,250,.22);
+      font-size:1.05rem;font-weight:900;color:var(--text);
+    }
+    .panel h3{margin:0;font-size:1rem}
+    .panel p{margin:0;color:var(--muted);line-height:1.55;font-size:.92rem}
+    .panel .btn{margin-top:auto}
+    .split{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:16px;
+    }
+    .section-label{
+      display:inline-flex;align-items:center;gap:8px;
+      font-size:.78rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+      color:var(--blue);
+      margin-bottom:10px;
+    }
+    .field-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+    }
+    .field{display:grid;gap:8px}
+    .field.full{grid-column:1/-1}
+    .label{
+      color:var(--muted);
+      font-size:.85rem;
+      font-weight:700;
+    }
+    .input, .textarea, .select{
+      width:100%;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(9,12,22,.85);
+      color:var(--text);
+      border-radius:14px;
+      padding:13px 14px;
+      outline:none;
+      font:inherit;
+      transition:.2s ease border-color,.2s ease box-shadow;
+    }
+    .textarea{min-height:92px;resize:vertical}
+    .input:focus,.textarea:focus,.select:focus{
+      border-color:rgba(167,139,250,.5);
+      box-shadow:0 0 0 3px rgba(124,58,237,.16);
+    }
+    .form-actions{
+      display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;
+    }
+    .status-wrap{
+      display:grid;gap:14px;
+    }
+    .status-pill{
+      display:inline-flex;align-items:center;gap:10px;
+      width:max-content;max-width:100%;
+      padding:12px 14px;border-radius:999px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      font-weight:800;font-size:.92rem;color:var(--text);
+    }
+    .status-dot{
+      width:10px;height:10px;border-radius:50%;
+      background:var(--danger);box-shadow:0 0 15px rgba(251,113,133,.45);
+    }
+    .status-dot.live{
+      background:var(--green);box-shadow:0 0 15px rgba(52,211,153,.55);
+    }
+    .list{
+      display:grid;gap:12px;
+    }
+    .list-item{
+      padding:14px 15px;border-radius:16px;
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.06);
+      color:var(--muted);
+      line-height:1.55;
+      font-size:.93rem;
+    }
+    .feature-list{
+      list-style:none;
+      padding:0;margin:0;
+      display:grid;gap:12px;
+    }
+    .feature-list li{
+      display:flex;gap:12px;align-items:flex-start;
+      padding:14px 15px;
+      border-radius:16px;
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.06);
+      color:var(--muted);
+      line-height:1.55;
+      font-size:.93rem;
+    }
+    .feature-bullet{
+      width:26px;height:26px;border-radius:10px;flex:0 0 auto;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg, rgba(124,58,237,.26), rgba(37,99,235,.16));
+      border:1px solid rgba(167,139,250,.24);
+      color:var(--text);
+      font-weight:900;font-size:.8rem;
+      margin-top:1px;
+    }
+    .preview{
+      min-height:140px;
+      border-radius:18px;
+      border:1px dashed rgba(167,139,250,.25);
+      background:linear-gradient(180deg, rgba(13,17,29,.75), rgba(8,11,19,.92));
+      padding:16px;
+      color:var(--muted);
+    }
+    .preview h3{margin:0 0 8px;font-size:1rem;color:var(--text)}
+    .preview p{margin:0;line-height:1.6}
+    .muted{color:var(--muted)}
+    .tiny{font-size:.82rem;color:var(--muted-2)}
+    .right-col .card-body{padding:18px}
+    .spacer{height:4px}
+    @media (max-width: 1120px){
+      .grid,.hero{grid-template-columns:1fr}
+      .panel-grid{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width: 760px){
+      .shell{width:min(100%, calc(100% - 16px));padding-top:12px}
+      .topbar{top:8px;border-radius:18px;padding:12px}
+      .topbar,.card-body{box-shadow:0 12px 40px rgba(0,0,0,.35)}
+      .field-grid,.panel-grid{grid-template-columns:1fr}
+      .hero-actions,.form-actions,.topbar-actions{flex-direction:column}
+      .btn,.btn.full{width:100%}
+      .chip{justify-content:center}
+      .card-body{padding:16px}
+      .hero h2{font-size:1.55rem}
+    }
+  </style>
 </head>
 <body>
-  <div class="auth-bg">
-    <div class="auth-flex">
-      <div class="auth-card">
-        <!-- Session Protection -->
-        <script>
-          const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
-          if (!fasUser || !fasUser.account_id) {
-            window.location.replace('login.html');
-          }
-        </script>
-        <div class="auth-brand">
-          <img src="assets/images/radio.png" alt="Faceless Brand" />
-        </div>
-        <h1 class="auth-title">Build Your Page<span>Share your work. Stay faceless.</span></h1>
-        <div style="display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.5rem;">
-          <div style="flex:1;min-width:180px;max-width:220px;background:rgba(124,58,237,0.08);border-radius:16px;padding:1.2rem 1rem;box-shadow:0 2px 12px 0 rgba(124,58,237,0.08);">
-            <h3 style="color:#a78bfa;font-size:1.1rem;font-weight:700;margin-bottom:0.7rem;">Quick Start Template</h3>
-            <form id="qs-form">
-              <label class="auth-label">Page Type</label>
-              <select id="qs-type" required class="auth-input">
-                <option value="">Choose type…</option>
-                <option>Artist</option>
-                <option>Business</option>
-                <option>Links</option>
-                <option>Personal</option>
-                <option>Promo</option>
-              </select>
-              <label class="auth-label">Title</label>
-              <input type="text" id="qs-title" placeholder="Page Title" required class="auth-input"/>
-              <label class="auth-label">Profile Image</label>
-              <input type="url" id="qs-profile-img" placeholder="Image URL (for now)" class="auth-input" />
-              <label class="auth-label">Header Image</label>
-              <input type="url" id="qs-header-img" placeholder="Image URL (for now)" class="auth-input" />
-              <label class="auth-label">Bio</label>
-              <textarea id="qs-bio" placeholder="Tell your story…" rows="2" class="auth-input"></textarea>
-              <label class="auth-label">Links</label>
-              <input type="text" id="qs-links" placeholder="Links (comma separated)" class="auth-input" />
-              <label class="auth-label">Contact</label>
-              <input type="text" id="qs-contact" placeholder="Contact info" class="auth-input" />
-              <label class="auth-label">Featured Content</label>
-              <input type="text" id="qs-featured" placeholder="Featured content" class="auth-input" />
-              <button type="submit" class="auth-btn">Save Draft</button>
-              <button type="button" class="auth-btn alt" style="margin-top:0.5rem;" onclick="publishPage()">Publish</button>
-            </form>
-          </div>
-          <div style="flex:1;min-width:180px;max-width:220px;background:rgba(124,58,237,0.08);border-radius:16px;padding:1.2rem 1rem;box-shadow:0 2px 12px 0 rgba(124,58,237,0.08);display:flex;flex-direction:column;align-items:center;justify-content:center;">
-            <h3 style="color:#a78bfa;font-size:1.1rem;font-weight:700;margin-bottom:0.7rem;">Visual Builder</h3>
-            <a href="faceless_builder_app.html" class="auth-btn" style="width:100%;margin-bottom:0.7rem;">Open Visual Builder</a>
-            <button class="auth-btn alt" style="width:100%;" onclick="window.open('creator.html?u=exampleuser','_blank')">See Example Page</button>
-          </div>
-        </div>
-        <div class="auth-sub" style="margin-top:1.2rem;">Your Pages</div>
-        <div id="my-pages-list" style="margin-bottom:1.2rem;">
-          <div style="color:#bdbde6;font-size:1.01rem;">(You have no pages yet. Pages you create will appear here.)</div>
-        </div>
-        <div class="auth-sub" style="margin-top:1.2rem;">Your Posts</div>
-        <div id="my-page-recent" style="margin-bottom:1.2rem;">
-          <div style="color:#bdbde6;font-size:1.01rem;">(No posts yet. Your recent activity will show here.)</div>
-        </div>
-        <div id="qs-preview" style="margin-top:1.2rem;"></div>
-        <div class="auth-sub" style="margin-top:1.2rem;">Page Status</div>
-        <div id="my-page-status"></div>
-        <a id="my-page-view-live" href="#" class="auth-btn alt" target="_blank" style="display:none;margin-top:0.7rem;">View Live</a>
-      </div>
-      <div class="auth-explain">
-        <h2>What is My Page?</h2>
-        <p>
-          Your public page is your home base on Faceless Animal Studios. Share your work, links, and story with the world. Use Quick Start for a simple setup, or the Advanced Editor for full control.
-        </p>
-        <ul style="color:#bdbde6;font-size:1.01rem;line-height:1.7;margin-top:1.2rem;">
-          <li>• No coding required</li>
-          <li>• Mobile-friendly</li>
-          <li>• Share your Signal Code for easy contact</li>
-        </ul>
-      </div>
-    </div>
-  </div>
   <script>
-    function showQuickStart() {
-      document.getElementById('quick-start-section').style.display = '';
-      window.scrollTo({ top: document.getElementById('quick-start-section').offsetTop - 20, behavior: 'smooth' });
-    }
-    document.getElementById('qs-form').onsubmit = function(e) {
-      e.preventDefault();
-      alert('Draft saved! (Demo)');
-    };
-    function publishPage() {
-      alert('Page published! (Demo)');
-    }
-    // Page status logic (replace with your real check)
-    const statusEl = document.getElementById('my-page-status');
-    const viewLiveBtn = document.getElementById('my-page-view-live');
-    const fasUser2 = JSON.parse(localStorage.getItem('fas_user') || 'null');
-    const hasPage = fasUser2 && fasUser2.page_published;
-    if (hasPage) {
-      statusEl.textContent = 'Live at:';
-      viewLiveBtn.style.display = '';
-      viewLiveBtn.href = 'creator.html?u=' + encodeURIComponent(fasUser2.username);
-      viewLiveBtn.textContent = 'View Live';
-    } else {
-      statusEl.textContent = 'Not published yet';
-      viewLiveBtn.style.display = 'none';
+    const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+    if (!fasUser || !fasUser.account_id) {
+      window.location.replace('login.html');
     }
   </script>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand-wrap">
+        <div class="brand-mark">
+          <img src="assets/images/radio.png" alt="Faceless Animal Studios" />
+        </div>
+        <div class="brand-copy">
+          <h1>Faceless Animal Studios — My Page</h1>
+          <p>Build pages. Publish fast. Keep the platform feeling like an app.</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="chip"><span class="chip-dot"></span> Session Active</div>
+        <a href="faceless_builder_app.html" class="btn btn-secondary">Visual Builder</a>
+      </div>
+    </header>
+    <main class="grid">
+      <section class="stack">
+        <div class="card">
+          <div class="card-body hero">
+            <div class="hero-copy">
+              <div>
+                <div class="section-label">Creator Hub</div>
+                <h2>Build your page like an app.<span>Fast sections. Floating cards. Clean mobile flow.</span></h2>
+                <p>
+                  Use the quick form for instant publishing, jump into the visual builder for deeper control,
+                  or keep it simple with the mobile builder. Everything here is split into focused panels so it
+                  feels more like a real product UI and less like one long page.
+                </p>
+              </div>
+              <div class="hero-actions">
+                <a href="faceless_builder_app.html" class="btn btn-primary">Open Visual Builder</a>
+                <a href="mobile_builder_app.html" class="btn btn-secondary">Open Mobile Builder</a>
+                <a href="login.html" class="btn btn-ghost">Create User</a>
+              </div>
+            </div>
+            <div class="hero-side">
+              <div class="mini-stat">
+                <small>Publishing Mode</small>
+                <strong>Quick Start</strong>
+                <span>Fill out one floating form, save your draft, and go live without getting buried in settings.</span>
+              </div>
+              <div class="mini-stat">
+                <small>Page Route</small>
+                <strong id="route-hint">/your-name</strong>
+                <span>Your saved page can route into your creator presence and expand later into multi-page builds.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Choose Your Builder</h2>
+                <p class="card-desc">Two paths. Same ecosystem. Pick speed or full control.</p>
+              </div>
+            </div>
+            <div class="panel-grid">
+              <div class="panel">
+                <div class="panel-icon">V</div>
+                <h3>Visual Builder</h3>
+                <p>Advanced drag-and-drop workspace with richer layout control, export flow, and more room to shape the page exactly how you want it.</p>
+                <a href="faceless_builder_app.html" class="btn btn-primary full">Launch Visual Builder</a>
+              </div>
+              <div class="panel">
+                <div class="panel-icon">M</div>
+                <h3>Mobile Builder</h3>
+                <p>Cleaner, faster, and lighter for mobile-first page creation. Good when you just need something polished and working right now.</p>
+                <a href="mobile_builder_app.html" class="btn btn-secondary full">Launch Mobile Builder</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body split">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Quick Start Template</h2>
+                <p class="card-desc">Fast guided setup for a live creator page. This is the lightweight path.</p>
+              </div>
+            </div>
+            <form id="qs-form">
+              <div class="field-grid">
+                <div class="field">
+                  <label class="label" for="qs-type">Page Type</label>
+                  <select id="qs-type" class="select" required>
+                    <option value="">Choose type…</option>
+                    <option>Artist</option>
+                    <option>Business</option>
+                    <option>Links</option>
+                    <option>Personal</option>
+                    <option>Promo</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="label" for="qs-title">Title</label>
+                  <input id="qs-title" class="input" type="text" placeholder="Page Title" required />
+                </div>
+                <div class="field">
+                  <label class="label" for="qs-profile-img">Profile Image URL</label>
+                  <input id="qs-profile-img" class="input" type="url" placeholder="https://..." />
+                </div>
+                <div class="field">
+                  <label class="label" for="qs-header-img">Header Image URL</label>
+                  <input id="qs-header-img" class="input" type="url" placeholder="https://..." />
+                </div>
+                <div class="field full">
+                  <label class="label" for="qs-bio">Bio</label>
+                  <textarea id="qs-bio" class="textarea" placeholder="Tell your story..."></textarea>
+                </div>
+                <div class="field full">
+                  <label class="label" for="qs-links">Links</label>
+                  <input id="qs-links" class="input" type="text" placeholder="Comma separated links" />
+                </div>
+                <div class="field">
+                  <label class="label" for="qs-contact">Contact</label>
+                  <input id="qs-contact" class="input" type="text" placeholder="Signal code or contact info" />
+                </div>
+                <div class="field">
+                  <label class="label" for="qs-featured">Featured Content</label>
+                  <input id="qs-featured" class="input" type="text" placeholder="Song, project, product, event..." />
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Draft</button>
+                <button type="button" class="btn btn-secondary" onclick="publishPage()">Publish</button>
+                <button type="button" class="btn btn-ghost" onclick="renderPreview()">Preview</button>
+              </div>
+              <div class="spacer"></div>
+              <div class="tiny">Tip: Save first, then publish once your status card looks right.</div>
+            </form>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Live Preview</h2>
+                <p class="card-desc">Quick visual check before saving or publishing.</p>
+              </div>
+            </div>
+            <div id="qs-preview" class="preview">
+              <h3>Preview ready</h3>
+              <p>Use the form above and hit Preview to generate a lightweight page snapshot here.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <aside class="stack right-col">
+        <div class="card">
+          <div class="card-body status-wrap">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Page Status</h2>
+                <p class="card-desc">Quick account-side publishing state and live route access.</p>
+              </div>
+            </div>
+            <div id="status-pill" class="status-pill">
+              <span id="status-dot" class="status-dot"></span>
+              <span id="my-page-status">Not published yet</span>
+            </div>
+            <a id="my-page-view-live" href="#" target="_blank" class="btn btn-primary" style="display:none;">View Live</a>
+            <div class="tiny">When a draft saves with a live route, the button will appear here.</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Recent Activity</h2>
+                <p class="card-desc">Last actions tied to your page workspace.</p>
+              </div>
+            </div>
+            <div id="my-page-recent" class="list">
+              <div class="list-item">(No posts yet. Your recent activity will show here.)</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">What You Can Do Here</h2>
+                <p class="card-desc">Everything is split into floating sections so the page feels like a builder dashboard.</p>
+              </div>
+            </div>
+            <ul class="feature-list">
+              <li><span class="feature-bullet">1</span><span><strong>Visual Builder:</strong> Build full layouts with deeper control and room for custom structure.</span></li>
+              <li><span class="feature-bullet">2</span><span><strong>Mobile Builder:</strong> Quick, clean page flow for lightweight editing and publishing.</span></li>
+              <li><span class="feature-bullet">3</span><span><strong>Quick Start:</strong> Fill out a few fields and generate a public-ready creator page fast.</span></li>
+              <li><span class="feature-bullet">4</span><span><strong>Status + Live Route:</strong> Check whether you are still in draft mode or already live.</span></li>
+              <li><span class="feature-bullet">5</span><span><strong>Future Growth:</strong> Expand into more pages, more routes, and a fuller creator hub later.</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">About My Page</h2>
+                <p class="card-desc">A cleaner, app-style version of your creator dashboard.</p>
+              </div>
+            </div>
+            <div class="list">
+              <div class="list-item">
+                My Page is your personal home inside Faceless Animal Studios. Build one page or eventually build a network of pages while keeping the workflow simple, mobile-friendly, and creator-focused.
+              </div>
+              <div class="list-item">
+                The point is control without clutter: quick forms for speed, stronger builders for deeper design, and a cleaner dashboard that does not feel like raw text stacked on a wall.
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+  <script src="assets/js/my-page.js"></script>
 </body>
 </html>

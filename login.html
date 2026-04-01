@@ -3,235 +3,203 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta
-    name="description"
-    content="Sign in or create a secure account on Faceless Animal Studios — a privacy-first creator platform with radio, pages, music, and live digital identity tools."
-  />
   <title>Login — Faceless Animal Studios</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-    rel="stylesheet"
-  />
-  <link rel="stylesheet" href="assets/style.css?v=20260322" />
+  <link rel="stylesheet" href="assets/style.css" />
   <style>
-    /* ...[all your CSS from above, unchanged]... */
+    :root{
+      --bg-1:#07080d;
+      --bg-2:#0e1220;
+      --card:rgba(20,24,40,.82);
+      --card-2:rgba(17,21,36,.88);
+      --line:rgba(167,139,250,.16);
+      --line-2:rgba(59,130,246,.16);
+      --text:#eef2ff;
+      --muted:#b7bfd8;
+      --muted-2:#8e96b2;
+      --purple:#a78bfa;
+      --purple-2:#7c3aed;
+      --blue:#60a5fa;
+      --blue-2:#2563eb;
+      --green:#34d399;
+      --danger:#fb7185;
+      --shadow:0 18px 60px rgba(0,0,0,.45);
+      --radius:22px;
+      --radius-sm:16px;
+      --blur:blur(18px);
+    }
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(124,58,237,.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(37,99,235,.18), transparent 30%),
+        radial-gradient(circle at bottom center, rgba(52,211,153,.08), transparent 24%),
+        linear-gradient(180deg, #06070b 0%, #0a0d16 40%, #080a12 100%);
+      overflow-x:hidden;
+    }
+    .shell {
+      width:min(480px, 100%);
+      margin:0 auto;
+      padding:18px 0 34px;
+    }
+    .topbar {
+      position:sticky;
+      top:12px;
+      z-index:30;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:14px 16px;
+      margin-bottom:18px;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(10,12,20,.72);
+      backdrop-filter:var(--blur);
+      -webkit-backdrop-filter:var(--blur);
+      border-radius:20px;
+      box-shadow:var(--shadow);
+    }
+    .brand-wrap{display:flex;align-items:center;gap:12px;min-width:0}
+    .brand-mark{
+      width:46px;height:46px;border-radius:14px;overflow:hidden;flex:0 0 auto;
+      border:1px solid rgba(167,139,250,.24);
+      background:linear-gradient(135deg, rgba(124,58,237,.24), rgba(37,99,235,.18));
+      display:grid;place-items:center;
+      box-shadow:0 0 24px rgba(124,58,237,.18);
+    }
+    .brand-mark img{width:100%;height:100%;object-fit:cover}
+    .brand-copy{min-width:0}
+    .brand-copy h1{
+      margin:0;
+      font-size:1rem;
+      font-weight:800;
+      letter-spacing:.01em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .brand-copy p{
+      margin:3px 0 0;
+      color:var(--muted-2);
+      font-size:.83rem;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .topbar-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:10px 14px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      font-size:.88rem;font-weight:700;
+    }
+    .chip-dot{
+      width:8px;height:8px;border-radius:50%;
+      background:var(--green);box-shadow:0 0 12px rgba(52,211,153,.7);
+    }
+    .card {
+      position:relative;
+      border-radius:var(--radius);
+      border:1px solid rgba(255,255,255,.06);
+      background:linear-gradient(180deg, rgba(22,27,46,.82), rgba(13,17,29,.9));
+      backdrop-filter:var(--blur);
+      -webkit-backdrop-filter:var(--blur);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      margin-bottom:18px;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), transparent 28%);
+      opacity:.65;
+    }
+    .card-body{position:relative;padding:20px}
+    .card-title{margin:0;font-size:1.08rem;font-weight:800;letter-spacing:.01em;}
+    .card-desc{margin:6px 0 0;color:var(--muted);font-size:.94rem;line-height:1.55;}
+    .form-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;}
+    .btn.full{width:100%}
+    .feature-list{list-style:none;padding:0;margin:0;display:grid;gap:12px;}
+    .feature-list li{display:flex;gap:12px;align-items:flex-start;padding:14px 15px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);color:var(--muted);line-height:1.55;font-size:.93rem;}
+    .feature-bullet{width:26px;height:26px;border-radius:10px;flex:0 0 auto;display:grid;place-items:center;background:linear-gradient(135deg, rgba(124,58,237,.26), rgba(37,99,235,.16));border:1px solid rgba(167,139,250,.24);color:var(--text);font-weight:900;font-size:.8rem;margin-top:1px;}
+    .quote{padding:15px;border-radius:16px;border:1px solid rgba(167,139,250,.18);background:linear-gradient(180deg, rgba(124,58,237,.08), rgba(37,99,235,.06));color:#d8def7;line-height:1.65;font-size:.95rem;margin-top:18px;}
+    .quote strong{color:#fff;}
+    @media (max-width: 760px){
+      .shell{width:min(100%, calc(100% - 16px));padding-top:12px}
+      .topbar{top:8px;border-radius:18px;padding:12px}
+      .topbar,.card-body{box-shadow:0 12px 40px rgba(0,0,0,.35)}
+      .form-actions,.topbar-actions{flex-direction:column}
+      .btn,.btn.full{width:100%}
+      .chip{justify-content:center}
+      .card-body{padding:16px}
+    }
   </style>
 </head>
 <body>
   <div class="shell">
     <header class="topbar">
-      <div class="brand">
+      <div class="brand-wrap">
         <div class="brand-mark">
           <img src="assets/images/radio.png" alt="Faceless Animal Studios" />
         </div>
         <div class="brand-copy">
           <h1>Faceless Animal Studios</h1>
-          <p>Privacy-first creator platform — pages, radio, music, identity, and tools.</p>
+          <p>Platform Login</p>
         </div>
       </div>
-      <div class="top-actions">
-        <div class="chip"><span class="chip-dot"></span> Platform Live</div>
-        <button id="open-create-top" class="btn btn-secondary" type="button">Create Account</button>
+      <div class="topbar-actions">
+        <div class="chip"><span class="chip-dot"></span> Secure Access</div>
       </div>
     </header>
-    <main class="layout">
-      <section class="stack">
-        <div class="card">
-          <div class="card-body hero">
-            <div>
-              <div class="eyebrow">Enter Signal</div>
-              <h2>
-                Sign in to the platform.
-                <span>Or step in and create your identity here.</span>
-              </h2>
-              <p>
-                Faceless Animal Studios is built for creators, listeners, builders, and people
-                who want more control over how they exist online. It is not just a login screen.
-                It is the front door to a system built around pages, radio, media, live presence,
-                and private digital identity without forcing the usual social-media feel.
-              </p>
-              <div class="hero-actions">
-                <button id="open-create-hero" class="btn btn-primary" type="button">Create Account</button>
-                <a href="#signin-card" class="btn btn-secondary">Sign In</a>
+    <main>
+      <div class="card" style="margin-bottom:22px;">
+        <div class="card-body">
+          <div class="card-title" style="font-size:1.25rem;font-weight:900;margin-bottom:10px;">Sign In to Your Account</div>
+          <form id="signin-form" novalidate class="form-grid">
+            <div class="field">
+              <label for="signin-username" class="label">Username or Signal ID</label>
+              <div class="input-wrap">
+                <input id="signin-username" name="username" type="text" placeholder="your_id" autocomplete="username" spellcheck="false" autocorrect="off" autocapitalize="none" required class="input" />
               </div>
             </div>
-            <div class="hero-side">
-              <div class="mini">
-                <small>What the platform is</small>
-                <strong>Creator infrastructure</strong>
-                <span>
-                  Build a page, hold a signal identity, move through radio, music, creator tools,
-                  and future features from one account.
-                </span>
-              </div>
-              <div class="mini">
-                <small>Why it feels different</small>
-                <strong>Less noise. More control.</strong>
-                <span>
-                  The goal is to give people a place to build and exist online without feeling trapped
-                  inside somebody else’s algorithm or commercial template.
-                </span>
+            <div class="field">
+              <label for="signin-password" class="label">Password</label>
+              <div class="input-wrap">
+                <input id="signin-password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required class="input has-toggle" />
+                <button type="button" class="pw-toggle" data-target="signin-password" aria-label="Show or hide password">👁</button>
               </div>
             </div>
+            <div id="signin-error" class="error" role="alert"></div>
+            <div class="form-actions">
+              <button type="submit" id="signin-btn" class="btn btn-primary full">Sign In</button>
+              <button type="button" id="open-create" class="btn btn-secondary full">Create Account</button>
+            </div>
+            <div class="tiny" style="margin-top:10px;">Keep your username, password, and recovery code somewhere safe.</div>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="card-title" style="font-size:1.13rem;font-weight:800;margin-bottom:8px;">What is Faceless Animal Studios?</div>
+          <div class="card-desc" style="margin-bottom:18px;">A privacy-first creator platform for pages, music, radio, and digital presence. Build your own space, control your identity, and access a growing suite of tools.</div>
+          <ul class="feature-list">
+            <li><span class="feature-bullet">1</span><span><strong>Identity:</strong> A username and signal-based foothold inside the ecosystem.</span></li>
+            <li><span class="feature-bullet">2</span><span><strong>Pages:</strong> Your own space built through simple forms or deeper builder tools.</span></li>
+            <li><span class="feature-bullet">3</span><span><strong>Media:</strong> Access to radio, music, creator content, and platform layers that can grow with the account.</span></li>
+            <li><span class="feature-bullet">4</span><span><strong>Control:</strong> A more private, less exposed way to build digital presence.</span></li>
+            <li><span class="feature-bullet">5</span><span><strong>Visual Builder:</strong> Drag-and-drop layouts, fast publishing, and a real app-style dashboard.</span></li>
+            <li><span class="feature-bullet">6</span><span><strong>Mobile Builder:</strong> Quick, clean page flow for lightweight editing and publishing.</span></li>
+            <li><span class="feature-bullet">7</span><span><strong>Quick Start:</strong> Fill out a few fields and generate a public-ready creator page fast.</span></li>
+            <li><span class="feature-bullet">8</span><span><strong>Status + Live Route:</strong> Check whether you are still in draft mode or already live.</span></li>
+            <li><span class="feature-bullet">9</span><span><strong>Future Growth:</strong> Expand into more pages, more routes, and a fuller creator hub later.</span></li>
+          </ul>
+          <div class="quote">
+            <strong>Faceless Animal Studios</strong> is meant to be a digital base — something between a creator system, identity layer, page builder, and media environment. Not a pitch deck. A place to step into and build from.
           </div>
         </div>
-        <div class="card" id="signin-card">
-          <div class="card-body">
-            <div class="head">
-              <div>
-                <h3>Sign In</h3>
-                <p>Use your username or Signal ID to enter your account.</p>
-              </div>
-            </div>
-            <form id="signin-form" novalidate class="form-grid">
-              <div class="field">
-                <label for="signin-username" class="label">Username or Signal ID</label>
-                <div class="input-wrap">
-                  <input
-                    id="signin-username"
-                    name="username"
-                    type="text"
-                    placeholder="your_id"
-                    autocomplete="username"
-                    spellcheck="false"
-                    autocorrect="off"
-                    autocapitalize="none"
-                    required
-                    class="input"
-                  />
-                </div>
-              </div>
-              <div class="field">
-                <label for="signin-password" class="label">Password</label>
-                <div class="input-wrap">
-                  <input
-                    id="signin-password"
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    autocomplete="current-password"
-                    required
-                    class="input has-toggle"
-                  />
-                  <button
-                    type="button"
-                    class="pw-toggle"
-                    data-target="signin-password"
-                    aria-label="Show or hide password"
-                  >👁</button>
-                </div>
-              </div>
-              <div id="signin-error" class="error" role="alert"></div>
-              <div class="row">
-                <button type="submit" id="signin-btn" class="btn btn-primary">Enter →</button>
-                <button type="button" id="open-create" class="btn btn-secondary">Create Account</button>
-              </div>
-              <div class="tiny">
-                Keep your username, password, and recovery code somewhere safe. Your account is your access point into the platform.
-              </div>
-            </form>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-body">
-            <div class="head">
-              <div>
-                <h3>What you get access to</h3>
-                <p>This is not presented like a pitch deck. It is the actual shape of the platform.</p>
-              </div>
-            </div>
-            <ul class="feature-list">
-              <li><span class="bullet">1</span><span><strong>Signal Identity:</strong> A platform identity that can connect your presence, pages, messaging direction, and future creator tools.</span></li>
-              <li><span class="bullet">2</span><span><strong>Pages and builder tools:</strong> Create your own space with guided forms, mobile tools, or deeper visual builder workflows.</span></li>
-              <li><span class="bullet">3</span><span><strong>Radio and media layer:</strong> Move through music, live atmosphere, and creator-driven content from inside the same ecosystem.</span></li>
-              <li><span class="bullet">4</span><span><strong>Privacy-first structure:</strong> The system is meant to feel more controlled and less exposed than typical social platforms.</span></li>
-              <li><span class="bullet">5</span><span><strong>Room to grow:</strong> Start with a simple account and build further into pages, media, identity, and future interactive features.</span></li>
-            </ul>
-          </div>
-        </div>
-      </section>
-      <aside class="stack">
-        <div class="card">
-          <div class="card-body">
-            <div class="head">
-              <div>
-                <h3>What Faceless Animal Studios is</h3>
-                <p>Clear explanation for new people, without turning this into an ad page.</p>
-              </div>
-            </div>
-            <div class="info-grid">
-              <div class="info-box">
-                <h4>A platform, not just a profile page</h4>
-                <p>
-                  The idea is to give people a place where identity, media, pages, and platform tools
-                  can live together instead of being split across random services.
-                </p>
-              </div>
-              <div class="info-box">
-                <h4>Built for creators and independent users</h4>
-                <p>
-                  Whether someone is making music, building a brand, testing ideas, or just creating a digital home,
-                  the platform is supposed to support that without overcomplicating it.
-                </p>
-              </div>
-              <div class="info-box">
-                <h4>Privacy matters here</h4>
-                <p>
-                  The system leans into usernames, signal identity, and controlled access so people can move with
-                  more ownership over their presence.
-                </p>
-              </div>
-              <div class="info-box">
-                <h4>Start simple, go deeper later</h4>
-                <p>
-                  A new user can begin with an account and a basic page, then move into more advanced tools
-                  as the platform expands around them.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-body">
-            <div class="head">
-              <div>
-                <h3>New here?</h3>
-                <p>Create an account when you are ready. No heavy funnel language, just the next step.</p>
-              </div>
-            </div>
-            <div class="mini" style="margin-bottom:14px;">
-              <small>Account setup</small>
-              <strong>Fast entry point</strong>
-              <span>
-                Pick a username, set a password, and keep your recovery code. That gives you your foothold
-                in the platform.
-              </span>
-            </div>
-            <div class="row">
-              <button id="open-create-2" class="btn btn-primary" type="button">Create Account</button>
-              <a href="#signin-card" class="btn btn-ghost">Already have one? Sign in</a>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-body">
-            <div class="head">
-              <div>
-                <h3>Platform direction</h3>
-                <p>A simple statement of intent so the page explains itself.</p>
-              </div>
-            </div>
-            <div class="muted" style="line-height:1.75;font-size:.95rem;">
-              Faceless Animal Studios is meant to be a controlled creator environment — a place where people can
-              build pages, connect identity to tools, move through radio and media, and shape a digital presence
-              that feels more their own. The point is not to act corporate. The point is to build something usable,
-              distinct, and expandable.
-            </div>
-          </div>
-        </div>
-      </aside>
+      </div>
     </main>
   </div>
   <div id="create-modal" class="auth-modal">
@@ -241,42 +209,21 @@
       <form id="create-form" novalidate class="form-grid">
         <div class="field">
           <label for="create-username" class="label">Choose a Username</label>
-          <input
-            id="create-username"
-            name="username"
-            type="text"
-            placeholder="your_id"
-            required
-            class="input"
-          />
+          <input id="create-username" name="username" type="text" placeholder="your_id" required class="input" />
         </div>
         <div class="field">
           <label for="create-password" class="label">Password</label>
           <div class="input-wrap">
-            <input
-              id="create-password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              required
-              class="input has-toggle"
-            />
-            <button
-              type="button"
-              class="pw-toggle"
-              data-target="create-password"
-              aria-label="Show or hide password"
-            >👁</button>
+            <input id="create-password" name="password" type="password" placeholder="••••••••" required class="input has-toggle" />
+            <button type="button" class="pw-toggle" data-target="create-password" aria-label="Show or hide password">👁</button>
           </div>
         </div>
         <div id="create-error" class="error" role="alert"></div>
-        <div class="row">
-          <button type="submit" class="btn btn-primary">Create Account</button>
-          <button type="button" class="btn btn-secondary" id="cancel-create">Cancel</button>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary full">Create Account</button>
+          <button type="button" class="btn btn-secondary full" id="cancel-create">Cancel</button>
         </div>
-        <div class="tiny">
-          Save your recovery code when it appears. It matters.
-        </div>
+        <div class="tiny">Save your recovery code when it appears.</div>
       </form>
     </div>
   </div>
@@ -295,10 +242,7 @@
     const closeCreate = document.getElementById('close-create');
     const cancelCreate = document.getElementById('cancel-create');
     const createTriggers = [
-      document.getElementById('open-create'),
-      document.getElementById('open-create-2'),
-      document.getElementById('open-create-top'),
-      document.getElementById('open-create-hero')
+      document.getElementById('open-create')
     ].filter(Boolean);
     function togglePassword(targetId) {
       const input = document.getElementById(targetId);
@@ -351,6 +295,7 @@
     }
     createForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
+      createError.style.color = '#fb7185';
       createError.textContent = '';
       const username = document.getElementById('create-username').value;
       const password = document.getElementById('create-password').value;
@@ -363,14 +308,12 @@
             window.location.href = 'dashboard.html';
           }, 1800);
         } else {
-          createError.style.color = '#ff4d4d';
           let msg = error || 'Account creation failed.';
           if (errorCode) msg += ` [${errorCode}]`;
           if (supabaseError) msg += `\nSupabase: ${supabaseError}`;
           createError.textContent = msg;
         }
       } catch (err) {
-        createError.style.color = '#ff4d4d';
         createError.textContent = 'Unexpected error: ' + (err?.message || err);
       }
     });
