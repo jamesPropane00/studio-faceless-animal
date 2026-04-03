@@ -21,8 +21,5 @@
 
 # ── DOMAIN ALIASES ─────────────────────────────────────────────────
 # djfacelessanimal.com → DJ Faceless Animal artist page
-https://djfacelessanimal.com/*      https://facelessanimalstudios.com/artist/djfacelessanimal  301
-https://www.djfacelessanimal.com/*  https://facelessanimalstudios.com/artist/djfacelessanimal  301
 
 # www → apex
-https://www.facelessanimalstudios.com/*  https://facelessanimalstudios.com/:splat  301
