@@ -36,10 +36,15 @@ const http  = require('http')
 const https = require('https')
 const fs    = require('fs')
 const path  = require('path')
+const { createClient } = require('@supabase/supabase-js')
 
 const PORT = parseInt(process.env.PORT || '3000', 10)
 const ROOT = __dirname
 
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://ghufaozjwondqcrcucjs.supabase.co'
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+const RADIO_BUCKET = 'radio'
 
 // ── STEP 1: WRITE env.js FROM ENVIRONMENT VARIABLES ─────────────────
 // This file is loaded by the browser before any Supabase-aware modules.
@@ -110,6 +115,9 @@ const MIME_TYPES = {
 const server = http.createServer(handleRequest)
 
 function handleRequest(req, res) {
+  // DEBUG: Log all incoming requests
+  console.log(`[DEBUG] ${req.method} ${req.url}`)
+
   // Strip query strings and decode URI
   let urlPath
   try {
@@ -117,6 +125,24 @@ function handleRequest(req, res) {
   } catch {
     send(res, 400, 'text/plain', 'Bad Request')
     return
+  }
+
+  // ── PULSE STATIONS API ROUTE ─────────────────────────────
+  if (urlPath === '/functions/pulse-stations.js') {
+    // CORS headers for browser fetches
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') { send(res, 204, 'text/plain', ''); return; }
+    if (req.method !== 'GET') { sendJSON(res, 405, { error: 'Method not allowed.' }); return; }
+    // Dynamically import the handler
+    try {
+      const handler = require('./functions/api/pulse-stations.js');
+      handler(req, res);
+    } catch (e) {
+      sendJSON(res, 500, { error: 'Internal server error.' });
+    }
+    return;
   }
 
   // ── API ROUTES (server-side, not static files) ─────────────
@@ -129,53 +155,59 @@ function handleRequest(req, res) {
     if (req.method === 'OPTIONS') { send(res, 204, 'text/plain', ''); return }
     if (req.method !== 'GET') { sendJSON(res, 405, { error: 'Method not allowed.' }); return }
 
-    // Parse query: /media/download?file=...&bucket=...&user_id=...
-    try {
-      const u = new URL(req.url, 'http://localhost')
-      const file = u.searchParams.get('file')
-      const bucket = u.searchParams.get('bucket') || 'user-storage'
-      const user_id = u.searchParams.get('user_id') || null
-      if (!file) return sendJSON(res, 400, { error: 'Missing file parameter.' })
+    // Move async logic to helper
+    handleMediaDownload(req, res);
+    return;
+  }
 
-      // Log download event to media_analytics
-      let creds
-      try { creds = getServiceCreds() } catch { creds = null }
-      if (creds && user_id) {
-        // Log event (non-blocking)
-        sbRequest(
+// --- Helper for /media/download to avoid top-level await ---
+async function handleMediaDownload(req, res) {
+  try {
+    const u = new URL(req.url, 'http://localhost')
+    const file = u.searchParams.get('file')
+    const bucket = u.searchParams.get('bucket') || 'user-storage'
+    const user_id = u.searchParams.get('user_id') || null
+    if (!file) return sendJSON(res, 400, { error: 'Missing file parameter.' })
+
+    // Log download event to media_analytics
+    let creds
+    try { creds = getServiceCreds() } catch { creds = null }
+    if (creds && user_id) {
+      // Log event (non-blocking)
+      sbRequest(
+        creds.host,
+        creds.key,
+        'POST',
+        '/rest/v1/media_analytics',
+        JSON.stringify([{ user_id, file_name: file, event_type: 'download', ts: new Date().toISOString() }])
+      ).catch(() => {})
+    }
+
+    // Generate signed URL for the file (valid 2 min)
+    let signedUrl = null
+    if (creds) {
+      try {
+        const signRes = await sbRequest(
           creds.host,
           creds.key,
           'POST',
-          '/rest/v1/media_analytics',
-          JSON.stringify([{ user_id, file_name: file, event_type: 'download', ts: new Date().toISOString() }])
-        ).catch(() => {})
-      }
-
-      // Generate signed URL for the file (valid 2 min)
-      let signedUrl = null
-      if (creds) {
-        try {
-          const signRes = await sbRequest(
-            creds.host,
-            creds.key,
-            'POST',
-            `/storage/v1/object/sign/${bucket}/${encodeURIComponent(file)}`,
-            JSON.stringify({ expiresIn: 120 })
-          )
-          const signData = JSON.parse(signRes.body.toString())
-          const raw = signData.signedURL || signData.signedUrl || ''
-          signedUrl = raw.startsWith('http') ? raw : `${process.env.SUPABASE_URL}/storage/v1${raw}`
-        } catch (e) {}
-      }
-      if (!signedUrl) return sendJSON(res, 500, { error: 'Could not generate download link.' })
-      // Redirect to signed URL
-      res.writeHead(302, { Location: signedUrl })
-      res.end()
-      return
-    } catch (e) {
-      return sendJSON(res, 500, { error: 'Internal error.' })
+          `/storage/v1/object/sign/${bucket}/${encodeURIComponent(file)}`,
+          JSON.stringify({ expiresIn: 120 })
+        )
+        const signData = JSON.parse(signRes.body.toString())
+        const raw = signData.signedURL || signData.signedUrl || ''
+        signedUrl = raw.startsWith('http') ? raw : `${process.env.SUPABASE_URL}/storage/v1${raw}`
+      } catch (e) {}
     }
+    if (!signedUrl) return sendJSON(res, 500, { error: 'Could not generate download link.' })
+    // Redirect to signed URL
+    res.writeHead(302, { Location: signedUrl })
+    res.end()
+    return
+  } catch (e) {
+    return sendJSON(res, 500, { error: 'Internal error.' })
   }
+}
   // ── RADIO API ROUTES ───────────────────────────────────────────────
   if (urlPath.startsWith('/api/radio/')) {
     res.setHeader('Access-Control-Allow-Origin', '*')
@@ -941,30 +973,38 @@ async function handleRadioUpload(req, res) {
     return sendJSON(res, 400, { error: 'File exceeds 50MB limit.' })
   }
 
-  const { dir } = getChannel(ch)
+  // --- Supabase upload logic ---
   const ext      = path.extname(file_name).toLowerCase() || '.mp3'
   const safeName = (path.basename(file_name, ext) || 'track').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60)
   const fileName = Date.now() + '_' + safeName + ext
-  const filePath = path.join(dir, fileName)
-  const srcPath  = ch === '1' ? 'assets/audio/' + fileName : 'assets/audio/ch' + ch + '/' + fileName
+  const supabasePath = `ch${ch}/${fileName}`
 
+  let uploadResult
   try {
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-    fs.writeFileSync(filePath, fileBuffer)
+    uploadResult = await supabase.storage.from(RADIO_BUCKET).upload(supabasePath, fileBuffer, {
+      contentType: file_type,
+      upsert: false
+    })
   } catch (e) {
-    console.error('[FAS:radio:upload] File write error:', e.message)
-    return sendJSON(res, 500, { error: 'Could not save file.' })
+    console.error('[FAS:radio:upload] Supabase upload error:', e.message)
+    return sendJSON(res, 500, { error: 'Could not upload to Supabase.' })
+  }
+  if (uploadResult.error) {
+    console.error('[FAS:radio:upload] Supabase upload error:', uploadResult.error.message)
+    return sendJSON(res, 500, { error: 'Could not upload to Supabase.' })
   }
 
+  const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${RADIO_BUCKET}/${supabasePath}`
+
   const tracks = readChannelTracks(ch)
-  const entry  = { id: fileName, title: title.trim().slice(0, 100), src: srcPath, uploadedAt: new Date().toISOString() }
+  const entry  = { id: fileName, title: title.trim().slice(0, 100), src: publicUrl, uploadedAt: new Date().toISOString() }
   tracks.push(entry)
   try { writeChannelTracks(tracks, ch) } catch (e) {
     console.error('[FAS:radio:upload] tracks write error:', e.message)
     return sendJSON(res, 500, { error: 'File saved but track list could not be updated.' })
   }
 
-  console.log('[FAS:radio:upload] Channel', ch, 'uploaded:', fileName, '(' + fileBuffer.length + ' bytes)')
+  console.log('[FAS:radio:upload] Channel', ch, 'uploaded to Supabase:', fileName, '(' + fileBuffer.length + ' bytes)')
   sendJSON(res, 200, { ok: true, track: entry, channel: ch })
 }
 
@@ -1057,41 +1097,64 @@ async function handleCommunityUpload(req, res) {
   const ok = await verifyIdentity(creds.host, creds.key, u, ph)
   if (!ok) return sendJSON(res, 401, { error: 'Authentication failed. Sign in again.' })
 
-  // Check paid plan from DB (server-side, not just session)
-  let planOk = false
-  try {
-    const planRes = await sbRequest(creds.host, creds.key, 'GET',
-      `/rest/v1/member_accounts?username=eq.${encodeURIComponent(u)}&select=plan_type,member_status`, null)
-    const rows = JSON.parse(planRes.body.toString())
-    if (Array.isArray(rows) && rows.length > 0) {
-      const { plan_type, member_status } = rows[0]
-      planOk = COMMUNITY_PAID_PLANS.has(plan_type) && member_status === 'active'
-    }
-  } catch {}
-  if (!planOk) return sendJSON(res, 403, { error: 'Active paid membership required to upload tracks to Station 1.' })
+  // Restrict to channel 1 only
+  // (no channel param, always uploads to ch1/community)
 
-  // Monthly quota from Supabase source-of-truth table.
-  const now = new Date()
-  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0)).toISOString()
-  const nextMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0)).toISOString()
-
-  let monthCount = 0
+  // 1. Check total (lifetime) uploads for this user
+  let totalUploads = 0
   try {
-    const quotaRes = await sbRequest(
+    const totalRes = await sbRequest(
       creds.host,
       creds.key,
       'GET',
-      `/rest/v1/radio_upload_quota?username=eq.${encodeURIComponent(u)}&uploaded_at=gte.${encodeURIComponent(monthStart)}&uploaded_at=lt.${encodeURIComponent(nextMonthStart)}&select=id`,
+      `/rest/v1/radio_upload_quota?username=eq.${encodeURIComponent(u)}&select=id`,
       null
     )
-    const rows = JSON.parse(quotaRes.body.toString())
-    monthCount = Array.isArray(rows) ? rows.length : 0
+    const rows = JSON.parse(totalRes.body.toString())
+    totalUploads = Array.isArray(rows) ? rows.length : 0
   } catch {
-    return sendJSON(res, 500, { error: 'Could not check monthly quota. Please try again.' })
+    return sendJSON(res, 500, { error: 'Could not check upload quota. Please try again.' })
   }
 
-  if (monthCount >= COMMUNITY_MAX_PER_MONTH) {
-    return sendJSON(res, 429, { error: 'You have already used your 2 uploads for this month.' })
+  if (totalUploads < 20) {
+    // Allow upload (free quota)
+  } else {
+    // After 20 uploads, require paid plan and enforce monthly limit
+    let planOk = false
+    try {
+      const planRes = await sbRequest(creds.host, creds.key, 'GET',
+        `/rest/v1/member_accounts?username=eq.${encodeURIComponent(u)}&select=plan_type,member_status`, null)
+      const rows = JSON.parse(planRes.body.toString())
+      if (Array.isArray(rows) && rows.length > 0) {
+        const { plan_type, member_status } = rows[0]
+        planOk = COMMUNITY_PAID_PLANS.has(plan_type) && member_status === 'active'
+      }
+    } catch {}
+    if (!planOk) return sendJSON(res, 403, { error: 'You have used your 20 free uploads. Active paid membership required for more uploads.' })
+
+    // Monthly quota from Supabase source-of-truth table.
+    const now = new Date()
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0)).toISOString()
+    const nextMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0)).toISOString()
+
+    let monthCount = 0
+    try {
+      const quotaRes = await sbRequest(
+        creds.host,
+        creds.key,
+        'GET',
+        `/rest/v1/radio_upload_quota?username=eq.${encodeURIComponent(u)}&uploaded_at=gte.${encodeURIComponent(monthStart)}&uploaded_at=lt.${encodeURIComponent(nextMonthStart)}&select=id`,
+        null
+      )
+      const rows = JSON.parse(quotaRes.body.toString())
+      monthCount = Array.isArray(rows) ? rows.length : 0
+    } catch {
+      return sendJSON(res, 500, { error: 'Could not check monthly quota. Please try again.' })
+    }
+
+    if (monthCount >= COMMUNITY_MAX_PER_MONTH) {
+      return sendJSON(res, 429, { error: 'You have already used your 2 uploads for this month.' })
+    }
   }
 
   let fileBuffer
@@ -1511,16 +1574,6 @@ function sbRequest(host, serviceKey, method, urlPath, jsonBody) {
       'Authorization': `Bearer ${serviceKey}`,
       'Content-Type':  'application/json',
       'Prefer':        'return=representation',
-
-      await recordMemberActivityServer(creds.host, creds.key, {
-        username: u,
-        actionType: 'radio_upload_success',
-        pagePath: '/radio.html',
-        source: 'server_local',
-        refId: (trackEntry && trackEntry.id) ? String(trackEntry.id) : storagePath,
-        momentumDelta: 1,
-        context: { station: '1' },
-      })
     }
     if (bodyBuf) headers['Content-Length'] = bodyBuf.length
 
@@ -2754,6 +2807,7 @@ async function handleDMConnectionStatus(req, res) {
   })
 }
 
+
 let signalCodeBackfillStarted = false
 
 async function runSignalCodeBackfillOnBoot() {
@@ -2825,6 +2879,11 @@ server.on('error', (err) => {
  * Returns the PID that was killed, or null if not found.
  */
 function killPortHolder(port) {
+  // ...existing code...
+}
+
+// Add missing closing bracket for the file
+// (This closes the last open block/function)
   try {
     const hexPort = port.toString(16).toUpperCase().padStart(4, '0')
 

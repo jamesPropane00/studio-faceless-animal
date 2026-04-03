@@ -1,3 +1,8 @@
+<body class="radio-page-wrap">
+  <!-- Open Faceless Pulse Stage Button -->
+  <div style="width:100%;display:flex;justify-content:center;margin:1.2rem 0 0.5rem 0;">
+    <button onclick="window.open('pulse.html', '_blank')" class="btn btn-gold" style="font-size:1rem;padding:0.7rem 2.2rem;">Open Faceless Pulse Stage</button>
+  </div>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1084,6 +1089,10 @@
 </head>
 <body class="radio-page-wrap">
 
+  <!-- Jump to Upload Button (Pulse-style anchor jump) -->
+  <div style="width:100%;display:flex;justify-content:center;margin:1.2rem 0 0.5rem 0;">
+    <a href="#rp-submit-section" class="btn btn-primary" style="font-size:1rem;padding:0.7rem 2.2rem;">Jump to Upload</a>
+  </div>
   <!-- ── NAV ── -->
   <nav class="navbar" role="navigation" aria-label="Main navigation">
     <div class="container">
@@ -1311,6 +1320,8 @@
           </div>
           <!-- Quota badge (filled by JS) -->
           <span id="rp-quota-badge" style="display:none;font-size:0.68rem;font-weight:800;letter-spacing:0.06em;padding:0.25rem 0.65rem;border-radius:20px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--purple-bright);"></span>
+            <!-- Simple Media Library Button -->
+            <button id="openMediaLibraryBtn" class="btn btn-outline-purple" style="margin-left:12px;">Open Media Library</button>
         </div>
 
         <p style="font-size:0.88rem;color:var(--text-2);line-height:1.7;margin-bottom:1rem;">
@@ -1329,6 +1340,26 @@
           </ul>
         </div>
 
+        <!-- Media Picker Script -->
+        <script type="module">
+          import { openMediaPicker } from './assets/js/media-picker.js';
+          document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('openMediaLibraryBtn');
+            if (btn) {
+              btn.addEventListener('click', function() {
+                openMediaPicker({
+                  onSelect: (media) => {
+                    if (media && media.url) {
+                      alert('Selected file: ' + media.name + '\nURL: ' + media.url);
+                    } else {
+                      alert('No file selected.');
+                    }
+                  }
+                });
+              });
+            }
+          });
+        </script>
         <!-- Upload form (members only) -->
         <div id="rp-submit-form-wrap">
 

@@ -1,621 +1,1088 @@
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Faceless Signal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="Faceless Animal Studios is a live creator system for websites, file sharing, radio, TV, live rooms, apps, tools, and digital identity."
+  />
+  <title>Faceless Animal Studios</title>
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
+    :root {
+      --bg-main: #0a0b0f;
+      --bg-soft: #11131a;
+      --bg-card: rgba(28, 29, 39, 0.94);
+      --bg-card-2: rgba(22, 23, 31, 0.96);
+      --text-main: #f3f3fa;
+      --text-soft: #c9cae5;
+      --text-dim: #9da0bc;
+      --purple: #7c3aed;
+      --purple-bright: #a78bfa;
+      --purple-soft: rgba(167, 139, 250, 0.14);
+      --gold: #f5c451;
+      --border: rgba(167, 139, 250, 0.16);
+      --shadow: 0 10px 40px rgba(124, 58, 237, 0.18), 0 3px 12px rgba(0, 0, 0, 0.22);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --max: 1180px;
     }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
-      background: #000;
-      overflow: hidden;
-      font-family: 'Share Tech Mono', 'Fira Mono', 'Consolas', monospace;
-      color: #ffd700;
+      margin: 0;
       min-height: 100vh;
-      width: 100vw;
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      color: var(--text-main);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.18) 0%, rgba(124, 58, 237, 0.06) 20%, transparent 46%),
+        radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.04) 0%, transparent 30%),
+        linear-gradient(180deg, #141621 0%, #0b0c12 42%, #08090d 100%);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(var(--max), calc(100% - 1.2rem));
+      margin: 0 auto;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(7, 8, 12, 0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(167, 139, 250, 0.08);
+    }
+
+    .navbar-inner {
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .navbar-logo {
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 0.01em;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .navbar-logo span {
+      color: var(--purple-bright);
+    }
+
+    .navbar-links {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex-wrap: wrap;
+    }
+
+    .navbar-links a {
+      color: var(--text-soft);
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .navbar-links a:hover {
+      color: #fff;
+    }
+
+    .nav-cta {
+      padding: 0.72rem 1rem;
+      border-radius: 999px;
+      background: linear-gradient(120deg, var(--purple) 0%, var(--purple-bright) 100%);
+      color: #fff !important;
+      box-shadow: 0 8px 25px rgba(124, 58, 237, 0.24);
+    }
+
+    .nav-toggle {
+      display: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .nav-toggle span {
+      width: 18px;
+      height: 2px;
+      border-radius: 99px;
+      background: #fff;
+      display: block;
+    }
+
+    .mobile-nav {
+      display: none;
+      padding: 0.75rem 1rem 1rem;
+      background: rgba(10, 11, 15, 0.98);
+      border-bottom: 1px solid rgba(167, 139, 250, 0.08);
+    }
+
+    .mobile-nav.open {
+      display: block;
+    }
+
+    .mobile-nav a {
+      display: block;
+      padding: 0.85rem 0;
+      color: var(--text-soft);
+      font-weight: 600;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    main {
+      padding-bottom: 4rem;
+    }
+
+    .hero-wrap {
+      padding: 1.2rem 0 0.8rem;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .hero-main,
+    .hero-side {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-main {
+      padding: 1.4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-main::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(167, 139, 250, 0.13) 0%, transparent 34%),
+        linear-gradient(135deg, rgba(255,255,255,0.02), transparent 38%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(167, 139, 250, 0.10);
+      color: var(--purple-bright);
+      font-size: 0.77rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 6vw, 4.3rem);
+      line-height: 0.96;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      margin: 0 0 0.85rem;
+      max-width: 10.5ch;
+    }
+
+    .hero-title .accent {
+      color: var(--purple-bright);
+      display: block;
+    }
+
+    .hero-sub {
+      color: var(--text-soft);
+      font-size: 1.02rem;
+      line-height: 1.65;
+      max-width: 58ch;
+      margin: 0 0 1.15rem;
+    }
+
+    .hero-bullets {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0 1.2rem;
+    }
+
+    .hero-bullet {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 14px;
+      padding: 0.85rem;
+    }
+
+    .hero-bullet strong {
+      display: block;
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+      color: #fff;
+    }
+
+    .hero-bullet span {
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 0.95rem 1.2rem;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+      min-height: 48px;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(120deg, var(--purple) 0%, var(--purple-bright) 100%);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(124, 58, 237, 0.28);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.03);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #050505;
+      box-shadow: 0 10px 24px rgba(245, 196, 81, 0.18);
+    }
+
+    .hero-side {
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      justify-content: space-between;
+    }
+
+    .side-card {
+      background: var(--bg-card-2);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 18px;
+      padding: 1rem;
+    }
+
+    .side-label {
+      font-size: 0.74rem;
+      color: var(--purple-bright);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.45rem;
+    }
+
+    .side-title {
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+    }
+
+    .side-copy {
+      font-size: 0.92rem;
+      color: var(--text-dim);
+      line-height: 1.55;
+    }
+
+    .signal-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.9rem;
+      margin: 1rem 0 0;
+    }
+
+    .signal-stat {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 1rem;
+    }
+
+    .signal-stat strong {
+      display: block;
+      font-size: 1rem;
+      color: #fff;
+      margin-bottom: 0.3rem;
+    }
+
+    .signal-stat span {
+      color: var(--text-dim);
+      font-size: 0.86rem;
+      line-height: 1.45;
+      display: block;
+    }
+
+    .section {
+      padding: 1rem 0 0;
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin: 0 auto 1rem;
+      text-align: center;
+    }
+
+    .section-kicker {
+      color: var(--purple-bright);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-head h2 {
+      margin: 0 0 0.6rem;
+      font-size: clamp(1.8rem, 4vw, 2.9rem);
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--text-soft);
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1.15rem;
+    }
+
+    .feature-card {
+      background: linear-gradient(180deg, rgba(30, 31, 41, 0.97) 0%, rgba(18, 19, 28, 0.98) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 6px 25px rgba(124, 58, 237, 0.08);
+      padding: 1.05rem;
+      min-height: 100%;
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(167, 139, 250, 0.1);
+      color: var(--purple-bright);
+      font-size: 1.25rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .feature-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+      color: #fff;
+    }
+
+    .feature-desc {
+      color: var(--text-dim);
+      font-size: 0.93rem;
+      line-height: 1.62;
+      margin: 0;
+    }
+
+    .feature-list {
+      margin: 0.7rem 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .feature-list li {
+      color: var(--text-soft);
+      font-size: 0.88rem;
+      line-height: 1.45;
+      margin-bottom: 0.45rem;
+      padding-left: 1rem;
       position: relative;
     }
-    canvas {
-      display: block;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      z-index: 0;
-      pointer-events: none;
-    }
-    .overlay-text {
+
+    .feature-list li::before {
+      content: "•";
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      color: #ffd700;
-      font-size: 1.1rem;
-      opacity: 0.88;
-      letter-spacing: 2.5px;
-      pointer-events: none;
-      z-index: 2;
-      text-shadow: 0 0 8px #ffd70044, 0 0 2px #000;
-      transition: filter 0.18s, opacity 0.18s;
+      left: 0;
+      color: var(--purple-bright);
+      font-weight: 900;
     }
-    .overlay-text span {
+
+    .future-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.2rem;
+    }
+
+    .future-card,
+    .sell-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      padding: 1.2rem;
+    }
+
+    .future-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.9rem;
+    }
+
+    .future-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 14px;
+      padding: 0.85rem;
+      color: var(--text-soft);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .future-item strong {
       display: block;
-      margin: 10px 0;
-      font-size: 1.1em;
-      line-height: 1.3;
+      color: #fff;
+      font-size: 0.92rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .sell-points {
+      display: grid;
+      gap: 0.7rem;
+      margin-top: 0.8rem;
+    }
+
+    .sell-point {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      color: var(--text-soft);
+      font-size: 0.93rem;
+      line-height: 1.55;
+    }
+
+    .sell-point i {
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-style: normal;
+      font-size: 0.88rem;
+      font-weight: 900;
+      background: rgba(167, 139, 250, 0.12);
+      color: var(--purple-bright);
+      flex: 0 0 auto;
+    }
+
+    .final-cta {
+      margin-top: 1.2rem;
+      background: linear-gradient(180deg, rgba(24, 25, 35, 0.98) 0%, rgba(14, 15, 21, 0.98) 100%);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      padding: 1.5rem 1.2rem;
+      text-align: center;
+    }
+
+    .final-cta h2 {
+      margin: 0 0 0.65rem;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      line-height: 1.04;
+      letter-spacing: -0.04em;
+    }
+
+    .final-cta p {
+      max-width: 760px;
+      margin: 0 auto;
+      color: var(--text-soft);
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+
+    .final-cta .hero-actions {
+      justify-content: center;
+    }
+
+    .footer {
+      margin-top: 3rem;
+      padding: 2rem 0 1.25rem;
+      background: rgba(0, 0, 0, 0.7);
+      border-top: 1px solid rgba(255,255,255,0.04);
+      text-align: center;
+    }
+
+    .footer-copy {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin: 0 0 0.9rem;
+    }
+
+    .footer-nav {
+      display: flex;
+      gap: 0.85rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .footer-nav a {
+      color: var(--text-soft);
+      font-size: 0.9rem;
       font-weight: 600;
-      letter-spacing: 2.5px;
-      opacity: 0.92;
     }
-    .glitch {
-      animation: flicker 0.18s 1;
+
+    .footer-nav a:hover {
+      color: #fff;
     }
-    @keyframes flicker {
-      0% { opacity: 0.7; filter: blur(0.5px) brightness(1.2); }
-      30% { opacity: 1; filter: blur(1.5px) brightness(1.3); }
-      60% { opacity: 0.8; filter: blur(0.8px) brightness(1.1); }
-      100% { opacity: 0.88; filter: none; }
-    }
-    @media (max-width: 600px) {
-      .overlay-text { font-size: 0.92rem; }
-      .overlay-text span { font-size: 1em; }
-    }
-  </style>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-</head>
-<body>
-  <canvas id="matrix"></canvas>
-  <div class="overlay-text" id="overlayText">
-    <span>THE SYSTEM CANNOT SEE YOU</span>
-    <span>YOUR SIGNAL HAS BEEN VEILED</span>
-    <span>YOUR MOVEMENT IS NO LONGER TRACEABLE</span>
-    <span>IDENTITY IS NOW COMPARTMENTALIZED</span>
-    <span>ENTERING SHADOW NETWORK...</span>
-  </div>
-  <script>
-    // Matrix-style falling text
-    const canvas = document.getElementById("matrix");
-    const ctx = canvas.getContext("2d");
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener("resize", resize);
-    const letters = "FACELLESSIGNAL0123456789";
-    const fontSize = 18;
-    let columns = Math.floor(canvas.width / fontSize);
-    let drops = Array(columns).fill(1);
-    function draw() {
-      ctx.fillStyle = "rgba(0,0,0,0.08)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#ffd700";
-      ctx.font = fontSize + "px 'Share Tech Mono', monospace";
-      for (let i = 0; i < drops.length; i++) {
-        const text = letters.charAt(Math.floor(Math.random() * letters.length));
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-          drops[i] = 0;
-        }
-        drops[i]++;
+
+    @media (max-width: 1080px) {
+      .hero-grid,
+      .future-wrap,
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .signal-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
-    setInterval(draw, 33);
-    // Responsive columns on resize
-    window.addEventListener('resize', () => {
-      columns = Math.floor(canvas.width / fontSize);
-      drops = Array(columns).fill(1);
-    });
-    // Overlay text flicker/glitch effect
-    const overlay = document.getElementById('overlayText');
-    function glitchOverlay() {
-      overlay.classList.remove('glitch');
-      // Force reflow
-      void overlay.offsetWidth;
-      overlay.classList.add('glitch');
+
+    @media (max-width: 820px) {
+      .navbar-links {
+        display: none;
+      }
+
+      .nav-toggle {
+        display: inline-flex;
+      }
+
+      .hero-wrap {
+        padding-top: 0.8rem;
+      }
+
+      .hero-main,
+      .hero-side,
+      .future-card,
+      .sell-card,
+      .final-cta {
+        border-radius: 20px;
+      }
+
+      .hero-main,
+      .hero-side,
+      .future-card,
+      .sell-card {
+        padding: 1rem;
+      }
     }
-    setInterval(glitchOverlay, 1700 + Math.random() * 1200);
-    // Redirect after 4 seconds
-    setTimeout(() => {
-      console.log("Redirecting to landingpage.html...");
-      window.location.href = "landingpage.html";
-    }, 4000);
-  </script>
-</body>
-</html>
-        <div class="about-intro-block">
-          <p class="section-label">What It Is</p>
-          <h2 id="fas-heading">Not an Agency.<br />Not a Brand.<br /><em>An Ecosystem.</em></h2>
-          <p class="section-sub">Faceless Animal Studios is a platform for creators, artists, and businesses who want presence without surrendering control. Music, games, apps, and digital identity — all connected, all intentional.</p>
+
+    @media (max-width: 640px) {
+      .container {
+        width: min(100% - 0.9rem, var(--max));
+      }
+
+      .navbar-inner {
+        min-height: 62px;
+      }
+
+      .hero-title {
+        max-width: none;
+      }
+
+      .hero-sub {
+        font-size: 0.96rem;
+      }
+
+      .hero-bullets,
+      .future-list,
+      .signal-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .section {
+        padding-top: 0.8rem;
+      }
+
+      .feature-card {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="radio.html">Radio</a></li>
+          <li><a href="tv.html">TV</a></li>
+          <li><a href="vault.html">Vault</a></li>
+          <li><a href="builder.html">Builder</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="login.html" class="nav-cta">Enter The System</a></li>
+        </ul>
+
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="radio.html">Radio</a>
+    <a href="tv.html">TV</a>
+    <a href="vault.html">Vault</a>
+    <a href="builder.html">Builder</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="pricing.html">Pricing</a>
+    <a href="login.html" style="color: var(--gold); font-weight: 800;">Enter The System</a>
+  </div>
+
+  <main>
+    <section class="hero-wrap">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="hero-main">
+            <div class="eyebrow">Live Creator System</div>
+
+            <h1 class="hero-title">
+              Build.
+              Share.
+              Go Live.
+              <span class="accent">Stay Faceless.</span>
+            </h1>
+
+            <p class="hero-sub">
+              Faceless Animal Studios is a creator platform for people who want more than just a profile.
+              Build web pages. Upload and share files. Run media. Watch TV. Tap into radio. Enter live rooms.
+              Use real tools inside one connected system built for identity, privacy, control, and motion.
+            </p>
+
+            <div class="hero-bullets">
+              <div class="hero-bullet">
+                <strong>What it is</strong>
+                <span>A modular creator ecosystem with websites, storage, media, live rooms, and identity built in.</span>
+              </div>
+              <div class="hero-bullet">
+                <strong>Why it hits fast</strong>
+                <span>New users understand it in seconds: build something, upload something, watch something, or enter the system.</span>
+              </div>
+              <div class="hero-bullet">
+                <strong>Who it’s for</strong>
+                <span>Artists, creators, hustlers, builders, streamers, brands, and anyone tired of dead platforms and algorithm games.</span>
+              </div>
+              <div class="hero-bullet">
+                <strong>What makes it different</strong>
+                <span>It’s not one tool. It’s one connected platform with multiple apps under the same signal and identity layer.</span>
+              </div>
+            </div>
+
+            <div class="hero-actions">
+              <a href="login.html" class="btn btn-primary">Enter The System</a>
+              <a href="free.html" class="btn btn-gold">Claim Free Username</a>
+              <a href="builder.html" class="btn btn-secondary">Build A Free Web Page</a>
+            </div>
+          </div>
+
+          <aside class="hero-side">
+            <div class="side-card">
+              <div class="side-label">In 5 Seconds</div>
+              <div class="side-title">This is where people come to create, host, share, and move.</div>
+              <div class="side-copy">
+                One account. One signal. Multiple tools. No bloated setup. No dead-end profiles. No waiting for permission.
+              </div>
+            </div>
+
+            <div class="side-card">
+              <div class="side-label">Start Here</div>
+              <div class="side-title">Fastest entry points</div>
+              <div class="side-copy">
+                Build a page. Upload and share files. Check the radio. Watch TV. Enter live rooms. Everything leads deeper into the platform.
+              </div>
+            </div>
+
+            <div class="side-card">
+              <div class="side-label">Built For Expansion</div>
+              <div class="side-title">More than a site</div>
+              <div class="side-copy">
+                Every section is designed like an app: Builder, Vault, Radio, TV, Signal Wire, Stages, Visuals, live creation tools, and more.
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="signal-strip">
+          <div class="signal-stat">
+            <strong>Faceless Builder</strong>
+            <span>Build web pages and digital presence inside the system.</span>
+          </div>
+          <div class="signal-stat">
+            <strong>Vault + Storage</strong>
+            <span>Upload files, manage media, and share public links fast.</span>
+          </div>
+          <div class="signal-stat">
+            <strong>Radio + TV</strong>
+            <span>Always-on platform sound and creator video submission layers.</span>
+          </div>
+          <div class="signal-stat">
+            <strong>Live Rooms</strong>
+            <span>Chat, sessions, stages, music interaction, and future live activity loops.</span>
+          </div>
         </div>
       </div>
     </section>
-    <!-- CALL TO ACTION -->
-    <section class="section" aria-label="Get started">
-      <div class="container" style="text-align:center;">
-        <h2>Start Your Presence</h2>
-        <p>Get your own page, join the network, and build your identity on your terms.</p>
-        <a href="free.html" class="btn btn-primary btn-lg">Create My Free Username</a>
-        <a href="pricing.html" class="btn btn-ghost btn-lg">Compare Plans</a>
+
+    <section class="section" aria-labelledby="features-heading">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-kicker">Current Platform Features</div>
+          <h2 id="features-heading">Everything already inside the system</h2>
+          <p>
+            This platform is designed as a connected stack, not a random collection of pages. Every tool is meant to work alone and work together.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="feature-icon">🧱</div>
+            <div class="feature-title">Builder + Mobile Builder</div>
+            <p class="feature-desc">
+              Create pages, layouts, and mobile-first digital presence without being boxed into a generic builder flow.
+            </p>
+            <ul class="feature-list">
+              <li>Faceless Builder for desktop-style workflow</li>
+              <li>Mobile Builder for fast phone-first creation</li>
+              <li>Future publishing and ecosystem linking</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon">📂</div>
+            <div class="feature-title">Vault + File Storage</div>
+            <p class="feature-desc">
+              Upload assets, organize files, and share links without needing a separate storage service for every move.
+            </p>
+            <ul class="feature-list">
+              <li>Fast media and file handling</li>
+              <li>Shareable file URLs</li>
+              <li>Built to connect to pages, TV, and creator tools</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon">📻</div>
+            <div class="feature-title">Radio App</div>
+            <p class="feature-desc">
+              A living audio layer for the platform. Music, atmosphere, movement, and creator energy without depending on outside apps.
+            </p>
+            <ul class="feature-list">
+              <li>Always-on platform audio presence</li>
+              <li>Underground sound and creator-driven media</li>
+              <li>Future crossover into live rooms and visuals</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon">📺</div>
+            <div class="feature-title">Faceless TV</div>
+            <p class="feature-desc">
+              A visual content layer built for uploads, curation, and creator motion inside the platform.
+            </p>
+            <ul class="feature-list">
+              <li>User video submission flow</li>
+              <li>Platform-first content display</li>
+              <li>Future short-form and clip loops</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon">🛰️</div>
+            <div class="feature-title">Signal Wire</div>
+            <p class="feature-desc">
+              News, updates, motion, platform activity, creator stories, and future live feed energy all inside one signal layer.
+            </p>
+            <ul class="feature-list">
+              <li>Hip hop and music news direction</li>
+              <li>Platform updates and signal board behavior</li>
+              <li>Built to feed activity and retention</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon">🆔</div>
+            <div class="feature-title">Signal Identity</div>
+            <p class="feature-desc">
+              Your signal is your access layer. The system is built around identity, movement, and control, not random disconnected accounts.
+            </p>
+            <ul class="feature-list">
+              <li>Shared identity across apps</li>
+              <li>Privacy-first system logic</li>
+              <li>Future deeper ecosystem presence</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="future-heading">
+      <div class="container">
+        <div class="future-wrap">
+          <div class="future-card">
+            <div class="section-kicker">Future Features</div>
+            <h2 id="future-heading" style="margin:0 0 0.65rem; font-size: clamp(1.7rem, 4vw, 2.5rem); line-height:1.06; letter-spacing:-0.04em;">
+              What this grows into next
+            </h2>
+            <p style="margin:0; color:var(--text-soft); line-height:1.7;">
+              The goal is not just to launch tools. The goal is to turn the whole platform into a live creator operating system.
+            </p>
+
+            <div class="future-list">
+              <div class="future-item">
+                <strong>Stages</strong>
+                Live chatrooms and creator rooms with public and private activity.
+              </div>
+              <div class="future-item">
+                <strong>Blend Rooms</strong>
+                DJ-style music sessions where users join, listen, react, and vote.
+              </div>
+              <div class="future-item">
+                <strong>Faceless Pulse</strong>
+                Audio-reactive visualizer tools for streams, radio, clips, and lives.
+              </div>
+              <div class="future-item">
+                <strong>Image Editor</strong>
+                Built-in visual creation tools for assets, posts, covers, and promo work.
+              </div>
+              <div class="future-item">
+                <strong>Miner + Wallet</strong>
+                Platform value, progression, and internal utility systems.
+              </div>
+              <div class="future-item">
+                <strong>Signal AI</strong>
+                A future assistant layer across the platform, tools, rooms, and creator flow.
+              </div>
+              <div class="future-item">
+                <strong>Signal Feed</strong>
+                A live activity board showing what is happening across the whole system.
+              </div>
+              <div class="future-item">
+                <strong>Mobile App Shell</strong>
+                A full system entry point wrapping the ecosystem into an app experience.
+              </div>
+            </div>
+          </div>
+
+          <div class="sell-card">
+            <div class="section-kicker">Why New Users Should Care</div>
+            <h2 style="margin:0 0 0.65rem; font-size: clamp(1.7rem, 4vw, 2.5rem); line-height:1.06; letter-spacing:-0.04em;">
+              More control. More tools. Less noise.
+            </h2>
+            <p style="margin:0; color:var(--text-soft); line-height:1.7;">
+              Most platforms give you one small function and then trap you in their system. This one is built to let you move.
+            </p>
+
+            <div class="sell-points">
+              <div class="sell-point">
+                <i>1</i>
+                <div>
+                  <strong style="color:#fff;">Start fast</strong><br />
+                  Build a page, upload files, or jump into media without learning a bloated platform first.
+                </div>
+              </div>
+              <div class="sell-point">
+                <i>2</i>
+                <div>
+                  <strong style="color:#fff;">Stay connected</strong><br />
+                  Every part of the system links back into your identity, your media, your presence, and your next move.
+                </div>
+              </div>
+              <div class="sell-point">
+                <i>3</i>
+                <div>
+                  <strong style="color:#fff;">Grow inside one ecosystem</strong><br />
+                  Pages, files, radio, TV, live rooms, visuals, and future creation tools are all designed to work together.
+                </div>
+              </div>
+              <div class="sell-point">
+                <i>4</i>
+                <div>
+                  <strong style="color:#fff;">Built for creators and real users</strong><br />
+                  This is for people building things, moving things, sharing things, streaming things, and making their own lane.
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-actions" style="margin-top: 1rem;">
+              <a href="free.html" class="btn btn-gold">Create My Free Username</a>
+              <a href="vault.html" class="btn btn-secondary">Try File Storage</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="why-heading">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-kicker">Why It Feels Different</div>
+          <h2 id="why-heading">Not a page builder. Not a file host. Not just a media site.</h2>
+          <p>
+            Faceless Animal Studios sits between creation, media, identity, and live interaction. That’s what makes it hit differently.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <div class="feature-title">Fast Entry</div>
+            <p class="feature-desc">
+              People land here and instantly understand the value: build, upload, watch, listen, or enter the system.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon">🧠</div>
+            <div class="feature-title">Connected Logic</div>
+            <p class="feature-desc">
+              Every tool is part of something bigger. You are not jumping between random services with random identities.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon">🌐</div>
+            <div class="feature-title">Future-Proof Structure</div>
+            <p class="feature-desc">
+              It starts with usable apps and grows into a full creator operating system with live feed, AI, visuals, and social motion.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="final-cta">
+          <div class="section-kicker">Enter The Ecosystem</div>
+          <h2>Claim your signal and move inside the platform.</h2>
+          <p>
+            Start with the tool that matches what you need right now, then move deeper into the system as you build, upload, stream, and grow.
+          </p>
+
+          <div class="hero-actions">
+            <a href="login.html" class="btn btn-primary">Enter The System</a>
+            <a href="free.html" class="btn btn-gold">Create Free Username</a>
+            <a href="builder.html" class="btn btn-secondary">Build A Free Web Page</a>
+          </div>
+        </div>
       </div>
     </section>
   </main>
-  <footer class="footer" style="margin-top:4rem;">
+
+  <footer class="footer">
     <div class="container">
-      <p class="footer-copy">&copy; 2026 Faceless Animal Studios · Providence, Rhode Island</p>
+      <p class="footer-copy">&copy; Faceless Animal Studios. All rights reserved.</p>
+      <nav class="footer-nav">
+        <a href="about.html">About</a>
+        <a href="directory.html">Directory</a>
+        <a href="radio.html">Radio</a>
+        <a href="tv.html">TV</a>
+        <a href="vault.html">Vault</a>
+        <a href="builder.html">Builder</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="dashboard.html">Dashboard</a>
+      </nav>
     </div>
   </footer>
-  <script src="assets/script.js?v=20260322"></script>
-</body>
-  <script src="assets/js/live-globe.js"></script>
-</html>
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 0.88rem;
-      padding: 0.6rem 0.85rem;
-      width: 100%;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .adm-field input:focus { border-color: var(--gold-dim); }
-    .adm-signin-btn {
-      width: 100%;
-      background: var(--gold);
-      color: #000;
-      border: none;
-      border-radius: var(--r);
-      font-family: inherit;
-      font-size: 0.85rem;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      padding: 0.7rem;
-      cursor: pointer;
-      margin-top: 0.5rem;
-      transition: background 0.15s;
-    }
-    .adm-signin-btn:hover { background: var(--gold-dim); }
-    .adm-signin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    #adm-login-error { font-size: 0.78rem; color: #ef4444; margin-top: 0.75rem; min-height: 1.2em; text-align: center; }
 
-    /* ── MAIN LAYOUT ── */
-    #adm-main { display: flex; flex-direction: column; min-height: 100vh; }
-
-    /* ── TOPBAR ── */
-    .adm-topbar {
-      position: sticky; top: 0; z-index: 100;
-      background: var(--bg-2);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 1.25rem;
-      height: 48px;
-      <main>
-        <!-- HERO / ENTRY SECTION -->
-        <section class="hero" aria-label="Hero">
-          <div class="container">
-            <h1 class="hero-title">Join the Network</h1>
-            <p class="hero-sub">Faceless Animal Studios is a live creative platform. Sign in or create your account to enter the system and access music, games, tools, and more.</p>
-            <div class="hero-actions">
-              <a href="login.html" class="btn btn-primary btn-lg">Sign In</a>
-              <a href="free.html" class="btn btn-ghost btn-lg">Create My Free Username</a>
-            </div>
-          </div>
-        </section>
-
-        <!-- FREE ACCOUNT / ENTRY STRIP -->
-        <section class="free-strip" id="free" aria-labelledby="free-heading">
-          <div class="container">
-            <p class="section-label">Enter The System</p>
-            <a href="free.html" class="btn btn-free btn-lg">Create My Free Username</a>
-            <p class="free-strip-nudge">Need more access? <a href="pricing.html">See platform tiers</a></p>
-          </div>
-        </section>
-
-        <!-- IDENTITY LAYER / PAGES SECTION -->
-        <section class="section section-alt" id="pages" aria-labelledby="pages-heading">
-          <div class="container">
-            <div class="section-header">
-              <p class="section-label">Identity Layer</p>
-              <p class="section-sub">Your page is not the whole platform. It is your public layer inside it. Clean, fast, mobile-ready identity that connects back to the wider FAS Signal ecosystem.</p>
-              <a href="free.html" class="btn btn-primary btn-lg">Create My Free Username</a>
-              <a href="network.html" class="btn btn-ghost btn-lg">See Who's Inside</a>
-            </div>
-          </div>
-        </section>
-
-        <!-- SERVICES / STUDIO ENGINE SECTION -->
-        <section class="section section-alt" id="services-engine" aria-labelledby="services-engine-heading" style="margin-top:2.5rem;">
-          <div class="container" style="max-width:820px;">
-            <h2 id="services-engine-heading" style="font-size:1.7rem;font-weight:900;letter-spacing:-0.01em;margin-bottom:0.7rem;color:var(--gold);">Studio Engine & Services</h2>
-            <p style="font-size:1.08em;color:var(--text-2);margin-bottom:1.2rem;">Faceless Animal Studios is more than a network — it’s a full studio and service engine. We support creators, brands, and clients with real business, media, and identity services. The service layer is part of the ecosystem, not an afterthought. Whether you need a custom page, media production, brand support, or platform tools, the studio engine is here to serve users, creators, and clients alike.</p>
-            <div class="services-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2.2rem;margin-top:2.2rem;">
-              <div>
-                <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">Custom Pages & Identity</h3>
-                <p style="color:var(--text-2);font-size:0.98em;">Get a presence that’s truly yours. We build custom pages, profiles, and identity layers for artists, creators, and businesses.</p>
-              </div>
-              <div>
-                <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">Media & Content Production</h3>
-                <p style="color:var(--text-2);font-size:0.98em;">From music to video to digital assets, the studio engine produces, edits, and supports all forms of media for the network and beyond.</p>
-              </div>
-              <div>
-                <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">Platform Tools & Apps</h3>
-                <p style="color:var(--text-2);font-size:0.98em;">Access a growing suite of tools, apps, and integrations — all built to empower users and clients inside the ecosystem.</p>
-              </div>
-              <div>
-                <h3 style="color:var(--gold);font-size:1.13em;margin-bottom:0.4rem;">Brand & Client Support</h3>
-                <p style="color:var(--text-2);font-size:0.98em;">We work with brands, businesses, and clients to deliver real results — from platform onboarding to creative execution and ongoing support.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- SIGNAL IN MOTION SECTION -->
-        <section class="section section-alt" id="projects" aria-labelledby="projects-heading">
-          <div class="container">
-            <div class="section-header">
-              <p class="section-label">Signal In Motion</p>
-              <p class="section-sub">A look at the music, games, and identity layers already moving through Faceless Animal Studios.</p>
-              <a href="artists/djfacelessanimal.html" class="btn btn-outline btn-sm">Artist Page</a>
-              <a href="https://youtube.com/channel/UCwIlRTdYZUnQ5-KsLHGNIRg?si=yGEYnYj6mN_qCTHh" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">YouTube</a>
-              <a href="https://open.spotify.com/artist/0pO4yejvRakRu8CzXlRwan?si=yUUVT_jnSsaaQQ5ZEWjY5g" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Spotify</a>
-              <a href="start.html" class="btn btn-outline btn-sm">Create My Free Username</a>
-              <a href="pricing.html" class="btn btn-ghost btn-sm">Get Pricing</a>
-            </div>
-          </div>
-        </section>
-
-        <!-- ENTRY TIERS / PRICING SECTION -->
-        <section class="section section-alt" id="pricing" aria-labelledby="pricing-heading">
-          <div class="container">
-            <div class="section-header">
-              <p class="section-label">Entry Tiers</p>
-              <p class="section-sub">Start inside the platform for free, then add stronger identity or custom execution when you need more control.</p>
-              <a href="pricing.html" class="btn btn-primary btn-lg">Compare All Tiers</a>
-            </div>
-          </div>
-        </section>
-
-        <!-- FOOTER / NAVIGATION -->
-        <footer class="footer" style="margin-top:3.5rem;padding:2rem 0 1.2rem;background:rgba(0,0,0,0.92);text-align:center;">
-          <div class="container">
-            <nav style="margin-bottom:1rem;">
-              <a href="about.html">About</a> ·
-              <a href="directory.html">Directory</a> ·
-              <a href="games.html">Games</a> ·
-              <a href="music.html">Music</a> ·
-              <a href="radio.html">Radio</a> ·
-              <a href="store.html">Store</a> ·
-              <a href="pricing.html">Pricing</a> ·
-              <a href="dashboard.html">Dashboard</a>
-            </nav>
-            <div style="font-size:0.92em;color:var(--text-3);">&copy; Faceless Animal Studios. Providence, RI. Underground since day one.</div>
-          </div>
-        </footer>
-    /* ── LINK ── */
-    .adm-link { font-size: 0.7rem; color: var(--gold-dim); font-weight: 600; white-space: nowrap; }
-    .adm-link:hover { color: var(--gold); }
-
-    /* ── NOTE FORM ── */
-    .adm-note-form {
-      background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px;
-      padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end;
-    }
-    .adm-note-form .adm-field { margin-bottom: 0; flex: 1; min-width: 140px; }
-    .adm-note-form textarea {
-      background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--r);
-      color: var(--text); font-family: inherit; font-size: 0.82rem; padding: 0.5rem 0.75rem;
-      resize: vertical; min-height: 64px; width: 100%; outline: none;
-    }
-    .adm-note-form textarea:focus { border-color: var(--gold-dim); }
-    .adm-note-form input {
-      background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--r);
-      color: var(--text); font-family: inherit; font-size: 0.82rem; padding: 0.45rem 0.75rem;
-      width: 100%; outline: none;
-    }
-    .adm-note-form input:focus { border-color: var(--gold-dim); }
-    .adm-add-note-btn {
-      background: var(--gold); color: #000; border: none; border-radius: var(--r);
-      font-family: inherit; font-size: 0.78rem; font-weight: 800;
-      padding: 0.5rem 1.25rem; cursor: pointer; white-space: nowrap;
-      transition: background 0.15s;
-    }
-    .adm-add-note-btn:hover { background: var(--gold-dim); }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 600px) {
-      .adm-pane { padding: 0.85rem; }
-      .adm-note-form { flex-direction: column; }
-      .adm-note-form .adm-field { min-width: 100%; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- ════════════════════════════════════════════════════════
-      LOGIN OVERLAY — shown until a platform member session is active
-  ════════════════════════════════════════════════════════════ -->
-  <div id="adm-login">
-    <div class="adm-login-form">
-      <span class="adm-login-logo">Faceless Animal Studios</span>
-      <h1>Admin Sign In</h1>
-      <div class="adm-field">
-        <label for="adm-login-id">Username or Signal ID</label>
-        <input type="text" id="adm-login-id" placeholder="@yourhandle or SIG-XXXX-XXXX" autocomplete="username" />
-      </div>
-      <p style="font-size:0.72rem;color:var(--text-3);line-height:1.5;margin:-0.25rem 0 0.65rem;">
-        Admin access uses platform-native identity only. Sign in with your handle or Signal ID and password. Access is granted only when your <strong style="color:var(--text-2);">member_accounts</strong> role is <strong style="color:var(--text-2);">super_admin</strong> or <strong style="color:var(--text-2);">admin</strong>.
-      </p>
-      <div class="adm-field">
-        <label for="adm-password">Password</label>
-        <input type="password" id="adm-password" placeholder="••••••••" autocomplete="current-password" />
-      </div>
-      <button class="adm-signin-btn" id="adm-signin-btn">Sign In</button>
-      <div id="adm-login-error" role="alert"></div>
-    </div>
-  </div>
-
-
-  <!-- ════════════════════════════════════════════════════════
-        MAIN DASHBOARD — shown after successful platform-native sign-in
-  ════════════════════════════════════════════════════════════ -->
-  <div id="adm-main" style="display:none;">
-
-    <!-- TOPBAR -->
-    <header class="adm-topbar" role="banner">
-      <div class="adm-topbar-left">
-        <a href="../index.html" class="adm-topbar-logo">Faceless Animal <span>Studios</span></a>
-        <span class="adm-topbar-badge">Admin</span>
-      </div>
-      <div class="adm-topbar-right">
-        <span id="adm-user-identity"></span>
-        <button class="adm-signout-btn" id="adm-signout-btn">Sign Out</button>
-      </div>
-    </header>
-
-    <!-- TAB BAR -->
-    <nav class="adm-tabbar" role="tablist" aria-label="Admin sections">
-      <button class="adm-tab adm-tab--active" role="tab" data-tab="profiles">Profiles</button>
-      <button class="adm-tab" role="tab" data-tab="pages">Pages</button>
-      <button class="adm-tab" role="tab" data-tab="submissions">Submissions</button>
-      <button class="adm-tab" role="tab" data-tab="board">Board Posts</button>
-      <button class="adm-tab" role="tab" data-tab="payments">Payments</button>
-      <button class="adm-tab" role="tab" data-tab="notes">Notes</button>
-    </nav>
-
-    <!-- ══ PROFILES PANE ══ -->
-    <div class="adm-pane" data-tab="profiles" role="tabpanel">
-      <div class="adm-pane-header">
-        <div>
-          <span class="adm-pane-title">Profiles</span>
-          <span class="adm-pane-count">username · display name · plan · category · active · featured</span>
-        </div>
-        <div class="adm-filters">
-          <button class="adm-filter-btn adm-filter-btn--active" data-group="profiles" data-preset="all">All</button>
-          <button class="adm-filter-btn" data-group="profiles" data-preset="active">Active</button>
-          <button class="adm-filter-btn" data-group="profiles" data-preset="inactive">Inactive</button>
-          <button class="adm-filter-btn" data-group="profiles" data-preset="featured">Featured</button>
-        </div>
-      </div>
-      <div class="adm-table-wrap">
-        <div id="adm-profiles-body"><p class="adm-state-msg">Loading profiles…</p></div>
-      </div>
-    </div>
-
-    <!-- ══ PAGES PANE ══ -->
-    <div class="adm-pane" data-tab="pages" style="display:none;" role="tabpanel">
-      <div class="adm-pane-header">
-        <div>
-          <span class="adm-pane-title">Pages</span>
-          <span class="adm-pane-count">slug · type · status · template · domain · upgrade</span>
-        </div>
-        <div class="adm-filters">
-          <button class="adm-filter-btn adm-filter-btn--active" data-group="pages" data-preset="all">All</button>
-          <button class="adm-filter-btn" data-group="pages" data-preset="draft">Draft</button>
-          <button class="adm-filter-btn" data-group="pages" data-preset="submitted">Submitted</button>
-          <button class="adm-filter-btn" data-group="pages" data-preset="live">Live</button>
-          <button class="adm-filter-btn" data-group="pages" data-preset="paused">Paused</button>
-        </div>
-      </div>
-      <div class="adm-table-wrap">
-        <div id="adm-pages-body"><p class="adm-state-msg adm-state-msg--dim">Select this tab to load.</p></div>
-      </div>
-    </div>
-
-    <!-- ══ SUBMISSIONS PANE ══ -->
-    <div class="adm-pane" data-tab="submissions" style="display:none;" role="tabpanel">
-      <div class="adm-pane-header">
-        <div>
-          <span class="adm-pane-title">Submissions</span>
-          <span class="adm-pane-count">free signups · paid intake · update requests · status</span>
-        </div>
-        <div class="adm-filters">
-          <button class="adm-filter-btn adm-filter-btn--active" data-group="submissions" data-preset="all">All</button>
-          <button class="adm-filter-btn" data-group="submissions" data-preset="free_signup">Free Signup</button>
-          <button class="adm-filter-btn" data-group="submissions" data-preset="paid_intake">Paid Intake</button>
-          <button class="adm-filter-btn" data-group="submissions" data-preset="update_request">Update Request</button>
-          <button class="adm-filter-btn" data-group="submissions" data-preset="pending">Pending</button>
-          <button class="adm-filter-btn" data-group="submissions" data-preset="in_progress">In Progress</button>
-          <button class="adm-filter-btn" data-group="submissions" data-preset="rejected">Rejected</button>
-        </div>
-      </div>
-      <div class="adm-table-wrap">
-        <div id="adm-submissions-body"><p class="adm-state-msg adm-state-msg--dim">Select this tab to load.</p></div>
-      </div>
-    </div>
-
-    <!-- ══ BOARD POSTS PANE ══ -->
-    <div class="adm-pane" data-tab="board" style="display:none;" role="tabpanel">
-      <div class="adm-pane-header">
-        <div>
-          <span class="adm-pane-title">Board Posts</span>
-          <span class="adm-pane-count">post text · username · approval · featured</span>
-        </div>
-        <div class="adm-filters">
-          <button class="adm-filter-btn adm-filter-btn--active" data-group="board" data-preset="all">All</button>
-          <button class="adm-filter-btn" data-group="board" data-preset="pending">Pending</button>
-          <button class="adm-filter-btn" data-group="board" data-preset="visible">Visible</button>
-          <button class="adm-filter-btn" data-group="board" data-preset="hidden">Hidden</button>
-        </div>
-      </div>
-
-      <!-- Moderation Queue (UI-only placeholder for track reports) -->
-      <div class="adm-table-wrap" style="margin-bottom:1rem;">
-        <div style="padding:0.65rem 0.85rem;border-bottom:1px solid var(--border);background:var(--bg-3);display:flex;align-items:center;justify-content:space-between;gap:0.6rem;">
-          <strong style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);">Moderation Queue</strong>
-          <span style="font-size:0.68rem;color:var(--text-3);">Music reports (UI only)</span>
-        </div>
-        <div id="adm-mod-queue-empty" class="adm-state-msg adm-state-msg--dim" style="display:none;padding:1rem;">No reports yet</div>
-        <div id="adm-mod-queue-list">
-          <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,0.9fr) minmax(0,0.9fr) auto;gap:0.6rem;align-items:center;padding:0.7rem 0.85rem;border-bottom:1px solid #1a1a1a;">
-            <div style="min-width:0;"><div style="font-size:0.82rem;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Night Run (Demo)</div></div>
-            <div style="font-size:0.76rem;color:var(--text-2);">Spam</div>
-            <div style="font-size:0.76rem;color:var(--text-2);">@samplecreator</div>
-            <div style="display:flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
-              <button class="adm-action-btn" type="button">Approve</button>
-              <button class="adm-action-btn adm-action-btn--danger" type="button">Remove</button>
-              <button class="adm-action-btn" type="button">Restrict User</button>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,0.9fr) minmax(0,0.9fr) auto;gap:0.6rem;align-items:center;padding:0.7rem 0.85rem;">
-            <div style="min-width:0;"><div style="font-size:0.82rem;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Street Echoes</div></div>
-            <div style="font-size:0.76rem;color:var(--text-2);">Explicit Content</div>
-            <div style="font-size:0.76rem;color:var(--text-2);">@koldvisual</div>
-            <div style="display:flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
-              <button class="adm-action-btn" type="button">Approve</button>
-              <button class="adm-action-btn adm-action-btn--danger" type="button">Remove</button>
-              <button class="adm-action-btn" type="button">Restrict User</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="adm-table-wrap">
-        <div id="adm-board-body"><p class="adm-state-msg adm-state-msg--dim">Select this tab to load.</p></div>
-      </div>
-    </div>
-
-    <!-- ══ PAYMENTS PANE ══ -->
-    <div class="adm-pane" data-tab="payments" style="display:none;" role="tabpanel">
-      <div class="adm-pane-header">
-        <div>
-          <span class="adm-pane-title">Payments</span>
-          <span class="adm-pane-count">provider · amount · type · plan · status · confirm &amp; activate</span>
-        </div>
-        <div class="adm-filters">
-          <button class="adm-filter-btn adm-filter-btn--active" data-group="payments" data-preset="all">All</button>
-          <button class="adm-filter-btn" data-group="payments" data-preset="pending">Pending</button>
-          <button class="adm-filter-btn" data-group="payments" data-preset="confirmed">Confirmed</button>
-          <button class="adm-filter-btn" data-group="payments" data-preset="failed">Failed</button>
-        </div>
-      </div>
-
-      <!-- Record Payment form -->
-      <div class="adm-note-form" style="margin-bottom:1rem;">
-        <div class="adm-field" style="min-width:120px;">
-          <label for="adm-pay-username">Username</label>
-          <input type="text" id="adm-pay-username" placeholder="@username" />
-        </div>
-        <div class="adm-field" style="min-width:120px;">
-          <label for="adm-pay-provider">Provider</label>
-          <select id="adm-pay-provider" class="adm-status-select" style="width:100%;padding:0.45rem 0.55rem;font-size:0.82rem;">
-            <option value="cash_app">Cash App</option>
-            <option value="venmo">Venmo</option>
-            <option value="zelle">Zelle</option>
-            <option value="paypal">PayPal</option>
-            <option value="stripe">Stripe</option>
-          </select>
-        </div>
-        <div class="adm-field" style="min-width:110px;">
-          <label for="adm-pay-type">Type</label>
-          <select id="adm-pay-type" class="adm-status-select" style="width:100%;padding:0.45rem 0.55rem;font-size:0.82rem;">
-            <option value="setup">Setup (one-time)</option>
-            <option value="monthly">Monthly</option>
-            <option value="annual">Annual</option>
-            <option value="upgrade">Upgrade</option>
-          </select>
-        </div>
-        <div class="adm-field" style="min-width:110px;">
-          <label for="adm-pay-plan">Plan</label>
-          <select id="adm-pay-plan" class="adm-status-select" style="width:100%;padding:0.45rem 0.55rem;font-size:0.82rem;">
-            <option value="free">Free ($0)</option>
-            <option value="starter">Starter ($50 setup / $20 mo)</option>
-            <option value="pro">Pro ($100 setup / $40 mo)</option>
-            <option value="premium">Premium ($200 setup / $75 mo)</option>
-          </select>
-        </div>
-        <div class="adm-field" style="min-width:80px;max-width:100px;">
-          <label for="adm-pay-amount">Amount ($)</label>
-          <input type="number" id="adm-pay-amount" placeholder="0.00" step="0.01" min="0" />
-        </div>
-        <div class="adm-field" style="min-width:130px;">
-          <label for="adm-pay-reference">Reference / Txn ID</label>
-          <input type="text" id="adm-pay-reference" placeholder="Cash App txn ID…" />
-        </div>
-        <div class="adm-field" style="flex:1;min-width:130px;">
-          <label for="adm-pay-notes">Notes</label>
-          <input type="text" id="adm-pay-notes" placeholder="Optional notes…" />
-        </div>
-        <button class="adm-add-note-btn" onclick="window._adm.adminRecordPayment()">Record Payment</button>
-      </div>
-
-      <div class="adm-table-wrap">
-        <div id="adm-payments-body"><p class="adm-state-msg adm-state-msg--dim">Select this tab to load.</p></div>
-      </div>
-    </div>
-
-    <!-- ══ NOTES PANE ══ -->
-    <div class="adm-pane" data-tab="notes" style="display:none;" role="tabpanel">
-      <div class="adm-pane-header">
-        <div>
-          <span class="adm-pane-title">Admin Notes</span>
-          <span class="adm-pane-count">internal notes · status · profile links</span>
-        </div>
-      </div>
-
-      <!-- Add note form -->
-      <div class="adm-note-form">
-        <div class="adm-field" style="flex:2;min-width:200px;">
-          <label for="adm-note-content">Note</label>
-          <textarea id="adm-note-content" placeholder="Enter internal note…" rows="2"></textarea>
-        </div>
-        <div class="adm-field" style="min-width:130px;">
-          <label for="adm-note-username">Username (optional)</label>
-          <input type="text" id="adm-note-username" placeholder="@username" />
-        </div>
-        <div class="adm-field" style="min-width:130px;">
-          <label for="adm-note-status">Current Status</label>
-          <input type="text" id="adm-note-status" placeholder="e.g. Awaiting payment" />
-        </div>
-        <button class="adm-add-note-btn" id="adm-add-note-btn">Add Note</button>
-      </div>
-
-      <div class="adm-table-wrap">
-        <div id="adm-notes-body"><p class="adm-state-msg adm-state-msg--dim">Select this tab to load.</p></div>
-      </div>
-    </div>
-
-  </div><!-- /adm-main -->
-
-  <script src="../assets/js/env.js"></script>
   <script>
-    ;(() => {
-      // UI-only empty-state behavior for the moderation queue.
-      const list = document.getElementById('adm-mod-queue-list')
-      const empty = document.getElementById('adm-mod-queue-empty')
-      if (!list || !empty) return
-      const hasItems = Array.from(list.children).some(el => el.nodeType === 1)
-      empty.style.display = hasItems ? 'none' : ''
-    })()
-  </script>
-  <script type="module" src="../assets/js/admin.js"></script>
+    const navToggle = document.querySelector('.nav-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
 
+    if (navToggle && mobileMenu) {
+      navToggle.addEventListener('click', function () {
+        const expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', String(!expanded));
+        mobileMenu.classList.toggle('open');
+      });
+    }
+  </script>
 </body>
 </html>

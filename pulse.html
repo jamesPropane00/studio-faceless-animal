@@ -1,0 +1,2512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="Faceless Pulse — the music visualizer app inside Faceless Animal Studios. Upload audio, react to sound, and run branded visuals for streams, radio, and content."
+  />
+  <title>Faceless Pulse — Faceless Animal Studios</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --bg-main: #08090d;
+      --bg-soft: #11131a;
+      --bg-card: rgba(24, 25, 35, 0.94);
+      --bg-card-2: rgba(18, 19, 28, 0.98);
+      --text-main: #f3f3fa;
+      --text-soft: #cacce5;
+      --text-dim: #9ea2bf;
+      --purple: #7c3aed;
+      --purple-bright: #a78bfa;
+      --gold: #f5c451;
+      --gold-bright: #f9d97d;
+      --border: rgba(167, 139, 250, 0.16);
+      --shadow: 0 12px 40px rgba(124, 58, 237, 0.18), 0 3px 12px rgba(0, 0, 0, 0.2);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text-main);
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.18) 0%, rgba(124, 58, 237, 0.07) 22%, transparent 48%),
+        radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.03) 0%, transparent 26%),
+        linear-gradient(180deg, #141621 0%, #0b0c12 44%, #08090d 100%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      width: min(var(--max), calc(100% - 1rem));
+      margin: 0 auto;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(7, 8, 12, 0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(167, 139, 250, 0.08);
+    }
+
+    .navbar-inner {
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .navbar-logo {
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 0.01em;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .navbar-logo span { color: var(--purple-bright); }
+
+    .navbar-links {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      flex-wrap: wrap;
+    }
+
+    .navbar-links a {
+      color: var(--text-soft);
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .navbar-links a:hover { color: #fff; }
+
+    .nav-cta {
+      padding: 0.72rem 1rem;
+      border-radius: 999px;
+      background: linear-gradient(120deg, var(--purple) 0%, var(--purple-bright) 100%);
+      color: #fff !important;
+      box-shadow: 0 8px 24px rgba(124, 58, 237, 0.24);
+    }
+
+    .nav-toggle {
+      display: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .nav-toggle span {
+      width: 18px;
+      height: 2px;
+      border-radius: 99px;
+      background: #fff;
+      display: block;
+    }
+
+    .mobile-nav {
+      display: none;
+      padding: 0.75rem 1rem 1rem;
+      background: rgba(10, 11, 15, 0.98);
+      border-bottom: 1px solid rgba(167, 139, 250, 0.08);
+    }
+
+    .mobile-nav.open { display: block; }
+
+    .mobile-nav a {
+      display: block;
+      padding: 0.85rem 0;
+      color: var(--text-soft);
+      font-weight: 600;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    main { padding-bottom: 4rem; }
+
+    .hero-wrap { padding: 1rem 0 0.8rem; }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.06fr 0.94fr;
+      gap: 1rem;
+    }
+
+    .hero-main,
+    .hero-side,
+    .app-shell,
+    .feature-shell,
+    .cta-shell {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-main {
+      padding: 1.35rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-main::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(167, 139, 250, 0.12) 0%, transparent 34%),
+        linear-gradient(135deg, rgba(255,255,255,0.02), transparent 40%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(167, 139, 250, 0.10);
+      color: var(--purple-bright);
+      font-size: 0.77rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 6vw, 4rem);
+      line-height: 0.96;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      margin: 0 0 0.8rem;
+      max-width: 10ch;
+    }
+
+    .hero-title .accent {
+      color: var(--purple-bright);
+      display: block;
+    }
+
+    .hero-sub {
+      color: var(--text-soft);
+      font-size: 1rem;
+      line-height: 1.7;
+      max-width: 60ch;
+      margin: 0 0 1rem;
+    }
+
+    .hero-bullets {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0 1.15rem;
+    }
+
+    .hero-bullet {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 14px;
+      padding: 0.85rem;
+    }
+
+    .hero-bullet strong {
+      display: block;
+      color: #fff;
+      font-size: 0.95rem;
+      margin-bottom: 0.24rem;
+    }
+
+    .hero-bullet span {
+      display: block;
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      line-height: 1.48;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 0.95rem 1.2rem;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+      min-height: 48px;
+      text-align: center;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-primary {
+      background: linear-gradient(120deg, var(--purple) 0%, var(--purple-bright) 100%);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(124, 58, 237, 0.28);
+    }
+
+    .btn-ghost {
+      background: rgba(255,255,255,0.03);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #050505;
+      box-shadow: 0 10px 24px rgba(245, 196, 81, 0.18);
+    }
+
+    .hero-side {
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      justify-content: space-between;
+    }
+
+    .side-card {
+      background: var(--bg-card-2);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 18px;
+      padding: 1rem;
+    }
+
+    .side-label {
+      font-size: 0.74rem;
+      color: var(--purple-bright);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.45rem;
+    }
+
+    .side-title {
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+    }
+
+    .side-copy {
+      font-size: 0.92rem;
+      color: var(--text-dim);
+      line-height: 1.55;
+    }
+
+    .section { padding: 1rem 0 0; }
+
+    .section-head {
+      max-width: 790px;
+      margin: 0 auto 1rem;
+      text-align: center;
+    }
+
+    .section-kicker {
+      color: var(--purple-bright);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-head h2 {
+      margin: 0 0 0.6rem;
+      font-size: clamp(1.8rem, 4vw, 2.9rem);
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--text-soft);
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+
+    .app-shell {
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .visualizer-grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .control-panel {
+      background: var(--bg-card-2);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 1rem;
+      display: grid;
+      gap: 0.85rem;
+      align-content: start;
+    }
+
+    .control-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 0;
+    }
+
+    .control-copy {
+      margin: 0;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .field {
+      display: grid;
+      gap: 0.42rem;
+    }
+
+    .field label {
+      color: #fff;
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .input,
+    .select,
+    .range {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-main);
+      padding: 0.9rem 0.95rem;
+      font-family: inherit;
+      font-size: 0.92rem;
+      outline: none;
+    }
+
+    .range {
+      padding: 0.5rem 0;
+      background: transparent;
+      border: none;
+    }
+
+    .input:focus,
+    .select:focus {
+      border-color: rgba(167, 139, 250, 0.34);
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.08);
+    }
+
+    .control-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.7rem;
+    }
+
+    .status-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 0.85rem;
+    }
+
+    .status-card strong {
+      display: block;
+      color: #fff;
+      font-size: 0.95rem;
+      margin-bottom: 0.22rem;
+    }
+
+    .status-card span {
+      display: block;
+      color: var(--text-dim);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .rp-stations-bar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.55rem;
+    }
+
+    .rp-station-btn,
+    .rp-ctrl-btn {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-soft);
+      cursor: pointer;
+      font-family: inherit;
+      transition: 0.18s ease;
+    }
+
+    .rp-station-btn {
+      min-height: 50px;
+      border-radius: 16px;
+      padding: 0.8rem 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      font-size: 0.84rem;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.25;
+    }
+
+    .rp-station-btn:hover,
+    .rp-ctrl-btn:hover,
+    .rp-station-btn--active {
+      color: #fff;
+      border-color: rgba(167, 139, 250, 0.32);
+      background: rgba(167, 139, 250, 0.12);
+      box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.06) inset;
+    }
+
+    .rp-station-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--purple-bright);
+      flex: 0 0 auto;
+      box-shadow: 0 0 0 5px rgba(167, 139, 250, 0.10);
+    }
+
+    .rp-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.7rem;
+    }
+
+    .rp-ctrl-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      font-size: 1.12rem;
+      font-weight: 900;
+    }
+
+    .rp-ctrl-btn--play {
+      width: 66px;
+      height: 66px;
+      font-size: 1.3rem;
+      color: #fff;
+      border-color: rgba(167, 139, 250, 0.3);
+      background: linear-gradient(120deg, var(--purple) 0%, var(--purple-bright) 100%);
+      box-shadow: 0 10px 24px rgba(124, 58, 237, 0.22);
+    }
+
+    .canvas-shell {
+      background: linear-gradient(180deg, rgba(18, 19, 28, 0.98) 0%, rgba(10, 11, 16, 0.98) 100%);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 22px;
+      padding: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
+    .canvas-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .canvas-topbar strong {
+      color: #fff;
+      font-size: 0.96rem;
+      font-weight: 800;
+    }
+
+    .canvas-topbar span {
+      color: var(--text-dim);
+      font-size: 0.82rem;
+    }
+
+    .visualizer-stage {
+      position: relative;
+      min-height: 430px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.05);
+      background:
+        radial-gradient(circle at center, rgba(124,58,237,0.18) 0%, rgba(124,58,237,0.04) 28%, transparent 54%),
+        linear-gradient(180deg, rgba(13, 14, 22, 0.98), rgba(7, 8, 12, 0.98));
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+
+    .floating-fullscreen-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 9;
+      padding: 0.52rem 0.9rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(8, 10, 18, 0.52);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.22);
+    }
+
+    .floating-fullscreen-btn:hover {
+      border-color: rgba(167, 139, 250, 0.34);
+      background: rgba(22, 18, 38, 0.74);
+    }
+
+    .stage-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 1rem;
+      background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.16) 100%);
+    }
+
+    .stage-brand {
+      color: rgba(255,255,255,0.72);
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .stage-brand span {
+      color: var(--purple-bright);
+    }
+
+    .stage-meta {
+      color: rgba(255,255,255,0.62);
+      font-size: 0.76rem;
+      text-align: right;
+      line-height: 1.45;
+    }
+
+    .feature-shell {
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .feature-card {
+      background: linear-gradient(180deg, rgba(30, 31, 41, 0.97) 0%, rgba(18, 19, 28, 0.98) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 6px 25px rgba(124, 58, 237, 0.08);
+      padding: 1.05rem;
+      min-height: 100%;
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(167, 139, 250, 0.1);
+      color: var(--purple-bright);
+      font-size: 1.25rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .feature-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+      color: #fff;
+    }
+
+    .feature-desc {
+      color: var(--text-dim);
+      font-size: 0.93rem;
+      line-height: 1.62;
+      margin: 0;
+    }
+
+    .cta-shell {
+      margin-top: 1rem;
+      padding: 1.35rem 1.1rem;
+      text-align: center;
+    }
+
+    .cta-shell h2 {
+      margin: 0 0 0.6rem;
+      font-size: clamp(1.8rem, 4vw, 2.9rem);
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+    }
+
+    .cta-shell p {
+      margin: 0 auto;
+      max-width: 720px;
+      color: var(--text-soft);
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+
+    .footer {
+      margin-top: 3rem;
+      padding: 2rem 0 1.25rem;
+      background: rgba(0, 0, 0, 0.7);
+      border-top: 1px solid rgba(255,255,255,0.04);
+      text-align: center;
+    }
+
+    .footer-inner {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .footer-logo {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .footer-logo span { color: var(--purple-bright); }
+
+    .footer-location,
+    .footer-copy {
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      margin: 0.2rem 0 0;
+    }
+
+    .footer-col--center {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .footer-col--center a {
+      color: var(--text-soft);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .footer-col--center a:hover { color: #fff; }
+
+    .footer-col--right { text-align: right; }
+
+    
+    .double-tap-hint,
+    .preset-badge {
+      position: absolute;
+      z-index: 6;
+      font-size: 0.72rem;
+      border-radius: 999px;
+      padding: 0.4rem 0.65rem;
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+    }
+
+    .double-tap-hint {
+      top: 14px;
+      right: 14px;
+      color: rgba(255,255,255,0.76);
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(10,11,18,0.42);
+    }
+
+    .preset-badge {
+      top: 14px;
+      left: 14px;
+      color: #d1fae5;
+      border: 1px solid rgba(52,211,153,0.22);
+      background: rgba(16,185,129,0.14);
+    }
+
+    .screen-controls {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      z-index: 8;
+      display: flex;
+      gap: 0.7rem;
+    }
+
+    .screen-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background: rgba(10,11,18,0.5);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer;
+      font-size: 1.12rem;
+      font-weight: 900;
+      font-family: inherit;
+    }
+
+    .screen-btn.play {
+      width: 66px;
+      height: 66px;
+      background: linear-gradient(120deg, rgba(124,58,237,0.9), rgba(167,139,250,0.95));
+      border-color: rgba(167,139,250,0.35);
+      box-shadow: 0 10px 24px rgba(124,58,237,0.22);
+    }
+
+    @media (max-width: 1080px) {
+      .hero-grid,
+      .visualizer-grid,
+      .feature-grid,
+      .footer-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-inner,
+      .footer-col--right {
+        text-align: center;
+      }
+
+      .status-strip {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .navbar-links { display: none; }
+      .nav-toggle { display: inline-flex; }
+
+      .hero-main,
+      .hero-side,
+      .app-shell,
+      .feature-shell,
+      .cta-shell {
+        border-radius: 20px;
+      }
+
+      .hero-main,
+      .hero-side,
+      .app-shell,
+      .feature-shell,
+      .cta-shell {
+        padding: 1rem;
+      }
+
+      .rp-stations-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        width: min(100% - 0.9rem, var(--max));
+      }
+
+      .navbar-inner { min-height: 62px; }
+      .hero-title { max-width: none; }
+      .hero-sub { font-size: 0.96rem; }
+
+      .hero-bullets,
+      .control-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn { width: 100%; }
+
+      .visualizer-stage {
+        min-height: 340px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="radio.html">Radio</a></li>
+          <li><a href="tv.html">TV</a></li>
+          <li><a href="vault.html">Vault</a></li>
+          <li><a href="apps.html">Apps</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="login.html" class="nav-cta">Enter The System</a></li>
+        </ul>
+
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="radio.html">Radio</a>
+    <a href="tv.html">TV</a>
+    <a href="vault.html">Vault</a>
+    <a href="apps.html">Apps</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="login.html" style="font-weight:800;color:var(--gold-bright);">Enter The System</a>
+  </div>
+
+  <main>
+    <section class="hero-wrap" aria-label="Faceless Pulse hero">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="hero-main">
+            <div class="eyebrow">Audio Reactive App</div>
+
+            <h1 class="hero-title">
+              Faceless
+              <span class="accent">Pulse.</span>
+            </h1>
+
+            <p class="hero-sub">
+              Faceless Pulse is the music visualizer app inside the platform — built for radio, streams, edits, background motion,
+              DJ sessions, branded loops, and pure sound-reactive energy. Load audio, switch modes, go fullscreen, and turn sound into movement.
+            </p>
+
+            <div class="hero-bullets">
+              <div class="hero-bullet">
+                <strong>What it is</strong>
+                <span>A branded visualizer tool for music, radio, content, and live visual energy inside the Faceless system.</span>
+              </div>
+              <div class="hero-bullet">
+                <strong>What it does</strong>
+                <span>Reacts to your audio with 20 animated visual modes and a selector so you can lock the exact look you want.</span>
+              </div>
+              <div class="hero-bullet">
+                <strong>Why it matters</strong>
+                <span>It gives you your own visual engine for lives, clips, edits, and platform media without relying on outside tools.</span>
+              </div>
+              <div class="hero-bullet">
+                <strong>Where it fits</strong>
+                <span>Radio, TV, Stages, DJ sessions, stream overlays, promo content, and future creator tools.</span>
+              </div>
+            </div>
+
+            <div class="hero-actions">
+              <a href="#pulse-app" class="btn btn-primary">Open Visualizer</a>
+              <a href="radio.html" class="btn btn-ghost">Go To Radio</a>
+              <a href="login.html" class="btn btn-gold">Enter The System</a>
+            </div>
+          </div>
+
+          <aside class="hero-side">
+            <div class="side-card">
+              <div class="side-label">In 5 Seconds</div>
+              <div class="side-title">This turns your sound into branded movement.</div>
+              <div class="side-copy">
+                Upload audio, hit play, switch visual modes, or choose one directly from the visual list and run your own reactive stage for streams, edits, and content.
+              </div>
+            </div>
+
+            <div class="side-card">
+              <div class="side-label">Built For</div>
+              <div class="side-title">Music, lives, clips, radio</div>
+              <div class="side-copy">
+                Use it as a browser visualizer, a stream source, a content background, or a platform-native music tool.
+              </div>
+            </div>
+
+            <div class="side-card">
+              <div class="side-label">Future Direction</div>
+              <div class="side-title">More than a visualizer</div>
+              <div class="side-copy">
+                Later this can connect to radio channels, blend rooms, live sessions, saved presets, logo overlays, and creator themes.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="pulse-app" aria-labelledby="pulse-heading">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-kicker">Visualizer App</div>
+          <h2 id="pulse-heading">Run the pulse</h2>
+          <p>
+            Load a track, choose a visual mode, and let the canvas react. This version is clean, mobile-ready, browser-friendly, and packed with 20 visuals.
+          </p>
+        </div>
+
+        <div class="app-shell">
+          <div class="visualizer-grid">
+            <div class="control-panel">
+              <p class="control-title">Controls</p>
+              <p class="control-copy">
+                Pick a station, choose a track, upload local audio, switch the visual mode, and drive the visual engine from one compact panel.
+              </p>
+
+              <div class="field">
+                <label>Station</label>
+                <div class="rp-stations-bar" id="pulse-stations-bar">
+                  <button class="rp-station-btn rp-station-btn--active" data-station="1" aria-pressed="true" type="button">
+                    <span class="rp-station-dot"></span>
+                    Station 1 · Original
+                  </button>
+                  <button class="rp-station-btn" data-station="4" aria-pressed="false" type="button">
+                    <span class="rp-station-dot"></span>
+                    Station 4 · Blends
+                  </button>
+                  <button class="rp-station-btn" data-station="5" aria-pressed="false" type="button">
+                    <span class="rp-station-dot"></span>
+                    Station 5 · Archives
+                  </button>
+                </div>
+                <select class="select" id="stationSelect" aria-label="Station select">
+                  <option value="1">Station 1 · Original</option>
+                  <option value="4">Station 4 · Blends</option>
+                  <option value="5">Station 5 · Archives</option>
+                </select>
+              </div>
+
+              <div class="rp-controls">
+                <button class="rp-ctrl-btn rp-ctrl-btn--skip" id="pulse-skip-back" aria-label="Previous track" title="Previous track" type="button">&#x23EE;</button>
+                <button class="rp-ctrl-btn rp-ctrl-btn--play" id="pulse-play-pause" aria-label="Play" title="Play / Pause" type="button">&#x25B6;</button>
+                <button class="rp-ctrl-btn rp-ctrl-btn--skip" id="pulse-skip-fwd" aria-label="Next track" title="Next track" type="button">&#x23ED;</button>
+              </div>
+
+              <div class="field">
+                <label for="trackSelect">Track</label>
+                <select class="select" id="trackSelect">
+                  <option value="">Loading…</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Upload Music</label>
+                <div style="display:flex;flex-direction:column;gap:0.4rem;">
+                  <button class="btn btn-ghost" type="button" id="uploadFilesBtn">Upload Files</button>
+                  <input class="input" type="file" id="audioFilesInput" accept="audio/*" multiple hidden />
+                  <button class="btn btn-ghost" type="button" id="uploadFolderBtn">Upload Folder</button>
+                  <input class="input" type="file" id="audioFolderInput" accept="audio/*" webkitdirectory hidden />
+                  <small style="color:var(--text-dim);font-size:0.92em;">
+                    <strong>Options:</strong> Upload one or more music files, or select a whole folder.
+                  </small>
+                  <div id="localTrackList" style="margin-top:0.5rem;display:none;">
+                    <span id="localTracksLabel" style="font-size:0.92em;color:var(--text-dim);font-weight:600;display:block;margin-bottom:2px;">Uploaded Tracks:</span>
+                    <div role="region" aria-labelledby="localTracksLabel">
+                      <ul id="localTracksUl" style="list-style:none;padding:0;margin:0;max-height:120px;overflow:auto;"></ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="visualSelect">Visual Selector</label>
+                <select class="select" id="visualSelect" aria-label="Visual selector"></select>
+              </div>
+
+              <div class="field">
+                <label style="margin-bottom:0.3em;">Visual Controls</label>
+                <div style="display:flex;gap:0.5em;align-items:center;flex-wrap:wrap;">
+                  <button class="btn btn-ghost" type="button" id="nextVisualBtn" style="min-width:140px;">Next Visual</button>
+                  <button class="btn btn-ghost" type="button" id="randomVisualBtn" style="min-width:140px;">Random Visual</button>
+                  <button class="btn btn-ghost" type="button" id="savePresetBtn" style="min-width:140px;">Save Preset</button>
+                  <span id="currentVisualLabel" style="align-self:center;color:var(--gold-bright);font-weight:700;margin-left:0.5em;white-space:nowrap;"></span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="presetSelect">Saved Presets</label>
+                <select class="select" id="presetSelect" aria-label="Saved presets"></select>
+                <div style="display:flex;gap:0.5em;flex-wrap:wrap;">
+                  <button class="btn btn-ghost" type="button" id="loadPresetBtn" style="min-width:140px;">Load Preset</button>
+                  <button class="btn btn-ghost" type="button" id="deletePresetBtn" style="min-width:140px;">Delete Preset</button>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="sensitivity">Sensitivity</label>
+                <input class="range" type="range" id="sensitivity" min="40" max="220" value="120" />
+              </div>
+
+              <div class="field">
+                <label for="colorBoost">Color Boost</label>
+                <input class="range" type="range" id="colorBoost" min="50" max="200" value="125" />
+              </div>
+
+              <div class="control-actions">
+                <button class="btn btn-primary" id="playBtn" type="button">Play</button>
+                <button class="btn btn-ghost" id="pauseBtn" type="button">Pause</button>
+              </div>
+
+              <div class="control-actions">
+                <button class="btn btn-gold" id="fullscreenBtn" type="button">Fullscreen</button>
+                <button class="btn btn-ghost" id="resetBtn" type="button">Reset</button>
+              </div>
+
+              <div class="control-actions">
+                <button class="btn btn-ghost" id="toggleLogoBtn" type="button">Logo Bounce: Off</button>
+                <button class="btn btn-ghost" id="toggleObsBtn" type="button">OBS Mode: Off</button>
+              </div>
+
+              <div class="control-actions">
+                <button class="btn btn-ghost" id="toggleStreamBtn" type="button">Radio Direct: On</button>
+                <button class="btn btn-ghost" id="themeShuffleBtn" type="button">Theme Shuffle</button>
+              </div>
+
+              <div class="status-strip">
+                <div class="status-card">
+                  <strong id="trackStatus">No Track</strong>
+                  <span>Current source</span>
+                </div>
+                <div class="status-card">
+                  <strong id="modeStatus">Spectrum Bars</strong>
+                  <span>Current mode</span>
+                </div>
+                <div class="status-card">
+                  <strong id="stateStatus">Idle</strong>
+                  <span>Visualizer state</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="canvas-shell">
+              <div class="canvas-topbar">
+                <div>
+                  <strong>Faceless Pulse Stage</strong>
+                  <span>Live audio-reactive visual output</span>
+                </div>
+                <span id="nowPlayingLabel">Waiting for audio</span>
+              </div>
+
+              <div class="visualizer-stage" id="visualizerStage">
+                <button class="floating-fullscreen-btn" id="floatingFullscreenBtn" type="button">FULLSCREEN</button>
+                <canvas id="visualizerCanvas" width="1200" height="700"></canvas>
+                <div class="double-tap-hint" id="doubleTapHint">Double tap = next visual</div>
+                <div class="preset-badge" id="presetBadge">Preset: Live Default</div>
+                <div class="screen-controls">
+                  <button class="screen-btn" id="screenBackBtn" type="button" aria-label="Previous track">&#x23EE;</button>
+                  <button class="screen-btn play" id="screenPlayBtn" type="button" aria-label="Play / Pause">&#x25B6;</button>
+                  <button class="screen-btn" id="screenNextBtn" type="button" aria-label="Next track">&#x23ED;</button>
+                </div>
+
+                <div class="stage-overlay">
+                  <div class="stage-brand">FACELESS <span>PULSE</span></div>
+                  <div class="stage-meta">
+                    Audio Reactive<br />
+                    Faceless Animal Studios
+                  </div>
+                </div>
+              </div>
+
+              <audio id="audioElement" crossorigin="anonymous"></audio>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="features-heading">
+      <div class="container">
+        <div class="feature-shell">
+          <div class="section-head">
+            <div class="section-kicker">Why This App Matters</div>
+            <h2 id="features-heading">It’s not just visual. It’s platform energy.</h2>
+            <p>
+              Faceless Pulse gives the platform a visual motion layer that can be reused across content, streams, rooms, and media.
+            </p>
+          </div>
+
+          <div class="feature-grid">
+            <article class="feature-card">
+              <div class="feature-icon">📻</div>
+              <div class="feature-title">Radio Ready</div>
+              <p class="feature-desc">
+                Use it as a visual companion for radio playback, looping platform music, or background stream motion.
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon">🎥</div>
+              <div class="feature-title">Content Friendly</div>
+              <p class="feature-desc">
+                Turn songs, snippets, and edits into branded visual clips for social posts, promos, and creator content.
+              </p>
+            </article>
+
+            <article class="feature-card">
+              <div class="feature-icon">🛰️</div>
+              <div class="feature-title">Platform Connected</div>
+              <p class="feature-desc">
+                This is built to eventually connect with Radio, TV, Stages, and future music tools inside the ecosystem.
+              </p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="cta-shell">
+          <div class="section-kicker">Faceless Animal Studios · Visual Layer</div>
+          <h2>Run your own branded visual engine.</h2>
+          <p>
+            Start with audio. Add motion. Build clips, loops, stream scenes, and platform energy around your own sound.
+          </p>
+
+          <div class="hero-actions" style="justify-content:center;">
+            <a href="#pulse-app" class="btn btn-primary">Use Faceless Pulse</a>
+            <a href="apps.html" class="btn btn-ghost">Back To Apps</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div>
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+
+        <nav class="footer-col--center" aria-label="Footer navigation">
+          <a href="about.html">About</a>
+          <a href="apps.html">Apps</a>
+          <a href="radio.html">Radio</a>
+          <a href="tv.html">TV</a>
+          <a href="vault.html">Vault</a>
+          <a href="pricing.html">Pricing</a>
+        </nav>
+
+        <div class="footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const navToggle = document.querySelector('.nav-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (navToggle && mobileMenu) {
+      navToggle.addEventListener('click', function () {
+        const expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', String(!expanded));
+        mobileMenu.classList.toggle('open');
+      });
+    }
+  </script>
+
+  <script>
+    const audioElement = document.getElementById('audioElement');
+    const canvas = document.getElementById('visualizerCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+    const nextVisualBtn = document.getElementById('nextVisualBtn');
+    const randomVisualBtn = document.getElementById('randomVisualBtn');
+    const visualSelect = document.getElementById('visualSelect');
+    const currentVisualLabel = document.getElementById('currentVisualLabel');
+    const presetSelect = document.getElementById('presetSelect');
+    const presetBadge = document.getElementById('presetBadge');
+    const colorBoost = document.getElementById('colorBoost');
+    const toggleLogoBtn = document.getElementById('toggleLogoBtn');
+    const toggleObsBtn = document.getElementById('toggleObsBtn');
+    const toggleStreamBtn = document.getElementById('toggleStreamBtn');
+    const themeShuffleBtn = document.getElementById('themeShuffleBtn');
+    const savePresetBtn = document.getElementById('savePresetBtn');
+    const loadPresetBtn = document.getElementById('loadPresetBtn');
+    const deletePresetBtn = document.getElementById('deletePresetBtn');
+    const screenBackBtn = document.getElementById('screenBackBtn');
+    const screenPlayBtn = document.getElementById('screenPlayBtn');
+    const screenNextBtn = document.getElementById('screenNextBtn');
+
+    const sensitivity = document.getElementById('sensitivity');
+    const stationSelect = document.getElementById('stationSelect');
+    const trackSelect = document.getElementById('trackSelect');
+
+    const trackStatus = document.getElementById('trackStatus');
+    const modeStatus = document.getElementById('modeStatus');
+    const stateStatus = document.getElementById('stateStatus');
+    const nowPlayingLabel = document.getElementById('nowPlayingLabel');
+    const visualizerStage = document.getElementById('visualizerStage');
+    const floatingFullscreenBtn = document.getElementById('floatingFullscreenBtn');
+
+    const stationBtns = document.querySelectorAll('#pulse-stations-bar .rp-station-btn');
+    const uploadFilesBtn = document.getElementById('uploadFilesBtn');
+    const audioFilesInput = document.getElementById('audioFilesInput');
+    const uploadFolderBtn = document.getElementById('uploadFolderBtn');
+    const audioFolderInput = document.getElementById('audioFolderInput');
+    const localTrackList = document.getElementById('localTrackList');
+    const localTracksUl = document.getElementById('localTracksUl');
+
+    const skipBackBtn = document.getElementById('pulse-skip-back');
+    const playPauseBtn = document.getElementById('pulse-play-pause');
+    const skipFwdBtn = document.getElementById('pulse-skip-fwd');
+
+    const VISUAL_MODES = [
+      { value: 'bars', label: 'Spectrum Bars' },
+      { value: 'ring', label: 'Pulse Ring' },
+      { value: 'wave', label: 'Wave Line' },
+      { value: 'orbs', label: 'Orbit Orbs' },
+      { value: 'mushrooms', label: 'Mushrooms & Smoke' },
+      { value: 'spiral', label: 'Neon Spiral' },
+      { value: 'sunburst', label: 'Sunburst' },
+      { value: 'tunnel', label: 'Pulse Tunnel' },
+      { value: 'matrix', label: 'Matrix Rain' },
+      { value: 'grid', label: 'Laser Grid' },
+      { value: 'stars', label: 'Starfield' },
+      { value: 'blob', label: 'Liquid Blob' },
+      { value: 'ribbons', label: 'Audio Ribbons' },
+      { value: 'hex', label: 'Hex Pulse' },
+      { value: 'mountains', label: 'Sound Mountains' },
+      { value: 'particles', label: 'Particle Storm' },
+      { value: 'radar', label: 'Radar Sweep' },
+      { value: 'flame', label: 'Purple Flame' },
+      { value: 'constellation', label: 'Constellation' },
+      { value: 'shards', label: 'Glass Shards' },
+      { value: 'smokeBloom', label: 'Smoke Bloom' },
+      { value: 'aurora', label: 'Aurora Haze' },
+      { value: 'confetti', label: 'Color Confetti' },
+      { value: 'prism', label: 'Prism Burst' }
+    ];
+
+    let currentVisualIdx = 0;
+    let localFilesQueue = [];
+    let localFileIdx = 0;
+
+    const STATIONS = {
+      '1': { label: 'Station 1 · Original' },
+      '4': { label: 'Station 4 · Blends' },
+      '5': { label: 'Station 5 · Archives' },
+    };
+
+    let AUDIO_TRACKS = [];
+    let currentStation = '1';
+    let currentTrackIdx = 0;
+
+    let audioContext;
+    let analyser;
+    let source;
+    let dataArray;
+    let animationId;
+    let initialized = false;
+    let mushrooms = [];
+    let smokePuffs = [];
+    let smokeClouds = [];
+    let confettiPieces = [];
+    let logoBounceEnabled = false;
+    let obsModeEnabled = false;
+    let radioDirectEnabled = true;
+    let lastTapTime = 0;
+    let lastMushroomBeat = 0;
+    let starfield = [];
+    let constellPoints = [];
+    let logoState = { x: 120, y: 110, vx: 2.2, vy: 1.8, w: 190, h: 56 };
+
+
+    function hue(base, shift = 0) {
+      return (Number(base) + Number(shift) + Number(colorBoost.value || 125)) % 360;
+    }
+
+    function presetsKey() {
+      return 'fas_pulse_presets_v3';
+    }
+
+    function getPresets() {
+      try {
+        return JSON.parse(localStorage.getItem(presetsKey()) || '[]');
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function refreshPresetSelect() {
+      presetSelect.innerHTML = '';
+      const presets = getPresets();
+      if (!presets.length) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No saved presets';
+        presetSelect.appendChild(opt);
+        return;
+      }
+      presets.forEach((preset, idx) => {
+        const opt = document.createElement('option');
+        opt.value = String(idx);
+        opt.textContent = preset.name || `Preset ${idx + 1}`;
+        presetSelect.appendChild(opt);
+      });
+    }
+
+    function currentPreset(name = 'Live Default') {
+      return {
+        name,
+        visualIdx: currentVisualIdx,
+        sensitivity: sensitivity.value,
+        colorBoost: colorBoost.value,
+        logoBounceEnabled,
+        obsModeEnabled,
+        radioDirectEnabled
+      };
+    }
+
+    function applyPreset(preset) {
+      if (!preset) return;
+      setVisualMode(Number(preset.visualIdx) || 0);
+      sensitivity.value = preset.sensitivity || 120;
+      colorBoost.value = preset.colorBoost || 125;
+      logoBounceEnabled = !!preset.logoBounceEnabled;
+      obsModeEnabled = !!preset.obsModeEnabled;
+      radioDirectEnabled = preset.radioDirectEnabled !== false;
+      updateToggleLabels();
+      presetBadge.textContent = `Preset: ${preset.name || 'Loaded'}`;
+    }
+
+    function updateToggleLabels() {
+      toggleLogoBtn.textContent = `Logo Bounce: ${logoBounceEnabled ? 'On' : 'Off'}`;
+      toggleObsBtn.textContent = `OBS Mode: ${obsModeEnabled ? 'On' : 'Off'}`;
+      toggleStreamBtn.textContent = `Radio Direct: ${radioDirectEnabled ? 'On' : 'Off'}`;
+    }
+
+    function populateVisualSelect() {
+      visualSelect.innerHTML = '';
+      VISUAL_MODES.forEach((mode, idx) => {
+        const opt = document.createElement('option');
+        opt.value = String(idx);
+        opt.textContent = `${idx + 1}. ${mode.label}`;
+        visualSelect.appendChild(opt);
+      });
+    }
+
+    function setVisualMode(idx) {
+      currentVisualIdx = ((idx % VISUAL_MODES.length) + VISUAL_MODES.length) % VISUAL_MODES.length;
+      const label = VISUAL_MODES[currentVisualIdx].label;
+      currentVisualLabel.textContent = label;
+      modeStatus.textContent = label;
+      visualSelect.value = String(currentVisualIdx);
+    }
+
+    function syncStationButtons(id) {
+      stationBtns.forEach((b) => {
+        const on = b.getAttribute('data-station') === id;
+        b.classList.toggle('rp-station-btn--active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      stationSelect.value = id;
+    }
+
+    function resizeCanvas() {
+      const rect = visualizerStage.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = rect.width * ratio;
+      canvas.height = rect.height * ratio;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+      const w = rect.width;
+      const h = rect.height;
+
+      if (!starfield.length) {
+        starfield = Array.from({ length: 120 }, () => ({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          z: Math.random() * 2 + 0.4
+        }));
+      }
+
+      if (!constellPoints.length) {
+        constellPoints = Array.from({ length: 28 }, () => ({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.45,
+          vy: (Math.random() - 0.5) * 0.45
+        }));
+      }
+    }
+
+    function initAudio() {
+      if (initialized) return;
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      source = audioContext.createMediaElementSource(audioElement);
+      source.connect(analyser);
+      analyser.connect(audioContext.destination);
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+      initialized = true;
+    }
+
+    function clearStage() {
+      const ratio = window.devicePixelRatio || 1;
+      const w = canvas.width / ratio;
+      const h = canvas.height / ratio;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#0a0b10";
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    function avgLevel() {
+      return dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+    }
+
+    function drawBars(w, h, intensity) {
+      const barWidth = (w / dataArray.length) * 1.55;
+      let x = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        const v = dataArray[i] / 255;
+        const barHeight = v * h * 0.72 * intensity;
+        const grad = ctx.createLinearGradient(0, h, 0, h - barHeight);
+        grad.addColorStop(0, `hsl(${hue(260, i)}, 100%, 55%)`);
+        grad.addColorStop(0.5, `hsl(${hue(190, i * 0.5)}, 100%, 58%)`);
+        grad.addColorStop(1, `hsl(${hue(40, i * 0.2)}, 100%, 62%)`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, h - barHeight, barWidth, barHeight);
+        x += barWidth + 2;
+      }
+    }
+
+    function drawRing(w, h, intensity) {
+      const cx = w / 2;
+      const cy = h / 2;
+      const avg = avgLevel();
+      const radius = 90 + avg * 0.35 * intensity;
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(167,139,250,0.9)";
+      ctx.lineWidth = 10;
+      ctx.shadowBlur = 24;
+      ctx.shadowColor = "#7c3aed";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius + 22, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(245,196,81,0.65)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawWave(w, h, intensity) {
+      ctx.beginPath();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "#a78bfa";
+      for (let i = 0; i < dataArray.length; i++) {
+        const x = (i / (dataArray.length - 1)) * w;
+        const y = h / 2 + ((dataArray[i] - 128) * 0.9 * intensity);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = "#7c3aed";
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawOrbs(w, h, intensity) {
+      const count = 24;
+      const avg = avgLevel();
+      const pulse = 1 + (avg / 255) * intensity;
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 / count) * i + performance.now() * 0.00035;
+        const radius = 120 + Math.sin(performance.now() * 0.001 + i) * 28;
+        const x = w / 2 + Math.cos(angle) * radius;
+        const y = h / 2 + Math.sin(angle) * radius;
+        const size = 6 + (dataArray[i % dataArray.length] / 255) * 16 * pulse;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fillStyle = i % 2 === 0 ? "rgba(167,139,250,0.85)" : "rgba(245,196,81,0.78)";
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = i % 2 === 0 ? "#7c3aed" : "#f5c451";
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+    }
+
+    function drawMushrooms(w, h, intensity) {
+      const count = 8;
+      const marginX = w * 0.1;
+      const marginY = h * 0.18;
+      const usableW = w - marginX * 2;
+      const usableH = h - marginY * 1.5;
+      const baseY = h - marginY * 0.5;
+      const maxHeight = usableH * 0.55 + intensity * usableH * 0.18;
+      const avg = avgLevel();
+      const now = performance.now();
+      const beat = avg > 170 && now - lastMushroomBeat > 350;
+      if (beat) lastMushroomBeat = now;
+
+      if (mushrooms.length !== count) {
+        mushrooms = Array.from({length: count}, (_, i) => ({
+          height: 30, popping: false, x: marginX + (usableW / (count - 1)) * i
+        }));
+      }
+
+      mushrooms.forEach((m, i) => {
+        if (!m.popping) {
+          const v = dataArray[Math.floor(i * dataArray.length / count)] / 255;
+          m.height = 30 + v * maxHeight;
+          if (beat && v > 0.5) {
+            m.popping = true;
+            smokePuffs.push({x: m.x, y: baseY - m.height, r: usableW * 0.025, alpha: 1});
+          }
+        } else {
+          m.height -= 8 + intensity * 4;
+          if (m.height < 30) {
+            m.height = 30;
+            m.popping = false;
+          }
+        }
+      });
+
+      mushrooms.forEach((m) => {
+        ctx.save();
+        ctx.beginPath();
+        ctx.strokeStyle = '#b7a6e7';
+        ctx.lineWidth = usableW * 0.012;
+        ctx.moveTo(m.x, baseY);
+        ctx.lineTo(m.x, baseY - m.height + usableW * 0.03);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.ellipse(m.x, baseY - m.height, usableW * 0.045, usableW * 0.028, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(124,58,237,0.93)';
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = '#a78bfa';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.beginPath();
+        ctx.arc(m.x - usableW * 0.013, baseY - m.height + usableW * 0.007, usableW * 0.007, 0, Math.PI * 2);
+        ctx.arc(m.x + usableW * 0.011, baseY - m.height - usableW * 0.011, usableW * 0.005, 0, Math.PI * 2);
+        ctx.arc(m.x, baseY - m.height - usableW * 0.015, usableW * 0.004, 0, Math.PI * 2);
+        ctx.fillStyle = '#f9d97d';
+        ctx.fill();
+        ctx.restore();
+      });
+
+      smokePuffs.forEach((s) => {
+        ctx.save();
+        ctx.globalAlpha = s.alpha;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(167,139,250,0.45)';
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = '#a78bfa';
+        ctx.fill();
+        ctx.restore();
+
+        s.y -= 1.2 + Math.random() * 0.7;
+        s.r += 0.7 + Math.random() * 0.5;
+        s.alpha -= 0.012 + Math.random() * 0.008;
+      });
+
+      smokePuffs = smokePuffs.filter((s) => s.alpha > 0.05);
+    }
+
+    function drawSpiral(w, h, intensity) {
+      const cx = w / 2;
+      const cy = h / 2;
+      const avg = avgLevel();
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(performance.now() * 0.0004);
+      ctx.beginPath();
+      for (let a = 0; a < Math.PI * 8; a += 0.1) {
+        const r = 4 + a * (6 + avg * 0.02 * intensity);
+        const x = Math.cos(a) * r;
+        const y = Math.sin(a) * r;
+        if (a === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = 'rgba(167,139,250,0.95)';
+      ctx.lineWidth = 3;
+      ctx.shadowBlur = 16;
+      ctx.shadowColor = '#7c3aed';
+      ctx.stroke();
+      ctx.restore();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawSunburst(w, h, intensity) {
+      const cx = w / 2, cy = h / 2;
+      const count = 48;
+      const avg = avgLevel();
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 / count) * i + performance.now() * 0.0003;
+        const len = 80 + (dataArray[i % dataArray.length] / 255) * 180 * intensity + avg * 0.08;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(angle) * len, cy + Math.sin(angle) * len);
+        ctx.strokeStyle = i % 2 ? 'rgba(245,196,81,0.7)' : 'rgba(167,139,250,0.8)';
+        ctx.lineWidth = 2 + (i % 3);
+        ctx.stroke();
+      }
+    }
+
+    function drawTunnel(w, h, intensity) {
+      const cx = w / 2, cy = h / 2;
+      const avg = avgLevel();
+      for (let i = 0; i < 22; i++) {
+        const pulse = (performance.now() * 0.08 + i * 24) % 520;
+        const size = 40 + pulse + avg * 0.2 * intensity;
+        ctx.beginPath();
+        ctx.rect(cx - size / 2, cy - size / 2, size, size);
+        ctx.strokeStyle = i % 2 ? 'rgba(167,139,250,0.45)' : 'rgba(245,196,81,0.38)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
+    function drawMatrix(w, h, intensity) {
+      const fontSize = 14;
+      const columns = Math.floor(w / fontSize);
+      const avg = avgLevel();
+      ctx.fillStyle = 'rgba(10,11,16,0.18)';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(167,139,250,0.8)';
+      ctx.font = `${fontSize}px monospace`;
+      for (let i = 0; i < columns; i++) {
+        const x = i * fontSize;
+        const speed = 0.02 + (i % 5) * 0.01 + avg * 0.00008 * intensity;
+        const y = ((performance.now() * speed + i * 24) % (h + 100)) - 60;
+        const char = ['0','1','F','A','S','*'][i % 6];
+        for (let j = 0; j < 10; j++) {
+          ctx.globalAlpha = 1 - j * 0.09;
+          ctx.fillText(char, x, y - j * fontSize);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawGrid(w, h, intensity) {
+      const avg = avgLevel();
+      const spacing = 28 + avg * 0.04 * intensity;
+      ctx.save();
+      ctx.translate(w / 2, h * 0.75);
+      ctx.strokeStyle = 'rgba(167,139,250,0.35)';
+      ctx.lineWidth = 1;
+      for (let i = -20; i <= 20; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * spacing, 0);
+        ctx.lineTo(i * spacing * 3, -h);
+        ctx.stroke();
+      }
+      for (let j = 0; j < 20; j++) {
+        const y = -j * (18 + intensity * 3);
+        ctx.beginPath();
+        ctx.moveTo(-w, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawStars(w, h, intensity) {
+      const avg = avgLevel();
+      if (!starfield.length) resizeCanvas();
+      starfield.forEach((s, i) => {
+        s.y += s.z * (0.4 + avg * 0.002 * intensity);
+        if (s.y > h + 5) {
+          s.y = -10;
+          s.x = Math.random() * w;
+        }
+        const size = 1 + s.z + (i % 5 === 0 ? avg * 0.01 : 0);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, size, 0, Math.PI * 2);
+        ctx.fillStyle = i % 4 === 0 ? 'rgba(245,196,81,0.9)' : 'rgba(167,139,250,0.85)';
+        ctx.fill();
+      });
+    }
+
+    function drawBlob(w, h, intensity) {
+      const avg = avgLevel();
+      const cx = w / 2, cy = h / 2;
+      const base = 120 + avg * 0.3 * intensity;
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.08) {
+        const mod = Math.sin(a * 4 + performance.now() * 0.002) * 22 + Math.cos(a * 7 - performance.now() * 0.0015) * 14;
+        const r = base + mod;
+        const x = cx + Math.cos(a) * r;
+        const y = cy + Math.sin(a) * r;
+        if (a === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(124,58,237,0.45)';
+      ctx.shadowBlur = 24;
+      ctx.shadowColor = '#7c3aed';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(245,196,81,0.65)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    function drawRibbons(w, h, intensity) {
+      const avg = avgLevel();
+      for (let r = 0; r < 4; r++) {
+        ctx.beginPath();
+        for (let i = 0; i < dataArray.length; i++) {
+          const x = (i / (dataArray.length - 1)) * w;
+          const y = h * (0.2 + r * 0.18) + Math.sin(i * 0.25 + performance.now() * 0.003 + r) * 24 + (dataArray[i] - 128) * 0.45 * intensity;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = r % 2 ? 'rgba(245,196,81,0.75)' : 'rgba(167,139,250,0.82)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+    }
+
+    function drawHex(w, h, intensity) {
+      const cx = w / 2, cy = h / 2;
+      const avg = avgLevel();
+      for (let i = 0; i < 12; i++) {
+        const rad = 50 + i * 24 + avg * 0.08 * intensity;
+        ctx.beginPath();
+        for (let s = 0; s < 6; s++) {
+          const a = Math.PI / 3 * s + performance.now() * 0.0003 * (i % 2 ? 1 : -1);
+          const x = cx + Math.cos(a) * rad;
+          const y = cy + Math.sin(a) * rad;
+          if (s === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = i % 2 ? 'rgba(167,139,250,0.42)' : 'rgba(245,196,81,0.35)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
+    function drawMountains(w, h, intensity) {
+      const layers = 3;
+      for (let l = 0; l < layers; l++) {
+        ctx.beginPath();
+        ctx.moveTo(0, h);
+        for (let i = 0; i < dataArray.length; i++) {
+          const x = (i / (dataArray.length - 1)) * w;
+          const y = h - (dataArray[i] / 255) * (90 + l * 50) * intensity - l * 60;
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(w, h);
+        ctx.closePath();
+        ctx.fillStyle = l === 0 ? 'rgba(124,58,237,0.45)' : l === 1 ? 'rgba(167,139,250,0.28)' : 'rgba(245,196,81,0.18)';
+        ctx.fill();
+      }
+    }
+
+    function drawParticles(w, h, intensity) {
+      const avg = avgLevel();
+      for (let i = 0; i < 90; i++) {
+        const angle = i * 0.37 + performance.now() * 0.0015;
+        const radius = ((i * 13 + performance.now() * 0.08) % (Math.min(w, h) * 0.55));
+        const x = w / 2 + Math.cos(angle) * radius;
+        const y = h / 2 + Math.sin(angle * 1.2) * radius * 0.6;
+        const size = 1.5 + (avg / 255) * 5 * intensity;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fillStyle = i % 3 === 0 ? 'rgba(245,196,81,0.8)' : 'rgba(167,139,250,0.85)';
+        ctx.fill();
+      }
+    }
+
+    function drawRadar(w, h, intensity) {
+      const cx = w / 2, cy = h / 2;
+      const avg = avgLevel();
+      for (let i = 1; i <= 5; i++) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, i * 55, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(167,139,250,0.18)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      const angle = (performance.now() * 0.0018) % (Math.PI * 2);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, 220 + avg * 0.2 * intensity, angle - 0.18, angle + 0.18);
+      ctx.closePath();
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 240);
+      grad.addColorStop(0, 'rgba(167,139,250,0.28)');
+      grad.addColorStop(1, 'rgba(167,139,250,0)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+    }
+
+    function drawFlame(w, h, intensity) {
+      const avg = avgLevel();
+      for (let i = 0; i < dataArray.length; i++) {
+        const x = (i / dataArray.length) * w;
+        const flameH = (dataArray[i] / 255) * (h * 0.55) * intensity;
+        const grad = ctx.createLinearGradient(0, h, 0, h - flameH);
+        grad.addColorStop(0, 'rgba(245,196,81,0.92)');
+        grad.addColorStop(0.5, 'rgba(167,139,250,0.85)');
+        grad.addColorStop(1, 'rgba(124,58,237,0.18)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(x, h);
+        ctx.quadraticCurveTo(x + 4, h - flameH * 0.5, x + 2, h - flameH);
+        ctx.quadraticCurveTo(x - 4, h - flameH * 0.5, x, h);
+        ctx.fill();
+      }
+    }
+
+    function drawConstellation(w, h, intensity) {
+      const avg = avgLevel();
+      if (!constellPoints.length) resizeCanvas();
+      constellPoints.forEach((p) => {
+        p.x += p.vx * (1 + avg * 0.002 * intensity);
+        p.y += p.vy * (1 + avg * 0.002 * intensity);
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+      });
+
+      for (let i = 0; i < constellPoints.length; i++) {
+        for (let j = i + 1; j < constellPoints.length; j++) {
+          const a = constellPoints[i];
+          const b = constellPoints[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 120) {
+            ctx.strokeStyle = `rgba(167,139,250,${0.22 - d / 900})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      constellPoints.forEach((p, i) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2.2 + (i % 4 === 0 ? avg * 0.008 : 0), 0, Math.PI * 2);
+        ctx.fillStyle = i % 4 === 0 ? 'rgba(245,196,81,0.85)' : 'rgba(167,139,250,0.9)';
+        ctx.fill();
+      });
+    }
+
+    function drawShards(w, h, intensity) {
+      const avg = avgLevel();
+      const count = 36;
+      for (let i = 0; i < count; i++) {
+        const angle = i * (Math.PI * 2 / count) + performance.now() * 0.0007;
+        const dist = 40 + ((i * 17 + performance.now() * 0.1) % 220);
+        const x = w / 2 + Math.cos(angle) * dist;
+        const y = h / 2 + Math.sin(angle) * dist;
+        const size = 10 + (dataArray[i % dataArray.length] / 255) * 24 * intensity;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(0, -size);
+        ctx.lineTo(size * 0.6, size * 0.2);
+        ctx.lineTo(-size * 0.5, size * 0.6);
+        ctx.closePath();
+        ctx.fillStyle = i % 2 ? 'rgba(167,139,250,0.55)' : 'rgba(245,196,81,0.5)';
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+
+    function drawSmokeBloom(w, h, intensity) {
+      const avg = avgLevel();
+      if (Math.random() < 0.45) {
+        smokeClouds.push({
+          x: w * (0.15 + Math.random() * 0.7),
+          y: h * (0.18 + Math.random() * 0.55),
+          r: 22 + Math.random() * 48 + avg * 0.08 * intensity,
+          alpha: 0.14 + Math.random() * 0.16,
+          tone: hue(Math.random() * 360),
+          vx: (Math.random() - 0.5) * 0.8,
+          vy: -0.12 - Math.random() * 0.35
+        });
+      }
+
+      smokeClouds.forEach((c) => {
+        const g = ctx.createRadialGradient(c.x, c.y, 1, c.x, c.y, c.r * 1.8);
+        g.addColorStop(0, `hsla(${c.tone},100%,72%,${c.alpha})`);
+        g.addColorStop(0.5, `hsla(${(c.tone + 45) % 360},100%,62%,${c.alpha * 0.75})`);
+        g.addColorStop(1, `hsla(${(c.tone + 80) % 360},100%,52%,0)`);
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.shadowBlur = 26;
+        ctx.shadowColor = `hsl(${c.tone},100%,70%)`;
+        ctx.fill();
+        c.x += c.vx;
+        c.y += c.vy;
+        c.r += 0.28;
+        c.alpha *= 0.988;
+      });
+
+      ctx.shadowBlur = 0;
+      smokeClouds = smokeClouds.filter((c) => c.alpha > 0.03 && c.r < Math.max(w, h));
+    }
+
+    function drawAurora(w, h, intensity) {
+      const avg = avgLevel();
+      for (let band = 0; band < 5; band++) {
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 12) {
+          const y = h * (0.18 + band * 0.12)
+            + Math.sin(x * 0.015 + performance.now() * 0.0015 + band) * (24 + avg * 0.07 * intensity)
+            + Math.cos(x * 0.01 - performance.now() * 0.001 + band) * 10;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.lineWidth = 16;
+        ctx.strokeStyle = band % 2
+          ? `hsla(${hue(185, band * 12)},100%,62%,0.18)`
+          : `hsla(${hue(265, band * 18)},100%,68%,0.18)`;
+        ctx.shadowBlur = 28;
+        ctx.shadowColor = band % 2
+          ? `hsl(${hue(185)},100%,60%)`
+          : `hsl(${hue(265)},100%,68%)`;
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+    }
+
+    function drawConfetti(w, h, intensity) {
+      const avg = avgLevel();
+      if (Math.random() < 0.28) {
+        confettiPieces.push({
+          x: Math.random() * w,
+          y: -12,
+          s: 4 + Math.random() * 8,
+          rot: Math.random() * Math.PI,
+          vr: (Math.random() - 0.5) * 0.22,
+          vy: 1.2 + Math.random() * 2.6 + avg * 0.01 * intensity,
+          tone: hue(Math.random() * 360)
+        });
+      }
+      confettiPieces.forEach((p) => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = `hsl(${p.tone},100%,65%)`;
+        ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 1.6);
+        ctx.restore();
+        p.y += p.vy;
+        p.rot += p.vr;
+      });
+      confettiPieces = confettiPieces.filter((p) => p.y < h + 20);
+    }
+
+    function drawPrism(w, h, intensity) {
+      const cx = w / 2;
+      const cy = h / 2;
+      const avg = avgLevel();
+      for (let i = 0; i < 14; i++) {
+        const r = 40 + i * 22 + avg * 0.05 * intensity;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(performance.now() * 0.0004 * (i % 2 ? 1 : -1));
+        ctx.beginPath();
+        for (let s = 0; s < 3; s++) {
+          const a = (-Math.PI / 2) + s * (Math.PI * 2 / 3);
+          const x = Math.cos(a) * r;
+          const y = Math.sin(a) * r;
+          if (s === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = `hsla(${hue(200 + i * 12)},100%,65%,0.36)`;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function drawLogoBounce(w, h) {
+      if (!logoBounceEnabled) return;
+      const avg = avgLevel();
+      logoState.x += logoState.vx + avg * 0.002;
+      logoState.y += logoState.vy + avg * 0.0015;
+      if (logoState.x <= 0 || logoState.x + logoState.w >= w) logoState.vx *= -1;
+      if (logoState.y <= 0 || logoState.y + logoState.h >= h) logoState.vy *= -1;
+
+      const grad = ctx.createLinearGradient(logoState.x, logoState.y, logoState.x + logoState.w, logoState.y + logoState.h);
+      grad.addColorStop(0, 'rgba(167,139,250,0.92)');
+      grad.addColorStop(1, 'rgba(245,196,81,0.92)');
+      ctx.fillStyle = 'rgba(0,0,0,0.26)';
+      ctx.fillRect(logoState.x + 8, logoState.y + 8, logoState.w, logoState.h);
+      ctx.fillStyle = grad;
+      ctx.fillRect(logoState.x, logoState.y, logoState.w, logoState.h);
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.strokeRect(logoState.x, logoState.y, logoState.w, logoState.h);
+      ctx.fillStyle = '#0a0b10';
+      ctx.font = 'bold 22px Inter, sans-serif';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('FACELESS ANIMAL', logoState.x + 14, logoState.y + logoState.h / 2);
+    }
+
+    function render() {
+      if (!analyser) return;
+
+      const ratio = window.devicePixelRatio || 1;
+      const w = canvas.width / ratio;
+      const h = canvas.height / ratio;
+      const intensity = Number(sensitivity.value) / 100;
+
+      analyser.getByteFrequencyData(dataArray);
+      clearStage();
+      drawSmokeBloom(w, h, intensity * 0.85);
+
+      const mode = VISUAL_MODES[currentVisualIdx].value;
+
+      if (mode === "bars") drawBars(w, h, intensity);
+      if (mode === "ring") drawRing(w, h, intensity);
+      if (mode === "wave") drawWave(w, h, intensity);
+      if (mode === "orbs") drawOrbs(w, h, intensity);
+      if (mode === "mushrooms") drawMushrooms(w, h, intensity);
+      if (mode === "spiral") { drawSpiral(w, h, intensity); drawPrism(w, h, intensity * 0.7); }
+      if (mode === "sunburst") drawSunburst(w, h, intensity);
+      if (mode === "tunnel") { drawTunnel(w, h, intensity); drawPrism(w, h, intensity * 0.5); }
+      if (mode === "matrix") drawMatrix(w, h, intensity);
+      if (mode === "grid") drawGrid(w, h, intensity);
+      if (mode === "stars") drawStars(w, h, intensity);
+      if (mode === "blob") drawBlob(w, h, intensity);
+      if (mode === "ribbons") { drawRibbons(w, h, intensity); drawAurora(w, h, intensity * 0.6); }
+      if (mode === "hex") drawHex(w, h, intensity);
+      if (mode === "mountains") drawMountains(w, h, intensity);
+      if (mode === "particles") drawParticles(w, h, intensity);
+      if (mode === "radar") drawRadar(w, h, intensity);
+      if (mode === "flame") drawFlame(w, h, intensity);
+      if (mode === "constellation") drawConstellation(w, h, intensity);
+      if (mode === "shards") drawShards(w, h, intensity);
+      if (mode === "smokeBloom") drawSmokeBloom(w, h, intensity * 1.2);
+      if (mode === "aurora") drawAurora(w, h, intensity);
+      if (mode === "confetti") drawConfetti(w, h, intensity);
+      if (mode === "prism") drawPrism(w, h, intensity);
+
+      if (obsModeEnabled) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.strokeRect(10, 10, w - 20, h - 20);
+      }
+
+      drawLogoBounce(w, h);
+      animationId = requestAnimationFrame(render);
+    }
+
+    function startVisualizer() {
+      if (!initialized) initAudio();
+      if (audioContext.state === "suspended") audioContext.resume();
+      cancelAnimationFrame(animationId);
+      render();
+      stateStatus.textContent = "Playing";
+    }
+
+    function stopVisualizer() {
+      cancelAnimationFrame(animationId);
+      stateStatus.textContent = "Paused";
+    }
+
+    function setPlayIcon(playing) {
+      playPauseBtn.innerHTML = playing ? '&#x23F8;' : '&#x25B6;';
+      playPauseBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+      playPauseBtn.title = playing ? 'Pause' : 'Play / Pause';
+    }
+
+    function updateLocalTrackList() {
+      if (!localFilesQueue.length) {
+        localTrackList.style.display = 'none';
+        localTracksUl.innerHTML = '';
+        return;
+      }
+
+      localTrackList.style.display = '';
+      localTracksUl.innerHTML = '';
+      localFilesQueue.forEach((file, idx) => {
+        const li = document.createElement('li');
+        li.textContent = file.name.length > 32 ? file.name.slice(0, 32) + '…' : file.name;
+        li.style.cursor = 'pointer';
+        li.style.padding = '4px 0 4px 0.5em';
+        li.style.color = idx === localFileIdx ? 'var(--gold-bright)' : 'var(--text-soft)';
+        li.style.fontWeight = idx === localFileIdx ? '700' : '400';
+        li.addEventListener('click', () => playLocalFile(idx, true));
+        localTracksUl.appendChild(li);
+      });
+    }
+
+    function playLocalFile(idx, autoplay = false) {
+      if (!localFilesQueue.length) return;
+      idx = ((idx % localFilesQueue.length) + localFilesQueue.length) % localFilesQueue.length;
+      localFileIdx = idx;
+      const file = localFilesQueue[idx];
+      const url = URL.createObjectURL(file);
+      audioElement.src = url;
+      trackStatus.textContent = file.name.length > 18 ? file.name.slice(0, 18) + "…" : file.name;
+      nowPlayingLabel.textContent = file.name;
+      stateStatus.textContent = "Loaded";
+      trackSelect.selectedIndex = -1;
+      updateLocalTrackList();
+      if (autoplay) {
+        audioElement.play().then(startVisualizer).catch(() => {});
+      }
+    }
+
+    function mapTrackRow(t) {
+      return Object.assign({}, t, {
+        src: t && t.storage_path
+          ? 'https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/radio/' + String(t.storage_path).replace(/^\/+/, '')
+          : (t && t.src ? t.src : ''),
+      });
+    }
+
+    async function fetchTracks(stationId) {
+      try {
+        const mod = await import('./assets/js/supabase-config.js');
+        const supabase = mod.supabase;
+        const SUPABASE_READY = mod.SUPABASE_READY;
+        if (!SUPABASE_READY || !supabase) throw new Error('Supabase not ready');
+        const res = await supabase
+          .from('radio_tracks')
+          .select('id,title,src,storage_path,play_count,upvotes,channel,is_active')
+          .eq('channel', parseInt(stationId, 10))
+          .eq('is_active', true)
+          .order('play_count', { ascending: false });
+        if (res.error) throw new Error(res.error.message);
+        return (Array.isArray(res.data) ? res.data : []).map(mapTrackRow);
+      } catch (err) {
+        try {
+          const res = await fetch(`./functions/pulse-stations.js?station=${stationId}`);
+          if (!res.ok) throw new Error('api error');
+          const data = await res.json();
+          return Array.isArray(data.tracks) ? data.tracks : [];
+        } catch (e) {
+          return [];
+        }
+      }
+    }
+
+    function updateTrackDropdown() {
+      trackSelect.innerHTML = '';
+      if (!AUDIO_TRACKS.length) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No tracks available';
+        trackSelect.appendChild(opt);
+        return;
+      }
+      AUDIO_TRACKS.forEach((t, i) => {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = t.title || `Track ${i + 1}`;
+        trackSelect.appendChild(opt);
+      });
+      trackSelect.selectedIndex = currentTrackIdx;
+    }
+
+    function loadAudioTrack(idx, autoplay = false) {
+      if (!AUDIO_TRACKS.length) return;
+      idx = ((idx % AUDIO_TRACKS.length) + AUDIO_TRACKS.length) % AUDIO_TRACKS.length;
+      currentTrackIdx = idx;
+      const track = AUDIO_TRACKS[idx];
+      audioElement.src = track.src;
+      trackStatus.textContent = track.title ? (track.title.length > 18 ? track.title.slice(0, 18) + '…' : track.title) : `Track ${idx + 1}`;
+      nowPlayingLabel.textContent = track.title || `Track ${idx + 1}`;
+      stateStatus.textContent = "Loaded";
+      trackSelect.selectedIndex = idx;
+      if (autoplay) {
+        audioElement.play().then(startVisualizer).catch(() => {});
+      }
+    }
+
+    async function loadChannelTracks(stationId) {
+      AUDIO_TRACKS = await fetchTracks(stationId);
+      currentTrackIdx = 0;
+      updateTrackDropdown();
+      if (AUDIO_TRACKS.length) {
+        loadAudioTrack(0, false);
+      } else {
+        audioElement.pause();
+        audioElement.removeAttribute('src');
+        audioElement.load();
+        trackStatus.textContent = 'No Track';
+        nowPlayingLabel.textContent = `No tracks in ${STATIONS[stationId]?.label || 'station'}`;
+        stateStatus.textContent = 'Idle';
+      }
+    }
+
+    stationBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-station');
+        if (id === currentStation) return;
+        currentStation = id;
+        syncStationButtons(currentStation);
+        loadChannelTracks(currentStation);
+      });
+    });
+
+    stationSelect.addEventListener('change', () => {
+      currentStation = stationSelect.value;
+      syncStationButtons(currentStation);
+      loadChannelTracks(currentStation);
+    });
+
+    trackSelect.addEventListener('change', () => {
+      const idx = parseInt(trackSelect.value, 10);
+      if (Number.isFinite(idx)) loadAudioTrack(idx, true);
+    });
+
+    uploadFilesBtn.addEventListener('click', () => audioFilesInput.click());
+    uploadFolderBtn.addEventListener('click', () => audioFolderInput.click());
+
+    audioFilesInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith('audio/'));
+      localFilesQueue = files;
+      localFileIdx = 0;
+      updateLocalTrackList();
+      if (localFilesQueue.length) playLocalFile(0, false);
+    });
+
+    audioFolderInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith('audio/'));
+      localFilesQueue = files;
+      localFileIdx = 0;
+      updateLocalTrackList();
+      if (localFilesQueue.length) playLocalFile(0, false);
+    });
+
+    nextVisualBtn.addEventListener('click', () => setVisualMode(currentVisualIdx + 1));
+    randomVisualBtn.addEventListener('click', () => {
+      let r;
+      do {
+        r = Math.floor(Math.random() * VISUAL_MODES.length);
+      } while (r === currentVisualIdx && VISUAL_MODES.length > 1);
+      setVisualMode(r);
+    });
+    visualSelect.addEventListener('change', () => setVisualMode(parseInt(visualSelect.value, 10) || 0));
+
+    playBtn.addEventListener('click', async () => {
+      if (!audioElement.src) {
+        if (localFilesQueue.length) playLocalFile(localFileIdx, false);
+        else loadAudioTrack(currentTrackIdx, false);
+      }
+      if (!audioElement.src) return;
+      if (!initialized) initAudio();
+      await audioElement.play().catch(() => {});
+      startVisualizer();
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      audioElement.pause();
+      stopVisualizer();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+      stopVisualizer();
+      clearStage();
+      stateStatus.textContent = "Idle";
+      setPlayIcon(false);
+    });
+
+    async function toggleStageFullscreen() {
+      if (!document.fullscreenElement) {
+        await visualizerStage.requestFullscreen?.();
+      } else {
+        await document.exitFullscreen?.();
+      }
+    }
+
+    fullscreenBtn.addEventListener('click', toggleStageFullscreen);
+    floatingFullscreenBtn?.addEventListener('click', toggleStageFullscreen);
+
+    playPauseBtn.addEventListener('click', async () => {
+      if (!audioElement.src) {
+        if (localFilesQueue.length) playLocalFile(localFileIdx, false);
+        else loadAudioTrack(currentTrackIdx, false);
+      }
+      if (!audioElement.src) return;
+      if (!initialized) initAudio();
+      if (audioElement.paused) {
+        await audioElement.play().catch(() => {});
+        startVisualizer();
+      } else {
+        audioElement.pause();
+      }
+    });
+
+    skipBackBtn.addEventListener('click', () => {
+      if (localFilesQueue.length) playLocalFile(localFileIdx - 1, true);
+      else loadAudioTrack(currentTrackIdx - 1, true);
+    });
+
+    skipFwdBtn.addEventListener('click', () => {
+      if (localFilesQueue.length) playLocalFile(localFileIdx + 1, true);
+      else loadAudioTrack(currentTrackIdx + 1, true);
+    });
+
+    audioElement.addEventListener('play', () => {
+      setPlayIcon(true);
+      stateStatus.textContent = "Playing";
+    });
+
+    audioElement.addEventListener('pause', () => {
+      setPlayIcon(false);
+      if (stateStatus.textContent !== 'Idle') stopVisualizer();
+    });
+
+    audioElement.addEventListener('ended', () => {
+      if (localFilesQueue.length) playLocalFile(localFileIdx + 1, true);
+      else loadAudioTrack(currentTrackIdx + 1, true);
+    });
+
+
+    savePresetBtn.addEventListener('click', () => {
+      const name = window.prompt('Preset name?');
+      if (!name) return;
+      const presets = getPresets();
+      presets.push(currentPreset(name.trim()));
+      localStorage.setItem(presetsKey(), JSON.stringify(presets));
+      refreshPresetSelect();
+      presetBadge.textContent = `Preset: ${name.trim()}`;
+    });
+
+    loadPresetBtn.addEventListener('click', () => {
+      const presets = getPresets();
+      const idx = Number(presetSelect.value);
+      if (Number.isFinite(idx) && presets[idx]) applyPreset(presets[idx]);
+    });
+
+    deletePresetBtn.addEventListener('click', () => {
+      const presets = getPresets();
+      const idx = Number(presetSelect.value);
+      if (!Number.isFinite(idx) || !presets[idx]) return;
+      presets.splice(idx, 1);
+      localStorage.setItem(presetsKey(), JSON.stringify(presets));
+      refreshPresetSelect();
+      presetBadge.textContent = 'Preset: Live Default';
+    });
+
+    toggleLogoBtn.addEventListener('click', () => {
+      logoBounceEnabled = !logoBounceEnabled;
+      updateToggleLabels();
+    });
+
+    toggleObsBtn.addEventListener('click', () => {
+      obsModeEnabled = !obsModeEnabled;
+      updateToggleLabels();
+    });
+
+    toggleStreamBtn.addEventListener('click', () => {
+      radioDirectEnabled = !radioDirectEnabled;
+      updateToggleLabels();
+    });
+
+    themeShuffleBtn.addEventListener('click', () => {
+      colorBoost.value = String(70 + Math.floor(Math.random() * 131));
+      setVisualMode(Math.floor(Math.random() * VISUAL_MODES.length));
+    });
+
+    screenBackBtn.addEventListener('click', () => skipBackBtn.click());
+    screenPlayBtn.addEventListener('click', () => playPauseBtn.click());
+    screenNextBtn.addEventListener('click', () => skipFwdBtn.click());
+
+    visualizerStage.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTapTime < 280) {
+        setVisualMode(currentVisualIdx + 1);
+        e.preventDefault();
+      }
+      lastTapTime = now;
+    });
+
+    visualizerStage.addEventListener('dblclick', () => setVisualMode(currentVisualIdx + 1));
+
+
+    window.addEventListener('resize', resizeCanvas);
+
+    populateVisualSelect();
+    refreshPresetSelect();
+    updateToggleLabels();
+    setVisualMode(0);
+    syncStationButtons(currentStation);
+    resizeCanvas();
+    clearStage();
+    loadChannelTracks(currentStation);
+  </script>
+</body>
+</html>
