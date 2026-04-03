@@ -6,6 +6,7 @@
     "dev": "pnpm --filter @workspace/studio run dev"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.101.1",
     "node-fetch": "^2.7.0"
   }
 }
