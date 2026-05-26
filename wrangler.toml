@@ -1,0 +1,9 @@
+name = "studio-faceless-animal"
+compatibility_date = "2026-05-25"
+compatibility_flags = ["nodejs_compat"]
+
+[build]
+command = "npm run build"
+
+[functions]
+directory = "./functions"

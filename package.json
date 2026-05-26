@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --filter @workspace/studio run dev",
-    "build": "echo 'Cloudflare Pages build: dependencies installed'"
+    "build": "node scripts/generate-env.js && cd functions && npm install"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1",
