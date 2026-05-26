@@ -69,10 +69,6 @@ ${html || ''}
     return new Response('Error', { status: 500 });
   }
 }
-
-  if (!res.ok) {
-    return new Response('User page not found.', { status: 404 });
-  }
   const data = await res.json();
   if (!data || !data[0]) {
     return new Response('User page not found.', { status: 404 });
