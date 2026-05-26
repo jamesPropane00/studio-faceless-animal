@@ -1,6 +1,12 @@
-// API endpoint for Pulse audio stations (Node.js Express style)
-const pulseStations = require('../functions/pulse-stations.js');
+import { onRequestGet as pulseStationsGet } from '../pulse-stations.js';
 
-module.exports = async function handlePulseStations(req, res) {
-  return pulseStations(req, res);
-};
+export async function onRequest(context) {
+  if (context.request.method !== 'GET') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+
+  return pulseStationsGet(context);
+}

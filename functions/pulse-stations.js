@@ -1,17 +1,12 @@
-// pulse-stations.js
-// API endpoint to return non-YouTube, non-Spotify radio stations and their tracks from Supabase
-// Requires supabase-js installed and environment variables for SUPABASE_URL and SUPABASE_ANON_KEY
+import { createClient } from '@supabase/supabase-js';
 
-const { createClient } = require('@supabase/supabase-js');
-
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://ghufaozjwondqcrcucjs.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_kixI74nB7Drt6mQKooaXHg_nPoE0h_-';
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Only include audio channels (not YouTube/Spotify)
 const AUDIO_CHANNELS = [1, 4, 5];
 
-module.exports = async function (req, res) {
+export async function onRequestGet(context) {
+  const SUPABASE_URL = context.env.SUPABASE_URL || 'https://ghufaozjwondqcrcucjs.supabase.co';
+  const SUPABASE_ANON_KEY = context.env.SUPABASE_ANON_KEY || 'sb_publishable_kixI74nB7Drt6mQKooaXHg_nPoE0h_-';
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
   try {
     console.log('[Pulse API] Request received');
     const { data, error } = await supabase
@@ -24,10 +19,12 @@ module.exports = async function (req, res) {
 
     if (error) {
       console.error('[Pulse API] Supabase error:', error.message);
-      return res.status(500).json({ error: error.message });
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { 'content-type': 'application/json' },
+      });
     }
 
-    // Group tracks by channel
     const stations = {};
     AUDIO_CHANNELS.forEach(ch => stations[ch] = []);
     (data || []).forEach(track => {
@@ -42,9 +39,15 @@ module.exports = async function (req, res) {
     });
 
     console.log('[Pulse API] Returning stations:', JSON.stringify(stations));
-    res.status(200).json({ stations });
+    return new Response(JSON.stringify({ stations }), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
   } catch (err) {
     console.error('[Pulse API] Handler error:', err.message);
-    res.status(500).json({ error: err.message });
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
   }
-};
+}
