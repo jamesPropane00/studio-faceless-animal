@@ -69,29 +69,3 @@ ${html || ''}
     return new Response('Error', { status: 500 });
   }
 }
-  const data = await res.json();
-  if (!data || !data[0]) {
-    return new Response('User page not found.', { status: 404 });
-  }
-  const { html, css, full_document } = data[0];
-
-  // If full_document is present, serve it as-is
-  if (full_document) {
-    return new Response(full_document, { headers: { 'Content-Type': 'text/html' } });
-  }
-
-  // Otherwise, build a minimal HTML page
-  const page = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${username}'s Page</title>
-  <style>${css || ''}</style>
-</head>
-<body>
-${html || ''}
-</body>
-</html>`;
-  return new Response(page, { headers: { 'Content-Type': 'text/html' } });
-}
