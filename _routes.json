@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/assets/*",
+    "/functions/*",
+    "/templates/*",
+    "/admin/*",
+    "/artists/*",
+    "/business/*",
+    "/artifacts/*",
+    "/supabase/*",
+    "/sql/*",
+    "/scripts/*",
+    "/*.html",
+    "/*.js",
+    "/*.css",
+    "/*.json",
+    "/*.ico",
+    "/*.txt",
+    "/*.md",
+    "/_headers",
+    "/_redirects",
+    "/favicon.ico"
+  ]
+}

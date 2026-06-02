@@ -186,6 +186,12 @@ export async function isUsernameAvailable(username) {
 export async function signIn(loginId, password) {
   if (!SUPABASE_READY || !supabase) return { success: false, error: 'Cannot connect. Try again.', errorCode: 'offline' }
 
+  // Validate Supabase URL is not a placeholder or broken
+  if (!supabase.supabaseUrl || supabase.supabaseUrl.includes('ghufaozjwondqcrcucjs')) {
+    console.error('[FAS] signIn: Supabase URL is missing or placeholder — check SUPABASE_URL env var')
+    return { success: false, error: 'Configuration error: Supabase is not properly configured. Please contact support.', errorCode: 'config_error' }
+  }
+
   const resolved = await resolveUsernameFromLoginId(loginId)
   const u = resolved.username
   if (!u) {
@@ -200,7 +206,7 @@ export async function signIn(loginId, password) {
     .rpc('get_member_salt', { p_username: u })
 
   if (saltError) {
-    console.error('[FAS] get_member_salt error:', saltError.message)
+    console.error('[FAS] get_member_salt error:', saltError)
     return { success: false, error: 'Server error. Try again.', errorCode: 'rpc_error' }
   }
 
@@ -225,6 +231,7 @@ export async function signIn(loginId, password) {
   try {
     hash = await hashPassword(password, salt)
   } catch (e) {
+    console.error('[FAS] hashPassword error:', e)
     return { success: false, error: 'Hashing failed. Browser may not support Web Crypto.', errorCode: 'crypto_error' }
   }
 
@@ -233,7 +240,7 @@ export async function signIn(loginId, password) {
     .rpc('verify_member_password', { p_username: u, p_hash: hash })
 
   if (verifyError) {
-    console.error('[FAS] verify_member_password error:', verifyError.message)
+    console.error('[FAS] verify_member_password error:', verifyError)
     return { success: false, error: 'Verification failed. Try again.', errorCode: 'rpc_error' }
   }
 
@@ -420,7 +427,10 @@ export async function setInitialPassword(username, password) {
   const { data: ok, error } = await supabase
     .rpc('set_member_password', { p_username: u, p_hash: hash, p_salt: salt })
 
-  if (error) return { success: false, error: 'Server error. Try again.' }
+  if (error) {
+    console.error('[FAS] set_member_password error:', error)
+    return { success: false, error: 'Server error. Try again.' }
+  }
   if (!ok)   return { success: false, error: 'Could not set password — it may already be set. Contact support if this keeps happening.' }
 
   return { success: true }
