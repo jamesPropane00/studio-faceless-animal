@@ -1,9 +1,18 @@
 {
   "version": 1,
-  "include": ["/*"],
+  "include": [
+    "/api/*",
+    "/profile/*"
+  ],
   "exclude": [
+    "*.html",
+    "*.css",
+    "*.js",
+    "*.json",
+    "*.ico",
+    "*.txt",
+    "*.md",
     "/assets/*",
-    "/functions/*",
     "/templates/*",
     "/admin/*",
     "/artists/*",
@@ -12,13 +21,6 @@
     "/supabase/*",
     "/sql/*",
     "/scripts/*",
-    "/*.html",
-    "/*.js",
-    "/*.css",
-    "/*.json",
-    "/*.ico",
-    "/*.txt",
-    "/*.md",
     "/_headers",
     "/_redirects",
     "/favicon.ico"
