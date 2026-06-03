@@ -1972,6 +1972,19 @@
       var AUDIO_TRACKS   = [];
       var activeChannel  = '1';  // tracks which upload-channel is loaded (1, 4, or 5)
       var lastPlayCountedTrackId = null;
+      var CONFIGURED_AUDIO_TRACKS = {
+        '1': [{
+          id: '997925d1-b2d5-4b26-8e7a-ff013e399474',
+          title: 'bloodline - DJ Faceless Animal',
+          artist: 'DJ Faceless Animal',
+          src: '/api/radio-proxy?path=ch1%2F1773909820985_bloodline.mp3',
+          storage_path: 'ch1/1773909820985_bloodline.mp3',
+          channel: 1,
+          is_active: true,
+          play_count: 17,
+          upvotes: 0
+        }]
+      };
       var LOCAL_AUDIO_TRACKS = {
         '1': [{
           id: 'local-biggie-and-jada',
@@ -1988,6 +2001,11 @@
       function getLocalTracks(ch) {
         ch = String(ch || '1');
         return Array.isArray(LOCAL_AUDIO_TRACKS[ch]) ? LOCAL_AUDIO_TRACKS[ch].slice() : [];
+      }
+
+      function getConfiguredTracks(ch) {
+        ch = String(ch || '1');
+        return Array.isArray(CONFIGURED_AUDIO_TRACKS[ch]) ? CONFIGURED_AUDIO_TRACKS[ch].slice() : [];
       }
 
       function radioAudioProxySrc(value) {
@@ -2008,6 +2026,11 @@
         var channelInt = parseInt(ch, 10);
         window.tracksByChannel = window.tracksByChannel || {};
         if (Array.isArray(window.tracksByChannel[ch]) && window.tracksByChannel[ch].length) {
+          return window.tracksByChannel[ch];
+        }
+        var configuredTracks = getConfiguredTracks(ch);
+        if (configuredTracks.length) {
+          window.tracksByChannel[ch] = configuredTracks;
           return window.tracksByChannel[ch];
         }
 
