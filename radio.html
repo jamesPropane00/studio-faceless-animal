@@ -2028,12 +2028,6 @@
         if (Array.isArray(window.tracksByChannel[ch]) && window.tracksByChannel[ch].length) {
           return window.tracksByChannel[ch];
         }
-        var configuredTracks = getConfiguredTracks(ch);
-        if (configuredTracks.length) {
-          window.tracksByChannel[ch] = configuredTracks;
-          return window.tracksByChannel[ch];
-        }
-
         try {
           var mod = await import('./assets/js/supabase-config.js');
           var supabase = mod.supabase;
@@ -2062,12 +2056,18 @@
             ? res.data.filter(function(t) { return String((t && t.channel) || '') === ch; })
             : [];
           if (!window.tracksByChannel[ch].length) {
+            window.tracksByChannel[ch] = getConfiguredTracks(ch);
+          }
+          if (!window.tracksByChannel[ch].length) {
             window.tracksByChannel[ch] = getLocalTracks(ch);
           }
           return window.tracksByChannel[ch];
         } catch (err) {
           console.log('[radio] loadTracks failed', err);
-          window.tracksByChannel[ch] = getLocalTracks(ch);
+          window.tracksByChannel[ch] = getConfiguredTracks(ch);
+          if (!window.tracksByChannel[ch].length) {
+            window.tracksByChannel[ch] = getLocalTracks(ch);
+          }
           return window.tracksByChannel[ch];
         }
       }

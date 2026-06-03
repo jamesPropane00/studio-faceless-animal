@@ -38,7 +38,7 @@
     '1': {
       label: 'Station 1 · Original',
       type: 'audio',
-      tracks: [{
+      fallbackTracks: [{
         id: '997925d1-b2d5-4b26-8e7a-ff013e399474',
         title: 'bloodline - DJ Faceless Animal',
         artist: 'DJ Faceless Animal',
@@ -195,6 +195,11 @@
     return st && Array.isArray(st.tracks) ? st.tracks : [];
   }
 
+  function getFallbackTracks(channel) {
+    var st = STATIONS[String(channel)];
+    return st && Array.isArray(st.fallbackTracks) ? st.fallbackTracks.slice() : [];
+  }
+
   function getActiveAudioTracks() {
     return getAudioTracks(activeAudioChannel);
   }
@@ -223,7 +228,8 @@
   function setAudioTracksForChannel(channel, rows) {
     var id = String(channel || '1');
     if (!STATIONS[id] || STATIONS[id].type !== 'audio') return [];
-    STATIONS[id].tracks = (Array.isArray(rows) ? rows : []).map(mapTrackRow);
+    var sourceRows = Array.isArray(rows) && rows.length ? rows : getFallbackTracks(id);
+    STATIONS[id].tracks = sourceRows.map(mapTrackRow);
     return STATIONS[id].tracks;
   }
 
