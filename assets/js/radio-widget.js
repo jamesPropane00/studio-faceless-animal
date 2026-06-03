@@ -38,17 +38,7 @@
     '1': {
       label: 'Station 1 · Original',
       type: 'audio',
-      fallbackTracks: [{
-        id: '997925d1-b2d5-4b26-8e7a-ff013e399474',
-        title: 'bloodline - DJ Faceless Animal',
-        artist: 'DJ Faceless Animal',
-        src: '/api/radio-proxy?path=ch1%2F1773909820985_bloodline.mp3',
-        storage_path: 'ch1/1773909820985_bloodline.mp3',
-        channel: 1,
-        is_active: true,
-        play_count: 17,
-        upvotes: 0
-      }],
+      tracks: [],
     },
     '2': { label: 'Station 2 · Mix Playlist', type: 'yt',      listId: 'PLuaOk7bBVKJTqt9w6hS_MxjeQHGURWaBN' },
     '3': { label: 'Station 3 · Spotify',      type: 'spotify', listId: null },
@@ -195,11 +185,6 @@
     return st && Array.isArray(st.tracks) ? st.tracks : [];
   }
 
-  function getFallbackTracks(channel) {
-    var st = STATIONS[String(channel)];
-    return st && Array.isArray(st.fallbackTracks) ? st.fallbackTracks.slice() : [];
-  }
-
   function getActiveAudioTracks() {
     return getAudioTracks(activeAudioChannel);
   }
@@ -228,8 +213,7 @@
   function setAudioTracksForChannel(channel, rows) {
     var id = String(channel || '1');
     if (!STATIONS[id] || STATIONS[id].type !== 'audio') return [];
-    var sourceRows = Array.isArray(rows) && rows.length ? rows : getFallbackTracks(id);
-    STATIONS[id].tracks = sourceRows.map(mapTrackRow);
+    STATIONS[id].tracks = (Array.isArray(rows) ? rows : []).map(mapTrackRow);
     return STATIONS[id].tracks;
   }
 
