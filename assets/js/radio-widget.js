@@ -203,10 +203,13 @@
   }
 
   function mapTrackRow(t) {
+    var storagePath = t && t.storage_path ? String(t.storage_path) : '';
+    var directSrc = t && t.src ? String(t.src) : '';
+    var useDirectSrc = /^external\//i.test(storagePath) && /^https?:\/\//i.test(directSrc);
     return Object.assign({}, t, {
-      src: t && t.storage_path
-        ? radioAudioProxySrc(t.storage_path)
-        : radioAudioProxySrc(t && t.src ? t.src : ''),
+      src: useDirectSrc
+        ? radioAudioProxySrc(directSrc)
+        : radioAudioProxySrc(storagePath || directSrc),
     });
   }
 
