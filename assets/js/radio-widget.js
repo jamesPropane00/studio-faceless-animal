@@ -189,11 +189,24 @@
     return getAudioTracks(activeAudioChannel);
   }
 
+  function radioAudioProxySrc(value) {
+    var src = String(value || '').trim();
+    if (!src) return '';
+    var marker = '/storage/v1/object/public/radio/';
+    var markerIdx = src.indexOf(marker);
+    if (markerIdx !== -1) {
+      src = src.slice(markerIdx + marker.length);
+    }
+    if (/^https?:\/\//i.test(src)) return src;
+    if (src.indexOf('/') === 0 || src.indexOf('./') === 0 || src.indexOf('../') === 0 || src.indexOf('assets/') === 0) return src;
+    return '/api/radio/proxy?path=' + encodeURIComponent(src.replace(/^\/+/, ''));
+  }
+
   function mapTrackRow(t) {
     return Object.assign({}, t, {
       src: t && t.storage_path
-        ? 'https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/radio/' + String(t.storage_path).replace(/^\/+/, '')
-        : (t && t.src ? t.src : ''),
+        ? radioAudioProxySrc(t.storage_path)
+        : radioAudioProxySrc(t && t.src ? t.src : ''),
     });
   }
 

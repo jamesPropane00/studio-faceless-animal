@@ -1990,6 +1990,19 @@
         return Array.isArray(LOCAL_AUDIO_TRACKS[ch]) ? LOCAL_AUDIO_TRACKS[ch].slice() : [];
       }
 
+      function radioAudioProxySrc(value) {
+        var src = String(value || '').trim();
+        if (!src) return '';
+        var marker = '/storage/v1/object/public/radio/';
+        var markerIdx = src.indexOf(marker);
+        if (markerIdx !== -1) {
+          src = src.slice(markerIdx + marker.length);
+        }
+        if (/^https?:\/\//i.test(src)) return src;
+        if (src.indexOf('/') === 0 || src.indexOf('./') === 0 || src.indexOf('../') === 0 || src.indexOf('assets/') === 0) return src;
+        return '/api/radio/proxy?path=' + encodeURIComponent(src.replace(/^\/+/, ''));
+      }
+
       async function loadTracks(ch) {
         ch = String(ch || '1');
         var channelInt = parseInt(ch, 10);
@@ -2136,9 +2149,11 @@
             var isLocalPath = directSrc.indexOf('/') === 0 || directSrc.indexOf('./') === 0 || directSrc.indexOf('../') === 0 || directSrc.indexOf('assets/') === 0;
             var resolvedSrc = directSrc || '';
             if (!resolvedSrc && storagePath) {
-              resolvedSrc = 'https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/radio/' + storagePath.replace(/^\/+/, '');
+              resolvedSrc = radioAudioProxySrc(storagePath);
             } else if (resolvedSrc && !isAbsolute && !isLocalPath && resolvedSrc.indexOf('/storage/v1/object/public/') === -1) {
-              resolvedSrc = 'https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/radio/' + resolvedSrc.replace(/^\/+/, '');
+              resolvedSrc = radioAudioProxySrc(resolvedSrc);
+            } else {
+              resolvedSrc = radioAudioProxySrc(resolvedSrc);
             }
             return {
               id: t.id,
