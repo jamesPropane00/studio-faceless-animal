@@ -186,11 +186,6 @@ export async function isUsernameAvailable(username) {
 export async function signIn(loginId, password) {
   if (!SUPABASE_READY || !supabase) return { success: false, error: 'Cannot connect. Try again.', errorCode: 'offline' }
 
-  // Validate Supabase URL is not a placeholder or broken
-  if (!supabase.supabaseUrl || supabase.supabaseUrl.includes('ghufaozjwondqcrcucjs')) {
-    console.error('[FAS] signIn: Supabase URL is missing or placeholder — check SUPABASE_URL env var')
-    return { success: false, error: 'Configuration error: Supabase is not properly configured. Please contact support.', errorCode: 'config_error' }
-  }
 
   const resolved = await resolveUsernameFromLoginId(loginId)
   const u = resolved.username
