@@ -2288,6 +2288,20 @@
         if (autoplay) { audioEl.play().catch(function() {}); }
       }
 
+      function switchToLocalAudioFallback() {
+        var fallbackTracks = getLocalTracks(activeChannel);
+        if (!fallbackTracks.length) return false;
+        if (AUDIO_TRACKS[audioTrackIdx] && AUDIO_TRACKS[audioTrackIdx].id === fallbackTracks[0].id) return false;
+        console.log('[radio] switching to local audio fallback', fallbackTracks[0]);
+        AUDIO_TRACKS = fallbackTracks;
+        window.tracksByChannel = window.tracksByChannel || {};
+        window.tracksByChannel[String(activeChannel)] = fallbackTracks;
+        audioTrackIdx = 0;
+        buildTrackList();
+        loadAudioTrack(0, true);
+        return true;
+      }
+
       function audioPlayPause() {
         if (!AUDIO_TRACKS.length) return;
         if (!audioEl.src || audioEl.src === window.location.href) {
@@ -2302,7 +2316,10 @@
         audioEl.addEventListener('play',    function() { setPlayIcon(true); });
         audioEl.addEventListener('pause',   function() { setPlayIcon(false); });
         audioEl.addEventListener('ended',   function() { loadAudioTrack(audioTrackIdx + 1, true); });
-        audioEl.addEventListener('error',   function() { console.log('[radio] audio error on track', audioTrackIdx, AUDIO_TRACKS[audioTrackIdx]); });
+        audioEl.addEventListener('error',   function() {
+          console.log('[radio] audio error on track', audioTrackIdx, AUDIO_TRACKS[audioTrackIdx]);
+          switchToLocalAudioFallback();
+        });
         audioEl.addEventListener('canplay', function() { console.log('[radio] canplay', audioTrackIdx, audioEl.src); });
         audioEl.addEventListener('timeupdate', function() {
           if (!audioEl.duration) return;
