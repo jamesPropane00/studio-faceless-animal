@@ -404,7 +404,10 @@
         <div class="dash-gate-icon">🔒</div>
         <h1 class="dash-gate-title">Members Area</h1>
         <p class="dash-gate-sub">Sign in with your platform handle to access your dashboard, messages, and member features.</p>
-        <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+        <div id="dash-gate-extra" style="display:none;margin-top:0.8rem;text-align:left;padding-top:0.6rem;border-top:1px solid rgba(255,255,255,0.04);">
+          <!-- Builder explanation will be injected here when landing from index -->
+        </div>
+        <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-top:0.75rem;">
           <a href="login.html?redirect=dashboard.html" class="btn btn-primary">Sign In →</a>
           <a href="login.html?tab=create&redirect=dashboard.html" class="btn btn-ghost">Create Account</a>
         </div>
@@ -444,28 +447,71 @@
       </div>
 
       <script>
-      // Session check (if not already present)
+      // Session check and builder landing behavior
       (function() {
         const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
-        if (!fasUser || !fasUser.account_id) {
-          window.location.replace('login.html');
+        const isBuilderHash = window.location.hash === '#builder';
+
+        // If arriving from the index builder link, show explanation in the gate
+        if (isBuilderHash) {
+          const extra = document.getElementById('dash-gate-extra');
+          if (extra) {
+            extra.style.display = '';
+            extra.innerHTML = `
+              <div style="text-align:left;">
+                <h3 style="margin:0 0 0.35rem;">What is the Builder?</h3>
+                <p style="margin:0 0 0.6rem;color:var(--text-2);">The Builder creates a hosted presence page for you (yourname). Use it to set your bio, links, media, and publish a lightweight site. Creating or editing a page requires an authenticated account.</p>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                  <a href="login.html?redirect=dashboard.html#builder" class="btn btn-primary">Sign In to Open Builder</a>
+                  <a href="login.html?tab=create&redirect=dashboard.html#builder" class="btn btn-ghost">Create Account</a>
+                </div>
+              </div>
+            `;
+          }
         }
-        // Page status logic (replace with your real check)
+
+        // Only redirect to login automatically when the page requires immediate access
+        // If landing to view the builder explanation, allow gate to remain visible so
+        // the explanation can be read before signing in.
         const statusEl = document.getElementById('my-page-status');
         const viewLiveBtn = document.getElementById('my-page-view-live');
-        // Example: check if user has a published page (replace with real logic)
-        const hasPage = fasUser && fasUser.page_published; // or your real flag
-        if (hasPage) {
-          statusEl.textContent = 'Live at:';
-          viewLiveBtn.style.display = '';
-          // Use your real public route pattern here:
-          viewLiveBtn.href = 'creator.html?u=' + encodeURIComponent(fasUser.username);
-          viewLiveBtn.textContent = 'View Live';
-        } else {
-          statusEl.textContent = 'Not published yet';
-          viewLiveBtn.style.display = 'none';
+
+        if (!fasUser || !fasUser.account_id) {
+          // Do not force redirect when the user intentionally came to see the builder explanation
+          if (!isBuilderHash) {
+            // For other dashboard entry points, redirect to login
+            window.location.replace('login.html?redirect=dashboard.html');
+            return;
+          }
+        }
+
+        // If user is present, populate page status information (non-blocking)
+        if (fasUser && fasUser.account_id) {
+          const hasPage = fasUser && fasUser.page_published;
+          if (hasPage) {
+            statusEl.textContent = 'Live at:';
+            viewLiveBtn.style.display = '';
+            viewLiveBtn.href = 'creator.html?u=' + encodeURIComponent(fasUser.username);
+            viewLiveBtn.textContent = 'View Live';
+          } else {
+            statusEl.textContent = 'Not published yet';
+            viewLiveBtn.style.display = 'none';
+          }
         }
       })();
+
+      // Allow opening the actual builder only when authenticated
+      function openBuilder() {
+        const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+        if (!fasUser || !fasUser.account_id) {
+          // redirect to login, come back to builder afterwards
+          window.location.href = 'login.html?redirect=dashboard.html#builder';
+          return;
+        }
+        // Authenticated: proceed to builder application
+        window.location.href = 'faceless_builder_app.html';
+      }
+      window.openBuilder = openBuilder;
       </script>
 
       <div class="dash-moment" id="dash-moment" style="display:none;">
