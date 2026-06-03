@@ -199,7 +199,7 @@
     }
     if (/^https?:\/\//i.test(src)) return src;
     if (src.indexOf('/') === 0 || src.indexOf('./') === 0 || src.indexOf('../') === 0 || src.indexOf('assets/') === 0) return src;
-    return '/api/radio/proxy?path=' + encodeURIComponent(src.replace(/^\/+/, ''));
+    return '/api/radio-proxy?path=' + encodeURIComponent(src.replace(/^\/+/, ''));
   }
 
   function mapTrackRow(t) {
