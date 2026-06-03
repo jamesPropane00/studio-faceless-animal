@@ -41,9 +41,11 @@ const { createClient } = require('@supabase/supabase-js')
 const PORT = parseInt(process.env.PORT || '3000', 10)
 const ROOT = __dirname
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://ghufaozjwondqcrcucjs.supabase.co'
+const SUPABASE_URL = process.env.SUPABASE_URL || ''
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+const supabase = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+  : null
 const RADIO_BUCKET = 'radio'
 
 // ── STEP 1: WRITE env.js FROM ENVIRONMENT VARIABLES ─────────────────
@@ -1433,8 +1435,9 @@ async function handleContactForm(req, res) {
   }
 
   // Store in Supabase submissions table
-  const sbHost = process.env.SUPABASE_URL.replace('https://', '')
-  const sbKey  = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+  if (!SUPABASE_URL) return sendJSON(res, 503, { error: 'Supabase not configured on server.' })
+  const sbHost = SUPABASE_URL.replace('https://', '').replace(/\/$/, '')
+  const sbKey  = SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 
   // Capture any extra form fields not already mapped
   const { name: _n, email: _e, type: _t, request_type: _rt, subject: _s, package: _pkg,

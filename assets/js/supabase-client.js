@@ -47,8 +47,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // Protection is enforced by Row Level Security, not by key secrecy.
 const cfg = (typeof window !== 'undefined' && window.__FAS_CONFIG) || {}
 
-const SUPABASE_URL      = cfg.supabaseUrl     || 'https://ghufaozjwondqcrcucjs.supabase.co'
-const SUPABASE_ANON_KEY = cfg.supabaseAnonKey || 'sb_publishable_kixI74nB7Drt6mQKooaXHg_nPoE0h_-'
+const SUPABASE_URL      = cfg.supabaseUrl     || ''
+const SUPABASE_ANON_KEY = cfg.supabaseAnonKey || ''
 
 // ── EXPORTS ──────────────────────────────────────────────────────────
 
@@ -79,4 +79,7 @@ if (!SUPABASE_READY) {
     'Running in static preview mode.',
     '\n  → Set SUPABASE_URL and SUPABASE_ANON_KEY env vars and restart the server.'
   )
+}
+else if (SUPABASE_URL.includes('ghufaozjwondqcrcucjs.supabase.co')) {
+  console.warn('[FAS] supabase-client.js: Detected placeholder Supabase URL — update your SUPABASE_URL in environment.')
 }
