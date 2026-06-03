@@ -1430,8 +1430,8 @@
     (function() {
       var sess = null;
       try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
-      var PAID_PLANS = ['access', 'starter', 'pro', 'premium'];
-      var isMember = sess && PAID_PLANS.indexOf(sess.plan) !== -1 && sess.status === 'active';
+      var blockedStatuses = ['suspended', 'banned', 'limited'];
+      var isMember = !!(sess && sess.username && sess.ph && blockedStatuses.indexOf(String(sess.status || '').toLowerCase()) === -1);
 
       if (!isMember) {
         var form = document.getElementById('rp-submit-form-wrap');
@@ -1442,11 +1442,14 @@
         if (sess && sess.username) {
           var msg = document.getElementById('rp-gate-msg');
           var si  = document.getElementById('rp-gate-signin');
-          if (msg) msg.textContent = 'Your current plan does not include Station 1 uploads. Upgrade to any paid plan to get 2 uploads/month.';
+          if (msg) msg.textContent = 'This account is not currently allowed to upload tracks. Contact support if this looks wrong.';
           if (si)  si.style.display = 'none';
         }
       } else {
-        // TODO: Load quota from Supabase quota tracking (coming later)
+        var formOk = document.getElementById('rp-submit-form-wrap');
+        var gateOk = document.getElementById('rp-submit-gate');
+        if (formOk) formOk.style.display = '';
+        if (gateOk) gateOk.style.display = 'none';
       }
     })();
 
