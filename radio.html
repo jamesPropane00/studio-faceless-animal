@@ -1972,6 +1972,23 @@
       var AUDIO_TRACKS   = [];
       var activeChannel  = '1';  // tracks which upload-channel is loaded (1, 4, or 5)
       var lastPlayCountedTrackId = null;
+      var LOCAL_AUDIO_TRACKS = {
+        '1': [{
+          id: 'local-biggie-and-jada',
+          title: 'Biggie and Jada',
+          artist: 'DJ Faceless Animal',
+          src: 'assets/audio/Biggie_and_Jada.mp3',
+          channel: 1,
+          is_active: true,
+          play_count: 0,
+          upvotes: 0
+        }]
+      };
+
+      function getLocalTracks(ch) {
+        ch = String(ch || '1');
+        return Array.isArray(LOCAL_AUDIO_TRACKS[ch]) ? LOCAL_AUDIO_TRACKS[ch].slice() : [];
+      }
 
       async function loadTracks(ch) {
         ch = String(ch || '1');
@@ -1988,7 +2005,7 @@
 
           if (!SUPABASE_READY || !supabase) {
             console.log('[radio] loadTracks: Supabase not ready');
-            window.tracksByChannel[ch] = [];
+            window.tracksByChannel[ch] = getLocalTracks(ch);
             return window.tracksByChannel[ch];
           }
 
@@ -2008,10 +2025,13 @@
           window.tracksByChannel[ch] = Array.isArray(res.data)
             ? res.data.filter(function(t) { return String((t && t.channel) || '') === ch; })
             : [];
+          if (!window.tracksByChannel[ch].length) {
+            window.tracksByChannel[ch] = getLocalTracks(ch);
+          }
           return window.tracksByChannel[ch];
         } catch (err) {
           console.log('[radio] loadTracks failed', err);
-          window.tracksByChannel[ch] = [];
+          window.tracksByChannel[ch] = getLocalTracks(ch);
           return window.tracksByChannel[ch];
         }
       }
@@ -2113,7 +2133,7 @@
             var directSrc = t && t.src ? String(t.src) : '';
             var storagePath = t && t.storage_path ? String(t.storage_path) : '';
             var isAbsolute = /^https?:\/\//i.test(directSrc);
-            var isLocalPath = directSrc.indexOf('/') === 0 || directSrc.indexOf('./') === 0 || directSrc.indexOf('../') === 0;
+            var isLocalPath = directSrc.indexOf('/') === 0 || directSrc.indexOf('./') === 0 || directSrc.indexOf('../') === 0 || directSrc.indexOf('assets/') === 0;
             var resolvedSrc = directSrc || '';
             if (!resolvedSrc && storagePath) {
               resolvedSrc = 'https://ghufaozjwondqcrcucjs.supabase.co/storage/v1/object/public/radio/' + storagePath.replace(/^\/+/, '');
@@ -2147,13 +2167,16 @@
             .then(function(r) { return r.json(); })
             .then(function(data) {
               AUDIO_TRACKS = Array.isArray(data.tracks) ? data.tracks : [];
+              if (!AUDIO_TRACKS.length) {
+                AUDIO_TRACKS = getLocalTracks(ch);
+              }
               console.log('[radio] loadChannelTracks fallback', ch, AUDIO_TRACKS);
               audioTrackIdx = 0;
               if (audioEl) { audioEl.pause(); audioEl.src = ''; setPlayIcon(false); }
               buildTrackList();
               if (cb) cb();
             })
-            .catch(function() { AUDIO_TRACKS = []; buildTrackList(); if (cb) cb(); });
+            .catch(function() { AUDIO_TRACKS = getLocalTracks(ch); buildTrackList(); if (cb) cb(); });
         }
       }
 
