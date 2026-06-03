@@ -549,6 +549,7 @@
         <button class="dash-tab-btn"                       data-tab="post"        role="tab" aria-selected="false">Signal Feed</button>
         <button class="dash-tab-btn"                       data-tab="platform"    role="tab" aria-selected="false">Overview</button>
         <button class="dash-tab-btn"                       data-tab="identity"    role="tab" aria-selected="false">Identity / Access</button>
+        <button class="dash-tab-btn"                       data-tab="builder"     role="tab" aria-selected="false">Builder</button>
         <button class="dash-tab-btn"                       data-tab="comms"       role="tab" aria-selected="false">Messages / Calls</button>
         <button class="dash-tab-btn"                       data-tab="faq"         role="tab" aria-selected="false">FAQ</button>
         <button class="dash-tab-btn admin-only-tab" style="display:none;" data-admin-tab="1" data-tab="users"       role="tab" aria-selected="false">Users</button>
@@ -1573,6 +1574,22 @@
         <a href="#" id="dash-logout">Sign out</a>
       </div>
 
+      <!-- ══ TAB: BUILDER ══════════════════════════════════════ -->
+      <div class="dash-tab-panel" id="tab-builder">
+        <div class="dash-section">
+          <p class="dash-section-title">Builder</p>
+          <div class="dash-card">
+            <h3 style="margin:0 0 0.5rem;">Create Your Presence</h3>
+            <p style="margin:0 0 1rem;color:var(--text-2);">The Builder creates a hosted presence page for your handle. Use it to set your bio, links, upload audio or images, and publish a lightweight page at facelessanimalstudios.com/yourname.</p>
+            <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+              <button id="open-builder-btn" class="btn btn-primary">Open Builder</button>
+              <a href="start.html?plan=free" class="btn btn-ghost">Intake Form</a>
+            </div>
+            <p style="margin-top:0.8rem;font-size:0.82rem;color:var(--text-3);">Note: Building and publishing require an authenticated account. If you don't have one, create it via the Sign In / Create flow.</p>
+          </div>
+        </div>
+      </div>
+
     </div><!-- end .dash-container -->
   </div>
 
@@ -1715,6 +1732,12 @@
       main.style.display = ''
     }
 
+    // If the page was loaded with #builder and the user is already authenticated,
+    // open the Builder tab automatically.
+    if (window.location.hash === '#builder' && session && session.username) {
+      switchTab('builder')
+    }
+
     // ── Tab switching ──────────────────────────────────────────
     let dashboardInitInFlight = false
     let dashboardReady = false
@@ -1761,6 +1784,12 @@
 
     document.querySelectorAll('.dash-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => switchTab(btn.dataset.tab))
+    })
+
+    // Wire Open Builder button inside the Builder tab
+    document.getElementById('open-builder-btn')?.addEventListener('click', () => {
+      // Use the global helper which enforces login
+      if (window.openBuilder) window.openBuilder()
     })
 
     // ── Quick action: Edit Profile ─────────────────────────────
