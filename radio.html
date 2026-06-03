@@ -2280,6 +2280,7 @@
         idx = ((idx % AUDIO_TRACKS.length) + AUDIO_TRACKS.length) % AUDIO_TRACKS.length;
         audioTrackIdx = idx;
         console.log('[radio] selected track', audioTrackIdx, AUDIO_TRACKS[audioTrackIdx]);
+        if (audioEl && audioEl.dataset) audioEl.dataset.localFallback = '0';
         audioEl.src = AUDIO_TRACKS[idx].src;
         console.log('[radio] assigned audio src', audioEl.src);
         if (nowPlaying) nowPlaying.textContent = AUDIO_TRACKS[idx].title || ('Track ' + (idx + 1));
@@ -2290,14 +2291,12 @@
       function switchToLocalAudioFallback() {
         var fallbackTracks = getLocalTracks(activeChannel);
         if (!fallbackTracks.length) return false;
-        if (AUDIO_TRACKS[audioTrackIdx] && AUDIO_TRACKS[audioTrackIdx].id === fallbackTracks[0].id) return false;
-        console.log('[radio] switching to local audio fallback', fallbackTracks[0]);
-        AUDIO_TRACKS = fallbackTracks;
-        window.tracksByChannel = window.tracksByChannel || {};
-        window.tracksByChannel[String(activeChannel)] = fallbackTracks;
-        audioTrackIdx = 0;
-        buildTrackList();
-        loadAudioTrack(0, true);
+        if (audioEl.dataset.localFallback === '1') return false;
+        audioEl.dataset.localFallback = '1';
+        console.log('[radio] using local playback fallback without replacing track list', fallbackTracks[0]);
+        audioEl.src = fallbackTracks[0].src;
+        if (nowPlaying) nowPlaying.textContent = fallbackTracks[0].title || 'Playback fallback';
+        audioEl.play().catch(function() {});
         return true;
       }
 
