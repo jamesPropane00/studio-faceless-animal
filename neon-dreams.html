@@ -70,10 +70,22 @@
       text-align: center;
       white-space: normal;
     }
-    .ndc-adult-link {
-      border-color: rgba(236,72,153,0.45) !important;
-      color: #f9a8d4 !important;
-      background: rgba(236,72,153,0.09) !important;
+    .ndc-fanvue {
+      position: relative;
+      overflow: hidden;
+      border-color: rgba(255,255,255,0.08) !important;
+      color: #fff !important;
+      background: linear-gradient(135deg, #ff4f9a 0%, #8b5cf6 100%) !important;
+      box-shadow: 0 14px 34px rgba(139,92,246,0.24), 0 0 0 1px rgba(255,255,255,0.06) inset;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.22);
+    }
+    .ndc-fanvue:hover {
+      background: linear-gradient(135deg, #ff6bac 0%, #a78bfa 100%) !important;
+      box-shadow: 0 18px 42px rgba(236,72,153,0.28), 0 0 0 1px rgba(255,255,255,0.1) inset;
+    }
+    .ndc-fanvue:focus-visible {
+      outline: 2px solid rgba(255,255,255,0.88);
+      outline-offset: 3px;
     }
     .ndc-art-grid {
       display: grid;
@@ -273,7 +285,7 @@
           <div class="ndc-actions">
             <a href="#comic" class="btn btn-primary">Read The Comic</a>
             <a href="assets/neon-dreams/first-edition/neon-dreams-club-first-edition.pdf" class="btn btn-ghost" download>Download First Edition</a>
-            <a href="https://fanvue.com/neondreamsclub" class="btn btn-ghost ndc-adult-link" target="_blank" rel="noopener noreferrer">For exclusive and adult content of the girls click here</a>
+            <a href="https://fanvue.com/neondreamsclub" class="btn btn-primary ndc-fanvue" target="_blank" rel="noopener noreferrer">Unlock Fanvue Access</a>
           </div>
         </div>
       </div>
@@ -413,7 +425,7 @@
             <h3 style="margin:0 0 0.4rem;">More Neon Dreams Club content</h3>
             <p style="color:var(--text-2);line-height:1.65;margin:0;">Exclusive and adult content is hosted off-site.</p>
           </div>
-          <a href="https://fanvue.com/neondreamsclub" class="btn btn-primary" target="_blank" rel="noopener noreferrer">For exclusive and adult content of the girls click here</a>
+          <a href="https://fanvue.com/neondreamsclub" class="btn btn-primary ndc-fanvue" target="_blank" rel="noopener noreferrer">Unlock Fanvue Access</a>
         </div>
       </div>
     </section>
