@@ -732,6 +732,13 @@ p {
   /* Chat send / attach buttons */
   .rp-send, .rs-send-btn,
   .msg-send-btn, .msg-attach-btn { min-height: 44px; min-width: 44px; }
+  .navbar {
+    z-index: 12050;
+  }
+  .nav-toggle {
+    position: relative;
+    z-index: 12060;
+  }
   .mobile-nav {
     position: fixed;
     top: var(--nav-h);
@@ -741,7 +748,7 @@ p {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding: 0.75rem 1.25rem 2rem;
-    z-index: 1200;
+    z-index: 12040;
     background: rgba(9, 9, 9, 0.98);
     backdrop-filter: blur(24px);
   }
@@ -10075,8 +10082,12 @@ body.board-layout {
 
 @media (max-width: 900px) {
   .fas-phone-launcher {
+    left: 0.75rem;
     right: 0.75rem;
-    bottom: max(var(--fas-phone-bottom, 96px), calc(env(safe-area-inset-bottom, 0px) + 88px));
+    bottom: max(var(--fas-phone-bottom, 96px), calc(env(safe-area-inset-bottom, 0px) + 16px));
+    width: auto;
+    max-width: none;
+    justify-content: center;
   }
 }
 
