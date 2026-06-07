@@ -12,6 +12,7 @@ const ALLOWED_TYPES = new Set([
   'audio/x-m4a',
 ]);
 const BLOCKED_STATUSES = new Set(['suspended', 'banned', 'limited']);
+const PAID_PLANS = new Set(['access', 'starter', 'pro', 'premium', 'paid']);
 
 function json(body, status = 200) {
   return Response.json(body, {
@@ -85,6 +86,11 @@ async function getMember(env, username, ph) {
     return { error: 'This account is not currently allowed to upload tracks.' };
   }
   return { member: row };
+}
+
+function isFreePlan(member) {
+  const plan = String(member?.plan_type || 'free').toLowerCase();
+  return !PAID_PLANS.has(plan);
 }
 
 async function countMonthlyUploads(env, username) {
@@ -165,8 +171,10 @@ export async function onRequestPost(context) {
     const memberResult = await getMember(context.env, username, ph);
     if (memberResult.error) return json({ ok: false, error: memberResult.error }, 403);
 
-    const monthlyCount = await countMonthlyUploads(context.env, username);
-    if (monthlyCount !== null && monthlyCount >= 2) {
+    const monthlyCount = isFreePlan(memberResult.member)
+      ? await countMonthlyUploads(context.env, username)
+      : null;
+    if (isFreePlan(memberResult.member) && monthlyCount !== null && monthlyCount >= 2) {
       return json({ ok: false, error: 'You have already used your 2 uploads for this month.', remaining: 0 }, 429);
     }
 

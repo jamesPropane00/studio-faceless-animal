@@ -1064,22 +1064,23 @@
       <!-- ══ TAB: TRACKS ═════════════════════════════════════════ -->
       <div class="dash-tab-panel" id="tab-tracks">
 
-        <!-- Gate — shown to free members -->
+        <!-- Gate — reserved for unavailable upload states -->
         <div class="dash-section" id="tracks-gate" style="display:none;">
           <div class="dash-card" style="text-align:center;padding:2rem 1.25rem;">
             <div style="font-size:2.5rem;margin-bottom:0.75rem;">🎵</div>
             <p style="font-size:1rem;font-weight:900;color:var(--text);margin:0 0 0.5rem;">Music Upload</p>
-            <p style="font-size:0.82rem;color:var(--text-2);line-height:1.65;margin:0 0 1.25rem;">Upload your tracks and host them directly on the platform. MP3, WAV, FLAC and more — up to 30MB per file. Requires an active plan.</p>
+            <p style="font-size:0.82rem;color:var(--text-2);line-height:1.65;margin:0 0 1.25rem;">Upload your tracks and host them directly on the platform. Free members get 2 uploads per month. Paid plans unlock the full upload lane.</p>
             <a href="pricing.html" class="btn btn-primary btn-sm">Get Access →</a>
           </div>
         </div>
 
-        <!-- Upload section — shown to paid members -->
+        <!-- Upload section -->
         <div id="tracks-upload-section" style="display:none;">
 
           <div class="dash-section">
             <!-- Fix 5: track count shown near upload form so creator knows their quota at a glance -->
             <p class="dash-section-title" style="display:flex;align-items:center;gap:0.5rem;">Upload a Track <span id="track-upload-count" style="font-size:0.7rem;color:var(--text-3);font-weight:400;"></span></p>
+            <p id="track-upload-quota-note" style="font-size:0.72rem;color:var(--text-3);margin:-0.2rem 0 0.75rem;line-height:1.55;">Free members get 2 music uploads each month.</p>
             <div class="dash-card">
 
               <!-- Drop zone -->
@@ -3719,6 +3720,7 @@
     const TRACK_MAX_MB   = 30
     const TRACK_MAX_B    = TRACK_MAX_MB * 1024 * 1024
     const TRACK_MAX_CNT  = 10
+    const FREE_TRACK_MONTHLY_UPLOADS = 2
     const TRACK_ALLOWED  = new Set([
       'audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/wav', 'audio/x-wav',
       'audio/flac', 'audio/mp4', 'audio/x-m4a', 'audio/aiff', 'audio/x-aiff',
@@ -3735,6 +3737,43 @@
       if (!bytes) return ''
       if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB'
       return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+    }
+
+    function isFreeTrackPlan() {
+      const plan = String((memberData && memberData.plan_type) || getSession()?.plan || 'free').toLowerCase()
+      return !['access', 'starter', 'pro', 'premium', 'paid'].includes(plan)
+    }
+
+    function trackUploadedThisMonth(track) {
+      const raw = track && (track.uploaded_at || track.created_at || track.createdAt)
+      if (!raw) return false
+      const uploaded = new Date(raw)
+      if (Number.isNaN(uploaded.getTime())) return false
+      const now = new Date()
+      return uploaded.getFullYear() === now.getFullYear() && uploaded.getMonth() === now.getMonth()
+    }
+
+    function getFreeMonthlyTrackCount() {
+      return trackList.filter(trackUploadedThisMonth).length
+    }
+
+    function updateTrackQuotaUi() {
+      const countThisMonth = getFreeMonthlyTrackCount()
+      const remaining = Math.max(0, FREE_TRACK_MONTHLY_UPLOADS - countThisMonth)
+      const uploadCount = document.getElementById('track-upload-count')
+      const quotaNote = document.getElementById('track-upload-quota-note')
+
+      if (isFreeTrackPlan()) {
+        if (uploadCount) uploadCount.textContent = `(${countThisMonth}/${FREE_TRACK_MONTHLY_UPLOADS} free uploads this month)`
+        if (quotaNote) {
+          quotaNote.textContent = remaining
+            ? `Free plan: ${remaining} of ${FREE_TRACK_MONTHLY_UPLOADS} uploads remaining this month.`
+            : `Free plan: monthly upload limit reached. You can upload again next month or upgrade for more.`
+        }
+      } else {
+        if (uploadCount) uploadCount.textContent = trackList.length ? `(${trackList.length}/${TRACK_MAX_CNT} stored)` : ''
+        if (quotaNote) quotaNote.textContent = 'Paid members can use the full upload lane.'
+      }
     }
 
     function trackNote(msg, ok = true) {
@@ -3780,9 +3819,7 @@
       const count = document.getElementById('tracks-count')
       if (!list) return
       if (count) count.textContent = trackList.length ? `(${trackList.length}/${TRACK_MAX_CNT})` : ''
-      // Fix 5: mirror count near the upload form title
-      const uploadCount = document.getElementById('track-upload-count')
-      if (uploadCount) uploadCount.textContent = trackList.length ? `(${trackList.length}/${TRACK_MAX_CNT} stored)` : ''
+      updateTrackQuotaUi()
       if (!trackList.length) {
         if (empty) empty.style.display = ''
         list.querySelectorAll('.track-card').forEach(c => c.remove())
@@ -3869,6 +3906,10 @@
       if (trackList.length >= TRACK_MAX_CNT) {
         trackNote(`Max ${TRACK_MAX_CNT} tracks. Delete one first.`, false); return
       }
+      if (isFreeTrackPlan() && getFreeMonthlyTrackCount() >= FREE_TRACK_MONTHLY_UPLOADS) {
+        trackNote(`Free members get ${FREE_TRACK_MONTHLY_UPLOADS} music uploads per month. Upgrade for more uploads.`, false)
+        return
+      }
 
       const sess = getSession()
       if (!sess?.ph) { trackNote('Session expired — sign in again.', false); return }
@@ -3940,7 +3981,7 @@
       if (label) label.textContent = 'Upload complete!'
 
       // Server updated _index.json in Storage — just add new track to local list
-      trackList = [result, ...trackList].slice(0, TRACK_MAX_CNT)
+      trackList = [{ uploaded_at: new Date().toISOString(), ...result }, ...trackList].slice(0, TRACK_MAX_CNT)
       renderTracks()
 
       // Reset form
@@ -3991,19 +4032,13 @@
     function initTrackTab(sess) {
       if (trackTabInitialized) return
       trackTabInitialized = true
-      const isPaid = FAS.isPaidMember()
 
-      // Show/hide gate vs upload section
+      // Show upload section for free and paid members.
       const gate = document.getElementById('tracks-gate')
       const sec  = document.getElementById('tracks-upload-section')
-      if (isPaid) {
-        if (gate) gate.style.display = 'none'
-        if (sec)  sec.style.display  = ''
-      } else {
-        if (gate) gate.style.display = ''
-        if (sec)  sec.style.display  = 'none'
-        return
-      }
+      if (gate) gate.style.display = 'none'
+      if (sec)  sec.style.display  = ''
+      updateTrackQuotaUi()
 
       // Load saved tracks from public _index.json in Storage (no DB column needed)
       const supaConf = window.__FAS_CONFIG || {}
