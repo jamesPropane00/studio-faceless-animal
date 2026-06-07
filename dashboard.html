@@ -361,6 +361,87 @@
     /* ── Misc ── */
     .dash-loading { font-size: 0.8rem; color: var(--text-3); text-align: center; padding: 0.85rem 0; }
     .dash-divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 1rem 0; }
+
+    /* Mobile dashboard hardening */
+    html, body { max-width: 100%; overflow-x: hidden; }
+    .dash-wrap, .dash-container, .dash-section, .dash-card, .dash-identity, .dash-msg-body, .track-card-meta { min-width: 0; }
+    .dash-card { overflow: hidden; }
+    .dash-status-val, .dash-id-val, .dash-field-note, .dash-upgrade-sub, .dash-moment-text, .track-card-sub { overflow-wrap: anywhere; }
+    .dash-link-card, .dash-link-card button, .dash-board-submit-row .btn { min-width: 0; }
+
+    @media (max-width: 640px) {
+      .dash-wrap { padding: 1rem 0 6rem; }
+      .dash-container { max-width: 100%; padding: 0 0.85rem; }
+      .dash-gate { min-height: calc(100dvh - 120px); padding: 2rem 1rem; }
+      .dash-header { align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem; padding-top: 0.5rem; }
+      .dash-avatar { width: 52px; height: 52px; font-size: 1.25rem; }
+      .dash-display-name { font-size: 1rem; }
+      .dash-username { font-size: 0.74rem; overflow-wrap: anywhere; }
+      .dash-vibe-pill { max-width: 100%; }
+      .dash-plan-badge { font-size: 0.58rem; padding: 0.22rem 0.48rem; }
+
+      .dash-tabs {
+        margin-left: -0.85rem;
+        margin-right: -0.85rem;
+        margin-bottom: 1.2rem;
+        padding: 0 0.85rem;
+        scroll-snap-type: x proximity;
+      }
+      .dash-tab-btn {
+        flex: 0 0 auto;
+        padding: 0.65rem 0.8rem;
+        font-size: 0.66rem;
+        scroll-snap-align: start;
+      }
+
+      .dash-section { margin-bottom: 1.25rem; }
+      .dash-card { padding: 0.9rem; border-radius: 12px; }
+      .dash-status-row { align-items: flex-start; }
+      .dash-links-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .dash-link-card { min-height: 84px; padding: 0.8rem 0.45rem; }
+      .dash-link-icon { font-size: 1.15rem; }
+      .dash-link-label { font-size: 0.62rem; line-height: 1.25; }
+
+      .dash-upgrade-actions .btn,
+      .dash-card .btn { max-width: 100%; white-space: normal; text-align: center; }
+      .dash-msg-item { align-items: flex-start; padding: 0.65rem; gap: 0.55rem; }
+      .dash-msg-meta { text-align: left; }
+      .dash-id-row { flex-direction: column; align-items: flex-start; }
+      .dash-id-label { min-width: 0; }
+      .dash-id-val-wrap { max-width: 100%; }
+      .dash-vibe-row { align-items: stretch; }
+      .dash-hl-add-row { grid-template-columns: 48px 1fr; }
+
+      .track-dropzone { padding: 1rem 0.75rem; }
+      .track-card { padding: 0.8rem; }
+      .track-card-header { align-items: flex-start; gap: 0.5rem; }
+      .track-card-title, .track-card-desc { white-space: normal; overflow-wrap: anywhere; }
+      .track-audio { height: 42px; }
+
+      .dash-board-actions,
+      .dash-board-submit-row { flex-direction: column; align-items: stretch; }
+      .dash-board-submit-row .btn,
+      .dash-board-cat-select { width: 100%; justify-content: center; }
+
+      .admin-user-row > div,
+      #legacy-admin-user-rows > div > div,
+      #admin-user-rows > div > div {
+        grid-template-columns: 1fr !important;
+        gap: 0.45rem !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .dash-header { flex-wrap: wrap; }
+      .dash-plan-badge { margin-left: calc(52px + 0.75rem); }
+      .dash-links-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 340px) {
+      .dash-links-grid { grid-template-columns: 1fr; }
+      .dash-avatar { width: 46px; height: 46px; }
+      .dash-plan-badge { margin-left: 0; }
+    }
   </style>
 </head>
 <body>
@@ -371,11 +452,12 @@
         <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
-          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
-          <li><a href="wallet.html">Vault</a></li>
-          <li><a href="games.html">Games</a></li>
-          <li><a href="pricing.html">Pricing</a></li>
-          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+          <li><a href="radio.html">Radio</a></li>
+          <li><a href="tv.html">TV</a></li>
+          <li><a href="neon-dreams.html">Neon Dreams</a></li>
+          <li><a href="news.html">News</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="login.html" class="nav-cta">Enter The System</a></li>
         </ul>
         <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
           <span></span><span></span><span></span>
@@ -386,14 +468,12 @@
 
   <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
     <a href="directory.html">Directory</a>
-    <a href="games.html">Games</a>
-    <a href="music.html">Music</a>
-    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
-    <a href="wallet.html">Vault</a>
-    <a href="pricing.html">Pricing</a>
-    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="about.html">About</a>
+    <a href="radio.html">Radio</a>
+    <a href="tv.html">TV</a>
+    <a href="neon-dreams.html">Neon Dreams</a>
+    <a href="news.html">News</a>
+    <a href="store.html">Store</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Enter The System</a>
   </div>
 
   <div class="dash-wrap">
