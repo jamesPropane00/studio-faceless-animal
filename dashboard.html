@@ -3599,6 +3599,26 @@
         return
       }
 
+      const loadBoardPosts = async () => {
+        const boardRes = await supabase
+          .from('board_posts')
+          .select('username, category, post_text, image_url, created_at, visibility_status')
+          .eq('is_approved', true)
+          .eq('visibility_status', 'visible')
+          .order('created_at', { ascending: false })
+          .limit(12)
+        return (boardRes.data || []).map(row => ({
+          author_username: row.username,
+          category: row.category,
+          post_type: 'text',
+          body_text: row.post_text,
+          media_url: row.image_url,
+          created_at: row.created_at,
+          moderation_state: row.visibility_status,
+          source_table: 'board_posts',
+        }))
+      }
+
       const signalRes = await supabase
         .from('signal_posts')
         .select('author_username, post_type, category, body_text, media_url, created_at, moderation_state')
@@ -3607,24 +3627,11 @@
         .order('created_at', { ascending: false })
         .limit(12)
 
-      let data = signalRes.data || []
+      let data = (signalRes.data || []).map(row => ({ ...row, source_table: 'signal_posts' }))
       if (signalRes.error && String(signalRes.error.code || '') === '42P01') {
-        const boardRes = await supabase
-          .from('board_posts')
-          .select('username, category, post_text, image_url, created_at, visibility_status')
-          .eq('is_approved', true)
-          .eq('visibility_status', 'visible')
-          .order('created_at', { ascending: false })
-          .limit(12)
-        data = (boardRes.data || []).map(row => ({
-          author_username: row.username,
-          category: row.category,
-          post_type: 'text',
-          body_text: row.post_text,
-          media_url: row.image_url,
-          created_at: row.created_at,
-          moderation_state: row.visibility_status,
-        }))
+        data = await loadBoardPosts()
+      } else if (!data.length) {
+        data = await loadBoardPosts()
       }
 
       if (loadingEl) loadingEl.style.display = 'none'
