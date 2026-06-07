@@ -3757,7 +3757,7 @@
               <p style="font-size:0.82rem;color:var(--text-2);line-height:1.6;margin:0;">${linkifySignalText(preview || 'Signal update')}</p>
               <div style="display:flex;justify-content:space-between;gap:0.6rem;align-items:center;margin-top:0.55rem;">
                 <span style="font-size:0.64rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;">${escHtml(type)} · ${escHtml(category)}</span>
-                ${row.media_url ? `<a href="${escHtml(row.media_url)}" target="_blank" rel="noopener noreferrer" style="min-width:0;font-size:0.68rem;color:var(--purple-bright);text-decoration:underline;text-underline-offset:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(row.media_url)}</a>` : ''}
+                ${row.media_url ? `<a href="${escHtml(signalUrlHref(row.media_url))}" target="_blank" rel="noopener noreferrer" style="min-width:0;font-size:0.68rem;color:var(--purple-bright);text-decoration:underline;text-underline-offset:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(row.media_url)}</a>` : ''}
               </div>
             </div>
           `
@@ -5403,13 +5403,21 @@ GRANT EXECUTE ON FUNCTION admin_fix_missing_signal_codes(TEXT, TEXT) TO anon, au
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
     }
 
+    function signalUrlHref(value) {
+      const raw = String(value || '').trim()
+      if (!raw) return '#'
+      if (/^https?:\/\//i.test(raw)) return raw
+      if (/^www\./i.test(raw)) return 'https://' + raw
+      return raw
+    }
+
     function linkifySignalText(value) {
       const escaped = escHtml(value)
-      const urlPattern = /\bhttps?:\/\/[^\s<]+/g
+      const urlPattern = /\b(?:https?:\/\/|www\.)[^\s<]+/gi
       return escaped.replace(urlPattern, rawUrl => {
         const href = rawUrl.replace(/[.,!?;:)]+$/g, '')
         const trailing = rawUrl.slice(href.length)
-        return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:var(--purple-bright);text-decoration:underline;text-underline-offset:3px;word-break:break-all;">${href}</a>${trailing}`
+        return `<a href="${escHtml(signalUrlHref(href))}" target="_blank" rel="noopener noreferrer" style="color:var(--purple-bright);text-decoration:underline;text-underline-offset:3px;word-break:break-all;">${href}</a>${trailing}`
       })
     }
 
