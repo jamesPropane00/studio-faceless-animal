@@ -5408,18 +5408,31 @@ GRANT EXECUTE ON FUNCTION admin_fix_missing_signal_codes(TEXT, TEXT) TO anon, au
       if (!raw) return '#'
       if (/^https?:\/\//i.test(raw)) return raw
       if (/^www\./i.test(raw)) return 'https://' + raw
+      if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(?:[/?#].*)?$/i.test(raw)) return 'https://' + raw
       return raw
     }
 
     function linkifySignalText(value) {
       const escaped = escHtml(value)
-      const urlPattern = /\b(?:https?:\/\/|www\.)[^\s<]+/gi
+      const urlPattern = /\b(?:https?:\/\/|www\.|[a-z0-9][a-z0-9.-]*\.[a-z]{2,})[^\s<]*/gi
       return escaped.replace(urlPattern, rawUrl => {
         const href = rawUrl.replace(/[.,!?;:)]+$/g, '')
         const trailing = rawUrl.slice(href.length)
         return `<a href="${escHtml(signalUrlHref(href))}" target="_blank" rel="noopener noreferrer" style="color:var(--purple-bright);text-decoration:underline;text-underline-offset:3px;word-break:break-all;">${href}</a>${trailing}`
       })
     }
+
+    document.addEventListener('click', function(e) {
+      const link = e.target && e.target.closest('#signal-overview-feed-list a, #signal-global-feed-list a')
+      if (!link) return
+      const href = signalUrlHref(link.getAttribute('href') || link.textContent || '')
+      if (!href || href === '#') return
+      e.preventDefault()
+      e.stopPropagation()
+      const opened = window.open(href, '_blank', 'noopener,noreferrer')
+      if (opened) opened.opener = null
+      else window.location.href = href
+    }, true)
 
     function formatTimeAgo(ts) {
       if (!ts) return '—'
