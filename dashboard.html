@@ -787,6 +787,26 @@
           </div>
         </div>
 
+        <!-- Signal feed preview -->
+        <div class="dash-section">
+          <p class="dash-section-title">Signal Feed</p>
+          <p style="font-size:0.75rem;color:var(--text-3);margin:-0.2rem 0 0.65rem;line-height:1.6;">Live posts, updates, drops, and announcements from the platform. This is the social pulse of the dashboard.</p>
+          <div id="signal-overview-feed-wrap">
+            <div class="dash-loading" id="signal-overview-feed-loading">Loading signal feed...</div>
+            <div id="signal-overview-feed-list" style="display:none;"></div>
+            <div id="signal-overview-feed-empty" style="display:none;">
+              <div class="dash-card" style="text-align:center;padding:1.25rem;">
+                <p style="font-size:0.82rem;color:var(--text-3);margin:0 0 0.75rem;">No public signals yet.</p>
+                <button class="btn btn-ghost btn-sm" type="button" onclick="document.querySelector('[data-tab=post]')?.click()">Start The Signal</button>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:0.55rem;flex-wrap:wrap;margin-top:0.65rem;">
+            <button class="btn btn-ghost btn-sm" type="button" style="font-size:0.72rem;" onclick="document.querySelector('[data-tab=post]')?.click()">Open Signal Feed</button>
+            <button class="btn btn-primary btn-sm" type="button" style="font-size:0.72rem;" onclick="document.querySelector('[data-tab=post]')?.click()">Post A Signal</button>
+          </div>
+        </div>
+
         <div class="dash-section">
           <p class="dash-section-title">Build Your Own Platform</p>
           <div class="dash-card">
@@ -3569,9 +3589,13 @@
       const loadingEl = document.getElementById('signal-global-feed-loading')
       const listEl = document.getElementById('signal-global-feed-list')
       const emptyEl = document.getElementById('signal-global-feed-empty')
+      const overviewLoadingEl = document.getElementById('signal-overview-feed-loading')
+      const overviewListEl = document.getElementById('signal-overview-feed-list')
+      const overviewEmptyEl = document.getElementById('signal-overview-feed-empty')
 
       if (!SUPABASE_READY || !supabase) {
         if (loadingEl) loadingEl.textContent = 'Unavailable offline.'
+        if (overviewLoadingEl) overviewLoadingEl.textContent = 'Signal feed unavailable offline.'
         return
       }
 
@@ -3604,9 +3628,12 @@
       }
 
       if (loadingEl) loadingEl.style.display = 'none'
+      if (overviewLoadingEl) overviewLoadingEl.style.display = 'none'
       if (!data.length) {
         if (emptyEl) emptyEl.style.display = ''
         if (listEl) { listEl.style.display = 'none'; listEl.innerHTML = '' }
+        if (overviewEmptyEl) overviewEmptyEl.style.display = ''
+        if (overviewListEl) { overviewListEl.style.display = 'none'; overviewListEl.innerHTML = '' }
         const pulseLive = document.getElementById('pulse-live-feed')
         if (pulseLive) pulseLive.textContent = '0'
         return
@@ -3635,6 +3662,7 @@
       } catch (_) {}
 
       if (emptyEl) emptyEl.style.display = 'none'
+      if (overviewEmptyEl) overviewEmptyEl.style.display = 'none'
       if (listEl) {
         listEl.style.display = ''
         listEl.innerHTML = data.map(row => {
@@ -3674,6 +3702,32 @@
             } catch (_) {}
           })
         })
+      }
+
+      if (overviewListEl) {
+        overviewListEl.style.display = ''
+        overviewListEl.innerHTML = data.slice(0, 5).map(row => {
+          const type = row.post_type || 'text'
+          const category = row.category || 'update'
+          const authorKey = String(row.author_username || '').toLowerCase()
+          const authorVeil = veilMap[authorKey] || 'unveiled'
+          const authorLabel = authorVeil === 'unveiled' ? ('@' + (row.author_username || 'member')) : 'Veiled User'
+          const body = String(row.body_text || '').trim()
+          const preview = body.length > 180 ? body.slice(0, 180).trim() + '...' : body
+          return `
+            <div class="dash-card dash-card--purple" style="margin-bottom:0.55rem;padding:0.85rem;">
+              <div style="display:flex;justify-content:space-between;gap:0.6rem;align-items:flex-start;margin-bottom:0.42rem;">
+                <span style="font-size:0.7rem;font-weight:800;color:var(--purple-bright);">${escHtml(authorLabel)}</span>
+                <span style="font-size:0.66rem;color:var(--text-3);white-space:nowrap;">${formatDMTime(row.created_at)}</span>
+              </div>
+              <p style="font-size:0.82rem;color:var(--text-2);line-height:1.6;margin:0;">${escHtml(preview || 'Signal update')}</p>
+              <div style="display:flex;justify-content:space-between;gap:0.6rem;align-items:center;margin-top:0.55rem;">
+                <span style="font-size:0.64rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;">${escHtml(type)} · ${escHtml(category)}</span>
+                ${row.media_url ? `<a href="${escHtml(row.media_url)}" target="_blank" rel="noopener" style="font-size:0.68rem;color:var(--purple-bright);">Open Link</a>` : ''}
+              </div>
+            </div>
+          `
+        }).join('')
       }
     }
 
