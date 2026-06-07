@@ -97,6 +97,38 @@
       font-size: 0.82rem;
       line-height: 1.6;
     }
+    .ndc-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+    }
+    .ndc-preview-card {
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.025);
+    }
+    .ndc-preview-card img {
+      display: block;
+      width: 100%;
+      height: 320px;
+      object-fit: cover;
+      object-position: top center;
+      background: rgba(255,255,255,0.04);
+    }
+    .ndc-preview-card-body {
+      padding: 0.95rem 1rem 1rem;
+    }
+    .ndc-preview-card h3 {
+      font-size: 0.98rem;
+      margin: 0 0 0.4rem;
+    }
+    .ndc-preview-card p {
+      margin: 0;
+      color: var(--text-2);
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
     .ndc-comic-panel {
       display: grid;
       grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
@@ -167,6 +199,8 @@
       .ndc-hero-inner { padding: 7rem 0 2.75rem; }
       .ndc-actions .btn { width: 100%; max-width: 100%; }
       .ndc-art-grid { grid-template-columns: 1fr; }
+      .ndc-preview-grid { grid-template-columns: 1fr 1fr; }
+      .ndc-preview-card img { height: 240px; }
       .ndc-comic-panel { grid-template-columns: 1fr; }
       .ndc-comic-cover img { min-height: 0; }
       .ndc-reader { max-height: 68dvh; padding: 0.5rem; }
@@ -248,6 +282,46 @@
             <div class="ndc-art-card-body">
               <h3>Alternate cover</h3>
               <p>Additional cover asset prepared for page and promo use.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="frames">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-label">Selected Frames</p>
+          <h2>Different images from the first edition</h2>
+          <p class="section-sub">A few page previews pulled from the comic so the page has more variety and less repeated cover art.</p>
+        </div>
+        <div class="ndc-preview-grid">
+          <article class="ndc-preview-card">
+            <img src="assets/neon-dreams/first-edition/page-01.jpg" alt="Neon Dreams Club First Edition page 1 preview" loading="lazy" />
+            <div class="ndc-preview-card-body">
+              <h3>Opening page</h3>
+              <p>The first page of the story sets the tone for the issue.</p>
+            </div>
+          </article>
+          <article class="ndc-preview-card">
+            <img src="assets/neon-dreams/first-edition/page-06.png" alt="Neon Dreams Club First Edition page 6 preview" loading="lazy" />
+            <div class="ndc-preview-card-body">
+              <h3>Mid-issue frame</h3>
+              <p>Different art beats from deeper in the comic.</p>
+            </div>
+          </article>
+          <article class="ndc-preview-card">
+            <img src="assets/neon-dreams/first-edition/page-10.png" alt="Neon Dreams Club First Edition page 10 preview" loading="lazy" />
+            <div class="ndc-preview-card-body">
+              <h3>Signal turn</h3>
+              <p>Another page to vary the visual rhythm on the page.</p>
+            </div>
+          </article>
+          <article class="ndc-preview-card">
+            <img src="assets/neon-dreams/first-edition/page-17.png" alt="Neon Dreams Club First Edition page 17 preview" loading="lazy" />
+            <div class="ndc-preview-card-body">
+              <h3>Closing page</h3>
+              <p>The final page gives the section a different texture and scale.</p>
             </div>
           </article>
         </div>
