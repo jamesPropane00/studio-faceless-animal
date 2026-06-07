@@ -3,12 +3,176 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Neon Dreams Club — the comic and lore hub of Faceless Animal Studios. Explore characters, comics, animated shorts, and the underground story universe." />
-  <title>Neon Dreams Club — Faceless Animal Studios</title>
+  <meta name="description" content="Neon Dreams Club - the comic and lore hub of Faceless Animal Studios. Explore characters, comics, artwork, and the underground story universe." />
+  <title>Neon Dreams Club - Faceless Animal Studios</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/style.css?v=20260322" />
+  <style>
+    .ndc-hero {
+      position: relative;
+      min-height: calc(100dvh - var(--nav-h, 72px));
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+      background: #07070c;
+    }
+    .ndc-hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(7,7,12,0.96) 0%, rgba(7,7,12,0.58) 44%, rgba(7,7,12,0.2) 100%),
+        linear-gradient(0deg, rgba(7,7,12,0.96) 0%, rgba(7,7,12,0.08) 48%, rgba(7,7,12,0.5) 100%),
+        url("assets/neon-dreams/covers/cover-vertical.jpg") center right / cover no-repeat;
+    }
+    .ndc-hero-inner {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      padding: 8rem 0 4rem;
+    }
+    .ndc-hero-copy { max-width: 760px; }
+    .ndc-kicker {
+      color: var(--gold);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin: 0 0 0.8rem;
+    }
+    .ndc-title {
+      font-size: clamp(3rem, 8vw, 7.25rem);
+      line-height: 0.92;
+      letter-spacing: 0;
+      margin: 0;
+      text-transform: uppercase;
+    }
+    .ndc-sub {
+      max-width: 650px;
+      color: var(--text-2);
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      line-height: 1.75;
+      margin: 1.2rem 0 1.5rem;
+    }
+    .ndc-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .ndc-adult-link {
+      border-color: rgba(236,72,153,0.45) !important;
+      color: #f9a8d4 !important;
+      background: rgba(236,72,153,0.09) !important;
+    }
+    .ndc-art-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+    .ndc-art-card {
+      min-width: 0;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.025);
+    }
+    .ndc-art-card img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1.12;
+      object-fit: cover;
+      background: rgba(255,255,255,0.04);
+    }
+    .ndc-art-card-body { padding: 1rem; }
+    .ndc-art-card h3 {
+      font-size: 1rem;
+      margin: 0 0 0.4rem;
+    }
+    .ndc-art-card p {
+      margin: 0;
+      color: var(--text-2);
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+    .ndc-comic-panel {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
+      gap: 1.25rem;
+      align-items: stretch;
+    }
+    .ndc-comic-cover {
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+    }
+    .ndc-comic-cover img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+      object-fit: cover;
+    }
+    .ndc-comic-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    .ndc-reader {
+      max-height: min(760px, 78dvh);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      padding: 0.75rem;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.025);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(139,92,246,0.6) rgba(255,255,255,0.05);
+    }
+    .ndc-reader::-webkit-scrollbar { width: 8px; }
+    .ndc-reader::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 999px; }
+    .ndc-reader::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.65); border-radius: 999px; }
+    .ndc-reader img {
+      display: block;
+      width: 100%;
+      max-width: 920px;
+      margin: 0 auto 0.8rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+    }
+    .ndc-banner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 1.25rem;
+      border-radius: 18px;
+      border: 1px solid rgba(236,72,153,0.22);
+      background: linear-gradient(135deg, rgba(236,72,153,0.12), rgba(139,92,246,0.08));
+    }
+    @media (max-width: 760px) {
+      .ndc-hero::before {
+        background:
+          linear-gradient(0deg, rgba(7,7,12,0.98) 0%, rgba(7,7,12,0.72) 48%, rgba(7,7,12,0.38) 100%),
+          url("assets/neon-dreams/covers/cover-vertical.jpg") center top / cover no-repeat;
+      }
+      .ndc-hero-inner { padding: 7rem 0 2.75rem; }
+      .ndc-actions .btn { width: 100%; max-width: 100%; }
+      .ndc-art-grid { grid-template-columns: 1fr; }
+      .ndc-comic-panel { grid-template-columns: 1fr; }
+      .ndc-comic-cover img { min-height: 0; }
+      .ndc-reader { max-height: 68dvh; padding: 0.5rem; }
+      .ndc-banner { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar" role="navigation" aria-label="Main navigation">
@@ -20,9 +184,8 @@
           <li><a href="radio.html">Radio</a></li>
           <li><a href="tv.html">TV</a></li>
           <li><a href="neon-dreams.html" aria-current="page">Neon Dreams</a></li>
-          <li><a href="vault.html">Vault</a></li>
-          <li><a href="dashboard.html">Dashboard</a></li>
-          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="news.html">News</a></li>
+          <li><a href="store.html">Store</a></li>
           <li><a href="login.html" class="nav-cta">Enter The System</a></li>
         </ul>
         <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
@@ -37,73 +200,55 @@
     <a href="radio.html">Radio</a>
     <a href="tv.html">TV</a>
     <a href="neon-dreams.html" style="font-weight:700;color:var(--gold);">Neon Dreams</a>
-    <a href="vault.html">Vault</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="pricing.html">Pricing</a>
+    <a href="news.html">News</a>
+    <a href="store.html">Store</a>
     <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Enter The System</a>
   </div>
 
   <main>
-    <section class="hero-wrap">
-      <div class="container">
-        <div class="hero-grid">
-          <div class="hero-main">
-            <p class="hero-eyebrow">NEON DREAMS CLUB</p>
-            <h1 class="hero-title">Enter the signal.</h1>
-            <p class="hero-sub">A growing universe of comics, characters, animated shorts, stories, music, and digital worlds created by Faceless Animal Studios.</p>
-            <div class="hero-actions">
-              <a href="#comic" class="btn btn-primary">Read The Comic</a>
-              <a href="#characters" class="btn btn-ghost">Meet The Characters</a>
-              <a href="vault.html" class="btn btn-secondary">Enter The Vault</a>
-            </div>
+    <section class="ndc-hero">
+      <div class="container ndc-hero-inner">
+        <div class="ndc-hero-copy">
+          <p class="ndc-kicker">NEON DREAMS CLUB</p>
+          <h1 class="ndc-title">First Edition</h1>
+          <p class="ndc-sub">The comic and visual story hub for the Neon Dreams Club universe. Browse the first edition, download the PDF, and step deeper into the signal.</p>
+          <div class="ndc-actions">
+            <a href="#comic" class="btn btn-primary">Read The Comic</a>
+            <a href="assets/neon-dreams/first-edition/neon-dreams-club-first-edition.pdf" class="btn btn-ghost" download>Download First Edition</a>
+            <a href="https://fanvue.com/neondreamsclub" class="btn btn-ghost ndc-adult-link" target="_blank" rel="noopener noreferrer">For exclusive and adult content of the girls click here</a>
           </div>
-          <aside class="hero-side">
-            <div class="side-card">
-              <div class="side-label">Neon Dreams</div>
-              <p style="margin:0;color:var(--text-2);line-height:1.75;">Your entry point to the Faceless Animal story universe: comics, character profiles, shorts, lore, and the world behind the network.</p>
-            </div>
-          </aside>
         </div>
       </div>
     </section>
 
-    <section class="section" id="characters">
+    <section class="section" id="covers">
       <div class="container">
         <div class="section-header">
-          <p class="section-label">Character Showcase</p>
-          <h2>Meet the Neon Dreams cast</h2>
-          <p class="section-sub">Placeholder character cards for Lux, Nyx, Nae, Vex, and Zei. Each card is ready for future profiles and story detail.</p>
+          <p class="section-label">Covers Folder</p>
+          <h2>Neon Dreams artwork</h2>
+          <p class="section-sub">Cover art and promo pieces pulled from the Neon Dreams Club Covers folder.</p>
         </div>
-        <div class="feature-grid">
-          <article class="feature-card">
-            <div style="height:190px;border-radius:18px;background:radial-gradient(circle at 30% 20%,rgba(167,139,250,0.3),rgba(10,11,15,0.95));margin-bottom:1rem;"></div>
-            <h3>Lux</h3>
-            <p style="color:var(--text-2);">Signal runner and mythmaker. Placeholder profile content will load here later.</p>
-            <a href="#" class="btn btn-ghost btn-sm">Profile coming soon</a>
+        <div class="ndc-art-grid">
+          <article class="ndc-art-card">
+            <img src="assets/neon-dreams/covers/cover-square.jpg" alt="Neon Dreams Club square cover art" loading="lazy" />
+            <div class="ndc-art-card-body">
+              <h3>Square cover</h3>
+              <p>Primary social cover artwork for the Neon Dreams Club universe.</p>
+            </div>
           </article>
-          <article class="feature-card">
-            <div style="height:190px;border-radius:18px;background:radial-gradient(circle at 70% 20%,rgba(255,126,211,0.2),rgba(10,11,15,0.95));margin-bottom:1rem;"></div>
-            <h3>Nyx</h3>
-            <p style="color:var(--text-2);">Digital shadow queen of the underground narrative. Details are placeholder only.</p>
-            <a href="#" class="btn btn-ghost btn-sm">Profile coming soon</a>
+          <article class="ndc-art-card">
+            <img src="assets/neon-dreams/covers/cover-a.png" alt="Neon Dreams Club character cover art" loading="lazy" />
+            <div class="ndc-art-card-body">
+              <h3>Character cover</h3>
+              <p>Visual key art from the Covers folder.</p>
+            </div>
           </article>
-          <article class="feature-card">
-            <div style="height:190px;border-radius:18px;background:radial-gradient(circle at 20% 80%,rgba(56,189,248,0.2),rgba(10,11,15,0.95));margin-bottom:1rem;"></div>
-            <h3>Nae</h3>
-            <p style="color:var(--text-2);">Circuit prophet and data poet. Placeholder text prepared for later expansion.</p>
-            <a href="#" class="btn btn-ghost btn-sm">Profile coming soon</a>
-          </article>
-          <article class="feature-card">
-            <div style="height:190px;border-radius:18px;background:radial-gradient(circle at 80% 80%,rgba(34,197,94,0.2),rgba(10,11,15,0.95));margin-bottom:1rem;"></div>
-            <h3>Vex</h3>
-            <p style="color:var(--text-2);">Augmented storyteller in the neon underground. This card is intentionally generic for now.</p>
-            <a href="#" class="btn btn-ghost btn-sm">Profile coming soon</a>
-          </article>
-          <article class="feature-card">
-            <div style="height:190px;border-radius:18px;background:radial-gradient(circle at 50% 30%,rgba(249,115,22,0.2),rgba(10,11,15,0.95));margin-bottom:1rem;"></div>
-            <h3>Zei</h3>
-            <p style="color:var(--text-2);">Lore archivist of the signal network. Placeholder data structure is ready for future updates.</p>
-            <a href="#" class="btn btn-ghost btn-sm">Profile coming soon</a>
+          <article class="ndc-art-card">
+            <img src="assets/neon-dreams/covers/cover-751.jpg" alt="Neon Dreams Club alternate cover art" loading="lazy" />
+            <div class="ndc-art-card-body">
+              <h3>Alternate cover</h3>
+              <p>Additional cover asset prepared for page and promo use.</p>
+            </div>
           </article>
         </div>
       </div>
@@ -112,82 +257,70 @@
     <section class="section section-alt" id="comic">
       <div class="container">
         <div class="section-header">
-          <p class="section-label">Comic Section</p>
-          <h2>FIRST SIGNAL</h2>
-          <p class="section-sub">Issue #1 of the Neon Dreams Club universe.</p>
+          <p class="section-label">Neon Dreams Club First Edition</p>
+          <h2>Read or download issue one</h2>
+          <p class="section-sub">The full first edition is available as an on-page reader and as a downloadable PDF.</p>
         </div>
         <div class="feature-card">
-          <div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;">
-            <div style="flex:1 1 240px;min-height:320px;border-radius:22px;background:linear-gradient(135deg,rgba(139,92,246,0.18),rgba(24,25,35,0.96));"></div>
-            <div style="flex:2 1 360px;">
-              <p style="color:var(--text-2);margin:0 0 1rem;line-height:1.75;">The first issue introduces the Neon Dreams Club story universe, the core signal, and the characters who move through its underground network.</p>
-              <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-                <a href="#" class="btn btn-primary">Read The Comic</a>
-                <a href="#" class="btn btn-ghost">View Issue List</a>
+          <div class="ndc-comic-panel">
+            <div class="ndc-comic-cover">
+              <img src="assets/neon-dreams/first-edition/cover.jpg" alt="Neon Dreams Club First Edition cover" loading="lazy" />
+            </div>
+            <div class="ndc-comic-info">
+              <p class="section-label">Issue #1</p>
+              <h3 style="font-size:clamp(1.8rem,4vw,3rem);margin:0;">Neon Dreams Club First Edition</h3>
+              <p style="color:var(--text-2);line-height:1.75;margin:0;">Start with the first issue of the Neon Dreams Club story universe. The reader below scrolls through every page, and the PDF can be downloaded for offline reading.</p>
+              <div class="ndc-actions">
+                <a href="#reader" class="btn btn-primary">Open Reader</a>
+                <a href="assets/neon-dreams/first-edition/neon-dreams-club-first-edition.pdf" class="btn btn-ghost" download>Download PDF</a>
+                <a href="assets/neon-dreams/first-edition/neon-dreams-club-first-edition.pdf" class="btn btn-ghost" target="_blank" rel="noopener noreferrer">View PDF</a>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-
-    <section class="section" id="shorts">
-      <div class="container">
-        <div class="section-header">
-          <p class="section-label">Animated Shorts</p>
-          <h2>Vertical video ready</h2>
-          <p class="section-sub">A prepared grid for TikTok embeds, YouTube Shorts, and future vertical animated content.</p>
-        </div>
-        <div class="feature-grid">
-          <article class="feature-card">
-            <div style="height:200px;border-radius:18px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;color:var(--text-2);">Shorts Card</div>
-            <h3>Vertical shorts</h3>
-            <p style="color:var(--text-2);">Reusable card prepared for TikTok / Shorts content.</p>
-            <a href="#" class="btn btn-ghost btn-sm">Placeholder</a>
-          </article>
-          <article class="feature-card">
-            <div style="height:200px;border-radius:18px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;color:var(--text-2);">Shorts Card</div>
-            <h3>Animated teasers</h3>
-            <p style="color:var(--text-2);">Built to hold future vertical videos and embed previews.</p>
-            <a href="#" class="btn btn-ghost btn-sm">Placeholder</a>
-          </article>
-          <article class="feature-card">
-            <div style="height:200px;border-radius:18px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;color:var(--text-2);">Shorts Card</div>
-            <h3>Creator drops</h3>
-            <p style="color:var(--text-2);">Designed for quick story drops tied to the Neon Dreams universe.</p>
-            <a href="#" class="btn btn-ghost btn-sm">Placeholder</a>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section section-alt" id="timeline">
-      <div class="container">
-        <div class="section-header">
-          <p class="section-label">Universe Timeline</p>
-          <h2>Story arcs and lore</h2>
-          <p class="section-sub">A future-ready timeline for story arcs, characters, events, and worldbuilding.</p>
-        </div>
-        <div class="feature-card">
-          <div style="display:grid;gap:1rem;">
-            <div style="padding:1rem;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);">
-              <strong>Arc 1</strong>
-              <p style="margin:0.65rem 0 0;color:var(--text-2);">The first signal enters the network. Placeholder timeline content.</p>
-            </div>
-            <div style="padding:1rem;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);">
-              <strong>Character spotlight</strong>
-              <p style="margin:0.65rem 0 0;color:var(--text-2);">Characters, factions, and world nodes are ready for future detail.</p>
-            </div>
-            <div style="padding:1rem;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);">
-              <strong>Event log</strong>
-              <p style="margin:0.65rem 0 0;color:var(--text-2);">Placeholder for live events, lore drops, and story beats.</p>
-            </div>
+        <div id="reader" style="margin-top:1.25rem;">
+          <div class="ndc-reader" aria-label="Neon Dreams Club First Edition comic reader">
+            <img src="assets/neon-dreams/first-edition/page-01.jpg" alt="Neon Dreams Club First Edition page 1" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-02.png" alt="Neon Dreams Club First Edition page 2" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-03.png" alt="Neon Dreams Club First Edition page 3" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-04.png" alt="Neon Dreams Club First Edition page 4" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-05.png" alt="Neon Dreams Club First Edition page 5" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-06.png" alt="Neon Dreams Club First Edition page 6" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-07.png" alt="Neon Dreams Club First Edition page 7" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-08.png" alt="Neon Dreams Club First Edition page 8" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-09.png" alt="Neon Dreams Club First Edition page 9" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-10.png" alt="Neon Dreams Club First Edition page 10" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-11.png" alt="Neon Dreams Club First Edition page 11" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-12.png" alt="Neon Dreams Club First Edition page 12" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-13.png" alt="Neon Dreams Club First Edition page 13" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-14.png" alt="Neon Dreams Club First Edition page 14" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-15.png" alt="Neon Dreams Club First Edition page 15" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-16.png" alt="Neon Dreams Club First Edition page 16" loading="lazy" />
+            <img src="assets/neon-dreams/first-edition/page-17.png" alt="Neon Dreams Club First Edition page 17" loading="lazy" />
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section">
+    <section class="section" id="world">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-label">Universe Assets</p>
+          <h2>Ready for The Five, Lux, villains, and shorts</h2>
+          <p class="section-sub">The page structure is ready for the remaining labeled folders. Those files were cloud-only during this pass, so the first edition and covers are live now.</p>
+        </div>
+        <div class="ndc-banner">
+          <div>
+            <p class="section-label" style="margin-bottom:0.45rem;">Exclusive Channel</p>
+            <h3 style="margin:0 0 0.4rem;">More Neon Dreams Club content</h3>
+            <p style="color:var(--text-2);line-height:1.65;margin:0;">Exclusive and adult content is hosted off-site.</p>
+          </div>
+          <a href="https://fanvue.com/neondreamsclub" class="btn btn-primary" target="_blank" rel="noopener noreferrer">For exclusive and adult content of the girls click here</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt">
       <div class="container">
         <div class="hero-actions" style="justify-content:flex-start;gap:1rem;padding:3rem 0;">
           <div>
@@ -200,5 +333,6 @@
       </div>
     </section>
   </main>
+  <script src="assets/script.js?v=20260322"></script>
 </body>
 </html>
