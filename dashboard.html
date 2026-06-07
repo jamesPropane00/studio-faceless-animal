@@ -1716,6 +1716,29 @@
   <script src="assets/js/env.js" onerror="void 0"></script>
   <script src="assets/js/radio-widget.js" defer></script>
 
+  <script>
+    ;(function () {
+      const navToggle = document.querySelector('.nav-toggle')
+      const mobileMenu = document.getElementById('mobile-menu')
+      if (!navToggle || !mobileMenu) return
+
+      navToggle.addEventListener('click', function () {
+        const expanded = this.getAttribute('aria-expanded') === 'true'
+        this.setAttribute('aria-expanded', String(!expanded))
+        this.classList.toggle('open', !expanded)
+        mobileMenu.classList.toggle('open', !expanded)
+      })
+
+      mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          navToggle.setAttribute('aria-expanded', 'false')
+          navToggle.classList.remove('open')
+          mobileMenu.classList.remove('open')
+        })
+      })
+    })()
+  </script>
+
   <!-- Pre-paint plan: runs synchronously before the ES module loads so the
        plan badge and overview card never flash "Free" for paid members. -->
   <script>
