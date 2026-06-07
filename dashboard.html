@@ -3711,8 +3711,8 @@
                 <span style="font-size:0.69rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;">${escHtml(authorLabel)} · ${escHtml(type)} · ${escHtml(category)}${authorVeil !== 'unveiled' ? ' · veil' : ''}</span>
                 <span style="font-size:0.68rem;color:var(--text-3);">${formatDMTime(row.created_at)}</span>
               </div>
-              <p style="font-size:0.82rem;color:var(--text-2);line-height:1.6;margin:0;">${escHtml(row.body_text || '')}</p>
-              ${row.media_url ? `<p style="margin:0.5rem 0 0;font-size:0.72rem;color:var(--purple-bright);word-break:break-all;">${escHtml(row.media_url)}</p>` : ''}
+              <p style="font-size:0.82rem;color:var(--text-2);line-height:1.6;margin:0;">${linkifySignalText(row.body_text || '')}</p>
+              ${row.media_url ? `<p style="margin:0.5rem 0 0;font-size:0.72rem;word-break:break-all;">${linkifySignalText(row.media_url)}</p>` : ''}
               <div style="margin-top:0.55rem;display:flex;justify-content:flex-end;">
                 <button type="button" class="dash-copy-btn signal-global-copy" data-copy-text="${escHtml(`Signal from ${authorLabel} — ${String(row.body_text || '').slice(0, 120)}`)}">Copy Signal</button>
               </div>
@@ -3754,10 +3754,10 @@
                 <span style="font-size:0.7rem;font-weight:800;color:var(--purple-bright);">${escHtml(authorLabel)}</span>
                 <span style="font-size:0.66rem;color:var(--text-3);white-space:nowrap;">${formatDMTime(row.created_at)}</span>
               </div>
-              <p style="font-size:0.82rem;color:var(--text-2);line-height:1.6;margin:0;">${escHtml(preview || 'Signal update')}</p>
+              <p style="font-size:0.82rem;color:var(--text-2);line-height:1.6;margin:0;">${linkifySignalText(preview || 'Signal update')}</p>
               <div style="display:flex;justify-content:space-between;gap:0.6rem;align-items:center;margin-top:0.55rem;">
                 <span style="font-size:0.64rem;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;">${escHtml(type)} · ${escHtml(category)}</span>
-                ${row.media_url ? `<a href="${escHtml(row.media_url)}" target="_blank" rel="noopener" style="font-size:0.68rem;color:var(--purple-bright);">Open Link</a>` : ''}
+                ${row.media_url ? `<a href="${escHtml(row.media_url)}" target="_blank" rel="noopener noreferrer" style="min-width:0;font-size:0.68rem;color:var(--purple-bright);text-decoration:underline;text-underline-offset:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(row.media_url)}</a>` : ''}
               </div>
             </div>
           `
@@ -5401,6 +5401,16 @@ GRANT EXECUTE ON FUNCTION admin_fix_missing_signal_codes(TEXT, TEXT) TO anon, au
     function escHtml(str) {
       if (str == null) return ''
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    }
+
+    function linkifySignalText(value) {
+      const escaped = escHtml(value)
+      const urlPattern = /\bhttps?:\/\/[^\s<]+/g
+      return escaped.replace(urlPattern, rawUrl => {
+        const href = rawUrl.replace(/[.,!?;:)]+$/g, '')
+        const trailing = rawUrl.slice(href.length)
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:var(--purple-bright);text-decoration:underline;text-underline-offset:3px;word-break:break-all;">${href}</a>${trailing}`
+      })
     }
 
     function formatTimeAgo(ts) {
