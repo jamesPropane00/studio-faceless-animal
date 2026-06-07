@@ -362,6 +362,29 @@
     .dash-loading { font-size: 0.8rem; color: var(--text-3); text-align: center; padding: 0.85rem 0; }
     .dash-divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 1rem 0; }
 
+    /* Overview Signal Feed: fixed panel with native social-feed scrolling */
+    #signal-overview-feed-wrap {
+      border: 1px solid rgba(139,92,246,0.16);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.018);
+      overflow: hidden;
+    }
+    #signal-overview-feed-list {
+      max-height: min(460px, 52dvh);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      padding: 0.65rem;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(139,92,246,0.55) rgba(255,255,255,0.04);
+    }
+    #signal-overview-feed-list::-webkit-scrollbar { width: 8px; }
+    #signal-overview-feed-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); border-radius: 999px; }
+    #signal-overview-feed-list::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.55); border-radius: 999px; }
+    #signal-overview-feed-list::-webkit-scrollbar-thumb:hover { background: rgba(167,139,250,0.75); }
+    #signal-overview-feed-list .dash-card:last-child { margin-bottom: 0 !important; }
+
     /* Mobile dashboard hardening */
     html, body { max-width: 100%; overflow-x: hidden; }
     .dash-wrap, .dash-container, .dash-section, .dash-card, .dash-identity, .dash-msg-body, .track-card-meta { min-width: 0; }
@@ -422,6 +445,10 @@
       .dash-board-submit-row { flex-direction: column; align-items: stretch; }
       .dash-board-submit-row .btn,
       .dash-board-cat-select { width: 100%; justify-content: center; }
+      #signal-overview-feed-list {
+        max-height: min(390px, 48dvh);
+        padding: 0.55rem;
+      }
 
       .admin-user-row > div,
       #legacy-admin-user-rows > div > div,
