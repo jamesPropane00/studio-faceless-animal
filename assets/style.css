@@ -648,6 +648,11 @@ p {
 }
 .mobile-nav a:last-child { border-bottom: none; }
 .mobile-nav a:hover { color: var(--text); padding-left: 0.5rem; }
+.mobile-nav a:focus-visible {
+  color: var(--text);
+  outline: none;
+  padding-left: 0.5rem;
+}
 
 
 /* ================================================================
@@ -727,6 +732,27 @@ p {
   /* Chat send / attach buttons */
   .rp-send, .rs-send-btn,
   .msg-send-btn, .msg-attach-btn { min-height: 44px; min-width: 44px; }
+  .mobile-nav {
+    position: fixed;
+    top: var(--nav-h);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.75rem 1.25rem 2rem;
+    z-index: 1200;
+    background: rgba(9, 9, 9, 0.98);
+    backdrop-filter: blur(24px);
+  }
+  body.nav-open {
+    overflow: hidden;
+    overscroll-behavior: contain;
+    touch-action: none;
+  }
+  .mobile-nav a {
+    padding: 1.05rem 0;
+  }
 }
 
 

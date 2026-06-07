@@ -129,6 +129,7 @@
     nav.classList.remove('open');
     toggle.classList.remove('open');
     toggle.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('nav-open');
   }
 
   function init() {
@@ -142,6 +143,7 @@
       nav.classList.toggle('open', opening);
       toggle.classList.toggle('open', opening);
       toggle.setAttribute('aria-expanded', String(opening));
+      document.body.classList.toggle('nav-open', opening);
     });
 
     /* Close when any link inside the mobile nav is clicked */
@@ -152,6 +154,18 @@
     /* Close when clicking outside the nav or toggle */
     document.addEventListener('click', function (e) {
       if (!toggle.contains(e.target) && !nav.contains(e.target)) {
+        closeMobileNav(toggle, nav);
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && nav.classList.contains('open')) {
+        closeMobileNav(toggle, nav);
+      }
+    });
+
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 640 && nav.classList.contains('open')) {
         closeMobileNav(toggle, nav);
       }
     });
