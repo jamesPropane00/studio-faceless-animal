@@ -40,31 +40,20 @@
     <a href="about.html">About</a>
   </div>
 
-  <script>
-    // Mobile nav toggle logic (copied from dashboard.html)
-    document.addEventListener('DOMContentLoaded', function() {
-      const navToggle = document.querySelector('.nav-toggle');
-      const mobileMenu = document.getElementById('mobile-menu');
-      if (navToggle && mobileMenu) {
-        navToggle.addEventListener('click', function() {
-          const open = navToggle.classList.toggle('open');
-          mobileMenu.classList.toggle('open', open);
-          navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        });
-      }
-    });
-  </script>
-
+  <style>
     .phone-status--ok { color: #22c55e; }
     .phone-status--err { color: #f87171; }
 
     .phone-tabs {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      display: flex;
       gap: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.02);
     }
+    .phone-tabs::-webkit-scrollbar { display: none; }
 
     .phone-tab-btn {
       border: none;
@@ -75,9 +64,12 @@
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      padding: 0.75rem 0.5rem;
+      padding: 0.82rem 0.75rem;
       cursor: pointer;
       border-right: 1px solid rgba(255,255,255,0.05);
+      white-space: nowrap;
+      flex: 1 0 6.5rem;
+      min-width: 6.5rem;
     }
 
     .phone-tab-btn:last-child { border-right: none; }
@@ -105,6 +97,7 @@
       border-radius: 12px;
       background: rgba(255,255,255,0.02);
       padding: 0.9rem;
+      min-width: 0;
     }
 
     .phone-card--compact {
@@ -238,6 +231,7 @@
       align-items: center;
       gap: 0.6rem;
       cursor: pointer;
+      min-width: 0;
     }
 
     .phone-list-main {
@@ -381,10 +375,53 @@
     }
 
     @media (max-width: 900px) {
-      .phone-grid-2 { grid-template-columns: 1fr; }
-      .phone-tabs { grid-template-columns: repeat(2, 1fr); }
       .phone-pane { min-height: 0; }
+      .phone-grid-2 { grid-template-columns: 1fr; }
       .phone-id-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .phone-wrap {
+        padding: 1rem 0.85rem 5.5rem;
+      }
+      .phone-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .phone-status {
+        text-align: left;
+        padding-top: 0;
+      }
+      .phone-tab-btn {
+        flex: 1 0 6rem;
+        min-width: 6rem;
+        padding: 0.78rem 0.6rem;
+        font-size: 0.68rem;
+      }
+      .phone-gate-actions,
+      .phone-actions,
+      .phone-row-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .phone-gate-actions .btn,
+      .phone-actions .btn,
+      .phone-row-actions .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      .phone-key {
+        min-height: 48px;
+        padding: 0.65rem 0.25rem;
+      }
+      .phone-list-item {
+        align-items: flex-start;
+      }
+      .phone-bubble {
+        max-width: 94%;
+      }
+      .phone-card {
+        padding: 0.8rem;
+      }
     }
   </style>
 </head>
