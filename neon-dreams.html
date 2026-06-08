@@ -3,13 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Neon Dreams Club - the comic and lore hub of Faceless Animal Studios. Explore characters, comics, artwork, and the underground story universe." />
+  <meta name="description" content="Neon Dreams Club - the comic and lore hub of Faceless Animal Studios. Explore the first edition, download the PDF, and browse the local artwork set." />
   <title>Neon Dreams Club - Faceless Animal Studios</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/style.css?v=20260607-navfix2" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css?v=20260607-ndc-local" />
   <style>
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+    main {
+      overflow-x: clip;
+    }
     .ndc-hero {
       position: relative;
       min-height: calc(100dvh - var(--nav-h, 72px));
@@ -23,8 +30,8 @@
       position: absolute;
       inset: 0;
       background:
-        linear-gradient(90deg, rgba(7,7,12,0.96) 0%, rgba(7,7,12,0.58) 44%, rgba(7,7,12,0.2) 100%),
-        linear-gradient(0deg, rgba(7,7,12,0.96) 0%, rgba(7,7,12,0.08) 48%, rgba(7,7,12,0.5) 100%),
+        linear-gradient(90deg, rgba(7,7,12,0.96) 0%, rgba(7,7,12,0.60) 46%, rgba(7,7,12,0.16) 100%),
+        linear-gradient(0deg, rgba(7,7,12,0.95) 0%, rgba(7,7,12,0.12) 48%, rgba(7,7,12,0.40) 100%),
         url("assets/neon-dreams/covers/cover-vertical.jpg") center right / cover no-repeat;
     }
     .ndc-hero-inner {
@@ -87,67 +94,70 @@
       outline: 2px solid rgba(255,255,255,0.88);
       outline-offset: 3px;
     }
-    .ndc-art-grid {
+    .ndc-card-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 1rem;
     }
-    .ndc-art-card {
+    .ndc-card {
       min-width: 0;
       overflow: hidden;
       border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.025);
     }
-    .ndc-art-card img {
+    .ndc-card img {
       display: block;
       width: 100%;
-      aspect-ratio: 1 / 1.12;
+      aspect-ratio: 1 / 1.18;
       object-fit: cover;
       background: rgba(255,255,255,0.04);
     }
-    .ndc-art-card-body { padding: 1rem; }
-    .ndc-art-card h3 {
+    .ndc-card-body { padding: 1rem; }
+    .ndc-card h3 {
       font-size: 1rem;
       margin: 0 0 0.4rem;
     }
-    .ndc-art-card p {
+    .ndc-card p {
       margin: 0;
       color: var(--text-2);
       font-size: 0.82rem;
       line-height: 1.6;
     }
-    .ndc-preview-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 1rem;
-    }
-    .ndc-preview-card {
-      overflow: hidden;
+    .ndc-reader-wrap {
+      max-height: min(760px, 78dvh);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      padding: 0.75rem;
       border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.025);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(139,92,246,0.6) rgba(255,255,255,0.05);
     }
-    .ndc-preview-card img {
+    .ndc-reader-wrap::-webkit-scrollbar { width: 8px; }
+    .ndc-reader-wrap::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 999px; }
+    .ndc-reader-wrap::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.65); border-radius: 999px; }
+    .ndc-reader-wrap img {
       display: block;
       width: 100%;
-      height: 320px;
-      object-fit: cover;
-      object-position: top center;
+      max-width: 920px;
+      margin: 0 auto 0.8rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.04);
     }
-    .ndc-preview-card-body {
-      padding: 0.95rem 1rem 1rem;
-    }
-    .ndc-preview-card h3 {
-      font-size: 0.98rem;
-      margin: 0 0 0.4rem;
-    }
-    .ndc-preview-card p {
-      margin: 0;
-      color: var(--text-2);
-      font-size: 0.82rem;
-      line-height: 1.6;
+    .ndc-banner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 1.25rem;
+      border-radius: 18px;
+      border: 1px solid rgba(236,72,153,0.22);
+      background: linear-gradient(135deg, rgba(236,72,153,0.12), rgba(139,92,246,0.08));
     }
     .ndc-comic-panel {
       display: grid;
@@ -175,40 +185,10 @@
       gap: 1rem;
       padding: 1rem;
     }
-    .ndc-reader {
-      max-height: min(760px, 78dvh);
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      -webkit-overflow-scrolling: touch;
-      scroll-behavior: smooth;
-      padding: 0.75rem;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.025);
-      scrollbar-width: thin;
-      scrollbar-color: rgba(139,92,246,0.6) rgba(255,255,255,0.05);
-    }
-    .ndc-reader::-webkit-scrollbar { width: 8px; }
-    .ndc-reader::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 999px; }
-    .ndc-reader::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.65); border-radius: 999px; }
-    .ndc-reader img {
-      display: block;
-      width: 100%;
-      max-width: 920px;
-      margin: 0 auto 0.8rem;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-    }
-    .ndc-banner {
+    .ndc-frame-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 1rem;
-      align-items: center;
-      padding: 1.25rem;
-      border-radius: 18px;
-      border: 1px solid rgba(236,72,153,0.22);
-      background: linear-gradient(135deg, rgba(236,72,153,0.12), rgba(139,92,246,0.08));
     }
     @media (max-width: 760px) {
       .ndc-hero::before {
@@ -230,20 +210,24 @@
         align-items: stretch;
       }
       .ndc-actions .btn { width: 100%; max-width: 100%; }
-      .ndc-art-grid { grid-template-columns: 1fr; }
-      .ndc-preview-grid { grid-template-columns: 1fr; }
-      .ndc-preview-card img { height: 280px; }
+      .ndc-card-grid { grid-template-columns: 1fr 1fr; }
+      .ndc-frame-grid { grid-template-columns: 1fr; }
+      .ndc-card img { aspect-ratio: 1 / 1.1; }
       .ndc-comic-panel { grid-template-columns: 1fr; }
       .ndc-comic-cover img { min-height: 0; }
-      .ndc-reader { max-height: 64dvh; padding: 0.45rem; }
+      .ndc-reader-wrap { max-height: 64dvh; padding: 0.45rem; }
       .ndc-banner { grid-template-columns: 1fr; }
       .ndc-banner .btn { width: 100%; }
       .section { padding-top: 4.25rem; padding-bottom: 4.25rem; }
       .section-header h2 { font-size: clamp(1.5rem, 6vw, 2.2rem); line-height: 1.05; }
       .section-sub { font-size: 0.95rem; line-height: 1.65; }
     }
-    /* Page-specific: hide Signal Phone launcher and radio widget on this page */
-    #fas-phone-launcher, #fas-radio-widget { display: none !important; }
+    #fas-phone-launcher,
+    .fas-phone-launcher,
+    #fas-radio-widget,
+    .signal-pulse {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -281,7 +265,7 @@
     <section class="ndc-hero">
       <div class="container ndc-hero-inner">
         <div class="ndc-hero-copy">
-          <p class="ndc-kicker">NEON DREAMS CLUB</p>
+          <p class="ndc-kicker">Neon Dreams Club</p>
           <h1 class="ndc-title">First Edition</h1>
           <p class="ndc-sub">The comic and visual story hub for the Neon Dreams Club universe. Browse the first edition, download the PDF, and step deeper into the signal.</p>
           <div class="ndc-actions">
@@ -298,28 +282,42 @@
         <div class="section-header">
           <p class="section-label">Covers Folder</p>
           <h2>Neon Dreams artwork</h2>
-          <p class="section-sub">Cover art and promo pieces pulled from the Neon Dreams Club Covers folder.</p>
+          <p class="section-sub">Cover art and promo pieces pulled from the local Neon Dreams asset set.</p>
         </div>
-        <div class="ndc-art-grid">
-          <article class="ndc-art-card">
+        <div class="ndc-card-grid">
+          <article class="ndc-card">
             <img src="assets/neon-dreams/covers/cover-square.jpg" alt="Neon Dreams Club square cover art" loading="lazy" />
-            <div class="ndc-art-card-body">
+            <div class="ndc-card-body">
               <h3>Square cover</h3>
               <p>Primary social cover artwork for the Neon Dreams Club universe.</p>
             </div>
           </article>
-          <article class="ndc-art-card">
+          <article class="ndc-card">
             <img src="assets/neon-dreams/covers/cover-a.png" alt="Neon Dreams Club character cover art" loading="lazy" />
-            <div class="ndc-art-card-body">
+            <div class="ndc-card-body">
               <h3>Character cover</h3>
               <p>Visual key art from the Covers folder.</p>
             </div>
           </article>
-          <article class="ndc-art-card">
+          <article class="ndc-card">
             <img src="assets/neon-dreams/covers/cover-751.jpg" alt="Neon Dreams Club alternate cover art" loading="lazy" />
-            <div class="ndc-art-card-body">
+            <div class="ndc-card-body">
               <h3>Alternate cover</h3>
               <p>Additional cover asset prepared for page and promo use.</p>
+            </div>
+          </article>
+          <article class="ndc-card">
+            <img src="assets/neon-dreams/covers/cover-thumb.jpg" alt="Neon Dreams Club compact cover art" loading="lazy" />
+            <div class="ndc-card-body">
+              <h3>Compact cover</h3>
+              <p>Small-format art for cards, social panels, and mobile layouts.</p>
+            </div>
+          </article>
+          <article class="ndc-card">
+            <img src="assets/neon-dreams/covers/cover-vertical.jpg" alt="Neon Dreams Club vertical cover art" loading="lazy" />
+            <div class="ndc-card-body">
+              <h3>Vertical cover</h3>
+              <p>Phone-first art used for the hero background and tall layouts.</p>
             </div>
           </article>
         </div>
@@ -329,44 +327,44 @@
     <section class="section section-alt" id="frames">
       <div class="container">
         <div class="section-header">
-          <p class="section-label">Selected Frames</p>
-          <h2>Different images from the first edition</h2>
-          <p class="section-sub">A few page previews pulled from the comic so the page has more variety and less repeated cover art.</p>
+          <p class="section-label">Story Pages</p>
+          <h2>Preview pages from the first edition</h2>
+          <p class="section-sub">A cleaner mobile-friendly preview that uses the comic pages already in the project.</p>
         </div>
-        <div class="ndc-preview-grid">
-          <article class="ndc-preview-card">
-            <img src="assets/neon-dreams/first-edition/page-01.jpg" alt="Neon Dreams Club First Edition page 1 preview" loading="lazy" />
-            <div class="ndc-preview-card-body">
-              <h3>Opening page</h3>
-              <p>The first page of the story sets the tone for the issue.</p>
+        <div class="ndc-frame-grid">
+          <article class="ndc-card">
+            <img src="assets/neon-dreams/first-edition/page-01.jpg" alt="Neon Dreams Club First Edition page 1" loading="lazy" />
+            <div class="ndc-card-body">
+              <h3>Page 1</h3>
+              <p>Opening page from the first edition comic.</p>
             </div>
           </article>
-          <article class="ndc-preview-card">
-            <img src="assets/neon-dreams/first-edition/page-06.png" alt="Neon Dreams Club First Edition page 6 preview" loading="lazy" />
-            <div class="ndc-preview-card-body">
-              <h3>Mid-issue frame</h3>
-              <p>Different art beats from deeper in the comic.</p>
+          <article class="ndc-card">
+            <img src="assets/neon-dreams/first-edition/page-04.png" alt="Neon Dreams Club First Edition page 4" loading="lazy" />
+            <div class="ndc-card-body">
+              <h3>Page 4</h3>
+              <p>Mid-issue preview from the story run.</p>
             </div>
           </article>
-          <article class="ndc-preview-card">
-            <img src="assets/neon-dreams/first-edition/page-10.png" alt="Neon Dreams Club First Edition page 10 preview" loading="lazy" />
-            <div class="ndc-preview-card-body">
-              <h3>Signal turn</h3>
-              <p>Another page to vary the visual rhythm on the page.</p>
+          <article class="ndc-card">
+            <img src="assets/neon-dreams/first-edition/page-09.png" alt="Neon Dreams Club First Edition page 9" loading="lazy" />
+            <div class="ndc-card-body">
+              <h3>Page 9</h3>
+              <p>Another interior page to break up the layout.</p>
             </div>
           </article>
-          <article class="ndc-preview-card">
-            <img src="assets/neon-dreams/first-edition/page-17.png" alt="Neon Dreams Club First Edition page 17 preview" loading="lazy" />
-            <div class="ndc-preview-card-body">
-              <h3>Closing page</h3>
-              <p>The final page gives the section a different texture and scale.</p>
+          <article class="ndc-card">
+            <img src="assets/neon-dreams/first-edition/page-14.png" alt="Neon Dreams Club First Edition page 14" loading="lazy" />
+            <div class="ndc-card-body">
+              <h3>Page 14</h3>
+              <p>Later-page preview from the comic reader.</p>
             </div>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="section section-alt" id="comic">
+    <section class="section" id="comic">
       <div class="container">
         <div class="section-header">
           <p class="section-label">Neon Dreams Club First Edition</p>
@@ -391,7 +389,7 @@
           </div>
         </div>
         <div id="reader" style="margin-top:1.25rem;">
-          <div class="ndc-reader" aria-label="Neon Dreams Club First Edition comic reader">
+          <div class="ndc-reader-wrap" aria-label="Neon Dreams Club First Edition comic reader">
             <img src="assets/neon-dreams/first-edition/page-01.jpg" alt="Neon Dreams Club First Edition page 1" loading="lazy" />
             <img src="assets/neon-dreams/first-edition/page-02.png" alt="Neon Dreams Club First Edition page 2" loading="lazy" />
             <img src="assets/neon-dreams/first-edition/page-03.png" alt="Neon Dreams Club First Edition page 3" loading="lazy" />
@@ -414,12 +412,12 @@
       </div>
     </section>
 
-    <section class="section" id="world">
+    <section class="section section-alt" id="world">
       <div class="container">
         <div class="section-header">
           <p class="section-label">Universe Assets</p>
-          <h2>Ready for The Five, Lux, villains, and shorts</h2>
-          <p class="section-sub">The page structure is ready for the remaining labeled folders. Those files were cloud-only during this pass, so the first edition and covers are live now.</p>
+          <h2>Ready for mobile, reader mode, and downloads</h2>
+          <p class="section-sub">This version uses the local Neon Dreams asset set already in the project so the page stays deployable and stays within the viewport on phones.</p>
         </div>
         <div class="ndc-banner">
           <div>
@@ -432,7 +430,7 @@
       </div>
     </section>
 
-    <section class="section section-alt">
+    <section class="section">
       <div class="container">
         <div class="hero-actions" style="justify-content:flex-start;gap:1rem;padding:3rem 0;">
           <div>
