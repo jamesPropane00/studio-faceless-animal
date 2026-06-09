@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Neon Dreams Club - the comic and lore hub of Faceless Animal Studios. Explore the first edition, download the PDF, and browse the local artwork set." />
+  <meta name="description" content="Neon Dreams Club - First Signal. Enter the hidden network, meet the figures inside the broadcast, and read the first edition from Faceless Animal Studios." />
   <title>Neon Dreams Club - Faceless Animal Studios</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -21,7 +21,7 @@
       position: relative;
       min-height: calc(100dvh - var(--nav-h, 72px));
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       overflow: hidden;
       background: #07070c;
     }
@@ -30,17 +30,61 @@
       position: absolute;
       inset: 0;
       background:
-        linear-gradient(90deg, rgba(7,7,12,0.96) 0%, rgba(7,7,12,0.60) 46%, rgba(7,7,12,0.16) 100%),
-        linear-gradient(0deg, rgba(7,7,12,0.95) 0%, rgba(7,7,12,0.12) 48%, rgba(7,7,12,0.40) 100%),
-        url("assets/neon-dreams/covers/cover-vertical.jpg") center right / cover no-repeat;
+        linear-gradient(90deg, rgba(7,7,12,0.98) 0%, rgba(7,7,12,0.76) 42%, rgba(7,7,12,0.18) 100%),
+        linear-gradient(0deg, rgba(7,7,12,0.96) 0%, rgba(7,7,12,0.18) 52%, rgba(7,7,12,0.62) 100%),
+        url("Neon%20Dreams%20Club/Logos%20and%20Banners/file_00000000e8c471f583f78f918217dd9b.png") center right / cover no-repeat;
+    }
+    .ndc-hero::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 34%;
+      background: linear-gradient(0deg, #07070c 0%, rgba(7,7,12,0) 100%);
+      pointer-events: none;
     }
     .ndc-hero-inner {
       position: relative;
       z-index: 1;
       width: 100%;
-      padding: 8rem 0 4rem;
+      max-width: 100%;
+      box-sizing: border-box;
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(280px, 0.6fr);
+      gap: clamp(1.5rem, 5vw, 4rem);
+      align-items: end;
+      padding: 8rem 1rem 4.5rem;
     }
-    .ndc-hero-copy { max-width: 760px; }
+    .ndc-hero-copy {
+      max-width: 760px;
+      min-width: 0;
+    }
+    .ndc-hero-art {
+      display: grid;
+      gap: 0.8rem;
+      justify-items: end;
+    }
+    .ndc-hero-mark {
+      width: min(100%, 420px);
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.52), 0 0 40px rgba(236,72,153,0.22);
+      background: rgba(255,255,255,0.04);
+    }
+    .ndc-hero-tile-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.7rem;
+      width: min(100%, 420px);
+      max-width: 100%;
+    }
+    .ndc-hero-tile-row img {
+      width: 100%;
+      aspect-ratio: 1 / 1.24;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+    }
     .ndc-kicker {
       color: var(--gold);
       font-size: 0.72rem;
@@ -96,13 +140,13 @@
     }
     .ndc-card-grid {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 1rem;
     }
     .ndc-card {
       min-width: 0;
       overflow: hidden;
-      border-radius: 18px;
+      border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.025);
     }
@@ -112,6 +156,51 @@
       aspect-ratio: 1 / 1.18;
       object-fit: cover;
       background: rgba(255,255,255,0.04);
+    }
+    .ndc-story {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(280px, 0.58fr);
+      gap: clamp(1.25rem, 4vw, 3rem);
+      align-items: start;
+    }
+    .ndc-story-copy {
+      display: grid;
+      gap: 1.15rem;
+    }
+    .ndc-story-copy h3 {
+      margin: 0;
+      font-size: clamp(1.3rem, 3vw, 2rem);
+      line-height: 1.1;
+    }
+    .ndc-story-copy p {
+      margin: 0;
+      color: var(--text-2);
+      line-height: 1.75;
+    }
+    .ndc-story-copy strong {
+      color: var(--text);
+    }
+    .ndc-story-aside {
+      position: sticky;
+      top: calc(var(--nav-h, 72px) + 1rem);
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.025);
+    }
+    .ndc-story-aside img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1.25;
+      object-fit: cover;
+    }
+    .ndc-story-aside-body {
+      padding: 1rem;
+    }
+    .ndc-story-aside-body p {
+      margin: 0;
+      color: var(--text-2);
+      line-height: 1.65;
     }
     .ndc-card-body { padding: 1rem; }
     .ndc-card h3 {
@@ -149,13 +238,54 @@
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.04);
     }
+    .ndc-feature-spread {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+      gap: 1rem;
+      align-items: stretch;
+    }
+    .ndc-feature-poster,
+    .ndc-wide-image {
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+    }
+    .ndc-feature-poster img,
+    .ndc-wide-image img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .ndc-feature-stack {
+      display: grid;
+      gap: 1rem;
+      align-content: start;
+    }
+    .ndc-copy-panel {
+      padding: 1.15rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.025);
+    }
+    .ndc-copy-panel p {
+      color: var(--text-2);
+      line-height: 1.7;
+      margin: 0;
+    }
+    .ndc-villain-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
     .ndc-banner {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 1rem;
       align-items: center;
       padding: 1.25rem;
-      border-radius: 18px;
+      border-radius: 8px;
       border: 1px solid rgba(236,72,153,0.22);
       background: linear-gradient(135deg, rgba(236,72,153,0.12), rgba(139,92,246,0.08));
     }
@@ -166,7 +296,7 @@
       align-items: stretch;
     }
     .ndc-comic-cover {
-      border-radius: 18px;
+      border-radius: 8px;
       overflow: hidden;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.03);
@@ -190,18 +320,26 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 1rem;
     }
-    @media (max-width: 760px) {
+    @media (max-width: 900px) {
+      .navbar-links { display: none; }
+      .nav-toggle { display: flex; }
       .ndc-hero::before {
         background:
-          linear-gradient(0deg, rgba(7,7,12,0.98) 0%, rgba(7,7,12,0.72) 48%, rgba(7,7,12,0.38) 100%),
-          url("assets/neon-dreams/covers/cover-vertical.jpg") center top / cover no-repeat;
+          linear-gradient(0deg, rgba(7,7,12,0.99) 0%, rgba(7,7,12,0.78) 56%, rgba(7,7,12,0.42) 100%),
+          url("Neon%20Dreams%20Club/Logos%20and%20Banners/file_00000000e8c471f583f78f918217dd9b_copy_627x627.png") center top / cover no-repeat;
       }
-      .ndc-hero-inner { padding: 6.25rem 0 2.25rem; }
+      .ndc-hero-inner {
+        grid-template-columns: 1fr;
+        padding: 6.25rem 1rem 2.25rem;
+      }
+      .ndc-hero-art { justify-items: stretch; }
+      .ndc-hero-mark { display: none; }
       .ndc-title {
-        font-size: clamp(2.35rem, 11vw, 4.5rem);
+        font-size: clamp(2.2rem, 10vw, 3rem);
         line-height: 0.94;
       }
       .ndc-sub {
+        max-width: 100%;
         font-size: 0.98rem;
         line-height: 1.65;
       }
@@ -213,6 +351,12 @@
       .ndc-card-grid { grid-template-columns: 1fr 1fr; }
       .ndc-frame-grid { grid-template-columns: 1fr; }
       .ndc-card img { aspect-ratio: 1 / 1.1; }
+      .ndc-feature-spread,
+      .ndc-story,
+      .ndc-villain-grid {
+        grid-template-columns: 1fr;
+      }
+      .ndc-story-aside { position: static; }
       .ndc-comic-panel { grid-template-columns: 1fr; }
       .ndc-comic-cover img { min-height: 0; }
       .ndc-reader-wrap { max-height: 64dvh; padding: 0.45rem; }
@@ -221,6 +365,10 @@
       .section { padding-top: 4.25rem; padding-bottom: 4.25rem; }
       .section-header h2 { font-size: clamp(1.5rem, 6vw, 2.2rem); line-height: 1.05; }
       .section-sub { font-size: 0.95rem; line-height: 1.65; }
+    }
+    @media (max-width: 520px) {
+      .ndc-card-grid { grid-template-columns: 1fr; }
+      .ndc-hero-tile-row { gap: 0.45rem; }
     }
     #fas-phone-launcher,
     .fas-phone-launcher,
@@ -266,60 +414,149 @@
       <div class="container ndc-hero-inner">
         <div class="ndc-hero-copy">
           <p class="ndc-kicker">Neon Dreams Club</p>
-          <h1 class="ndc-title">First Edition</h1>
-          <p class="ndc-sub">The comic and visual story hub for the Neon Dreams Club universe. Browse the first edition, download the PDF, and step deeper into the signal.</p>
+          <h1 class="ndc-title">Frequency<br>Over<br>Everything</h1>
+          <p class="ndc-sub">A hidden network beneath the neon glow. Follow the first transmission, meet the figures inside the signal, and enter the story before it finds you.</p>
           <div class="ndc-actions">
             <a href="#comic" class="btn btn-primary">Read The Comic</a>
-            <a href="assets/neon-dreams/first-edition/neon-dreams-club-first-edition.pdf" class="btn btn-ghost" download>Download First Edition</a>
+            <a href="#vault" class="btn btn-ghost">Open The Vault</a>
             <a href="https://fanvue.com/neondreamsclub" class="btn btn-primary ndc-fanvue" target="_blank" rel="noopener noreferrer">Unlock Fanvue Access</a>
+          </div>
+        </div>
+        <div class="ndc-hero-art" aria-hidden="true">
+          <img class="ndc-hero-mark" src="Neon%20Dreams%20Club/Logos%20and%20Banners/file_00000000e8c471f583f78f918217dd9b_copy_627x627.png" alt="" />
+          <div class="ndc-hero-tile-row">
+            <img src="Neon%20Dreams%20Club/The%20Five/Lux/file_00000000688471f881166576a2f5595d.png" alt="" />
+            <img src="Neon%20Dreams%20Club/The%20Five/file_00000000a1a07230a94b121749786188.png" alt="" />
+            <img src="Neon%20Dreams%20Club/Villains/bd83fdfe-b31e-43c4-bb88-b5c76ec5af53.png" alt="" />
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="covers">
+    <section class="section section-alt" id="first-signal">
       <div class="container">
         <div class="section-header">
-          <p class="section-label">Covers Folder</p>
-          <h2>Neon Dreams artwork</h2>
-          <p class="section-sub">Cover art and promo pieces pulled from the local Neon Dreams asset set.</p>
+          <p class="section-label">First Signal</p>
+          <h2>Welcome to the city that never sleeps</h2>
+          <p class="section-sub">Most people think the city shuts down after midnight. They're wrong.</p>
+        </div>
+        <div class="ndc-story">
+          <div class="ndc-story-copy">
+            <p>When the office lights go dark and the streets begin to empty, another world wakes up beneath the neon glow. Hidden between forgotten alleyways, abandoned warehouses, rooftop parties, underground clubs, and encrypted broadcasts is a secret network known only as <strong>Neon Dreams Club</strong>.</p>
+            <p>Nobody knows who started it. Nobody knows where it began. Some say it appeared online years ago as a pirate radio signal. Others claim it emerged from underground artists, musicians, hackers, dreamers, and night workers who refused to disappear into the system.</p>
+            <p><strong>Once you find the signal, it starts finding you.</strong></p>
+
+            <h3>The Signal</h3>
+            <p>Late one night, strange transmissions began appearing across the city: unmarked frequencies, encrypted messages, fragments of music, faces hidden behind masks, and coordinates that led nowhere. The broadcasts carried the same phrase every time: <strong>The Signal Never Sleeps.</strong></p>
+            <p>Most people ignored it. A few became obsessed. Those who followed the clues found themselves drawn toward a hidden community operating between reality and rumor, where artists become legends and the night belongs to those willing to chase something bigger than themselves.</p>
+
+            <h3>The Girls of Neon Dreams</h3>
+            <p>Within the Club are mysterious figures whose appearances seem connected to every major sighting of the Signal. Lux is the first face most people encounter: confident, fearless, and impossible to predict. Many believe she knows more about the Signal than she lets on.</p>
+            <p>Nyx is silent, calculating, and dangerously observant. She appears in places she should not be able to reach and vanishes before anyone can ask questions. Some believe Nyx is not searching for the Signal. They believe the Signal is searching for her.</p>
+            <p>Vex is chaos disguised as confidence: fast cars, fast decisions, zero fear. Every sighting leaves more questions than answers. Zei is the most mysterious of them all. Almost no verified information exists, only rumors, and rumors spread quickly inside Neon Dreams Club.</p>
+
+            <h3>The Operator</h3>
+            <p>Every transmission eventually traces back to one name: <strong>Faceless Animal</strong>. The Operator. The broadcaster. The voice behind the signal. No confirmed photographs exist. No official records. Only a masked figure who appears briefly during broadcasts before disappearing back into the noise.</p>
+            <p>Some believe he is building something. Others believe he is warning us. Either way, the Signal continues every night, every city, every screen.</p>
+
+            <h3>Chapter One: First Signal</h3>
+            <p>The story begins with a single transmission. One broadcast. One late-night message. One decision to follow a signal that should not exist. For Lux, Nyx, Vex, and the others, it will lead into a hidden world operating beneath ordinary life.</p>
+            <p><strong>The Signal Never Sleeps.</strong> Enter the network. Follow the broadcasts. Become part of the story. Welcome to Neon Dreams Club.</p>
+          </div>
+          <aside class="ndc-story-aside" aria-label="Neon Dreams Club first signal artwork">
+            <img src="Neon%20Dreams%20Club/The%20Five/Lux/file_00000000688471f881166576a2f5595d.png" alt="Lux Neon Dreams Club artwork" loading="lazy" />
+            <div class="ndc-story-aside-body">
+              <p class="section-label" style="margin-bottom:0.45rem;">Transmission Open</p>
+              <p>One broadcast. One late-night message. One signal that should not exist.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="vault">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-label">Signal Archive</p>
+          <h2>Fragments from inside the Club</h2>
+          <p class="section-sub">Club marks, character sightings, broadcast cards, villain files, and cover art from the Neon Dreams Club universe.</p>
         </div>
         <div class="ndc-card-grid">
           <article class="ndc-card">
-            <img src="assets/neon-dreams/covers/cover-square.jpg" alt="Neon Dreams Club square cover art" loading="lazy" />
+            <img src="Neon%20Dreams%20Club/Logos%20and%20Banners/file_00000000e8c471f583f78f918217dd9b_copy_627x627.png" alt="Neon Dreams Club logo and character group art" loading="lazy" />
             <div class="ndc-card-body">
-              <h3>Square cover</h3>
-              <p>Primary social cover artwork for the Neon Dreams Club universe.</p>
+              <h3>Club mark</h3>
+              <p>The mark that keeps appearing wherever the Signal breaks through.</p>
             </div>
           </article>
           <article class="ndc-card">
-            <img src="assets/neon-dreams/covers/cover-a.png" alt="Neon Dreams Club character cover art" loading="lazy" />
+            <img src="Neon%20Dreams%20Club/The%20Five/file_00000000a5d87230abb799d86b05e3c9.png" alt="Neon Dreams Club The Five character artwork" loading="lazy" />
             <div class="ndc-card-body">
-              <h3>Character cover</h3>
-              <p>Visual key art from the Covers folder.</p>
+              <h3>The Five</h3>
+              <p>Five forces tied to one city, one night, and one impossible frequency.</p>
             </div>
           </article>
           <article class="ndc-card">
-            <img src="assets/neon-dreams/covers/cover-751.jpg" alt="Neon Dreams Club alternate cover art" loading="lazy" />
+            <img src="Neon%20Dreams%20Club/Video%20Cards/file_00000000a7f471f88c092c2d0b6b455d.png" alt="Faceless Animal Studios neon video card art" loading="lazy" />
             <div class="ndc-card-body">
-              <h3>Alternate cover</h3>
-              <p>Additional cover asset prepared for page and promo use.</p>
+              <h3>Signal card</h3>
+              <p>A broadcast fragment from the network behind the Club.</p>
             </div>
           </article>
           <article class="ndc-card">
-            <img src="assets/neon-dreams/covers/cover-thumb.jpg" alt="Neon Dreams Club compact cover art" loading="lazy" />
+            <img src="Neon%20Dreams%20Club/Villains/a34c51f7-8b5c-4abb-b861-d64ca9dc32d5.png" alt="Neon Dreams Club villain artwork" loading="lazy" />
             <div class="ndc-card-body">
-              <h3>Compact cover</h3>
-              <p>Small-format art for cards, social panels, and mobile layouts.</p>
+              <h3>Villains archive</h3>
+              <p>Enemy files from the darker side of the transmission.</p>
             </div>
           </article>
           <article class="ndc-card">
             <img src="assets/neon-dreams/covers/cover-vertical.jpg" alt="Neon Dreams Club vertical cover art" loading="lazy" />
             <div class="ndc-card-body">
               <h3>Vertical cover</h3>
-              <p>Phone-first art used for the hero background and tall layouts.</p>
+              <p>A tall-format gateway into the first Neon Dreams Club story.</p>
             </div>
           </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="five">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-label">The Five</p>
+          <h2>One city. One frequency. Five forces.</h2>
+          <p class="section-sub">Their names move through clubs, rooftops, back channels, and encrypted drops. Every sighting brings the Signal closer.</p>
+        </div>
+        <div class="ndc-feature-spread">
+          <div class="ndc-feature-poster">
+            <img src="Neon%20Dreams%20Club/The%20Five/file_00000000a1a07230a94b121749786188.png" alt="Lux the Architect Neon Dreams Club dossier art" loading="lazy" />
+          </div>
+          <div class="ndc-feature-stack">
+            <div class="ndc-copy-panel">
+              <p class="section-label" style="margin-bottom:0.45rem;">Lux / The Architect</p>
+              <p>I don't follow paths. I create them. Lux is the first face most people encounter, always one step ahead of the crowd and closer to the truth behind the Signal.</p>
+            </div>
+            <div class="ndc-card-grid">
+              <article class="ndc-card">
+                <img src="Neon%20Dreams%20Club/The%20Five/Lux/file_00000000726471fd8158226e51e27e63.png" alt="Lux Neon Dreams Club character portrait" loading="lazy" />
+                <div class="ndc-card-body">
+                  <h3>Lux file</h3>
+                  <p>Confident, fearless, and impossible to predict.</p>
+                </div>
+              </article>
+              <article class="ndc-card">
+                <img src="Neon%20Dreams%20Club/The%20Five/Lux/file_00000000917471f8b68e86018f0d1036.png" alt="Lux Neon Dreams Club alternate character portrait" loading="lazy" />
+                <div class="ndc-card-body">
+                  <h3>Frequency profile</h3>
+                  <p>Another transmission, another version of the same mystery.</p>
+                </div>
+              </article>
+            </div>
+            <div class="ndc-wide-image">
+              <img src="Neon%20Dreams%20Club/The%20Five/file_00000000a5d87230abb799d86b05e3c9.png" alt="The Five Neon Dreams Club group art" loading="lazy" />
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -329,35 +566,35 @@
         <div class="section-header">
           <p class="section-label">Story Pages</p>
           <h2>Preview pages from the first edition</h2>
-          <p class="section-sub">A cleaner mobile-friendly preview that uses the comic pages already in the project.</p>
+          <p class="section-sub">Selected pages from Chapter One, where the first broadcast begins pulling the city out of ordinary life.</p>
         </div>
         <div class="ndc-frame-grid">
           <article class="ndc-card">
             <img src="assets/neon-dreams/first-edition/page-01.jpg" alt="Neon Dreams Club First Edition page 1" loading="lazy" />
             <div class="ndc-card-body">
               <h3>Page 1</h3>
-              <p>Opening page from the first edition comic.</p>
+              <p>The first trace of the transmission.</p>
             </div>
           </article>
           <article class="ndc-card">
             <img src="assets/neon-dreams/first-edition/page-04.png" alt="Neon Dreams Club First Edition page 4" loading="lazy" />
             <div class="ndc-card-body">
               <h3>Page 4</h3>
-              <p>Mid-issue preview from the story run.</p>
+              <p>The clues start connecting.</p>
             </div>
           </article>
           <article class="ndc-card">
             <img src="assets/neon-dreams/first-edition/page-09.png" alt="Neon Dreams Club First Edition page 9" loading="lazy" />
             <div class="ndc-card-body">
               <h3>Page 9</h3>
-              <p>Another interior page to break up the layout.</p>
+              <p>The city reveals another layer.</p>
             </div>
           </article>
           <article class="ndc-card">
             <img src="assets/neon-dreams/first-edition/page-14.png" alt="Neon Dreams Club First Edition page 14" loading="lazy" />
             <div class="ndc-card-body">
               <h3>Page 14</h3>
-              <p>Later-page preview from the comic reader.</p>
+              <p>The Signal refuses to stay hidden.</p>
             </div>
           </article>
         </div>
@@ -369,7 +606,7 @@
         <div class="section-header">
           <p class="section-label">Neon Dreams Club First Edition</p>
           <h2>Read or download issue one</h2>
-          <p class="section-sub">The full first edition is available as an on-page reader and as a downloadable PDF.</p>
+          <p class="section-sub">Open Chapter One in the reader or keep the first transmission with you as a PDF.</p>
         </div>
         <div class="feature-card">
           <div class="ndc-comic-panel">
@@ -379,7 +616,7 @@
             <div class="ndc-comic-info">
               <p class="section-label">Issue #1</p>
               <h3 style="font-size:clamp(1.8rem,4vw,3rem);margin:0;">Neon Dreams Club First Edition</h3>
-              <p style="color:var(--text-2);line-height:1.75;margin:0;">Start with the first issue of the Neon Dreams Club story universe. The reader below scrolls through every page, and the PDF can be downloaded for offline reading.</p>
+              <p style="color:var(--text-2);line-height:1.75;margin:0;">Start where the broadcast starts: one late-night signal, one hidden network, and one doorway into the world beneath the city.</p>
               <div class="ndc-actions">
                 <a href="#reader" class="btn btn-primary">Open Reader</a>
                 <a href="assets/neon-dreams/first-edition/neon-dreams-club-first-edition.pdf" class="btn btn-ghost" download>Download PDF</a>
@@ -412,12 +649,38 @@
       </div>
     </section>
 
+    <section class="section section-alt" id="villains">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-label">Villains Archive</p>
+          <h2>The signal has enemies</h2>
+          <p class="section-sub">Not every voice in the network wants the Club to survive. Some signals are traps. Some masks are warnings.</p>
+        </div>
+        <div class="ndc-villain-grid">
+          <article class="ndc-card">
+            <img src="Neon%20Dreams%20Club/Villains/a34c51f7-8b5c-4abb-b861-d64ca9dc32d5.png" alt="Neon Dreams Club villains lineup art" loading="lazy" />
+            <div class="ndc-card-body">
+              <h3>Villains lineup</h3>
+              <p>The darker figures gathering around the broadcast.</p>
+            </div>
+          </article>
+          <article class="ndc-card">
+            <img src="Neon%20Dreams%20Club/Villains/bd83fdfe-b31e-43c4-bb88-b5c76ec5af53.png" alt="Neon Dreams Club alternate villain artwork" loading="lazy" />
+            <div class="ndc-card-body">
+              <h3>Enemy signal</h3>
+              <p>A corrupted frequency from the edge of the network.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <section class="section section-alt" id="world">
       <div class="container">
         <div class="section-header">
-          <p class="section-label">Universe Assets</p>
-          <h2>Ready for mobile, reader mode, and downloads</h2>
-          <p class="section-sub">This version uses the local Neon Dreams asset set already in the project so the page stays deployable and stays within the viewport on phones.</p>
+          <p class="section-label">Exclusive Channel</p>
+          <h2>The broadcast continues after dark</h2>
+          <p class="section-sub">Follow the signal beyond the first edition and unlock the off-site Neon Dreams Club channel.</p>
         </div>
         <div class="ndc-banner">
           <div>
