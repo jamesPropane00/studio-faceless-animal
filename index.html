@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="Faceless Animal Studios is a live creator system for websites, file sharing, radio, TV, live rooms, apps, tools, and digital identity."
+    content="Faceless Animal Studios is the home base for Neon Dreams Club, creator channels, radio, TV, music, apps, games, pages, and studio services."
   />
   <title>Faceless Animal Studios</title>
-  <link rel="stylesheet" href="assets/style.css?v=20260322" />
+  <link rel="stylesheet" href="assets/style.css?v=20260610-index-revamp" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -23,6 +23,8 @@
       --purple-bright: #a78bfa;
       --purple-soft: rgba(167, 139, 250, 0.14);
       --gold: #f5c451;
+      --cyan: #21f4d0;
+      --red: #ff2f4f;
       --border: rgba(167, 139, 250, 0.16);
       --shadow: 0 10px 40px rgba(124, 58, 237, 0.18), 0 3px 12px rgba(0, 0, 0, 0.22);
       --radius-xl: 24px;
@@ -45,8 +47,8 @@
       font-family: "Inter", "Segoe UI", Arial, sans-serif;
       color: var(--text-main);
       background:
-        radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.18) 0%, rgba(124, 58, 237, 0.06) 20%, transparent 46%),
-        radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.04) 0%, transparent 30%),
+        radial-gradient(circle at 50% 0%, rgba(33, 244, 208, 0.12) 0%, rgba(124, 58, 237, 0.08) 25%, transparent 48%),
+        radial-gradient(circle at 86% 8%, rgba(255, 47, 79, 0.12) 0%, transparent 30%),
         linear-gradient(180deg, #141621 0%, #0b0c12 42%, #08090d 100%);
     }
 
@@ -371,6 +373,135 @@
       display: block;
     }
 
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 1rem;
+    }
+
+    .quick-links a,
+    .micro-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0.46rem 0.68rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.035);
+      color: var(--text-soft);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+    }
+
+    .quick-links a:hover,
+    .micro-link:hover {
+      border-color: rgba(33,244,208,0.34);
+      background: rgba(33,244,208,0.08);
+      color: #fff;
+    }
+
+    .feature-card .micro-link {
+      margin-top: 0.85rem;
+    }
+
+    .ndc-showcase {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(280px, 0.98fr);
+      gap: 1rem;
+      padding: 1rem;
+      border: 1px solid rgba(33,244,208,0.18);
+      border-radius: var(--radius-xl);
+      background:
+        linear-gradient(135deg, rgba(255,47,79,0.14), rgba(124,58,237,0.12) 45%, rgba(33,244,208,0.1)),
+        rgba(12,13,18,0.96);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.42), 0 0 0 1px rgba(255,255,255,0.03) inset;
+    }
+
+    .ndc-copy {
+      min-width: 0;
+      padding: clamp(0.35rem, 1vw, 0.65rem);
+      align-self: center;
+    }
+
+    .ndc-title {
+      margin: 0 0 0.7rem;
+      font-size: clamp(2rem, 5vw, 4.1rem);
+      line-height: 0.94;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .ndc-title span {
+      display: block;
+      color: var(--cyan);
+    }
+
+    .ndc-copy p {
+      max-width: 60ch;
+      color: var(--text-soft);
+      line-height: 1.72;
+      margin: 0 0 1rem;
+    }
+
+    .ndc-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 1rem;
+    }
+
+    .ndc-link-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 1rem;
+    }
+
+    .ndc-art {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 1fr 0.55fr;
+      gap: 0.65rem;
+      align-items: stretch;
+    }
+
+    .ndc-poster,
+    .ndc-stack img {
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      background: rgba(0,0,0,0.24);
+      box-shadow: 0 18px 46px rgba(0,0,0,0.34);
+    }
+
+    .ndc-poster img,
+    .ndc-stack img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .ndc-poster {
+      aspect-ratio: 4 / 5;
+    }
+
+    .ndc-stack {
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    .ndc-stack img {
+      min-height: 0;
+      aspect-ratio: 1 / 1;
+    }
+
     .section {
       padding: 1rem 0 0;
     }
@@ -601,12 +732,17 @@
     @media (max-width: 1080px) {
       .hero-grid,
       .future-wrap,
-      .feature-grid {
+      .feature-grid,
+      .ndc-showcase {
         grid-template-columns: 1fr;
       }
 
       .signal-strip {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .ndc-art {
+        max-width: 760px;
       }
     }
 
@@ -658,7 +794,8 @@
 
       .hero-bullets,
       .future-list,
-      .signal-strip {
+      .signal-strip,
+      .ndc-art {
         grid-template-columns: 1fr;
       }
 
@@ -669,6 +806,16 @@
 
       .btn {
         width: 100%;
+        justify-content: center;
+      }
+
+      .ndc-actions {
+        flex-direction: column;
+      }
+
+      .quick-links a,
+      .micro-link {
+        font-size: 0.68rem;
       }
 
       .section {
@@ -721,68 +868,73 @@
       <div class="container">
         <div class="hero-grid">
           <div class="hero-main">
-            <div class="eyebrow">Live Creator System</div>
+            <div class="eyebrow">Creator Platform + Story Universe</div>
 
             <h1 class="hero-title">
-              Build.
-              Share.
-              Go Live.
-              <span class="accent">Stay Faceless.</span>
+              Enter the platform.
+              <span class="accent">Follow the signal.</span>
             </h1>
 
             <p class="hero-sub">
-              Faceless Animal Studios is a creator platform for people who want more than just a profile.
-              Build web pages. Upload and share files. Run media. Watch TV. Tap into radio. Enter live rooms.
-              Use real tools inside one connected system built for identity, privacy, control, and motion.
+              Faceless Animal Studios is the home base for Neon Dreams Club, creator channels, radio, TV, music,
+              games, apps, pages, and studio services. Start with the story universe, then move into the tools.
             </p>
 
             <div class="hero-bullets">
               <div class="hero-bullet">
-                <strong>What it is</strong>
-                <span>A modular creator ecosystem with websites, storage, media, live rooms, and identity built in.</span>
+                <strong>Story universe</strong>
+                <span>Neon Dreams Club brings Lux, Nyx, Vex, the comic, shorts, and the signal into focus.</span>
               </div>
               <div class="hero-bullet">
-                <strong>Why it hits fast</strong>
-                <span>New users understand it in seconds: build something, upload something, watch something, or enter the system.</span>
+                <strong>Media platform</strong>
+                <span>Faceless TV, Radio, Music, News, and creator pages keep the brand moving.</span>
               </div>
               <div class="hero-bullet">
-                <strong>Who it’s for</strong>
-                <span>Artists, creators, hustlers, builders, streamers, brands, and anyone tired of dead platforms and algorithm games.</span>
+                <strong>Creator tools</strong>
+                <span>Pages, uploads, apps, storage, and services give people a place to build.</span>
               </div>
               <div class="hero-bullet">
-                <strong>What makes it different</strong>
-                <span>It’s not one tool. It’s one connected platform with multiple apps under the same signal and identity layer.</span>
+                <strong>Clear next step</strong>
+                <span>Read the comic, watch the TV layer, listen to radio, or create a channel.</span>
               </div>
             </div>
 
             <div class="hero-actions">
-              <a href="login.html" class="btn btn-primary">Enter The System</a>
-              <a href="free.html" class="btn btn-gold">Claim Free Username</a>
+              <a href="neon-dreams.html" class="btn btn-primary">Enter Neon Dreams Club</a>
+              <a href="tv.html" class="btn btn-gold">Watch Faceless TV</a>
+            </div>
+            <div class="quick-links" aria-label="Quick links">
+              <a href="radio.html">Radio</a>
+              <a href="music.html">Music</a>
+              <a href="directory.html">Channels</a>
+              <a href="games.html">Games</a>
+              <a href="services.html">Services</a>
+              <a href="store.html">Store</a>
             </div>
           </div>
 
           <aside class="hero-side">
             <div class="side-card">
-              <div class="side-label">In 5 Seconds</div>
-              <div class="side-title">This is where people come to create, host, share, and move.</div>
-              <div class="side-copy">
-                One account. One signal. Multiple tools. No bloated setup. No dead-end profiles. No waiting for permission.
-              </div>
-            </div>
-
-            <div class="side-card">
               <div class="side-label">Start Here</div>
-              <div class="side-title">Fastest entry points</div>
+              <div class="side-title">Neon Dreams Club is the front door.</div>
               <div class="side-copy">
-                Build a page. Upload and share files. Check the radio. Watch TV. Enter live rooms. Everything leads deeper into the platform.
+                If somebody finds Lux, the comic, or the signal on social, this page points them straight into the universe.
               </div>
             </div>
 
             <div class="side-card">
-              <div class="side-label">Built For Expansion</div>
-              <div class="side-title">More than a site</div>
+              <div class="side-label">Then Explore</div>
+              <div class="side-title">TV, Radio, Music, and creator channels.</div>
               <div class="side-copy">
-                Every section is designed like an app: Builder, Radio, TV, Signal Wire, Stages, Visuals, live creation tools, and more.
+                Faceless Animal Studios is not just a landing page. It is a platform with connected media, pages, and tools.
+              </div>
+            </div>
+
+            <div class="side-card">
+              <div class="side-label">For Creators</div>
+              <div class="side-title">Build a page or create a channel.</div>
+              <div class="side-copy">
+                Artists, builders, brands, and fans can move through the platform without guessing where to go next.
               </div>
             </div>
           </aside>
@@ -790,20 +942,57 @@
 
         <div class="signal-strip">
           <div class="signal-stat">
-            <strong>Faceless Builder</strong>
-            <span>Build web pages and digital presence inside the system.</span>
+            <strong>Neon Dreams Club</strong>
+            <span>Comic, characters, story pages, shorts, and the main universe.</span>
           </div>
           <div class="signal-stat">
-            <strong>Media Storage</strong>
-            <span>Manage media and connect files to the tools that need them.</span>
+            <strong>Creator Channels</strong>
+            <span>Public pages and channels for artists, brands, and builders.</span>
           </div>
           <div class="signal-stat">
             <strong>Radio + TV</strong>
-            <span>Always-on platform sound and creator video submission layers.</span>
+            <span>Always-on platform sound and open creator video channels.</span>
           </div>
           <div class="signal-stat">
-            <strong>Live Rooms</strong>
-            <span>Chat, sessions, stages, music interaction, and future live activity loops.</span>
+            <strong>Studio Services</strong>
+            <span>Web builds, media direction, music work, and platform support.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="ndc-heading">
+      <div class="container">
+        <div class="ndc-showcase">
+          <div class="ndc-copy">
+            <div class="section-kicker">Featured Universe</div>
+            <h2 class="ndc-title" id="ndc-heading">
+              Neon Dreams Club
+              <span>The Signal Never Sleeps.</span>
+            </h2>
+            <p>
+              A hidden network beneath the neon glow. Meet Lux, Nyx, Vex, and the figures inside the broadcast.
+              Read Issue #1, explore the character files, watch the visual drops, and enter the story before it finds you.
+            </p>
+            <div class="ndc-actions">
+              <a href="neon-dreams.html" class="btn btn-primary">Enter The Club</a>
+              <a href="assets/neon-dreams/first-edition/neon-dreams-club-first-edition.pdf" class="btn btn-gold" target="_blank" rel="noopener noreferrer">Read Issue #1</a>
+            </div>
+            <div class="ndc-link-row" aria-label="Neon Dreams Club links">
+              <a class="micro-link" href="neon-dreams.html#vault">Vault</a>
+              <a class="micro-link" href="neon-dreams.html#reader">Comic Reader</a>
+              <a class="micro-link" href="neon-dreams.html">Meet Lux</a>
+              <a class="micro-link" href="https://fanvue.com/neondreamsclub" target="_blank" rel="noopener noreferrer">Fanvue</a>
+            </div>
+          </div>
+          <div class="ndc-art" aria-label="Neon Dreams Club artwork">
+            <div class="ndc-poster">
+              <img src="Neon%20Dreams%20Club/The%20Five/Lux/file_00000000688471f881166576a2f5595d.png" alt="Lux from Neon Dreams Club" loading="lazy" />
+            </div>
+            <div class="ndc-stack">
+              <img src="Neon%20Dreams%20Club/Logos%20and%20Banners/file_00000000e8c471f583f78f918217dd9b_copy_627x627.png" alt="Neon Dreams Club mark" loading="lazy" />
+              <img src="assets/neon-dreams/first-edition/cover.jpg" alt="Neon Dreams Club First Edition cover" loading="lazy" />
+            </div>
           </div>
         </div>
       </div>
@@ -812,90 +1001,96 @@
     <section class="section" aria-labelledby="features-heading">
       <div class="container">
         <div class="section-head">
-          <div class="section-kicker">Current Platform Features</div>
-          <h2 id="features-heading">Everything already inside the system</h2>
+          <div class="section-kicker">Platform Paths</div>
+          <h2 id="features-heading">Choose what you came for</h2>
           <p>
-            This platform is designed as a connected stack, not a random collection of pages. Every tool is meant to work alone and work together.
+            Faceless Animal Studios has a lot inside it. These are the clearest paths: watch, listen, create, browse, buy, or build.
           </p>
         </div>
 
         <div class="feature-grid">
           <article class="feature-card">
             <div class="feature-icon">🧱</div>
-            <div class="feature-title">Builder + Mobile Builder</div>
+            <div class="feature-title">Creator Pages</div>
             <p class="feature-desc">
-              Create pages, layouts, and mobile-first digital presence without being boxed into a generic builder flow.
+              Build a public presence for an artist, creator, brand, or project without sending people to a dead profile.
             </p>
             <ul class="feature-list">
-              <li>Faceless Builder for desktop-style workflow</li>
-              <li>Mobile Builder for fast phone-first creation</li>
-              <li>Future publishing and ecosystem linking</li>
+              <li>Pages for people, projects, and channels</li>
+              <li>Directory discovery built into the platform</li>
+              <li>Studio help available when you need it</li>
             </ul>
+            <a class="micro-link" href="directory.html">Browse Channels</a>
           </article>
 
           <article class="feature-card">
             <div class="feature-icon">📂</div>
-            <div class="feature-title">Media File Storage</div>
+            <div class="feature-title">Studio Services</div>
             <p class="feature-desc">
-              Upload assets, organize files, and share links without needing a separate storage service for every move.
+              Custom websites, creator pages, music work, media direction, and branded builds from the studio side.
             </p>
             <ul class="feature-list">
-              <li>Fast media and file handling</li>
-              <li>Shareable file URLs</li>
-              <li>Built to connect to pages, TV, and creator tools</li>
+              <li>Web and page builds</li>
+              <li>Music, audio, and creative support</li>
+              <li>Useful for creators who want it done clean</li>
             </ul>
+            <a class="micro-link" href="services.html">View Services</a>
           </article>
 
           <article class="feature-card">
             <div class="feature-icon">📻</div>
-            <div class="feature-title">Radio App</div>
+            <div class="feature-title">Radio</div>
             <p class="feature-desc">
-              A living audio layer for the platform. Music, atmosphere, movement, and creator energy without depending on outside apps.
+              The sound layer of Faceless Animal Studios: underground music, atmosphere, sessions, and live platform energy.
             </p>
             <ul class="feature-list">
-              <li>Always-on platform audio presence</li>
-              <li>Underground sound and creator-driven media</li>
-              <li>Future crossover into live rooms and visuals</li>
+              <li>Listen without leaving the site</li>
+              <li>Built around DJ Faceless Animal</li>
+              <li>Connects back to music and TV</li>
             </ul>
+            <a class="micro-link" href="radio.html">Listen Live</a>
           </article>
 
           <article class="feature-card">
             <div class="feature-icon">📺</div>
             <div class="feature-title">Faceless TV</div>
             <p class="feature-desc">
-              A visual content layer built for uploads, curation, and creator motion inside the platform.
+              A video layer for channels, uploads, broadcasts, visual drops, and the open Faceless TV watch page.
             </p>
             <ul class="feature-list">
-              <li>User video submission flow</li>
-              <li>Platform-first content display</li>
-              <li>Future short-form and clip loops</li>
+              <li>Create a channel</li>
+              <li>Upload video during test mode</li>
+              <li>Watch public content and archive drops</li>
             </ul>
+            <a class="micro-link" href="tv.html">Watch TV</a>
           </article>
 
           <article class="feature-card">
             <div class="feature-icon">🛰️</div>
-            <div class="feature-title">Signal Wire</div>
+            <div class="feature-title">News + Store</div>
             <p class="feature-desc">
-              News, updates, motion, platform activity, creator stories, and future live feed energy all inside one signal layer.
+              Updates, drops, supply, and platform announcements live in places visitors can check quickly.
             </p>
             <ul class="feature-list">
-              <li>Hip hop and music news direction</li>
-              <li>Platform updates and signal board behavior</li>
-              <li>Built to feed activity and retention</li>
+              <li>News and platform movement</li>
+              <li>Store and supply drops</li>
+              <li>Links back into the full ecosystem</li>
             </ul>
+            <a class="micro-link" href="news.html">Read News</a>
           </article>
 
           <article class="feature-card">
             <div class="feature-icon">🆔</div>
-            <div class="feature-title">Signal Identity</div>
+            <div class="feature-title">Games + Apps</div>
             <p class="feature-desc">
-              Your signal is your access layer. The system is built around identity, movement, and control, not random disconnected accounts.
+              Lightweight games, apps, chat, tools, and experiments give visitors more reasons to stay inside the platform.
             </p>
             <ul class="feature-list">
-              <li>Shared identity across apps</li>
-              <li>Privacy-first system logic</li>
-              <li>Future deeper ecosystem presence</li>
+              <li>Quick games and interactive tools</li>
+              <li>Chat and utility pages</li>
+              <li>Built to grow without confusing the homepage</li>
             </ul>
+            <a class="micro-link" href="games.html">Play Games</a>
           </article>
         </div>
       </div>
@@ -905,92 +1100,93 @@
       <div class="container">
         <div class="future-wrap">
           <div class="future-card">
-            <div class="section-kicker">Future Features</div>
+            <div class="section-kicker">What The Site Is</div>
             <h2 id="future-heading" style="margin:0 0 0.65rem; font-size: clamp(1.7rem, 4vw, 2.5rem); line-height:1.06; letter-spacing:-0.04em;">
-              What this grows into next
+              A media universe with creator tools attached
             </h2>
             <p style="margin:0; color:var(--text-soft); line-height:1.7;">
-              The goal is not just to launch tools. The goal is to turn the whole platform into a live creator operating system.
+              The simplest way to understand it: Neon Dreams Club is the story world, Faceless Animal Studios is the platform around it.
             </p>
 
             <div class="future-list">
               <div class="future-item">
-                <strong>Stages</strong>
-                Live chatrooms and creator rooms with public and private activity.
+                <strong>Neon Dreams Club</strong>
+                Characters, comic pages, visuals, Fanvue, and the signal that pulls people in.
               </div>
               <div class="future-item">
-                <strong>Blend Rooms</strong>
-                DJ-style music sessions where users join, listen, react, and vote.
+                <strong>Faceless TV</strong>
+                Creator channels, videos, broadcasts, and a YouTube-style layer without the corporate feel.
               </div>
               <div class="future-item">
-                <strong>Faceless Pulse</strong>
-                Audio-reactive visualizer tools for streams, radio, clips, and lives.
+                <strong>Radio + Music</strong>
+                The sound of the platform, DJ Faceless Animal, mixes, sessions, and music work.
               </div>
               <div class="future-item">
-                <strong>Image Editor</strong>
-                Built-in visual creation tools for assets, posts, covers, and promo work.
+                <strong>Creator Directory</strong>
+                Public channels and pages for artists, creators, businesses, and members.
               </div>
               <div class="future-item">
-                <strong>Miner + Wallet</strong>
-                Platform value, progression, and internal utility systems.
+                <strong>Games + Apps</strong>
+                Small interactive pieces that make the platform feel alive instead of static.
               </div>
               <div class="future-item">
-                <strong>Signal AI</strong>
-                A future assistant layer across the platform, tools, rooms, and creator flow.
+                <strong>Studio Services</strong>
+                Custom sites, pages, media work, and hands-on builds for people who need help.
               </div>
               <div class="future-item">
-                <strong>Signal Feed</strong>
-                A live activity board showing what is happening across the whole system.
+                <strong>News + Store</strong>
+                Updates, drops, announcements, and things people can buy or follow.
               </div>
               <div class="future-item">
-                <strong>Mobile App Shell</strong>
-                A full system entry point wrapping the ecosystem into an app experience.
+                <strong>Accounts</strong>
+                Sign in when you want to create, save, upload, or move deeper into the system.
               </div>
             </div>
           </div>
 
           <div class="sell-card">
-            <div class="section-kicker">Why New Users Should Care</div>
+            <div class="section-kicker">What To Do First</div>
             <h2 style="margin:0 0 0.65rem; font-size: clamp(1.7rem, 4vw, 2.5rem); line-height:1.06; letter-spacing:-0.04em;">
-              More control. More tools. Less noise.
+              Pick a door and go deeper.
             </h2>
             <p style="margin:0; color:var(--text-soft); line-height:1.7;">
-              Most platforms give you one small function and then trap you in their system. This one is built to let you move.
+              The homepage should not make people solve the whole ecosystem. These are the clearest first moves.
             </p>
 
             <div class="sell-points">
               <div class="sell-point">
                 <i>1</i>
                 <div>
-                  <strong style="color:#fff;">Start fast</strong><br />
-                  Build a page, upload files, or jump into media without learning a bloated platform first.
+                  <strong style="color:#fff;">If you came from Lux or the comic</strong><br />
+                  Go straight to Neon Dreams Club and read the first edition.
                 </div>
               </div>
               <div class="sell-point">
                 <i>2</i>
                 <div>
-                  <strong style="color:#fff;">Stay connected</strong><br />
-                  Every part of the system links back into your identity, your media, your presence, and your next move.
+                  <strong style="color:#fff;">If you want media</strong><br />
+                  Watch Faceless TV, listen to Radio, or open the Music page.
                 </div>
               </div>
               <div class="sell-point">
                 <i>3</i>
                 <div>
-                  <strong style="color:#fff;">Grow inside one ecosystem</strong><br />
-                  Pages, files, radio, TV, live rooms, visuals, and future creation tools are all designed to work together.
+                  <strong style="color:#fff;">If you create</strong><br />
+                  Browse channels, create your page, or start a Faceless TV channel.
                 </div>
               </div>
               <div class="sell-point">
                 <i>4</i>
                 <div>
-                  <strong style="color:#fff;">Built for creators and real users</strong><br />
-                  This is for people building things, moving things, sharing things, streaming things, and making their own lane.
+                  <strong style="color:#fff;">If you need a build</strong><br />
+                  Use Studio Services for websites, pages, music, media, and custom work.
                 </div>
               </div>
             </div>
 
             <div class="hero-actions" style="margin-top: 1rem;">
-              <a href="free.html" class="btn btn-gold">Create My Free Username</a>
+              <a href="neon-dreams.html" class="btn btn-primary">Enter Neon Dreams Club</a>
+              <a href="services.html" class="btn btn-gold">Studio Services</a>
             </div>
           </div>
         </div>
@@ -1000,35 +1196,35 @@
     <section class="section" aria-labelledby="why-heading">
       <div class="container">
         <div class="section-head">
-          <div class="section-kicker">Why It Feels Different</div>
-          <h2 id="why-heading">Not a page builder. Not a file host. Not just a media site.</h2>
+          <div class="section-kicker">Why It Works</div>
+          <h2 id="why-heading">A story brand, a media platform, and creator tools in one place.</h2>
           <p>
-            Faceless Animal Studios sits between creation, media, identity, and live interaction. That’s what makes it hit differently.
+            The site can be many things because the homepage gives visitors a clear first path: story, media, creator channel, or studio service.
           </p>
         </div>
 
         <div class="feature-grid">
           <article class="feature-card">
             <div class="feature-icon">⚡</div>
-            <div class="feature-title">Fast Entry</div>
+            <div class="feature-title">Clear Entry</div>
             <p class="feature-desc">
-              People land here and instantly understand the value: build, upload, watch, listen, or enter the system.
+              People can land here from TikTok, YouTube, Instagram, or search and immediately know where to go.
             </p>
           </article>
 
           <article class="feature-card">
             <div class="feature-icon">🧠</div>
-            <div class="feature-title">Connected Logic</div>
+            <div class="feature-title">Connected Media</div>
             <p class="feature-desc">
-              Every tool is part of something bigger. You are not jumping between random services with random identities.
+              Neon Dreams Club, TV, Radio, Music, News, Store, and Directory all support the same brand world.
             </p>
           </article>
 
           <article class="feature-card">
             <div class="feature-icon">🌐</div>
-            <div class="feature-title">Future-Proof Structure</div>
+            <div class="feature-title">Creator Ready</div>
             <p class="feature-desc">
-              It starts with usable apps and grows into a full creator operating system with live feed, AI, visuals, and social motion.
+              The platform leaves room for pages, uploads, games, services, accounts, and new features without confusing the first visit.
             </p>
           </article>
         </div>
@@ -1038,14 +1234,14 @@
     <section class="section">
       <div class="container">
         <div class="final-cta">
-          <div class="section-kicker">Enter The Ecosystem</div>
-          <h2>Claim your signal and move inside the platform.</h2>
+          <div class="section-kicker">Start Moving</div>
+          <h2>Enter the story or build your place in the platform.</h2>
           <p>
-            Start with the tool that matches what you need right now, then move deeper into the system as you build, upload, stream, and grow.
+            Neon Dreams Club is the strongest front door. The creator tools, media apps, and studio services are the next doors.
           </p>
 
           <div class="hero-actions">
-            <a href="login.html" class="btn btn-primary">Enter The System</a>
+            <a href="neon-dreams.html" class="btn btn-primary">Enter Neon Dreams Club</a>
             <a href="free.html" class="btn btn-gold">Create Free Username</a>
           </div>
         </div>
