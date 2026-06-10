@@ -318,8 +318,8 @@
         '<article class="tv-card" tabindex="0" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '">',
           '<div class="tv-thumb">',
             source
-              ? '<video class="tv-thumb-video" muted autoplay loop playsinline preload="metadata" src="' + escapeHtml(source) + '" poster="' + escapeHtml(image) + '"></video>'
-              : '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(title) + '" loading="lazy" />',
+              ? '<video class="tv-thumb-video" muted autoplay loop playsinline preload="auto" src="' + escapeHtml(source) + '" poster="' + escapeHtml(image) + '"></video>'
+              : '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(title) + '" loading="eager" fetchpriority="high" />',
             '<span class="tv-play" aria-hidden="true">&gt;</span>',
             '<span class="tv-meta">' + escapeHtml(duration) + '</span>',
           '</div>',
