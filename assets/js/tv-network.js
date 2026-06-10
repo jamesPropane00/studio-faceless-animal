@@ -286,11 +286,12 @@
 
     el.recentUploads.innerHTML = uploads.slice(0, 10).map(function (item) {
       var source = item.source_url || item.external_video_url || '';
+      var preview = source ? '<video class="tv-upload-preview" controls playsinline muted preload="auto" src="' + escapeHtml(source) + '"></video>' : '';
       return [
         '<div class="tv-list-item">',
           '<strong>' + escapeHtml(item.title || 'Untitled broadcast') + '</strong>',
           '<span>' + escapeHtml((item.channel_slug || 'channel') + ' / ' + (item.visibility || 'public') + ' / ' + (item.status || 'published')) + '</span>',
-          source ? '<span>' + escapeHtml(source) + '</span>' : '',
+          preview,
         '</div>',
       ].join('');
     }).join('');
@@ -350,7 +351,7 @@
     el.featureCopy.textContent = copy;
 
     if (source) {
-      el.screen.innerHTML = '<video controls playsinline preload="metadata" src="' + escapeHtml(source) + '"></video>';
+      el.screen.innerHTML = '<video controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
       return;
     }
 
@@ -550,6 +551,7 @@
       var description = el.uploadForm.description.value;
       var visibility = el.uploadForm.visibility.value;
       var file = el.uploadForm.file.files && el.uploadForm.file.files[0] ? el.uploadForm.file.files[0] : null;
+      var fileBase64 = null;
 
       if (!channelSlug) {
         setStatus(el.uploadStatus, 'Choose a channel.', 'error');
@@ -566,7 +568,7 @@
 
       setStatus(el.uploadStatus, 'Uploading...');
       try {
-        var fileBase64 = await readFileAsBase64(file);
+        fileBase64 = await readFileAsBase64(file);
         var result = await fetchJson(API.uploads, {
           method: 'POST',
           headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
@@ -586,6 +588,7 @@
         await loadNetwork();
       } catch (err) {
         var localUploads = readLocalJson('uploads_cache', { uploads: [], mine_uploads: [] });
+        var previewUrl = fileBase64 ? ('data:' + (file.type || 'video/mp4') + ';base64,' + fileBase64) : URL.createObjectURL(file);
         var createdUpload = {
           id: 'local-' + Date.now(),
           username: state.session && state.session.username || 'guest',
@@ -597,8 +600,8 @@
           file_name: file.name,
           file_type: file.type || 'video/mp4',
           file_size_bytes: file.size,
-          source_url: '',
-          external_video_url: '',
+          source_url: previewUrl,
+          external_video_url: previewUrl,
           duration_seconds: null,
           is_published: true,
           thumb_url: 'assets/neon-dreams/covers/cover-thumb.jpg',
