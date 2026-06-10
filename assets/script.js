@@ -288,6 +288,8 @@
 
   function shouldHideLauncher() {
     var path = currentPath();
+    if (window.FAS_DISABLE_PHONE_LAUNCHER === true) return true;
+    if (document.body && document.body.hasAttribute('data-disable-phone-launcher')) return true;
     return path.endsWith('/phone.html') || path === '/phone.html';
   }
 

@@ -17,6 +17,7 @@
   };
 
   var el = {};
+  var MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 
   function qs(selector, root) {
     return (root || document).querySelector(selector);
@@ -524,7 +525,7 @@
     }
     if (el.uploadLink) {
       el.uploadLink.href = state.session ? '#tv-studio' : 'login.html?redirect=tv.html#tv-studio';
-      el.uploadLink.textContent = state.session ? 'Claim Channel' : 'Sign In';
+      el.uploadLink.textContent = state.session ? 'Create Channel' : 'Sign In';
     }
   }
 
@@ -537,7 +538,7 @@
       node.disabled = locked;
     });
     if (locked) {
-      setStatus(el.channelStatus, 'Sign in to claim a channel.', 'error');
+      setStatus(el.channelStatus, 'Sign in to create a channel.', 'error');
       setStatus(el.uploadStatus, 'Sign in to upload video.', 'error');
     }
   }
@@ -681,7 +682,7 @@
         localChannels.channels.push(created);
         localChannels.mine.push(created);
         writeLocalJson('channels_cache', localChannels);
-        setStatus(el.channelStatus, 'Saved locally. Deploy the API to publish it globally.', 'success');
+        setStatus(el.channelStatus, 'Saved in Faceless TV test mode.', 'success');
         el.channelForm.reset();
         await loadNetwork();
       }
@@ -730,6 +731,10 @@
       }
       if (!file) {
         setStatus(el.uploadStatus, 'Choose a video file.', 'error');
+        return;
+      }
+      if (file.size > MAX_UPLOAD_BYTES) {
+        setStatus(el.uploadStatus, '50MB max while Faceless TV is in test mode. Choose a smaller video for now.', 'error');
         return;
       }
 
@@ -782,7 +787,7 @@
         localUploads.uploads.unshift(createdUpload);
         localUploads.mine_uploads.unshift(createdUpload);
         writeLocalJson('uploads_cache', localUploads);
-        setStatus(el.uploadStatus, 'Saved locally. Deploy the API to publish it globally.', 'success');
+        setStatus(el.uploadStatus, 'Saved in Faceless TV test mode.', 'success');
         el.uploadForm.reset();
         await loadNetwork();
       }
