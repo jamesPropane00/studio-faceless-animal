@@ -286,7 +286,7 @@
 
     el.recentUploads.innerHTML = uploads.slice(0, 10).map(function (item) {
       var source = item.source_url || item.external_video_url || '';
-      var preview = source ? '<video class="tv-upload-preview" controls playsinline muted preload="auto" src="' + escapeHtml(source) + '"></video>' : '';
+      var preview = source ? '<video class="tv-upload-preview" controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>' : '';
       return [
         '<div class="tv-list-item">',
           '<strong>' + escapeHtml(item.title || 'Untitled broadcast') + '</strong>',
@@ -318,7 +318,7 @@
         '<article class="tv-card" tabindex="0" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '">',
           '<div class="tv-thumb">',
             source
-              ? '<video class="tv-thumb-video" controls muted playsinline preload="metadata" src="' + escapeHtml(source) + '" poster="' + escapeHtml(image) + '"></video>'
+              ? '<video class="tv-thumb-video" controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '" poster="' + escapeHtml(image) + '"></video>'
               : '<div class="tv-thumb-preview" style="--preview-image:url(&quot;' + escapeHtml(image) + '&quot;)"><img src="' + escapeHtml(image) + '" alt="' + escapeHtml(title) + '" loading="eager" fetchpriority="high" /><span class="tv-scanline"></span><span class="tv-preview-badge">Preview loop</span></div>',
             '<span class="tv-play" aria-hidden="true">&gt;</span>',
             '<span class="tv-meta">' + escapeHtml(duration) + '</span>',
@@ -357,7 +357,7 @@
     el.featureCopy.textContent = copy;
 
     if (source) {
-      el.screen.innerHTML = '<video controls playsinline preload="metadata" src="' + escapeHtml(source) + '"></video>';
+      el.screen.innerHTML = '<video controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
       activateVideos(el.screen);
       return;
     }
@@ -384,13 +384,28 @@
     qsa('video', root).forEach(function (video) {
       try {
         video.muted = true;
+        video.defaultMuted = true;
         video.playsInline = true;
         video.autoplay = true;
+        video.loop = true;
         video.preload = 'auto';
-        video.load();
-        var playPromise = video.play();
-        if (playPromise && typeof playPromise.catch === 'function') {
-          playPromise.catch(function () {});
+
+        var startPreview = function () {
+          try {
+            if (video.ended && Number.isFinite(video.duration)) video.currentTime = 0;
+            var playPromise = video.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+              playPromise.catch(function () {});
+            }
+          } catch (err) {}
+        };
+
+        if (video.readyState >= 2) {
+          startPreview();
+        } else {
+          video.addEventListener('loadeddata', startPreview, { once: true });
+          video.addEventListener('canplay', startPreview, { once: true });
+          video.load();
         }
       } catch (err) {}
     });
