@@ -52,6 +52,95 @@
       backdrop-filter: blur(18px);
     }
 
+    .navbar .navbar-links {
+      display: none;
+    }
+
+    .navbar .nav-toggle {
+      display: inline-flex;
+      width: 46px;
+      height: 46px;
+      border-color: rgba(33,244,208,0.22);
+      background: rgba(255,255,255,0.045);
+      box-shadow: 0 14px 34px rgba(0,0,0,0.28);
+    }
+
+    .navbar .nav-toggle span {
+      background: var(--tv-cyan);
+      box-shadow: 8px 0 0 var(--tv-cyan), 16px 0 0 var(--tv-cyan);
+    }
+
+    .navbar .nav-toggle:hover,
+    .navbar .nav-toggle.open {
+      border-color: rgba(33,244,208,0.52);
+      background: rgba(33,244,208,0.1);
+      box-shadow: 0 0 28px rgba(33,244,208,0.12);
+    }
+
+    .tv-waffle-menu {
+      position: fixed;
+      top: calc(var(--nav-h, 72px) + 0.75rem);
+      right: max(0.75rem, calc((100vw - 1180px) / 2));
+      left: auto;
+      width: min(320px, calc(100vw - 1.5rem));
+      z-index: 12040;
+      padding: 0.72rem;
+      border: 1px solid rgba(33,244,208,0.2);
+      border-radius: 14px;
+      background:
+        linear-gradient(135deg, rgba(33,244,208,0.08), rgba(139,92,246,0.08)),
+        rgba(8,9,13,0.96);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+      backdrop-filter: blur(20px);
+    }
+
+    .tv-waffle-menu.open {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    .tv-waffle-menu a {
+      display: flex;
+      min-height: 54px;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 0.6rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.035);
+      color: #eef3ff;
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-align: center;
+      text-transform: uppercase;
+      transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    }
+
+    .tv-waffle-menu a:hover,
+    .tv-waffle-menu a:focus-visible {
+      padding-left: 0.6rem;
+      border-color: rgba(33,244,208,0.34);
+      background: rgba(33,244,208,0.08);
+      color: #fff;
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .tv-waffle-menu a[aria-current="page"] {
+      border-color: rgba(139,92,246,0.42);
+      background: rgba(139,92,246,0.14);
+    }
+
+    .tv-waffle-menu .tv-waffle-cta {
+      grid-column: 1 / -1;
+      min-height: 48px;
+      color: #08090d !important;
+      background: linear-gradient(135deg, var(--gold-bright), #f3d47a);
+      border-color: rgba(255,255,255,0.18);
+    }
+
     .tv-page {
       min-height: calc(100dvh - var(--nav-h, 72px));
       padding: clamp(1rem, 3vw, 2rem) 0 4rem;
@@ -1349,14 +1438,14 @@
           <li><a href="store.html">Store</a></li>
           <li><a href="login.html" class="nav-cta">Enter The System</a></li>
         </ul>
-        <button class="nav-toggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-menu">
+        <button class="nav-toggle tv-waffle-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
           <span></span><span></span><span></span>
         </button>
       </div>
     </div>
   </nav>
 
-  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+  <div class="mobile-nav tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
     <a href="directory.html">Directory</a>
     <a href="radio.html">Radio</a>
     <a href="chat.html">Chat</a>
@@ -1364,7 +1453,7 @@
     <a href="neon-dreams.html">Neon Dreams</a>
     <a href="news.html">News</a>
     <a href="store.html">Store</a>
-    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Enter The System</a>
+    <a href="login.html" class="tv-waffle-cta">Enter The System</a>
   </div>
 
   <main class="tv-page">
@@ -1471,37 +1560,6 @@
               <span>Creator uploads</span>
             </article>
           </div>
-        </div>
-      </section>
-
-      <section class="tv-section" aria-label="Upload workflow">
-        <div class="tv-section-head">
-          <div>
-            <h2>How Uploading Works</h2>
-            <p>Create a channel, upload your video, and keep it legal. Faceless TV is built for open posting, not corporate-style content lanes.</p>
-          </div>
-        </div>
-        <div class="tv-upload-grid">
-          <article class="tv-upload">
-            <span>1</span>
-            <strong>Create an account</strong>
-            <p>Sign in and start a Faceless TV channel for your videos, shows, drops, or archive.</p>
-          </article>
-          <article class="tv-upload">
-            <span>2</span>
-            <strong>Upload to Faceless TV</strong>
-            <p>Add a video to your channel and choose whether it goes public or stays private.</p>
-          </article>
-          <article class="tv-upload">
-            <span>3</span>
-            <strong>Keep it legal</strong>
-            <p>Illegal content is not allowed. Everything else has room to move.</p>
-          </article>
-          <article class="tv-upload">
-            <span>4</span>
-            <strong>Go live on Faceless TV</strong>
-            <p>Public videos can show up in the watch page, archive, and channel feed.</p>
-          </article>
         </div>
       </section>
 
