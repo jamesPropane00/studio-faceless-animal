@@ -319,7 +319,7 @@
           '<div class="tv-thumb">',
             source
               ? '<video class="tv-thumb-video" controls muted playsinline preload="metadata" src="' + escapeHtml(source) + '" poster="' + escapeHtml(image) + '"></video>'
-              : '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(title) + '" loading="eager" fetchpriority="high" />',
+              : '<div class="tv-thumb-preview" style="--preview-image:url(&quot;' + escapeHtml(image) + '&quot;)"><img src="' + escapeHtml(image) + '" alt="' + escapeHtml(title) + '" loading="eager" fetchpriority="high" /><span class="tv-scanline"></span><span class="tv-preview-badge">Preview loop</span></div>',
             '<span class="tv-play" aria-hidden="true">&gt;</span>',
             '<span class="tv-meta">' + escapeHtml(duration) + '</span>',
           '</div>',
@@ -363,10 +363,11 @@
     }
 
     el.screen.innerHTML = [
-      '<div class="tv-screen-placeholder" style="background:linear-gradient(0deg,rgba(0,0,0,0.64),rgba(0,0,0,0.2)),url(\'' + escapeHtml(image) + '\') center / cover no-repeat;">',
+      '<div class="tv-screen-placeholder tv-screen-preview" style="--preview-image:url(&quot;' + escapeHtml(image) + '&quot;);background-image:linear-gradient(0deg,rgba(0,0,0,0.66),rgba(0,0,0,0.22)),var(--preview-image);">',
+        '<span class="tv-scanline"></span>',
         '<div>',
-          '<strong>Selected Broadcast</strong>',
-          '<span>This card is ready to become a live Faceless TV stream once the backend is connected.</span>',
+          '<strong>' + escapeHtml(title) + '</strong>',
+          '<span>Preview loop playing from the Faceless TV broadcast card. Uploads with real media will open as full video.</span>',
         '</div>',
       '</div>',
     ].join('');
@@ -683,3 +684,4 @@
     boot();
   }
 }());
+
