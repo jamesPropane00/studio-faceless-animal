@@ -125,6 +125,11 @@
     return Boolean(videoSource(item) || embedSource(item));
   }
 
+  function uploadKey(item) {
+    if (!item) return '';
+    return String(item.id || item.external_video_id || item.storage_path || videoSource(item) || embedSource(item) || item.title || '').trim();
+  }
+
   function currentChannelSlug() {
     if (state.activeChannelSlug) return state.activeChannelSlug;
     try {
@@ -341,6 +346,7 @@
     var visible = sourceItems.filter(function (item) {
       return state.activeFilter === 'all' || inferFilter(item) === state.activeFilter;
     });
+    if (el.archiveCount) el.archiveCount.textContent = String(visible.length);
 
     if (!visible.length) {
       el.grid.innerHTML = '<div class="tv-empty">No playable videos are available in this channel archive yet.</div>';
@@ -356,8 +362,9 @@
       var duration = item.duration_label || (item.duration_seconds ? Math.max(1, Math.round(Number(item.duration_seconds) / 60)) + ' min' : (item.status || 'Video'));
       var source = videoSource(item);
       var embed = embedSource(item);
+      var key = uploadKey(item);
       return [
-        '<article class="tv-card" tabindex="0" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '" data-embed="' + escapeHtml(embed) + '">',
+        '<article class="tv-card" tabindex="0" data-key="' + escapeHtml(key) + '" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '" data-embed="' + escapeHtml(embed) + '">',
           '<div class="tv-thumb">',
             source
               ? '<video class="tv-thumb-video" controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '" poster="' + escapeHtml(image) + '"></video>'
@@ -397,6 +404,7 @@
       return;
     }
     featureUpload(first);
+    setActiveCard(uploadKey(first));
   }
 
   function renderEmptyFeature() {
@@ -419,9 +427,11 @@
     var copy = card.getAttribute('data-copy') || '';
     var source = card.getAttribute('data-source') || '';
     var embed = card.getAttribute('data-embed') || '';
+    var key = card.getAttribute('data-key') || '';
 
     el.featureTitle.textContent = title;
     el.featureCopy.textContent = copy;
+    setActiveCard(key);
 
     if (source) {
       el.screen.innerHTML = '<video controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
@@ -443,9 +453,11 @@
     var copy = item.copy || item.description || 'Faceless TV broadcast';
     var source = videoSource(item);
     var embed = embedSource(item);
+    var key = uploadKey(item);
 
     el.featureTitle.textContent = title;
     el.featureCopy.textContent = copy;
+    setActiveCard(key);
 
     if (source) {
       el.screen.innerHTML = '<video controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
@@ -459,6 +471,13 @@
     }
 
     renderEmptyFeature();
+  }
+
+  function setActiveCard(key) {
+    if (!el.grid) return;
+    qsa('.tv-card', el.grid).forEach(function (card) {
+      card.classList.toggle('is-active', Boolean(key) && card.getAttribute('data-key') === key);
+    });
   }
 
   function syncFilterButtons() {
@@ -782,6 +801,7 @@
     el.recentUploads = qs('#tv-recent-uploads');
     el.channelCount = qs('#tv-channel-count');
     el.uploadCount = qs('#tv-upload-count');
+    el.archiveCount = qs('#tv-archive-count');
     el.channelStatus = qs('#tv-channel-status');
     el.uploadStatus = qs('#tv-upload-status');
     el.channelForm = qs('#tv-channel-form');
