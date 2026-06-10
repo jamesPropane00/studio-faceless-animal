@@ -295,6 +295,8 @@
         '</div>',
       ].join('');
     }).join('');
+
+    activateVideos(el.recentUploads);
   }
 
   function renderCards(items) {
@@ -352,6 +354,7 @@
 
     if (source) {
       el.screen.innerHTML = '<video controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
+      activateVideos(el.screen);
       return;
     }
 
@@ -368,6 +371,23 @@
   function syncFilterButtons() {
     qsa('.tv-filter').forEach(function (button) {
       button.classList.toggle('active', button.getAttribute('data-filter') === state.activeFilter);
+    });
+  }
+
+  function activateVideos(root) {
+    if (!root) return;
+    qsa('video', root).forEach(function (video) {
+      try {
+        video.muted = true;
+        video.playsInline = true;
+        video.autoplay = true;
+        video.preload = 'auto';
+        video.load();
+        var playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(function () {});
+        }
+      } catch (err) {}
     });
   }
 
@@ -451,6 +471,7 @@
     renderMyChannels(state.session ? ownedChannels : []);
     renderRecentUploads(state.session ? state.uploads : uploadPayload.uploads || []);
     renderCards(state.uploads);
+    activateVideos(el.recentUploads);
     syncFilterButtons();
     setShellMode();
   }
