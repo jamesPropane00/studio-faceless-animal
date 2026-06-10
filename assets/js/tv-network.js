@@ -110,6 +110,24 @@
     node.style.color = tone === 'error' ? '#ff7a8c' : '#21f4d0';
   }
 
+  function localCacheKey(name) {
+    return 'fas_tv_' + name;
+  }
+
+  function readLocalJson(name, fallback) {
+    try {
+      return JSON.parse(localStorage.getItem(localCacheKey(name)) || 'null') || fallback;
+    } catch (err) {
+      return fallback;
+    }
+  }
+
+  function writeLocalJson(name, value) {
+    try {
+      localStorage.setItem(localCacheKey(name), JSON.stringify(value));
+    } catch (err) {}
+  }
+
   function slugify(value) {
     return String(value || '')
       .trim()
@@ -407,8 +425,8 @@
       state.localMode = false;
     } catch (err) {
       console.info('[TV] network load fallback:', err && err.message ? err.message : err);
-      channelPayload = { owner: ownerChannel(), channels: [], mine: [] };
-      uploadPayload = { uploads: [], mine_uploads: [] };
+      channelPayload = readLocalJson('channels_cache', { owner: ownerChannel(), channels: [], mine: [] });
+      uploadPayload = readLocalJson('uploads_cache', { uploads: [], mine_uploads: [] });
       state.localMode = true;
     }
 
@@ -418,6 +436,8 @@
     state.owner = normalizedChannels.owner;
     state.channels = normalizedChannels.list;
     state.uploads = uploads;
+    writeLocalJson('channels_cache', channelPayload);
+    writeLocalJson('uploads_cache', uploadPayload);
 
     var ownedChannels = state.channels.filter(function (item) {
       if (item.is_owner) return true;
@@ -472,7 +492,30 @@
         el.channelForm.reset();
         await loadNetwork();
       } catch (err) {
-        setStatus(el.channelStatus, err.message || 'Could not create channel.', 'error');
+        var localChannels = readLocalJson('channels_cache', { owner: ownerChannel(), channels: [], mine: [] });
+        var created = {
+          id: 'local-' + Date.now(),
+          account_id: state.session && state.session.account_id || null,
+          username: state.session && state.session.username || 'guest',
+          display_name: state.session && (state.session.display || state.session.display_name) || 'Guest',
+          channel_slug: slugify(payload.channel_slug || payload.channel_name),
+          channel_name: payload.channel_name,
+          channel_kind: 'member',
+          visibility: payload.visibility,
+          description: payload.description,
+          parent_slug: 'faceless-animal-studios',
+          invite_code: payload.visibility === 'private' ? 'TV-LOCAL-0000' : null,
+          is_owner: false,
+          is_featured: false,
+        };
+        localChannels.mine = localChannels.mine || [];
+        localChannels.channels = localChannels.channels || [];
+        localChannels.channels.push(created);
+        localChannels.mine.push(created);
+        writeLocalJson('channels_cache', localChannels);
+        setStatus(el.channelStatus, 'Saved locally. Deploy the API to publish it globally.', 'success');
+        el.channelForm.reset();
+        await loadNetwork();
       }
     });
   }
@@ -542,7 +585,32 @@
         el.uploadForm.reset();
         await loadNetwork();
       } catch (err) {
-        setStatus(el.uploadStatus, err.message || 'Upload failed.', 'error');
+        var localUploads = readLocalJson('uploads_cache', { uploads: [], mine_uploads: [] });
+        var createdUpload = {
+          id: 'local-' + Date.now(),
+          username: state.session && state.session.username || 'guest',
+          channel_slug: channelSlug,
+          title: title,
+          description: description,
+          visibility: visibility,
+          status: 'published',
+          file_name: file.name,
+          file_type: file.type || 'video/mp4',
+          file_size_bytes: file.size,
+          source_url: '',
+          external_video_url: '',
+          duration_seconds: null,
+          is_published: true,
+          thumb_url: 'assets/neon-dreams/covers/cover-thumb.jpg',
+        };
+        localUploads.uploads = localUploads.uploads || [];
+        localUploads.mine_uploads = localUploads.mine_uploads || [];
+        localUploads.uploads.unshift(createdUpload);
+        localUploads.mine_uploads.unshift(createdUpload);
+        writeLocalJson('uploads_cache', localUploads);
+        setStatus(el.uploadStatus, 'Saved locally. Deploy the API to publish it globally.', 'success');
+        el.uploadForm.reset();
+        await loadNetwork();
       }
     });
   }
