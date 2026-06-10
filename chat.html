@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Signal Chat is the standalone DJ Faceless Animal live chat room for Faceless Animal Studios." />
+  <title>Signal Chat - DJ Faceless Animal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=VT323&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css?v=20260322" />
+  <link rel="stylesheet" href="assets/css/chat-widget.css" />
+  <style>
+    :root {
+      --chat-green: #39ff88;
+      --chat-pink: #ff3da5;
+      --chat-purple: #8b5cf6;
+      --chat-gold: #d2b16f;
+      --chat-ink: #050507;
+      --chat-panel: rgba(10, 9, 16, 0.92);
+      --chat-border: rgba(139, 92, 246, 0.32);
+      --chat-soft: #aaa4bd;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255, 61, 165, 0.14), transparent 32%),
+        radial-gradient(circle at 84% 18%, rgba(57, 255, 136, 0.08), transparent 30%),
+        linear-gradient(180deg, #07060b 0%, #101018 48%, #050507 100%);
+    }
+
+    body {
+      color: var(--text);
+      font-family: "Inter", sans-serif;
+    }
+
+    .navbar {
+      background: rgba(3, 3, 6, 0.9);
+      border-bottom: 1px solid rgba(57, 255, 136, 0.12);
+      backdrop-filter: blur(18px);
+    }
+
+    #fas-phone-launcher,
+    .fas-phone-launcher {
+      display: none !important;
+    }
+
+    .chat-page {
+      min-height: calc(100dvh - var(--nav-h, 72px));
+      padding: clamp(1rem, 3vw, 2rem) 0 2rem;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .chat-page::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(57, 255, 136, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 61, 165, 0.025) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.7), rgba(0,0,0,0.08));
+    }
+
+    .chat-shell {
+      max-width: 460px;
+      min-height: min(820px, calc(100dvh - 110px));
+      margin: 0 auto;
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+        var(--chat-panel);
+      box-shadow:
+        0 28px 90px rgba(0,0,0,0.62),
+        0 0 0 1px rgba(57,255,136,0.06) inset,
+        0 0 48px rgba(139,92,246,0.14);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+    }
+
+    .chat-phone-top {
+      padding: 0.85rem 1rem 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      background: rgba(0,0,0,0.42);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .chat-brand {
+      min-width: 0;
+    }
+
+    .chat-kicker {
+      margin: 0;
+      color: var(--chat-green);
+      font-family: "VT323", monospace;
+      font-size: 1.05rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .chat-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-live {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.42rem;
+      padding: 0.4rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(57,255,136,0.25);
+      color: var(--chat-green);
+      background: rgba(57,255,136,0.08);
+      font-size: 0.64rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .chat-live-dot,
+    .rp-active-dot,
+    .rp-chat-username-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--chat-green);
+      box-shadow: 0 0 12px rgba(57,255,136,0.72);
+      animation: chatPulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes chatPulse {
+      0%, 100% { opacity: 0.55; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    .chat-hero {
+      padding: 1.05rem 1rem 0.85rem;
+      background:
+        linear-gradient(135deg, rgba(255,61,165,0.16), rgba(139,92,246,0.08) 45%, rgba(57,255,136,0.06)),
+        rgba(0,0,0,0.28);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .chat-hero h1 {
+      margin: 0;
+      font-size: clamp(1.65rem, 8vw, 2.35rem);
+      line-height: 0.92;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .chat-hero h1 span {
+      color: var(--chat-pink);
+      text-shadow: 0 0 24px rgba(255,61,165,0.32);
+    }
+
+    .chat-hero p {
+      margin: 0.65rem 0 0;
+      color: var(--chat-soft);
+      line-height: 1.55;
+      font-size: 0.9rem;
+    }
+
+    .chat-status-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.45rem;
+      margin-top: 0.9rem;
+    }
+
+    .chat-status-strip span {
+      min-width: 0;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.32);
+      border-radius: 7px;
+      padding: 0.45rem 0.5rem;
+      font-family: "VT323", monospace;
+      color: var(--chat-green);
+      font-size: 1rem;
+      line-height: 1;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rp-chat-section {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto auto 1fr auto auto;
+      padding: 0;
+    }
+
+    .rp-chat-title-row {
+      display: none;
+    }
+
+    .rp-chat-username-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 0.8rem;
+      background: rgba(57,255,136,0.07);
+      border-bottom: 1px solid rgba(57,255,136,0.12);
+      color: var(--chat-green);
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
+    .rp-chat-username-signout {
+      margin-left: auto;
+      color: var(--chat-soft);
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.7rem;
+    }
+
+    .rp-rooms-strip {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.34);
+    }
+
+    .rp-rooms-scroll {
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex: 1;
+    }
+
+    .rp-rooms-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .rp-room-tab {
+      flex-shrink: 0;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      color: var(--chat-soft);
+      padding: 0.72rem 0.85rem;
+      font-family: "VT323", monospace;
+      font-size: 1.06rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .rp-room-tab--active {
+      color: var(--chat-green);
+      border-bottom-color: var(--chat-green);
+      background: rgba(57,255,136,0.06);
+    }
+
+    .rp-room-count {
+      color: var(--chat-gold);
+      font-size: 0.9em;
+    }
+
+    .chat-create-room-btn {
+      flex-shrink: 0;
+      margin: 0.38rem 0.45rem;
+      border: 1px solid rgba(255,61,165,0.34);
+      border-radius: 8px;
+      background: rgba(255,61,165,0.1);
+      color: var(--chat-pink);
+      padding: 0.55rem 0.7rem;
+      font-family: "VT323", monospace;
+      font-size: 1rem;
+      line-height: 1;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .chat-create-room-btn:hover {
+      background: rgba(255,61,165,0.18);
+    }
+
+    .chat-room-list-panel {
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.26);
+      padding: 0.65rem;
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .chat-room-list-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+    }
+
+    .chat-room-list-head h2 {
+      margin: 0;
+      color: var(--chat-green);
+      font-family: "VT323", monospace;
+      font-size: 1.2rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .chat-room-list-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-shrink: 0;
+    }
+
+    .chat-room-mini-btn {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      color: var(--chat-soft);
+      padding: 0.45rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .chat-room-mini-btn:hover,
+    .chat-room-mini-btn[aria-expanded="true"] {
+      color: var(--chat-green);
+      border-color: rgba(57,255,136,0.25);
+      background: rgba(57,255,136,0.08);
+    }
+
+    .chat-room-list {
+      display: grid;
+      gap: 0.45rem;
+      max-height: 212px;
+      overflow-y: auto;
+      padding-right: 0.1rem;
+      scrollbar-width: auto;
+      scrollbar-color: rgba(57,255,136,0.72) rgba(255,255,255,0.07);
+    }
+
+    .chat-room-list[data-collapsed="true"] {
+      max-height: 92px;
+      overflow: hidden;
+    }
+
+    .chat-room-list::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .chat-room-list::-webkit-scrollbar-thumb {
+      background: rgba(57,255,136,0.72);
+      border-radius: 999px;
+      border: 2px solid rgba(0,0,0,0.55);
+    }
+
+    .chat-room-list::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.07);
+      border-radius: 999px;
+    }
+
+    .chat-room-card {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.65rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.035);
+      padding: 0.65rem 0.7rem;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .chat-room-card:hover,
+    .chat-room-card--active {
+      border-color: rgba(57,255,136,0.24);
+      background: rgba(57,255,136,0.07);
+    }
+
+    .chat-room-card-main {
+      min-width: 0;
+    }
+
+    .chat-room-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      min-width: 0;
+      margin: 0;
+      color: var(--text);
+      font-size: 0.86rem;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .chat-room-card-title span:last-child {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chat-room-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+      margin-top: 0.32rem;
+      color: var(--chat-soft);
+      font-family: "VT323", monospace;
+      font-size: 0.95rem;
+      line-height: 1;
+    }
+
+    .chat-room-card-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+    }
+
+    .chat-room-card-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--chat-green);
+      box-shadow: 0 0 8px rgba(57,255,136,0.5);
+    }
+
+    .chat-room-card-tag {
+      justify-self: end;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--chat-gold);
+      background: rgba(0,0,0,0.24);
+      padding: 0.3rem 0.48rem;
+      font-size: 0.62rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .chat-room-card--private .chat-room-card-tag {
+      color: var(--chat-pink);
+      border-color: rgba(255,61,165,0.22);
+      background: rgba(255,61,165,0.08);
+    }
+
+    .rp-active-room-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 0.85rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(139,92,246,0.08);
+      min-width: 0;
+    }
+
+    .rp-active-name {
+      min-width: 0;
+      flex: 1;
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rp-active-count {
+      color: var(--chat-soft);
+      font-size: 0.68rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .rp-chat-feed {
+      min-height: 330px;
+      max-height: none;
+      overflow-y: auto;
+      padding: 0.95rem 0.55rem 0.95rem 0.95rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      background:
+        linear-gradient(rgba(57,255,136,0.035) 1px, transparent 1px),
+        rgba(0,0,0,0.3);
+      background-size: 100% 28px;
+      scroll-behavior: smooth;
+      scrollbar-width: auto;
+      scrollbar-color: rgba(57,255,136,0.76) rgba(255,255,255,0.07);
+    }
+
+    .rp-chat-feed::-webkit-scrollbar {
+      width: 11px;
+    }
+
+    .rp-chat-feed::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(57,255,136,0.9), rgba(255,61,165,0.72));
+      border-radius: 999px;
+      border: 2px solid rgba(0,0,0,0.62);
+    }
+
+    .rp-chat-feed::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.07);
+      border-left: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .rp-chat-feed::after {
+      content: "SCROLL";
+      position: sticky;
+      right: 0;
+      bottom: -0.55rem;
+      align-self: flex-end;
+      margin-top: -1.1rem;
+      padding: 0.2rem 0.35rem;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.72);
+      color: var(--chat-green);
+      font-family: "VT323", monospace;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      pointer-events: none;
+      opacity: 0.72;
+    }
+
+    .rp-msg {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+
+    .rp-avatar {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      border: 1px solid rgba(57,255,136,0.25);
+      background: linear-gradient(135deg, rgba(57,255,136,0.18), rgba(139,92,246,0.18));
+      color: var(--chat-green);
+      font-family: "VT323", monospace;
+      font-size: 1.05rem;
+      text-transform: uppercase;
+    }
+
+    .rp-msg-body {
+      min-width: 0;
+      max-width: 88%;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px 12px 12px 12px;
+      background: rgba(8,8,12,0.84);
+      padding: 0.55rem 0.7rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.24);
+    }
+
+    .rp-msg--self {
+      flex-direction: row-reverse;
+    }
+
+    .rp-msg--self .rp-msg-body {
+      border-radius: 12px 4px 12px 12px;
+      border-color: rgba(255,61,165,0.28);
+      background: rgba(70, 12, 46, 0.72);
+    }
+
+    .rp-handle {
+      display: block;
+      color: var(--chat-gold);
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+
+    .rp-msg-text {
+      margin: 0;
+      color: #e9e4f5;
+      font-size: 0.9rem;
+      line-height: 1.48;
+      word-break: break-word;
+    }
+
+    .rp-msg--system {
+      justify-content: center;
+    }
+
+    .rp-msg--system p {
+      margin: 0;
+      padding: 0.42rem 0.65rem;
+      border: 1px solid rgba(57,255,136,0.16);
+      border-radius: 999px;
+      color: var(--chat-green);
+      background: rgba(57,255,136,0.06);
+      font-family: "VT323", monospace;
+      font-size: 1rem;
+    }
+
+    .lux-bot-msg .rp-avatar {
+      border-color: rgba(255,61,165,0.42);
+      background: linear-gradient(135deg, rgba(255,61,165,0.28), rgba(139,92,246,0.28));
+      color: #ffd7ef;
+      box-shadow: 0 0 18px rgba(255,61,165,0.18);
+    }
+
+    .lux-bot-msg .rp-msg-body {
+      border-color: rgba(255,61,165,0.22);
+      background: linear-gradient(135deg, rgba(36, 10, 28, 0.9), rgba(18, 12, 35, 0.9));
+    }
+
+    .lux-bot-msg .rp-handle {
+      color: var(--chat-pink);
+    }
+
+    .rp-room-note {
+      margin: 0.65rem 0.85rem 0 !important;
+      font-family: "VT323", monospace;
+      color: var(--chat-green) !important;
+      font-size: 1rem !important;
+      border-color: rgba(57,255,136,0.15) !important;
+      background: rgba(0,0,0,0.34) !important;
+    }
+
+    .rp-chat-gate {
+      margin: 0.8rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,61,165,0.26);
+      background: rgba(255,61,165,0.08);
+      padding: 1rem;
+    }
+
+    .rp-gate-inner {
+      display: grid;
+      gap: 0.55rem;
+      text-align: center;
+      justify-items: center;
+    }
+
+    .rp-gate-icon {
+      color: var(--chat-green);
+      font-family: "VT323", monospace;
+      font-size: 1.5rem;
+    }
+
+    .rp-gate-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 900;
+    }
+
+    .rp-gate-sub {
+      margin: 0;
+      color: var(--chat-soft);
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .rp-gate-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+
+    .chat-entry-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.6rem;
+      margin-top: 0.4rem;
+    }
+
+    .chat-entry-card {
+      min-width: 0;
+      display: grid;
+      gap: 0.45rem;
+      align-content: start;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.28);
+      padding: 0.85rem;
+      text-align: left;
+    }
+
+    .chat-entry-card strong {
+      color: var(--text);
+      font-size: 0.82rem;
+      line-height: 1.15;
+    }
+
+    .chat-entry-card span {
+      color: var(--chat-soft);
+      font-size: 0.72rem;
+      line-height: 1.45;
+    }
+
+    .chat-entry-card .btn {
+      width: 100%;
+      justify-content: center;
+      margin-top: 0.1rem;
+      padding: 0.58rem 0.65rem;
+      font-size: 0.78rem;
+    }
+
+    .rp-input-wrap {
+      display: flex;
+      align-items: stretch;
+      gap: 0.45rem;
+      padding: 0.75rem;
+      background: rgba(0,0,0,0.62);
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .rp-input,
+    .rp-gate-input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid rgba(57,255,136,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.62);
+      color: var(--chat-green);
+      padding: 0.78rem 0.85rem;
+      font-family: "VT323", monospace;
+      font-size: 1.15rem;
+      outline: none;
+    }
+
+    .rp-input::placeholder,
+    .rp-gate-input::placeholder {
+      color: rgba(57,255,136,0.45);
+    }
+
+    .rp-input:focus,
+    .rp-gate-input:focus {
+      border-color: var(--chat-green);
+      box-shadow: 0 0 0 3px rgba(57,255,136,0.08);
+    }
+
+    .rp-send {
+      width: 52px;
+      border: 1px solid rgba(255,61,165,0.4);
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--chat-pink), var(--chat-purple));
+      color: #fff;
+      font-size: 1.35rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .rp-send:disabled,
+    .rp-input:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .rp-phase-note {
+      margin: 0;
+      padding: 0 0.8rem 0.8rem;
+      color: var(--chat-soft);
+      font-family: "VT323", monospace;
+      font-size: 1rem;
+      text-align: center;
+      background: rgba(0,0,0,0.62);
+    }
+
+    .rp-phase-note a {
+      color: var(--chat-gold);
+      text-decoration: underline;
+    }
+
+    .chat-status-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.55rem 0.8rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.72);
+      color: var(--chat-soft);
+      font-family: "VT323", monospace;
+      font-size: 1rem;
+    }
+
+    .rp-handle-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .rp-handle-modal[hidden] {
+      display: none !important;
+    }
+
+    .rp-handle-modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(5px);
+    }
+
+    .rp-handle-modal-card {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 360px);
+      border-radius: 12px;
+      border: 1px solid rgba(57,255,136,0.22);
+      background: #09090f;
+      padding: 1.35rem;
+      box-shadow: 0 28px 70px rgba(0,0,0,0.62), 0 0 42px rgba(57,255,136,0.08);
+    }
+
+    .chat-modal-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+    }
+
+    .chat-modal-options label {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 0.62rem 0.7rem;
+      color: var(--chat-soft);
+      background: rgba(255,255,255,0.035);
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .chat-modal-options input {
+      accent-color: var(--chat-pink);
+    }
+
+    .chat-link-row {
+      max-width: 460px;
+      margin: 1rem auto 0;
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 900px) {
+      .navbar-links { display: none; }
+      .nav-toggle { display: flex; }
+    }
+
+    @media (max-width: 520px) {
+      .chat-page {
+        padding: 0;
+      }
+
+      .chat-shell {
+        min-height: calc(100dvh - var(--nav-h, 72px));
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+      }
+
+      .chat-status-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .chat-room-list-panel {
+        padding: 0.55rem;
+      }
+
+      .chat-room-list {
+        max-height: 188px;
+      }
+
+      .chat-room-list[data-collapsed="true"] {
+        max-height: 86px;
+      }
+
+      .chat-entry-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .rp-chat-feed {
+        min-height: 280px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="radio.html">Radio</a></li>
+          <li><a href="chat.html" aria-current="page" style="color:var(--purple-bright);">Chat</a></li>
+          <li><a href="tv.html">TV</a></li>
+          <li><a href="neon-dreams.html">Neon Dreams</a></li>
+          <li><a href="news.html">News</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="login.html" class="nav-cta">Enter The System</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="radio.html">Radio</a>
+    <a href="chat.html" aria-current="page" style="font-weight:800;color:var(--purple-bright);">Chat</a>
+    <a href="tv.html">TV</a>
+    <a href="neon-dreams.html">Neon Dreams</a>
+    <a href="news.html">News</a>
+    <a href="store.html">Store</a>
+    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Enter The System</a>
+  </div>
+
+  <main class="chat-page">
+    <section class="chat-shell" aria-label="Signal Chat mobile app">
+      <header class="chat-phone-top">
+        <div class="chat-brand">
+          <p class="chat-kicker">Private Signal Room</p>
+          <p class="chat-title">DJ Faceless Animal Signal Chat</p>
+        </div>
+        <span class="chat-live"><span class="chat-live-dot" aria-hidden="true"></span><span id="rp-listener-num">24</span> online</span>
+      </header>
+
+      <section class="chat-hero" aria-label="Chat room identity">
+        <h1>Signal<br><span>Wiretap</span></h1>
+        <p>Old internet backroom energy. Dark lobby. Purple smoke. Underground hip-hop chatter moving through the same global chat as DJ Faceless Animal Radio.</p>
+        <div class="chat-status-strip" aria-label="Room status">
+          <span>Alias Ready</span>
+          <span>Encrypted Lobby</span>
+          <span>Member Count <b id="rp-listener-pill-num">24</b></span>
+        </div>
+      </section>
+
+      <section class="rp-chat-section" aria-label="Live global radio chat">
+        <div class="rp-chat-title-row">
+          <h1 class="rp-chat-title">DJ Faceless Animal Radio <em>(Live Chat)</em></h1>
+        </div>
+
+        <div class="rp-rooms-strip">
+          <div class="rp-rooms-scroll" role="tablist" aria-label="Chat rooms">
+            <button class="rp-room-tab rp-room-tab--active" role="tab" aria-selected="true" data-room="radio" data-count="24">
+              Radio <span class="rp-room-count">24</span>
+            </button>
+            <button class="rp-room-tab" role="tab" aria-selected="false" data-room="underground" data-count="8">
+              Mix Room <span class="rp-room-count">8</span>
+            </button>
+            <button class="rp-room-tab" role="tab" aria-selected="false" data-room="gaming" data-count="12">
+              Gaming <span class="rp-room-count">12</span>
+            </button>
+            <button class="rp-room-tab" role="tab" aria-selected="false" data-room="latenight" data-count="5">
+              Late Night <span class="rp-room-count">5</span>
+            </button>
+            <button class="rp-room-tab" role="tab" aria-selected="false" data-room="lux" data-count="1">
+              Lux <span class="rp-room-count">bot</span>
+            </button>
+          </div>
+          <button class="chat-create-room-btn" id="chat-create-room-btn" type="button">+ Room</button>
+        </div>
+
+        <section class="chat-room-list-panel" aria-label="Room list">
+          <div class="chat-room-list-head">
+            <h2>Room List</h2>
+            <div class="chat-room-list-actions">
+              <button class="chat-room-mini-btn" id="chat-room-list-toggle" type="button" aria-expanded="false">Expand</button>
+              <button class="chat-room-mini-btn" id="chat-room-list-create" type="button">New</button>
+            </div>
+          </div>
+          <div class="chat-room-list" id="chat-room-list" data-collapsed="true"></div>
+        </section>
+
+        <div class="rp-active-room-bar">
+          <span class="rp-active-dot" aria-hidden="true"></span>
+          <span class="rp-active-name" id="rp-active-name">DJ Faceless Animal Radio</span>
+          <span class="rp-active-count"><span id="rp-active-count-num">24</span> in room</span>
+        </div>
+
+        <div class="rp-chat-feed" id="rp-chat-feed" role="log" aria-label="Live chat" aria-live="polite">
+          <div class="rp-msg">
+            <div class="rp-avatar" aria-hidden="true">FA</div>
+            <div class="rp-msg-body">
+              <span class="rp-handle">FacelessFanz1</span>
+              <p class="rp-msg-text">The room is open. Keep it low and move with the mix.</p>
+            </div>
+          </div>
+          <div class="rp-msg">
+            <div class="rp-avatar" aria-hidden="true">DX</div>
+            <div class="rp-msg-body">
+              <span class="rp-handle">DrillXOff</span>
+              <p class="rp-msg-text">This feels like a hidden room in a back alley studio.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rp-chat-gate" id="rp-chat-gate" hidden aria-label="Join the chat room">
+          <div class="rp-gate-inner">
+            <span class="rp-gate-icon" aria-hidden="true">LOGIN:</span>
+            <p class="rp-gate-title">Enter the room</p>
+            <p class="rp-gate-sub">Members can sign in with any plan, including free. Visitors can create a guest alias and chat without a full account.</p>
+            <div class="chat-entry-grid">
+              <div class="chat-entry-card">
+                <strong>Member Sign In</strong>
+                <span>Free and paid members use their existing Faceless Animal identity.</span>
+                <a href="login.html?redirect=chat.html" class="btn btn-primary">Member Sign In</a>
+              </div>
+              <div class="chat-entry-card">
+                <strong>Guest Alias</strong>
+                <span>Pick a temporary name and jump into the public rooms.</span>
+                <button class="btn btn-ghost" id="rp-set-handle-btn" type="button">Create Alias</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rp-input-wrap" id="rp-input-wrap">
+          <input
+            type="text"
+            class="rp-input"
+            id="rp-chat-input"
+            placeholder="type like it is 1999..."
+            maxlength="300"
+            autocomplete="off"
+            aria-label="Chat message"
+          />
+          <button class="rp-send" id="rp-send-btn" aria-label="Send message">></button>
+        </div>
+
+        <p class="rp-phase-note">Same global room as Radio. Do not post private info.</p>
+      </section>
+
+      <div class="chat-status-bar" aria-label="Connection status">
+        <span>FAS://GLOBAL-RADIO-CHAT</span>
+        <span>READY</span>
+      </div>
+    </section>
+
+    <div class="chat-link-row">
+      <a class="btn btn-ghost" href="radio.html">Back To Radio</a>
+      <a class="btn btn-primary" href="start.html">Claim A Page</a>
+    </div>
+  </main>
+
+  <div id="rp-handle-modal" class="rp-handle-modal" role="dialog" aria-modal="true" aria-label="Set your chat handle" hidden>
+    <div class="rp-handle-modal-overlay" id="rp-modal-overlay"></div>
+    <div class="rp-handle-modal-card">
+      <p class="rp-gate-title" style="margin:0 0 0.35rem;">Create Guest Alias</p>
+      <p class="rp-gate-sub" style="margin:0 0 1rem;">Pick a temporary chat name. Letters, numbers, underscores only.</p>
+      <form id="rp-modal-form" novalidate style="display:flex;flex-direction:column;gap:0.6rem;">
+        <input
+          type="text"
+          id="rp-modal-username"
+          class="rp-gate-input"
+          style="width:100%;box-sizing:border-box;"
+          placeholder="@yourhandle"
+          maxlength="30"
+          autocomplete="off"
+          spellcheck="false"
+          autocorrect="off"
+          autocapitalize="none"
+          aria-label="Choose a username"
+          required
+        />
+        <p id="rp-modal-error" style="font-size:0.75rem;color:#f87171;margin:0;display:none;"></p>
+        <button type="submit" class="btn btn-primary" style="font-size:0.88rem;padding:0.65rem 1rem;">Enter As Guest</button>
+        <button type="button" id="rp-modal-cancel" class="btn btn-ghost" style="font-size:0.82rem;padding:0.5rem 1rem;">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="chat-room-modal" class="rp-handle-modal" role="dialog" aria-modal="true" aria-label="Create a chat room" hidden>
+    <div class="rp-handle-modal-overlay" id="chat-room-overlay"></div>
+    <div class="rp-handle-modal-card">
+      <p class="rp-gate-title" style="margin:0 0 0.35rem;">Create Room</p>
+      <p class="rp-gate-sub" style="margin:0 0 1rem;">Make a public lobby or an unlisted private room with an invite code.</p>
+      <form id="chat-room-form" novalidate style="display:flex;flex-direction:column;gap:0.65rem;">
+        <input
+          type="text"
+          id="chat-room-name"
+          class="rp-gate-input"
+          style="width:100%;box-sizing:border-box;"
+          placeholder="room name"
+          maxlength="32"
+          autocomplete="off"
+          spellcheck="false"
+          required
+        />
+        <div class="chat-modal-options" role="radiogroup" aria-label="Room visibility">
+          <label><input type="radio" name="chat-room-visibility" value="public" checked /> Public</label>
+          <label><input type="radio" name="chat-room-visibility" value="private" /> Private</label>
+        </div>
+        <p id="chat-room-error" style="font-size:0.75rem;color:#f87171;margin:0;display:none;"></p>
+        <button type="submit" class="btn btn-primary" style="font-size:0.88rem;padding:0.65rem 1rem;">Open Room</button>
+        <button type="button" id="chat-room-cancel" class="btn btn-ghost" style="font-size:0.82rem;padding:0.5rem 1rem;">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="chat-widget" aria-hidden="true"></div>
+
+  <script src="assets/script.js?v=20260322"></script>
+  <script type="module" src="assets/js/chat-widget.js"></script>
+  <script src="assets/js/radio-widget.js" defer></script>
+  <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
+  <script src="assets/js/env.js" onerror="void 0"></script>
+  <script>
+    (function () {
+      function esc(str) {
+        return String(str)
+          .replace(/&/g,'&amp;')
+          .replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;');
+      }
+
+      var SESSION_KEY = 'fas_user';
+      function getSession() {
+        try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e) { return null; }
+      }
+      function clearSession() {
+        try {
+          localStorage.removeItem(SESSION_KEY);
+          localStorage.removeItem('fas_member');
+          localStorage.removeItem('fas_guest_alias');
+        } catch(e) {}
+      }
+
+      var chatGate = document.getElementById('rp-chat-gate');
+      var inputWrap = document.getElementById('rp-input-wrap');
+
+      function showUsernameBar(session) {
+        var username = session && session.username ? session.username : session;
+        var kind = session && session.guest ? 'Guest alias' : 'Member';
+        var existingBar = document.getElementById('rp-username-bar');
+        if (existingBar) return;
+        var bar = document.createElement('div');
+        bar.id = 'rp-username-bar';
+        bar.className = 'rp-chat-username-bar';
+        bar.innerHTML =
+          '<span class="rp-chat-username-dot"></span>' +
+          '<span>' + esc(kind) + ' <strong>@' + esc(username) + '</strong></span>' +
+          '<span class="rp-chat-username-signout" id="rp-signout-btn" role="button" tabindex="0">Sign out</span>';
+        var chatSection = document.querySelector('.rp-chat-section');
+        var rooms = chatSection ? chatSection.querySelector('.rp-rooms-strip') : null;
+        if (chatSection && rooms) chatSection.insertBefore(bar, rooms);
+
+        var signoutBtn = document.getElementById('rp-signout-btn');
+        if (signoutBtn) {
+          signoutBtn.addEventListener('click', function() {
+            clearSession();
+            window.location.reload();
+          });
+          signoutBtn.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); signoutBtn.click(); }
+          });
+        }
+      }
+
+      function initChatGate() {
+        var session = getSession();
+        if (session && session.username) {
+          if (chatGate) chatGate.hidden = true;
+          if (inputWrap) inputWrap.style.display = '';
+          showUsernameBar(session);
+        } else {
+          if (chatGate) chatGate.hidden = false;
+          if (inputWrap) inputWrap.style.display = 'none';
+        }
+      }
+
+      var activeNameEl = document.getElementById('rp-active-name');
+      window.FAS_CHAT_ROOM_NAMES = {
+        radio: 'DJ Faceless Animal Radio',
+        underground: 'Underground Mix Room',
+        gaming: 'Gaming Vibes Room',
+        latenight: 'Late Night Room',
+        lux: 'Lux / The Architect'
+      };
+      document.querySelectorAll('.rp-room-tab').forEach(function(t) {
+        t.addEventListener('click', function() {
+          var id = t.dataset.room;
+          window.FAS_ACTIVE_CHAT_ROOM = id;
+          if (activeNameEl && window.FAS_CHAT_ROOM_NAMES[id]) activeNameEl.textContent = window.FAS_CHAT_ROOM_NAMES[id];
+        });
+      });
+
+      initChatGate();
+    }());
+  </script>
+  <script type="module">
+    import { initRadioChat } from './assets/js/radio-chat.js'
+
+    function getSession() {
+      try { return JSON.parse(localStorage.getItem('fas_user') || 'null') } catch(e) { return null }
+    }
+
+    const sess = getSession()
+    const plan = (sess && sess.plan) || 'free'
+    const status = (sess && sess.status) || 'free'
+    const isPaid = !['free','none',''].includes(plan) || status === 'active'
+
+    const chatController = initRadioChat({
+      feedEl:        document.getElementById('rp-chat-feed'),
+      inputEl:       document.getElementById('rp-chat-input'),
+      sendBtnEl:     document.getElementById('rp-send-btn'),
+      tabEls:        document.querySelectorAll('.rp-room-tab'),
+      activeCountEl: document.getElementById('rp-active-count-num'),
+      listenerNumEl: document.getElementById('rp-listener-num'),
+      pillNumEl:     document.getElementById('rp-listener-pill-num'),
+      initialRoom:   'radio',
+      getSession:    getSession,
+      sendDebounceMs: isPaid ? 1200 : 10000,
+      tierLimited:   false,
+    })
+
+    window.FAS_CHAT_CONTROLLER = chatController
+
+    const CUSTOM_ROOMS_KEY = 'fas_chat_rooms'
+    const roomsScroll = document.querySelector('.rp-rooms-scroll')
+    const roomListEl = document.getElementById('chat-room-list')
+    const roomListToggle = document.getElementById('chat-room-list-toggle')
+    const roomListCreate = document.getElementById('chat-room-list-create')
+    const createRoomBtn = document.getElementById('chat-create-room-btn')
+    const activeNameEl = document.getElementById('rp-active-name')
+    const activeCountEl = document.getElementById('rp-active-count-num')
+    const BUILT_IN_ROOMS = [
+      { id: 'radio', name: 'DJ Faceless Animal Radio', visibility: 'public', count: '24', custom: false },
+      { id: 'underground', name: 'Underground Mix Room', visibility: 'public', count: '8', custom: false },
+      { id: 'gaming', name: 'Gaming Vibes Room', visibility: 'public', count: '12', custom: false },
+      { id: 'latenight', name: 'Late Night Room', visibility: 'public', count: '5', custom: false },
+      { id: 'lux', name: 'Lux / The Architect', visibility: 'public', count: 'bot', custom: false, bot: true },
+    ]
+
+    function esc(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+    }
+
+    function slugifyRoomName(name) {
+      return String(name || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 28)
+    }
+
+    function privateCode() {
+      return Math.random().toString(36).slice(2, 8).toUpperCase()
+    }
+
+    function getRooms() {
+      try {
+        const rows = JSON.parse(localStorage.getItem(CUSTOM_ROOMS_KEY) || '[]')
+        return Array.isArray(rows) ? rows : []
+      } catch(e) {
+        return []
+      }
+    }
+
+    function saveRooms(rooms) {
+      try { localStorage.setItem(CUSTOM_ROOMS_KEY, JSON.stringify(rooms.slice(0, 20))) } catch(e) {}
+    }
+
+    function setActiveTab(roomId) {
+      document.querySelectorAll('.rp-room-tab').forEach(function(tab) {
+        const on = tab.dataset.room === roomId
+        tab.classList.toggle('rp-room-tab--active', on)
+        tab.setAttribute('aria-selected', on ? 'true' : 'false')
+      })
+      if (roomListEl) {
+        roomListEl.querySelectorAll('.chat-room-card').forEach(function(card) {
+          const on = card.dataset.room === roomId
+          card.classList.toggle('chat-room-card--active', on)
+          card.setAttribute('aria-current', on ? 'true' : 'false')
+        })
+      }
+    }
+
+    function activateRoom(room) {
+      if (!room || !room.id) return
+      window.FAS_ACTIVE_CHAT_ROOM = room.id
+      if (window.FAS_CHAT_ROOM_NAMES) window.FAS_CHAT_ROOM_NAMES[room.id] = room.name
+      if (activeNameEl) activeNameEl.textContent = room.visibility === 'private' && room.code
+        ? room.name + ' / code ' + room.code
+        : room.name
+      if (activeCountEl && room.custom) activeCountEl.textContent = room.visibility === 'private' ? 'private' : 'public'
+      setActiveTab(room.id)
+      if (chatController && chatController.switchRoom) chatController.switchRoom(room.id)
+    }
+
+    function allRooms() {
+      return BUILT_IN_ROOMS.concat(getRooms().map(function(room) {
+        room.custom = true
+        return room
+      }))
+    }
+
+    function renderRoomList(activeRoomId) {
+      if (!roomListEl) return
+      const current = activeRoomId || 'radio'
+      roomListEl.innerHTML = allRooms().map(function(room) {
+        const isPrivate = room.visibility === 'private'
+        const count = room.count || (isPrivate ? 'invite' : 'new')
+        const label = isPrivate ? 'Private' : (room.custom ? 'Public' : 'Live')
+        const meta = isPrivate ? 'invite required' : count + ' in room'
+        return (
+          '<button type="button" class="chat-room-card' + (isPrivate ? ' chat-room-card--private' : '') + (room.id === current ? ' chat-room-card--active' : '') + '" data-room="' + esc(room.id) + '" aria-current="' + (room.id === current ? 'true' : 'false') + '">' +
+            '<span class="chat-room-card-main">' +
+              '<span class="chat-room-card-title"><span class="chat-room-card-dot" aria-hidden="true"></span><span>' + esc(room.name) + '</span></span>' +
+              '<span class="chat-room-card-meta">' +
+                '<span class="chat-room-card-status">' + esc(meta) + '</span>' +
+                (isPrivate && room.code ? '<span>code ' + esc(room.code) + '</span>' : '') +
+              '</span>' +
+            '</span>' +
+            '<span class="chat-room-card-tag">' + label + '</span>' +
+          '</button>'
+        )
+      }).join('')
+
+      roomListEl.querySelectorAll('.chat-room-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+          const id = card.dataset.room
+          const room = allRooms().find(function(item) { return item.id === id })
+          if (room) activateRoom(room)
+        })
+      })
+    }
+
+    function addRoomTab(room, activate) {
+      if (!roomsScroll || !room || !room.id) return
+      if (roomsScroll.querySelector('[data-room="' + CSS.escape(room.id) + '"]')) {
+        if (activate) activateRoom(room)
+        return
+      }
+
+      const tab = document.createElement('button')
+      tab.className = 'rp-room-tab'
+      tab.type = 'button'
+      tab.role = 'tab'
+      tab.setAttribute('aria-selected', 'false')
+      tab.dataset.room = room.id
+      tab.dataset.count = room.visibility === 'private' ? 'private' : 'public'
+      tab.innerHTML = esc(room.name) + ' <span class="rp-room-count">' + (room.visibility === 'private' ? 'code' : 'new') + '</span>'
+      tab.addEventListener('click', function() { activateRoom(room) })
+      roomsScroll.appendChild(tab)
+
+      if (window.FAS_CHAT_ROOM_NAMES) window.FAS_CHAT_ROOM_NAMES[room.id] = room.name
+      if (activate) activateRoom(room)
+      renderRoomList(activate ? room.id : undefined)
+    }
+
+    getRooms().forEach(function(room) {
+      room.custom = true
+      addRoomTab(room, false)
+    })
+
+    document.querySelectorAll('.rp-room-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        setActiveTab(tab.dataset.room)
+        renderRoomList(tab.dataset.room)
+      })
+    })
+
+    renderRoomList('radio')
+
+    if (roomListToggle && roomListEl) {
+      roomListToggle.addEventListener('click', function() {
+        const collapsed = roomListEl.getAttribute('data-collapsed') !== 'false'
+        roomListEl.setAttribute('data-collapsed', collapsed ? 'false' : 'true')
+        roomListToggle.setAttribute('aria-expanded', collapsed ? 'true' : 'false')
+        roomListToggle.textContent = collapsed ? 'Collapse' : 'Expand'
+      })
+    }
+
+    if (roomListCreate && createRoomBtn) {
+      roomListCreate.addEventListener('click', function() {
+        createRoomBtn.click()
+      })
+    }
+
+    window.FAS_CREATE_CHAT_ROOM = function(name, visibility) {
+      const clean = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 32)
+      if (clean.length < 3) return { ok: false, error: 'Name the room with at least 3 characters.' }
+
+      const base = slugifyRoomName(clean)
+      if (!base) return { ok: false, error: 'Use letters or numbers in the room name.' }
+
+      const isPrivate = visibility === 'private'
+      const code = isPrivate ? privateCode() : ''
+      const id = isPrivate
+        ? 'private-' + base + '-' + code.toLowerCase()
+        : 'room-' + base
+
+      const rooms = getRooms().filter(function(room) { return room.id !== id })
+      const room = { id, name: clean, visibility: isPrivate ? 'private' : 'public', code, custom: true, createdAt: Date.now() }
+      rooms.unshift(room)
+      saveRooms(rooms)
+      addRoomTab(room, true)
+      renderRoomList(room.id)
+      return { ok: true, room }
+    }
+  </script>
+  <script>
+    (function() {
+      var pendingLuxText = '';
+      var pendingLuxAt = 0;
+
+      function esc(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function appendLuxMessage(text) {
+        var feed = document.getElementById('rp-chat-feed');
+        if (!feed) return;
+        var el = document.createElement('div');
+        el.className = 'rp-msg lux-bot-msg';
+        el.innerHTML =
+          '<div class="rp-avatar" aria-hidden="true">LX</div>' +
+          '<div class="rp-msg-body">' +
+            '<span class="rp-handle">Lux</span>' +
+            '<p class="rp-msg-text">' + esc(text) + '</p>' +
+          '</div>';
+        feed.appendChild(el);
+        feed.scrollTop = feed.scrollHeight;
+      }
+
+      function luxReply(raw) {
+        var text = String(raw || '').trim();
+        var lower = text.toLowerCase();
+        if (!text) {
+          return "Say it plainly. I listen better when people stop performing.";
+        }
+        if (lower.includes('hello') || lower.includes('hi ') || lower === 'hi' || lower.includes('hey')) {
+          return "I'm Lux. You found the quiet room. Tell me what brought you here.";
+        }
+        if (lower.includes('plan') || lower.includes('idea') || lower.includes('build')) {
+          return "Good. Ideas are cheap until you give them structure. What is the first decision you can make tonight?";
+        }
+        if (lower.includes('problem') || lower.includes('stuck') || lower.includes('help')) {
+          return "Start with the part you can control. The rest is just noise trying to look important.";
+        }
+        if (lower.includes('dream') || lower.includes('future') || lower.includes('goal')) {
+          return "Most people talk about the future like it owes them something. I prefer blueprints. What are you building?";
+        }
+        if (lower.includes('faceless')) {
+          return "Faceless understands the work behind the signal. Vision matters. Discipline keeps it alive.";
+        }
+        if (lower.includes('love') || lower.includes('cute') || lower.includes('fine') || lower.includes('beautiful')) {
+          return "Careful. Flattery is only interesting when it comes with ambition. What else do you have?";
+        }
+        if (lower.includes('who are you') || lower.includes('about you')) {
+          return "Lux. The Architect. I build the stage while everyone else fights for the spotlight.";
+        }
+        var replies = [
+          "Most people react. I prefer to plan. What move are you considering?",
+          "Interesting. Not loud, but interesting. There might be something there.",
+          "Power is not being seen first. Power is being ready when the door opens.",
+          "I can work with that. Trim the noise and tell me the real objective.",
+          "You have my attention. Do not waste it.",
+          "That sounds like a spark. Sparks are easy. Can you protect the fire?"
+        ];
+        return replies[Math.floor(Math.random() * replies.length)];
+      }
+
+      function isLuxRoom() {
+        return window.FAS_ACTIVE_CHAT_ROOM === 'lux' || document.querySelector('.rp-room-tab--active[data-room="lux"]');
+      }
+
+      function captureLuxText() {
+        if (!isLuxRoom()) return;
+        var input = document.getElementById('rp-chat-input');
+        var session = null;
+        try { session = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
+        if (!input || !session || !session.username) return;
+        var text = input.value.trim();
+        if (!text) return;
+        pendingLuxText = text;
+        pendingLuxAt = Date.now();
+      }
+
+      function maybeLuxRespond() {
+        if (!pendingLuxText || Date.now() - pendingLuxAt > 2000) return;
+        var text = pendingLuxText;
+        pendingLuxText = '';
+        window.setTimeout(function() {
+          if (isLuxRoom()) appendLuxMessage(luxReply(text));
+        }, 650 + Math.floor(Math.random() * 700));
+      }
+
+      document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'rp-send-btn') captureLuxText();
+      }, true);
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target && e.target.id === 'rp-chat-input') captureLuxText();
+      }, true);
+
+      document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'rp-send-btn') maybeLuxRespond();
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target && e.target.id === 'rp-chat-input') maybeLuxRespond();
+      });
+
+      document.addEventListener('click', function(e) {
+        var tab = e.target && e.target.closest ? e.target.closest('[data-room="lux"]') : null;
+        if (!tab) return;
+        window.setTimeout(function() {
+          appendLuxMessage("I'm Lux. Most people know the spotlight. I prefer building the stage. Tell me what's on your mind.");
+        }, 420);
+      });
+    }());
+  </script>
+  <script>
+    (function() {
+      var modal = document.getElementById('chat-room-modal');
+      var overlay = document.getElementById('chat-room-overlay');
+      var openBtn = document.getElementById('chat-create-room-btn');
+      var cancelBtn = document.getElementById('chat-room-cancel');
+      var form = document.getElementById('chat-room-form');
+      var nameInput = document.getElementById('chat-room-name');
+      var errorEl = document.getElementById('chat-room-error');
+
+      function openModal() {
+        if (!modal) return;
+        modal.hidden = false;
+        if (nameInput) setTimeout(function() { nameInput.focus(); }, 80);
+      }
+
+      function closeModal() {
+        if (!modal) return;
+        modal.hidden = true;
+        if (errorEl) errorEl.style.display = 'none';
+        if (form) form.reset();
+      }
+
+      function showError(text) {
+        if (!errorEl) return;
+        errorEl.textContent = text;
+        errorEl.style.display = 'block';
+      }
+
+      if (openBtn) openBtn.addEventListener('click', openModal);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+      if (overlay) overlay.addEventListener('click', closeModal);
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal && !modal.hidden) closeModal();
+      });
+
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          if (errorEl) errorEl.style.display = 'none';
+
+          var visibilityInput = form.querySelector('input[name="chat-room-visibility"]:checked');
+          var visibility = visibilityInput ? visibilityInput.value : 'public';
+          var creator = window.FAS_CREATE_CHAT_ROOM;
+          if (!creator) {
+            showError('Room system is still loading. Try again.');
+            return;
+          }
+
+          var result = creator(nameInput ? nameInput.value : '', visibility);
+          if (!result || !result.ok) {
+            showError((result && result.error) || 'Could not create room.');
+            return;
+          }
+
+          closeModal();
+        });
+      }
+    }());
+  </script>
+  <script>
+    (function() {
+      var modal = document.getElementById('rp-handle-modal');
+      var overlay = document.getElementById('rp-modal-overlay');
+      var openBtn = document.getElementById('rp-set-handle-btn');
+      var cancelBtn = document.getElementById('rp-modal-cancel');
+      var modalForm = document.getElementById('rp-modal-form');
+      var modalInput = document.getElementById('rp-modal-username');
+      var modalError = document.getElementById('rp-modal-error');
+
+      function openModal() {
+        if (modal) {
+          modal.hidden = false;
+          if (modalInput) setTimeout(function() { modalInput.focus(); }, 80);
+        }
+      }
+      function closeModal() {
+        if (modal) {
+          modal.hidden = true;
+          if (modalError) modalError.style.display = 'none';
+        }
+      }
+
+      if (openBtn) openBtn.addEventListener('click', openModal);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+      if (overlay) overlay.addEventListener('click', closeModal);
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal && !modal.hidden) closeModal();
+      });
+
+      if (modalForm) {
+        modalForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          if (modalError) modalError.style.display = 'none';
+
+          var raw = (modalInput ? modalInput.value : '').trim().replace(/^@/, '').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 30);
+          if (!raw || raw.length < 3) {
+            if (modalError) {
+              modalError.textContent = 'Pick a handle: at least 3 characters, letters/numbers/underscores.';
+              modalError.style.display = 'block';
+            }
+            return;
+          }
+
+          var SESSION_KEY = 'fas_user';
+          var accounts = {};
+          try { accounts = JSON.parse(localStorage.getItem('fas_accounts') || '{}'); } catch(x) {}
+          var currentSession = null;
+          try { currentSession = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(x) {}
+          var existingAccount = accounts[raw.toLowerCase()];
+
+          if (existingAccount) {
+            var sessionUsername = currentSession && currentSession.username ? currentSession.username.toLowerCase() : '';
+            if (sessionUsername !== raw.toLowerCase()) {
+              if (modalError) {
+                modalError.textContent = 'That handle is already taken. Try adding a number or underscore.';
+                modalError.style.display = 'block';
+              }
+              return;
+            }
+          }
+
+          var user = { username: raw, display: raw, email: '', guest: true, plan: 'guest', status: 'guest', ts: Date.now() };
+          try {
+            localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+            localStorage.setItem('fas_guest_alias', raw);
+            if (!existingAccount) {
+              accounts[raw.toLowerCase()] = { username: raw, display: raw, guest: true, created: Date.now() };
+              localStorage.setItem('fas_accounts', JSON.stringify(accounts));
+            }
+          } catch(x) {}
+
+          closeModal();
+          window.location.reload();
+        });
+      }
+    }());
+  </script>
+</body>
+</html>
