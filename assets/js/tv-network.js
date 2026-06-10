@@ -317,7 +317,9 @@
       return [
         '<article class="tv-card" tabindex="0" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '">',
           '<div class="tv-thumb">',
-            '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(title) + '" loading="lazy" />',
+            source
+              ? '<video class="tv-thumb-video" muted autoplay loop playsinline preload="metadata" src="' + escapeHtml(source) + '" poster="' + escapeHtml(image) + '"></video>'
+              : '<img src="' + escapeHtml(image) + '" alt="' + escapeHtml(title) + '" loading="lazy" />',
             '<span class="tv-play" aria-hidden="true">&gt;</span>',
             '<span class="tv-meta">' + escapeHtml(duration) + '</span>',
           '</div>',
@@ -328,6 +330,8 @@
         '</article>',
       ].join('');
     }).join('');
+
+    activateVideos(el.grid);
 
     qsa('.tv-card', el.grid).forEach(function (card) {
       card.addEventListener('click', function () {
