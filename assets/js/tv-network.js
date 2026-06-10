@@ -6,69 +6,13 @@
     uploads: '/api/tv/uploads',
   };
 
-  var fallbackVideos = [
-    {
-      title: 'Neon Dreams: First Signal',
-      channel: 'Neon Dreams',
-      channel_slug: 'neon-dreams',
-      filter: 'neon-dreams',
-      duration_label: 'Preview',
-      image: 'assets/neon-dreams/covers/cover-thumb.jpg',
-      copy: 'Story drops, animated teasers, character reels, and broadcast fragments from the city.',
-    },
-    {
-      title: 'DJ Faceless Animal Radio Visuals',
-      channel: 'Music',
-      channel_slug: 'radio-visuals',
-      filter: 'music',
-      duration_label: 'Live',
-      image: 'assets/images/radio.png',
-      copy: 'Video loops, radio sessions, beat drops, and late-night station footage.',
-    },
-    {
-      title: 'Creator Uploads: Open Channel',
-      channel: 'Creator Uploads',
-      channel_slug: 'creator-uploads',
-      filter: 'creator',
-      duration_label: 'Queue',
-      image: 'Neon%20Dreams%20Club/Video%20Cards/file_00000000a7f471f88c092c2d0b6b455d.png',
-      copy: 'A public lane for early uploads while the network rules are being shaped.',
-    },
-    {
-      title: 'Underground Reports',
-      channel: 'Street Reports',
-      channel_slug: 'street-reports',
-      filter: 'street',
-      duration_label: 'Field',
-      image: 'attached_assets/vault_image.png',
-      copy: 'Short-form reports, scene updates, interviews, and city signal captures.',
-    },
-    {
-      title: 'Archive Broadcasts',
-      channel: 'Archive',
-      channel_slug: 'archive',
-      filter: 'archive',
-      duration_label: 'Vault',
-      image: 'assets/neon-dreams/first-edition/cover.jpg',
-      copy: 'Older drops, hidden transmissions, and recovered media from the Faceless vault.',
-    },
-    {
-      title: 'Member Premieres',
-      channel: 'Creator Uploads',
-      channel_slug: 'member-premieres',
-      filter: 'creator',
-      duration_label: 'Soon',
-      image: 'assets/neon-dreams/covers/cover-square.jpg',
-      copy: 'A premiere lane for member videos, campaigns, and exclusive releases.',
-    },
-  ];
-
   var state = {
     session: null,
     owner: null,
     channels: [],
     uploads: [],
     activeFilter: 'all',
+    activeChannelSlug: '',
     localMode: true,
   };
 
@@ -126,6 +70,93 @@
     try {
       localStorage.setItem(localCacheKey(name), JSON.stringify(value));
     } catch (err) {}
+  }
+
+  function cleanOrigin(value) {
+    return String(value || '').trim().replace(/\/+$/, '');
+  }
+
+  function apiUrl(path, origin) {
+    var cleanPath = String(path || '');
+    if (!origin) return cleanPath;
+    return cleanOrigin(origin) + '/' + cleanPath.replace(/^\/+/, '');
+  }
+
+  function tvOrigins() {
+    var current = window.location && window.location.origin ? window.location.origin : '';
+    var configured = cleanOrigin(window.FAS_TV_ORIGIN);
+    var origins = [];
+
+    if (configured) origins.push(configured);
+    origins.push('');
+
+    return origins.filter(function (origin, index) {
+      if (origin && current && origin === current) return index === origins.indexOf(origin);
+      return origins.indexOf(origin) === index;
+    });
+  }
+
+  function sourceFromStoragePath(item) {
+    var storagePath = item && item.storage_path ? String(item.storage_path).replace(/^\/+/, '') : '';
+    var cfg = window.__FAS_CONFIG || {};
+    var supabaseUrl = cleanOrigin(cfg.supabaseUrl || cfg.SUPABASE_URL);
+    if (!storagePath || !supabaseUrl) return '';
+    return supabaseUrl + '/storage/v1/object/public/tv-media/' + storagePath;
+  }
+
+  function videoSource(item) {
+    if (!item) return '';
+    return item.source_url ||
+      item.external_video_url ||
+      item.video_url ||
+      item.playback_url ||
+      item.src ||
+      item.url ||
+      sourceFromStoragePath(item) ||
+      '';
+  }
+
+  function embedSource(item) {
+    if (!item) return '';
+    return item.embed_url || item.external_embed_url || item.iframe_url || '';
+  }
+
+  function hasPlayableVideo(item) {
+    return Boolean(videoSource(item) || embedSource(item));
+  }
+
+  function currentChannelSlug() {
+    if (state.activeChannelSlug) return state.activeChannelSlug;
+    try {
+      var params = new URLSearchParams(window.location.search || '');
+      return slugify(params.get('channel') || params.get('channel_slug') || params.get('channelSlug') || '');
+    } catch (err) {
+      return '';
+    }
+  }
+
+  function channelMatches(item, channelSlug) {
+    if (!item || !channelSlug) return false;
+    return [
+      item.channel_slug,
+      item.channel,
+      item.channel_name,
+      item.channel_id,
+    ].some(function (value) {
+      return slugify(value) === channelSlug;
+    });
+  }
+
+  function firstPlayableUpload(uploads) {
+    var playable = (uploads || []).filter(hasPlayableVideo);
+    var channelSlug = currentChannelSlug() || slugify(state.owner && state.owner.channel_slug);
+    if (channelSlug) {
+      var channelFirst = playable.find(function (item) {
+        return channelMatches(item, channelSlug);
+      });
+      if (channelFirst) return channelFirst;
+    }
+    return playable[0] || null;
   }
 
   function slugify(value) {
@@ -190,6 +221,9 @@
   function normalizeUploads(payload) {
     var all = []
       .concat(payload && payload.uploads ? payload.uploads : [])
+      .concat(payload && payload.videos ? payload.videos : [])
+      .concat(payload && payload.items ? payload.items : [])
+      .concat(payload && payload.data ? payload.data : [])
       .concat(payload && payload.mine_uploads ? payload.mine_uploads : []);
     var seen = {};
     var list = [];
@@ -277,15 +311,16 @@
 
   function renderRecentUploads(uploads) {
     if (!el.recentUploads) return;
-    el.uploadCount.textContent = String(uploads.length);
+    var playable = uploads.filter(hasPlayableVideo);
+    el.uploadCount.textContent = String(playable.length);
 
-    if (!uploads.length) {
-      el.recentUploads.innerHTML = '<div class="tv-empty">No uploads yet. The first clip sets the rhythm.</div>';
+    if (!playable.length) {
+      el.recentUploads.innerHTML = '<div class="tv-empty">No videos loaded from the channel archive yet.</div>';
       return;
     }
 
-    el.recentUploads.innerHTML = uploads.slice(0, 10).map(function (item) {
-      var source = item.source_url || item.external_video_url || '';
+    el.recentUploads.innerHTML = playable.slice(0, 10).map(function (item) {
+      var source = videoSource(item);
       var preview = source ? '<video class="tv-upload-preview" controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>' : '';
       return [
         '<div class="tv-list-item">',
@@ -302,10 +337,16 @@
   function renderCards(items) {
     if (!el.grid) return;
 
-    var sourceItems = items.length ? items : fallbackVideos;
+    var sourceItems = items.filter(hasPlayableVideo);
     var visible = sourceItems.filter(function (item) {
       return state.activeFilter === 'all' || inferFilter(item) === state.activeFilter;
     });
+
+    if (!visible.length) {
+      el.grid.innerHTML = '<div class="tv-empty">No playable videos are available in this channel archive yet.</div>';
+      renderFirstChannelVideo(sourceItems);
+      return;
+    }
 
     el.grid.innerHTML = visible.map(function (item) {
       var image = item.thumb_url || item.image || 'assets/neon-dreams/covers/cover-thumb.jpg';
@@ -313,13 +354,14 @@
       var description = item.copy || item.description || 'Faceless TV broadcast';
       var channel = item.channel || item.channel_name || item.channel_slug || 'Faceless TV';
       var duration = item.duration_label || (item.duration_seconds ? Math.max(1, Math.round(Number(item.duration_seconds) / 60)) + ' min' : (item.status || 'Video'));
-      var source = item.source_url || item.external_video_url || '';
+      var source = videoSource(item);
+      var embed = embedSource(item);
       return [
-        '<article class="tv-card" tabindex="0" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '">',
+        '<article class="tv-card" tabindex="0" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '" data-embed="' + escapeHtml(embed) + '">',
           '<div class="tv-thumb">',
             source
               ? '<video class="tv-thumb-video" controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '" poster="' + escapeHtml(image) + '"></video>'
-              : '<div class="tv-thumb-preview" style="--preview-image:url(&quot;' + escapeHtml(image) + '&quot;)"><img src="' + escapeHtml(image) + '" alt="' + escapeHtml(title) + '" loading="eager" fetchpriority="high" /><span class="tv-scanline"></span><span class="tv-preview-badge">Preview loop</span></div>',
+              : '<iframe src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>',
             '<span class="tv-play" aria-hidden="true">&gt;</span>',
             '<span class="tv-meta">' + escapeHtml(duration) + '</span>',
           '</div>',
@@ -344,14 +386,39 @@
         }
       });
     });
+
+    renderFirstChannelVideo(sourceItems);
+  }
+
+  function renderFirstChannelVideo(items) {
+    var first = firstPlayableUpload(items);
+    if (!first) {
+      renderEmptyFeature();
+      return;
+    }
+    featureUpload(first);
+  }
+
+  function renderEmptyFeature() {
+    if (!el.screen || !el.featureTitle || !el.featureCopy) return;
+    el.featureTitle.textContent = 'No Videos Loaded';
+    el.featureCopy.textContent = 'The TV page is waiting for published videos from the channel archive.';
+    el.screen.innerHTML = [
+      '<div class="tv-screen-placeholder">',
+        '<div>',
+          '<strong>Archive Empty</strong>',
+          '<span>No playable video URL was returned by the channel archive.</span>',
+        '</div>',
+      '</div>',
+    ].join('');
   }
 
   function featureCard(card) {
     if (!el.screen || !el.featureTitle || !el.featureCopy) return;
     var title = card.getAttribute('data-title') || 'Selected Broadcast';
     var copy = card.getAttribute('data-copy') || '';
-    var image = card.getAttribute('data-image') || 'assets/neon-dreams/covers/cover-thumb.jpg';
     var source = card.getAttribute('data-source') || '';
+    var embed = card.getAttribute('data-embed') || '';
 
     el.featureTitle.textContent = title;
     el.featureCopy.textContent = copy;
@@ -362,15 +429,36 @@
       return;
     }
 
-    el.screen.innerHTML = [
-      '<div class="tv-screen-placeholder tv-screen-preview" style="--preview-image:url(&quot;' + escapeHtml(image) + '&quot;);background-image:linear-gradient(0deg,rgba(0,0,0,0.66),rgba(0,0,0,0.22)),var(--preview-image);">',
-        '<span class="tv-scanline"></span>',
-        '<div>',
-          '<strong>' + escapeHtml(title) + '</strong>',
-          '<span>Preview loop playing from the Faceless TV broadcast card. Uploads with real media will open as full video.</span>',
-        '</div>',
-      '</div>',
-    ].join('');
+    if (embed) {
+      el.screen.innerHTML = '<iframe src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="eager" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+      return;
+    }
+
+    renderEmptyFeature();
+  }
+
+  function featureUpload(item) {
+    if (!el.screen || !el.featureTitle || !el.featureCopy) return;
+    var title = item.title || 'Selected Broadcast';
+    var copy = item.copy || item.description || 'Faceless TV broadcast';
+    var source = videoSource(item);
+    var embed = embedSource(item);
+
+    el.featureTitle.textContent = title;
+    el.featureCopy.textContent = copy;
+
+    if (source) {
+      el.screen.innerHTML = '<video controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
+      activateVideos(el.screen);
+      return;
+    }
+
+    if (embed) {
+      el.screen.innerHTML = '<iframe src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="eager" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+      return;
+    }
+
+    renderEmptyFeature();
   }
 
   function syncFilterButtons() {
@@ -450,6 +538,21 @@
     return data;
   }
 
+  async function fetchTvJson(path, options) {
+    var origins = tvOrigins();
+    var lastError = null;
+
+    for (var i = 0; i < origins.length; i += 1) {
+      try {
+        return await fetchJson(apiUrl(path, origins[i]), options);
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    throw lastError || new Error('TV archive request failed.');
+  }
+
   async function loadNetwork() {
     state.session = getSession();
     state.localMode = !window.FAS_TV_ORIGIN;
@@ -461,8 +564,8 @@
     var uploadPayload = null;
 
     try {
-      channelPayload = await fetchJson(API.channels, { headers: headers });
-      uploadPayload = await fetchJson(API.uploads, { headers: headers });
+      channelPayload = await fetchTvJson(API.channels, { headers: headers });
+      uploadPayload = await fetchTvJson(API.uploads, { headers: headers });
       state.localMode = false;
     } catch (err) {
       console.info('[TV] network load fallback:', err && err.message ? err.message : err);
@@ -683,6 +786,7 @@
     el.uploadStatus = qs('#tv-upload-status');
     el.channelForm = qs('#tv-channel-form');
     el.uploadForm = qs('#tv-upload-form');
+    state.activeChannelSlug = currentChannelSlug();
   }
 
   function boot() {
