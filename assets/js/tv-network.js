@@ -514,6 +514,10 @@
         el.channelForm.reset();
         await loadNetwork();
       } catch (err) {
+        if (!state.localMode) {
+          setStatus(el.channelStatus, err.message || 'Could not create channel.', 'error');
+          return;
+        }
         var localChannels = readLocalJson('channels_cache', { owner: ownerChannel(), channels: [], mine: [] });
         var created = {
           id: 'local-' + Date.now(),
@@ -608,6 +612,10 @@
         el.uploadForm.reset();
         await loadNetwork();
       } catch (err) {
+        if (!state.localMode) {
+          setStatus(el.uploadStatus, err.message || 'Upload failed.', 'error');
+          return;
+        }
         var localUploads = readLocalJson('uploads_cache', { uploads: [], mine_uploads: [] });
         var previewUrl = fileBase64 ? ('data:' + (file.type || 'video/mp4') + ';base64,' + fileBase64) : URL.createObjectURL(file);
         var createdUpload = {
