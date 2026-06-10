@@ -1,8 +1,3 @@
-<body class="radio-page-wrap">
-  <!-- Open Faceless Pulse Stage Button -->
-  <div style="width:100%;display:flex;justify-content:center;margin:1.2rem 0 0.5rem 0;">
-    <button onclick="window.open('pulse.html', '_blank')" class="btn btn-gold" style="font-size:1rem;padding:0.7rem 2.2rem;">Open Faceless Pulse Stage</button>
-  </div>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,6 +57,67 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--text-3);
+    }
+    .rp-strip-listeners {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+    .rp-strip-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .rp-strip-action {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.42rem 0.72rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      color: var(--text-2);
+      font-size: 0.66rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    }
+    .rp-strip-action:hover,
+    .rp-strip-action:focus-visible {
+      border-color: rgba(139,92,246,0.42);
+      background: rgba(139,92,246,0.12);
+      color: #fff;
+      outline: none;
+      transform: translateY(-1px);
+    }
+    .rp-strip-action--gold {
+      color: #0b0c12;
+      border-color: rgba(245,196,81,0.32);
+      background: linear-gradient(135deg, var(--gold), #f3d47a);
+    }
+    .rp-strip-action--gold:hover,
+    .rp-strip-action--gold:focus-visible {
+      color: #050505;
+      border-color: rgba(245,196,81,0.55);
+      background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    }
+    @media (max-width: 680px) {
+      .rp-station-strip {
+        align-items: flex-start;
+      }
+      .rp-strip-right {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .rp-strip-actions {
+        justify-content: flex-end;
+      }
     }
     .rp-live-dot {
       display: inline-block;
@@ -955,46 +1011,6 @@
     .rp-phase-note a { color: var(--purple-bright); text-decoration: none; }
     .rp-phase-note a:hover { text-decoration: underline; }
 
-    /* Future strip */
-    .rp-future-strip {
-      max-width: 780px;
-      margin: 0 auto 1.5rem;
-      padding: 0 1.25rem;
-    }
-    .rp-future-inner {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-      padding: 1rem 1.25rem;
-      background: rgba(139,92,246,0.06);
-      border: 1px solid rgba(139,92,246,0.12);
-      border-radius: 10px;
-    }
-    .rp-future-icon { color: var(--purple); flex-shrink: 0; }
-    .rp-future-inner p {
-      font-size: 0.8rem;
-      color: var(--text-2);
-      line-height: 1.75;
-      margin: 0;
-    }
-    .rp-future-inner strong { color: var(--text); }
-
-    /* ── Back-to-music link ── */
-    .rp-back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-3);
-      text-decoration: none;
-      padding: 0.5rem 1.25rem;
-      transition: color 0.15s;
-    }
-    .rp-back-link:hover { color: var(--purple-bright); }
-
     /* ── Modal ── */
     .rp-modal-overlay {
       position: fixed;
@@ -1089,10 +1105,6 @@
 </head>
 <body class="radio-page-wrap">
 
-  <!-- Jump to Upload Button (Pulse-style anchor jump) -->
-  <div style="width:100%;display:flex;justify-content:center;margin:1.2rem 0 0.5rem 0;">
-    <a href="#rp-submit-section" class="btn btn-primary" style="font-size:1rem;padding:0.7rem 2.2rem;">Jump to Upload</a>
-  </div>
   <!-- ── NAV ── -->
   <nav class="navbar waffle-nav" role="navigation" aria-label="Main navigation">
     <div class="container">
@@ -1128,9 +1140,6 @@
 
   <main class="radio-page-main">
 
-    <!-- Back link -->
-    <a href="music.html#radio" class="rp-back-link">← Back to Music</a>
-
     <!-- Station status strip -->
     <div class="rp-station-strip">
       <div class="rp-strip-left">
@@ -1148,8 +1157,14 @@
         </span>
       </div>
       <div class="rp-strip-right">
-        <span class="rp-live-dot" aria-hidden="true"></span>
-        <span id="rp-listener-num">24</span> listening
+        <span class="rp-strip-listeners">
+          <span class="rp-live-dot" aria-hidden="true"></span>
+          <span><span id="rp-listener-num">24</span> listening</span>
+        </span>
+        <span class="rp-strip-actions" aria-label="Radio shortcuts">
+          <a href="pulse.html" class="rp-strip-action rp-strip-action--gold" target="_blank" rel="noopener noreferrer">Pulse Stage</a>
+          <a href="#rp-submit-section" class="rp-strip-action">Upload</a>
+        </span>
       </div>
     </div>
 
@@ -1335,7 +1350,7 @@
           <ul style="margin:0;padding-left:1.1rem;display:flex;flex-direction:column;gap:0.3rem;">
             <li style="font-size:0.8rem;color:var(--text-2);line-height:1.55;">Must be <strong style="color:var(--text);">your original music only</strong> — no covers, samples, or third-party content</li>
             <li style="font-size:0.8rem;color:var(--text-2);line-height:1.55;">Limit of <strong style="color:var(--text);">2 uploads per calendar month</strong> per member</li>
-            <li style="font-size:0.8rem;color:var(--text-2);line-height:1.55;">Accepted formats: <strong style="color:var(--text);">MP3, WAV, FLAC, OGG, M4A, AAC</strong> — max 30MB</li>
+            <li style="font-size:0.8rem;color:var(--text-2);line-height:1.55;">Accepted formats: <strong style="color:var(--text);">MP3, WAV, FLAC, OGG, M4A, AAC</strong> — max 50MB</li>
             <li style="font-size:0.8rem;color:var(--text-2);line-height:1.55;">Tracks can be removed from rotation at any time without notice</li>
           </ul>
         </div>
@@ -1372,7 +1387,7 @@
             ondrop="rpHandleDrop(event)">
             <div style="font-size:1.8rem;margin-bottom:0.4rem;">🎵</div>
             <p style="font-size:0.85rem;font-weight:700;color:var(--text);margin:0 0 0.2rem;">Drop your audio file here</p>
-            <p style="font-size:0.75rem;color:var(--text-3);margin:0;">or click to browse — MP3, WAV, FLAC, OGG, M4A, AAC · max 30MB</p>
+            <p style="font-size:0.75rem;color:var(--text-3);margin:0;">or click to browse — MP3, WAV, FLAC, OGG, M4A, AAC · max 50MB</p>
           </div>
           <input type="file" id="rp-file-input" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/flac,audio/x-m4a,audio/mp4,audio/aac,audio/aiff" style="display:none;" />
 
@@ -1414,45 +1429,10 @@
 
         </div>
 
-        <!-- Gate: not logged in or free plan -->
-        <div id="rp-submit-gate" style="display:none;text-align:center;padding:0.5rem 0;">
-          <p style="font-size:0.83rem;color:var(--text-2);margin-bottom:0.75rem;" id="rp-gate-msg">You need an active monthly membership to upload tracks.</p>
-          <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
-            <a href="login.html" class="btn btn-ghost btn-sm" id="rp-gate-signin">Sign In →</a>
-            <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" target="_blank" rel="noopener noreferrer" class="btn btn-outline-purple btn-sm">Get Access — $5/mo →</a>
-          </div>
-        </div>
-
       </div>
     </div>
 
     <script>
-    (function() {
-      var sess = null;
-      try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
-      var blockedStatuses = ['suspended', 'banned', 'limited'];
-      var isMember = !!(sess && sess.username && sess.ph && blockedStatuses.indexOf(String(sess.status || '').toLowerCase()) === -1);
-
-      if (!isMember) {
-        var form = document.getElementById('rp-submit-form-wrap');
-        var gate = document.getElementById('rp-submit-gate');
-        if (form) form.style.display = 'none';
-        if (gate) gate.style.display = '';
-        // Customize gate message based on whether user is logged in at all
-        if (sess && sess.username) {
-          var msg = document.getElementById('rp-gate-msg');
-          var si  = document.getElementById('rp-gate-signin');
-          if (msg) msg.textContent = 'This account is not currently allowed to upload tracks. Contact support if this looks wrong.';
-          if (si)  si.style.display = 'none';
-        }
-      } else {
-        var formOk = document.getElementById('rp-submit-form-wrap');
-        var gateOk = document.getElementById('rp-submit-gate');
-        if (formOk) formOk.style.display = '';
-        if (gateOk) gateOk.style.display = 'none';
-      }
-    })();
-
     var rpPendingFile = null;
 
     function rpFormatBytes(b) {
@@ -1469,8 +1449,8 @@
         rpShowError('Only audio files are supported (MP3, WAV, OGG, FLAC, M4A, AAC).');
         return;
       }
-      if (file.size > 30 * 1024 * 1024) {
-        rpShowError('File too large — max 30MB.');
+      if (file.size > 50 * 1024 * 1024) {
+        rpShowError('File too large — max 50MB.');
         return;
       }
       rpPendingFile = file;
@@ -1644,42 +1624,6 @@
     }
     </script>
 
-    <!-- $5/mo Join Strip — targets non-members listening to the station -->
-    <div id="rp-join-strip" style="max-width:780px;margin:1.5rem auto 0;padding:0 1.25rem;">
-      <div style="background:linear-gradient(135deg,rgba(139,92,246,0.12),rgba(139,92,246,0.04));border:1px solid rgba(139,92,246,0.3);border-radius:16px;padding:1.4rem 1.5rem;display:flex;flex-wrap:wrap;gap:1.25rem;align-items:center;justify-content:space-between;">
-
-        <div style="display:flex;align-items:center;gap:1rem;flex:1;min-width:200px;">
-          <div style="width:42px;height:42px;background:rgba(139,92,246,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">📻</div>
-          <div>
-            <p style="font-size:0.88rem;font-weight:800;color:var(--text);margin-bottom:0.15rem;">Like what you're hearing?</p>
-            <p style="font-size:0.78rem;color:var(--text-2);line-height:1.55;margin:0;">$5/month gets you inside the platform — radio access, games, apps, private DMs, and 2 track submissions/month to Station 1.</p>
-          </div>
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:0.5rem;flex-shrink:0;min-width:160px;">
-          <a href="https://buy.stripe.com/fZu3cv2hh23Q0jufqc3ZK01" target="_blank" rel="noopener noreferrer" class="btn btn-outline-purple" style="text-align:center;font-size:0.82rem;white-space:nowrap;">
-            Join — $5/month →
-          </a>
-          <a href="https://cash.app/$Jamespropane00" target="_blank" rel="noopener noreferrer" style="text-align:center;font-size:0.72rem;color:var(--text-3);text-decoration:none;padding:0.2rem 0;">
-            or pay via Cash App <span style="color:var(--gold-dim);">$Jamespropane00</span>
-          </a>
-        </div>
-
-      </div>
-    </div>
-
-    <script>
-    (function() {
-      var sess = null;
-      try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
-      var isMember = sess && (sess.plan === 'access' || sess.plan === 'starter' || sess.plan === 'pro' || sess.plan === 'premium') && sess.status === 'active';
-      if (isMember) {
-        var strip = document.getElementById('rp-join-strip');
-        if (strip) strip.style.display = 'none';
-      }
-    })();
-    </script>
-
     <div class="rp-chat-section">
 
       <!-- Title row -->
@@ -1819,14 +1763,6 @@
 
     </div>
 
-    <!-- Future direction -->
-    <div class="rp-future-strip">
-      <div class="rp-future-inner">
-        <span class="rp-future-icon" aria-hidden="true">◈</span>
-        <p>Eventually creators will upload tracks, rooms will vote, and the top songs of the week will rise to the front. <strong>The station grows with the platform.</strong></p>
-      </div>
-    </div>
-
   </main>
 
   <!-- Footer -->
@@ -1880,6 +1816,9 @@
     </div>
   </div>
 
+  <script>
+    window.FAS_DISABLE_PHONE_LAUNCHER = true;
+  </script>
   <script src="assets/script.js"></script>
   <script>
     (function () {
