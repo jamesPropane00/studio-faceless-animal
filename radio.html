@@ -11,7 +11,15 @@
   <link rel="stylesheet" href="assets/style.css?v=20260610-waffle-main" />
   <style>
     /* ── Radio page shell ── */
-    body { background: var(--bg); }
+    body {
+      background:
+        linear-gradient(rgba(33,244,208,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,47,79,0.025) 1px, transparent 1px),
+        radial-gradient(circle at 14% 0%, rgba(139,92,246,0.22), transparent 34%),
+        radial-gradient(circle at 88% 10%, rgba(33,244,208,0.1), transparent 28%),
+        linear-gradient(180deg, #090a10 0%, #06070a 48%, #030406 100%);
+      background-size: 44px 44px, 44px 44px, auto, auto, auto;
+    }
 
     .radio-page-wrap {
       min-height: 100dvh;
@@ -23,6 +31,321 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+    }
+
+    .rp-shell {
+      width: min(1180px, calc(100% - 1.2rem));
+      margin: 0 auto;
+      display: grid;
+      gap: 1rem;
+      padding: clamp(0.8rem, 2vw, 1.25rem) 0 3rem;
+    }
+
+    .rp-radio-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 0.78fr) minmax(360px, 1.22fr);
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .rp-intro-panel,
+    .rp-player-card,
+    .rp-section-panel,
+    .rp-mini-card {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: rgba(12,13,18,0.9);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    }
+
+    .rp-intro-panel {
+      position: relative;
+      overflow: hidden;
+      min-height: 430px;
+      display: grid;
+      align-content: end;
+      padding: clamp(1rem, 3vw, 1.6rem);
+      isolation: isolate;
+      background: #050509;
+    }
+    .rp-intro-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(90deg, rgba(5,5,9,0.96), rgba(5,5,9,0.64) 48%, rgba(5,5,9,0.18)),
+        linear-gradient(0deg, rgba(5,5,9,0.98), rgba(5,5,9,0.22) 62%, rgba(5,5,9,0.74)),
+        url("assets/boombox.png") center 24% / min(340px, 76%) no-repeat;
+    }
+    .rp-intro-panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(rgba(255,255,255,0.055) 50%, rgba(0,0,0,0.05) 50%);
+      background-size: 100% 4px;
+      opacity: 0.28;
+      pointer-events: none;
+    }
+    .rp-kicker,
+    .rp-chip,
+    .rp-card-label {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 900;
+    }
+    .rp-kicker {
+      margin: 0 0 0.75rem;
+      color: #21f4d0;
+      font-size: 0.76rem;
+    }
+    .rp-hero-title {
+      margin: 0;
+      font-size: clamp(2.7rem, 7vw, 5.8rem);
+      line-height: 0.9;
+      letter-spacing: 0;
+      color: #fff;
+    }
+    .rp-hero-title span {
+      color: #ff2f4f;
+      text-shadow: 0 0 30px rgba(255,47,79,0.38);
+    }
+    .rp-hero-copy {
+      margin: 1rem 0 0;
+      color: #d7d9e4;
+      line-height: 1.65;
+      font-size: 0.98rem;
+    }
+    .rp-hero-actions,
+    .rp-section-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      margin-top: 1.25rem;
+    }
+    .rp-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 0.38rem 0.68rem;
+      border: 1px solid rgba(212,181,108,0.34);
+      border-radius: 999px;
+      color: var(--gold);
+      background: rgba(212,181,108,0.08);
+      font-size: 0.65rem;
+    }
+
+    .rp-station-guide {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+    .rp-mini-card {
+      box-shadow: none;
+      padding: 0.85rem;
+      background: rgba(255,255,255,0.035);
+    }
+    .rp-mini-card strong {
+      display: block;
+      color: #fff;
+      font-size: 0.88rem;
+      line-height: 1.15;
+    }
+    .rp-mini-card span {
+      display: block;
+      margin-top: 0.3rem;
+      color: var(--text-3);
+      font-size: 0.74rem;
+      line-height: 1.35;
+    }
+
+    .rp-section-panel {
+      padding: clamp(1rem, 3vw, 1.35rem);
+      background: rgba(8,9,13,0.82);
+    }
+    .rp-section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .rp-section-head h2 {
+      margin: 0;
+      color: #fff;
+      font-size: clamp(1.45rem, 4vw, 2.25rem);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+    .rp-section-head p,
+    .rp-section-copy {
+      margin: 0.45rem 0 0;
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+    .rp-pulse-grid,
+    .rp-explore-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+    .rp-pulse-preview {
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid rgba(33,244,208,0.16);
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 50% 40%, rgba(33,244,208,0.18), transparent 34%),
+        linear-gradient(135deg, rgba(255,47,79,0.12), rgba(139,92,246,0.16)),
+        #050509;
+    }
+    .rp-pulse-wave {
+      width: min(320px, 82%);
+      height: 92px;
+      display: flex;
+      align-items: end;
+      justify-content: center;
+      gap: 0.34rem;
+    }
+    .rp-pulse-wave span {
+      width: 10px;
+      min-height: 22px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #21f4d0, #8b5cf6 58%, #ff2f4f);
+      box-shadow: 0 0 18px rgba(33,244,208,0.28);
+      animation: rp-wave 0.9s ease-in-out infinite alternate;
+    }
+    .rp-pulse-wave span:nth-child(2n) { animation-delay: 0.12s; }
+    .rp-pulse-wave span:nth-child(3n) { animation-delay: 0.22s; }
+    .rp-pulse-wave span:nth-child(4n) { animation-delay: 0.32s; }
+    .rp-explore-link {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      padding: 0.9rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.09);
+      background: rgba(255,255,255,0.035);
+      color: #eef3ff;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.78rem;
+      transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+    }
+    .rp-explore-link:hover,
+    .rp-explore-link:focus-visible {
+      border-color: rgba(33,244,208,0.32);
+      background: rgba(33,244,208,0.08);
+      color: #fff;
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .rp-upload-card {
+      display: grid;
+      gap: 1rem;
+    }
+    .rp-upload-flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.65rem;
+      margin: 0 0 1rem;
+    }
+    .rp-upload-step {
+      padding: 0.8rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.035);
+    }
+    .rp-upload-step span {
+      display: block;
+      color: #21f4d0;
+      font-size: 0.66rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .rp-upload-step strong {
+      display: block;
+      margin-top: 0.3rem;
+      color: #fff;
+      font-size: 0.86rem;
+    }
+    .rp-upload-step p {
+      margin: 0.3rem 0 0;
+      color: var(--text-3);
+      font-size: 0.74rem;
+      line-height: 1.35;
+    }
+
+    @media (max-width: 920px) {
+      .rp-radio-hero {
+        grid-template-columns: 1fr;
+      }
+      .rp-intro-panel {
+        min-height: 360px;
+      }
+      .rp-station-guide,
+      .rp-upload-flow,
+      .rp-pulse-grid,
+      .rp-explore-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .rp-top-track-item {
+        grid-template-columns: 36px minmax(0, 1fr) 76px;
+      }
+      .rp-top-track-artist,
+      .rp-top-track-duration {
+        display: none;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .rp-shell {
+        width: 100%;
+        padding-top: 0.5rem;
+      }
+      .rp-intro-panel,
+      .rp-player-card,
+      .rp-section-panel,
+      .rp-top-tracks-inner {
+        border-left: 0;
+        border-right: 0;
+        border-radius: 0;
+      }
+      .rp-intro-panel {
+        min-height: 330px;
+      }
+      .rp-station-guide,
+      .rp-upload-flow,
+      .rp-pulse-grid,
+      .rp-explore-grid {
+        grid-template-columns: 1fr;
+      }
+      .rp-hero-actions,
+      .rp-section-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+      .rp-hero-actions .btn,
+      .rp-section-actions .btn,
+      .rp-hero-actions .rp-chip,
+      .rp-section-actions .rp-chip {
+        width: 100%;
+      }
+    }
+
+    @keyframes rp-wave {
+      from { height: 22px; }
+      to { height: 92px; }
     }
 
     /* ── Top station strip ── */
@@ -190,15 +513,13 @@
 
     /* ── Boombox + player card ── */
     .rp-player-section {
-      background: linear-gradient(180deg, rgba(139,92,246,0.08) 0%, var(--bg) 100%);
-      padding: 1.5rem 1.25rem 0;
+      padding: 0;
     }
     .rp-player-card {
-      max-width: 780px;
-      margin: 0 auto;
-      background: rgba(255,255,255,0.025);
-      border: 1px solid rgba(139,92,246,0.2);
-      border-radius: 18px;
+      margin: 0;
+      background:
+        radial-gradient(circle at 100% 0%, rgba(33,244,208,0.12), transparent 36%),
+        rgba(17,18,24,0.96);
       overflow: hidden;
     }
 
@@ -391,15 +712,15 @@
       color: var(--purple-bright);
     }
     .rp-top-tracks {
-      max-width: 780px;
-      margin: 1.5rem auto 0;
-      padding: 0 1.25rem;
+      margin: 0;
+      padding: 0;
     }
     .rp-top-tracks-inner {
-      background: rgba(139,92,246,0.04);
-      border: 1px solid rgba(139,92,246,0.15);
-      border-radius: 14px;
-      padding: 1.25rem;
+      background: rgba(8,9,13,0.82);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: clamp(1rem, 3vw, 1.35rem);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.45);
     }
     .rp-top-tracks-title {
       font-size: 0.78rem;
@@ -418,7 +739,8 @@
       gap: 0.5rem;
     }
     .rp-top-track-item {
-      display: flex;
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) minmax(110px, auto) 96px 70px;
       align-items: center;
       gap: 0.65rem;
       padding: 0.7rem 0.9rem;
@@ -439,17 +761,20 @@
       font-size: 0.7rem;
       font-weight: 800;
       color: var(--text-3);
-      width: 24px;
       text-align: center;
-      flex-shrink: 0;
     }
     .rp-top-track-info {
-      flex: 1;
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       font-weight: 500;
+    }
+    .rp-top-track-artist,
+    .rp-top-track-duration {
+      color: var(--text-3);
+      font-size: 0.74rem;
+      white-space: nowrap;
     }
     .rp-top-track-score {
       display: flex;
@@ -1139,6 +1464,7 @@
   </div>
 
   <main class="radio-page-main">
+    <div class="rp-shell">
 
     <!-- Station status strip -->
     <div class="rp-station-strip">
@@ -1170,7 +1496,23 @@
 
     <!-- Player Section -->
     <div class="rp-player-section">
-      <div class="rp-player-card">
+      <div class="rp-radio-hero">
+        <section class="rp-intro-panel" aria-label="What is Faceless Animal Radio">
+          <div>
+            <p class="rp-kicker">Faceless Animal Studios Radio</p>
+            <h1 class="rp-hero-title">DJ Faceless <span>Animal</span> Radio</h1>
+            <p class="rp-hero-copy">
+              A community-driven music platform for underground tracks, DJ blends, creator uploads, live chat, and Pulse Stage visuals.
+              Press play, pick a station, or upload original music when you are ready.
+            </p>
+            <div class="rp-hero-actions">
+              <a href="#rp-station-player" class="btn btn-primary">Listen Now</a>
+              <a href="#rp-submit-section" class="btn btn-ghost">Upload Music</a>
+              <a href="pulse.html" class="rp-chip" target="_blank" rel="noopener noreferrer">Pulse Stage</a>
+            </div>
+          </div>
+        </section>
+      <div class="rp-player-card" id="rp-station-player">
 
         <!-- Boombox + station identity -->
         <div class="rp-boombox-header">
@@ -1310,7 +1652,31 @@
         </div>
 
       </div>
+      </div>
     </div>
+
+    <section class="rp-station-guide" aria-label="Radio station guide">
+      <article class="rp-mini-card">
+        <strong>Station 1</strong>
+        <span>Creator uploads and original tracks.</span>
+      </article>
+      <article class="rp-mini-card">
+        <strong>Station 2</strong>
+        <span>DJ Faceless Animal radio mixes.</span>
+      </article>
+      <article class="rp-mini-card">
+        <strong>Station 3</strong>
+        <span>Spotify artist feed.</span>
+      </article>
+      <article class="rp-mini-card">
+        <strong>Station 4</strong>
+        <span>Mixes, blends, and featured drops.</span>
+      </article>
+      <article class="rp-mini-card">
+        <strong>Station 5</strong>
+        <span>Archives and community picks.</span>
+      </article>
+    </section>
 
     <!-- ── Top Tracks Panel ── -->
     <div class="rp-top-tracks">
@@ -1325,13 +1691,13 @@
     </div>
 
     <!-- ── Station 1 Community Upload Section ── -->
-    <div id="rp-submit-section" style="max-width:780px;margin:1.5rem auto 0;padding:0 1.25rem;">
-      <div style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.22);border-radius:16px;padding:1.5rem;">
+    <section id="rp-submit-section" class="rp-section-panel">
+      <div class="rp-upload-card">
 
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;margin-bottom:0.5rem;">
           <div style="display:flex;align-items:center;gap:0.65rem;">
             <span style="font-size:1.1rem;">&#x1F3B5;</span>
-            <p style="font-size:0.72rem;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--purple-bright);margin:0;">Upload to Station 1 · Members</p>
+            <p style="font-size:0.72rem;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:var(--purple-bright);margin:0;">Upload To Station 1</p>
           </div>
           <!-- Quota badge (filled by JS) -->
           <span id="rp-quota-badge" style="display:none;font-size:0.68rem;font-weight:800;letter-spacing:0.06em;padding:0.25rem 0.65rem;border-radius:20px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--purple-bright);"></span>
@@ -1339,10 +1705,32 @@
             <button id="openMediaLibraryBtn" class="btn btn-outline-purple" style="margin-left:12px;">Open Media Library</button>
         </div>
 
-        <p style="font-size:0.88rem;color:var(--text-2);line-height:1.7;margin-bottom:1rem;">
-          Active members can upload up to <strong style="color:var(--text);">2 original songs per month</strong> directly to Station 1.
-          Your track goes live in the rotation immediately after uploading.
+        <p style="font-size:0.9rem;color:var(--text-2);line-height:1.7;margin:0;">
+          Upload original music for Station 1. Add the file, name the track, and send it into the radio queue. During testing, each audio file is capped at <strong style="color:var(--text);">50MB</strong>.
         </p>
+
+        <div class="rp-upload-flow" aria-label="Upload process">
+          <article class="rp-upload-step">
+            <span>01</span>
+            <strong>Choose audio</strong>
+            <p>MP3, WAV, FLAC, OGG, M4A, or AAC.</p>
+          </article>
+          <article class="rp-upload-step">
+            <span>02</span>
+            <strong>Name the track</strong>
+            <p>Keep the title clean and easy to find.</p>
+          </article>
+          <article class="rp-upload-step">
+            <span>03</span>
+            <strong>Send to queue</strong>
+            <p>The track is submitted for Station 1 rotation.</p>
+          </article>
+          <article class="rp-upload-step">
+            <span>04</span>
+            <strong>Radio ready</strong>
+            <p>Approved uploads appear in the station feed.</p>
+          </article>
+        </div>
 
         <!-- Rules -->
         <div style="background:rgba(0,0,0,0.25);border-left:3px solid rgba(139,92,246,0.5);border-radius:0 8px 8px 0;padding:0.85rem 1rem;margin-bottom:1.25rem;">
@@ -1430,7 +1818,8 @@
         </div>
 
       </div>
-    </div>
+      </div>
+    </section>
 
     <script>
     var rpPendingFile = null;
@@ -1624,6 +2013,34 @@
     }
     </script>
 
+    <section class="rp-section-panel" id="pulse-stage-showcase" aria-label="Faceless Pulse Stage">
+      <div class="rp-section-head">
+        <div>
+          <p class="rp-kicker">Visual performance system</p>
+          <h2>Faceless Pulse Stage</h2>
+          <p>Pulse Stage turns music into a live visual performance layer with audio-reactive effects, stream-ready overlays, fullscreen modes, and visual presets.</p>
+        </div>
+        <div class="rp-section-actions">
+          <a href="pulse.html" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Launch Pulse Stage</a>
+          <a href="pulse.html?mode=fullscreen" class="btn btn-ghost" target="_blank" rel="noopener noreferrer">Fullscreen Mode</a>
+          <a href="pulse.html?mode=stream" class="rp-chip" target="_blank" rel="noopener noreferrer">Stream Mode</a>
+        </div>
+      </div>
+      <div class="rp-pulse-grid">
+        <div class="rp-pulse-preview" aria-hidden="true">
+          <div class="rp-pulse-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <article class="rp-mini-card">
+          <strong>Audio Reactive</strong>
+          <span>Effects move with the track so the station can become a performance screen.</span>
+        </article>
+        <article class="rp-mini-card">
+          <strong>Broadcast Ready</strong>
+          <span>Use it for fullscreen visuals, live rooms, creator streams, and Faceless TV energy.</span>
+        </article>
+      </div>
+    </section>
+
     <div class="rp-chat-section">
 
       <!-- Title row -->
@@ -1637,32 +2054,6 @@
           <span id="rp-listener-pill-num">24</span> in the room
         </span>
       </div>
-
-      <section class="rp-vault-chip" id="rp-vault-chip" aria-label="Signal Vault quick panel">
-        <div class="rp-vault-chip-head">
-          <p class="rp-vault-chip-title">Signal Vault</p>
-          <span class="rp-vault-chip-status"><span id="rp-vault-status-dot" class="rp-vault-status-dot" aria-hidden="true"></span><span id="rp-vault-status-text">Idle</span></span>
-        </div>
-        <div class="rp-vault-chip-grid">
-          <div class="rp-vault-chip-cell">
-            <p class="rp-vault-chip-label">Veil Balance</p>
-            <p class="rp-vault-chip-label">Veil Layer</p>
-            <p id="rp-vault-veil-val" class="rp-vault-chip-val">--</p>
-          </div>
-          <div class="rp-vault-chip-cell">
-            <p class="rp-vault-chip-label">Pulse Balance</p>
-            <p class="rp-vault-chip-label">Pulse (Staged)</p>
-            <p id="rp-vault-pulse-val" class="rp-vault-chip-val">--</p>
-          </div>
-        </div>
-        <div class="rp-vault-chip-foot">
-          <p id="rp-vault-note" class="rp-vault-chip-note">Vault snapshot ready.</p>
-          <div class="rp-vault-chip-actions">
-            <a href="miner.html" class="btn btn-ghost btn-sm">Open Miner</a>
-            <a href="wallet.html" class="btn btn-primary btn-sm">Open Wallet</a>
-          </div>
-        </div>
-      </section>
 
       <!-- Room tabs -->
       <div class="rp-rooms-strip">
@@ -1760,6 +2151,61 @@
       </div>
 
       <p class="rp-phase-note">Phase 1 · Live backend launching soon · <a href="start.html">Get early access</a></p>
+
+    </div>
+
+    <section class="rp-section-panel" aria-label="Platform extras">
+      <div class="rp-section-head">
+        <div>
+          <p class="rp-kicker">Platform Extras</p>
+          <h2>Vault, Wallet, Miner</h2>
+          <p>Extra Faceless Animal systems live here for people who want to go deeper after they listen.</p>
+        </div>
+      </div>
+      <section class="rp-vault-chip" id="rp-vault-chip" aria-label="Signal Vault quick panel">
+        <div class="rp-vault-chip-head">
+          <p class="rp-vault-chip-title">Signal Vault</p>
+          <span class="rp-vault-chip-status"><span id="rp-vault-status-dot" class="rp-vault-status-dot" aria-hidden="true"></span><span id="rp-vault-status-text">Idle</span></span>
+        </div>
+        <div class="rp-vault-chip-grid">
+          <div class="rp-vault-chip-cell">
+            <p class="rp-vault-chip-label">Veil Balance</p>
+            <p class="rp-vault-chip-label">Veil Layer</p>
+            <p id="rp-vault-veil-val" class="rp-vault-chip-val">--</p>
+          </div>
+          <div class="rp-vault-chip-cell">
+            <p class="rp-vault-chip-label">Pulse Balance</p>
+            <p class="rp-vault-chip-label">Pulse (Staged)</p>
+            <p id="rp-vault-pulse-val" class="rp-vault-chip-val">--</p>
+          </div>
+        </div>
+        <div class="rp-vault-chip-foot">
+          <p id="rp-vault-note" class="rp-vault-chip-note">Vault snapshot ready.</p>
+          <div class="rp-vault-chip-actions">
+            <a href="miner.html" class="btn btn-ghost btn-sm">Open Miner</a>
+            <a href="wallet.html" class="btn btn-primary btn-sm">Open Wallet</a>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="rp-section-panel" aria-label="Explore more Faceless Animal Studios">
+      <div class="rp-section-head">
+        <div>
+          <p class="rp-kicker">Explore More</p>
+          <h2>Stay Inside The Signal</h2>
+          <p>Radio feeds the rest of Faceless Animal Studios. Jump into TV, Neon Dreams Club, creator pages, or the wider directory.</p>
+        </div>
+      </div>
+      <div class="rp-explore-grid">
+        <a class="rp-explore-link" href="tv.html">Faceless TV <span>-></span></a>
+        <a class="rp-explore-link" href="neon-dreams.html">Neon Dreams <span>-></span></a>
+        <a class="rp-explore-link" href="directory.html">Directory <span>-></span></a>
+        <a class="rp-explore-link" href="pulse.html">Pulse Stage <span>-></span></a>
+        <a class="rp-explore-link" href="neon-dreams.html">Comic <span>-></span></a>
+        <a class="rp-explore-link" href="wallet.html">Vault <span>-></span></a>
+      </div>
+    </section>
 
     </div>
 
@@ -2066,12 +2512,17 @@
         sorted.forEach(function(item, rank) {
           var div = document.createElement('div');
           div.className = 'rp-top-track-item';
+          var plays = Number(item.track.play_count) || 0;
+          var artist = item.track.artist || 'DJ Faceless Animal';
+          var duration = item.track.duration || '--:--';
           div.innerHTML =
             '<div class="rp-top-track-rank">#' + (rank + 1) + '</div>' +
             '<div class="rp-top-track-info">' + escHtml(item.track.title || 'Track') + '</div>' +
+            '<div class="rp-top-track-artist">' + escHtml(artist) + '</div>' +
             '<div class="rp-top-track-score">' +
-              '<span>⭐ <span class="rp-top-track-score-val">' + item.score + '</span></span>' +
-            '</div>';
+              '<span><span class="rp-top-track-score-val">' + plays + '</span> plays</span>' +
+            '</div>' +
+            '<div class="rp-top-track-duration">' + escHtml(duration) + '</div>';
           container.appendChild(div);
         });
       }
