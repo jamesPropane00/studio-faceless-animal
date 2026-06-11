@@ -13,6 +13,9 @@
     uploads: [],
     activeFilter: 'all',
     activeChannelSlug: '',
+    playlist: [],
+    playlistIndex: -1,
+    autoplaying: false,
     localMode: true,
   };
 
@@ -163,6 +166,47 @@
       if (channelFirst) return channelFirst;
     }
     return playable[0] || null;
+  }
+
+  function shuffleItems(items) {
+    var list = (items || []).slice();
+    for (var i = list.length - 1; i > 0; i -= 1) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = list[i];
+      list[i] = list[j];
+      list[j] = tmp;
+    }
+    return list;
+  }
+
+  function buildPlaylist(items) {
+    var playable = (items || []).filter(hasPlayableVideo);
+    var channelSlug = currentChannelSlug() || slugify(state.owner && state.owner.channel_slug);
+    var channelItems = channelSlug
+      ? playable.filter(function (item) { return channelMatches(item, channelSlug); })
+      : [];
+    var base = channelItems.length ? channelItems : playable;
+    state.playlist = shuffleItems(base);
+    state.playlistIndex = state.playlist.length ? Math.floor(Math.random() * state.playlist.length) : -1;
+  }
+
+  function currentPlaylistUpload() {
+    if (!state.playlist.length || state.playlistIndex < 0) return null;
+    return state.playlist[state.playlistIndex] || null;
+  }
+
+  function playNextUpload() {
+    if (!state.playlist.length) return;
+    if (state.playlist.length === 1) {
+      state.playlistIndex = 0;
+    } else {
+      state.playlistIndex = (state.playlistIndex + 1) % state.playlist.length;
+      if (state.playlistIndex === 0) {
+        state.playlist = shuffleItems(state.playlist);
+      }
+    }
+    state.autoplaying = true;
+    featureUpload(currentPlaylistUpload());
   }
 
   function slugify(value) {
@@ -395,15 +439,17 @@
       });
     });
 
-    renderFirstChannelVideo(sourceItems);
+    startShuffledPlaylist(sourceItems);
   }
 
-  function renderFirstChannelVideo(items) {
-    var first = firstPlayableUpload(items);
+  function startShuffledPlaylist(items) {
+    buildPlaylist(items);
+    var first = currentPlaylistUpload() || firstPlayableUpload(items);
     if (!first) {
       renderEmptyFeature();
       return;
     }
+    state.autoplaying = true;
     featureUpload(first);
     setActiveCard(uploadKey(first));
   }
@@ -430,12 +476,14 @@
     var embed = card.getAttribute('data-embed') || '';
     var key = card.getAttribute('data-key') || '';
 
+    state.autoplaying = false;
+    syncPlaylistToKey(key);
     el.featureTitle.textContent = title;
     el.featureCopy.textContent = copy;
     setActiveCard(key);
 
     if (source) {
-      el.screen.innerHTML = '<video controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
+      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
       activateVideos(el.screen);
       return;
     }
@@ -461,7 +509,7 @@
     setActiveCard(key);
 
     if (source) {
-      el.screen.innerHTML = '<video controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
+      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
       activateVideos(el.screen);
       return;
     }
@@ -481,6 +529,14 @@
     });
   }
 
+  function syncPlaylistToKey(key) {
+    if (!key || !state.playlist.length) return;
+    var index = state.playlist.findIndex(function (item) {
+      return uploadKey(item) === key;
+    });
+    if (index >= 0) state.playlistIndex = index;
+  }
+
   function syncFilterButtons() {
     qsa('.tv-filter').forEach(function (button) {
       button.classList.toggle('active', button.getAttribute('data-filter') === state.activeFilter);
@@ -495,8 +551,15 @@
         video.defaultMuted = true;
         video.playsInline = true;
         video.autoplay = true;
-        video.loop = true;
+        video.loop = !video.classList.contains('tv-main-video');
         video.preload = 'auto';
+
+        if (video.classList.contains('tv-main-video')) {
+          video.addEventListener('ended', playNextUpload, { once: true });
+          video.addEventListener('error', function () {
+            window.setTimeout(playNextUpload, 800);
+          }, { once: true });
+        }
 
         var startPreview = function () {
           try {
