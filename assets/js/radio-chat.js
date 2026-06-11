@@ -547,18 +547,21 @@ export function initRadioChat(config) {
     if (error) {
       // Optimistic rollback — add error note
       console.warn('[FAS] radio-chat: insert error', error.message)
+      inputEl.value = text
       appendMsg(feedEl, buildSystemEl('Could not send. Try again.'))
     }
   }
 
   // ── Wire up events ────────────────────────────────────────────────
+  function requestSend(e) {
+    if (e) e.preventDefault()
+    sendMessage()
+  }
+
   if (sendBtnEl) {
-    sendBtnEl.addEventListener('click', sendMessage)
-    sendBtnEl.addEventListener('pointerup', function(e) {
-      if (e.pointerType === 'mouse') return
-      e.preventDefault()
-      sendMessage()
-    })
+    sendBtnEl.setAttribute('type', 'button')
+    sendBtnEl.addEventListener('click', requestSend)
+    sendBtnEl.addEventListener('touchend', requestSend, { passive: false })
   }
   if (inputEl) {
     inputEl.addEventListener('keydown', function(e) {

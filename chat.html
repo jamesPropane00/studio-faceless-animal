@@ -1661,11 +1661,19 @@
         if (e.target && e.target.id === 'rp-send-btn') captureLuxText();
       }, true);
 
+      document.addEventListener('touchend', function(e) {
+        if (e.target && e.target.id === 'rp-send-btn') captureLuxText();
+      }, true);
+
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && e.target && e.target.id === 'rp-chat-input') captureLuxText();
       }, true);
 
       document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'rp-send-btn') maybeLuxRespond();
+      });
+
+      document.addEventListener('touchend', function(e) {
         if (e.target && e.target.id === 'rp-send-btn') maybeLuxRespond();
       });
 
