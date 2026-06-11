@@ -1,4 +1,0 @@
-[[services]]
-localPort = 3000
-name = "web"
-paths = ["/"]

@@ -18,6 +18,11 @@ function getSession() {
   try { return JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch { return null; }
 }
 
+function currentPage() {
+  const path = window.location.pathname.split('/').pop() || 'index.html';
+  return path.indexOf('.') === -1 ? path + '.html' : path;
+}
+
 function maskIconSvg() {
   return `
     <svg viewBox="0 0 64 64" role="img" aria-label="Faceless Animal widgets">
@@ -203,6 +208,7 @@ function renderChatWidget() {
 
 function renderMessagesWidget() {
   const sess = getSession();
+  const page = currentPage();
   bodyEl().innerHTML = `
     <div class="fas-widget-pane">
       <div class="fas-widget-pane__hero">
@@ -212,7 +218,7 @@ function renderMessagesWidget() {
       </div>
       <div class="fas-widget-pane__actions">
         <a class="fas-widget-hub__btn fas-widget-hub__btn--primary" href="messages.html">Open Messenger</a>
-        <a class="fas-widget-hub__btn" href="chat.html">Open Global Chat</a>
+        <a class="fas-widget-hub__btn" href="${page === 'chat.html' ? 'radio.html' : 'chat.html'}">${page === 'chat.html' ? 'Open Radio' : 'Open Global Chat'}</a>
       </div>
     </div>`;
 }
@@ -253,6 +259,7 @@ function renderVaultWidget() {
 
 function renderProfileWidget() {
   const sess = getSession();
+  const page = currentPage();
   bodyEl().innerHTML = `
     <div class="fas-widget-pane">
       <div class="fas-widget-pane__hero">
@@ -261,7 +268,7 @@ function renderProfileWidget() {
         <p class="fas-widget-pane__text">${sess && sess.username ? 'Your active member session is loaded.' : 'Sign in or pick a handle to unlock member tools.'}</p>
       </div>
       <div class="fas-widget-pane__actions">
-        <a class="fas-widget-hub__btn fas-widget-hub__btn--primary" href="${sess && sess.username ? 'dashboard.html' : 'login.html?redirect=radio.html'}">${sess && sess.username ? 'Dashboard' : 'Sign In'}</a>
+        <a class="fas-widget-hub__btn fas-widget-hub__btn--primary" href="${sess && sess.username ? 'dashboard.html' : 'login.html?redirect=' + encodeURIComponent(page)}">${sess && sess.username ? 'Dashboard' : 'Sign In'}</a>
         <button class="fas-widget-hub__btn" type="button" id="fas-widget-handle">Set Handle</button>
       </div>
     </div>`;
@@ -275,7 +282,7 @@ async function requestChatConnection(targetUsername, ctx) {
   const current = getSession();
   const btn = ctx && ctx.button;
   if (!current || !current.username) {
-    window.location.href = 'login.html?redirect=radio.html';
+    window.location.href = 'login.html?redirect=' + encodeURIComponent(currentPage());
     return;
   }
   if (!targetUsername || targetUsername.toLowerCase() === current.username.toLowerCase()) return;
