@@ -3077,12 +3077,13 @@
 
     // ── Determine chat tier from session ────────────────────────────
     // Paid plans (starter, pro, premium) and active ($5/mo) get full speed.
-    // Free members and guests get 10-second rate limit between messages.
+    // Free signed-in members can chat with a slower cooldown; guests must set a handle first.
     const sess = getSession()
     const plan   = (sess && sess.plan)   || 'free'
     const status = (sess && sess.status) || 'free'
+    const isSignedIn = !!(sess && sess.username)
     const isPaid = !['free','none',''].includes(plan) || status === 'active'
-    const tierLimited    = !isPaid   // free/guest = limited
+    const tierLimited    = !isSignedIn
     const sendDebounceMs = isPaid ? 1200 : 10000
 
     async function requestChatConnection(targetUsername, ctx) {

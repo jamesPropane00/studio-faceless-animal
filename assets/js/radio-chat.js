@@ -593,17 +593,17 @@ export function initRadioChat(config) {
   }
 
   // ── Tier-limited notice ───────────────────────────────────────────
-  // Free users: lock input/send UI so visible state matches permissions.
+  // Guests: lock input/send UI until they sign in or set a handle.
   if (tierLimited && inputEl && inputEl.parentElement) {
     inputEl.disabled = true
     inputEl.readOnly = true
-    inputEl.placeholder = 'Chat is members-only. Upgrade to join the room.'
+    inputEl.placeholder = 'Set a handle or sign in to join the room.'
     inputEl.setAttribute('aria-disabled', 'true')
 
     if (sendBtnEl) {
       sendBtnEl.disabled = true
       sendBtnEl.setAttribute('aria-disabled', 'true')
-      sendBtnEl.title = 'Members-only chat'
+      sendBtnEl.title = 'Set a handle or sign in to chat'
     }
 
     var limitNotice = document.createElement('p')
@@ -617,7 +617,7 @@ export function initRadioChat(config) {
       'border-radius:6px',
       'border:1px solid rgba(255,255,255,0.06)',
     ].join(';')
-    limitNotice.textContent = '🔒 Free access — chat sending is locked. Upgrade to join the room.'
+    limitNotice.textContent = 'Set a handle or sign in to chat. Free members can join the room.'
     inputEl.parentElement.insertBefore(limitNotice, inputEl)
   }
 
