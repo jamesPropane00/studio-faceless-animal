@@ -9,7 +9,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=VT323&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/style.css?v=20260610-waffle-main" />
-  <link rel="stylesheet" href="assets/css/chat-widget.css" />
   <style>
     :root {
       --chat-green: #39ff88;
@@ -54,6 +53,13 @@
       padding: clamp(1rem, 3vw, 2rem) 0 2rem;
       position: relative;
       isolation: isolate;
+    }
+
+    .chat-app {
+      width: min(460px, calc(100% - 1rem));
+      margin: 0 auto;
+      display: grid;
+      gap: 0.75rem;
     }
 
     .chat-page::before {
@@ -178,6 +184,19 @@
       color: var(--chat-soft);
       line-height: 1.55;
       font-size: 0.9rem;
+    }
+
+    .chat-hero-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.95rem;
+    }
+
+    .chat-hero-actions .btn {
+      padding: 0.62rem 0.82rem;
+      font-size: 0.82rem;
+      line-height: 1;
     }
 
     .chat-status-strip {
@@ -792,6 +811,7 @@
 
     .chat-entry-card {
       min-width: 0;
+      width: 100%;
       display: grid;
       gap: 0.45rem;
       align-content: start;
@@ -803,15 +823,20 @@
     }
 
     .chat-entry-card strong {
+      display: block;
       color: var(--text);
       font-size: 0.82rem;
       line-height: 1.15;
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
 
     .chat-entry-card span {
+      display: block;
       color: var(--chat-soft);
       font-size: 0.72rem;
       line-height: 1.45;
+      overflow-wrap: anywhere;
     }
 
     .chat-entry-card .btn {
@@ -932,6 +957,18 @@
       box-shadow: 0 28px 70px rgba(0,0,0,0.62), 0 0 42px rgba(57,255,136,0.08);
     }
 
+    .rp-login-modal-card {
+      width: min(100%, 400px);
+      border-color: rgba(255,92,180,0.22);
+      box-shadow: 0 28px 70px rgba(0,0,0,0.62), 0 0 42px rgba(255,92,180,0.08);
+    }
+
+    .rp-login-fields {
+      display: grid;
+      gap: 0.6rem;
+      margin-bottom: 0.8rem;
+    }
+
     .chat-modal-options {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -957,8 +994,8 @@
     }
 
     .chat-link-row {
-      max-width: 460px;
-      margin: 1rem auto 0;
+      width: min(460px, calc(100% - 1rem));
+      margin: 0 auto 1rem;
       display: flex;
       justify-content: center;
       gap: 0.6rem;
@@ -972,14 +1009,59 @@
 
     @media (max-width: 520px) {
       .chat-page {
-        padding: 0;
+        padding: 0.5rem 0 0;
       }
 
       .chat-shell {
-        min-height: calc(100dvh - var(--nav-h, 72px));
-        border-radius: 0;
+        width: 100%;
+        min-height: calc(100dvh - var(--nav-h, 72px) - 0.5rem);
+        border-radius: 16px 16px 0 0;
         border-left: 0;
         border-right: 0;
+      }
+
+      .chat-app {
+        width: 100%;
+        gap: 0.55rem;
+      }
+
+      .chat-phone-top {
+        padding: 0.7rem 0.8rem 0.55rem;
+      }
+
+      .chat-kicker {
+        font-size: 0.96rem;
+      }
+
+      .chat-title {
+        font-size: 0.94rem;
+      }
+
+      .chat-live {
+        padding: 0.35rem 0.55rem;
+        font-size: 0.58rem;
+      }
+
+      .chat-hero {
+        padding: 0.95rem 0.8rem 0.8rem;
+      }
+
+      .chat-hero h1 {
+        font-size: clamp(1.45rem, 11vw, 2rem);
+      }
+
+      .chat-hero p {
+        font-size: 0.84rem;
+      }
+
+      .chat-status-strip {
+        gap: 0.38rem;
+        margin-top: 0.75rem;
+      }
+
+      .chat-status-strip span {
+        padding: 0.4rem 0.45rem;
+        font-size: 0.92rem;
       }
 
       .chat-status-strip {
@@ -988,6 +1070,19 @@
 
       .chat-room-list-panel {
         padding: 0.55rem;
+      }
+
+      .chat-room-list-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .chat-room-list-actions {
+        width: 100%;
+      }
+
+      .chat-room-mini-btn {
+        flex: 1;
       }
 
       .chat-room-list {
@@ -1004,6 +1099,26 @@
 
       .rp-chat-feed {
         min-height: 280px;
+      }
+
+      .rp-msg-body {
+        max-width: 92%;
+      }
+
+      .rp-input-wrap {
+        padding: 0.6rem;
+      }
+
+      .rp-input {
+        font-size: 1.02rem;
+      }
+
+      .rp-send {
+        width: 46px;
+      }
+
+      .chat-link-row {
+        display: none;
       }
     }
   </style>
@@ -1044,6 +1159,7 @@
   </div>
 
   <main class="chat-page">
+    <div class="chat-app">
     <section class="chat-shell" aria-label="Signal Chat mobile app">
       <header class="chat-phone-top">
         <div class="chat-brand">
@@ -1056,6 +1172,10 @@
       <section class="chat-hero" aria-label="Chat room identity">
         <h1>Signal<br><span>Wiretap</span></h1>
         <p>Old internet backroom energy. Dark lobby. Purple smoke. Underground hip-hop chatter moving through the same global chat as DJ Faceless Animal Radio.</p>
+        <div class="chat-hero-actions" aria-label="Quick actions">
+          <a class="btn btn-primary" href="radio.html">Back To Radio</a>
+          <a class="btn btn-ghost" href="start.html">Claim A Page</a>
+        </div>
         <div class="chat-status-strip" aria-label="Room status">
           <span>Alias Ready</span>
           <span>Encrypted Lobby</span>
@@ -1133,8 +1253,8 @@
             <div class="chat-entry-grid">
               <div class="chat-entry-card">
                 <strong>Member Sign In</strong>
-                <span>Free and paid members use their existing Faceless Animal identity.</span>
-                <a href="login.html?redirect=chat.html" class="btn btn-primary">Member Sign In</a>
+                <span>Use your Faceless Animal account without leaving the room.</span>
+                <button class="btn btn-primary" id="rp-open-login-btn" type="button">Member Sign In</button>
               </div>
               <div class="chat-entry-card">
                 <strong>Guest Alias</strong>
@@ -1171,6 +1291,7 @@
       <a class="btn btn-ghost" href="radio.html">Back To Radio</a>
       <a class="btn btn-primary" href="start.html">Claim A Page</a>
     </div>
+    </div>
   </main>
 
   <div id="rp-handle-modal" class="rp-handle-modal" role="dialog" aria-modal="true" aria-label="Set your chat handle" hidden>
@@ -1196,6 +1317,42 @@
         <p id="rp-modal-error" style="font-size:0.75rem;color:#f87171;margin:0;display:none;"></p>
         <button type="submit" class="btn btn-primary" style="font-size:0.88rem;padding:0.65rem 1rem;">Enter As Guest</button>
         <button type="button" id="rp-modal-cancel" class="btn btn-ghost" style="font-size:0.82rem;padding:0.5rem 1rem;">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="rp-login-modal" class="rp-handle-modal" role="dialog" aria-modal="true" aria-label="Faceless Animal member sign in" hidden>
+    <div class="rp-handle-modal-overlay" id="rp-login-overlay"></div>
+    <div class="rp-handle-modal-card rp-login-modal-card">
+      <p class="rp-gate-title" style="margin:0 0 0.35rem;">Faceless Animal Member Sign In</p>
+      <p class="rp-gate-sub" style="margin:0 0 1rem;">Sign in here and stay on chat. Your session unlocks the room immediately.</p>
+      <form id="rp-login-form" novalidate style="display:flex;flex-direction:column;gap:0.6rem;">
+        <div class="rp-login-fields">
+          <input
+            type="text"
+            id="rp-login-username"
+            class="rp-gate-input"
+            style="width:100%;box-sizing:border-box;"
+            placeholder="username or Signal ID"
+            autocomplete="username"
+            spellcheck="false"
+            autocorrect="off"
+            autocapitalize="none"
+            required
+          />
+          <input
+            type="password"
+            id="rp-login-password"
+            class="rp-gate-input"
+            style="width:100%;box-sizing:border-box;"
+            placeholder="password"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+        <p id="rp-login-error" style="font-size:0.75rem;color:#f87171;margin:0;display:none;"></p>
+        <button type="submit" class="btn btn-primary" style="font-size:0.88rem;padding:0.65rem 1rem;">Sign In</button>
+        <button type="button" id="rp-login-cancel" class="btn btn-ghost" style="font-size:0.82rem;padding:0.5rem 1rem;">Cancel</button>
       </form>
     </div>
   </div>
@@ -1228,10 +1385,7 @@
     </div>
   </div>
 
-  <div id="chat-widget" aria-hidden="true"></div>
-
   <script src="assets/script.js?v=20260322"></script>
-  <script type="module" src="assets/js/chat-widget.js"></script>
   <script src="assets/js/radio-widget.js" defer></script>
   <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
   <script src="assets/js/env.js" onerror="void 0"></script>
@@ -1320,6 +1474,7 @@
   </script>
   <script type="module">
     import { initRadioChat } from './assets/js/radio-chat.js'
+    import { signIn } from './assets/js/auth.js'
     import { requestDMConnection } from './assets/js/dm.js'
 
     function getSession() {
@@ -1335,7 +1490,11 @@
       const current = getSession()
       const btn = ctx && ctx.button
       if (!current || !current.username) {
-        window.location.href = 'login.html?redirect=chat.html'
+        if (typeof window.FAS_OPEN_CHAT_LOGIN === 'function') {
+          window.FAS_OPEN_CHAT_LOGIN()
+        } else {
+          window.location.href = 'login.html'
+        }
         return
       }
       if (!targetUsername || targetUsername.toLowerCase() === current.username.toLowerCase()) return
@@ -1351,13 +1510,13 @@
         return
       }
       if (data && data.state === 'connected') {
-        if (window.confirm('@' + targetUsername + ' is already connected. Open Messenger?')) {
+        if (window.confirm('@' + targetUsername + ' is already connected. Open DMs?')) {
           window.location.href = 'messages.html?to=' + encodeURIComponent(targetUsername)
         }
         return
       }
       if (btn) btn.classList.add('rp-user-pill--requested')
-      window.alert('Connection request sent to @' + targetUsername + '. Messenger unlocks after they accept and trade Signal IDs.')
+      window.alert('Connection request sent to @' + targetUsername + '. Direct messages unlock after they accept and trade Signal IDs.')
     }
 
     const chatController = initRadioChat({
@@ -1824,6 +1983,89 @@
 
           closeModal();
           window.location.reload();
+        });
+      }
+    }());
+
+    (function() {
+      var modal = document.getElementById('rp-login-modal');
+      var overlay = document.getElementById('rp-login-overlay');
+      var openBtn = document.getElementById('rp-open-login-btn');
+      var cancelBtn = document.getElementById('rp-login-cancel');
+      var form = document.getElementById('rp-login-form');
+      var usernameInput = document.getElementById('rp-login-username');
+      var passwordInput = document.getElementById('rp-login-password');
+      var errorEl = document.getElementById('rp-login-error');
+
+      function openModal() {
+        if (modal) {
+          modal.hidden = false;
+          if (errorEl) errorEl.style.display = 'none';
+          if (usernameInput) setTimeout(function() { usernameInput.focus(); }, 80);
+        }
+      }
+      function closeModal() {
+        if (modal) {
+          modal.hidden = true;
+          if (errorEl) errorEl.style.display = 'none';
+          if (form) form.reset();
+        }
+      }
+
+      window.FAS_OPEN_CHAT_LOGIN = openModal;
+
+      if (openBtn) openBtn.addEventListener('click', openModal);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+      if (overlay) overlay.addEventListener('click', closeModal);
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal && !modal.hidden) closeModal();
+      });
+
+      if (form) {
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          if (errorEl) errorEl.style.display = 'none';
+
+          var rawUsername = (usernameInput ? usernameInput.value : '').trim();
+          var password = passwordInput ? passwordInput.value : '';
+
+          if (!rawUsername) {
+            if (errorEl) {
+              errorEl.textContent = 'Enter your Faceless Animal username or Signal ID.';
+              errorEl.style.display = 'block';
+            }
+            return;
+          }
+          if (!password) {
+            if (errorEl) {
+              errorEl.textContent = 'Password is required.';
+              errorEl.style.display = 'block';
+            }
+            return;
+          }
+
+          var submitBtn = form.querySelector('button[type="submit"]');
+          if (submitBtn) submitBtn.disabled = true;
+
+          try {
+            var result = await signIn(rawUsername, password);
+            if (result && result.success) {
+              closeModal();
+              window.location.reload();
+              return;
+            }
+            if (errorEl) {
+              errorEl.textContent = (result && result.error) ? result.error : 'Sign in failed.';
+              errorEl.style.display = 'block';
+            }
+          } catch (err) {
+            if (errorEl) {
+              errorEl.textContent = 'Sign in failed: ' + (err && err.message ? err.message : 'unknown error');
+              errorEl.style.display = 'block';
+            }
+          } finally {
+            if (submitBtn) submitBtn.disabled = false;
+          }
         });
       }
     }());
