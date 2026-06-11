@@ -1375,6 +1375,8 @@
     /* Input bar — sticky-feel at bottom of chat card */
     .rp-input-wrap {
       display: flex;
+      position: relative;
+      z-index: 10030;
       border: 1px solid rgba(255,255,255,0.08);
       border-top: none;
       border-radius: 0 0 12px 12px;
@@ -1398,6 +1400,7 @@
       flex-shrink: 0;
       width: 52px;
       min-height: 44px;
+      touch-action: manipulation;
       background: var(--purple);
       border: none;
       color: #fff;

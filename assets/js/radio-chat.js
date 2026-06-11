@@ -554,6 +554,11 @@ export function initRadioChat(config) {
   // ── Wire up events ────────────────────────────────────────────────
   if (sendBtnEl) {
     sendBtnEl.addEventListener('click', sendMessage)
+    sendBtnEl.addEventListener('pointerup', function(e) {
+      if (e.pointerType === 'mouse') return
+      e.preventDefault()
+      sendMessage()
+    })
   }
   if (inputEl) {
     inputEl.addEventListener('keydown', function(e) {
