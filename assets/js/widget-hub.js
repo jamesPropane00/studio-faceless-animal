@@ -55,6 +55,7 @@ function createHub() {
     </section>
     <button class="fas-widget-hub__toggle" type="button" aria-label="Open widget hub" aria-expanded="false">
       <span class="fas-widget-hub__toggle-icon">${maskIconSvg()}</span>
+      <span class="fas-widget-hub__toggle-label">Widget Hub</span>
       <span class="fas-widget-hub__toggle-text">FA</span>
     </button>`;
 

@@ -1,0 +1,141 @@
+Update the DJ Faceless Animal Radio feature so it feels like a real mobile-first listening room people would actually leave running on their phone while working, driving, or sitting at a desk.
+
+IMPORTANT:
+- Keep this aligned with Faceless Animal Studios and DJ Faceless Animal
+- Make it feel premium, underground, urban, and smooth
+- The radio should feel like part of the platform culture, not a random widget
+- Mobile-first is the priority
+- It should be something users want to keep open in the background visually and functionally
+
+YOUTUBE PLAYLIST:
+Use this playlist for the radio player:
+https://youtube.com/playlist?list=PLuaOk7bBVKJSckyZeRXFsar3x_2zRkDKe&si=Y9RCVzgeNY8RMmgZ
+
+PART 1 — RADIO PLAYER UPGRADE
+
+Build or refine the DJ Faceless Animal Radio section so it includes:
+- the YouTube playlist embedded cleanly
+- a mini boombox player UI using the custom PNG image I am adding
+- a visible volume control or volume slider concept in the UI
+- a clean play/listen area that feels smooth on mobile
+- strong visual hierarchy so it feels like a real radio station section
+
+Requirements:
+- make the player area feel compact and polished
+- optimize it for phones first
+- avoid clutter
+- preserve performance
+- make it feel like something users can leave open while they work
+
+PART 2 — LIVE CHAT / ROOMS CONCEPT
+
+Build the chat section so it supports a room-based concept.
+
+Base/default room:
+DJ Faceless Animal Radio (Live Chat)
+
+Also allow the UI to support creating additional rooms.
+
+For phase one:
+- if full backend room creation is not ready, build the room system as a strong staged UI shell
+- include a room list or room selector
+- include the default room already active
+- include a “Create Room” action/button or modal shell
+- include sample room cards or room tabs if needed
+- make it feel like users can create their own chat room space inside the radio/community feature
+
+Examples of room ideas:
+- DJ Faceless Animal Radio
+- Underground Mix Room
+- Gaming Vibes Room
+- Late Night Room
+
+IMPORTANT:
+- if true real-time room creation already has enough backend support, wire it properly
+- if not, build it as a clean scalable shell ready for backend later
+- do not fake broken functionality
+- make it feel complete even if some room features are staged
+
+PART 3 — MOBILE-FIRST EXPERIENCE
+
+This feature must be 100% mobile friendly and smooth.
+
+Focus on:
+- compact layout
+- strong tap targets
+- clean sticky/fixed boombox behavior if appropriate
+- radio player should not take over the whole screen
+- chat should scroll smoothly
+- room tabs/selectors should be easy to use on mobile
+- text should remain readable
+- volume control should be easy to use on a phone
+- overall experience should feel light, fluid, and polished
+
+The goal:
+This should feel like something someone actually leaves open on their phone while at work, at a desk, or just hanging out.
+
+PART 4 — TONE / COPY
+
+Use language that feels like:
+- underground station
+- live room
+- community energy
+- real culture
+- not corporate
+- not generic livestream software
+
+Suggested tone:
+- “Tap in with the station”
+- “Live room for sound, reactions, and underground energy”
+- “Leave it running”
+- “Move with the mix”
+
+Keep future-direction copy subtle but present:
+Eventually users will be able to upload tracks, vote in rooms, and push top songs of the week to the front.
+
+PART 5 — BOOMBOX IMAGE INTEGRATION
+
+Use the custom boombox PNG as the visual anchor of the radio feature.
+
+Requirements:
+- integrate the image cleanly
+- preserve transparency if present
+- keep it sharp on mobile
+- design the surrounding UI so it feels like the boombox is actually part of the player
+- if needed, place the boombox in a floating or featured position that works on both homepage and radio section
+
+PART 6 — UX DETAILS
+
+If it improves the result, add:
+- On Air badge
+- Live indicator
+- room counter or listener vibe text
+- subtle waveform / equalizer accent
+- station header
+- room selector tabs
+- Create Room button
+- compact volume slider
+- smooth transitions
+
+But do not overbuild or bloat the experience.
+
+PART 7 — TECHNICAL RULES
+
+- keep everything stable
+- do not break existing site flows
+- do not expose Stripe keys
+- keep existing payment and Supabase systems intact
+- if backend for true room creation is not ready, build the cleanest scalable staged version
+- keep the code modular so real room logic can be plugged in later
+- prioritize mobile performance and usability
+- make the radio + chat feel like a real feature, not a placeholder
+
+FINAL GOAL
+
+The DJ Faceless Animal Radio feature should feel like:
+- a real underground station
+- a mobile-friendly listening room
+- a community feature inside the larger platform
+- something people actually want to keep open on their phone
+
+It should feel alive, smooth, branded, and ready to grow into track uploads, voting, and room-based radio culture later.

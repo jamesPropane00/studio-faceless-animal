@@ -1,0 +1,13 @@
+{
+  "name": "faceless-animal-studios",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @workspace/studio run dev",
+    "build": "node scripts/generate-env.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.101.1",
+    "node-fetch": "^2.7.0"
+  }
+}

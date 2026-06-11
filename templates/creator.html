@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+      // Canonical member session gate
+      const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+      if (!fasUser || !fasUser.account_id) {
+        window.location.replace('../login.html');
+      }
+    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Creator page — Faceless Animal Studios" />
+  <title>Loading… — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/style.css?v=20260322" />
+  <style>
+    body[data-loading] main,
+    body[data-loading] #powered-by-bar { opacity: 0; }
+    body[data-state="loaded"] main,
+    body[data-state="loaded"] #powered-by-bar { opacity: 1; transition: opacity 0.35s ease; }
+    body[data-state="not-found"] main,
+    body[data-state="not-found"] #powered-by-bar { display: none; }
+    .creator-avatar-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    #page-loading-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg-1); display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 1.25rem;
+      opacity: 1; transition: opacity 0.3s ease; pointer-events: none;
+    }
+    body[data-state="loaded"] #page-loading-overlay,
+    body[data-state="not-found"] #page-loading-overlay { opacity: 0; }
+    .page-loader-row { display: flex; gap: 0.6rem; }
+    .page-loader-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--gold);
+      animation: loader-pulse 1.2s ease-in-out infinite;
+    }
+    .page-loader-dot:nth-child(2) { animation-delay: 0.2s; }
+    .page-loader-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes loader-pulse { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+    #page-loading-msg { font-size: 0.72rem; color: var(--text-3); letter-spacing: 0.06em; }
+    .sc-work-real-img { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--r-lg) var(--r-lg) 0 0; }
+  </style>
+</head>
+<body
+  class="artist-page"
+  data-page-type="creator"
+  data-loading="true"
+>
+  <div id="template-editor-controls" style="margin:2rem auto 1rem auto;max-width:600px;display:flex;gap:0.5rem;align-items:center;justify-content:center;">
+    <span id="templatePageStatus" style="font-weight:700;font-size:0.9em;color:var(--gold-bright);">Draft</span>
+    <button id="templateSaveDraftBtn" class="btn btn-ghost btn-sm">Save Draft</button>
+    <button id="templatePublishBtn" class="btn btn-primary btn-sm">Publish</button>
+    <button id="templateUnpublishBtn" class="btn btn-ghost btn-sm">Unpublish</button>
+    <button id="templateViewLiveBtn" class="btn btn-ghost btn-sm">View Live Page</button>
+    <button id="insertImageBtn" class="btn btn-primary btn-sm" style="background:var(--purple-bright);color:#fff;">Insert Image</button>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="page-loading-overlay" role="status" aria-live="polite">
+    <div class="page-loader-row">
+      <div class="page-loader-dot"></div>
+      <div class="page-loader-dot"></div>
+      <div class="page-loader-dot"></div>
+    </div>
+    <p id="page-loading-msg">Faceless Animal Studios</p>
+  </div>
+
+  <!-- 404 / Not Found state -->
+  <div id="page-not-found" hidden aria-live="assertive">
+    <nav class="navbar" role="navigation">
+      <div class="container"><div class="navbar-inner">
+        <a href="../index.html" class="navbar-logo">Faceless <span>Animal</span></a>
+        <ul class="navbar-links" role="list">
+          <li><a href="../apps.html">Apps</a></li>
+          <li><a href="../network.html">Network</a></li>
+          <li><a href="../index.html" class="nav-cta">← Studio</a></li>
+        </ul>
+      </div></div>
+    </nav>
+    <div class="container" style="padding-top:10rem;padding-bottom:6rem;text-align:center;max-width:520px;">
+      <p class="section-label" style="margin-bottom:1.25rem;">Page Not Found</p>
+      <h1 style="font-size:2.8rem;font-weight:900;letter-spacing:-0.05em;margin-bottom:1.5rem;">No Creator Here.</h1>
+      <p style="color:var(--text-2);line-height:1.85;margin-bottom:2.5rem;">
+        The page <code style="font-size:0.85em;color:var(--gold);background:var(--bg-3);padding:0.1em 0.4em;border-radius:4px;" data-f="nf-slug"></code>
+        doesn't match any active creator in the network.
+        The link may be wrong, or this page is still being built.
+      </p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <a href="../network.html" class="btn btn-primary">Browse the Network →</a>
+        <a href="../start.html" class="btn btn-ghost">Get Your Own Page</a>
+      </div>
+    </div>
+    <footer class="footer" role="contentinfo">
+      <div class="container"><div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col" aria-label="Footer navigation">
+          <a href="../network.html">Network</a>
+          <a href="../pricing.html">Pricing</a>
+          <a href="../start.html">Get Started</a>
+        </nav>
+      </div></div>
+    </footer>
+  </div>
+
+  <!-- ============================================================
+       NAVIGATION
+  ============================================================ -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="#hero" class="navbar-logo">
+          <span data-f="display_name">Creator</span>
+        </a>
+        <ul class="navbar-links" role="list">
+          <li><a href="../apps.html">Apps</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#work">Work</a></li>
+          <li><a href="#links">Links</a></li>
+          <li><a href="../network.html">Network</a></li>
+          <li><a href="../index.html" class="nav-cta">← Studio</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="../apps.html">Apps</a>
+    <a href="#about">About</a>
+    <a href="#work">Work</a>
+    <a href="#links">Links</a>
+    <a href="../network.html">Network</a>
+    <a href="../index.html">← Studio</a>
+  </div>
+
+  <main>
+
+    <!-- ============================================================
+         HERO
+    ============================================================ -->
+    <section class="ap-hero" id="hero" aria-label="Creator hero">
+      <div class="ap-hero-glow" aria-hidden="true"
+           style="background:radial-gradient(ellipse at 35% 50%, var(--page-accent-dim,rgba(220,100,80,0.07)) 0%, transparent 65%);"></div>
+      <div class="ap-hero-grain" aria-hidden="true"></div>
+
+      <div class="container ap-hero-inner">
+        <div class="ap-hero-content">
+
+          <div class="ap-hero-eyebrow" style="color:var(--page-accent,var(--gold));">
+            <span class="eyebrow-dot" aria-hidden="true"
+                  style="background:var(--page-accent,var(--gold));box-shadow:0 0 6px var(--page-accent-dim,rgba(220,100,80,0.5));"></span>
+            Faceless Animal Studios
+          </div>
+
+          <h1 class="ap-hero-heading" data-f="hero_heading">Loading</h1>
+
+          <p class="ap-hero-sub" data-f="tagline"></p>
+
+          <p class="ap-hero-location">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12" aria-hidden="true" style="flex-shrink:0;opacity:0.65"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            <span data-f="location"></span>
+          </p>
+
+          <div class="ap-hero-actions">
+            <a href="#work" class="btn btn-primary btn-lg"
+               style="background:linear-gradient(135deg, color-mix(in srgb, var(--page-accent,var(--gold)) 60%, #000), var(--page-accent,var(--gold)));border:none;">
+              View My Work
+            </a>
+            <a href="#links" class="btn btn-ghost btn-lg">Follow Me</a>
+          </div>
+
+          <div class="ap-hero-tags" aria-label="Creator type tags" data-slot="tags"></div>
+
+          <div class="ap-hero-socials" aria-label="Follow on social" data-slot="social_btns"></div>
+
+          <!-- Free plan badge — shown only when body[data-plan="free"] -->
+          <div class="fas-free-badge" aria-label="Powered by Faceless Animal Studios (free plan)">
+            <span class="fas-free-badge-dot" aria-hidden="true"></span>
+            Free plan via <a href="../index.html" class="fas-free-badge-link">Faceless Animal Studios</a>
+          </div>
+
+          <!-- Premium custom domain badge -->
+          <div class="fas-domain-badge" data-plan-feature="custom_domain" hidden>
+            <span class="fas-domain-badge-icon" aria-hidden="true">↗</span>
+            <a data-f="custom_domain" class="fas-domain-badge-link" href="#"></a>
+          </div>
+        </div>
+
+        <!-- Right side: avatar -->
+        <div class="ap-hero-visual" aria-label="Profile avatar">
+          <div class="sc-hero-avatar" data-slot="avatar"
+               style="position:relative;overflow:hidden;border-color:var(--page-accent-dim,rgba(201,169,110,0.15));color:var(--page-accent,var(--gold));font-size:2rem;font-weight:900;"></div>
+        </div>
+      </div>
+
+      <div class="ap-hero-marquee" aria-hidden="true">
+        <div class="marquee-track" data-slot="marquee"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         ABOUT
+    ============================================================ -->
+    <section class="section section-alt" id="about" aria-labelledby="about-heading">
+      <div class="container">
+        <div class="ap-bio">
+
+          <div class="ap-bio-text">
+            <p class="section-label">About</p>
+            <h2 id="about-heading">The Work,<br /><em>The Vision.</em></h2>
+            <div data-slot="bio"></div>
+          </div>
+
+          <div>
+            <div data-section="quick_info" data-plan-gate="starter" style="background:var(--bg-3);border:1.5px solid var(--border);border-radius:var(--r-xl);padding:1.75rem 2rem;margin-bottom:1.5rem;">
+              <p class="section-label" style="margin-bottom:1.1rem;">Quick Info</p>
+              <ul class="check-list" data-slot="quick_info"></ul>
+            </div>
+            <div class="stat-strip" data-section="stats" data-plan-gate="starter" style="grid-template-columns:repeat(3,1fr);" data-slot="stats"></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         WORK / PORTFOLIO
+    ============================================================ -->
+    <section class="section" id="work" data-section="works" data-plan-gate="starter" hidden aria-labelledby="work-heading">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-label" style="color:var(--page-accent,var(--gold))">Work</p>
+          <h2 id="work-heading">What I've<br /><em>Made.</em></h2>
+          <p class="section-sub">Portfolio, projects, and ongoing work.</p>
+        </div>
+        <div class="sc-work-grid" role="list" data-slot="works"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         TRACKS — hidden until page-renderer fills it from _index.json
+    ============================================================ -->
+    <section class="section" id="music" data-section="tracks" hidden aria-labelledby="tracks-heading">
+      <div class="container" style="max-width:640px;">
+        <div class="section-header">
+          <p class="section-label" style="color:var(--page-accent,var(--gold))">Music</p>
+          <h2 id="tracks-heading">Uploaded<br /><em>Tracks.</em></h2>
+        </div>
+        <div data-slot="tracks" style="display:flex;flex-direction:column;gap:1rem;"></div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================
+         LINKS / PLATFORMS
+    ============================================================ -->
+    <section class="section section-alt" id="links" data-section="links" hidden aria-labelledby="links-heading">
+      <div class="container" style="max-width:640px;">
+        <div class="section-header text-center">
+          <p class="section-label">Platforms</p>
+          <h2 id="links-heading">Find the Work<br /><em>Everywhere.</em></h2>
+          <p class="section-sub">Follow, commission, or connect across platforms.</p>
+        </div>
+        <div class="platform-list" role="list" data-slot="links"></div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ============================================================
+       POWERED BY BAR (free plan only)
+  ============================================================ -->
+  <div id="powered-by-bar" class="powered-by-bar" role="contentinfo" aria-label="Platform attribution">
+    <div class="container">
+      <div class="powered-by-inner">
+        <span class="powered-by-dot" aria-hidden="true"></span>
+        Powered by
+        <a href="../index.html" class="powered-by-link">Faceless Animal Studios</a>
+        <span class="powered-by-dot" aria-hidden="true"></span>
+        <span data-f="page_slug"></span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+          <p style="font-size:0.68rem;color:var(--text-3);margin-top:0.5rem;" data-f="page_slug"></p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="../about.html">About</a>
+          <a href="../network.html">Network</a>
+          <a href="../store.html">Supply</a>
+          <a href="../pricing.html">Pricing</a>
+          <a href="../drops.html">Drops</a>
+          <a href="../faq.html">FAQ</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <a href="../start.html" class="btn btn-primary btn-sm">Get Your Page →</a>
+          <p style="font-size:0.68rem;color:var(--text-3);margin-top:1rem;line-height:1.8;">
+            djfacelessanimal@gmail.com<br />
+            Providence, RI
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024–2026 Faceless Animal Studios. Built independently.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Track report modal (UI-only, local state) -->
+  <div id="creator-track-report-modal" style="display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,0.72);align-items:center;justify-content:center;padding:1.5rem;" role="dialog" aria-modal="true" aria-labelledby="creator-track-report-title">
+    <div style="background:var(--bg-2,#111);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:1.25rem 1.25rem 1rem;width:100%;max-width:420px;">
+      <h2 id="creator-track-report-title" style="font-size:1.05rem;font-weight:800;color:var(--text,#fff);margin:0 0 0.35rem;">Report Track</h2>
+      <p id="creator-track-report-target" style="font-size:0.75rem;color:var(--text-3,#777);margin:0 0 0.85rem;"></p>
+      <div style="display:flex;flex-direction:column;gap:0.65rem;">
+        <label for="creator-track-report-reason" style="font-size:0.72rem;color:var(--text-3,#777);text-transform:uppercase;letter-spacing:0.06em;">Reason</label>
+        <select id="creator-track-report-reason" style="width:100%;background:var(--bg-3,#171717);border:1px solid var(--border,rgba(255,255,255,0.14));border-radius:8px;padding:0.55rem 0.65rem;color:var(--text,#fff);font-family:inherit;font-size:0.84rem;">
+          <option>Spam</option>
+          <option>Stolen Content</option>
+          <option>Explicit Content</option>
+          <option>Other</option>
+        </select>
+        <label for="creator-track-report-details" style="font-size:0.72rem;color:var(--text-3,#777);text-transform:uppercase;letter-spacing:0.06em;">Additional details (optional)</label>
+        <textarea id="creator-track-report-details" rows="3" placeholder="Add context (optional)" style="resize:vertical;background:var(--bg-3,#171717);border:1px solid var(--border,rgba(255,255,255,0.14));border-radius:8px;padding:0.55rem 0.65rem;color:var(--text,#fff);font-family:inherit;font-size:0.84rem;"></textarea>
+      </div>
+      <div style="display:flex;gap:0.6rem;justify-content:flex-end;margin-top:0.95rem;">
+        <button class="btn btn-ghost btn-sm" id="creator-track-report-cancel" type="button">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="creator-track-report-submit" type="button">Submit Report</button>
+      </div>
+    </div>
+  </div>
+  <span id="creator-track-report-note" style="display:none;position:fixed;left:50%;bottom:1.15rem;transform:translateX(-50%);background:rgba(16,16,16,0.94);border:1px solid rgba(255,255,255,0.14);border-radius:999px;padding:0.3rem 0.7rem;font-size:0.72rem;color:var(--text-2,#aaa);z-index:9300;pointer-events:none;"></span>
+
+
+  <script src="../assets/js/env.js"></script>
+  <script>
+  // Quick Template editor: page status and publish logic
+  let templatePageState = {
+    is_published: false,
+    slug: '',
+    updated_at: null
+  };
+  function updateTemplatePageStatusUI() {
+    const statusEl = document.getElementById('templatePageStatus');
+    const viewBtn = document.getElementById('templateViewLiveBtn');
+    if (templatePageState.is_published) {
+      statusEl.textContent = 'Published';
+      statusEl.style.color = '#22c55e';
+      viewBtn.disabled = false;
+      viewBtn.textContent = 'View Live Page';
+    } else {
+      statusEl.textContent = 'Draft';
+      statusEl.style.color = 'var(--gold-bright)';
+      viewBtn.disabled = true;
+      viewBtn.textContent = 'Publish first';
+    }
+  }
+  function getTemplateSlug() {
+    // You may want to get this from an input or the current page context
+    // For now, use fas_user.username as the slug
+    const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+    return fasUser && fasUser.username ? fasUser.username : '';
+  }
+  document.getElementById('templateSaveDraftBtn').onclick = function() {
+    const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+    const slug = getTemplateSlug();
+    const data = {
+      is_published: false,
+      slug,
+      updated_at: new Date().toISOString(),
+      account_id: fasUser && fasUser.account_id ? fasUser.account_id : null,
+      signal_id: fasUser && fasUser.signal_id ? fasUser.signal_id : null,
+      username: fasUser && fasUser.username ? fasUser.username : null
+    };
+    localStorage.setItem('faceless-template-project', JSON.stringify(data));
+    templatePageState = { is_published: false, slug, updated_at: data.updated_at };
+    updateTemplatePageStatusUI();
+    alert('Draft saved!');
+  };
+  document.getElementById('templatePublishBtn').onclick = function() {
+    const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+    const slug = getTemplateSlug();
+    const data = {
+      is_published: true,
+      slug,
+      updated_at: new Date().toISOString(),
+      account_id: fasUser && fasUser.account_id ? fasUser.account_id : null,
+      signal_id: fasUser && fasUser.signal_id ? fasUser.signal_id : null,
+      username: fasUser && fasUser.username ? fasUser.username : null
+    };
+    localStorage.setItem('faceless-template-project', JSON.stringify(data));
+    templatePageState = { is_published: true, slug, updated_at: data.updated_at };
+    updateTemplatePageStatusUI();
+    alert('Page published!');
+  };
+  document.getElementById('templateUnpublishBtn').onclick = function() {
+    const raw = localStorage.getItem('faceless-template-project');
+    if (!raw) return alert('No project found');
+    const data = JSON.parse(raw);
+    data.is_published = false;
+    data.updated_at = new Date().toISOString();
+    localStorage.setItem('faceless-template-project', JSON.stringify(data));
+    templatePageState = { is_published: false, slug: data.slug, updated_at: data.updated_at };
+    updateTemplatePageStatusUI();
+    alert('Page unpublished.');
+  };
+  document.getElementById('templateViewLiveBtn').onclick = function() {
+    if (!templatePageState.is_published) return;
+    const fasUser = JSON.parse(localStorage.getItem('fas_user') || 'null');
+    if (!fasUser || !fasUser.account_id) {
+      window.location.replace('../login.html');
+      return;
+    }
+    const publicHandle = fasUser.username || fasUser.signal_id;
+    let url = `/${publicHandle}`;
+    if (templatePageState.slug) url = `/${publicHandle}/${templatePageState.slug}`;
+    window.open(url, '_blank');
+  };
+  function loadTemplatePageStateFromStorage() {
+    const raw = localStorage.getItem('faceless-template-project');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    templatePageState = {
+      is_published: !!data.is_published,
+      slug: data.slug || '',
+      updated_at: data.updated_at || null
+    };
+    updateTemplatePageStatusUI();
+  }
+  // On load, initialize status UI
+  loadTemplatePageStateFromStorage();
+  </script>
+  <script src="../assets/script.js?v=20260322" defer></script>
+  <script type="module">
+    import { openMediaPicker } from '../assets/js/media-picker.js';
+    // Insert Image button logic
+    const insertImageBtn = document.getElementById('insertImageBtn');
+    if (insertImageBtn) {
+      insertImageBtn.onclick = () => {
+        openMediaPicker({
+          onSelect: (media) => {
+            if (!media || !media.url) return;
+            // Insert image at cursor in main content area (about section)
+            const aboutSection = document.querySelector('.ap-bio-text div[data-slot="bio"]');
+            if (aboutSection) {
+              // Insert an <img> at the end for demo; in production, insert at cursor
+              const img = document.createElement('img');
+              img.src = media.url;
+              img.alt = media.alt || '';
+              img.style = 'max-width:100%;height:auto;border-radius:0.5em;box-shadow:0 2px 8px rgba(0,0,0,0.07);margin:0.5em auto;display:block;';
+              aboutSection.appendChild(img);
+            }
+          }
+        });
+      };
+    }
+  </script>
+  <script type="module" src="../assets/js/page-renderer.js"></script>
+</body>
+</html>

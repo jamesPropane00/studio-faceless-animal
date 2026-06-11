@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Faceless Animal Studios Apps - radio, TV, chat, messenger, dashboard, vault, creator tools, games, and member utilities." />
+  <title>Apps - Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css?v=20260610-waffle-main" />
+  <style>
+    :root {
+      --apps-bg: #080a10;
+      --apps-panel: rgba(14,16,24,0.92);
+      --apps-panel-2: rgba(20,22,32,0.88);
+      --apps-border: rgba(255,255,255,0.1);
+      --apps-text: #f7f8ff;
+      --apps-muted: #aab5cf;
+      --apps-cyan: #21f4d0;
+      --apps-purple: #8b5cf6;
+      --apps-gold: #f5c451;
+      --apps-red: #ff2f4f;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      color: var(--apps-text);
+      background:
+        linear-gradient(rgba(33,244,208,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px),
+        radial-gradient(circle at 16% 4%, rgba(33,244,208,0.16), transparent 34%),
+        radial-gradient(circle at 88% 10%, rgba(255,47,79,0.12), transparent 30%),
+        linear-gradient(180deg, #11131c 0%, #080a10 48%, #05060a 100%);
+      background-size: 44px 44px, 44px 44px, auto, auto, auto;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .apps-shell { width: min(1180px, calc(100% - 1.2rem)); margin: 0 auto; }
+
+    .apps-hero {
+      min-height: min(620px, calc(100dvh - 70px));
+      display: grid;
+      align-content: center;
+      gap: 1.25rem;
+      padding: clamp(2rem, 7vw, 5rem) 0 2rem;
+    }
+
+    .apps-hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .apps-hero-copy,
+    .apps-status-panel,
+    .apps-section-panel {
+      border: 1px solid var(--apps-border);
+      border-radius: 8px;
+      background: var(--apps-panel);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+    }
+
+    .apps-hero-copy { padding: clamp(1rem, 3vw, 1.6rem); display: grid; align-content: end; min-height: 420px; }
+    .apps-kicker {
+      margin: 0 0 0.65rem;
+      color: var(--apps-cyan);
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .apps-title {
+      margin: 0;
+      max-width: 780px;
+      font-size: clamp(2.55rem, 7vw, 6rem);
+      line-height: 0.9;
+      letter-spacing: 0;
+      font-weight: 950;
+    }
+    .apps-title span { color: var(--apps-cyan); }
+    .apps-sub {
+      margin: 1rem 0 0;
+      max-width: 620px;
+      color: #cfd6ea;
+      font-size: clamp(0.98rem, 2vw, 1.14rem);
+      line-height: 1.65;
+    }
+    .apps-actions { display: flex; gap: 0.65rem; flex-wrap: wrap; margin-top: 1.2rem; }
+
+    .apps-status-panel { padding: 1rem; display: grid; gap: 0.75rem; }
+    .apps-status-card {
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.045);
+      padding: 0.95rem;
+    }
+    .apps-status-label {
+      margin: 0 0 0.35rem;
+      color: var(--apps-muted);
+      font-size: 0.72rem;
+      font-weight: 850;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .apps-status-title { margin: 0; font-size: 1.05rem; font-weight: 900; }
+    .apps-status-text { margin: 0.45rem 0 0; color: var(--apps-muted); font-size: 0.84rem; line-height: 1.55; }
+
+    .apps-section { padding: 0 0 3rem; }
+    .apps-section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 1rem;
+      margin: 0 0 1rem;
+    }
+    .apps-section-title { margin: 0; font-size: clamp(1.75rem, 4vw, 3rem); line-height: 1; font-weight: 950; }
+    .apps-section-note { margin: 0; max-width: 520px; color: var(--apps-muted); line-height: 1.55; font-size: 0.9rem; }
+
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+    .app-card {
+      min-height: 310px;
+      border: 1px solid var(--apps-border);
+      border-radius: 8px;
+      background: var(--apps-panel-2);
+      padding: 0.95rem;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 0.8rem;
+      overflow: hidden;
+    }
+    .app-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.8rem; }
+    .app-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #05060a;
+      background: linear-gradient(135deg, var(--apps-purple), var(--apps-cyan));
+      font-size: 0.84rem;
+      font-weight: 950;
+      flex: 0 0 auto;
+    }
+    .app-tags { display: flex; gap: 0.35rem; flex-wrap: wrap; justify-content: flex-end; }
+    .app-tag {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      padding: 0.26rem 0.45rem;
+      color: var(--apps-muted);
+      background: rgba(255,255,255,0.045);
+      font-size: 0.64rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .app-tag--live { color: var(--apps-cyan); border-color: rgba(33,244,208,0.34); }
+    .app-tag--login { color: var(--apps-gold); border-color: rgba(245,196,81,0.32); }
+    .app-tag--member { color: #d8c6ff; border-color: rgba(139,92,246,0.34); }
+    .app-name { margin: 0; font-size: 1.18rem; font-weight: 950; }
+    .app-desc { margin: 0.55rem 0 0; color: #cfd6ea; font-size: 0.88rem; line-height: 1.58; }
+    .app-best { margin: 0.72rem 0 0; color: var(--apps-muted); font-size: 0.76rem; line-height: 1.45; }
+    .app-card-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+    .apps-flow {
+      margin-top: 1rem;
+      border: 1px solid var(--apps-border);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.035);
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.7rem;
+    }
+    .apps-flow-step {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.035);
+      padding: 0.8rem;
+    }
+    .apps-flow-step strong { display: block; color: var(--apps-cyan); font-size: 0.78rem; margin-bottom: 0.35rem; }
+    .apps-flow-step span { color: var(--apps-muted); font-size: 0.78rem; line-height: 1.45; }
+
+    @media (max-width: 900px) {
+      .apps-hero-grid { grid-template-columns: 1fr; }
+      .apps-hero-copy { min-height: 360px; }
+      .apps-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .apps-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 620px) {
+      .apps-hero { min-height: auto; padding-top: 1rem; }
+      .apps-hero-copy { min-height: 330px; }
+      .apps-section-head { display: grid; }
+      .apps-grid { grid-template-columns: 1fr; }
+      .apps-flow { grid-template-columns: 1fr; }
+      .app-card { min-height: 0; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="apps.html" aria-current="page" style="color:var(--purple-bright);">Apps</a></li>
+          <li><a href="radio.html">Radio</a></li>
+          <li><a href="chat.html">Chat</a></li>
+          <li><a href="tv.html">TV</a></li>
+          <li><a href="neon-dreams.html">Neon Dreams</a></li>
+          <li><a href="news.html">News</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="login.html" class="nav-cta">Enter The System</a></li>
+        </ul>
+        <button class="nav-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
+    <a href="directory.html">Directory</a>
+    <a href="apps.html" aria-current="page" style="color:var(--purple-bright);">Apps</a>
+    <a href="radio.html">Radio</a>
+    <a href="chat.html">Chat</a>
+    <a href="tv.html">TV</a>
+    <a href="neon-dreams.html">Neon Dreams</a>
+    <a href="news.html">News</a>
+    <a href="store.html">Store</a>
+    <a href="login.html" class="waffle-menu-cta">Enter The System</a>
+  </div>
+
+  <main>
+    <section class="apps-hero" aria-label="Apps overview">
+      <div class="apps-shell apps-hero-grid">
+        <div class="apps-hero-copy">
+          <p class="apps-kicker">Platform Apps</p>
+          <h1 class="apps-title">All The Tools In <span>One System.</span></h1>
+          <p class="apps-sub">Radio, TV, chat, Messenger, Signal Phone, Pulse, dashboard tools, vault access, games, creator pages, and member utilities. Public apps open right away. Private apps route through login so user data stays tied to the right account.</p>
+          <div class="apps-actions">
+            <a class="btn btn-primary btn-lg" href="login.html?redirect=apps.html">Sign In</a>
+            <a class="btn btn-ghost btn-lg" href="pricing.html">Compare Access</a>
+          </div>
+        </div>
+        <aside class="apps-status-panel" aria-label="Access guide">
+          <div class="apps-status-card">
+            <p class="apps-status-label">Public</p>
+            <h2 class="apps-status-title">Open tools</h2>
+            <p class="apps-status-text">Directory, Radio, TV, Chat, Pulse, Store, News, Drops, and public games can be opened directly.</p>
+          </div>
+          <div class="apps-status-card">
+            <p class="apps-status-label">Login</p>
+            <h2 class="apps-status-title">Account tools</h2>
+            <p class="apps-status-text">Messenger, Dashboard, Wallet, My Pages, and My Media need a signed-in account because they read or write private data.</p>
+          </div>
+          <div class="apps-status-card">
+            <p class="apps-status-label">Members</p>
+            <h2 class="apps-status-title">Active access</h2>
+            <p class="apps-status-text">Some games, uploads, file attachments, drops, and advanced creator tools are best routed through membership.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="apps-section" aria-labelledby="live-apps-heading">
+      <div class="apps-shell">
+        <div class="apps-section-head">
+          <h2 class="apps-section-title" id="live-apps-heading">Live Apps</h2>
+          <p class="apps-section-note">These are the main surfaces people can use now. Each card explains what it does and sends the user to the right place.</p>
+        </div>
+        <div class="apps-grid" role="list">
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">RD</span><div class="app-tags"><span class="app-tag app-tag--live">Live</span><span class="app-tag">Public</span></div></div>
+            <div><h3 class="app-name">Radio</h3><p class="app-desc">The live audio room for DJ Faceless Animal Radio, stations, chat, listeners, and the floating widget hub.</p><p class="app-best">Best for: listening, discovering tracks, and joining the room.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="radio.html">Open Radio</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">TV</span><div class="app-tags"><span class="app-tag app-tag--live">Live</span><span class="app-tag">Public</span></div></div>
+            <div><h3 class="app-name">TV</h3><p class="app-desc">A video channel built for continuous playback, archive browsing, and Faceless Animal visual drops.</p><p class="app-best">Best for: watching channel videos and checking the archive.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="tv.html">Open TV</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">CH</span><div class="app-tags"><span class="app-tag app-tag--live">Live</span><span class="app-tag">Public</span></div></div>
+            <div><h3 class="app-name">Global Chat</h3><p class="app-desc">A room-based chat app connected to Radio, with a visible user list and private connection requests.</p><p class="app-best">Best for: public conversation before moving to Messenger.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="chat.html">Open Chat</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">DM</span><div class="app-tags"><span class="app-tag app-tag--login">Login</span><span class="app-tag">Private</span></div></div>
+            <div><h3 class="app-name">Messenger</h3><p class="app-desc">Private messaging with request-based Signal ID exchange, inbox threads, file support for active members, and call requests.</p><p class="app-best">Best for: one-to-one contact after both users approve the connection.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="login.html?redirect=messages.html">Sign In To Message</a><a class="btn btn-ghost" href="messages.html">Open Inbox</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">DB</span><div class="app-tags"><span class="app-tag app-tag--login">Login</span><span class="app-tag">Account</span></div></div>
+            <div><h3 class="app-name">Dashboard</h3><p class="app-desc">The member control center for profile state, quick access, pages, role-based tools, and account management.</p><p class="app-best">Best for: managing the account and launching private tools.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="login.html?redirect=dashboard.html">Sign In To Dashboard</a><a class="btn btn-ghost" href="dashboard.html">Open Dashboard</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">DR</span><div class="app-tags"><span class="app-tag app-tag--live">Live</span><span class="app-tag">Public</span></div></div>
+            <div><h3 class="app-name">Directory</h3><p class="app-desc">The discovery layer for creators, artists, businesses, public pages, and network activity.</p><p class="app-best">Best for: finding people and public platform pages.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="directory.html">Browse Directory</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">GM</span><div class="app-tags"><span class="app-tag app-tag--live">Live</span><span class="app-tag app-tag--member">Member</span></div></div>
+            <div><h3 class="app-name">Games</h3><p class="app-desc">Studio-built web games and interactive experiments that live inside the platform ecosystem.</p><p class="app-best">Best for: quick play, member perks, and new interactive releases.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="games.html">Browse Games</a><a class="btn btn-ghost" href="pricing.html">Unlock Access</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">SC</span><div class="app-tags"><span class="app-tag app-tag--login">Login</span><span class="app-tag">Wallet</span></div></div>
+            <div><h3 class="app-name">Wallet</h3><p class="app-desc">Signal Credit and vault access for member balances, account value, and future platform economy tools.</p><p class="app-best">Best for: checking wallet state and vault features.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="login.html?redirect=wallet.html">Sign In To Wallet</a><a class="btn btn-ghost" href="wallet.html">Open Wallet</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">MP</span><div class="app-tags"><span class="app-tag app-tag--login">Login</span><span class="app-tag">Creator</span></div></div>
+            <div><h3 class="app-name">My Pages</h3><p class="app-desc">Creator page management for people building profile pages, business pages, and platform identity surfaces.</p><p class="app-best">Best for: editing public page presence.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="login.html?redirect=my-pages.html">Sign In To Pages</a><a class="btn btn-ghost" href="my-pages.html">Open Pages</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">MM</span><div class="app-tags"><span class="app-tag app-tag--login">Login</span><span class="app-tag app-tag--member">Media</span></div></div>
+            <div><h3 class="app-name">My Media</h3><p class="app-desc">A media workspace for uploads, files, assets, and creator materials tied to the member account.</p><p class="app-best">Best for: organizing media connected to your pages.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="login.html?redirect=my-media.html">Sign In To Media</a><a class="btn btn-ghost" href="my-media.html">Open Media</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">ST</span><div class="app-tags"><span class="app-tag app-tag--live">Live</span><span class="app-tag">Public</span></div></div>
+            <div><h3 class="app-name">Store</h3><p class="app-desc">The product and offer layer for platform access, creative drops, services, memberships, and paid tools.</p><p class="app-best">Best for: buying access, offers, and studio products.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="store.html">Open Store</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">ND</span><div class="app-tags"><span class="app-tag app-tag--live">Live</span><span class="app-tag">Culture</span></div></div>
+            <div><h3 class="app-name">Neon Dreams</h3><p class="app-desc">A story and culture surface for the Neon Dreams Club branch of the Faceless Animal world.</p><p class="app-best">Best for: branded lore, drops, and immersive content.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="neon-dreams.html">Open Neon Dreams</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">PH</span><div class="app-tags"><span class="app-tag app-tag--login">Login</span><span class="app-tag">Signal</span></div></div>
+            <div><h3 class="app-name">Signal Phone</h3><p class="app-desc">A communication shell for dialer tools, messages, contacts, recents, and identity settings inside one phone-style interface.</p><p class="app-best">Best for: keeping Signal identity, contacts, and communication tools in one place.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="login.html?redirect=phone.html">Sign In To Phone</a><a class="btn btn-ghost" href="phone.html">Open Phone</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">PL</span><div class="app-tags"><span class="app-tag app-tag--live">Live</span><span class="app-tag">Visualizer</span></div></div>
+            <div><h3 class="app-name">Faceless Pulse</h3><p class="app-desc">A music visualizer and stage app for audio-reactive visuals, stream overlays, fullscreen modes, and radio-ready motion presets.</p><p class="app-best">Best for: visualizing music, running branded stream visuals, and creating performance backdrops.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="pulse.html">Open Pulse</a><a class="btn btn-ghost" href="radio.html#pulse-stage-showcase">See On Radio</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">NW</span><div class="app-tags"><span class="app-tag app-tag--live">Live</span><span class="app-tag">Public</span></div></div>
+            <div><h3 class="app-name">News</h3><p class="app-desc">The platform update surface for announcements, creator activity, culture notes, and studio releases.</p><p class="app-best">Best for: checking what changed and what is happening across the network.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="news.html">Open News</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">DP</span><div class="app-tags"><span class="app-tag app-tag--live">Live</span><span class="app-tag">Drops</span></div></div>
+            <div><h3 class="app-name">Drops</h3><p class="app-desc">A release surface for platform drops, special offers, limited access, and launch moments.</p><p class="app-best">Best for: finding current releases and limited platform opportunities.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="drops.html">Open Drops</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">PR</span><div class="app-tags"><span class="app-tag app-tag--live">Live</span><span class="app-tag">Onboarding</span></div></div>
+            <div><h3 class="app-name">Start / Presence</h3><p class="app-desc">The entry app for claiming a handle, starting a free presence page, and moving into the platform identity system.</p><p class="app-best">Best for: new users who need a handle, page, or platform entry point.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="start.html">Start Here</a><a class="btn btn-ghost" href="presence.html">Presence Info</a></div>
+          </article>
+
+          <article class="app-card" role="listitem">
+            <div class="app-card-top"><span class="app-icon">SG</span><div class="app-tags"><span class="app-tag app-tag--member">Member</span><span class="app-tag">Storage</span></div></div>
+            <div><h3 class="app-name">Storage</h3><p class="app-desc">The capacity and upgrade guide for creator files, page assets, media uploads, and heavier account workflows.</p><p class="app-best">Best for: understanding upload limits and choosing the right access level.</p></div>
+            <div class="app-card-actions"><a class="btn btn-primary" href="storage.html">Open Storage</a><a class="btn btn-ghost" href="pricing.html">Upgrade</a></div>
+          </article>
+        </div>
+
+        <div class="apps-flow" aria-label="How app access works">
+          <div class="apps-flow-step"><strong>1. Open public apps</strong><span>Radio, TV, Chat, Pulse, Directory, News, Store, Drops, and Neon Dreams are direct links.</span></div>
+          <div class="apps-flow-step"><strong>2. Sign in for private apps</strong><span>Messenger, Signal Phone, Dashboard, Wallet, Pages, and Media need account identity.</span></div>
+          <div class="apps-flow-step"><strong>3. Upgrade when needed</strong><span>Member-only features route to Pricing or the active member checkout.</span></div>
+          <div class="apps-flow-step"><strong>4. Return to Apps</strong><span>This page works as the directory for every tool as the platform grows.</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-col">
+          <div class="footer-logo">Faceless <span>Animal</span> Studios</div>
+          <p class="footer-location">Providence, Rhode Island</p>
+        </div>
+        <nav class="footer-col footer-col--center" aria-label="Footer navigation">
+          <a href="about.html">About</a>
+          <a href="directory.html">Directory</a>
+          <a href="apps.html">Apps</a>
+          <a href="radio.html">Radio</a>
+          <a href="chat.html">Chat</a>
+          <a href="tv.html">TV</a>
+          <a href="pricing.html">Pricing</a>
+        </nav>
+        <div class="footer-col footer-col--right">
+          <p class="footer-copy">&copy; 2026 Faceless Animal Studios</p>
+          <p class="footer-copy">All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/script.js?v=20260611-apps"></script>
+</body>
+</html>

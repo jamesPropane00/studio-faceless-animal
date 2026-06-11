@@ -1,0 +1,43 @@
+// This file is for isolating GrapesJS block registration issues.
+// You can run this file in a browser to verify all block categories and blocks appear as expected.
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>GrapesJS Block Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css" />
+  <style>body { background: #181818; color: #fff; }</style>
+</head>
+<body>
+  <div id="gjs" style="height:100vh;"></div>
+  <script src="https://unpkg.com/grapesjs"></script>
+  <script>
+    const editor = grapesjs.init({
+      container: '#gjs',
+      height: '100%',
+      fromElement: false,
+      storageManager: false,
+      blockManager: { appendTo: '#gjs' },
+    });
+    const bm = editor.BlockManager;
+    bm.add('site-navbar', { label: 'Navbar', category: 'Layout', content: '<header>Navbar</header>' });
+    bm.add('hero-banner', { label: 'Hero Banner', category: 'Layout', content: '<section>Hero Banner</section>' });
+    bm.add('section-block', { label: 'Section', category: 'Layout', content: '<section>Section</section>' });
+    bm.add('two-columns', { label: '2 Columns', category: 'Layout', content: '<section>2 Columns</section>' });
+    bm.add('feature-cards', { label: 'Feature Cards', category: 'Sections', content: '<section>Feature Cards</section>' });
+    bm.add('gallery-grid', { label: 'Gallery Grid', category: 'Media', content: '<section>Gallery Grid</section>' });
+    bm.add('social-links', { label: 'Social Links', category: 'Media', content: '<section>Social Links</section>' });
+    bm.add('contact-block', { label: 'Contact Block', category: 'Sections', content: '<section>Contact Block</section>' });
+    bm.add('site-footer', { label: 'Footer', category: 'Layout', content: '<footer>Footer</footer>' });
+    bm.add('text-block', { label: 'Text', category: 'Basic', content: '<div>Text</div>' });
+    bm.add('image-block', { label: 'Image', category: 'Basic', content: '<div>Image</div>' });
+    bm.add('button-block', { label: 'Button', category: 'Basic', content: '<div>Button</div>' });
+    // Debug block
+    bm.add('debug-block', { label: 'DEBUG', category: 'Basic', content: '<div>Debug Block</div>' });
+    // Log all registered blocks
+    console.log('Registered blocks:', bm.getAll().map(b => b.id));
+  </script>
+</body>
+</html>
