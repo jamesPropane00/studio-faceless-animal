@@ -196,6 +196,94 @@ export async function getConnectionState(myUsername, otherUsername) {
 }
 
 /**
+ * Request a private Signal Code connection by public username.
+ * Signal Codes are resolved and stored server-side; the response intentionally
+ * does not expose either user's Signal Code.
+ */
+export async function requestDMConnection(sender, targetUsername) {
+  const ph = _getSessionPH()
+  if (!ph) return { data: null, error: 'Session expired - please sign in again.' }
+
+  const requester = String(sender || '').toLowerCase().trim()
+  const target = String(targetUsername || '').replace(/^@+/, '').toLowerCase().trim()
+  if (!requester || !target) return { data: null, error: 'Missing sender or target user.' }
+  if (requester === target) return { data: null, error: "You can't connect to yourself." }
+
+  try {
+    const res = await fetch('/api/dm/request-connection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: requester,
+        ph,
+        target_username: target,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok || !data || data.ok !== true) {
+      return { data: null, error: (data && data.error) || 'Could not request connection.' }
+    }
+    return { data, error: null }
+  } catch {
+    return { data: null, error: 'Network error. Check your connection.' }
+  }
+}
+
+/**
+ * Load incoming Signal Code connection requests for the signed-in user.
+ * The API returns public identity only, never the requester's Signal Code.
+ */
+export async function loadDMConnectionRequests(myUsername) {
+  const ph = _getSessionPH()
+  if (!ph) return { requests: [], error: 'Session expired - please sign in again.' }
+
+  const me = String(myUsername || '').toLowerCase().trim()
+  if (!me) return { requests: [], error: 'Missing username.' }
+
+  try {
+    const res = await fetch(
+      `/api/dm/connection-requests?username=${encodeURIComponent(me)}`,
+      { headers: _dmHeaders(ph, me) }
+    )
+    const data = await res.json()
+    if (!res.ok || !data || data.ok !== true) {
+      return { requests: [], error: (data && data.error) || 'Could not load connection requests.' }
+    }
+    return { requests: Array.isArray(data.requests) ? data.requests : [], error: null }
+  } catch {
+    return { requests: [], error: 'Network error. Check your connection.' }
+  }
+}
+
+/**
+ * Accept or decline an incoming Signal Code connection request.
+ */
+export async function respondDMConnection(myUsername, requesterUsername, action) {
+  const ph = _getSessionPH()
+  if (!ph) return { data: null, error: 'Session expired - please sign in again.' }
+
+  try {
+    const res = await fetch('/api/dm/respond-connection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: String(myUsername || '').toLowerCase(),
+        ph,
+        requester_username: String(requesterUsername || '').toLowerCase(),
+        action,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok || !data || data.ok !== true) {
+      return { data: null, error: (data && data.error) || 'Could not update connection request.' }
+    }
+    return { data, error: null }
+  } catch {
+    return { data: null, error: 'Network error. Check your connection.' }
+  }
+}
+
+/**
  * Send a DM with a file attachment.
  * File must already be uploaded via uploadDMFile().
  * @param {string} sender

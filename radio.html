@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/style.css?v=20260610-waffle-main" />
+  <link rel="stylesheet" href="assets/css/widget-hub.css?v=20260611-widget-hub" />
   <style>
     /* ── Radio page shell ── */
     body {
@@ -1219,6 +1220,91 @@
       white-space: nowrap;
     }
 
+    .rp-user-list {
+      margin: 0 0 0.75rem;
+      padding: 0.72rem;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+    }
+    .rp-user-list-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      margin-bottom: 0.58rem;
+    }
+    .rp-user-list-head strong {
+      color: var(--text-2);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .rp-user-list-head span {
+      color: var(--text-3);
+      font-size: 0.68rem;
+      white-space: nowrap;
+    }
+    .rp-user-list-grid {
+      display: flex;
+      gap: 0.45rem;
+      overflow-x: auto;
+      padding-bottom: 0.05rem;
+      scrollbar-width: thin;
+    }
+    .rp-user-pill {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.38rem;
+      max-width: 160px;
+      padding: 0.34rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.2);
+      color: var(--text-2);
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: var(--font-body);
+      cursor: pointer;
+    }
+    .rp-user-pill:disabled {
+      cursor: default;
+      opacity: 0.72;
+    }
+    .rp-user-pill--self {
+      border-color: rgba(212,181,108,0.45);
+      color: var(--gold);
+      background: rgba(212,181,108,0.08);
+    }
+    .rp-user-pill--pending {
+      opacity: 0.72;
+    }
+    .rp-user-pill--requested {
+      border-color: rgba(33,244,208,0.35);
+      color: var(--text);
+      background: rgba(33,244,208,0.08);
+    }
+    .rp-user-avatar {
+      width: 21px;
+      height: 21px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--purple-bright));
+      color: #fff;
+      font-size: 0.58rem;
+      font-weight: 900;
+    }
+    .rp-user-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     /* Chat feed */
     .rp-chat-feed {
       flex: 1;
@@ -1437,6 +1523,7 @@
         <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
+          <li><a href="apps.html">Apps</a></li>
           <li><a href="radio.html" aria-current="page" style="color:var(--purple-bright);">Radio</a></li>
           <li><a href="chat.html">Chat</a></li>
           <li><a href="tv.html">TV</a></li>
@@ -1454,6 +1541,7 @@
 
   <div class="mobile-nav waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
     <a href="directory.html">Directory</a>
+    <a href="apps.html">Apps</a>
     <a href="radio.html" aria-current="page" style="color:var(--purple-bright);">Radio</a>
     <a href="chat.html">Chat</a>
     <a href="tv.html">TV</a>
@@ -2080,6 +2168,8 @@
         <span class="rp-active-name" id="rp-active-name">DJ Faceless Animal Radio</span>
         <span class="rp-active-count"><span id="rp-active-count-num">24</span> in the room</span>
       </div>
+
+      <div class="rp-user-list" id="rp-user-list" aria-label="Users in this chat room"></div>
 
       <!-- Chat feed -->
       <div class="rp-chat-feed" id="rp-chat-feed" role="log" aria-label="Live chat" aria-live="polite">
@@ -2979,6 +3069,7 @@
   <script src="assets/js/env.js" onerror="void 0"></script>
   <script type="module">
     import { initRadioChat } from './assets/js/radio-chat.js'
+    import { requestDMConnection } from './assets/js/dm.js'
 
     function getSession() {
       try { return JSON.parse(localStorage.getItem('fas_user') || 'null') } catch(e) { return null }
@@ -2994,6 +3085,35 @@
     const tierLimited    = !isPaid   // free/guest = limited
     const sendDebounceMs = isPaid ? 1200 : 10000
 
+    async function requestChatConnection(targetUsername, ctx) {
+      const current = getSession()
+      const btn = ctx && ctx.button
+      if (!current || !current.username) {
+        window.location.href = 'login.html?redirect=radio.html'
+        return
+      }
+      if (!targetUsername || targetUsername.toLowerCase() === current.username.toLowerCase()) return
+      if (btn) {
+        btn.disabled = true
+        btn.classList.add('rp-user-pill--pending')
+      }
+      const { data, error } = await requestDMConnection(current.username, targetUsername)
+      if (btn) btn.disabled = false
+      if (error) {
+        window.alert(error)
+        if (btn) btn.classList.remove('rp-user-pill--pending')
+        return
+      }
+      if (data && data.state === 'connected') {
+        if (window.confirm('@' + targetUsername + ' is already connected. Open Messenger?')) {
+          window.location.href = 'messages.html?to=' + encodeURIComponent(targetUsername)
+        }
+        return
+      }
+      if (btn) btn.classList.add('rp-user-pill--requested')
+      window.alert('Connection request sent to @' + targetUsername + '. Messenger unlocks after they accept and trade Signal IDs.')
+    }
+
     initRadioChat({
       feedEl:        document.getElementById('rp-chat-feed'),
       inputEl:       document.getElementById('rp-chat-input'),
@@ -3002,6 +3122,8 @@
       activeCountEl: document.getElementById('rp-active-count-num'),
       listenerNumEl: document.getElementById('rp-listener-num'),
       pillNumEl:     document.getElementById('rp-listener-pill-num'),
+      userListEl:    document.getElementById('rp-user-list'),
+      onUserClick:   requestChatConnection,
       initialRoom:   'radio',
       getSession:    getSession,
       sendDebounceMs,
@@ -3010,6 +3132,7 @@
   </script>
 
   <!-- ── Handle picker modal ──────────────────────────────────── -->
+  <script type="module" src="assets/js/widget-hub.js?v=20260611-widget-hub"></script>
   <div id="rp-handle-modal" class="rp-handle-modal" role="dialog" aria-modal="true" aria-label="Set your chat handle" hidden>
     <div class="rp-handle-modal-overlay" id="rp-modal-overlay"></div>
     <div class="rp-handle-modal-card">

@@ -137,6 +137,20 @@ function initials(username) {
   return username.slice(0, 2).toUpperCase()
 }
 
+function uniqueUsers(rows) {
+  const seen = new Set()
+  const users = []
+  ;(rows || []).forEach(function(row) {
+    const username = row && row.username ? String(row.username).trim() : ''
+    if (!username) return
+    const key = username.toLowerCase()
+    if (seen.has(key)) return
+    seen.add(key)
+    users.push({ username })
+  })
+  return users
+}
+
 // ── Message DOM builder (prefix = 'rp' for radio.html, 'rs' for music.html) ──
 function makeMsgBuilders(prefix) {
   function buildMsgEl(username, message, isSelf, avatarHint) {
@@ -199,6 +213,8 @@ export function initRadioChat(config) {
     activeCountEl,
     listenerNumEl,
     pillNumEl,
+    userListEl,
+    onUserClick,
     initialRoom = 'radio',
     getSession,
     cssPrefix = 'rp',
@@ -224,6 +240,7 @@ export function initRadioChat(config) {
   let simMsgIdxs       = Object.fromEntries(Object.keys(SIM_MESSAGES).map(r => [r, 0]))
   let simCountTimerId  = null
   let simMsgTimerId    = null
+  let activeUsers      = []
 
   function insertRoomNotice(text) {
     if (!feedEl || !feedEl.parentElement) return
@@ -274,6 +291,55 @@ export function initRadioChat(config) {
     })
   }
 
+  function renderUserList(users, count) {
+    if (!userListEl) return
+    const list = uniqueUsers(users)
+    const sess = getSession ? getSession() : null
+    if (sess && sess.username && !list.some(function(u) { return u.username.toLowerCase() === sess.username.toLowerCase() })) {
+      list.unshift({ username: sess.username })
+    }
+    const displayCount = typeof count === 'number' ? count : list.length
+    const shown = list.slice(0, 12)
+    userListEl.innerHTML = [
+      '<div class="rp-user-list-head">',
+        '<strong>In This Room</strong>',
+        '<span>' + esc(displayCount) + ' online</span>',
+      '</div>',
+      '<div class="rp-user-list-grid">',
+        shown.map(function(user) {
+          const self = sess && sess.username && user.username.toLowerCase() === sess.username.toLowerCase()
+          return [
+            '<button class="rp-user-pill' + (self ? ' rp-user-pill--self' : '') + '" type="button" data-username="' + esc(user.username) + '"' + (self ? ' disabled aria-disabled="true"' : '') + '>',
+              '<span class="rp-user-avatar">' + esc(initials(user.username)) + '</span>',
+              '<span class="rp-user-name">@' + esc(user.username) + '</span>',
+            '</button>',
+          ].join('')
+        }).join(''),
+      '</div>',
+    ].join('')
+
+    if (typeof onUserClick === 'function') {
+      userListEl.querySelectorAll('.rp-user-pill[data-username]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          if (btn.disabled) return
+          onUserClick(btn.dataset.username, { room: activeRoom, button: btn })
+        })
+      })
+    }
+  }
+
+  function renderSimUserList(roomId) {
+    const messages = SIM_MESSAGES[roomId] || []
+    const count = SIM_ROOMS[roomId] ? SIM_ROOMS[roomId].count : uniqueUsers(messages).length
+    renderUserList(messages, count)
+  }
+
+  function addActiveUser(username) {
+    if (!username) return
+    activeUsers = uniqueUsers([{ username }].concat(activeUsers))
+    renderUserList(activeUsers, activeUsers.length)
+  }
+
   // ── Simulation mode ───────────────────────────────────────────────
   function startSimulation() {
     // Render initial seed messages for active room
@@ -288,6 +354,7 @@ export function initRadioChat(config) {
         setTabCount(id, r.count)
       })
       setCountDisplay(SIM_ROOMS[activeRoom] ? SIM_ROOMS[activeRoom].count : 24)
+      renderSimUserList(activeRoom)
     }, SIM_COUNT_INTERVAL)
 
     // Auto-inject messages
@@ -322,6 +389,7 @@ export function initRadioChat(config) {
     if (SIM_ROOMS[roomId]) {
       setCountDisplay(SIM_ROOMS[roomId].count)
     }
+    renderSimUserList(roomId)
   }
 
   // ── Feed management ───────────────────────────────────────────────
@@ -360,6 +428,8 @@ export function initRadioChat(config) {
 
     // Render oldest-first (empty room shows system message only)
     const rows = data ? [...data].reverse() : []
+    activeUsers = uniqueUsers(rows)
+    renderUserList(activeUsers, activeUsers.length)
     rows.forEach(function(row) {
       feedEl.appendChild(buildMsgEl(row.username, row.message, false, null))
     })
@@ -399,6 +469,7 @@ export function initRadioChat(config) {
           if (!row || !row.username || !row.message) return
           const sess = getSession ? getSession() : null
           const self = sess && sess.username && sess.username.toLowerCase() === row.username.toLowerCase()
+          addActiveUser(row.username)
           appendMsg(feedEl, buildMsgEl(row.username, row.message, self, null))
         }
       )

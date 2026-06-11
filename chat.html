@@ -496,6 +496,101 @@
       white-space: nowrap;
     }
 
+    .rp-user-list {
+      padding: 0.72rem 0.85rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.22);
+    }
+
+    .rp-user-list-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.65rem;
+      margin-bottom: 0.58rem;
+    }
+
+    .rp-user-list-head strong {
+      color: var(--chat-green);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .rp-user-list-head span {
+      color: var(--chat-soft);
+      font-size: 0.68rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .rp-user-list-grid {
+      display: flex;
+      gap: 0.45rem;
+      overflow-x: auto;
+      padding-bottom: 0.05rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--chat-green) rgba(255,255,255,0.08);
+    }
+
+    .rp-user-pill {
+      flex: 0 0 auto;
+      max-width: 160px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.38rem;
+      padding: 0.34rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-size: 0.72rem;
+      font-weight: 800;
+      font-family: "Inter", sans-serif;
+      cursor: pointer;
+    }
+
+    .rp-user-pill:disabled {
+      cursor: default;
+      opacity: 0.72;
+    }
+
+    .rp-user-pill--self {
+      color: var(--chat-gold);
+      border-color: rgba(255,211,106,0.42);
+      background: rgba(255,211,106,0.08);
+    }
+
+    .rp-user-pill--pending {
+      opacity: 0.72;
+    }
+
+    .rp-user-pill--requested {
+      color: var(--chat-green);
+      border-color: rgba(57,255,136,0.42);
+      background: rgba(57,255,136,0.08);
+    }
+
+    .rp-user-avatar {
+      width: 21px;
+      height: 21px;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      color: #060407;
+      background: var(--chat-green);
+      font-size: 0.58rem;
+      font-weight: 900;
+    }
+
+    .rp-user-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .rp-chat-feed {
       min-height: 330px;
       max-height: none;
@@ -920,6 +1015,7 @@
         <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
+          <li><a href="apps.html">Apps</a></li>
           <li><a href="radio.html">Radio</a></li>
           <li><a href="chat.html" aria-current="page" style="color:var(--purple-bright);">Chat</a></li>
           <li><a href="tv.html">TV</a></li>
@@ -937,6 +1033,7 @@
 
   <div class="mobile-nav waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
     <a href="directory.html">Directory</a>
+    <a href="apps.html">Apps</a>
     <a href="radio.html">Radio</a>
     <a href="chat.html" aria-current="page" style="font-weight:800;color:var(--purple-bright);">Chat</a>
     <a href="tv.html">TV</a>
@@ -1008,6 +1105,8 @@
           <span class="rp-active-name" id="rp-active-name">DJ Faceless Animal Radio</span>
           <span class="rp-active-count"><span id="rp-active-count-num">24</span> in room</span>
         </div>
+
+        <div class="rp-user-list" id="rp-user-list" aria-label="Users in this chat room"></div>
 
         <div class="rp-chat-feed" id="rp-chat-feed" role="log" aria-label="Live chat" aria-live="polite">
           <div class="rp-msg">
@@ -1221,6 +1320,7 @@
   </script>
   <script type="module">
     import { initRadioChat } from './assets/js/radio-chat.js'
+    import { requestDMConnection } from './assets/js/dm.js'
 
     function getSession() {
       try { return JSON.parse(localStorage.getItem('fas_user') || 'null') } catch(e) { return null }
@@ -1231,6 +1331,35 @@
     const status = (sess && sess.status) || 'free'
     const isPaid = !['free','none',''].includes(plan) || status === 'active'
 
+    async function requestChatConnection(targetUsername, ctx) {
+      const current = getSession()
+      const btn = ctx && ctx.button
+      if (!current || !current.username) {
+        window.location.href = 'login.html?redirect=chat.html'
+        return
+      }
+      if (!targetUsername || targetUsername.toLowerCase() === current.username.toLowerCase()) return
+      if (btn) {
+        btn.disabled = true
+        btn.classList.add('rp-user-pill--pending')
+      }
+      const { data, error } = await requestDMConnection(current.username, targetUsername)
+      if (btn) btn.disabled = false
+      if (error) {
+        window.alert(error)
+        if (btn) btn.classList.remove('rp-user-pill--pending')
+        return
+      }
+      if (data && data.state === 'connected') {
+        if (window.confirm('@' + targetUsername + ' is already connected. Open Messenger?')) {
+          window.location.href = 'messages.html?to=' + encodeURIComponent(targetUsername)
+        }
+        return
+      }
+      if (btn) btn.classList.add('rp-user-pill--requested')
+      window.alert('Connection request sent to @' + targetUsername + '. Messenger unlocks after they accept and trade Signal IDs.')
+    }
+
     const chatController = initRadioChat({
       feedEl:        document.getElementById('rp-chat-feed'),
       inputEl:       document.getElementById('rp-chat-input'),
@@ -1239,6 +1368,8 @@
       activeCountEl: document.getElementById('rp-active-count-num'),
       listenerNumEl: document.getElementById('rp-listener-num'),
       pillNumEl:     document.getElementById('rp-listener-pill-num'),
+      userListEl:    document.getElementById('rp-user-list'),
+      onUserClick:   requestChatConnection,
       initialRoom:   'radio',
       getSession:    getSession,
       sendDebounceMs: isPaid ? 1200 : 10000,

@@ -303,6 +303,33 @@ async function handleMediaDownload(req, res) {
       return
     }
 
+    if (urlPath === '/api/dm/request-connection') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { error: 'Method not allowed.' }); return }
+      handleDMRequestConnection(req, res).catch(err => {
+        console.error('[FAS:dm:request-connection] Unhandled error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/dm/connection-requests') {
+      if (req.method !== 'GET') { sendJSON(res, 405, { error: 'Method not allowed.' }); return }
+      handleDMConnectionRequests(req, res).catch(err => {
+        console.error('[FAS:dm:connection-requests] Unhandled error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/dm/respond-connection') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { error: 'Method not allowed.' }); return }
+      handleDMRespondConnection(req, res).catch(err => {
+        console.error('[FAS:dm:respond-connection] Unhandled error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+      })
+      return
+    }
+
     if (urlPath === '/api/dm/connection') {
       if (req.method !== 'GET') { sendJSON(res, 405, { error: 'Method not allowed.' }); return }
       handleDMConnectionStatus(req, res).catch(err => {
@@ -2768,6 +2795,215 @@ async function handleDMConnectByCode(req, res) {
 }
 
 /**
+ * POST /api/dm/request-connection { username, ph, target_username }
+ * Privacy-first chat contact request.
+ *
+ * The requester can click a public chat username, but Signal Codes stay
+ * server-side until the target accepts. DMs remain locked while state=requested.
+ */
+async function handleDMRequestConnection(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { error: 'DM service unavailable.' })
+  }
+
+  let body
+  try {
+    const raw = await readBody(req, 16 * 1024)
+    body = JSON.parse(raw.toString('utf8'))
+  } catch {
+    return sendJSON(res, 400, { error: 'Invalid request body.' })
+  }
+
+  const requester = String(body.username || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  const ph = String(body.ph || '').trim()
+  const targetUsername = String(body.target_username || body.target || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+
+  if (!requester || !ph || !targetUsername) {
+    return sendJSON(res, 400, { error: 'Missing username, auth token, or target user.' })
+  }
+  if (requester === targetUsername) {
+    return sendJSON(res, 400, { error: "You can't connect to yourself." })
+  }
+
+  const ok = await verifyIdentity(creds.host, creds.key, requester, ph)
+  if (!ok) return sendJSON(res, 401, { error: 'Authentication failed.' })
+
+  const me = await getMemberByUsername(creds.host, creds.key, requester)
+  const target = await getMemberByUsername(creds.host, creds.key, targetUsername)
+  if (!me || me.dms_enabled === false) {
+    return sendJSON(res, 403, { error: 'Direct messages are disabled for this account.' })
+  }
+  if (!target || !target.username) {
+    return sendJSON(res, 404, { error: 'User not found.' })
+  }
+  if (target.dms_enabled === false) {
+    return sendJSON(res, 403, { error: 'That user cannot receive direct messages right now.' })
+  }
+  if (target.contact_mode && target.contact_mode !== 'signal_code_only') {
+    return sendJSON(res, 403, { error: 'Target contact policy blocks direct connection.' })
+  }
+
+  const existing = await getConnectionRow(creds.host, creds.key, requester, targetUsername)
+  if (existing && existing.state === 'blocked') {
+    return sendJSON(res, 403, { error: 'Connection is blocked.' })
+  }
+  if (existing && existing.state === 'connected') {
+    return sendJSON(res, 200, {
+      ok: true,
+      state: 'connected',
+      target: {
+        username: targetUsername,
+        display_name: target.display_name || targetUsername,
+        dms_enabled: target.dms_enabled !== false,
+      },
+    })
+  }
+  if (existing && existing.state === 'requested') {
+    return sendJSON(res, 200, {
+      ok: true,
+      state: 'requested',
+      target: {
+        username: targetUsername,
+        display_name: target.display_name || targetUsername,
+      },
+    })
+  }
+
+  const payload = JSON.stringify({
+    requester_username: requester,
+    requester_platform_id: me.platform_id || null,
+    target_username: targetUsername,
+    target_platform_id: target.platform_id || null,
+    state: 'requested',
+  })
+
+  const writeResult = existing && existing.id
+    ? await sbRequest(creds.host, creds.key, 'PATCH', `/rest/v1/user_connections?id=eq.${encodeURIComponent(existing.id)}`, payload)
+    : await sbRequest(creds.host, creds.key, 'POST', '/rest/v1/user_connections', payload)
+
+  if (writeResult.status < 200 || writeResult.status >= 300) {
+    console.warn('[FAS:dm:request-connection] write error', writeResult.status, writeResult.body.toString())
+    return sendJSON(res, 500, { error: 'Could not save connection request.' })
+  }
+
+  return sendJSON(res, 200, {
+    ok: true,
+    state: 'requested',
+    target: {
+      username: targetUsername,
+      display_name: target.display_name || targetUsername,
+    },
+  })
+}
+
+/**
+ * GET /api/dm/connection-requests?username=X
+ * Returns incoming pending requesters only. Signal Codes stay server-side.
+ */
+async function handleDMConnectionRequests(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { error: 'DM service unavailable.' })
+  }
+
+  const qs = new URL(req.url, `http://localhost`).searchParams
+  const username = String(qs.get('username') || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  const authHeader = req.headers['authorization'] || ''
+  const ph = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : ''
+
+  if (!username || !ph) {
+    return sendJSON(res, 400, { error: 'Missing username or auth token.' })
+  }
+
+  const ok = await verifyIdentity(creds.host, creds.key, username, ph)
+  if (!ok) return sendJSON(res, 401, { error: 'Authentication failed.' })
+
+  const path = `/rest/v1/user_connections?target_username=eq.${encodeURIComponent(username)}&state=eq.requested&select=id,requester_username,created_at,updated_at&order=created_at.desc&limit=25`
+  const result = await sbRequest(creds.host, creds.key, 'GET', path, null)
+  if (result.status !== 200) {
+    console.warn('[FAS:dm:connection-requests] read error', result.status, result.body.toString())
+    return sendJSON(res, 500, { error: 'Could not load connection requests.' })
+  }
+
+  let rows = []
+  try {
+    rows = JSON.parse(result.body.toString())
+  } catch {
+    rows = []
+  }
+
+  const requests = []
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const requester = String(row.requester_username || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+    if (!requester) continue
+    const member = await getMemberByUsername(creds.host, creds.key, requester)
+    requests.push({
+      id: row.id,
+      username: requester,
+      display_name: (member && member.display_name) || requester,
+      created_at: row.created_at || row.updated_at || null,
+    })
+  }
+
+  return sendJSON(res, 200, { ok: true, requests })
+}
+
+/**
+ * POST /api/dm/respond-connection { username, ph, requester_username, action }
+ * action = accept | decline
+ */
+async function handleDMRespondConnection(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { error: 'DM service unavailable.' })
+  }
+
+  let body
+  try {
+    const raw = await readBody(req, 16 * 1024)
+    body = JSON.parse(raw.toString('utf8'))
+  } catch {
+    return sendJSON(res, 400, { error: 'Invalid request body.' })
+  }
+
+  const username = String(body.username || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  const ph = String(body.ph || '').trim()
+  const requester = String(body.requester_username || body.requester || '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+  const action = String(body.action || '').toLowerCase().trim()
+
+  if (!username || !ph || !requester || !['accept', 'decline'].includes(action)) {
+    return sendJSON(res, 400, { error: 'Missing username, requester, auth token, or valid action.' })
+  }
+
+  const ok = await verifyIdentity(creds.host, creds.key, username, ph)
+  if (!ok) return sendJSON(res, 401, { error: 'Authentication failed.' })
+
+  const existing = await getConnectionRow(creds.host, creds.key, username, requester)
+  if (!existing || existing.state !== 'requested') {
+    return sendJSON(res, 404, { error: 'No pending request found.' })
+  }
+  if (String(existing.target_username || '').toLowerCase() !== username) {
+    return sendJSON(res, 403, { error: 'Only the requested user can respond.' })
+  }
+
+  const nextState = action === 'accept' ? 'connected' : 'none'
+  const result = await sbRequest(
+    creds.host,
+    creds.key,
+    'PATCH',
+    `/rest/v1/user_connections?id=eq.${encodeURIComponent(existing.id)}`,
+    JSON.stringify({ state: nextState })
+  )
+
+  if (result.status < 200 || result.status >= 300) {
+    return sendJSON(res, 500, { error: 'Could not update connection request.' })
+  }
+
+  return sendJSON(res, 200, { ok: true, state: nextState })
+}
+
+/**
  * GET /api/dm/connection?username=X&with=Y
  * Authorization: Bearer <ph>
  */
@@ -2795,6 +3031,7 @@ async function handleDMConnectionStatus(req, res) {
 
   const row = await getConnectionRow(creds.host, creds.key, username, other)
   const state = row && row.state ? row.state : 'none'
+  const exposeSignalCode = state === 'connected'
 
   return sendJSON(res, 200, {
     ok: true,
@@ -2802,7 +3039,7 @@ async function handleDMConnectionStatus(req, res) {
     target: {
       username: String(target.username || '').toLowerCase(),
       display_name: target.display_name || target.username || other,
-      platform_id: target.platform_id || null,
+      platform_id: exposeSignalCode ? (target.platform_id || null) : null,
       calls_enabled: target.calls_enabled !== false,
       dms_enabled: target.dms_enabled !== false,
       contact_mode: target.contact_mode || 'signal_code_only',

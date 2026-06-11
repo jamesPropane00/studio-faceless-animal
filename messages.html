@@ -131,6 +131,35 @@
       padding: 2rem; text-align: center;
       font-size: 0.82rem; color: var(--text-3); flex-direction: column; gap: 0.75rem;
     }
+    .msg-request-box {
+      display: none;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 0.75rem;
+      background: rgba(139,92,246,0.05);
+    }
+    .msg-request-box.visible { display: block; }
+    .msg-request-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.75rem; margin-bottom: 0.55rem;
+      font-size: 0.72rem; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .msg-request-list { display: flex; flex-direction: column; gap: 0.45rem; }
+    .msg-request-item {
+      display: grid; grid-template-columns: 1fr auto; gap: 0.55rem; align-items: center;
+      background: rgba(255,255,255,0.045);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px; padding: 0.55rem;
+    }
+    .msg-request-name {
+      margin: 0; color: var(--text); font-size: 0.82rem; font-weight: 800;
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .msg-request-note {
+      margin: 0.12rem 0 0; color: var(--text-3); font-size: 0.68rem;
+    }
+    .msg-request-actions { display: flex; gap: 0.35rem; }
+    .msg-request-actions .btn { font-size: 0.68rem; padding: 0.38rem 0.55rem; }
 
     /* ── Thread ── */
     .msg-thread {
@@ -325,6 +354,9 @@
       .msg-inbox.hidden-mobile { display: none; }
       .msg-thread.hidden-mobile { display: none; }
       .msg-back-btn { display: block; }
+      .msg-request-item { grid-template-columns: 1fr; }
+      .msg-request-actions { width: 100%; }
+      .msg-request-actions .btn { flex: 1; }
     }
   </style>
 </head>
@@ -336,6 +368,7 @@
         <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
+          <li><a href="apps.html">Apps</a></li>
           <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
           <li><a href="games.html">Games</a></li>
           <li><a href="pricing.html">Pricing</a></li>
@@ -350,6 +383,7 @@
 
   <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
     <a href="directory.html">Directory</a>
+    <a href="apps.html">Apps</a>
     <a href="games.html">Games</a>
     <a href="music.html">Music</a>
     <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
@@ -392,6 +426,13 @@
           <div class="msg-inbox-hdr">
             <span class="msg-inbox-label">Conversations</span>
             <span class="msg-inbox-count" id="msg-thread-count">0</span>
+          </div>
+          <div class="msg-request-box" id="msg-request-box" aria-label="Connection requests">
+            <div class="msg-request-head">
+              <span>Requests</span>
+              <span id="msg-request-count">0</span>
+            </div>
+            <div class="msg-request-list" id="msg-request-list"></div>
           </div>
           <div class="msg-inbox-list" id="msg-inbox-list" role="list">
             <div class="msg-inbox-empty" id="msg-inbox-empty" style="display:none;">
@@ -488,7 +529,7 @@
   <script type="module">
     import { getSession } from './assets/js/member-db.js'
     import { supabase, SUPABASE_READY } from './assets/js/supabase-client.js'
-    import { loadThreads, loadMessages, sendDM, sendDMWithFile, uploadDMFile, validateDMFile, formatFileSize, markRead, subscribeThread, formatDMTime, DM_READY, connectBySignalCode, getConnectionState } from './assets/js/dm.js'
+    import { loadThreads, loadMessages, sendDM, sendDMWithFile, uploadDMFile, validateDMFile, formatFileSize, markRead, subscribeThread, formatDMTime, DM_READY, connectBySignalCode, getConnectionState, requestDMConnection, loadDMConnectionRequests, respondDMConnection } from './assets/js/dm.js'
 
     // ── Auth gate ─────────────────────────────────────────────
     const session = getSession()
@@ -599,6 +640,8 @@
         return
       }
 
+      await renderConnectionRequests()
+
       const threads = await loadThreads(myUsername)
       countEl.textContent = threads.length
 
@@ -615,6 +658,62 @@
         const el = buildInboxItem(t)
         listEl.appendChild(el)
       })
+    }
+
+    async function renderConnectionRequests() {
+      const boxEl = document.getElementById('msg-request-box')
+      const listEl = document.getElementById('msg-request-list')
+      const countEl = document.getElementById('msg-request-count')
+      if (!boxEl || !listEl || !countEl) return
+
+      const { requests, error } = await loadDMConnectionRequests(myUsername)
+      if (error || !requests.length) {
+        boxEl.classList.remove('visible')
+        listEl.innerHTML = ''
+        countEl.textContent = '0'
+        return
+      }
+
+      countEl.textContent = String(requests.length)
+      listEl.innerHTML = ''
+      requests.forEach(req => {
+        const username = String(req.username || '').toLowerCase()
+        if (!username) return
+        const displayName = String(req.display_name || username).trim()
+        const item = document.createElement('div')
+        item.className = 'msg-request-item'
+        item.innerHTML = `
+          <div style="min-width:0;">
+            <p class="msg-request-name">${escHtml(displayName)} (@${escHtml(username)})</p>
+            <p class="msg-request-note">Wants to trade Signal IDs for Messenger access.</p>
+          </div>
+          <div class="msg-request-actions">
+            <button class="btn btn-primary" type="button" data-action="accept" data-user="${escHtml(username)}">Accept</button>
+            <button class="btn btn-ghost" type="button" data-action="decline" data-user="${escHtml(username)}">Decline</button>
+          </div>`
+        item.querySelectorAll('button[data-action]').forEach(btn => {
+          btn.addEventListener('click', () => respondToConnectionRequest(username, btn.dataset.action))
+        })
+        listEl.appendChild(item)
+      })
+      boxEl.classList.add('visible')
+    }
+
+    async function respondToConnectionRequest(requester, action) {
+      const boxEl = document.getElementById('msg-request-box')
+      boxEl?.querySelectorAll('button').forEach(btn => { btn.disabled = true })
+
+      const { data, error } = await respondDMConnection(myUsername, requester, action)
+      if (error || !data) {
+        alert(error || 'Could not update connection request.')
+        boxEl?.querySelectorAll('button').forEach(btn => { btn.disabled = false })
+        return
+      }
+
+      await renderInbox()
+      if (action === 'accept') {
+        await openThread(requester)
+      }
     }
 
     function buildInboxItem(t) {
@@ -692,7 +791,9 @@
       const displayName = String(data.target.display_name || '').trim()
       const handle = '@' + String(data.target.username || partner)
       whoEl.textContent = displayName ? `${displayName} (${handle})` : handle
-      const signalCode = data.target.platform_id ? `Signal Code: ${data.target.platform_id}` : 'Signal Code unavailable'
+      const signalCode = String(data.state || 'none') === 'connected' && data.target.platform_id
+        ? `Signal Code: ${data.target.platform_id}`
+        : 'Signal Code hidden until connected'
       const state = String(data.state || 'none')
       subEl.textContent = `${signalCode} · ${state}`
     }
@@ -914,7 +1015,7 @@
 
       const { data: byUsername, error: usernameErr } = await supabase
         .from('member_accounts')
-        .select('username, display_name, platform_id')
+        .select('username, display_name')
         .eq('username', normalizedUsername)
         .maybeSingle()
 
@@ -922,7 +1023,8 @@
         return { user: {
           username: String(byUsername.username).toLowerCase(),
           display_name: byUsername.display_name || byUsername.username,
-          platform_id: byUsername.platform_id || null,
+          platform_id: null,
+          needs_request: true,
         }, error: null }
       }
 
@@ -948,7 +1050,50 @@
       }
 
       resolvedEl.textContent = `Resolved: ${recipient.display_name} (@${recipient.username}) · ${recipient.platform_id || 'No Signal ID'}`
+      resolvedEl.textContent = `Resolved: ${recipient.display_name} (@${recipient.username})`
       resolvedEl.style.display = ''
+
+      if (recipient.needs_request) {
+        const { data: requestData, error: requestError } = await requestDMConnection(myUsername, recipient.username)
+        if (requestError || !requestData) {
+          errEl.textContent = requestError || 'Could not send connection request.'
+          errEl.classList.add('visible')
+          return
+        }
+
+        const recipientUsername = String((requestData.target && requestData.target.username) || recipient.username).toLowerCase()
+        if (String(requestData.state || 'none') !== 'connected') {
+          errEl.textContent = 'Connection request sent. Messaging unlocks after they accept and trade Signal IDs.'
+          errEl.classList.add('visible')
+          return
+        }
+        if (!text) {
+          errEl.textContent = 'Enter a message.'
+          errEl.classList.add('visible')
+          return
+        }
+        if (recipientUsername === myUsername) {
+          errEl.textContent = "You can't message yourself."
+          errEl.classList.add('visible')
+          return
+        }
+
+        const { error } = await sendDM(myUsername, recipientUsername, text)
+        if (error) {
+          errEl.textContent = 'Failed to send. Try again.'
+          errEl.classList.add('visible')
+          return
+        }
+
+        document.getElementById('msg-compose-modal').classList.remove('open')
+        document.getElementById('compose-to').value = ''
+        document.getElementById('compose-text').value = ''
+
+        await renderInbox()
+        await openThread(recipientUsername)
+        maybeAutoOpenCallModal()
+        return
+      }
 
       if (!recipient.platform_id) {
         errEl.textContent = 'This user does not have a valid Signal ID yet.'
@@ -1034,6 +1179,7 @@
 
       activePartnerMeta = data.target
       const targetName = data.target.display_name || ('@' + data.target.username)
+      if (data.state !== 'connected') data.target.platform_id = null
       const targetMeta = `@${data.target.username} · ${data.target.platform_id || 'No Signal Code'} · ${data.state}`
       document.getElementById('call-target-name').textContent = targetName
       document.getElementById('call-target-meta').textContent = targetMeta

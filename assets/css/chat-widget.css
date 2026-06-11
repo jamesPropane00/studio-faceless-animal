@@ -84,6 +84,85 @@
   background: rgba(127,152,220,0.08);
   color: #fff;
 }
+.chat-widget-user-list {
+  padding: 0.72rem 1rem 0.35rem;
+  border-bottom: 1px solid rgba(127,152,220,0.08);
+}
+.chat-widget-user-list .rp-user-list-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.45rem;
+}
+.chat-widget-user-list .rp-user-list-head strong {
+  color: #25d07f;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.chat-widget-user-list .rp-user-list-head span {
+  color: #9aa7c9;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+.chat-widget-user-list .rp-user-list-grid {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.12rem;
+  scrollbar-width: thin;
+}
+.chat-widget-user-list .rp-user-pill {
+  flex: 0 0 auto;
+  max-width: 126px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  padding: 0.3rem 0.44rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 999px;
+  background: rgba(44,36,60,0.62);
+  color: #eef3ff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+.chat-widget-user-list .rp-user-pill:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+.chat-widget-user-list .rp-user-pill--self {
+  color: #25d07f;
+  border-color: rgba(37,208,127,0.38);
+}
+.chat-widget-user-list .rp-user-pill--pending {
+  opacity: 0.72;
+}
+.chat-widget-user-list .rp-user-pill--requested {
+  color: #25d07f;
+  border-color: rgba(37,208,127,0.45);
+  background: rgba(37,208,127,0.09);
+}
+.chat-widget-user-list .rp-user-avatar {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#7b65ff,#25d07f);
+  color: #fff;
+  font-size: 0.56rem;
+  font-weight: 900;
+}
+.chat-widget-user-list .rp-user-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .chat-widget-feed {
   flex: 1;
   min-height: 120px;
