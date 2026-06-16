@@ -465,6 +465,12 @@ async function handleMediaDownload(req, res) {
     return
   }
 
+  // ── AI CHAT API (free, no key needed) ──────────────────────────────
+  if (urlPath === '/api/ai/chat' && req.method === 'POST') {
+    handleAIChat(req, res)
+    return
+  }
+
   // ── CONTACT FORM API ──────────────────────────────────────────────
   if (urlPath === '/api/contact') {
     res.setHeader('Access-Control-Allow-Origin', '*')

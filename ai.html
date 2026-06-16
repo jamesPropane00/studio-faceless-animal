@@ -90,29 +90,7 @@
     .model-bar .key-status { margin-left: auto; cursor: pointer; padding: 0.25rem 0.5rem; border-radius: 6px; background: rgba(255,255,255,0.03); }
     .model-bar .key-status.set { color: var(--green, #4ade80); }
     .model-bar .key-status.unset { color: var(--gold); }
-    .settings-modal {
-      display: none; position: fixed; inset: 0; z-index: 999;
-      background: rgba(0,0,0,0.7); align-items: center; justify-content: center; padding: 1rem;
-    }
-    .settings-modal.open { display: flex; }
-    .settings-panel {
-      background: var(--card); border: 1px solid var(--border); border-radius: 20px;
-      padding: 1.5rem; width: 100%; max-width: 400px;
-    }
-    .settings-panel h2 { font-size: 1rem; margin-bottom: 0.5rem; }
-    .settings-panel p { font-size: 0.82rem; color: var(--dim); margin-bottom: 1rem; line-height: 1.5; }
-    .settings-panel label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--soft); }
-    .settings-panel input {
-      width: 100%; padding: 0.7rem; border-radius: 10px; border: 1px solid var(--border);
-      background: var(--surface); color: var(--text); font-size: 0.9rem; outline: none; margin-bottom: 0.75rem;
-    }
-    .settings-panel input:focus { border-color: var(--bright); }
-    .settings-actions { display: flex; gap: 0.5rem; }
-    .settings-actions button {
-      flex: 1; padding: 0.65rem; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; font-size: 0.85rem;
-    }
-    .btn-primary { background: linear-gradient(135deg, var(--purple), var(--bright)); color: #fff; }
-    .btn-secondary { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border) !important; }
+
     .scroll-top {
       position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
       background: var(--card); border: 1px solid var(--border); border-radius: 999px;
@@ -148,8 +126,7 @@
 
     <div class="chat-input-area">
       <div class="model-bar">
-        <select id="modelSelect"></select>
-        <span class="key-status unset" id="keyStatus" onclick="openSettings()">&#9881; Set API Key</span>
+        <span style="color:var(--dim);font-size:0.75rem">Free open source AI &mdash; no account needed</span>
       </div>
       <div class="input-row">
         <textarea id="input" rows="1" placeholder="Message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}"></textarea>
@@ -158,99 +135,39 @@
     </div>
   </main>
 
-  <div class="settings-modal" id="settingsModal">
-    <div class="settings-panel">
-      <h2>API Settings</h2>
-      <p>Get a free key from <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--bright)">OpenRouter</a> to chat with open models. Your key stays on your device.</p>
-      <label>OpenRouter API Key</label>
-      <input type="password" id="apiKeyInput" placeholder="sk-or-v1-..." />
-      <label>Custom Base URL (optional)</label>
-      <input type="text" id="baseUrlInput" placeholder="https://openrouter.ai/api/v1" />
-      <div class="settings-actions">
-        <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
-        <button class="btn-primary" onclick="saveSettings()">Save</button>
-      </div>
-    </div>
-  </div>
+
 
   <script>
-    const API = 'https://openrouter.ai/api/v1';
-    let models = [];
-    let controller = null;
+    async function send() {
+      const input = document.getElementById('input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      input.style.height = 'auto';
 
-    const DEFAULT_MODELS = [
-      { id: 'google/gemma-4:free', name: 'Gemma 4 (Free)' },
-      { id: 'qwen/qwen3-coder:free', name: 'Qwen3-Coder (Free)' },
-      { id: 'deepseek/deepseek-chat:free', name: 'DeepSeek Chat (Free)' },
-      { id: 'mistralai/mistral-small-3.1:free', name: 'Mistral Small 3.1 (Free)' },
-    ];
+      addMessage('user', text);
+      showTyping();
+      document.getElementById('sendBtn').disabled = true;
 
-    function loadSettings() {
-      return {
-        key: localStorage.getItem('fa_ai_key') || '',
-        baseUrl: localStorage.getItem('fa_ai_base') || API,
-      };
-    }
-
-    function saveSettingsToLS(key, baseUrl) {
-      localStorage.setItem('fa_ai_key', key);
-      localStorage.setItem('fa_ai_base', baseUrl);
-    }
-
-    function openSettings() {
-      const s = loadSettings();
-      document.getElementById('apiKeyInput').value = s.key;
-      document.getElementById('baseUrlInput').value = s.baseUrl;
-      document.getElementById('settingsModal').classList.add('open');
-    }
-
-    function closeSettings() {
-      document.getElementById('settingsModal').classList.remove('open');
-    }
-
-    function saveSettings() {
-      const key = document.getElementById('apiKeyInput').value.trim();
-      const baseUrl = document.getElementById('baseUrlInput').value.trim() || API;
-      saveSettingsToLS(key, baseUrl);
-      closeSettings();
-      updateKeyStatus();
-      loadModels();
-    }
-
-    function updateKeyStatus() {
-      const s = loadSettings();
-      const el = document.getElementById('keyStatus');
-      if (s.key) { el.className = 'key-status set'; el.innerHTML = '&#10003; Key Set'; }
-      else { el.className = 'key-status unset'; el.innerHTML = '&#9881; Set API Key'; }
-    }
-
-    async function loadModels() {
-      const s = loadSettings();
-      const sel = document.getElementById('modelSelect');
-      sel.innerHTML = '<option value="">Loading...</option>';
       try {
-        const res = await fetch(s.baseUrl.replace(/\/+$/,'') + '/models', {
-          headers: s.key ? { 'Authorization': 'Bearer ' + s.key } : {}
+        const res = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text }),
         });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        removeTyping();
+        if (!res.ok) {
+          const err = await res.json();
+          addMessage('system', 'Error: ' + (err.error || 'Request failed.'));
+          return;
+        }
         const data = await res.json();
-        models = (data.data || data).filter(m => m.id && !m.id.includes(':beta'));
-        sel.innerHTML = '';
-        if (models.length === 0) throw new Error('no models');
-        models.forEach(m => {
-          const opt = document.createElement('option');
-          opt.value = m.id;
-          opt.textContent = m.id;
-          sel.appendChild(opt);
-        });
+        addMessage('assistant', data.reply || 'No response.');
       } catch (e) {
-        sel.innerHTML = '';
-        DEFAULT_MODELS.forEach(m => {
-          const opt = document.createElement('option');
-          opt.value = m.id;
-          opt.textContent = m.name || m.id;
-          sel.appendChild(opt);
-        });
+        removeTyping();
+        addMessage('system', 'Error: ' + e.message);
+      } finally {
+        document.getElementById('sendBtn').disabled = false;
       }
     }
 
@@ -298,64 +215,11 @@
       if (el) el.remove();
     }
 
-    async function send() {
-      const input = document.getElementById('input');
-      const text = input.value.trim();
-      if (!text) return;
-      input.value = '';
-      input.style.height = 'auto';
-
-      const s = loadSettings();
-      const model = document.getElementById('modelSelect').value;
-
-      if (!s.key) {
-        addMessage('system', 'Set your OpenRouter API key first (click the key icon below). Free at openrouter.ai/keys.');
-        return;
-      }
-
-      addMessage('user', text);
-      showTyping();
-      document.getElementById('sendBtn').disabled = true;
-
-      controller = new AbortController();
-      try {
-        const res = await fetch((s.baseUrl || API).replace(/\/+$/,'') + '/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.key },
-          body: JSON.stringify({
-            model: model || 'google/gemma-4:free',
-            messages: [{ role: 'user', content: text }],
-            max_tokens: 4096,
-          }),
-          signal: controller.signal,
-        });
-        removeTyping();
-        if (!res.ok) {
-          const err = await res.text();
-          addMessage('system', 'Error: ' + (err.length > 200 ? err.slice(0,200)+'...' : err));
-          return;
-        }
-        const data = await res.json();
-        const reply = data.choices?.[0]?.message?.content || 'No response.';
-        addMessage('assistant', reply);
-      } catch (e) {
-        removeTyping();
-        if (e.name !== 'AbortError') addMessage('system', 'Error: ' + e.message);
-      } finally {
-        document.getElementById('sendBtn').disabled = false;
-        controller = null;
-      }
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
-      updateKeyStatus();
-      loadModels();
+      addMessage('system', 'Welcome to Faceless AI. Ask anything — powered by open source models.');
       const ta = document.getElementById('input');
       ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 150) + 'px'; });
-    });
-
-    document.getElementById('settingsModal').addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) closeSettings();
+      ta.focus();
     });
   </script>
 </body>
