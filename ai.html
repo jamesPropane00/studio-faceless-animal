@@ -359,12 +359,24 @@
       availableModels = models;
       const sel = document.getElementById('modelSelect');
       sel.innerHTML = '';
+      const groups = {};
       models.forEach((m, i) => {
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = m.name;
-        sel.appendChild(opt);
+        const g = m.group || 'Other';
+        if (!groups[g]) groups[g] = [];
+        groups[g].push(i);
       });
+      for (const [gName, indices] of Object.entries(groups)) {
+        const grp = document.createElement('optgroup');
+        grp.label = gName;
+        indices.forEach(i => {
+          const m = models[i];
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = m.name;
+          grp.appendChild(opt);
+        });
+        sel.appendChild(grp);
+      }
     }
 
     // ── CONVERSATIONS ──

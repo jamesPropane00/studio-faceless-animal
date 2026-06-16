@@ -36,15 +36,22 @@ const AUDIO_MODELS = [
 ];
 
 const IMAGE_MODELS = [
-  { id: '@cf/bytedance/stable-diffusion-xl-lightning', name: 'SDXL Lightning', type: 'image' },
-  { id: '@cf/black-forest-labs/flux-1-schnell', name: 'Flux 1 Schnell', type: 'image' },
-  { id: '@cf/black-forest-labs/flux-2-dev', name: 'Flux 2 Dev', type: 'image' },
-  { id: '@cf/black-forest-labs/flux-2-klein-9b', name: 'Flux 2 Klein 9B', type: 'image' },
-  { id: '@cf/black-forest-labs/flux-2-klein-4b', name: 'Flux 2 Klein 4B', type: 'image' },
-  { id: '@cf/leonardo/phoenix-1.0', name: 'Leonardo Phoenix', type: 'image' },
-  { id: '@cf/leonardo/lucid-origin', name: 'Leonardo Lucid', type: 'image' },
-  { id: '@cf/lykon/dreamshaper-8-lcm', name: 'Dreamshaper LCM', type: 'image' },
-  { id: '@cf/stabilityai/stable-diffusion-xl-base-1.0', name: 'SDXL', type: 'image' },
+  // 📷 Photorealistic — best for real people, products, scenes
+  { id: '@cf/black-forest-labs/flux-1-schnell', name: 'Flux 1 Schnell', type: 'image', group: '📷 Photo Realistic' },
+  { id: '@cf/black-forest-labs/flux-2-dev', name: 'Flux 2 Dev', type: 'image', group: '📷 Photo Realistic' },
+  { id: '@cf/black-forest-labs/flux-2-klein-9b', name: 'Flux 2 Klein 9B', type: 'image', group: '📷 Photo Realistic' },
+  { id: '@cf/bytedance/stable-diffusion-xl-lightning', name: 'SDXL Lightning', type: 'image', group: '📷 Photo Realistic' },
+  { id: '@cf/stabilityai/stable-diffusion-xl-base-1.0', name: 'SDXL Base', type: 'image', group: '📷 Photo Realistic' },
+  // 🎨 Anime & Illustration — best for anime, cartoons, stylized
+  { id: '@cf/lykon/dreamshaper-8-lcm', name: 'Dreamshaper LCM', type: 'image', group: '🎨 Anime & Illustration' },
+  // ✨ Artistic & Creative — artistic styles, concept art
+  { id: '@cf/leonardo/phoenix-1.0', name: 'Leonardo Phoenix', type: 'image', group: '✨ Artistic' },
+  { id: '@cf/leonardo/lucid-origin', name: 'Leonardo Lucid', type: 'image', group: '✨ Artistic' },
+  // ⚡ Fast Generation — quick results, lower quality
+  { id: '@cf/black-forest-labs/flux-2-klein-4b', name: 'Flux 2 Klein 4B', type: 'image', group: '⚡ Fast' },
+  // 🖌️ Photo Editor — edit/transform existing images (needs image upload — coming soon)
+  { id: '@cf/runwayml/stable-diffusion-v1-5-img2img', name: 'SD 1.5 Img2Img', type: 'img2img', group: '🖌️ Photo Editor' },
+  { id: '@cf/runwayml/stable-diffusion-v1-5-inpainting', name: 'SD 1.5 Inpainting', type: 'img2img', group: '🖌️ Photo Editor' },
 ];
 
 const ALLOWED_USERS = ['jdot00', 'jamespropane00'];
@@ -137,7 +144,7 @@ export async function onRequest(context) {
           return new Response(JSON.stringify({
             conversations: Object.values(convMap).sort((a, b) => b.last.localeCompare(a.last)),
             username,
-            models: allModels.map(m => ({ id: m.id, name: m.name, type: m.type })),
+            models: allModels.map(m => ({ id: m.id, name: m.name, type: m.type, group: m.group })),
           }), { headers: { 'content-type': 'application/json' } });
         }
       }
@@ -296,13 +303,27 @@ export async function onRequest(context) {
     }
   }
 
+  // ── IMG2IMG (needs upload — coming soon) ──────────────────
+  if (selectedModel.type === 'img2img') {
+    return new Response(JSON.stringify({ error: 'Image-to-image requires uploading a photo — coming soon. Use a Photo Realistic model instead with a detailed prompt.' }), {
+      status: 400, headers: { 'content-type': 'application/json' },
+    });
+  }
+
   // ── CF IMAGE GENERATION ───────────────────────────────────
   if (selectedModel.type === 'image') {
     try {
+      let prompt = message;
+      // Auto-enhance prompts for photorealistic models
+      const isPhotoModel = selectedModel.group && selectedModel.group.includes('Photo');
+      const wantsHuman = /person|woman|man|girl|boy|portrait|face|human|people|model|actor|actress/i.test(message);
+      if (isPhotoModel && wantsHuman) {
+        prompt = message + ', photorealistic, detailed skin texture, professional studio lighting, sharp focus, 8k, canon eos r5, natural skin,毛孔 visible, subsurface scattering';
+      }
       const imageRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: message }),
+        body: JSON.stringify({ prompt }),
       });
       if (!imageRes.ok) {
         const err = await imageRes.text();
