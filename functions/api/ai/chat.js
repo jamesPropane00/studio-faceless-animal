@@ -99,6 +99,7 @@ export async function onRequest(context) {
   const modelIdx = body.model !== undefined ? parseInt(body.model) : 0;
   const listConversations = body.list_conversations === true;
   const loadConversationId = String(body.load_conversation || '').trim() || null;
+  const maxTokens = parseInt(body.max_tokens) || 1024;
 
   // Build model list with local options for authorized users
   const allModels = [...TEXT_MODELS, ...IMAGE_MODELS];
@@ -376,7 +377,7 @@ export async function onRequest(context) {
     const aiRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages, max_tokens: maxTokens }),
     });
     if (!aiRes.ok) {
       const errText = await aiRes.text();
