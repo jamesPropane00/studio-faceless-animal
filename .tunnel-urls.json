@@ -1,0 +1,7 @@
+{
+  "note": "Tunnel URLs change every time cloudflared restarts. After reboot, run 'C:\\Users\\Miner\\Desktop\\start-local-ai.bat', then copy the new URLs from the terminal windows and update Cloudflare Pages env vars.",
+  "startup_script": "C:\\Users\\Miner\\Desktop\\start-local-ai.bat",
+  "updated": "2026-06-16T07:45:00Z",
+  "ollama": "https://intervention-spell-involving-constructed.trycloudflare.com",
+  "comfyui": "https://contribution-accounting-copyrights-discs.trycloudflare.com"
+}
