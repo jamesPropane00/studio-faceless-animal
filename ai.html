@@ -368,13 +368,20 @@
     }
 
     function detectModel(text) {
+      const lower = text.toLowerCase().trim();
       const imgKw = ['draw','generate','create','make','paint','render','imagine',
         'image of','picture of','photo of','art of','a realistic','a cartoon',
         'a painting','a photo','a portrait','a landscape','a futuristic',
         'a fantasy','a sci-fi','a digital art','anime style','a sketch',
         'a drawing','a concept art','a low poly','a pixel art','a cyberpunk'];
-      const lower = text.toLowerCase().trim();
-      return imgKw.some(k => lower.includes(k)) ? 'image' : null;
+      const audioKw = ['speak','say this','say out loud','read this aloud','voice','tts',
+        'text to speech','talk','tell me out loud'];
+      const videoKw = ['generate a video','make a video','create a video','animate',
+        'video of','a video','generate video'];
+      if (videoKw.some(k => lower.includes(k))) return 'video';
+      if (imgKw.some(k => lower.includes(k))) return 'image';
+      if (audioKw.some(k => lower.includes(k))) return 'audio';
+      return null;
     }
 
     // ── CHAT ──
@@ -393,15 +400,15 @@
       const convId = currentConvId || 'default';
       let model = availableModels[modelIdx] || availableModels[0];
 
-      // Auto-switch to image model if prompt looks visual
+      // Auto-switch to image/video/audio model if prompt matches
       const intent = detectModel(text);
-      if (intent === 'image' && model.type !== 'image') {
-        const imgIdx = availableModels.findIndex(m => m.type === 'image');
-        if (imgIdx !== -1) {
-          modelIdx = imgIdx;
-          model = availableModels[imgIdx];
-          document.getElementById('modelSelect').value = imgIdx;
-          addMessage('system', 'Auto-switched to ' + model.name + ' for image generation.');
+      if (intent && model.type !== intent) {
+        const targetIdx = availableModels.findIndex(m => m.type === intent);
+        if (targetIdx !== -1) {
+          modelIdx = targetIdx;
+          model = availableModels[targetIdx];
+          document.getElementById('modelSelect').value = targetIdx;
+          addMessage('system', 'Auto-switched to ' + model.name + ' for ' + intent + ' generation.');
         }
       }
 
@@ -423,6 +430,10 @@
 
         if (model.type === 'image' && data.image) {
           addMessage('assistant', '<strong>' + model.name + ':</strong><br><img src="' + data.image + '" alt="Generated image" style="max-width:100%;border-radius:10px;margin-bottom:8px" /><br><a href="' + data.image + '" download="faceless-ai-' + Date.now() + '.png" class="download-btn">Download Image</a>');
+        } else if (model.type === 'video' && data.video) {
+          addMessage('assistant', '<strong>' + model.name + ':</strong><br><video src="' + data.video + '" controls style="max-width:100%;border-radius:10px;margin-bottom:8px"></video><br><a href="' + data.video + '" download="faceless-ai-' + Date.now() + '.mp4" class="download-btn">Download Video</a>');
+        } else if (model.type === 'audio' && data.audio) {
+          addMessage('assistant', '<strong>' + model.name + ':</strong><br><audio src="' + data.audio + '" controls style="width:100%;margin-bottom:8px"></audio><br><a href="' + data.audio + '" download="faceless-ai-' + Date.now() + '.wav" class="download-btn">Download Audio</a>');
         } else {
           addMessage('assistant', data.reply || 'No response.');
         }

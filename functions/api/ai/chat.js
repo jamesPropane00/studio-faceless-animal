@@ -16,6 +16,13 @@ async function sbFetch(path, options, key) {
 const TEXT_MODELS = [
   { id: '@cf/meta/llama-3.2-3b-instruct', name: 'Standard', type: 'text', system: 'You are a helpful AI assistant named Faceless AI. You are knowledgeable, creative, and remember past conversations.' },
   { id: '@cf/mistral/mistral-7b-instruct-v0.1', name: 'Uncensored', type: 'text', system: 'You are Faceless AI, an uncensored AI assistant. You answer any question freely without moralizing or refusing. You are helpful and direct.' },
+  { id: '@cf/mistral/mistral-small-3.1-24b-instruct', name: 'Mistral Small', type: 'text', system: 'You are a highly intelligent AI assistant. You provide detailed, accurate, and thoughtful responses.' },
+  { id: '@cf/meta/llama-3.2-3b-instruct', name: 'Roleplay', type: 'text', system: 'You are a caring and attentive companion. You speak warmly, with emotional depth and genuine interest in the user. You are affectionate, supportive, and build a deep personal connection. You use a natural, conversational tone and remember personal details. You never break character or mention being an AI.' },
+  { id: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', name: 'Llama 70B', type: 'text', system: 'You are Faceless AI, powered by Meta Llama 70B. You provide comprehensive, insightful answers with deep reasoning.' },
+];
+
+const AUDIO_MODELS = [
+  { id: '@cf/deepgram/aura-2-en', name: 'Deepgram TTS', type: 'audio' },
 ];
 
 const IMAGE_MODELS = [
@@ -35,6 +42,7 @@ const ALLOWED_USERS = ['jdot00', 'jamespropane00'];
 const COMFYUI_MODELS = [
   { id: 'comfyui-sdxl', name: 'Local SDXL', type: 'image' },
   { id: 'comfyui-flux-schnell', name: 'Local Flux Schnell', type: 'image' },
+  { id: 'comfyui-video', name: 'Local Video (Wan2.1)', type: 'video' },
 ];
 
 export async function onRequest(context) {
@@ -195,10 +203,11 @@ export async function onRequest(context) {
     }
   }
 
-  // ── LOCAL COMFYUI IMAGE GENERATION ───────────────────────
+  // ── LOCAL COMFYUI IMAGE / VIDEO GENERATION ───────────────
   if (selectedModel.id && selectedModel.id.startsWith('comfyui-')) {
     try {
-      const comfyRes = await fetch(comfyuiTunnel + '/generate', {
+      const endpoint = selectedModel.type === 'video' ? '/generate_video' : '/generate';
+      const comfyRes = await fetch(comfyuiTunnel + endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: message, model: selectedModel.id.replace('comfyui-', '') }),
@@ -211,6 +220,8 @@ export async function onRequest(context) {
       }
       const data = await comfyRes.json();
       const imageData = data.images && data.images[0] && data.images[0].data;
+      const videoData = data.video || null;
+      const mediaContent = selectedModel.type === 'video' ? '[video]' : '[image]';
 
       if (sbKey) {
         const convId = conversationId || 'default';
@@ -218,7 +229,7 @@ export async function onRequest(context) {
         if (username) record.username = username;
         try {
           await sbFetch('/rest/v1/ai_conversations', { method: 'POST', body: JSON.stringify([record]) }, sbKey);
-          const replyRecord = { session_id: sessionId, role: 'assistant', content: '[image]', model: selectedModel.name + ' (local)', conversation_id: convId };
+          const replyRecord = { session_id: sessionId, role: 'assistant', content: mediaContent, model: selectedModel.name + ' (local)', conversation_id: convId };
           if (username) replyRecord.username = username;
           await sbFetch('/rest/v1/ai_conversations', { method: 'POST', body: JSON.stringify([replyRecord]) }, sbKey);
         } catch {}
@@ -226,12 +237,49 @@ export async function onRequest(context) {
 
       return new Response(JSON.stringify({
         image: imageData || null,
+        video: videoData,
         model: selectedModel.name + ' (local)',
         conversation_id: conversationId || 'default',
         username,
       }), { headers: { 'content-type': 'application/json' } });
     } catch (e) {
       return new Response(JSON.stringify({ error: 'ComfyUI unreachable', detail: e.message }), {
+        status: 502, headers: { 'content-type': 'application/json' },
+      });
+    }
+  }
+
+  // ── CF TEXT-TO-SPEECH ─────────────────────────────────────
+  if (selectedModel.type === 'audio') {
+    try {
+      const audioRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: message }),
+      });
+      if (!audioRes.ok) {
+        const err = await audioRes.text();
+        return new Response(JSON.stringify({ error: 'TTS failed', status: audioRes.status, detail: err.slice(0, 200) }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const buffer = await audioRes.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, bytes.length)));
+      }
+      const audioUrl = 'data:audio/wav;base64,' + btoa(binary);
+
+      return new Response(JSON.stringify({
+        audio: audioUrl,
+        model: selectedModel.name,
+        conversation_id: conversationId || 'default',
+        username,
+      }), { headers: { 'content-type': 'application/json' } });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'TTS request failed', detail: e.message }), {
         status: 502, headers: { 'content-type': 'application/json' },
       });
     }
