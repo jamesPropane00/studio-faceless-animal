@@ -142,6 +142,8 @@
     .msg.user .label { color: var(--bright); }
     .msg.assistant .label { color: var(--cyan); }
     .msg.assistant img { max-width: 100%; border-radius: 10px; margin-top: 0.5rem; }
+    .download-btn { display: inline-block; padding: 0.4rem 0.8rem; border-radius: 8px; background: linear-gradient(135deg, var(--purple), var(--bright)); color: #fff; font-size: 0.78rem; font-weight: 600; text-decoration: none; margin-top: 0.3rem; transition: opacity 0.15s; }
+    .download-btn:hover { opacity: 0.85; }
     .typing { display: flex; gap: 4px; padding: 0.4rem 0; }
     .typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--dim); animation: bounce 1.2s infinite; }
     .typing span:nth-child(2) { animation-delay: 0.2s; }
@@ -398,7 +400,7 @@
         const data = await res.json();
 
         if (model.type === 'image' && data.image) {
-          addMessage('assistant', '<strong>' + model.name + ':</strong><br><img src="' + data.image + '" alt="Generated image" />');
+          addMessage('assistant', '<strong>' + model.name + ':</strong><br><img src="' + data.image + '" alt="Generated image" style="max-width:100%;border-radius:10px;margin-bottom:8px" /><br><a href="' + data.image + '" download="faceless-ai-' + Date.now() + '.png" class="download-btn">Download Image</a>');
         } else {
           addMessage('assistant', data.reply || 'No response.');
         }
