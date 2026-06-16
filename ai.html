@@ -150,19 +150,20 @@
       document.getElementById('sendBtn').disabled = true;
 
       try {
-        const res = await fetch('/api/ai/chat', {
+        const res = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text }),
+          body: JSON.stringify({ inputs: text, parameters: { max_new_tokens: 1024, return_full_text: false } }),
         });
         removeTyping();
         if (!res.ok) {
-          const err = await res.json();
-          addMessage('system', 'Error: ' + (err.error || 'Request failed.'));
+          const err = await res.text();
+          addMessage('system', 'AI is warming up — try again in a few seconds.');
           return;
         }
         const data = await res.json();
-        addMessage('assistant', data.reply || 'No response.');
+        const reply = Array.isArray(data) && data[0] ? (data[0].generated_text || '') : (data.generated_text || 'No response.');
+        addMessage('assistant', reply);
       } catch (e) {
         removeTyping();
         addMessage('system', 'Error: ' + e.message);
