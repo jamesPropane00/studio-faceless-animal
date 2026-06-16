@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Run open source AI agents locally. OpenCode, Ollama, and the Faceless AI stack — full control, no gatekeepers." />
+  <title>Faceless AI — Faceless Animal Studios</title>
+  <link rel="stylesheet" href="assets/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-main: #0a0b0f;
+      --bg-soft: #11131a;
+      --bg-card: rgba(28, 29, 39, 0.94);
+      --bg-card-2: rgba(22, 23, 31, 0.96);
+      --text-main: #f3f3fa;
+      --text-soft: #c9cae5;
+      --text-dim: #9da0bc;
+      --purple: #7c3aed;
+      --purple-bright: #a78bfa;
+      --purple-soft: rgba(167, 139, 250, 0.14);
+      --gold: #f5c451;
+      --border: rgba(167, 139, 250, 0.16);
+      --shadow: 0 10px 40px rgba(124, 58, 237, 0.18), 0 3px 12px rgba(0, 0, 0, 0.22);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --max: 1180px;
+      --green: #4ade80;
+      --cyan: #22d3ee;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      color: var(--text-main);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.18) 0%, rgba(124, 58, 237, 0.06) 20%, transparent 46%),
+        radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.04) 0%, transparent 30%),
+        linear-gradient(180deg, #141621 0%, #0b0c12 42%, #08090d 100%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      width: min(var(--max), calc(100% - 1.2rem));
+      margin: 0 auto;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(7, 8, 12, 0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(167, 139, 250, 0.08);
+    }
+
+    .navbar-inner {
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .navbar-logo {
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 0.01em;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .navbar-logo span { color: var(--purple-bright); }
+
+    .navbar-links {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex-wrap: wrap;
+    }
+
+    .navbar-links a {
+      color: var(--text-soft);
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .navbar-links a:hover { color: #fff; }
+
+    .nav-cta {
+      padding: 0.72rem 1rem;
+      border-radius: 999px;
+      background: linear-gradient(120deg, var(--purple) 0%, var(--purple-bright) 100%);
+      color: #fff !important;
+      box-shadow: 0 8px 25px rgba(124, 58, 237, 0.24);
+    }
+
+    .nav-toggle {
+      display: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .nav-toggle span {
+      width: 18px;
+      height: 2px;
+      border-radius: 99px;
+      background: #fff;
+      display: block;
+    }
+
+    .mobile-nav {
+      display: none;
+      padding: 0.75rem 1rem 1rem;
+      background: rgba(10, 11, 15, 0.98);
+      border-bottom: 1px solid rgba(167, 139, 250, 0.08);
+    }
+
+    .mobile-nav.open { display: block; }
+
+    .mobile-nav a {
+      display: block;
+      padding: 0.85rem 0;
+      color: var(--text-soft);
+      font-weight: 600;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    main { padding-bottom: 4rem; }
+
+    .hero-wrap { padding: 1.2rem 0 0.8rem; }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .hero-main,
+    .hero-side {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-main {
+      padding: 1.4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-main::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(167, 139, 250, 0.13) 0%, transparent 34%),
+        linear-gradient(135deg, rgba(255,255,255,0.02), transparent 38%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(167, 139, 250, 0.10);
+      color: var(--purple-bright);
+      font-size: 0.77rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .eyebrow.ai-eyebrow {
+      background: rgba(34, 211, 238, 0.10);
+      color: var(--cyan);
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 6vw, 4.3rem);
+      line-height: 0.96;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      margin: 0 0 0.85rem;
+      max-width: 10.5ch;
+    }
+
+    .hero-title .accent {
+      color: var(--purple-bright);
+      display: block;
+    }
+
+    .hero-title .accent-cyan {
+      color: var(--cyan);
+      display: block;
+    }
+
+    .hero-sub {
+      color: var(--text-soft);
+      font-size: 1.02rem;
+      line-height: 1.65;
+      max-width: 58ch;
+      margin: 0 0 1.15rem;
+    }
+
+    .code-block {
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(167, 139, 250, 0.12);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin: 1rem 0 1.2rem;
+      font-family: "Fira Code", "Cascadia Code", monospace;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: var(--cyan);
+      overflow-x: auto;
+    }
+
+    .code-block .cmt { color: #6b7280; }
+    .code-block .kw { color: var(--purple-bright); }
+    .code-block .str { color: var(--gold); }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 0.95rem 1.2rem;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+      min-height: 48px;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-primary {
+      background: linear-gradient(120deg, var(--purple) 0%, var(--purple-bright) 100%);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(124, 58, 237, 0.28);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.03);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #050505;
+      box-shadow: 0 10px 24px rgba(245, 196, 81, 0.18);
+    }
+
+    .btn-cyan {
+      background: linear-gradient(120deg, #0891b2 0%, var(--cyan) 100%);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(34, 211, 238, 0.24);
+    }
+
+    .hero-side {
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      justify-content: space-between;
+    }
+
+    .side-card {
+      background: var(--bg-card-2);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 18px;
+      padding: 1rem;
+    }
+
+    .side-label {
+      font-size: 0.74rem;
+      color: var(--purple-bright);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.45rem;
+    }
+
+    .side-label.cyan { color: var(--cyan); }
+    .side-label.gold { color: var(--gold); }
+
+    .side-title {
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+    }
+
+    .side-copy {
+      font-size: 0.92rem;
+      color: var(--text-dim);
+      line-height: 1.55;
+    }
+
+    .stack-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.9rem;
+      margin: 1rem 0 0;
+    }
+
+    .stack-item {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 1rem;
+    }
+
+    .stack-item strong {
+      display: block;
+      font-size: 1rem;
+      color: #fff;
+      margin-bottom: 0.3rem;
+    }
+
+    .stack-item strong.cyan { color: var(--cyan); }
+    .stack-item strong.gold { color: var(--gold); }
+    .stack-item strong.green { color: var(--green); }
+
+    .stack-item span {
+      color: var(--text-dim);
+      font-size: 0.86rem;
+      line-height: 1.45;
+      display: block;
+    }
+
+    .section {
+      padding: 1rem 0 0;
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin: 0 auto 1rem;
+      text-align: center;
+    }
+
+    .section-kicker {
+      color: var(--purple-bright);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-kicker.cyan { color: var(--cyan); }
+    .section-kicker.gold { color: var(--gold); }
+
+    .section-head h2 {
+      margin: 0 0 0.6rem;
+      font-size: clamp(1.8rem, 4vw, 2.9rem);
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--text-soft);
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1.15rem;
+    }
+
+    .feature-card {
+      background: linear-gradient(180deg, rgba(30, 31, 41, 0.97) 0%, rgba(18, 19, 28, 0.98) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 6px 25px rgba(124, 58, 237, 0.08);
+      padding: 1.05rem;
+      min-height: 100%;
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(167, 139, 250, 0.1);
+      color: var(--purple-bright);
+      font-size: 1.25rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .feature-icon.cyan {
+      background: rgba(34, 211, 238, 0.1);
+      color: var(--cyan);
+    }
+
+    .feature-icon.gold {
+      background: rgba(245, 196, 81, 0.1);
+      color: var(--gold);
+    }
+
+    .feature-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+      color: #fff;
+    }
+
+    .feature-desc {
+      color: var(--text-dim);
+      font-size: 0.93rem;
+      line-height: 1.62;
+      margin: 0;
+    }
+
+    .feature-list {
+      margin: 0.7rem 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .feature-list li {
+      color: var(--text-soft);
+      font-size: 0.88rem;
+      line-height: 1.45;
+      margin-bottom: 0.45rem;
+      padding-left: 1rem;
+      position: relative;
+    }
+
+    .feature-list li::before {
+      content: "\25C6";
+      position: absolute;
+      left: 0;
+      color: var(--cyan);
+      font-weight: 900;
+    }
+
+    .final-cta {
+      margin-top: 1.2rem;
+      background: linear-gradient(180deg, rgba(24, 25, 35, 0.98) 0%, rgba(14, 15, 21, 0.98) 100%);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      padding: 1.5rem 1.2rem;
+      text-align: center;
+    }
+
+    .final-cta h2 {
+      margin: 0 0 0.65rem;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      line-height: 1.04;
+      letter-spacing: -0.04em;
+    }
+
+    .final-cta p {
+      max-width: 760px;
+      margin: 0 auto;
+      color: var(--text-soft);
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+
+    .final-cta .hero-actions { justify-content: center; }
+
+    .footer {
+      margin-top: 3rem;
+      padding: 2rem 0 1.25rem;
+      background: rgba(0, 0, 0, 0.7);
+      border-top: 1px solid rgba(255,255,255,0.04);
+      text-align: center;
+    }
+
+    .footer-copy {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin: 0 0 0.9rem;
+    }
+
+    .footer-nav {
+      display: flex;
+      gap: 0.85rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .footer-nav a {
+      color: var(--text-soft);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .footer-nav a:hover { color: #fff; }
+
+    @media (max-width: 1080px) {
+      .hero-grid,
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stack-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .navbar-links { display: none; }
+      .nav-toggle { display: flex; }
+      .nav-toggle[aria-expanded="true"] + .mobile-nav { display: block; }
+
+      .hero-title { max-width: none; }
+      .hero-sub { font-size: 0.96rem; }
+      .stack-strip { grid-template-columns: 1fr; }
+
+      .hero-actions { flex-direction: column; align-items: stretch; }
+      .btn { width: 100%; }
+
+      .section { padding-top: 0.8rem; }
+      .feature-card { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="radio.html">Radio</a></li>
+          <li><a href="tv.html">TV</a></li>
+          <li><a href="neon-dreams.html">Neon Dreams</a></li>
+          <li><a href="news.html">News</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="login.html" class="nav-cta">Enter The System</a></li>
+        </ul>
+
+        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+    <a href="directory.html">Directory</a>
+    <a href="radio.html">Radio</a>
+    <a href="tv.html">TV</a>
+    <a href="neon-dreams.html">Neon Dreams</a>
+    <a href="news.html">News</a>
+    <a href="store.html">Store</a>
+    <a href="login.html" style="color: var(--gold); font-weight: 800;">Enter The System</a>
+  </div>
+
+  <main>
+    <section class="hero-wrap">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="hero-main">
+            <div class="eyebrow ai-eyebrow">Open Source AI Layer</div>
+
+            <h1 class="hero-title">
+              Run AI.
+              Own It.
+              <span class="accent-cyan">Stay Faceless.</span>
+            </h1>
+
+            <p class="hero-sub">
+              This is the AI layer of Faceless Animal Studios. Open source coding agents,
+              local LLMs through Ollama, and full control over your automation stack.
+              No subscriptions. No gatekeepers. Just the signal.
+            </p>
+
+            <div class="code-block">
+              <span class="cmt"># Install the agent</span>
+              curl -fsSL https://opencode.ai/install | bash
+
+              <span class="cmt"># Pull a local model</span>
+              ollama pull qwen3-coder
+
+              <span class="cmt"># Run it</span>
+              opencode
+            </div>
+
+            <div class="hero-actions">
+              <a href="https://opencode.ai" target="_blank" class="btn btn-cyan">Install OpenCode</a>
+              <a href="https://ollama.com" target="_blank" class="btn btn-secondary">Get Ollama</a>
+              <a href="https://github.com/jamesPropane00/studio-faceless-animal" target="_blank" class="btn btn-secondary">GitHub</a>
+            </div>
+          </div>
+
+          <aside class="hero-side">
+            <div class="side-card">
+              <div class="side-label cyan">What This Is</div>
+              <div class="side-title">A public AI page for the faceless stack.</div>
+              <div class="side-copy">
+                OpenCode + Ollama = a fully local AI coding agent. No data leaves your machine.
+                No API bills. No rate limits. Just you and the model.
+              </div>
+            </div>
+
+            <div class="side-card">
+              <div class="side-label gold">The Stack</div>
+              <div class="side-title">Open source, from top to bottom.</div>
+              <div class="side-copy">
+                OpenCode is the agent. Ollama runs the models. Your machine is the server.
+                This page exists to remind you: you don't need permission to build with AI.
+              </div>
+            </div>
+
+            <div class="side-card">
+              <div class="side-label cyan">DJ Faceless Signal</div>
+              <div class="side-title">This is not a product. This is a position.</div>
+              <div class="side-copy">
+                Every tool on this page is free, open, and runs on your own hardware.
+                The faceless way: build it yourself, own everything.
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="stack-strip">
+          <div class="stack-item">
+            <strong class="cyan">OpenCode</strong>
+            <span>Open source AI coding agent. Works in your terminal, with any LLM provider including local models.</span>
+          </div>
+          <div class="stack-item">
+            <strong class="gold">Ollama</strong>
+            <span>Run LLMs locally. Pull models like Qwen, Llama, Gemma, and DeepSeek with one command.</span>
+          </div>
+          <div class="stack-item">
+            <strong class="green">Local First</strong>
+            <span>Every model runs on your hardware. No data uploaded. No cloud dependency. Full privacy.</span>
+          </div>
+          <div class="stack-item">
+            <strong class="cyan">Open Weights</strong>
+            <span>Qwen3-Coder, DeepSeek, Llama, Gemma — state-of-the-art open models you can actually run.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="models-heading">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-kicker cyan">Recommended Models</div>
+          <h2 id="models-heading">Open models that actually work</h2>
+          <p>
+            These are models tested with OpenCode that fit on consumer hardware. Pull any of them with Ollama and start building.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="feature-icon cyan">Q</div>
+            <div class="feature-title">Qwen3-Coder</div>
+            <p class="feature-desc">
+              Alibaba's code-specialized model. Strong tool calling, long context, fits on 24GB GPUs.
+              The current best open coding model for agentic use.
+            </p>
+            <ul class="feature-list">
+              <li>ollama pull qwen3-coder</li>
+              <li>128K context window</li>
+              <li>Strong function calling</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon gold">D</div>
+            <div class="feature-title">DeepSeek Coder V3</div>
+            <p class="feature-desc">
+              DeepSeek's code model. Competitive with closed models on coding benchmarks.
+              Great for refactoring, debugging, and generating full files.
+            </p>
+            <ul class="feature-list">
+              <li>ollama pull deepseek-coder</li>
+              <li>Strong at long-form codegen</li>
+              <li>MIT license</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon cyan">G</div>
+            <div class="feature-title">Gemma 4</div>
+            <p class="feature-desc">
+              Google's open model. Smaller footprint, fast inference, solid all-around performance
+              for chat, coding, and tool-based tasks.
+            </p>
+            <ul class="feature-list">
+              <li>ollama pull gemma4</li>
+              <li>Runs on 16GB RAM</li>
+              <li>Great for daily agent use</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="stack-heading">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-kicker gold">How It Connects</div>
+          <h2 id="stack-heading">The faceless AI workflow</h2>
+          <p>
+            One terminal. Two tools. No cloud. Here is how the pieces fit together.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="feature-icon gold">1</div>
+            <div class="feature-title">Install Ollama</div>
+            <p class="feature-desc">
+              Download from ollama.com. It runs as a local server on port 11434.
+              Pull any model with one command.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon cyan">2</div>
+            <div class="feature-title">Install OpenCode</div>
+            <p class="feature-desc">
+              `npm install -g opencode-ai` or use the install script.
+              It connects to Ollama's API automatically with a config file.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon gold">3</div>
+            <div class="feature-title">Configure & Run</div>
+            <p class="feature-desc">
+              Point OpenCode to Ollama's endpoint, select your model, and start coding.
+              The agent edits files, runs commands, and searches your codebase.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="final-cta">
+          <div class="section-kicker cyan">Get Started</div>
+          <h2>Run the stack. Own your AI.</h2>
+          <p>
+            No accounts. No subscriptions. No data leaving your machine.
+            Pull a model, launch the agent, and start building like the system belongs to you —
+            because it does.
+          </p>
+
+          <div class="hero-actions">
+            <a href="https://opencode.ai" target="_blank" class="btn btn-cyan">Install OpenCode</a>
+            <a href="https://ollama.com" target="_blank" class="btn btn-gold">Download Ollama</a>
+            <a href="index.html" class="btn btn-secondary">Back to Studios</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p class="footer-copy">&copy; Faceless Animal Studios. All rights reserved.</p>
+      <nav class="footer-nav">
+        <a href="about.html">About</a>
+        <a href="directory.html">Directory</a>
+        <a href="radio.html">Radio</a>
+        <a href="tv.html">TV</a>
+        <a href="news.html">News</a>
+        <a href="store.html">Store</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    const navToggle = document.querySelector('.nav-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (navToggle && mobileMenu) {
+      navToggle.addEventListener('click', function () {
+        const expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', String(!expanded));
+        mobileMenu.classList.toggle('open');
+      });
+    }
+  </script>
+</body>
+</html>
