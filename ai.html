@@ -367,6 +367,16 @@
       document.getElementById('input').focus();
     }
 
+    function detectModel(text) {
+      const imgKw = ['draw','generate','create','make','paint','render','imagine',
+        'image of','picture of','photo of','art of','a realistic','a cartoon',
+        'a painting','a photo','a portrait','a landscape','a futuristic',
+        'a fantasy','a sci-fi','a digital art','anime style','a sketch',
+        'a drawing','a concept art','a low poly','a pixel art','a cyberpunk'];
+      const lower = text.toLowerCase().trim();
+      return imgKw.some(k => lower.includes(k)) ? 'image' : null;
+    }
+
     // ── CHAT ──
     async function send() {
       const input = document.getElementById('input');
@@ -379,9 +389,21 @@
       showTyping();
       document.getElementById('sendBtn').disabled = true;
 
-      const modelIdx = parseInt(document.getElementById('modelSelect').value);
+      let modelIdx = parseInt(document.getElementById('modelSelect').value);
       const convId = currentConvId || 'default';
-      const model = availableModels[modelIdx] || availableModels[0];
+      let model = availableModels[modelIdx] || availableModels[0];
+
+      // Auto-switch to image model if prompt looks visual
+      const intent = detectModel(text);
+      if (intent === 'image' && model.type !== 'image') {
+        const imgIdx = availableModels.findIndex(m => m.type === 'image');
+        if (imgIdx !== -1) {
+          modelIdx = imgIdx;
+          model = availableModels[imgIdx];
+          document.getElementById('modelSelect').value = imgIdx;
+          addMessage('system', 'Auto-switched to ' + model.name + ' for image generation.');
+        }
+      }
 
       try {
         const body = { message: text, session_id: SESSION_ID, model: modelIdx, conversation_id: convId };
