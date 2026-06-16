@@ -1,4 +1,5 @@
 export async function onRequest(context) {
+  try {
   if (context.request.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -72,4 +73,9 @@ export async function onRequest(context) {
   return new Response(JSON.stringify({ reply: reply || '...' }), {
     headers: { 'content-type': 'application/json' },
   });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: 'AI request failed', detail: e.message, name: e.name, stack: (e.stack||'').slice(0,200) }), {
+      status: 502, headers: { 'content-type': 'application/json' },
+    });
+  }
 }
