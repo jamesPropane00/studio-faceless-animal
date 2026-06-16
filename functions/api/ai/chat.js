@@ -252,8 +252,13 @@ export async function onRequest(context) {
         });
       }
       const buffer = await imageRes.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
-      const dataUrl = 'data:image/png;base64,' + base64;
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, bytes.length)));
+      }
+      const dataUrl = 'data:image/png;base64,' + btoa(binary);
 
       if (sbKey) {
         const convId = conversationId || 'default';
