@@ -433,7 +433,7 @@
         } else if (model.type === 'video' && data.video) {
           addMessage('assistant', '<strong>' + model.name + ':</strong><br><video src="' + data.video + '" controls style="max-width:100%;border-radius:10px;margin-bottom:8px"></video><br><a href="' + data.video + '" download="faceless-ai-' + Date.now() + '.mp4" class="download-btn">Download Video</a>');
         } else if (model.type === 'audio' && data.audio) {
-          addMessage('assistant', '<strong>' + model.name + ':</strong><br><audio src="' + data.audio + '" controls style="width:100%;margin-bottom:8px"></audio><br><a href="' + data.audio + '" download="faceless-ai-' + Date.now() + '.wav" class="download-btn">Download Audio</a>');
+          addMessage('assistant', '<strong>' + model.name + ':</strong><br><audio src="' + data.audio + '" controls style="width:100%;margin-bottom:8px"></audio><br><a href="' + data.audio + '" download="faceless-ai-' + Date.now() + '.mp3" class="download-btn">Download Audio</a>');
         } else {
           addMessage('assistant', data.reply || 'No response.');
         }
