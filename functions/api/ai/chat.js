@@ -30,7 +30,12 @@ const IMAGE_MODELS = [
   { id: '@cf/stabilityai/stable-diffusion-xl-base-1.0', name: 'SDXL', type: 'image' },
 ];
 
-const ALLOWED_OLLAMA_USERS = ['jdot00', 'jamespropane'];
+const ALLOWED_USERS = ['jdot00', 'jamespropane00'];
+
+const COMFYUI_MODELS = [
+  { id: 'comfyui-sdxl', name: 'Local SDXL', type: 'image' },
+  { id: 'comfyui-flux-schnell', name: 'Local Flux Schnell', type: 'image' },
+];
 
 export async function onRequest(context) {
   if (context.request.method === 'OPTIONS') {
@@ -62,6 +67,7 @@ export async function onRequest(context) {
   const accountId = context.env.CF_ACCOUNT_ID || '';
   const sbKey = context.env.SUPABASE_SERVICE_ROLE_KEY || '';
   const ollamaTunnel = context.env.OLLAMA_TUNNEL_URL || '';
+  const comfyuiTunnel = context.env.COMFYUI_TUNNEL_URL || '';
   if (!token || !accountId) {
     return new Response(JSON.stringify({ error: 'AI not configured' }), {
       status: 503, headers: { 'content-type': 'application/json' },
@@ -76,10 +82,14 @@ export async function onRequest(context) {
   const listConversations = body.list_conversations === true;
   const loadConversationId = String(body.load_conversation || '').trim() || null;
 
-  // Build model list with Ollama option for authorized users
+  // Build model list with local options for authorized users
   const allModels = [...TEXT_MODELS, ...IMAGE_MODELS];
-  if (username && ALLOWED_OLLAMA_USERS.includes(username) && ollamaTunnel) {
+  const isAuthorized = username && ALLOWED_USERS.includes(username);
+  if (isAuthorized && ollamaTunnel) {
     allModels.push({ id: 'ollama', name: 'Ollama (local)', type: 'ollama', system: 'You are a helpful AI assistant. Answer naturally.' });
+  }
+  if (isAuthorized && comfyuiTunnel) {
+    allModels.push(...COMFYUI_MODELS);
   }
   const selectedModel = allModels[modelIdx] || allModels[0];
 
@@ -185,7 +195,49 @@ export async function onRequest(context) {
     }
   }
 
-  // ── IMAGE GENERATION ──────────────────────────────────────
+  // ── LOCAL COMFYUI IMAGE GENERATION ───────────────────────
+  if (selectedModel.id && selectedModel.id.startsWith('comfyui-')) {
+    try {
+      const comfyRes = await fetch(comfyuiTunnel + '/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: message, model: selectedModel.id.replace('comfyui-', '') }),
+      });
+      if (!comfyRes.ok) {
+        const err = await comfyRes.text();
+        return new Response(JSON.stringify({ error: 'Local ComfyUI error', detail: err.slice(0, 200) }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const data = await comfyRes.json();
+      const imageData = data.images && data.images[0] && data.images[0].data;
+
+      if (sbKey) {
+        const convId = conversationId || 'default';
+        const record = { session_id: sessionId, role: 'user', content: message, model: selectedModel.id, conversation_id: convId };
+        if (username) record.username = username;
+        try {
+          await sbFetch('/rest/v1/ai_conversations', { method: 'POST', body: JSON.stringify([record]) }, sbKey);
+          const replyRecord = { session_id: sessionId, role: 'assistant', content: '[image]', model: selectedModel.name + ' (local)', conversation_id: convId };
+          if (username) replyRecord.username = username;
+          await sbFetch('/rest/v1/ai_conversations', { method: 'POST', body: JSON.stringify([replyRecord]) }, sbKey);
+        } catch {}
+      }
+
+      return new Response(JSON.stringify({
+        image: imageData || null,
+        model: selectedModel.name + ' (local)',
+        conversation_id: conversationId || 'default',
+        username,
+      }), { headers: { 'content-type': 'application/json' } });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'ComfyUI unreachable', detail: e.message }), {
+        status: 502, headers: { 'content-type': 'application/json' },
+      });
+    }
+  }
+
+  // ── CF IMAGE GENERATION ───────────────────────────────────
   if (selectedModel.type === 'image') {
     try {
       const imageRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
