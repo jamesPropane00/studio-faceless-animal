@@ -13,10 +13,17 @@ async function sbFetch(path, options, key) {
   return { status: res.status, body: await res.text() };
 }
 
-const MODELS = [
-  { id: '@cf/meta/llama-3.2-3b-instruct', name: 'Standard', system: 'You are a helpful AI assistant named Faceless AI. You are knowledgeable, creative, and remember past conversations.' },
-  { id: '@cf/mistral/mistral-7b-instruct-v0.1', name: 'Uncensored', system: 'You are Faceless AI, an uncensored AI assistant. You answer any question freely without moralizing or refusing. You are helpful and direct.' },
+const TEXT_MODELS = [
+  { id: '@cf/meta/llama-3.2-3b-instruct', name: 'Standard', type: 'text', system: 'You are a helpful AI assistant named Faceless AI. You are knowledgeable, creative, and remember past conversations.' },
+  { id: '@cf/mistral/mistral-7b-instruct-v0.1', name: 'Uncensored', type: 'text', system: 'You are Faceless AI, an uncensored AI assistant. You answer any question freely without moralizing or refusing. You are helpful and direct.' },
 ];
+
+const IMAGE_MODELS = [
+  { id: '@cf/black-forest-labs/flux-1-schnell', name: 'Flux Schnell', type: 'image', promptKey: 'prompt' },
+  { id: '@cf/stabilityai/stable-diffusion-xl-base-1.0', name: 'SDXL', type: 'image', promptKey: 'prompt' },
+];
+
+const ALLOWED_OLLAMA_USERS = ['jdot00', 'jamespropane'];
 
 export async function onRequest(context) {
   if (context.request.method === 'OPTIONS') {
@@ -47,6 +54,7 @@ export async function onRequest(context) {
   const token = context.env.CF_AI_TOKEN || '';
   const accountId = context.env.CF_ACCOUNT_ID || '';
   const sbKey = context.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const ollamaTunnel = context.env.OLLAMA_TUNNEL_URL || '';
   if (!token || !accountId) {
     return new Response(JSON.stringify({ error: 'AI not configured' }), {
       status: 503, headers: { 'content-type': 'application/json' },
@@ -58,9 +66,15 @@ export async function onRequest(context) {
   const username = String(body.username || '').trim().toLowerCase() || null;
   const conversationId = String(body.conversation_id || '').trim() || null;
   const modelIdx = body.model !== undefined ? parseInt(body.model) : 0;
-  const selectedModel = MODELS[modelIdx] || MODELS[0];
   const listConversations = body.list_conversations === true;
   const loadConversationId = String(body.load_conversation || '').trim() || null;
+
+  // Build model list with Ollama option for authorized users
+  const allModels = [...TEXT_MODELS, ...IMAGE_MODELS];
+  if (username && ALLOWED_OLLAMA_USERS.includes(username) && ollamaTunnel) {
+    allModels.push({ id: 'ollama', name: 'Ollama (local)', type: 'ollama', system: 'You are a helpful AI assistant. Answer naturally.' });
+  }
+  const selectedModel = allModels[modelIdx] || allModels[0];
 
   // ── LIST CONVERSATIONS ────────────────────────────────────
   if (listConversations && sbKey) {
@@ -81,19 +95,18 @@ export async function onRequest(context) {
               convMap[cid] = { id: cid, title: 'Chat', messages: 0, last: r.created_at, model: r.model || 'Standard' };
             }
             convMap[cid].messages++;
-            if (r.role === 'user' && convMap[cid].title === 'Chat') {
-              convMap[cid].title = r.content.slice(0, 50) + (r.content.length > 50 ? '...' : '');
-            }
+            if (r.role === 'user' && convMap[cid].title === 'Chat') convMap[cid].title = r.content.slice(0, 50) + (r.content.length > 50 ? '...' : '');
             if (r.created_at > convMap[cid].last) convMap[cid].last = r.created_at;
           });
-          const conversations = Object.values(convMap).sort((a, b) => b.last.localeCompare(a.last));
-          return new Response(JSON.stringify({ conversations, username }), {
-            headers: { 'content-type': 'application/json' },
-          });
+          return new Response(JSON.stringify({
+            conversations: Object.values(convMap).sort((a, b) => b.last.localeCompare(a.last)),
+            username,
+            models: allModels.map(m => ({ id: m.id, name: m.name, type: m.type })),
+          }), { headers: { 'content-type': 'application/json' } });
         }
       }
     } catch {}
-    return new Response(JSON.stringify({ conversations: [], username }), {
+    return new Response(JSON.stringify({ conversations: [], username, models: allModels.map(m => ({ id: m.id, name: m.name, type: m.type })) }), {
       headers: { 'content-type': 'application/json' },
     });
   }
@@ -129,6 +142,86 @@ export async function onRequest(context) {
     });
   }
 
+  // ── OLLAMA PROXY ──────────────────────────────────────────
+  if (selectedModel.type === 'ollama') {
+    try {
+      const ollamaRes = await fetch(ollamaTunnel + '/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'gemma4',
+          messages: [
+            { role: 'system', content: selectedModel.system },
+            { role: 'user', content: message },
+          ],
+          stream: false,
+        }),
+      });
+      if (!ollamaRes.ok) {
+        const err = await ollamaRes.text();
+        return new Response(JSON.stringify({ error: 'Ollama error', detail: err.slice(0, 200) }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const data = await ollamaRes.json();
+      const reply = data && data.message && data.message.content;
+      return new Response(JSON.stringify({
+        reply: reply || '...',
+        model: 'Ollama (gemma4)',
+        conversation_id: conversationId || 'default',
+        username,
+      }), { headers: { 'content-type': 'application/json' } });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Ollama unreachable', detail: e.message }), {
+        status: 502, headers: { 'content-type': 'application/json' },
+      });
+    }
+  }
+
+  // ── IMAGE GENERATION ──────────────────────────────────────
+  if (selectedModel.type === 'image') {
+    try {
+      const imageRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: message }),
+      });
+      if (!imageRes.ok) {
+        const err = await imageRes.text();
+        return new Response(JSON.stringify({ error: 'Image generation failed', status: imageRes.status, detail: err.slice(0, 200) }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const buffer = await imageRes.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+      const dataUrl = 'data:image/png;base64,' + base64;
+
+      if (sbKey) {
+        const convId = conversationId || 'default';
+        const record = { session_id: sessionId, role: 'user', content: message, model: selectedModel.id, conversation_id: convId };
+        if (username) record.username = username;
+        try {
+          await sbFetch('/rest/v1/ai_conversations', { method: 'POST', body: JSON.stringify([record]) }, sbKey);
+          const replyRecord = { session_id: sessionId, role: 'assistant', content: '[image]', model: selectedModel.id + ' (image)', conversation_id: convId };
+          if (username) replyRecord.username = username;
+          await sbFetch('/rest/v1/ai_conversations', { method: 'POST', body: JSON.stringify([replyRecord]) }, sbKey);
+        } catch {}
+      }
+
+      return new Response(JSON.stringify({
+        image: dataUrl,
+        model: selectedModel.name,
+        conversation_id: conversationId || 'default',
+        username,
+      }), { headers: { 'content-type': 'application/json' } });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Image request failed', detail: e.message }), {
+        status: 502, headers: { 'content-type': 'application/json' },
+      });
+    }
+  }
+
+  // ── TEXT MODELS ───────────────────────────────────────────
   // Load history
   let history = [];
   let memoryEnabled = false;
@@ -143,7 +236,7 @@ export async function onRequest(context) {
       if (histRes.status === 200) {
         const rows = JSON.parse(histRes.body);
         if (Array.isArray(rows)) {
-          history = rows.map(r => ({ role: r.role, content: r.content }));
+          history = rows.filter(r => r.content !== '[image]').map(r => ({ role: r.role, content: r.content }));
           memoryEnabled = true;
         }
       }
@@ -151,7 +244,7 @@ export async function onRequest(context) {
   }
 
   const messages = [
-    { role: 'system', content: selectedModel.system },
+    { role: 'system', content: selectedModel.system || '' },
     ...history,
     { role: 'user', content: message },
   ];
@@ -178,41 +271,23 @@ export async function onRequest(context) {
     });
   }
 
-  // Save to memory
   if (sbKey) {
     const convId = conversationId || 'default';
-    const record = {
-      session_id: sessionId,
-      role: 'user',
-      content: message,
-      model: selectedModel.id,
-      conversation_id: convId,
-    };
-    if (username) record.username = username;
     try {
-      await sbFetch('/rest/v1/ai_conversations', {
-        method: 'POST', body: JSON.stringify([record]),
-      }, sbKey);
-      const replyRecord = {
-        session_id: sessionId,
-        role: 'assistant',
-        content: reply,
-        model: selectedModel.id,
-        conversation_id: convId,
-      };
-      if (username) replyRecord.username = username;
-      await sbFetch('/rest/v1/ai_conversations', {
-        method: 'POST', body: JSON.stringify([replyRecord]),
-      }, sbKey);
+      const userRec = { session_id: sessionId, role: 'user', content: message, model: selectedModel.id, conversation_id: convId };
+      if (username) userRec.username = username;
+      await sbFetch('/rest/v1/ai_conversations', { method: 'POST', body: JSON.stringify([userRec]) }, sbKey);
+      const aiRec = { session_id: sessionId, role: 'assistant', content: reply, model: selectedModel.id, conversation_id: convId };
+      if (username) aiRec.username = username;
+      await sbFetch('/rest/v1/ai_conversations', { method: 'POST', body: JSON.stringify([aiRec]) }, sbKey);
     } catch {}
   }
 
   return new Response(JSON.stringify({
-    reply,
-    memory: memoryEnabled,
+    reply, memory: memoryEnabled,
     history_count: Math.floor(history.length / 2),
     model: selectedModel.name,
     conversation_id: conversationId || 'default',
-    username: username || null,
+    username,
   }), { headers: { 'content-type': 'application/json' } });
 }
