@@ -6,21 +6,14 @@ export async function onRequest(context) {
   const token = context.env.CF_AI_TOKEN || '';
   const accountId = context.env.CF_ACCOUNT_ID || '';
 
-  let result = { tokenLen: token.length, accountId };
-
-  // Test fetch to api.cloudflare.com
-  try {
-    const testUrl = 'https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/models/search?search=llama';
-    const resp = await fetch(testUrl, {
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-    });
-    const bodyText = await resp.text();
-    result = { status: resp.status, body: bodyText.slice(0, 500), tokenLen: token.length, accountId };
-  } catch (e) {
-    result = { error: e.message, name: e.name, stack: (e.stack || '').slice(0, 300) };
-  }
-
-  return new Response(JSON.stringify(result), {
+  return new Response(JSON.stringify({
+    tokenPrefix: token.slice(0, 10),
+    tokenLength: token.length,
+    tokenEnd: token.slice(-6),
+    accountId,
+    accountIdLength: accountId.length,
+    envList: Object.keys(context.env).join(', '),
+  }), {
     headers: { 'content-type': 'application/json' },
   });
 }
