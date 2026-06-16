@@ -36,20 +36,23 @@ export async function onRequest(context) {
   }
 
   try {
-    const testRes = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
-      method: 'HEAD',
+    const model = 'HuggingFaceH4/zephyr-7b-beta';
+    const prompt = '<|system|>\nYou are a helpful AI assistant named Faceless AI.</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
+
+    const hfRes = await fetch('https://huggingface.co/api/models/' + model, {
+      method: 'GET',
+      headers: { 'User-Agent': 'Cloudflare-Pages-Function' },
     });
-    const text = await testRes.text();
+
     return new Response(JSON.stringify({
-      ok: testRes.ok,
-      status: testRes.status,
-      text: text.slice(0, 200),
+      status: hfRes.status,
+      ok: hfRes.ok,
     }), {
       headers: { 'content-type': 'application/json' },
     });
   } catch (e) {
     return new Response(JSON.stringify({
-      error: 'API fetch failed',
+      error: 'Fetch failed',
       detail: e.message,
       name: e.name,
     }), {
