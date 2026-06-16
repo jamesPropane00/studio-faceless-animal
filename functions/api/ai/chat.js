@@ -19,8 +19,9 @@ const TEXT_MODELS = [
 ];
 
 const IMAGE_MODELS = [
-  { id: '@cf/black-forest-labs/flux-1-schnell', name: 'Flux Schnell', type: 'image', promptKey: 'prompt' },
-  { id: '@cf/stabilityai/stable-diffusion-xl-base-1.0', name: 'SDXL', type: 'image', promptKey: 'prompt' },
+  { id: '@cf/bytedance/stable-diffusion-xl-lightning', name: 'SDXL Lightning', type: 'image' },
+  { id: '@cf/black-forest-labs/flux-1-schnell', name: 'Flux Schnell', type: 'image' },
+  { id: '@cf/stabilityai/stable-diffusion-xl-base-1.0', name: 'SDXL', type: 'image' },
 ];
 
 const ALLOWED_OLLAMA_USERS = ['jdot00', 'jamespropane'];
