@@ -27,6 +27,12 @@ const AUDIO_MODELS = [
   { id: '@cf/deepgram/aura-2-en', name: 'TTS Apollo (male)', type: 'audio', voice: 'apollo' },
   { id: '@cf/deepgram/aura-2-en', name: 'TTS Athena (fem)', type: 'audio', voice: 'athena' },
   { id: '@cf/deepgram/aura-2-en', name: 'TTS Orion (male)', type: 'audio', voice: 'orion' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Aurora (fem)', type: 'audio', voice: 'aurora' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Atlas (male)', type: 'audio', voice: 'atlas' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Nova (fem)', type: 'audio', voice: 'andromeda' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Jupiter (male)', type: 'audio', voice: 'jupiter' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Selene (fem)', type: 'audio', voice: 'callista' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Phoenix (fem)', type: 'audio', voice: 'phoebe' },
 ];
 
 const IMAGE_MODELS = [
