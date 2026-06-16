@@ -36,51 +36,19 @@ export async function onRequest(context) {
   }
 
   try {
-    const HF_TOKEN = (context.env && context.env.HF_TOKEN) || '';
-    const model = 'HuggingFaceH4/zephyr-7b-beta';
-    const prompt = '<|system|>\nYou are a helpful AI assistant named Faceless AI.</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
-
-    const hfRes = await fetch('https://api-inference.huggingface.co/models/' + model, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(HF_TOKEN ? { 'Authorization': 'Bearer ' + HF_TOKEN } : {}),
-      },
-      body: JSON.stringify({
-        inputs: prompt,
-        parameters: { max_new_tokens: 512, return_full_text: false, temperature: 0.7 },
-      }),
-    });
-
-    if (!hfRes.ok) {
-      const errText = await hfRes.text();
-      return new Response(JSON.stringify({
-        error: 'AI service unavailable',
-        status: hfRes.status,
-        detail: errText.slice(0, 300),
-      }), {
-        status: 502,
-        headers: { 'content-type': 'application/json' },
-      });
-    }
-
-    const data = await hfRes.json();
-    let text = Array.isArray(data) && data[0]
-      ? (data[0].generated_text || '')
-      : (data.generated_text || '');
-
-    if (!text) text = JSON.stringify(data);
-    if (text.startsWith(prompt)) text = text.slice(prompt.length).trim();
-
-    return new Response(JSON.stringify({ reply: text.trim() || '...' }), {
+    const testRes = await fetch('https://huggingface.co', { method: 'HEAD' });
+    return new Response(JSON.stringify({
+      ok: true,
+      status: testRes.status,
+    }), {
       headers: { 'content-type': 'application/json' },
     });
   } catch (e) {
     return new Response(JSON.stringify({
-      error: 'Fetch failed',
+      error: 'HF fetch failed',
       detail: e.message,
       name: e.name,
-      stack: (e.stack || '').slice(0, 300),
+      cause: e.cause ? String(e.cause).slice(0, 200) : null,
     }), {
       status: 502,
       headers: { 'content-type': 'application/json' },
