@@ -139,6 +139,8 @@
     .msg.assistant { align-self: flex-start; background: var(--card); border: 1px solid var(--border); }
     .msg.system { align-self: center; background: rgba(245,196,81,0.08); border: 1px solid rgba(245,196,81,0.15); color: var(--gold); font-size: 0.82rem; text-align: center; max-width: 100%; }
     .msg .label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.3rem; display: block; }
+    .speak-btn { background: none; border: 1px solid var(--border); color: var(--dim); cursor: pointer; font-size: 0.75rem; padding: 0.1rem 0.35rem; border-radius: 6px; margin-left: 0.4rem; vertical-align: middle; line-height: 1; }
+    .speak-btn:hover { background: rgba(167,139,250,0.1); color: var(--bright); }
     .msg.user .label { color: var(--bright); }
     .msg.assistant .label { color: var(--cyan); }
     .msg.assistant img { max-width: 100%; border-radius: 10px; margin-top: 0.5rem; }
@@ -456,6 +458,16 @@
     }
 
     // ── UI HELPERS ──
+    function speakText(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const clean = text.replace(/<[^>]*>/g, '').replace(/```[\s\S]*?```/g, '');
+      const utter = new SpeechSynthesisUtterance(clean.slice(0, 2000));
+      utter.rate = 1.0;
+      utter.pitch = 1.0;
+      window.speechSynthesis.speak(utter);
+    }
+
     function addMessage(role, content, skipScroll) {
       const el = document.createElement('div');
       el.className = 'msg ' + role;
@@ -465,6 +477,14 @@
         label.className = 'label';
         label.textContent = role === 'user' ? 'You' : 'Faceless AI';
         el.appendChild(label);
+        if (role === 'assistant' && content.indexOf('<img') === -1 && content.indexOf('<video') === -1 && content.indexOf('<audio') === -1) {
+          const speakBtn = document.createElement('button');
+          speakBtn.className = 'speak-btn';
+          speakBtn.textContent = '\uD83D\uDD0A';
+          speakBtn.title = 'Read aloud';
+          speakBtn.onclick = function(e) { e.stopPropagation(); speakText(content); };
+          label.after(speakBtn);
+        }
         const text = document.createElement('div');
         if (content.indexOf('<img') !== -1) {
           text.innerHTML = content;
