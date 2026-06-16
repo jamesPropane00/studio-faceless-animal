@@ -36,19 +36,22 @@ export async function onRequest(context) {
   }
 
   try {
-    const testRes = await fetch('https://huggingface.co', { method: 'HEAD' });
+    const testRes = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
+      method: 'HEAD',
+    });
+    const text = await testRes.text();
     return new Response(JSON.stringify({
-      ok: true,
+      ok: testRes.ok,
       status: testRes.status,
+      text: text.slice(0, 200),
     }), {
       headers: { 'content-type': 'application/json' },
     });
   } catch (e) {
     return new Response(JSON.stringify({
-      error: 'HF fetch failed',
+      error: 'API fetch failed',
       detail: e.message,
       name: e.name,
-      cause: e.cause ? String(e.cause).slice(0, 200) : null,
     }), {
       status: 502,
       headers: { 'content-type': 'application/json' },
