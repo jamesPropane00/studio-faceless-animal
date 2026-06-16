@@ -20,7 +20,13 @@ const TEXT_MODELS = [
 
 const IMAGE_MODELS = [
   { id: '@cf/bytedance/stable-diffusion-xl-lightning', name: 'SDXL Lightning', type: 'image' },
-  { id: '@cf/black-forest-labs/flux-1-schnell', name: 'Flux Schnell', type: 'image' },
+  { id: '@cf/black-forest-labs/flux-1-schnell', name: 'Flux 1 Schnell', type: 'image' },
+  { id: '@cf/black-forest-labs/flux-2-dev', name: 'Flux 2 Dev', type: 'image' },
+  { id: '@cf/black-forest-labs/flux-2-klein-9b', name: 'Flux 2 Klein 9B', type: 'image' },
+  { id: '@cf/black-forest-labs/flux-2-klein-4b', name: 'Flux 2 Klein 4B', type: 'image' },
+  { id: '@cf/leonardo/phoenix-1.0', name: 'Leonardo Phoenix', type: 'image' },
+  { id: '@cf/leonardo/lucid-origin', name: 'Leonardo Lucid', type: 'image' },
+  { id: '@cf/lykon/dreamshaper-8-lcm', name: 'Dreamshaper LCM', type: 'image' },
   { id: '@cf/stabilityai/stable-diffusion-xl-base-1.0', name: 'SDXL', type: 'image' },
 ];
 
