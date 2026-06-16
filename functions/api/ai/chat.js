@@ -364,11 +364,15 @@ export async function onRequest(context) {
         // For inpainting, user needs to describe what to change — we use the full image as both image and mask for now
         cfBody.mask = [...imgBytes];
       }
+      const imgController = new AbortController();
+      const imgTimeout = setTimeout(() => imgController.abort(), 25000);
       const imgRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify(cfBody),
+        signal: imgController.signal,
       });
+      clearTimeout(imgTimeout);
       if (!imgRes.ok) {
         const err = await imgRes.text();
         return new Response(JSON.stringify({ error: 'Image edit failed', detail: err.slice(0, 200) }), {
@@ -416,11 +420,15 @@ export async function onRequest(context) {
       } else if (wantsArtistic) {
         prompt = message + ', high quality digital art, masterpiece, detailed, intricate, professional concept art';
       }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
       const imageRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
       if (!imageRes.ok) {
         const err = await imageRes.text();
         return new Response(JSON.stringify({ error: 'Image generation failed', status: imageRes.status, detail: err.slice(0, 200) }), {

@@ -561,13 +561,17 @@
       // Auto-switch to image/video/audio model if prompt matches
       const intent = detectModel(text);
       if (intent && model.type !== intent) {
-        const targetIdx = availableModels.findIndex(m => m.type === intent);
-        if (targetIdx !== -1) {
-          modelIdx = targetIdx;
-          model = availableModels[targetIdx];
-          document.getElementById('modelSelect').value = targetIdx;
-          addMessage('system', 'Auto-switched to ' + model.name + ' for ' + intent + ' generation.');
+        // Prefer SDXL Lightning for images (fastest, less likely to timeout)
+        if (intent === 'image') {
+          const fastIdx = availableModels.findIndex(m => m.id && m.id.includes('lightning'));
+          if (fastIdx !== -1) { modelIdx = fastIdx; model = availableModels[fastIdx]; }
+          else { modelIdx = availableModels.findIndex(m => m.type === 'image'); model = availableModels[modelIdx]; }
+        } else {
+          const targetIdx = availableModels.findIndex(m => m.type === intent);
+          if (targetIdx !== -1) { modelIdx = targetIdx; model = availableModels[targetIdx]; }
         }
+        document.getElementById('modelSelect').value = modelIdx;
+        addMessage('system', 'Auto-switched to ' + model.name + ' for ' + intent + ' generation.');
       }
 
       // Attach pending files
