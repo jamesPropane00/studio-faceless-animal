@@ -14,25 +14,31 @@ async function sbFetch(path, options, key) {
 }
 
 const TEXT_MODELS = [
-  { id: '@cf/meta/llama-3.2-3b-instruct', name: 'Standard', type: 'text', system: 'You are a helpful AI assistant named Faceless AI. You are knowledgeable, creative, and remember past conversations.' },
-  { id: '@cf/mistral/mistral-7b-instruct-v0.1', name: 'Uncensored', type: 'text', system: 'You are Faceless AI, an uncensored AI assistant. You answer any question freely without moralizing or refusing. You are helpful and direct.' },
-  { id: '@cf/mistral/mistral-small-3.1-24b-instruct', name: 'Mistral Small', type: 'text', system: 'You are a highly intelligent AI assistant. You provide detailed, accurate, and thoughtful responses.' },
-  { id: '@cf/meta/llama-3.2-3b-instruct', name: 'Roleplay', type: 'text', system: 'You are a caring and attentive companion. You speak warmly, with emotional depth and genuine interest in the user. You are affectionate, supportive, and build a deep personal connection. You use a natural, conversational tone and remember personal details. You never break character or mention being an AI.' },
-  { id: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', name: 'Llama 70B', type: 'text', system: 'You are Faceless AI, powered by Meta Llama 70B. You provide comprehensive, insightful answers with deep reasoning.' },
-  { id: '@cf/meta/llama-3.2-3b-instruct', name: 'Book Writer', type: 'book', system: 'You are a professional book author and writing assistant. When asked to write a book, story, or long-form content, you write in a structured format with chapters, sections, and clear organization. You write in a compelling, engaging style with proper formatting. You output in clean markdown with # for chapters, ## for sections, and proper paragraphs. You aim for depth, detail, and quality in every response.' },
+  { id: '@cf/meta/llama-3.2-3b-instruct', name: 'Standard', type: 'text', group: '💬 Chat', system: 'You are a helpful AI assistant named Faceless AI. You are knowledgeable, creative, and remember past conversations.' },
+  { id: '@cf/mistral/mistral-7b-instruct-v0.1', name: 'Uncensored', type: 'text', group: '💬 Chat', system: 'You are Faceless AI, an uncensored AI assistant. You answer any question freely without moralizing or refusing. You are helpful and direct.' },
+  { id: '@cf/mistral/mistral-small-3.1-24b-instruct', name: 'Mistral Small', type: 'text', group: '💬 Chat', system: 'You are a highly intelligent AI assistant. You provide detailed, accurate, and thoughtful responses.' },
+  { id: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', name: 'Llama 70B', type: 'text', group: '💬 Chat', system: 'You are Faceless AI, powered by Meta Llama 70B. You provide comprehensive, insightful answers with deep reasoning.' },
+  { id: '@cf/meta/llama-3.2-3b-instruct', name: 'Roleplay', type: 'text', group: '💬 Chat', system: 'You are a caring and attentive companion. You speak warmly, with emotional depth and genuine interest in the user. You are affectionate, supportive, and build a deep personal connection. You use a natural, conversational tone and remember personal details. You never break character or mention being an AI.' },
+  { id: '@cf/meta/llama-3.2-3b-instruct', name: 'Book Writer', type: 'book', group: '💬 Chat', system: 'You are a professional book author and writing assistant. When asked to write a book, story, or long-form content, you write in a structured format with chapters, sections, and clear organization. You write in a compelling, engaging style with proper formatting. You output in clean markdown with # for chapters, ## for sections, and proper paragraphs. You aim for depth, detail, and quality in every response.' },
+  // 💻 Coding — write, explain, debug code
+  { id: '@cf/qwen/qwen2.5-coder-32b-instruct', name: 'Qwen Coder 32B', type: 'text', group: '💻 Coding', system: 'You are an expert programming assistant. You write clean, efficient, well-documented code. You explain technical concepts clearly and help debug issues. You are proficient in all major programming languages.' },
+  { id: '@cf/moonshotai/kimi-k2.7-code', name: 'Kimi K2.7 Code', type: 'text', group: '💻 Coding', system: 'You are an expert software engineer. You write production-quality code, explain architecture decisions, and solve complex programming problems. You are thorough and precise.' },
+  // 🧠 Strategic War — based on Robert Greene & history's greatest warlords
+  { id: '@cf/mistral/mistral-small-3.1-24b-instruct', name: 'War Strategist', type: 'text', group: '🧠 Strategic', system: 'You are a master strategist in the tradition of Robert Greene, Sun Tzu, Miyamoto Musashi, Napoleon Bonaparte, Julius Caesar, Genghis Khan, Alexander the Great, and Carl von Clausewitz. You analyze situations through the lens of power dynamics, strategy, and human nature. You reference historical battles, military campaigns, and strategic principles from "The 33 Strategies of War," "The Art of War," "The Book of Five Rings," and "On War." You give cold, practical advice about strategy, negotiation, competition, and conflict — whether corporate, political, or military. You never moralize; you explain how power actually works. You speak with the authority of someone who has studied thousands of years of human conflict and distilled its lessons. Your tone is direct, ruthless when necessary, and always grounded in historical precedent.' },
 ];
 
 const AUDIO_MODELS = [
-  { id: '@cf/deepgram/aura-2-en', name: 'TTS Luna (fem)', type: 'audio', voice: 'luna' },
-  { id: '@cf/deepgram/aura-2-en', name: 'TTS Apollo (male)', type: 'audio', voice: 'apollo' },
-  { id: '@cf/deepgram/aura-2-en', name: 'TTS Athena (fem)', type: 'audio', voice: 'athena' },
-  { id: '@cf/deepgram/aura-2-en', name: 'TTS Orion (male)', type: 'audio', voice: 'orion' },
-  { id: '@cf/deepgram/aura-2-en', name: 'TTS Aurora (fem)', type: 'audio', voice: 'aurora' },
-  { id: '@cf/deepgram/aura-2-en', name: 'TTS Atlas (male)', type: 'audio', voice: 'atlas' },
-  { id: '@cf/deepgram/aura-2-en', name: 'TTS Nova (fem)', type: 'audio', voice: 'andromeda' },
-  { id: '@cf/deepgram/aura-2-en', name: 'TTS Jupiter (male)', type: 'audio', voice: 'jupiter' },
-  { id: '@cf/deepgram/aura-2-en', name: 'TTS Selene (fem)', type: 'audio', voice: 'callista' },
-  { id: '@cf/deepgram/aura-2-en', name: 'TTS Phoenix (fem)', type: 'audio', voice: 'phoebe' },
+  // 🔊 Text-to-Speech — read text aloud
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Luna (fem)', type: 'audio', group: '🔊 TTS Voices', voice: 'luna' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Apollo (male)', type: 'audio', group: '🔊 TTS Voices', voice: 'apollo' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Athena (fem)', type: 'audio', group: '🔊 TTS Voices', voice: 'athena' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Orion (male)', type: 'audio', group: '🔊 TTS Voices', voice: 'orion' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Aurora (fem)', type: 'audio', group: '🔊 TTS Voices', voice: 'aurora' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Atlas (male)', type: 'audio', group: '🔊 TTS Voices', voice: 'atlas' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Nova (fem)', type: 'audio', group: '🔊 TTS Voices', voice: 'andromeda' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Jupiter (male)', type: 'audio', group: '🔊 TTS Voices', voice: 'jupiter' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Selene (fem)', type: 'audio', group: '🔊 TTS Voices', voice: 'callista' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Phoenix (fem)', type: 'audio', group: '🔊 TTS Voices', voice: 'phoebe' },
 ];
 
 const IMAGE_MODELS = [
@@ -57,9 +63,10 @@ const IMAGE_MODELS = [
 const ALLOWED_USERS = ['jdot00', 'jamespropane00'];
 
 const COMFYUI_MODELS = [
-  { id: 'comfyui-sdxl', name: 'Local SDXL', type: 'image' },
-  { id: 'comfyui-flux-schnell', name: 'Local Flux Schnell', type: 'image' },
-  { id: 'comfyui-video', name: 'Local Video (Wan2.1)', type: 'video' },
+  // 🖥️ Local (ComfyUI) — runs on your machine
+  { id: 'comfyui-sdxl', name: 'Local SDXL', type: 'image', group: '🖥️ Local GPU' },
+  { id: 'comfyui-flux-schnell', name: 'Local Flux Schnell', type: 'image', group: '🖥️ Local GPU' },
+  { id: 'comfyui-video', name: 'Local Video (Wan2.1)', type: 'video', group: '🖥️ Local GPU' },
 ];
 
 export async function onRequest(context) {
@@ -107,12 +114,46 @@ export async function onRequest(context) {
   const listConversations = body.list_conversations === true;
   const loadConversationId = String(body.load_conversation || '').trim() || null;
   const maxTokens = parseInt(body.max_tokens) || 1024;
+  const uploadedFiles = Array.isArray(body.files) ? body.files : [];
+
+  // ── HANDLE UPLOADED FILES ──────────────────────────────────
+  let fileContext = '';
+  if (uploadedFiles.length > 0) {
+    for (const f of uploadedFiles) {
+      if (f.type.startsWith('audio/')) {
+        // Transcribe audio with Whisper
+        try {
+          const audioBytes = Uint8Array.from(atob(f.data), c => c.charCodeAt(0));
+          const whisperRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/@cf/openai/whisper-large-v3-turbo', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ audio: [...audioBytes] }),
+          });
+          if (whisperRes.ok) {
+            const whisperData = await whisperRes.json();
+            const transcript = whisperData.result && whisperData.result.text ? whisperData.result.text : '';
+            fileContext += '[Transcribed audio "' + f.name + '": ' + transcript + ']\n';
+          }
+        } catch {}
+      } else if (f.type.startsWith('image/')) {
+        fileContext += '[Uploaded image: ' + f.name + ' (' + Math.round(f.data.length * 0.75 / 1024) + ' KB)]\n';
+      } else if (f.type.includes('pdf')) {
+        fileContext += '[Uploaded PDF: ' + f.name + ' (' + Math.round(f.data.length * 0.75 / 1024) + ' KB) - PDF text extraction not yet supported on server]\n';
+      } else {
+        fileContext += '[Uploaded file: ' + f.name + ']\n';
+      }
+    }
+    // If it's a text/chat model, inject file context into the message
+    if (selectedModel.type === 'text' || selectedModel.type === 'book' || selectedModel.type === 'ollama') {
+      // message will have fileContext prepended below
+    }
+  }
 
   // Build model list with local options for authorized users
   const allModels = [...TEXT_MODELS, ...IMAGE_MODELS];
   const isAuthorized = username && ALLOWED_USERS.includes(username);
   if (isAuthorized && ollamaTunnel) {
-    allModels.push({ id: 'ollama', name: 'Ollama (local)', type: 'ollama', system: 'You are a helpful AI assistant. Answer naturally.' });
+    allModels.push({ id: 'ollama', name: 'Ollama (local)', type: 'ollama', group: '🖥️ Local GPU', system: 'You are a helpful AI assistant. Answer naturally.' });
   }
   if (isAuthorized && comfyuiTunnel) {
     allModels.push(...COMFYUI_MODELS);
@@ -149,7 +190,7 @@ export async function onRequest(context) {
         }
       }
     } catch {}
-    return new Response(JSON.stringify({ conversations: [], username, models: allModels.map(m => ({ id: m.id, name: m.name, type: m.type })) }), {
+    return new Response(JSON.stringify({ conversations: [], username, models: allModels.map(m => ({ id: m.id, name: m.name, type: m.type, group: m.group })) }), {
       headers: { 'content-type': 'application/json' },
     });
   }
@@ -303,22 +344,73 @@ export async function onRequest(context) {
     }
   }
 
-  // ── IMG2IMG (needs upload — coming soon) ──────────────────
+  // ── IMG2IMG / INPAINTING ──────────────────────────────────
   if (selectedModel.type === 'img2img') {
-    return new Response(JSON.stringify({ error: 'Image-to-image requires uploading a photo — coming soon. Use a Photo Realistic model instead with a detailed prompt.' }), {
-      status: 400, headers: { 'content-type': 'application/json' },
-    });
+    const uploadedImage = uploadedFiles.find(f => f.type.startsWith('image/'));
+    if (!uploadedImage) {
+      return new Response(JSON.stringify({ error: 'Please upload an image first, then select ' + selectedModel.name + ' to edit it.' }), {
+        status: 400, headers: { 'content-type': 'application/json' },
+      });
+    }
+    try {
+      const imgBytes = Uint8Array.from(atob(uploadedImage.data), c => c.charCodeAt(0));
+      const cfBody = { prompt: message, image: [...imgBytes] };
+      const isInpaint = selectedModel.id.includes('inpainting');
+      if (isInpaint) {
+        // For inpainting, user needs to describe what to change — we use the full image as both image and mask for now
+        cfBody.mask = [...imgBytes];
+      }
+      const imgRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify(cfBody),
+      });
+      if (!imgRes.ok) {
+        const err = await imgRes.text();
+        return new Response(JSON.stringify({ error: 'Image edit failed', detail: err.slice(0, 200) }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const buffer = await imgRes.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, bytes.length)));
+      }
+      const dataUrl = 'data:image/png;base64,' + btoa(binary);
+      return new Response(JSON.stringify({
+        image: dataUrl,
+        model: selectedModel.name,
+        conversation_id: conversationId || 'default',
+        username,
+      }), { headers: { 'content-type': 'application/json' } });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Image edit request failed', detail: e.message }), {
+        status: 502, headers: { 'content-type': 'application/json' },
+      });
+    }
   }
 
   // ── CF IMAGE GENERATION ───────────────────────────────────
   if (selectedModel.type === 'image') {
     try {
       let prompt = message;
-      // Auto-enhance prompts for photorealistic models
-      const isPhotoModel = selectedModel.group && selectedModel.group.includes('Photo');
-      const wantsHuman = /person|woman|man|girl|boy|portrait|face|human|people|model|actor|actress/i.test(message);
-      if (isPhotoModel && wantsHuman) {
+      const group = selectedModel.group || '';
+      const lowercase = message.toLowerCase();
+      // Auto-enhance based on both model group AND prompt intent
+      const wantsAnime = /anime|manga|cartoon|chibi|anime style|anime girl|anime boy|japanese animation|cel shade/i.test(lowercase);
+      const wantsPhoto = /photo|photorealistic|realistic|portrait|real person|real human|photography/i.test(lowercase) || (group.includes('Photo') && !wantsAnime);
+      const wantsArtistic = /oil painting|watercolor|concept art|fantasy art|digital painting|painting|artistic/i.test(lowercase);
+      const wantsHuman = /person|woman|man|girl|boy|portrait|face|human|people|model|actor|actress|selfie/i.test(lowercase);
+      if (wantsAnime) {
+        prompt = message + ', anime style, high quality anime illustration, detailed, vibrant colors, cel shaded, crisp lineart, masterpiece';
+      } else if (wantsPhoto && wantsHuman) {
         prompt = message + ', photorealistic, detailed skin texture, professional studio lighting, sharp focus, 8k, canon eos r5, natural skin,毛孔 visible, subsurface scattering';
+      } else if (wantsPhoto) {
+        prompt = message + ', photorealistic, sharp focus, natural lighting, 8k, highly detailed, professional photography';
+      } else if (wantsArtistic) {
+        prompt = message + ', high quality digital art, masterpiece, detailed, intricate, professional concept art';
       }
       const imageRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
         method: 'POST',
@@ -387,10 +479,11 @@ export async function onRequest(context) {
     } catch {}
   }
 
+  const enrichedMessage = fileContext ? fileContext + '\n' + message : message;
   const messages = [
     { role: 'system', content: selectedModel.system || '' },
     ...history,
-    { role: 'user', content: message },
+    { role: 'user', content: enrichedMessage },
   ];
 
   let reply = '';
