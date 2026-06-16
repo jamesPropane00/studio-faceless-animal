@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="description" content="Faceless AI Chat — Run open source models from your browser. Powered by OpenRouter." />
+  <meta name="description" content="Faceless AI Chat — Open source AI with memory." />
   <title>Faceless AI — Chat</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
@@ -33,7 +33,7 @@
     .navbar-inner {
       min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
     }
-    .navbar-logo { font-size: 0.95rem; font-weight: 900; color: #fff; white-space: nowrap; }
+    .navbar-logo { font-size: 0.95rem; font-weight: 900; color: #fff; white-space: nowrap; text-decoration: none; }
     .navbar-logo span { color: var(--bright); }
     .navbar-links { display: flex; gap: 0.75rem; list-style: none; flex-wrap: wrap; }
     .navbar-links a { color: var(--soft); font-size: 0.82rem; font-weight: 600; text-decoration: none; }
@@ -83,20 +83,12 @@
       display: flex; gap: 0.5rem; align-items: center; padding: 0.5rem 0 0.25rem;
       font-size: 0.75rem; color: var(--dim); flex-wrap: wrap;
     }
-    .model-bar select {
-      background: var(--surface); color: var(--text); border: 1px solid var(--border);
-      border-radius: 8px; padding: 0.3rem 0.5rem; font-size: 0.75rem; outline: none;
+    .memory-badge {
+      margin-left: auto;
+      padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;
     }
-    .model-bar .key-status { margin-left: auto; cursor: pointer; padding: 0.25rem 0.5rem; border-radius: 6px; background: rgba(255,255,255,0.03); }
-    .model-bar .key-status.set { color: var(--green, #4ade80); }
-    .model-bar .key-status.unset { color: var(--gold); }
-
-    .scroll-top {
-      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-      background: var(--card); border: 1px solid var(--border); border-radius: 999px;
-      padding: 0.4rem 1rem; font-size: 0.75rem; color: var(--dim); cursor: pointer; z-index: 50;
-      display: none; backdrop-filter: blur(8px);
-    }
+    .memory-badge.on { background: rgba(74,222,128,0.1); color: #4ade80; }
+    .memory-badge.off { background: rgba(255,255,255,0.03); color: var(--dim); }
     @media (max-width: 600px) {
       .navbar-links a:not(.nav-cta) { display: none; }
       .msg { max-width: 95%; font-size: 0.88rem; }
@@ -107,7 +99,7 @@
 <body>
   <nav class="navbar">
     <div class="navbar-inner">
-      <a href="index.html" class="navbar-logo" style="text-decoration:none">Faceless <span>Animal</span> AI</a>
+      <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> AI</a>
       <ul class="navbar-links">
         <li><a href="ai.html">Chat</a></li>
         <li><a href="index.html">Studios</a></li>
@@ -119,7 +111,7 @@
   <main>
     <div class="chat-header">
       <h1>Faceless <span>AI</span></h1>
-      <p>Open source models. No gatekeepers. Your key, your control.</p>
+      <p>Open source AI that remembers our conversations.</p>
     </div>
 
     <div class="chat-messages" id="messages"></div>
@@ -127,11 +119,11 @@
     <div class="chat-input-area">
       <div class="model-bar">
         <select id="modelSelect">
-          <option value="0">TinyLlama 1.1B (fast)</option>
-          <option value="1">Zephyr 7B (smart)</option>
-          <option value="2">Phi-2 2.7B</option>
+          <option value="0">Standard (LLama 3.2)</option>
+          <option value="1">Uncensored (Mistral 7B)</option>
         </select>
-        <span style="color:var(--dim);font-size:0.75rem">Free open source AI</span>
+        <span id="modelWarning" style="display:none;color:var(--gold);font-size:0.75rem">&#9888; Uncensored model — no content filters</span>
+        <span id="memoryBadge" class="memory-badge off">&#9679; memory off</span>
       </div>
       <div class="input-row">
         <textarea id="input" rows="1" placeholder="Message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}"></textarea>
@@ -140,9 +132,54 @@
     </div>
   </main>
 
-
-
   <script>
+    // Model selector warning toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const sel = document.getElementById('modelSelect');
+      const warn = document.getElementById('modelWarning');
+      sel.addEventListener('change', function() {
+        warn.style.display = this.value === '1' ? 'inline' : 'none';
+      });
+    });
+
+    // Persistent session — survives page reloads
+    const SESSION_ID = localStorage.getItem('fas_ai_session') || (function() {
+      const id = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+      localStorage.setItem('fas_ai_session', id);
+      return id;
+    })();
+
+    // Load past messages from the server on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+      addMessage('system', 'Welcome back, Faceless. I remember our conversations.');
+
+      // Fetch conversation history
+      const modelIdx = document.getElementById('modelSelect').value;
+      try {
+        const res = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: '.load', session_id: SESSION_ID, load_only: true, model: parseInt(modelIdx) }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.history && Array.isArray(data.history)) {
+            data.history.forEach(msg => {
+              addMessage(msg.role, msg.content, true);
+            });
+          }
+          if (data.memory) {
+            document.getElementById('memoryBadge').className = 'memory-badge on';
+            document.getElementById('memoryBadge').textContent = '\u25CF memory on (' + data.history_count + ' past chats)';
+          }
+        }
+      } catch {}
+
+      const ta = document.getElementById('input');
+      ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 150) + 'px'; });
+      ta.focus();
+    });
+
     async function send() {
       const input = document.getElementById('input');
       const text = input.value.trim();
@@ -159,20 +196,22 @@
         const res = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text, model: parseInt(modelIdx) }),
+          body: JSON.stringify({ message: text, session_id: SESSION_ID, model: parseInt(modelIdx) }),
         });
         removeTyping();
         if (!res.ok) {
           const err = await res.json();
-          const msg = 'Error: ' + (err.error || 'Request failed.');
-          addMessage('system', msg);
-          if (err.retryable) {
-            addRetryButton(text, modelIdx);
-          }
+          addMessage('system', 'Error: ' + (err.error || 'Request failed.'));
           return;
         }
         const data = await res.json();
         addMessage('assistant', data.reply || 'No response.');
+
+        if (data.memory) {
+          const badge = document.getElementById('memoryBadge');
+          badge.className = 'memory-badge on';
+          badge.textContent = '\u25CF memory on (' + (data.history_count || 0) + ' past chats)';
+        }
       } catch (e) {
         removeTyping();
         addMessage('system', 'Error: ' + e.message);
@@ -181,7 +220,7 @@
       }
     }
 
-    function addMessage(role, content) {
+    function addMessage(role, content, skipScroll) {
       const el = document.createElement('div');
       el.className = 'msg ' + role;
       if (role === 'system') { el.textContent = content; }
@@ -195,7 +234,7 @@
         el.appendChild(text);
       }
       document.getElementById('messages').appendChild(el);
-      el.scrollIntoView({ behavior: 'smooth' });
+      if (!skipScroll) el.scrollIntoView({ behavior: 'smooth' });
     }
 
     function formatContent(text) {
@@ -220,35 +259,10 @@
       el.scrollIntoView({ behavior: 'smooth' });
     }
 
-    function addRetryButton(msg, modelIdx) {
-      const el = document.createElement('div');
-      el.className = 'msg system';
-      const btn = document.createElement('button');
-      btn.textContent = 'Retry';
-      btn.style.cssText = 'margin-top:0.5rem;padding:0.4rem 1rem;border-radius:8px;border:none;background:linear-gradient(135deg,var(--purple),var(--bright));color:#fff;font-size:0.82rem;cursor:pointer;';
-      btn.onclick = async () => {
-        el.remove();
-        input.value = msg;
-        document.getElementById('modelSelect').value = String(modelIdx);
-        send();
-      };
-      el.textContent = 'Model may need a moment. ';
-      el.appendChild(btn);
-      document.getElementById('messages').appendChild(el);
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-
     function removeTyping() {
       const el = document.getElementById('typing-indicator');
       if (el) el.remove();
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      addMessage('system', 'Welcome to Faceless AI. Ask anything — powered by open source models.');
-      const ta = document.getElementById('input');
-      ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 150) + 'px'; });
-      ta.focus();
-    });
   </script>
 </body>
 </html>
