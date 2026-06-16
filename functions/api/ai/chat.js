@@ -35,11 +35,10 @@ export async function onRequest(context) {
     });
   }
 
-  const HF_TOKEN = context.env.HF_TOKEN || '';
-  const model = 'HuggingFaceH4/zephyr-7b-beta';
-  const prompt = '<|system|>\nYou are a helpful AI assistant named Faceless AI.</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
-
   try {
+    const HF_TOKEN = (context.env && context.env.HF_TOKEN) || '';
+    const model = 'HuggingFaceH4/zephyr-7b-beta';
+    const prompt = '<|system|>\nYou are a helpful AI assistant named Faceless AI.</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
     const hfRes = await fetch('https://api-inference.huggingface.co/models/' + model, {
       method: 'POST',
       headers: {
