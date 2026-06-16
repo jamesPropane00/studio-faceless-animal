@@ -826,429 +826,614 @@
         padding: 1rem;
       }
     }
+
+    /* Dark signal-board homepage revamp */
+    html,
+    body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      background:
+        linear-gradient(rgba(33,244,208,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,47,79,0.035) 1px, transparent 1px),
+        radial-gradient(circle at 12% 0%, rgba(255,47,79,0.16), transparent 30%),
+        radial-gradient(circle at 84% 8%, rgba(33,244,208,0.12), transparent 28%),
+        linear-gradient(180deg, #07080c 0%, #040509 52%, #020305 100%);
+      background-size: 44px 44px, 44px 44px, auto, auto, auto;
+    }
+
+    .home-board {
+      width: min(1180px, calc(100% - 1.2rem));
+      margin: 0 auto;
+      padding: clamp(0.8rem, 2vw, 1.25rem) 0 4rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .signal-hero,
+    .signal-panel,
+    .signal-card,
+    .drop-card,
+    .wire-card {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: rgba(8,9,13,0.92);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+
+    .signal-hero {
+      min-height: min(720px, calc(100dvh - 92px));
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+      gap: 1rem;
+      align-items: stretch;
+      padding: clamp(1rem, 3vw, 1.35rem);
+      isolation: isolate;
+      background:
+        linear-gradient(90deg, rgba(3,4,7,0.98), rgba(3,4,7,0.76) 45%, rgba(3,4,7,0.26)),
+        radial-gradient(circle at 78% 15%, rgba(33,244,208,0.16), transparent 28%),
+        radial-gradient(circle at 18% 12%, rgba(255,47,79,0.22), transparent 30%),
+        #030407;
+    }
+
+    .signal-hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(rgba(255,255,255,0.055) 50%, rgba(0,0,0,0.04) 50%);
+      background-size: 100% 4px;
+      opacity: 0.26;
+      mix-blend-mode: screen;
+    }
+
+    .signal-hero::after {
+      content: "FACELESS ANIMAL STUDIOS";
+      position: absolute;
+      right: -0.35rem;
+      bottom: -0.7rem;
+      z-index: -1;
+      color: rgba(255,255,255,0.035);
+      font-size: clamp(3.8rem, 12vw, 10rem);
+      line-height: 0.8;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      max-width: 7ch;
+      text-align: right;
+    }
+
+    .signal-copy {
+      display: grid;
+      align-content: end;
+      gap: 1rem;
+      min-width: 0;
+    }
+
+    .signal-kicker,
+    .signal-tag,
+    .drop-tag,
+    .wire-tag {
+      color: #21f4d0;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .signal-title {
+      max-width: 9ch;
+      margin: 0;
+      color: #fff;
+      font-size: clamp(3rem, 10vw, 8.4rem);
+      line-height: 0.82;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .signal-title span {
+      display: block;
+      color: #ff2f4f;
+      text-shadow: 0 0 34px rgba(255,47,79,0.36);
+      overflow-wrap: anywhere;
+    }
+
+    .signal-sub {
+      max-width: 62ch;
+      margin: 0;
+      color: #d9dbe7;
+      font-size: 1rem;
+      line-height: 1.62;
+    }
+
+    .signal-actions,
+    .signal-chip-row,
+    .wire-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+    }
+
+    .signal-chip-row a,
+    .wire-links a {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.045);
+      color: #eef3ff;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .signal-visual {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 0.75rem;
+      align-content: stretch;
+    }
+
+    .signal-poster,
+    .signal-stack img,
+    .signal-mini {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.26);
+      box-shadow: 0 18px 48px rgba(0,0,0,0.42);
+      overflow: hidden;
+    }
+
+    .signal-poster {
+      min-height: 100%;
+      position: relative;
+    }
+
+    .signal-poster img,
+    .signal-stack img,
+    .drop-thumb img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .signal-poster img {
+      position: absolute;
+      inset: 0;
+      filter: saturate(1.1) contrast(1.04);
+    }
+
+    .signal-poster strong {
+      position: absolute;
+      left: 0.8rem;
+      bottom: 0.8rem;
+      right: 0.8rem;
+      z-index: 2;
+      color: #fff;
+      font-size: 1.4rem;
+      line-height: 0.94;
+      text-transform: uppercase;
+      text-shadow: 0 12px 34px rgba(0,0,0,0.9);
+    }
+
+    .signal-stack {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .signal-stack img {
+      aspect-ratio: 16 / 10;
+    }
+
+    .signal-mini {
+      min-height: 118px;
+      display: grid;
+      align-content: end;
+      padding: 0.85rem;
+      background:
+        radial-gradient(circle at 82% 18%, rgba(33,244,208,0.18), transparent 34%),
+        linear-gradient(135deg, rgba(255,47,79,0.16), rgba(139,92,246,0.1)),
+        rgba(0,0,0,0.25);
+    }
+
+    .signal-mini strong {
+      color: #fff;
+      font-size: 1rem;
+      text-transform: uppercase;
+    }
+
+    .drop-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.8rem;
+    }
+
+    .drop-card {
+      min-height: 260px;
+      display: grid;
+      grid-template-rows: 132px 1fr;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015)),
+        rgba(8,9,13,0.94);
+    }
+
+    .drop-thumb {
+      overflow: hidden;
+      background: #020305;
+    }
+
+    .drop-body,
+    .wire-card,
+    .signal-panel {
+      padding: 0.95rem;
+    }
+
+    .drop-card h2,
+    .wire-card h2,
+    .signal-panel h2 {
+      margin: 0;
+      color: #fff;
+      font-size: 1.35rem;
+      line-height: 1;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .drop-card p,
+    .wire-card p,
+    .signal-panel p {
+      margin: 0.55rem 0 0;
+      color: var(--text-dim);
+      line-height: 1.5;
+      font-size: 0.88rem;
+    }
+
+    .live-board {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+      gap: 0.9rem;
+    }
+
+    .wire-card {
+      display: grid;
+      gap: 0.85rem;
+      background:
+        radial-gradient(circle at 90% 8%, rgba(33,244,208,0.12), transparent 32%),
+        rgba(8,9,13,0.92);
+    }
+
+    .wire-feed {
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .wire-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.65rem;
+      align-items: start;
+      padding: 0.72rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .wire-dot {
+      width: 10px;
+      height: 10px;
+      margin-top: 0.35rem;
+      border-radius: 50%;
+      background: #21f4d0;
+      box-shadow: 0 0 18px rgba(33,244,208,0.45);
+    }
+
+    .wire-item strong {
+      display: block;
+      color: #fff;
+      font-size: 0.92rem;
+      text-transform: uppercase;
+    }
+
+    .wire-item span {
+      display: block;
+      margin-top: 0.22rem;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .signal-panel {
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .channel-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+
+    .channel-tile {
+      min-height: 126px;
+      display: grid;
+      align-content: end;
+      padding: 0.78rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.012)),
+        rgba(0,0,0,0.22);
+    }
+
+    .channel-tile strong {
+      color: #fff;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+    }
+
+    .channel-tile span {
+      color: var(--text-dim);
+      font-size: 0.74rem;
+      line-height: 1.35;
+      margin-top: 0.25rem;
+    }
+
+    .home-board .btn {
+      border-radius: 8px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 1080px) {
+      .signal-hero,
+      .live-board {
+        grid-template-columns: 1fr;
+      }
+
+      .drop-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .signal-visual {
+        min-height: 520px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .home-board {
+        width: min(100% - 0.75rem, 1180px);
+      }
+
+      .signal-hero {
+        min-height: 0;
+        padding: 0.85rem;
+      }
+
+      .signal-title {
+        max-width: 8ch;
+        font-size: clamp(2.65rem, 15vw, 4.7rem);
+      }
+
+      .signal-visual,
+      .drop-grid,
+      .channel-row {
+        grid-template-columns: 1fr;
+      }
+
+      .signal-visual {
+        min-height: 0;
+      }
+
+      .signal-poster {
+        min-height: 360px;
+      }
+
+      .drop-card {
+        min-height: 0;
+        grid-template-rows: 150px 1fr;
+      }
+
+      .signal-actions .btn {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
-  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <nav class="navbar waffle-nav tv-waffle-nav" role="navigation" aria-label="Main navigation">
     <div class="container">
       <div class="navbar-inner">
         <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
-
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
-          <li><a href="apps.html">Apps</a></li>
           <li><a href="radio.html">Radio</a></li>
-          <li><a href="chat.html">Chat</a></li>
+          <li><a href="pulse.html">Pulse Stage</a></li>
+          <li><a href="chat.html">Rooms</a></li>
           <li><a href="tv.html">TV</a></li>
           <li><a href="neon-dreams.html">Neon Dreams</a></li>
           <li><a href="news.html">News</a></li>
           <li><a href="store.html">Store</a></li>
+          <li><a href="wallet.html">Vault</a></li>
+          <li><a href="apps.html">Apps</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
           <li><a href="login.html" class="nav-cta">Enter The System</a></li>
         </ul>
-
-        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+        <button class="nav-toggle tv-waffle-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
           <span></span><span></span><span></span>
         </button>
       </div>
     </div>
   </nav>
 
-  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+  <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
     <a href="directory.html">Directory</a>
-    <a href="apps.html">Apps</a>
     <a href="radio.html">Radio</a>
-    <a href="chat.html">Chat</a>
+    <a href="pulse.html">Pulse Stage</a>
+    <a href="chat.html">Rooms</a>
     <a href="tv.html">TV</a>
     <a href="neon-dreams.html">Neon Dreams</a>
     <a href="news.html">News</a>
     <a href="store.html">Store</a>
-    <a href="login.html" style="color: var(--gold); font-weight: 800;">Enter The System</a>
+    <a href="wallet.html">Vault</a>
+    <a href="apps.html">Apps</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="login.html" class="waffle-menu-cta tv-waffle-cta">Enter The System</a>
   </div>
-
   <main>
-    <section class="hero-wrap">
-      <div class="container">
-        <div class="hero-grid">
-          <div class="hero-main">
-            <div class="eyebrow">Creator Platform + Story Universe</div>
-
-            <h1 class="hero-title">
-              Enter the platform.
-              <span class="accent">Follow the signal.</span>
-            </h1>
-
-            <p class="hero-sub">
-              Faceless Animal Studios is the home base for Neon Dreams Club, creator channels, radio, TV, music,
-              games, apps, pages, and studio services. Start with the story universe, then move into the tools.
-            </p>
-
-            <div class="hero-bullets">
-              <div class="hero-bullet">
-                <strong>Story universe</strong>
-                <span>Neon Dreams Club brings Lux, Nyx, Vex, the comic, shorts, and the signal into focus.</span>
-              </div>
-              <div class="hero-bullet">
-                <strong>Media platform</strong>
-                <span>Faceless TV, Radio, Music, News, and creator pages keep the brand moving.</span>
-              </div>
-              <div class="hero-bullet">
-                <strong>Creator tools</strong>
-                <span>Pages, uploads, apps, storage, and services give people a place to build.</span>
-              </div>
-              <div class="hero-bullet">
-                <strong>Clear next step</strong>
-                <span>Read the comic, watch the TV layer, listen to radio, or create a channel.</span>
-              </div>
-            </div>
-
-            <div class="hero-actions">
-              <a href="neon-dreams.html" class="btn btn-primary">Enter Neon Dreams Club</a>
-              <a href="tv.html" class="btn btn-gold">Watch Faceless TV</a>
-            </div>
-            <div class="quick-links" aria-label="Quick links">
-              <a href="radio.html">Radio</a>
-              <a href="music.html">Music</a>
-              <a href="directory.html">Channels</a>
-              <a href="games.html">Games</a>
-              <a href="services.html">Services</a>
-              <a href="store.html">Store</a>
-            </div>
-          </div>
-
-          <aside class="hero-side">
-            <div class="side-card">
-              <div class="side-label">Start Here</div>
-              <div class="side-title">Neon Dreams Club is the front door.</div>
-              <div class="side-copy">
-                If somebody finds Lux, the comic, or the signal on social, this page points them straight into the universe.
-              </div>
-            </div>
-
-            <div class="side-card">
-              <div class="side-label">Then Explore</div>
-              <div class="side-title">TV, Radio, Music, and creator channels.</div>
-              <div class="side-copy">
-                Faceless Animal Studios is not just a landing page. It is a platform with connected media, pages, and tools.
-              </div>
-            </div>
-
-            <div class="side-card">
-              <div class="side-label">For Creators</div>
-              <div class="side-title">Build a page or create a channel.</div>
-              <div class="side-copy">
-                Artists, builders, brands, and fans can move through the platform without guessing where to go next.
-              </div>
-            </div>
-          </aside>
-        </div>
-
-        <div class="signal-strip">
-          <div class="signal-stat">
-            <strong>Neon Dreams Club</strong>
-            <span>Comic, characters, story pages, shorts, and the main universe.</span>
-          </div>
-          <div class="signal-stat">
-            <strong>Creator Channels</strong>
-            <span>Public pages and channels for artists, brands, and builders.</span>
-          </div>
-          <div class="signal-stat">
-            <strong>Radio + TV</strong>
-            <span>Always-on platform sound and open creator video channels.</span>
-          </div>
-          <div class="signal-stat">
-            <strong>Studio Services</strong>
-            <span>Web builds, media direction, music work, and platform support.</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" aria-labelledby="ndc-heading">
-      <div class="container">
-        <div class="ndc-showcase">
-          <div class="ndc-copy">
-            <div class="section-kicker">Featured Universe</div>
-            <h2 class="ndc-title" id="ndc-heading">
-              Neon Dreams Club
-              <span>The Signal Never Sleeps.</span>
-            </h2>
-            <p>
-              A hidden network beneath the neon glow. Meet Lux, Nyx, Vex, and the figures inside the broadcast.
-              Read Issue #1, explore the character files, watch the visual drops, and enter the story before it finds you.
-            </p>
-            <div class="ndc-actions">
-              <a href="neon-dreams.html" class="btn btn-primary">Enter The Club</a>
-              <a href="assets/neon-dreams/first-edition/neon-dreams-club-first-edition.pdf" class="btn btn-gold" target="_blank" rel="noopener noreferrer">Read Issue #1</a>
-            </div>
-            <div class="ndc-link-row" aria-label="Neon Dreams Club links">
-              <a class="micro-link" href="neon-dreams.html#vault">Vault</a>
-              <a class="micro-link" href="neon-dreams.html#reader">Comic Reader</a>
-              <a class="micro-link" href="neon-dreams.html">Meet Lux</a>
-              <a class="micro-link" href="https://fanvue.com/neondreamsclub" target="_blank" rel="noopener noreferrer">Fanvue</a>
-            </div>
-          </div>
-          <div class="ndc-art" aria-label="Neon Dreams Club artwork">
-            <div class="ndc-poster">
-              <img src="Neon%20Dreams%20Club/The%20Five/Lux/file_00000000688471f881166576a2f5595d.png" alt="Lux from Neon Dreams Club" loading="lazy" />
-            </div>
-            <div class="ndc-stack">
-              <img src="Neon%20Dreams%20Club/Logos%20and%20Banners/file_00000000e8c471f583f78f918217dd9b_copy_627x627.png" alt="Neon Dreams Club mark" loading="lazy" />
-              <img src="assets/neon-dreams/first-edition/cover.jpg" alt="Neon Dreams Club First Edition cover" loading="lazy" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" aria-labelledby="features-heading">
-      <div class="container">
-        <div class="section-head">
-          <div class="section-kicker">Platform Paths</div>
-          <h2 id="features-heading">Choose what you came for</h2>
-          <p>
-            Faceless Animal Studios has a lot inside it. These are the clearest paths: watch, listen, create, browse, buy, or build.
+    <div class="home-board">
+      <section class="signal-hero" aria-label="Faceless Animal Studios front door">
+        <div class="signal-copy">
+          <div class="signal-kicker">DJ Faceless Animal / Signal Live</div>
+          <h1 class="signal-title">Enter <span>Faceless</span></h1>
+          <p class="signal-sub">
+            TV, radio, rooms, street posts, creator channels, Neon Dreams, vault energy, and whatever else gets dragged out of the wire.
           </p>
-        </div>
-
-        <div class="feature-grid">
-          <article class="feature-card">
-            <div class="feature-icon">🧱</div>
-            <div class="feature-title">Creator Pages</div>
-            <p class="feature-desc">
-              Build a public presence for an artist, creator, brand, or project without sending people to a dead profile.
-            </p>
-            <ul class="feature-list">
-              <li>Pages for people, projects, and channels</li>
-              <li>Directory discovery built into the platform</li>
-              <li>Studio help available when you need it</li>
-            </ul>
-            <a class="micro-link" href="directory.html">Browse Channels</a>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon">📂</div>
-            <div class="feature-title">Studio Services</div>
-            <p class="feature-desc">
-              Custom websites, creator pages, music work, media direction, and branded builds from the studio side.
-            </p>
-            <ul class="feature-list">
-              <li>Web and page builds</li>
-              <li>Music, audio, and creative support</li>
-              <li>Useful for creators who want it done clean</li>
-            </ul>
-            <a class="micro-link" href="services.html">View Services</a>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon">📻</div>
-            <div class="feature-title">Radio</div>
-            <p class="feature-desc">
-              The sound layer of Faceless Animal Studios: underground music, atmosphere, sessions, and live platform energy.
-            </p>
-            <ul class="feature-list">
-              <li>Listen without leaving the site</li>
-              <li>Built around DJ Faceless Animal</li>
-              <li>Connects back to music and TV</li>
-            </ul>
-            <a class="micro-link" href="radio.html">Listen Live</a>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon">📺</div>
-            <div class="feature-title">Faceless TV</div>
-            <p class="feature-desc">
-              A video layer for channels, uploads, broadcasts, visual drops, and the open Faceless TV watch page.
-            </p>
-            <ul class="feature-list">
-              <li>Create a channel</li>
-              <li>Upload video during test mode</li>
-              <li>Watch public content and archive drops</li>
-            </ul>
-            <a class="micro-link" href="tv.html">Watch TV</a>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon">🛰️</div>
-            <div class="feature-title">News + Store</div>
-            <p class="feature-desc">
-              Updates, drops, supply, and platform announcements live in places visitors can check quickly.
-            </p>
-            <ul class="feature-list">
-              <li>News and platform movement</li>
-              <li>Store and supply drops</li>
-              <li>Links back into the full ecosystem</li>
-            </ul>
-            <a class="micro-link" href="news.html">Read News</a>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon">🆔</div>
-            <div class="feature-title">Games + Apps</div>
-            <p class="feature-desc">
-              Lightweight games, apps, chat, tools, and experiments give visitors more reasons to stay inside the platform.
-            </p>
-            <ul class="feature-list">
-              <li>Quick games and interactive tools</li>
-              <li>Chat and utility pages</li>
-              <li>Built to grow without confusing the homepage</li>
-            </ul>
-            <a class="micro-link" href="games.html">Play Games</a>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" aria-labelledby="future-heading">
-      <div class="container">
-        <div class="future-wrap">
-          <div class="future-card">
-            <div class="section-kicker">What The Site Is</div>
-            <h2 id="future-heading" style="margin:0 0 0.65rem; font-size: clamp(1.7rem, 4vw, 2.5rem); line-height:1.06; letter-spacing:-0.04em;">
-              A media universe with creator tools attached
-            </h2>
-            <p style="margin:0; color:var(--text-soft); line-height:1.7;">
-              The simplest way to understand it: Neon Dreams Club is the story world, Faceless Animal Studios is the platform around it.
-            </p>
-
-            <div class="future-list">
-              <div class="future-item">
-                <strong>Neon Dreams Club</strong>
-                Characters, comic pages, visuals, Fanvue, and the signal that pulls people in.
-              </div>
-              <div class="future-item">
-                <strong>Faceless TV</strong>
-                Creator channels, videos, broadcasts, and a YouTube-style layer without the corporate feel.
-              </div>
-              <div class="future-item">
-                <strong>Radio + Music</strong>
-                The sound of the platform, DJ Faceless Animal, mixes, sessions, and music work.
-              </div>
-              <div class="future-item">
-                <strong>Creator Directory</strong>
-                Public channels and pages for artists, creators, businesses, and members.
-              </div>
-              <div class="future-item">
-                <strong>Games + Apps</strong>
-                Small interactive pieces that make the platform feel alive instead of static.
-              </div>
-              <div class="future-item">
-                <strong>Studio Services</strong>
-                Custom sites, pages, media work, and hands-on builds for people who need help.
-              </div>
-              <div class="future-item">
-                <strong>News + Store</strong>
-                Updates, drops, announcements, and things people can buy or follow.
-              </div>
-              <div class="future-item">
-                <strong>Accounts</strong>
-                Sign in when you want to create, save, upload, or move deeper into the system.
-              </div>
-            </div>
+          <div class="signal-actions">
+            <a href="tv.html" class="btn btn-gold">Watch TV</a>
+            <a href="radio.html" class="btn btn-primary">Run Radio</a>
+            <a href="pulse.html" class="btn btn-secondary">Pulse Stage</a>
           </div>
+          <div class="signal-chip-row" aria-label="Featured sections">
+            <a href="news.html">Signal Wire</a>
+            <a href="directory.html">Channels</a>
+            <a href="chat.html">Rooms</a>
+            <a href="neon-dreams.html">Neon Dreams</a>
+            <a href="wallet.html">Vault</a>
+          </div>
+        </div>
 
-          <div class="sell-card">
-            <div class="section-kicker">What To Do First</div>
-            <h2 style="margin:0 0 0.65rem; font-size: clamp(1.7rem, 4vw, 2.5rem); line-height:1.06; letter-spacing:-0.04em;">
-              Pick a door and go deeper.
-            </h2>
-            <p style="margin:0; color:var(--text-soft); line-height:1.7;">
-              The homepage should not make people solve the whole ecosystem. These are the clearest first moves.
-            </p>
-
-            <div class="sell-points">
-              <div class="sell-point">
-                <i>1</i>
-                <div>
-                  <strong style="color:#fff;">If you came from Lux or the comic</strong><br />
-                  Go straight to Neon Dreams Club and read the first edition.
-                </div>
-              </div>
-              <div class="sell-point">
-                <i>2</i>
-                <div>
-                  <strong style="color:#fff;">If you want media</strong><br />
-                  Watch Faceless TV, listen to Radio, or open the Music page.
-                </div>
-              </div>
-              <div class="sell-point">
-                <i>3</i>
-                <div>
-                  <strong style="color:#fff;">If you create</strong><br />
-                  Browse channels, create your page, or start a Faceless TV channel.
-                </div>
-              </div>
-              <div class="sell-point">
-                <i>4</i>
-                <div>
-                  <strong style="color:#fff;">If you need a build</strong><br />
-                  Use Studio Services for websites, pages, music, media, and custom work.
-                </div>
-              </div>
-            </div>
-
-            <div class="hero-actions" style="margin-top: 1rem;">
-              <a href="neon-dreams.html" class="btn btn-primary">Enter Neon Dreams Club</a>
-              <a href="services.html" class="btn btn-gold">Studio Services</a>
+        <div class="signal-visual" aria-label="Faceless visual stack">
+          <a class="signal-poster" href="neon-dreams.html">
+            <img src="assets/mascot-animal.png" alt="Faceless Animal Studios character artwork" />
+            <strong>Neon Dreams is bleeding through.</strong>
+          </a>
+          <div class="signal-stack">
+            <img src="assets/boombox.png" alt="Faceless radio boombox artwork" />
+            <img src="assets/mascot.png" alt="Faceless Animal Studios mascot" />
+            <div class="signal-mini">
+              <div class="signal-tag">Tonight</div>
+              <strong>Radio, rooms, TV, posts.</strong>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section" aria-labelledby="why-heading">
-      <div class="container">
-        <div class="section-head">
-          <div class="section-kicker">Why It Works</div>
-          <h2 id="why-heading">A story brand, a media platform, and creator tools in one place.</h2>
-          <p>
-            The site can be many things because the homepage gives visitors a clear first path: story, media, creator channel, or studio service.
-          </p>
-        </div>
-
-        <div class="feature-grid">
-          <article class="feature-card">
-            <div class="feature-icon">⚡</div>
-            <div class="feature-title">Clear Entry</div>
-            <p class="feature-desc">
-              People can land here from TikTok, YouTube, Instagram, or search and immediately know where to go.
-            </p>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon">🧠</div>
-            <div class="feature-title">Connected Media</div>
-            <p class="feature-desc">
-              Neon Dreams Club, TV, Radio, Music, News, Store, and Directory all support the same brand world.
-            </p>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon">🌐</div>
-            <div class="feature-title">Creator Ready</div>
-            <p class="feature-desc">
-              The platform leaves room for pages, uploads, games, services, accounts, and new features without confusing the first visit.
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <div class="final-cta">
-          <div class="section-kicker">Start Moving</div>
-          <h2>Enter the story or build your place in the platform.</h2>
-          <p>
-            Neon Dreams Club is the strongest front door. The creator tools, media apps, and studio services are the next doors.
-          </p>
-
-          <div class="hero-actions">
-            <a href="neon-dreams.html" class="btn btn-primary">Enter Neon Dreams Club</a>
-            <a href="free.html" class="btn btn-gold">Create Free Username</a>
+      <section class="drop-grid" aria-label="Featured Faceless sections">
+        <a class="drop-card" href="tv.html">
+          <div class="drop-thumb">
+            <img src="assets/mascot.png" alt="Faceless TV visual card" loading="lazy" />
           </div>
-        </div>
-      </div>
-    </section>
+          <div class="drop-body">
+            <div class="drop-tag">Faceless TV</div>
+            <h2>Broadcast Floor</h2>
+            <p>Channels, public uploads, music videos, shorts, odd clips, and the main studio feed.</p>
+          </div>
+        </a>
+
+        <a class="drop-card" href="radio.html">
+          <div class="drop-thumb">
+            <img src="assets/boombox-chat.png" alt="Faceless radio artwork" loading="lazy" />
+          </div>
+          <div class="drop-body">
+            <div class="drop-tag">Radio</div>
+            <h2>Sound System</h2>
+            <p>DJ Faceless Animal energy, chat, music lanes, Pulse visuals, and late signal traffic.</p>
+          </div>
+        </a>
+
+        <a class="drop-card" href="pulse.html">
+          <div class="drop-thumb">
+            <img src="assets/vault_image.png" alt="Pulse Stage vault artwork" loading="lazy" />
+          </div>
+          <div class="drop-body">
+            <div class="drop-tag">Pulse Stage</div>
+            <h2>Live Rooms</h2>
+            <p>Camera rooms now. Voice stages, DJ decks, cyphers, panels, and recordings next.</p>
+          </div>
+        </a>
+
+        <a class="drop-card" href="neon-dreams.html">
+          <div class="drop-thumb">
+            <img src="assets/mascot-animal.png" alt="Neon Dreams Club signal artwork" loading="lazy" />
+          </div>
+          <div class="drop-body">
+            <div class="drop-tag">Neon Dreams</div>
+            <h2>Story Signal</h2>
+            <p>Lux, Nyx, Vex, the comic, the vault, the club, and the part nobody has decoded yet.</p>
+          </div>
+        </a>
+      </section>
+
+      <section class="live-board" aria-label="Live signal board">
+        <article class="wire-card">
+          <div>
+            <div class="wire-tag">Signal Wire</div>
+            <h2>What is moving</h2>
+          </div>
+          <div class="wire-feed">
+            <a class="wire-item" href="news.html">
+              <span class="wire-dot" aria-hidden="true"></span>
+              <span><strong>Street Talk From The Wire</strong><span>Articles, drops, photos, clips, and board posts roll through the news feed.</span></span>
+            </a>
+            <a class="wire-item" href="directory.html">
+              <span class="wire-dot" aria-hidden="true"></span>
+              <span><strong>Community Feed</strong><span>Posts, files, pictures, videos, channel updates, and creator pages in the directory.</span></span>
+            </a>
+            <a class="wire-item" href="chat.html">
+              <span class="wire-dot" aria-hidden="true"></span>
+              <span><strong>Rooms</strong><span>Signal-powered chat lanes and camera rooms under the Faceless skin.</span></span>
+            </a>
+            <a class="wire-item" href="store.html">
+              <span class="wire-dot" aria-hidden="true"></span>
+              <span><strong>Store Drops</strong><span>Supply, support links, drops, and brand pieces when they hit.</span></span>
+            </a>
+          </div>
+          <div class="wire-links">
+            <a href="news.html">Read</a>
+            <a href="newsletter-admin.html">Admin</a>
+            <a href="directory.html">Post</a>
+          </div>
+        </article>
+
+        <article class="signal-panel">
+          <div>
+            <div class="signal-tag">Creator Channels</div>
+            <h2>Faces in the system</h2>
+            <p>Channels, posts, videos, pages, music, and profiles. The network gets stranger when people start leaving proof.</p>
+          </div>
+          <div class="channel-row">
+            <a class="channel-tile" href="directory.html">
+              <strong>Post Board</strong>
+              <span>Facebook feed energy, but inside the brand.</span>
+            </a>
+            <a class="channel-tile" href="tv.html#tv-studio">
+              <strong>Upload TV</strong>
+              <span>Videos can feed Faceless TV and channel pages.</span>
+            </a>
+            <a class="channel-tile" href="dashboard.html">
+              <strong>Dashboard</strong>
+              <span>Account, vault, media, pages, and controls.</span>
+            </a>
+          </div>
+          <div class="signal-actions">
+            <a href="directory.html" class="btn btn-secondary">Open Directory</a>
+            <a href="login.html" class="btn btn-gold">Enter The System</a>
+          </div>
+        </article>
+      </section>
+    </div>
   </main>
 
   <footer class="footer">
