@@ -29,7 +29,7 @@
       var head = document.head || document.getElementsByTagName('head')[0];
       if (head) {
         var tags = [
-          { h: 'Cache-Control', c: 'no-store, no-cache, must-revalidate, max-age=0' },
+          { h: 'Cache-Control', c: 'no-store, no-cache, max-age=0' },
           { h: 'Pragma', c: 'no-cache' },
           { h: 'Expires', c: '0' }
         ];

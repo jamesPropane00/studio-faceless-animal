@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="Faceless Pulse — the music visualizer app inside Faceless Animal Studios. Upload audio, react to sound, and run branded visuals for streams, radio, and content."
+    content="Pulse Stage is the DJ Faceless Animal live room system for signal rooms, DJ audio, open mics, cyphers, video panels, and future stage engines."
   />
-  <title>Faceless Pulse — Faceless Animal Studios</title>
+  <title>Pulse Stage - DJ Faceless Animal</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -148,6 +148,126 @@
       color: var(--text-soft);
       font-weight: 600;
       border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .navbar.waffle-nav,
+    .navbar.tv-waffle-nav {
+      background: rgba(3, 4, 7, 0.9);
+      border-bottom: 1px solid rgba(33,244,208,0.13);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .navbar.waffle-nav .navbar-links,
+    .navbar.tv-waffle-nav .navbar-links {
+      display: none;
+    }
+
+    .navbar.waffle-nav .nav-toggle,
+    .navbar.tv-waffle-nav .nav-toggle {
+      display: inline-flex;
+      width: 46px;
+      height: 46px;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border-color: rgba(33,244,208,0.22);
+      background: rgba(255,255,255,0.045);
+      box-shadow: 0 14px 34px rgba(0,0,0,0.28);
+    }
+
+    .navbar.waffle-nav .nav-toggle span,
+    .navbar.tv-waffle-nav .nav-toggle span {
+      display: block;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #21f4d0;
+      box-shadow: 8px 0 0 #21f4d0, 16px 0 0 #21f4d0;
+    }
+
+    .navbar.waffle-nav .nav-toggle:hover,
+    .navbar.waffle-nav .nav-toggle.open,
+    .navbar.tv-waffle-nav .nav-toggle:hover,
+    .navbar.tv-waffle-nav .nav-toggle.open {
+      border-color: rgba(33,244,208,0.52);
+      background: rgba(33,244,208,0.1);
+      box-shadow: 0 0 28px rgba(33,244,208,0.12);
+    }
+
+    .mobile-nav.waffle-menu,
+    .mobile-nav.tv-waffle-menu {
+      position: fixed;
+      top: calc(66px + 0.75rem);
+      right: max(0.75rem, calc((100vw - 1180px) / 2));
+      left: auto;
+      bottom: auto;
+      width: min(320px, calc(100vw - 1.5rem));
+      z-index: 12040;
+      padding: 0.72rem;
+      border: 1px solid rgba(33,244,208,0.2);
+      border-radius: 14px;
+      background:
+        linear-gradient(135deg, rgba(33,244,208,0.08), rgba(139,92,246,0.08)),
+        rgba(8,9,13,0.96);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .mobile-nav.waffle-menu.open,
+    .mobile-nav.tv-waffle-menu.open {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-content: start;
+      gap: 0.5rem;
+    }
+
+    .mobile-nav.waffle-menu a,
+    .mobile-nav.tv-waffle-menu a {
+      display: flex;
+      min-height: 54px;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 0.6rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.035);
+      color: #eef3ff;
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-align: center;
+      text-transform: uppercase;
+      transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    }
+
+    .mobile-nav.waffle-menu a:hover,
+    .mobile-nav.waffle-menu a:focus-visible,
+    .mobile-nav.tv-waffle-menu a:hover,
+    .mobile-nav.tv-waffle-menu a:focus-visible {
+      border-color: rgba(33,244,208,0.34);
+      background: rgba(33,244,208,0.08);
+      color: #fff;
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .mobile-nav.waffle-menu a[aria-current="page"],
+    .mobile-nav.tv-waffle-menu a[aria-current="page"] {
+      border-color: rgba(139,92,246,0.42);
+      background: rgba(139,92,246,0.14);
+    }
+
+    .mobile-nav.waffle-menu .waffle-menu-cta,
+    .mobile-nav.waffle-menu .tv-waffle-cta,
+    .mobile-nav.tv-waffle-menu .waffle-menu-cta,
+    .mobile-nav.tv-waffle-menu .tv-waffle-cta {
+      grid-column: 1 / -1;
+      min-height: 48px;
+      color: #08090d;
+      background: linear-gradient(135deg, var(--gold-bright), #f3d47a);
+      border-color: rgba(255,255,255,0.18);
     }
 
     main { padding-bottom: 4rem; }
@@ -543,6 +663,224 @@
       box-shadow: 0 10px 24px rgba(124, 58, 237, 0.22);
     }
 
+    .stage-shell {
+      width: min(var(--max), calc(100% - 1rem));
+      margin: 0 auto;
+      padding: 1rem 0 0;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .stage-hero,
+    .stage-card,
+    .stage-roadmap,
+    .stage-dj-panel {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: rgba(8,9,13,0.92);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.52);
+      overflow: hidden;
+    }
+
+    .stage-hero {
+      min-height: 520px;
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+      gap: 1rem;
+      align-items: stretch;
+      padding: clamp(1rem, 3vw, 1.5rem);
+      isolation: isolate;
+      background:
+        linear-gradient(90deg, rgba(4,5,8,0.98), rgba(4,5,8,0.68) 50%, rgba(4,5,8,0.28)),
+        radial-gradient(circle at 86% 12%, rgba(57,255,136,0.12), transparent 28%),
+        radial-gradient(circle at 18% 4%, rgba(255,47,79,0.2), transparent 32%),
+        #050507;
+    }
+
+    .stage-hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(rgba(57,255,136,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,47,79,0.032) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.85), transparent 95%);
+    }
+
+    .stage-copy {
+      display: grid;
+      align-content: end;
+      gap: 1rem;
+    }
+
+    .stage-kicker,
+    .stage-tag,
+    .stage-step-num {
+      color: #21f4d0;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .stage-title {
+      max-width: 10ch;
+      margin: 0;
+      color: #fff;
+      font-size: clamp(3.2rem, 11vw, 7.4rem);
+      line-height: 0.82;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .stage-title span {
+      color: #ff2f4f;
+      text-shadow: 0 0 34px rgba(255,47,79,0.36);
+    }
+
+    .stage-sub {
+      max-width: 58rem;
+      margin: 0;
+      color: #d7d9e4;
+      font-size: 1rem;
+      line-height: 1.65;
+    }
+
+    .stage-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+    }
+
+    .stage-dj-panel {
+      display: grid;
+      align-content: space-between;
+      gap: 0.85rem;
+      padding: 1rem;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)),
+        rgba(11,12,17,0.92);
+    }
+
+    .stage-decks {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem;
+    }
+
+    .stage-deck {
+      min-height: 210px;
+      display: grid;
+      align-content: space-between;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 50% 36%, rgba(33,244,208,0.18), transparent 30%),
+        rgba(0,0,0,0.28);
+      padding: 0.85rem;
+    }
+
+    .stage-vinyl {
+      width: min(118px, 60%);
+      aspect-ratio: 1;
+      justify-self: center;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, #f5c451 0 8%, #0a0a0e 9% 34%, #191923 35% 42%, #050506 43% 100%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.09), 0 18px 40px rgba(0,0,0,0.5);
+    }
+
+    .stage-deck strong,
+    .stage-room-card strong,
+    .stage-roadmap h2 {
+      color: #fff;
+    }
+
+    .stage-mixer {
+      display: grid;
+      gap: 0.7rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.24);
+      padding: 0.8rem;
+    }
+
+    .stage-fader {
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #ff2f4f, #f5c451 50%, #21f4d0);
+      box-shadow: 0 0 28px rgba(33,244,208,0.16);
+    }
+
+    .stage-buttons,
+    .stage-room-grid,
+    .stage-road-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .stage-buttons {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .stage-mini-btn {
+      min-height: 44px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.045);
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .stage-room-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .stage-room-card {
+      min-height: 210px;
+      display: grid;
+      align-content: space-between;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015)),
+        rgba(8,9,13,0.92);
+      padding: 0.95rem;
+    }
+
+    .stage-room-card p,
+    .stage-step p {
+      margin: 0;
+      color: var(--text-dim);
+      line-height: 1.55;
+      font-size: 0.88rem;
+    }
+
+    .stage-roadmap {
+      padding: 1rem;
+    }
+
+    .stage-roadmap h2 {
+      margin: 0 0 0.75rem;
+      font-size: clamp(1.6rem, 4vw, 2.7rem);
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .stage-road-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .stage-step {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.035);
+      padding: 0.85rem;
+    }
+
     .canvas-shell {
       background: linear-gradient(180deg, rgba(18, 19, 28, 0.98) 0%, rgba(10, 11, 16, 0.98) 100%);
       border: 1px solid rgba(255,255,255,0.05);
@@ -824,11 +1162,21 @@
     }
 
     @media (max-width: 1080px) {
+      .stage-hero,
       .hero-grid,
       .visualizer-grid,
       .feature-grid,
       .footer-inner {
         grid-template-columns: 1fr;
+      }
+
+      .stage-hero {
+        min-height: 0;
+      }
+
+      .stage-room-grid,
+      .stage-road-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .footer-inner,
@@ -864,6 +1212,24 @@
       .rp-stations-bar {
         grid-template-columns: 1fr;
       }
+
+      .stage-shell {
+        width: min(100% - 0.75rem, var(--max));
+      }
+
+      .stage-room-grid,
+      .stage-road-grid,
+      .stage-decks {
+        grid-template-columns: 1fr;
+      }
+
+      .stage-buttons {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .stage-title {
+        max-width: 8ch;
+      }
     }
 
     @media (max-width: 640px) {
@@ -890,45 +1256,149 @@
       .visualizer-stage {
         min-height: 340px;
       }
+
+      .stage-room-card {
+        min-height: 160px;
+      }
     }
   </style>
 </head>
 <body>
-  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <nav class="navbar waffle-nav tv-waffle-nav" role="navigation" aria-label="Main navigation">
     <div class="container">
       <div class="navbar-inner">
         <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
-
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
           <li><a href="radio.html">Radio</a></li>
+          <li><a href="pulse.html" aria-current="page">Pulse Stage</a></li>
+          <li><a href="chat.html">Rooms</a></li>
           <li><a href="tv.html">TV</a></li>
           <li><a href="neon-dreams.html">Neon Dreams</a></li>
-          <li><a href="vault.html">Vault</a></li>
+          <li><a href="news.html">News</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="wallet.html">Vault</a></li>
           <li><a href="apps.html">Apps</a></li>
           <li><a href="dashboard.html">Dashboard</a></li>
           <li><a href="login.html" class="nav-cta">Enter The System</a></li>
         </ul>
-
-        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+        <button class="nav-toggle tv-waffle-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
           <span></span><span></span><span></span>
         </button>
       </div>
     </div>
   </nav>
 
-  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+  <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
     <a href="directory.html">Directory</a>
     <a href="radio.html">Radio</a>
+    <a href="pulse.html" aria-current="page">Pulse Stage</a>
+    <a href="chat.html">Rooms</a>
     <a href="tv.html">TV</a>
     <a href="neon-dreams.html">Neon Dreams</a>
-    <a href="vault.html">Vault</a>
+    <a href="news.html">News</a>
+    <a href="store.html">Store</a>
+    <a href="wallet.html">Vault</a>
     <a href="apps.html">Apps</a>
     <a href="dashboard.html">Dashboard</a>
-    <a href="login.html" style="font-weight:800;color:var(--gold-bright);">Enter The System</a>
+    <a href="login.html" class="waffle-menu-cta tv-waffle-cta">Enter The System</a>
   </div>
+<main>
+    <section class="stage-shell" aria-label="Pulse Stage">
+      <div class="stage-hero">
+        <div class="stage-copy">
+          <div class="stage-kicker">Pulse Stage / live room system</div>
+          <h1 class="stage-title">Pulse <span>Stage</span></h1>
+          <p class="stage-sub">
+            A dark-room performance layer for DJ sets, open mics, cyphers, producer sessions, podcasts, video panels, and the Faceless crowd. Signal rooms carry the chat and identity now; the next engines bring real low-latency stages and DJ decks into the same universe.
+          </p>
+          <div class="stage-actions">
+            <a href="chat.html#video-room-lobby" class="btn btn-gold">Open Rooms</a>
+            <a href="radio.html" class="btn btn-primary">Radio</a>
+            <a href="#pulse-app" class="btn btn-ghost">Visualizer</a>
+          </div>
+        </div>
 
-  <main>
+        <aside class="stage-dj-panel" aria-label="Pulse Stage deck preview">
+          <div class="stage-decks">
+            <div class="stage-deck">
+              <div class="stage-tag">Deck A</div>
+              <div class="stage-vinyl" aria-hidden="true"></div>
+              <strong>Beat loaded</strong>
+            </div>
+            <div class="stage-deck">
+              <div class="stage-tag">Deck B</div>
+              <div class="stage-vinyl" aria-hidden="true"></div>
+              <strong>Guest track</strong>
+            </div>
+          </div>
+          <div class="stage-mixer">
+            <div class="stage-tag">Street booth controls</div>
+            <div class="stage-fader" aria-hidden="true"></div>
+            <div class="stage-buttons">
+              <button class="stage-mini-btn" type="button">Mic</button>
+              <button class="stage-mini-btn" type="button">Cue</button>
+              <button class="stage-mini-btn" type="button">Rec</button>
+              <button class="stage-mini-btn" type="button">Live</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="stage-room-grid" aria-label="Pulse Stage room types">
+        <article class="stage-room-card">
+          <div class="stage-tag">DJ Live</div>
+          <strong>Broadcast the room like your own station.</strong>
+          <p>Radio energy, live chat, mic control, and a path toward WebDJ decks inside Faceless.</p>
+        </article>
+        <article class="stage-room-card">
+          <div class="stage-tag">Open Mic</div>
+          <strong>Let people request the mic and jump in.</strong>
+          <p>Built for freestyles, call-ins, interviews, and street-radio moments without sending people off-site.</p>
+        </article>
+        <article class="stage-room-card">
+          <div class="stage-tag">Cypher</div>
+          <strong>Multiple voices, one room, live crowd.</strong>
+          <p>Signal chat stays under the performance while the stage layer grows into real voice and video.</p>
+        </article>
+        <article class="stage-room-card">
+          <div class="stage-tag">Video Panel</div>
+          <strong>Host podcasts, creator panels, and live sessions.</strong>
+          <p>Camera rooms become cleaner, branded panels with recordings that can move into TV and Vault.</p>
+        </article>
+      </div>
+
+      <section class="stage-roadmap" aria-label="Pulse Stage build order">
+        <h2>Build order that makes Faceless dangerous</h2>
+        <div class="stage-road-grid">
+          <article class="stage-step">
+            <div class="stage-step-num">01 Signal rooms</div>
+            <p>Accounts, chat, room lobby, and branded camera entry are the first live layer.</p>
+          </article>
+          <article class="stage-step">
+            <div class="stage-step-num">02 Voice/video stage</div>
+            <p>Low-latency voice/video rooms with speakers, listeners, and clean host control.</p>
+          </article>
+          <article class="stage-step">
+            <div class="stage-step-num">03 DJ decks</div>
+            <p>Deck A, Deck B, crossfader, mic, and WebDJ broadcast controls.</p>
+          </article>
+          <article class="stage-step">
+            <div class="stage-step-num">04 Tips + passes</div>
+            <p>Support buttons, access drops, creator rooms, and paid moments when you want them.</p>
+          </article>
+          <article class="stage-step">
+            <div class="stage-step-num">05 Record sessions</div>
+            <p>Capture shows, cyphers, panels, interviews, and live sets right from the room.</p>
+          </article>
+          <article class="stage-step">
+            <div class="stage-step-num">06 TV + Vault</div>
+            <p>Push recordings into Faceless TV and archive the best sessions in the Vault.</p>
+          </article>
+        </div>
+      </section>
+    </section>
+
     <section class="hero-wrap" aria-label="Faceless Pulse hero">
       <div class="container">
         <div class="hero-grid">
@@ -1250,7 +1720,7 @@
           <a href="apps.html">Apps</a>
           <a href="radio.html">Radio</a>
           <a href="tv.html">TV</a>
-          <a href="vault.html">Vault</a>
+          <a href="wallet.html">Vault</a>
           <a href="pricing.html">Pricing</a>
         </nav>
 
@@ -1335,7 +1805,7 @@
       { value: 'spiral', label: 'Neon Spiral' },
       { value: 'sunburst', label: 'Sunburst' },
       { value: 'tunnel', label: 'Pulse Tunnel' },
-      { value: 'matrix', label: 'Matrix Rain' },
+      { value: 'matrix', label: 'Signal Rain' },
       { value: 'grid', label: 'Laser Grid' },
       { value: 'stars', label: 'Starfield' },
       { value: 'blob', label: 'Liquid Blob' },

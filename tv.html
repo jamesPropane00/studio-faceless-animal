@@ -326,21 +326,105 @@
       border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.11);
       background: #030406;
-      min-height: 230px;
+      aspect-ratio: 16 / 9;
+      min-height: 0;
       position: relative;
       overflow: hidden;
       display: grid;
       place-items: center;
+      touch-action: pan-y;
     }
 
     .tv-screen video,
     .tv-screen iframe {
       width: 100%;
       height: 100%;
-      min-height: 230px;
+      min-height: 0;
       border: 0;
       display: block;
       background: #000;
+      object-fit: contain;
+    }
+
+    .tv-screen.is-portrait {
+      aspect-ratio: 9 / 16;
+    }
+
+    .tv-screen[data-tv-ratio="landscape"] {
+      aspect-ratio: 16 / 9;
+    }
+
+    .tv-screen[data-tv-ratio="portrait"] {
+      aspect-ratio: 9 / 16;
+    }
+
+    .tv-sound-toggle {
+      position: absolute;
+      right: 0.75rem;
+      bottom: 0.75rem;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      min-height: 34px;
+      padding: 0.42rem 0.62rem;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      background: rgba(3,4,6,0.66);
+      color: rgba(255,255,255,0.88);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.34);
+    }
+
+    .tv-sound-toggle:hover,
+    .tv-sound-toggle:focus-visible {
+      border-color: rgba(33,244,208,0.44);
+      color: #fff;
+      outline: none;
+    }
+
+    .tv-resume {
+      width: 100%;
+      height: 100%;
+      min-height: 230px;
+      display: grid;
+      place-items: center;
+      gap: 0.42rem;
+      padding: 1rem;
+      border: 0;
+      background:
+        radial-gradient(circle at 50% 34%, rgba(33,244,208,0.13), transparent 38%),
+        linear-gradient(135deg, rgba(255,47,79,0.1), rgba(3,4,6,0.97));
+      color: #fff;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .tv-resume span {
+      color: var(--tv-muted);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .tv-resume strong {
+      color: var(--tv-cyan);
+      font-size: clamp(1rem, 2.2vw, 1.35rem);
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    .tv-resume:hover,
+    .tv-resume:focus-visible {
+      outline: none;
+      background:
+        radial-gradient(circle at 50% 34%, rgba(33,244,208,0.2), transparent 40%),
+        linear-gradient(135deg, rgba(255,47,79,0.12), rgba(3,4,6,0.97));
     }
 
     .tv-screen-placeholder {
@@ -392,6 +476,174 @@
       color: var(--tv-muted);
       line-height: 1.55;
       font-size: 0.93rem;
+    }
+
+    .tv-channel-credit[hidden] {
+      display: none;
+    }
+
+    .tv-channel-credit {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.42rem;
+      width: fit-content;
+      max-width: 100%;
+      min-height: 30px;
+      padding: 0.34rem 0.55rem;
+      border: 1px solid rgba(33,244,208,0.18);
+      border-radius: 999px;
+      background: rgba(33,244,208,0.055);
+      color: var(--tv-muted);
+      font-size: 0.72rem;
+      line-height: 1.2;
+    }
+
+    .tv-channel-credit span {
+      color: var(--tv-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 900;
+      font-size: 0.62rem;
+    }
+
+    .tv-channel-credit a {
+      color: var(--tv-cyan);
+      text-decoration: none;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .tv-reactions {
+      display: grid;
+      gap: 0.45rem;
+      padding: 0.68rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .tv-reaction-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    .tv-reaction {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.42rem;
+      min-height: 38px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      background: rgba(0,0,0,0.24);
+      color: #fff;
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .tv-reaction:hover,
+    .tv-reaction:focus-visible,
+    .tv-reaction.active {
+      border-color: rgba(33,244,208,0.52);
+      color: var(--tv-cyan);
+      outline: none;
+    }
+
+    .tv-reaction:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .tv-reaction-note {
+      margin: 0;
+      color: var(--tv-muted);
+      font-size: 0.72rem;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .tv-comments {
+      display: grid;
+      gap: 0.7rem;
+      padding-top: 0.1rem;
+    }
+
+    .tv-comments-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .tv-comments-title {
+      margin: 0;
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .tv-comments-list {
+      display: grid;
+      gap: 0.55rem;
+      max-height: 190px;
+      overflow: auto;
+      padding-right: 0.25rem;
+    }
+
+    .tv-comment {
+      display: grid;
+      gap: 0.22rem;
+      padding: 0.62rem 0.68rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .tv-comment strong {
+      color: var(--tv-cyan);
+      font-size: 0.72rem;
+    }
+
+    .tv-comment span {
+      color: var(--tv-muted);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .tv-comment-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.5rem;
+    }
+
+    .tv-comment-input {
+      min-width: 0;
+      min-height: 38px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      background: rgba(0,0,0,0.34);
+      color: #fff;
+      padding: 0.55rem 0.8rem;
+      font: inherit;
+      font-size: 0.82rem;
+    }
+
+    .tv-comment-input:focus {
+      outline: none;
+      border-color: rgba(33,244,208,0.48);
+    }
+
+    .tv-comment-note {
+      margin: 0;
+      min-height: 1rem;
+      color: var(--tv-muted);
+      font-size: 0.72rem;
     }
 
     .tv-control-foot {
@@ -476,15 +728,41 @@
 
     .tv-channel-row {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
       gap: 0.65rem;
+      max-height: 520px;
+      overflow: auto;
+      padding-right: 0.25rem;
+      scrollbar-color: var(--tv-cyan) rgba(255,255,255,0.08);
     }
 
     .tv-channel-badge {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr);
+      align-items: center;
+      gap: 0.68rem;
+      min-height: 72px;
       padding: 0.8rem;
       border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.035);
+      text-decoration: none;
+    }
+
+    .tv-channel-badge:hover,
+    .tv-channel-badge:focus-visible {
+      border-color: rgba(33,244,208,0.42);
+      background: rgba(255,255,255,0.065);
+      outline: none;
+    }
+
+    .tv-channel-badge img {
+      width: 48px;
+      height: 48px;
+      display: block;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #030406;
     }
 
     .tv-channel-badge strong {
@@ -493,14 +771,162 @@
       line-height: 1.15;
       text-transform: uppercase;
       color: #fff;
+      overflow-wrap: anywhere;
     }
 
-    .tv-channel-badge span {
+    .tv-channel-badge small,
+    .tv-channel-badge span > span {
       display: block;
       margin-top: 0.28rem;
       color: var(--tv-muted);
       font-size: 0.72rem;
       line-height: 1.3;
+    }
+
+    .tv-channel-page {
+      display: grid;
+      grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .tv-channel-page[hidden] {
+      display: none;
+    }
+
+    .tv-channel-cover {
+      aspect-ratio: 1;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: #030406;
+    }
+
+    .tv-channel-cover img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .tv-channel-page-body {
+      display: grid;
+      gap: 0.72rem;
+      min-width: 0;
+    }
+
+    .tv-channel-page-body h2 {
+      margin: 0;
+      color: #fff;
+      font-size: clamp(1.65rem, 4vw, 2.6rem);
+      line-height: 1;
+    }
+
+    .tv-channel-page-body p {
+      margin: 0;
+      color: var(--tv-muted);
+      line-height: 1.55;
+      max-width: 58rem;
+    }
+
+    .tv-channel-video-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.35rem;
+    }
+
+    .tv-channel-video {
+      display: grid;
+      gap: 0.48rem;
+      color: inherit;
+      text-decoration: none;
+      min-width: 0;
+    }
+
+    .tv-channel-video-main {
+      display: grid;
+      gap: 0.48rem;
+      color: inherit;
+      text-decoration: none;
+      min-width: 0;
+    }
+
+    .tv-channel-video-thumb {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: #000;
+    }
+
+    .tv-channel-video-thumb video,
+    .tv-channel-video-thumb img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .tv-channel-video strong {
+      color: #fff;
+      font-size: 0.88rem;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .tv-channel-video small {
+      color: var(--tv-muted);
+      font-size: 0.72rem;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .tv-channel-video-actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.35rem;
+    }
+
+    .tv-channel-video-actions button,
+    .tv-channel-video-actions a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.28rem;
+      min-height: 30px;
+      padding: 0.34rem 0.4rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.035);
+      color: rgba(255,255,255,0.84);
+      text-decoration: none;
+      font: inherit;
+      font-size: 0.68rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .tv-channel-video-actions button.active,
+    .tv-channel-video-actions button:hover,
+    .tv-channel-video-actions button:focus-visible,
+    .tv-channel-video-actions a:hover,
+    .tv-channel-video-actions a:focus-visible {
+      border-color: rgba(33,244,208,0.4);
+      color: var(--tv-cyan);
+      outline: none;
+    }
+
+    .tv-channel-video-note {
+      min-height: 1em;
+      color: var(--tv-cyan);
+      font-size: 0.68rem;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
     }
 
     .tv-section-head {
@@ -568,7 +994,9 @@
       position: relative;
       aspect-ratio: 16 / 9;
       overflow: hidden;
-      background: #090a10;
+      background:
+        radial-gradient(circle at 50% 34%, rgba(33,244,208,0.14), transparent 38%),
+        linear-gradient(135deg, rgba(255,47,79,0.12), rgba(3,4,6,0.96));
     }
 
     .tv-thumb img {
@@ -584,7 +1012,33 @@
       height: 100%;
       display: block;
       object-fit: cover;
+      background: transparent;
+    }
+
+    .tv-thumb.is-video-preview-unavailable::after,
+    .tv-channel-video-thumb.is-video-preview-unavailable::after {
+      content: "Tap to play";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--tv-cyan);
+      background: rgba(0,0,0,0.62);
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .tv-inline-video,
+    .tv-inline-frame {
+      width: 100%;
+      height: 100%;
+      min-height: inherit;
+      display: block;
+      border: 0;
       background: #000;
+      object-fit: contain;
     }
 
     .tv-thumb-preview,
@@ -918,6 +1372,101 @@
       min-height: 1.1em;
     }
 
+    .tv-compress-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.7rem;
+      margin: -0.18rem 0 0.75rem;
+      padding: 0.72rem;
+      border: 1px solid rgba(33,244,208,0.16);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.22);
+    }
+
+    .tv-compress-row small {
+      color: var(--tv-muted);
+      font-size: 0.72rem;
+      line-height: 1.35;
+    }
+
+    .tv-compress-widget[hidden] {
+      display: none;
+    }
+
+    .tv-compress-widget {
+      position: fixed;
+      right: clamp(0.75rem, 3vw, 1.5rem);
+      bottom: clamp(0.75rem, 3vw, 1.5rem);
+      z-index: 50;
+      width: min(360px, calc(100vw - 1.5rem));
+      padding: 0.95rem;
+      border: 1px solid rgba(33,244,208,0.28);
+      border-radius: 8px;
+      background: rgba(8,9,13,0.96);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.46);
+      backdrop-filter: blur(16px);
+    }
+
+    .tv-compress-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .tv-compress-head strong {
+      display: block;
+      color: #fff;
+      font-size: 0.95rem;
+      line-height: 1.15;
+      text-transform: uppercase;
+    }
+
+    .tv-compress-head small,
+    .tv-compress-copy,
+    .tv-compress-status {
+      display: block;
+      color: var(--tv-muted);
+      font-size: 0.72rem;
+      line-height: 1.42;
+    }
+
+    .tv-compress-close {
+      width: 32px;
+      height: 32px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .tv-compress-meter {
+      --progress: 0%;
+      height: 8px;
+      margin: 0.72rem 0;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .tv-compress-meter::before {
+      content: "";
+      display: block;
+      width: var(--progress);
+      height: 100%;
+      background: linear-gradient(90deg, var(--tv-cyan), var(--tv-gold));
+    }
+
+    .tv-compress-actions {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 0.72rem;
+    }
+
     .tv-list {
       display: grid;
       gap: 0.55rem;
@@ -1089,13 +1638,26 @@
 
     .tv-watch-layout .tv-screen {
       aspect-ratio: 16 / 9;
-      min-height: 280px;
+      width: calc(100% - 2rem);
+      min-height: 0;
       margin: 1rem;
+    }
+
+    .tv-watch-layout .tv-screen.is-portrait {
+      width: min(calc(100% - 2rem), 420px, calc((100svh - 220px) * 0.5625));
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .tv-watch-layout .tv-screen[data-tv-ratio="portrait"] {
+      width: min(calc(100% - 2rem), 420px, calc((100svh - 220px) * 0.5625));
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .tv-watch-layout .tv-screen video,
     .tv-watch-layout .tv-screen iframe {
-      min-height: 280px;
+      min-height: 0;
     }
 
     .tv-watch-layout .tv-control-foot {
@@ -1143,13 +1705,51 @@
 
     .tv-archive-panel .tv-card {
       display: grid;
-      grid-template-columns: minmax(104px, 36%) minmax(0, 1fr);
-      gap: 0.72rem;
-      padding: 0.72rem;
+      grid-template-columns: minmax(164px, 48%) minmax(0, 1fr);
+      gap: 0.9rem;
+      padding: 0.9rem;
       border: 0;
       border-radius: 0;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       background: transparent;
+    }
+
+    .tv-archive-panel .tv-thumb {
+      min-height: 118px;
+    }
+
+    .tv-archive-panel .tv-card.is-inline-playing {
+      grid-template-columns: 1fr;
+      gap: 0.72rem;
+      background: rgba(255,255,255,0.07);
+      cursor: default;
+    }
+
+    .tv-archive-panel .tv-card.is-inline-playing .tv-thumb {
+      width: 100%;
+      min-height: 260px;
+      background: #000;
+    }
+
+    .tv-archive-panel .tv-card.is-inline-playing.is-inline-portrait .tv-thumb {
+      width: min(100%, 360px, calc((100svh - 180px) * 0.5625));
+      min-height: 0;
+      aspect-ratio: 9 / 16;
+      justify-self: center;
+    }
+
+    .tv-archive-panel .tv-card.is-inline-playing .tv-card-body {
+      max-width: 620px;
+    }
+
+    .tv-archive-panel .tv-card.is-inline-playing.is-inline-portrait .tv-card-body {
+      width: min(100%, 360px, calc((100svh - 180px) * 0.5625));
+      justify-self: center;
+    }
+
+    .tv-archive-panel .tv-card.is-inline-playing .tv-play,
+    .tv-archive-panel .tv-card.is-inline-playing .tv-meta {
+      display: none;
     }
 
     .tv-archive-panel .tv-card:hover,
@@ -1226,9 +1826,22 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      .tv-channel-page {
+        grid-template-columns: 1fr;
+      }
+
+      .tv-channel-video-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .tv-studio-grid,
       .tv-form-row {
         grid-template-columns: 1fr;
+      }
+
+      .tv-compress-row {
+        align-items: stretch;
+        flex-direction: column;
       }
     }
 
@@ -1263,6 +1876,7 @@
       .tv-status-row,
       .tv-grid,
       .tv-channel-row,
+      .tv-channel-video-grid,
       .tv-upload-grid,
       .tv-studio-grid,
       .tv-config {
@@ -1315,6 +1929,12 @@
         white-space: normal;
       }
 
+      .tv-compress-widget {
+        right: 0.5rem;
+        bottom: 0.5rem;
+        width: calc(100vw - 1rem);
+      }
+
       .tv-subbar {
         top: 0;
       }
@@ -1333,6 +1953,14 @@
         width: calc(100% - 1rem);
         margin: 0.5rem;
         min-height: 0;
+      }
+
+      .tv-watch-layout .tv-screen.is-portrait {
+        width: min(calc(100% - 1rem), 76vw, calc((100svh - 170px) * 0.5625));
+      }
+
+      .tv-watch-layout .tv-screen[data-tv-ratio="portrait"] {
+        width: min(calc(100% - 1rem), 76vw, calc((100svh - 170px) * 0.5625));
       }
 
       .tv-watch-layout .tv-screen video,
@@ -1366,9 +1994,22 @@
       }
 
       .tv-archive-panel .tv-card {
-        grid-template-columns: 112px minmax(0, 1fr);
-        gap: 0.58rem;
-        padding: 0.62rem;
+        grid-template-columns: minmax(150px, 42vw) minmax(0, 1fr);
+        gap: 0.72rem;
+        padding: 0.74rem;
+      }
+
+      .tv-archive-panel .tv-thumb {
+        min-height: 112px;
+      }
+
+      .tv-archive-panel .tv-card.is-inline-playing .tv-thumb {
+        min-height: 230px;
+      }
+
+      .tv-archive-panel .tv-card.is-inline-playing.is-inline-portrait .tv-thumb,
+      .tv-archive-panel .tv-card.is-inline-playing.is-inline-portrait .tv-card-body {
+        width: min(72vw, 360px, calc((100svh - 150px) * 0.5625));
       }
 
       .tv-archive-panel .tv-card h3 {
@@ -1397,9 +2038,22 @@
       }
 
       .tv-archive-panel .tv-card {
-        grid-template-columns: 96px minmax(0, 1fr);
-        gap: 0.5rem;
-        padding: 0.58rem 0.62rem;
+        grid-template-columns: 1fr;
+        gap: 0.58rem;
+        padding: 0.72rem 0.7rem;
+      }
+
+      .tv-archive-panel .tv-thumb {
+        min-height: 176px;
+      }
+
+      .tv-archive-panel .tv-card.is-inline-playing .tv-thumb {
+        min-height: 210px;
+      }
+
+      .tv-archive-panel .tv-card.is-inline-playing.is-inline-portrait .tv-thumb,
+      .tv-archive-panel .tv-card.is-inline-playing.is-inline-portrait .tv-card-body {
+        width: min(78vw, 340px, calc((100svh - 132px) * 0.5625));
       }
 
       .tv-archive-panel .tv-card h3,
@@ -1424,19 +2078,22 @@
   </style>
 </head>
 <body>
-  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <nav class="navbar waffle-nav tv-waffle-nav" role="navigation" aria-label="Main navigation">
     <div class="container">
       <div class="navbar-inner">
         <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
-          <li><a href="apps.html">Apps</a></li>
           <li><a href="radio.html">Radio</a></li>
-          <li><a href="chat.html">Chat</a></li>
-          <li><a href="tv.html" aria-current="page" style="color:var(--purple-bright);">TV</a></li>
+          <li><a href="pulse.html">Pulse Stage</a></li>
+          <li><a href="chat.html">Rooms</a></li>
+          <li><a href="tv.html" aria-current="page">TV</a></li>
           <li><a href="neon-dreams.html">Neon Dreams</a></li>
           <li><a href="news.html">News</a></li>
           <li><a href="store.html">Store</a></li>
+          <li><a href="wallet.html">Vault</a></li>
+          <li><a href="apps.html">Apps</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
           <li><a href="login.html" class="nav-cta">Enter The System</a></li>
         </ul>
         <button class="nav-toggle tv-waffle-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
@@ -1446,21 +2103,23 @@
     </div>
   </nav>
 
-  <div class="mobile-nav tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
+  <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
     <a href="directory.html">Directory</a>
-    <a href="apps.html">Apps</a>
     <a href="radio.html">Radio</a>
-    <a href="chat.html">Chat</a>
-    <a href="tv.html" aria-current="page" style="font-weight:800;color:var(--purple-bright);">TV</a>
+    <a href="pulse.html">Pulse Stage</a>
+    <a href="chat.html">Rooms</a>
+    <a href="tv.html" aria-current="page">TV</a>
     <a href="neon-dreams.html">Neon Dreams</a>
     <a href="news.html">News</a>
     <a href="store.html">Store</a>
-    <a href="login.html" class="tv-waffle-cta">Enter The System</a>
+    <a href="wallet.html">Vault</a>
+    <a href="apps.html">Apps</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="login.html" class="waffle-menu-cta tv-waffle-cta">Enter The System</a>
   </div>
-
-  <main class="tv-page">
+<main class="tv-page">
     <div class="tv-shell">
-      <section class="tv-watch" aria-label="Faceless TV watch page">
+      <section class="tv-watch" id="tv-watch" aria-label="Faceless TV watch page">
         <header class="tv-watch-bar">
           <div class="tv-brand-lockup">
             <div class="tv-brand-mark" aria-hidden="true">TV</div>
@@ -1470,7 +2129,7 @@
             </div>
           </div>
           <div class="tv-watch-actions">
-            <a class="tv-btn primary" id="tv-upload-link" href="login.html?redirect=tv.html">Create Channel</a>
+            <a class="tv-btn primary" id="tv-upload-link" href="login.html?redirect=tv.html">Upload Video</a>
             <a class="tv-btn" id="tv-instance-link" href="#faceless-tv-code">Upload Code</a>
           </div>
         </header>
@@ -1505,6 +2164,30 @@
               <p class="tv-control-copy" id="tv-feature-copy">
                 Public uploads, creator channels, and featured broadcasts play inside the Faceless TV watch page.
               </p>
+              <div class="tv-channel-credit" id="tv-channel-credit" hidden></div>
+              <section class="tv-reactions" aria-label="Video reactions">
+                <div class="tv-reaction-buttons">
+                  <button class="tv-reaction" id="tv-like-button" type="button" disabled>Like <span id="tv-like-count">0</span></button>
+                  <button class="tv-reaction" id="tv-dislike-button" type="button" disabled>Dislike <span id="tv-dislike-count">0</span></button>
+                  <button class="tv-reaction" id="tv-share-button" type="button" disabled>Share</button>
+                </div>
+                <p class="tv-reaction-note" id="tv-reaction-note"></p>
+                <p class="tv-reaction-note" id="tv-share-note"></p>
+              </section>
+              <section class="tv-comments" id="tv-comments" aria-label="Video comments">
+                <div class="tv-comments-head">
+                  <p class="tv-comments-title">Comments</p>
+                  <span class="tv-chip" id="tv-comment-count">0</span>
+                </div>
+                <div class="tv-comments-list" id="tv-comments-list" aria-live="polite">
+                  <div class="tv-empty">Select a video to load comments.</div>
+                </div>
+                <form class="tv-comment-form" id="tv-comment-form">
+                  <input class="tv-comment-input" id="tv-comment-input" name="comment" maxlength="500" placeholder="Add a comment" autocomplete="off" />
+                  <button class="tv-btn primary" type="submit">Post</button>
+                </form>
+                <p class="tv-comment-note" id="tv-comment-note"></p>
+              </section>
             </div>
             <footer class="tv-control-foot">
               <div class="tv-status-row" aria-label="TV system status">
@@ -1528,6 +2211,18 @@
         </div>
       </section>
 
+      <section class="tv-section tv-channel-page" id="tv-channel-page" aria-label="Channel page" hidden>
+        <div class="tv-channel-cover">
+          <img id="tv-channel-page-image" src="assets/neon-dreams/covers/cover-thumb.jpg" alt="" loading="lazy" />
+        </div>
+        <div class="tv-channel-page-body">
+          <span class="tv-chip" id="tv-channel-page-meta">0 videos</span>
+          <h2 id="tv-channel-page-title">Channel</h2>
+          <p id="tv-channel-page-copy">Creator videos from this Faceless TV channel.</p>
+          <div class="tv-channel-video-grid" id="tv-channel-page-grid"></div>
+        </div>
+      </section>
+
       <section class="tv-section tv-channel-section" aria-label="Channel directory">
         <div class="tv-section-head">
           <div>
@@ -1540,9 +2235,9 @@
             <div>
               <p class="tv-channel-label">Owner Channel</p>
               <h3>Faceless Animal Studios</h3>
-              <p>The central channel that anchors the whole network. Users experience the branches, not the plumbing.</p>
+              <p class="tv-channel-owner-copy">The central channel that anchors the whole network. Users experience the branches, not the plumbing.</p>
             </div>
-            <span class="tv-chip">Verified</span>
+            <a class="tv-btn" id="tv-owner-channel-link" href="tv.html?channel=faceless-animal-studios#tv-channel-page">View Channel</a>
           </article>
           <div class="tv-channel-row">
             <article class="tv-channel-badge">
@@ -1565,11 +2260,11 @@
         </div>
       </section>
 
-      <section class="tv-section" id="tv-studio" aria-label="Create channel">
+      <section class="tv-section" id="tv-studio" aria-label="Upload to Faceless TV">
         <div class="tv-section-head">
           <div>
-            <h2>Create Channel</h2>
-            <p>Start your Faceless TV channel. Name it, choose who can see it, and post when you are ready.</p>
+            <h2>Upload To Faceless TV</h2>
+            <p>Post straight to the main Faceless Animal Studios channel, or create your own channel later.</p>
           </div>
           <a class="tv-btn" href="login.html?redirect=tv.html#tv-studio">Sign In</a>
         </div>
@@ -1578,8 +2273,8 @@
           <form class="tv-panel tv-create-panel" id="tv-channel-form">
             <div class="tv-panel-head">
               <div>
-                <strong>Create Channel</strong>
-                <span>Make a channel for your videos, shows, drops, or private archive.</span>
+                <strong>Optional Channel</strong>
+                <span>Only use this if you want a separate lane for your own shows, drops, or private archive.</span>
               </div>
               <span class="tv-chip">New</span>
             </div>
@@ -1604,8 +2299,12 @@
               <label for="tv-channel-description">Description</label>
               <textarea class="tv-textarea" id="tv-channel-description" name="description" maxlength="320" placeholder="What this channel carries."></textarea>
             </div>
+            <div class="tv-field">
+              <label for="tv-channel-cover">Channel image URL</label>
+              <input class="tv-input" id="tv-channel-cover" name="cover_url" maxlength="500" placeholder="https://..." />
+            </div>
             <button class="tv-btn primary" type="submit">Create Channel</button>
-            <p class="tv-form-note">Your channel lives on Faceless TV. Keep it public, keep it private, or open it later.</p>
+            <p class="tv-form-note">Uploads can go to the main Faceless TV channel without creating one of these.</p>
             <div class="tv-form-status" id="tv-channel-status" aria-live="polite"></div>
           </form>
 
@@ -1613,12 +2312,12 @@
             <div class="tv-panel-head">
               <div>
                 <strong>Upload Video</strong>
-                <span>Add a video to your channel and choose how the audience sees it.</span>
+                <span>Add a video to the main channel without creating your own channel.</span>
               </div>
               <span class="tv-chip">Media</span>
             </div>
             <div class="tv-field">
-              <label for="tv-upload-channel">Channel</label>
+              <label for="tv-upload-channel">Destination</label>
               <select class="tv-select" id="tv-upload-channel" name="channel_id"></select>
             </div>
             <div class="tv-field">
@@ -1636,18 +2335,39 @@
               <div class="tv-field">
                 <label for="tv-upload-file">Video file</label>
                 <input class="tv-input" id="tv-upload-file" name="file" type="file" accept="video/*" />
-                <p class="tv-form-note">50MB max per video while Faceless TV is in test mode.</p>
+                <p class="tv-form-note" id="tv-upload-size" aria-live="polite">Choose a video to see its file size.</p>
               </div>
+            </div>
+            <div class="tv-compress-row">
+              <small>Over 50MB? Try one quick compression before uploading.</small>
+              <button class="tv-btn" id="tv-compress-open" type="button">Compress For Upload</button>
             </div>
             <div class="tv-field">
               <label for="tv-upload-description">Description</label>
               <textarea class="tv-textarea" id="tv-upload-description" name="description" maxlength="500" placeholder="What the audience should know."></textarea>
             </div>
             <button class="tv-btn primary" type="submit">Upload Video</button>
-            <p class="tv-form-note">Pick a channel, add the details, and publish when the video is ready. Files over 50MB will need to wait until the next upload window.</p>
+            <p class="tv-form-note">The main Faceless Animal Studios channel is selected by default. Compression can reduce quality and may take longer than a normal upload.</p>
             <div class="tv-form-status" id="tv-upload-status" aria-live="polite"></div>
           </form>
         </div>
+
+        <aside class="tv-compress-widget" id="tv-compress-widget" hidden aria-hidden="true" aria-label="Video compression">
+          <div class="tv-compress-head">
+            <div>
+              <strong>Compress Video</strong>
+              <small>One button. It stays on this page.</small>
+            </div>
+            <button class="tv-compress-close" id="tv-compress-close" type="button" aria-label="Close compression">X</button>
+          </div>
+          <small class="tv-compress-copy" id="tv-compress-estimate">Choose a video first.</small>
+          <div class="tv-compress-meter" id="tv-compress-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+          <small class="tv-compress-copy">This tries to shrink the video under 50MB without going below about 380p. Quality may go down, and compression can take longer than uploading.</small>
+          <div class="tv-compress-actions">
+            <button class="tv-btn primary" id="tv-compress-start" type="button">Compress For Upload</button>
+            <small class="tv-compress-status" id="tv-compress-status" aria-live="polite"></small>
+          </div>
+        </aside>
 
         <div class="tv-studio-grid">
           <div class="tv-panel">
@@ -1714,7 +2434,7 @@
   <script>
     window.FAS_TV_ORIGIN = window.FAS_TV_ORIGIN || "https://tv.facelessanimalstudios.com";
   </script>
-  <script type="module" src="assets/js/tv-network.js?v=20260611-shuffle-loop"></script>
+  <script type="module" src="assets/js/tv-network.js?v=20260613-shared-video-post-comments"></script>
 </body>
 </html>
 

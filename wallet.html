@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -117,36 +117,46 @@
   </style>
 </head>
 <body>
-  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <nav class="navbar waffle-nav tv-waffle-nav" role="navigation" aria-label="Main navigation">
     <div class="container">
       <div class="navbar-inner">
         <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
         <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="radio.html">Radio</a></li>
+          <li><a href="pulse.html">Pulse Stage</a></li>
+          <li><a href="chat.html">Rooms</a></li>
+          <li><a href="tv.html">TV</a></li>
+          <li><a href="neon-dreams.html">Neon Dreams</a></li>
+          <li><a href="news.html">News</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="wallet.html">Vault</a></li>
           <li><a href="apps.html">Apps</a></li>
-          <li><a href="miner.html">Miner</a></li>
-          <li><a href="dashboard.html">Dashboard</a></li>
-          <li><a href="network.html">Board</a></li>
-          <li><a href="phone.html">Phone</a></li>
-          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+          <li><a href="dashboard.html" aria-current="page">Dashboard</a></li>
+          <li><a href="login.html" class="nav-cta">Enter The System</a></li>
         </ul>
-        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+        <button class="nav-toggle tv-waffle-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
           <span></span><span></span><span></span>
         </button>
       </div>
     </div>
   </nav>
 
-  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+  <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
+    <a href="directory.html">Directory</a>
+    <a href="radio.html">Radio</a>
+    <a href="pulse.html">Pulse Stage</a>
+    <a href="chat.html">Rooms</a>
+    <a href="tv.html">TV</a>
+    <a href="neon-dreams.html">Neon Dreams</a>
+    <a href="news.html">News</a>
+    <a href="store.html">Store</a>
+    <a href="wallet.html">Vault</a>
     <a href="apps.html">Apps</a>
-    <a href="miner.html">Miner</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="network.html">Board</a>
-    <a href="phone.html">Phone</a>
-    <a href="pricing.html">Pricing</a>
-    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
+    <a href="dashboard.html" aria-current="page">Dashboard</a>
+    <a href="login.html" class="waffle-menu-cta tv-waffle-cta">Enter The System</a>
   </div>
-
-  <main class="wallet-wrap">
+<main class="wallet-wrap">
     <section id="wallet-gate" class="auth-gate" style="display:none;">
       <h1 class="wallet-title" style="margin:0;">Wallet Access Required</h1>
       <p>Your Wallet and Vault controls are private to your signed-in Signal account. Sign in to view balances, transfers, and activity.</p>

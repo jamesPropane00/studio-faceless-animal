@@ -766,6 +766,127 @@ p {
   border-color: rgba(255,255,255,0.18);
 }
 
+/* Faceless TV standard waffle navigation */
+.navbar.waffle-nav,
+.navbar.tv-waffle-nav {
+  background: rgba(3, 4, 7, 0.9) !important;
+  border-bottom: 1px solid rgba(33,244,208,0.13) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.navbar.waffle-nav .navbar-links,
+.navbar.tv-waffle-nav .navbar-links {
+  display: none !important;
+}
+
+.navbar.waffle-nav .nav-toggle,
+.navbar.tv-waffle-nav .nav-toggle {
+  display: inline-flex !important;
+  width: 46px;
+  height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-color: rgba(33,244,208,0.22) !important;
+  background: rgba(255,255,255,0.045) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.28);
+}
+
+.navbar.waffle-nav .nav-toggle span,
+.navbar.tv-waffle-nav .nav-toggle span {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #21f4d0 !important;
+  box-shadow: 8px 0 0 #21f4d0, 16px 0 0 #21f4d0 !important;
+}
+
+.navbar.waffle-nav .nav-toggle:hover,
+.navbar.waffle-nav .nav-toggle.open,
+.navbar.tv-waffle-nav .nav-toggle:hover,
+.navbar.tv-waffle-nav .nav-toggle.open {
+  border-color: rgba(33,244,208,0.52) !important;
+  background: rgba(33,244,208,0.1) !important;
+  box-shadow: 0 0 28px rgba(33,244,208,0.12);
+}
+
+.mobile-nav.waffle-menu,
+.mobile-nav.tv-waffle-menu {
+  position: fixed;
+  top: calc(var(--nav-h, 72px) + 0.75rem);
+  right: max(0.75rem, calc((100vw - 1180px) / 2));
+  left: auto;
+  bottom: auto;
+  width: min(320px, calc(100vw - 1.5rem));
+  z-index: 12040;
+  padding: 0.72rem;
+  border: 1px solid rgba(33,244,208,0.2) !important;
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(33,244,208,0.08), rgba(139,92,246,0.08)),
+    rgba(8,9,13,0.96) !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.mobile-nav.waffle-menu.open,
+.mobile-nav.tv-waffle-menu.open {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 0.5rem;
+}
+
+.mobile-nav.waffle-menu a,
+.mobile-nav.tv-waffle-menu a {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 0.6rem !important;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.035);
+  color: #eef3ff !important;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.mobile-nav.waffle-menu a:hover,
+.mobile-nav.waffle-menu a:focus-visible,
+.mobile-nav.tv-waffle-menu a:hover,
+.mobile-nav.tv-waffle-menu a:focus-visible {
+  border-color: rgba(33,244,208,0.34);
+  background: rgba(33,244,208,0.08);
+  color: #fff !important;
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.mobile-nav.waffle-menu a[aria-current="page"],
+.mobile-nav.tv-waffle-menu a[aria-current="page"] {
+  border-color: rgba(139,92,246,0.42);
+  background: rgba(139,92,246,0.14);
+}
+
+.mobile-nav.waffle-menu .waffle-menu-cta,
+.mobile-nav.waffle-menu .tv-waffle-cta,
+.mobile-nav.tv-waffle-menu .waffle-menu-cta,
+.mobile-nav.tv-waffle-menu .tv-waffle-cta {
+  grid-column: 1 / -1;
+  min-height: 48px;
+  color: #08090d !important;
+  background: linear-gradient(135deg, var(--gold-bright, #f9d97d), #f3d47a);
+  border-color: rgba(255,255,255,0.18);
+}
+
 
 /* ================================================================
    6. BUTTONS

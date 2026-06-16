@@ -3,6 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="canonical" href="https://facelessanimalstudios.com/directory.html" />
+  <meta property="og:site_name" content="Faceless Animal Studios" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Faceless Animal Studios Directory" />
+  <meta property="og:description" content="Community posts, creator pages, channel updates, videos, music, and files from the Faceless Animal Studios network." />
+  <meta property="og:url" content="https://facelessanimalstudios.com/directory.html" />
+  <meta property="og:image" content="https://facelessanimalstudios.com/assets/mascot.png" />
+  <meta property="og:image:alt" content="Faceless Animal Studios mascot artwork" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Faceless Animal Studios Directory" />
+  <meta name="twitter:description" content="Community posts, creator pages, channel updates, videos, music, and files from the Faceless Animal Studios network." />
+  <meta name="twitter:image" content="https://facelessanimalstudios.com/assets/mascot.png" />
   <meta
     name="description"
     content="The Faceless Animal Studios Channel Directory helps visitors discover artists, creators, businesses, featured pages, and community updates."
@@ -31,6 +43,9 @@
       --purple-soft: rgba(167, 139, 250, 0.14);
       --gold: #f5c451;
       --gold-bright: #f9d97d;
+      --tv-cyan: #21f4d0;
+      --tv-gold: #d4b56c;
+      --tv-violet: #8b5cf6;
       --border: rgba(167, 139, 250, 0.16);
       --shadow: 0 12px 40px rgba(124, 58, 237, 0.18), 0 3px 12px rgba(0, 0, 0, 0.2);
       --radius-xl: 24px;
@@ -43,8 +58,20 @@
       box-sizing: border-box;
     }
 
-    html {
+    main,
+    section,
+    .container,
+    .filter-shell,
+    .live-feed-shell,
+    .feed-item {
+      min-width: 0;
+    }
+
+    html,
+    body {
       scroll-behavior: smooth;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     body {
@@ -114,6 +141,19 @@
       color: #fff;
     }
 
+    .navbar {
+      --purple: #8B5CF6;
+      --purple-bright: #A78BFA;
+      --gold-bright: #d7ba82;
+      background: rgba(3, 4, 7, 0.9);
+      border-bottom: 1px solid rgba(33,244,208,0.13);
+      backdrop-filter: blur(18px);
+    }
+
+    .navbar .navbar-links {
+      display: none;
+    }
+
     .nav-cta {
       padding: 0.72rem 1rem;
       border-radius: 999px;
@@ -122,49 +162,118 @@
       box-shadow: 0 8px 24px rgba(124, 58, 237, 0.24);
     }
 
-    .nav-toggle {
-      display: none;
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.02);
+    .navbar .nav-toggle {
+      display: inline-flex;
+      width: 46px;
+      height: 46px;
+      border-color: rgba(33,244,208,0.22);
+      background: rgba(255,255,255,0.045);
+      box-shadow: 0 14px 34px rgba(0,0,0,0.28);
+    }
+
+    .navbar .nav-toggle span {
+      background: var(--tv-cyan);
+      box-shadow: 8px 0 0 var(--tv-cyan), 16px 0 0 var(--tv-cyan);
+    }
+
+    .navbar .nav-toggle:hover,
+    .navbar .nav-toggle.open {
+      border-color: rgba(33,244,208,0.52);
+      background: rgba(33,244,208,0.1);
+      box-shadow: 0 0 28px rgba(33,244,208,0.12);
+    }
+
+    .tv-waffle-menu {
+      --purple: #8B5CF6;
+      --purple-bright: #A78BFA;
+      --gold-bright: #d7ba82;
+      position: fixed;
+      top: calc(var(--nav-h, 72px) + 0.75rem);
+      right: max(0.75rem, calc((100vw - 1180px) / 2));
+      left: auto;
+      z-index: 12040;
+      width: min(320px, calc(100vw - 1.5rem));
+      padding: 0.72rem;
+      border: 1px solid rgba(33,244,208,0.2);
+      border-radius: 14px;
+      background:
+        linear-gradient(135deg, rgba(33,244,208,0.08), rgba(139,92,246,0.08)),
+        rgba(8,9,13,0.96);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+      backdrop-filter: blur(20px);
+    }
+
+    .tv-waffle-menu.open {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    .tv-waffle-menu a {
+      display: flex;
+      min-height: 54px;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
-      gap: 4px;
-      cursor: pointer;
+      padding: 0.75rem 0.6rem;
+      color: #eef3ff;
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-align: center;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.035);
+      transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
     }
 
-    .nav-toggle span {
-      width: 18px;
-      height: 2px;
-      border-radius: 99px;
-      background: #fff;
-      display: block;
+    .tv-waffle-menu a:hover,
+    .tv-waffle-menu a:focus-visible {
+      padding-left: 0.6rem;
+      border-color: rgba(33,244,208,0.34);
+      background: rgba(33,244,208,0.08);
+      color: #fff;
+      outline: none;
+      transform: translateY(-1px);
     }
 
-    .mobile-nav {
-      display: none;
-      padding: 0.75rem 1rem 1rem;
-      background: rgba(10, 11, 15, 0.98);
-      border-bottom: 1px solid rgba(167, 139, 250, 0.08);
+    .tv-waffle-menu a[aria-current="page"] {
+      border-color: rgba(139,92,246,0.42);
+      background: rgba(139,92,246,0.14);
     }
 
-    .mobile-nav.open {
-      display: block;
-    }
-
-    .mobile-nav a {
-      display: block;
-      padding: 0.85rem 0;
-      color: var(--text-soft);
-      font-weight: 600;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+    .tv-waffle-menu .tv-waffle-cta {
+      grid-column: 1 / -1;
+      min-height: 48px;
+      color: #08090d !important;
+      background: linear-gradient(135deg, var(--gold-bright), #f3d47a);
+      border-color: rgba(255,255,255,0.18);
     }
 
     main {
+      display: flex;
+      flex-direction: column;
       padding-bottom: 4rem;
+    }
+
+    .hero-wrap {
+      order: 1;
+    }
+
+    #tv-videos {
+      order: 3;
+    }
+
+    #tv-channels {
+      order: 4;
+    }
+
+    .live-block {
+      order: 2;
+    }
+
+    #index {
+      order: 5;
     }
 
     .hero-wrap {
@@ -318,6 +427,70 @@
       flex-direction: column;
       gap: 0.85rem;
       justify-content: space-between;
+    }
+
+    .post-hub {
+      display: grid;
+      gap: 0.8rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 18px;
+      border: 1px solid rgba(167,139,250,0.16);
+      background: rgba(5,6,10,0.34);
+    }
+
+    .post-box {
+      min-height: 92px;
+      padding: 0.9rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.035);
+      color: var(--text-soft);
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
+
+    .post-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.55rem;
+    }
+
+    .post-action {
+      appearance: none;
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.62rem 0.7rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.035);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .post-action--primary {
+      border-color: rgba(167,139,250,0.32);
+      background: rgba(167,139,250,0.14);
+      color: var(--purple-bright);
+    }
+
+    .post-panel {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    .post-panel .post-hub {
+      margin-top: 0;
+    }
+
+    .pulse-strip,
+    .social-strip {
+      display: none;
     }
 
     .side-card {
@@ -513,6 +686,7 @@
     }
 
     .dir-featured-hero {
+      display: none;
       margin-top: 1rem;
       background: linear-gradient(135deg, rgba(48, 33, 78, 0.96) 0%, rgba(22, 20, 33, 0.98) 100%);
       border: 1px solid rgba(167, 139, 250, 0.2);
@@ -580,21 +754,20 @@
 
     .dir-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1rem;
+      grid-template-columns: 1fr;
+      gap: 0;
       margin-top: 1rem;
     }
 
     .dir-card {
-      background: linear-gradient(180deg, rgba(28, 29, 39, 0.98) 0%, rgba(16, 17, 25, 0.99) 100%);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 20px;
-      padding: 1rem;
-      min-height: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 0.85rem;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.16);
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.8fr) auto;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.72rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      background: transparent;
     }
 
     .dir-card--featured {
@@ -606,6 +779,7 @@
       display: flex;
       gap: 0.8rem;
       align-items: center;
+      min-width: 0;
     }
 
     .dir-avatar {
@@ -651,16 +825,129 @@
     .dir-card-bio {
       margin: 0;
       color: var(--text-soft);
-      font-size: 0.89rem;
-      line-height: 1.65;
-      flex: 1 1 auto;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .dir-card-link {
-      color: var(--purple-bright);
-      font-size: 0.88rem;
+      color: var(--tv-cyan);
+      font-size: 0.78rem;
       font-weight: 800;
+      justify-self: end;
+      white-space: nowrap;
+    }
+
+    .channel-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .video-card {
+      display: grid;
+      gap: 0.72rem;
+      min-height: 100%;
+      padding: 0.78rem;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.035);
+      text-decoration: none;
+    }
+
+    .video-thumb {
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      border-radius: 13px;
+      object-fit: cover;
+      background: rgba(0,0,0,0.42);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .video-card h3 {
+      margin: 0;
+      color: #fff;
+      font-size: 0.9rem;
+      line-height: 1.24;
+      overflow-wrap: anywhere;
+    }
+
+    .video-card p {
+      margin: 0;
+      color: var(--text-dim);
+      font-size: 0.76rem;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .channel-card {
+      display: grid;
+      gap: 0.75rem;
+      min-height: 100%;
+      padding: 1rem;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: linear-gradient(180deg, rgba(28,29,39,0.98), rgba(16,17,25,0.99));
+    }
+
+    .channel-card-top {
+      display: grid;
+      grid-template-columns: 58px minmax(0,1fr);
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .channel-card-img {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      object-fit: cover;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .channel-card h3 {
+      margin: 0;
+      color: #fff;
+      font-size: 1rem;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    .channel-card p {
+      margin: 0;
+      color: var(--text-dim);
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .channel-card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
       margin-top: auto;
+    }
+
+    .channel-card-actions a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0.45rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid rgba(167,139,250,0.18);
+      color: var(--purple-bright);
+      font-size: 0.76rem;
+      font-weight: 900;
+      text-decoration: none;
     }
 
     .post-loading {
@@ -693,10 +980,12 @@
     }
 
     .live-block {
-      margin-top: 1.25rem;
+      margin-top: 0.25rem;
     }
 
     .live-feed-shell {
+      max-width: 780px;
+      margin: 0 auto;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
@@ -706,34 +995,457 @@
 
     .feed-list {
       display: grid;
-      gap: 0.7rem;
+      gap: 0.85rem;
       margin-top: 0.75rem;
     }
 
     .feed-item {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 16px;
-      padding: 0.95rem;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 18px;
+      padding: 0.9rem;
+      transition: border-color 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .feed-item.is-shared-target {
+      border-color: rgba(33,244,208,0.56);
+      box-shadow: 0 0 0 1px rgba(33,244,208,0.22), 0 16px 42px rgba(33,244,208,0.1);
     }
 
     .feed-item-top {
-      font-size: 0.72rem;
-      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 0.62rem;
+      margin-bottom: 0.65rem;
+    }
+
+    .feed-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      background: rgba(167,139,250,0.14);
+      border: 1px solid rgba(167,139,250,0.18);
+      color: var(--purple-bright);
+      font-size: 0.82rem;
+      font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 0.45rem;
+    }
+
+    .feed-author {
+      margin: 0;
+      color: #fff;
+      font-size: 0.92rem;
+      font-weight: 900;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    .feed-meta {
+      margin: 0.18rem 0 0;
+      color: var(--text-dim);
+      font-size: 0.72rem;
     }
 
     .feed-item-text {
-      font-size: 0.9rem;
+      font-size: 0.94rem;
       color: var(--text-soft);
-      line-height: 1.6;
+      line-height: 1.55;
       margin: 0;
       word-break: break-word;
     }
 
+    .feed-media {
+      display: block;
+      margin-top: 0.75rem;
+      color: var(--purple-bright);
+      font-size: 0.78rem;
+      overflow-wrap: anywhere;
+    }
+
+    .feed-media img,
+    .feed-video {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(0,0,0,0.34);
+    }
+
+    .feed-media img {
+      max-height: 360px;
+      object-fit: cover;
+    }
+
+    .feed-video-wrap {
+      position: relative;
+      width: min(100%, 560px);
+      margin-top: 0.82rem;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #050609;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .feed-video-wrap.is-portrait {
+      width: min(72vw, 310px);
+      max-width: 100%;
+      margin-right: auto;
+      margin-left: auto;
+      border-color: rgba(33,244,208,0.18);
+      background:
+        linear-gradient(90deg, rgba(33,244,208,0.1), transparent 18%, transparent 82%, rgba(167,139,250,0.12)),
+        #040509;
+      box-shadow: 0 18px 42px rgba(0,0,0,0.38), 0 0 0 1px rgba(255,255,255,0.035);
+    }
+
+    .feed-video-wrap.is-portrait::before,
+    .feed-video-wrap.is-portrait::after {
+      content: "";
+      position: absolute;
+      top: 12%;
+      bottom: 12%;
+      width: 2px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, transparent, rgba(33,244,208,0.55), transparent);
+      opacity: 0.7;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .feed-video-wrap.is-portrait::before {
+      left: 0.48rem;
+    }
+
+    .feed-video-wrap.is-portrait::after {
+      right: 0.48rem;
+      background: linear-gradient(180deg, transparent, rgba(167,139,250,0.5), transparent);
+    }
+
+    .feed-video {
+      display: block;
+      aspect-ratio: 16 / 9;
+      max-height: 420px;
+      object-fit: contain;
+      border: 0;
+      border-radius: 0;
+    }
+
+    .feed-video-wrap.is-portrait .feed-video {
+      aspect-ratio: 9 / 16;
+      max-height: min(68vh, 540px);
+      object-fit: contain;
+    }
+
+    @media (max-width: 640px) {
+      .feed-video-wrap.is-portrait {
+        width: min(82vw, 300px);
+      }
+
+      .feed-video-wrap.is-portrait .feed-video {
+        max-height: min(64vh, 500px);
+      }
+    }
+
+    .feed-video-play {
+      position: absolute;
+      left: 0.75rem;
+      bottom: 0.75rem;
+      min-width: 42px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 900;
+      pointer-events: none;
+    }
+
+    .feed-audio-card {
+      width: min(100%, 520px);
+      margin-top: 0.82rem;
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr);
+      gap: 0.8rem;
+      align-items: center;
+      padding: 0.78rem;
+      border-radius: 16px;
+      border: 1px solid rgba(33,244,208,0.12);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(33,244,208,0.12), transparent 38%),
+        linear-gradient(135deg, rgba(139,92,246,0.09), rgba(255,255,255,0.025));
+    }
+
+    .feed-audio-art {
+      width: 76px;
+      height: 76px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: rgba(0,0,0,0.36);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .feed-audio-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .feed-audio-title {
+      margin: 0 0 0.42rem;
+      color: #fff;
+      font-size: 0.84rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .feed-audio-card audio {
+      width: 100%;
+      height: 34px;
+      display: block;
+    }
+
+    .feed-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.8rem;
+      padding-top: 0.72rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .feed-actions button {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      color: var(--text-dim);
+      font-size: 0.76rem;
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .feed-actions button:hover,
+    .feed-actions button.is-active {
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+    }
+
+    .feed-comment-box {
+      display: none;
+      gap: 0.45rem;
+      margin-top: 0.65rem;
+    }
+
+    .feed-item.show-comments .feed-comment-box {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .feed-comment-box input {
+      min-width: 0;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+      padding: 0.58rem 0.75rem;
+      font: inherit;
+      font-size: 0.82rem;
+    }
+
+    .feed-comment-box button {
+      border: 1px solid rgba(33,244,208,0.18);
+      border-radius: 999px;
+      background: rgba(33,244,208,0.08);
+      color: var(--tv-cyan);
+      font-weight: 900;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+    }
+
+    .feed-comments {
+      display: grid;
+      gap: 0.42rem;
+      margin-top: 0.6rem;
+    }
+
+    .feed-comment {
+      margin: 0;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .post-widget {
+      position: fixed;
+      right: clamp(0.75rem, 3vw, 1.35rem);
+      bottom: clamp(0.75rem, 3vw, 1.35rem);
+      z-index: 999;
+      display: grid;
+      justify-items: end;
+      gap: 0.65rem;
+      max-width: calc(100vw - 1rem);
+    }
+
+    .post-widget-panel[hidden] {
+      display: none;
+    }
+
+    .post-widget-panel {
+      width: min(390px, calc(100vw - 1.2rem));
+      padding: 0.9rem;
+      border-radius: 20px;
+      border: 1px solid rgba(167,139,250,0.22);
+      background: rgba(12,13,19,0.97);
+      box-shadow: 0 22px 70px rgba(0,0,0,0.56);
+      backdrop-filter: blur(18px);
+    }
+
+    #dir-video-panel {
+      position: fixed;
+      right: clamp(0.75rem, 3vw, 1.35rem);
+      bottom: clamp(0.75rem, 3vw, 1.35rem);
+      z-index: 1000;
+    }
+
+    .post-widget-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .post-widget-head strong {
+      display: block;
+      color: #fff;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+    }
+
+    .post-widget-head small,
+    .post-widget-note,
+    .post-widget-status {
+      display: block;
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      line-height: 1.42;
+    }
+
+    .post-widget-close,
+    .post-widget-toggle {
+      border: 1px solid rgba(255,255,255,0.12);
+      cursor: pointer;
+    }
+
+    .post-widget-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+    }
+
+    .post-widget-form {
+      display: grid;
+      gap: 0.62rem;
+    }
+
+    .post-widget-form textarea,
+    .post-widget-form select,
+    .post-widget-form input[type="text"],
+    .post-widget-form input[type="file"] {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 13px;
+      background: rgba(255,255,255,0.045);
+      color: #fff;
+      padding: 0.72rem;
+      font: inherit;
+      font-size: 0.86rem;
+    }
+
+    .post-widget-form textarea {
+      min-height: 108px;
+      resize: vertical;
+    }
+
+    .post-widget-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .post-widget-btn {
+      min-height: 42px;
+      border: 1px solid rgba(167,139,250,0.2);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.045);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .post-widget-btn.primary {
+      background: rgba(167,139,250,0.16);
+      color: var(--purple-bright);
+    }
+
+    .post-widget-toggle {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(167,139,250,0.96), rgba(245,196,81,0.92));
+      color: #090a10;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.42);
+      font-size: 0;
+      transform-origin: center;
+      animation: postWidgetFloat 3.2s ease-in-out infinite;
+    }
+
+    .post-widget-toggle::before,
+    .post-widget-toggle::after {
+      content: "";
+      position: absolute;
+      width: 22px;
+      height: 4px;
+      border-radius: 999px;
+      background: #090a10;
+    }
+
+    .post-widget-toggle::after {
+      transform: rotate(90deg);
+    }
+
+    .post-widget.is-open .post-widget-toggle {
+      animation-play-state: paused;
+      transform: rotate(45deg);
+    }
+
+    @keyframes postWidgetFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-7px) rotate(8deg); }
+    }
+
     .bottom-cta {
+      display: none;
       text-align: center;
       margin-top: 1.2rem;
       padding-top: 1.1rem;
@@ -805,6 +1517,8 @@
       .hero-grid,
       .feature-grid,
       .dir-grid,
+      .video-grid,
+      .channel-grid,
       .social-strip {
         grid-template-columns: 1fr;
       }
@@ -869,6 +1583,10 @@
         grid-template-columns: 1fr;
       }
 
+      .post-actions {
+        grid-template-columns: 1fr;
+      }
+
       .hero-actions {
         flex-direction: column;
         align-items: stretch;
@@ -882,144 +1600,89 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
+
+      .dir-card {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+
+      .dir-card-link {
+        justify-self: start;
+      }
+
+      .dir-featured-hero,
+      .bottom-cta {
+        display: none;
+      }
+
+      .feed-comment-box {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
-<body>
+<body data-disable-phone-launcher>
 
-  <div class="top-bar waffle-nav">
+    <nav class="navbar waffle-nav tv-waffle-nav" role="navigation" aria-label="Main navigation">
     <div class="container">
-      <div class="top-bar-inner">
-        <a href="index.html" class="nav-logo">Faceless <span>Animal</span> Studios</a>
-
-        <div class="nav-links">
-          <a href="directory.html" aria-current="page" style="color:var(--purple-bright);">Directory</a>
-          <a href="apps.html">Apps</a>
-          <a href="radio.html">Radio</a>
-          <a href="chat.html">Chat</a>
-          <a href="tv.html">TV</a>
-          <a href="neon-dreams.html">Neon Dreams</a>
-          <a href="news.html">News</a>
-          <a href="store.html">Store</a>
-          <a href="login.html" class="nav-cta">Sign In</a>
-        </div>
-
-        <button class="nav-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html" aria-current="page">Directory</a></li>
+          <li><a href="radio.html">Radio</a></li>
+          <li><a href="pulse.html">Pulse Stage</a></li>
+          <li><a href="chat.html">Rooms</a></li>
+          <li><a href="tv.html">TV</a></li>
+          <li><a href="neon-dreams.html">Neon Dreams</a></li>
+          <li><a href="news.html">News</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="wallet.html">Vault</a></li>
+          <li><a href="apps.html">Apps</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="login.html" class="nav-cta">Enter The System</a></li>
+        </ul>
+        <button class="nav-toggle tv-waffle-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
           <span></span><span></span><span></span>
         </button>
       </div>
     </div>
-  </div>
+  </nav>
 
-  <div class="mobile-nav waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
-    <a href="directory.html" aria-current="page" style="color:var(--purple-bright);">Directory</a>
-    <a href="apps.html">Apps</a>
+  <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
+    <a href="directory.html" aria-current="page">Directory</a>
     <a href="radio.html">Radio</a>
-    <a href="chat.html">Chat</a>
+    <a href="pulse.html">Pulse Stage</a>
+    <a href="chat.html">Rooms</a>
     <a href="tv.html">TV</a>
     <a href="neon-dreams.html">Neon Dreams</a>
     <a href="news.html">News</a>
     <a href="store.html">Store</a>
-    <a href="login.html" class="waffle-menu-cta">Sign In</a>
+    <a href="wallet.html">Vault</a>
+    <a href="apps.html">Apps</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="login.html" class="waffle-menu-cta tv-waffle-cta">Enter The System</a>
   </div>
-
-  <main>
-    <section class="hero-wrap" aria-label="Directory hero">
+<main>
+    <section class="hero-wrap" aria-label="Post to the network">
       <div class="container">
-        <div class="hero-grid">
-          <div class="hero-main">
-            <div class="eyebrow">Creator Directory</div>
+        <div class="hero-main post-panel">
 
-            <h1 class="hero-title">
-              Channel
-              <span class="accent">Directory.</span>
-            </h1>
-
-            <p class="hero-sub">
-              Find artists, creators, brands, and community pages inside Faceless Animal Studios.
-              Browse public profiles, discover featured channels, and jump straight to the pages worth watching.
-            </p>
-
-            <div class="hero-bullets">
-              <div class="hero-bullet">
-                <strong>Browse</strong>
-                <span>Search the public lineup of artists, creators, brands, and community members.</span>
+            <div class="post-hub" aria-label="Post to the network">
+              <div class="post-box">
+                What are you building, dropping, selling, streaming, filming, or showing today?
               </div>
-              <div class="hero-bullet">
-                <strong>Discover</strong>
-                <span>Find featured profiles, live pages, and new people building inside the studio.</span>
-              </div>
-              <div class="hero-bullet">
-                <strong>Connect</strong>
-                <span>Open pages, follow updates, and move through the Faceless Animal community.</span>
-              </div>
-              <div class="hero-bullet">
-                <strong>Get Listed</strong>
-                <span>Create your page and make your channel easier for people to find.</span>
+              <div class="post-actions">
+                <button type="button" class="post-action post-action--primary" data-open-post-widget>Post Update</button>
+                <a href="my-page.html" class="post-action">My Page</a>
+                <button type="button" class="post-action" data-open-video-upload>Upload Video</button>
               </div>
             </div>
 
-            <div class="hero-actions">
-              <a href="#index" class="btn btn-primary">Browse Channels</a>
-              <a href="start.html" class="btn btn-ghost">Get Listed</a>
-              <a href="login.html" class="btn btn-gold">Sign In</a>
-            </div>
           </div>
-
-          <aside class="hero-side">
-            <div class="side-card">
-              <div class="side-label">Featured</div>
-              <div class="side-title">Fresh channels, real people, active pages.</div>
-              <div class="side-copy">
-                A faster way to find who is creating, performing, building, and moving through the brand.
-              </div>
-            </div>
-
-            <div class="side-card">
-              <div class="side-label">Categories</div>
-              <div class="side-title">Artists, creators, brands, and more.</div>
-              <div class="side-copy">
-                Use the filters to narrow the directory without losing the underground Faceless Animal feel.
-              </div>
-            </div>
-
-            <div class="side-card">
-              <div class="side-label">Join</div>
-              <div class="side-title">Claim space for your channel.</div>
-              <div class="side-copy">
-                Add your public page so fans, clients, and collaborators can find you faster.
-              </div>
-            </div>
-          </aside>
-        </div>
-
-        <div class="pulse-strip">
-          <div class="pulse-kicker">Directory Pulse</div>
-          <p id="dir-pulse-strip" class="pulse-copy">Loading directory activity…</p>
-        </div>
-
-        <div class="social-strip">
-          <div class="social-stat">
-            <strong>Channels</strong>
-            <span>Public profiles for people and brands inside the Faceless Animal world.</span>
-          </div>
-          <div class="social-stat">
-            <strong>Members</strong>
-            <span>Browse artists, creators, businesses, and community profiles.</span>
-          </div>
-          <div class="social-stat">
-            <strong>Pages</strong>
-            <span>Open public pages and see what each channel is about.</span>
-          </div>
-          <div class="social-stat">
-            <strong>Activity</strong>
-            <span>Catch public updates and featured movement from the community.</span>
-          </div>
-        </div>
       </div>
     </section>
 
-    <section class="section" aria-labelledby="directory-features-heading">
+    <section class="section" aria-labelledby="directory-features-heading" hidden>
       <div class="container">
         <div class="section-head">
           <div class="section-kicker">How It Works</div>
@@ -1081,14 +1744,28 @@
       </div>
     </section>
 
+    <section class="section" id="tv-videos" aria-labelledby="tv-video-heading">
+      <div class="container">
+        <div class="filter-shell">
+          <div class="section-head" style="text-align:left; max-width:none; margin:0 0 0.8rem;">
+            <div class="section-kicker">Faceless TV</div>
+            <h2 id="tv-video-heading" style="margin-bottom:0.45rem;">Videos from the TV archive.</h2>
+          </div>
+          <div class="video-grid" id="dir-tv-video-grid" aria-live="polite">
+            <div class="feed-item" style="grid-column:1/-1;">Loading TV videos...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="section" id="index" aria-labelledby="dir-heading">
       <div class="container">
         <div class="filter-shell">
           <div class="section-head" style="text-align:left; max-width:none; margin:0 0 0.8rem;">
-            <div class="section-kicker">Browse Channels</div>
-            <h2 id="dir-heading" style="margin-bottom:0.45rem;">Artists, creators, businesses, and featured pages.</h2>
+            <div class="section-kicker">Link Library</div>
+            <h2 id="dir-heading" style="margin-bottom:0.45rem;">Plain directory of pages and channels.</h2>
             <p>
-              Use the filters to find the kind of channel you want, then open the page to learn more.
+              Names, categories, and direct URLs for people building inside Faceless Animal Studios.
             </p>
           </div>
 
@@ -1144,14 +1821,31 @@
       </div>
     </section>
 
+    <section class="section" id="tv-channels" aria-labelledby="tv-channel-heading">
+      <div class="container">
+        <div class="filter-shell">
+          <div class="section-head" style="text-align:left; max-width:none; margin:0 0 0.8rem;">
+            <div class="section-kicker">Creator Channels</div>
+            <h2 id="tv-channel-heading" style="margin-bottom:0.45rem;">Video channels connected to creator pages.</h2>
+            <p>
+              Browse TV channels, open the channel page, or jump to the user behind it when a public profile is available.
+            </p>
+          </div>
+          <div class="channel-grid" id="dir-channel-grid" aria-live="polite">
+            <div class="feed-item" style="grid-column:1/-1;">Loading creator channels...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="section live-block" aria-labelledby="feed-heading">
       <div class="container">
         <div class="live-feed-shell">
           <div class="section-head" style="text-align:left; max-width:none; margin:0 0 0.8rem;">
-            <div class="section-kicker">Latest Activity</div>
-            <h2 id="feed-heading" style="margin-bottom:0.45rem;">Community updates</h2>
+            <div class="section-kicker">Community Feed</div>
+            <h2 id="feed-heading" style="margin-bottom:0.45rem;">Member posts</h2>
             <p>
-              Public updates from members and creators appear here when they are available.
+              Public updates from members and creators appear here first.
             </p>
           </div>
 
@@ -1198,21 +1892,67 @@
     </div>
   </footer>
 
+  <aside class="post-widget" id="dir-post-widget" aria-label="Quick post widget">
+    <section class="post-widget-panel" id="dir-post-panel" hidden aria-hidden="true">
+      <div class="post-widget-head">
+        <div>
+          <strong>Add A Post</strong>
+          <small>Text, pictures, videos, PDFs, audio, or other files. 50MB max.</small>
+        </div>
+        <button class="post-widget-close" id="dir-post-close" type="button" aria-label="Close post widget">X</button>
+      </div>
+      <form class="post-widget-form" id="dir-post-form">
+        <textarea id="dir-post-text" maxlength="800" placeholder="What do you want to post?"></textarea>
+        <select id="dir-post-type" aria-label="Post type">
+          <option value="drop">Post</option>
+          <option value="picture">Picture</option>
+          <option value="music">Music</option>
+          <option value="update">Update</option>
+          <option value="file">File</option>
+          <option value="video">Video</option>
+          <option value="question">Question</option>
+        </select>
+        <input id="dir-post-file" type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.zip,.csv,.xlsx,.ppt,.pptx" />
+        <small class="post-widget-note" id="dir-post-file-note">Choose a file to see its size. Files over 50MB cannot post here.</small>
+        <div class="post-widget-actions">
+          <button class="post-widget-btn" id="dir-post-compress" type="button">Compress File</button>
+          <button class="post-widget-btn primary" type="submit">Post</button>
+        </div>
+        <small class="post-widget-note">Compression is for video files when supported. It can take longer and quality may go down.</small>
+        <small class="post-widget-status" id="dir-post-status" aria-live="polite"></small>
+      </form>
+    </section>
+    <button class="post-widget-toggle" id="dir-post-toggle" type="button" aria-label="Open post widget" aria-expanded="false"></button>
+  </aside>
+
+  <aside class="post-widget-panel" id="dir-video-panel" hidden aria-hidden="true" aria-label="Video upload">
+    <div class="post-widget-head">
+      <div>
+        <strong>Upload Video</strong>
+        <small>Main Faceless Animal Studios channel is selected by default.</small>
+      </div>
+      <button class="post-widget-close" id="dir-video-close" type="button" aria-label="Close video upload">X</button>
+    </div>
+    <form class="post-widget-form" id="dir-video-form">
+      <input id="dir-video-title" type="text" maxlength="120" placeholder="Video title" required />
+      <textarea id="dir-video-description" maxlength="500" placeholder="Short description for the post or archive."></textarea>
+      <select id="dir-video-target" aria-label="Video channel target">
+        <option value="main">Post to Faceless Animal Studios</option>
+        <option value="mine">Post to my channel instead</option>
+      </select>
+      <select id="dir-video-channel" aria-label="My channel" hidden></select>
+      <input id="dir-video-file" type="file" accept="video/*" required />
+      <small class="post-widget-note" id="dir-video-size">Choose a video to see its file size. 50MB max.</small>
+      <div class="post-widget-actions">
+        <button class="post-widget-btn" id="dir-video-compress" type="button">Compress Video</button>
+        <button class="post-widget-btn primary" type="submit">Upload</button>
+      </div>
+      <small class="post-widget-note">If you use your own channel, the video can still be used in your directory post. Create a channel on the TV page if none appears.</small>
+      <small class="post-widget-status" id="dir-video-status" aria-live="polite"></small>
+    </form>
+  </aside>
+
   <script src="assets/script.js?v=20260322"></script>
-  <script src="assets/js/radio-widget.js" defer></script>
-
-  <script>
-    const navToggle = document.querySelector('.nav-toggle');
-    const mobileMenu = document.getElementById('mobile-menu');
-
-    if (navToggle && mobileMenu) {
-      navToggle.addEventListener('click', function () {
-        const expanded = this.getAttribute('aria-expanded') === 'true';
-        this.setAttribute('aria-expanded', String(!expanded));
-        mobileMenu.classList.toggle('open');
-      });
-    }
-  </script>
 
   <script>
   (function () {
@@ -1220,6 +1960,8 @@
 
     var SUPABASE_URL = 'https://ghufaozjwondqcrcucjs.supabase.co';
     var SUPABASE_ANON_KEY = 'sb_publishable_kixI74nB7Drt6mQKooaXHg_nPoE0h_-';
+    var pendingPostMediaUrl = '';
+    var feedCommentCache = {};
 
     var TEST_PREFIXES = [
       'fas_rpc_test_','conntest_','probe_','fastest_','smoketest',
@@ -1239,6 +1981,390 @@
         .replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+
+    function isImageUrl(value) {
+      return /\.(png|jpe?g|gif|webp|avif)(\?.*)?$/i.test(String(value || ''));
+    }
+
+    function isVideoUrl(value) {
+      return /\.(mp4|mov|m4v|webm|ogg)(\?.*)?$/i.test(String(value || ''));
+    }
+
+    function isAudioUrl(value) {
+      return /\.(mp3|wav|m4a|aac|flac|oga|ogg)(\?.*)?$/i.test(String(value || ''));
+    }
+
+    function renderFeedMedia(url) {
+      if (!url) return '';
+      if (isImageUrl(url)) {
+        return '<a class="feed-media" href="' + esc(url) + '"><img src="' + esc(url) + '" alt="" loading="lazy"></a>';
+      }
+      if (isVideoUrl(url)) {
+        return '<div class="feed-video-wrap">'
+          + '<video class="feed-video" playsinline preload="metadata" src="' + esc(url) + '#t=0.1"></video>'
+          + '<span class="feed-video-play">Play</span>'
+          + '</div>';
+      }
+      if (isAudioUrl(url)) {
+        var name = decodeURIComponent(String(url).split('/').pop() || 'Music file').replace(/\?.*$/, '').replace(/[-_]+/g, ' ');
+        return '<div class="feed-audio-card">'
+          + '<div class="feed-audio-art" aria-hidden="true"><img src="assets/boombox.png" alt=""></div>'
+          + '<div>'
+          + '<p class="feed-audio-title">' + esc(name) + '</p>'
+          + '<audio controls preload="metadata" src="' + esc(url) + '"></audio>'
+          + '</div>'
+          + '</div>';
+      }
+      return '<a class="feed-media" href="' + esc(url) + '">' + esc(url) + '</a>';
+    }
+
+    function feedPostKey(row) {
+      return String(row && (row.id || row.post_id || row.created_at || row.body_text) || 'post-' + Date.now()).replace(/[^a-z0-9_-]+/gi, '-');
+    }
+
+    function feedStoreKey(key, type) {
+      return 'dir_feed_' + type + '_' + key;
+    }
+
+    function commentCategory(key) {
+      return 'comment:' + String(key || '').slice(0, 120);
+    }
+
+    function isCommentRow(row) {
+      return String(row && (row.post_type || '')).toLowerCase() === 'comment'
+        || String(row && (row.category || '')).indexOf('comment:') === 0;
+    }
+
+    function readFeedComments(key) {
+      try { return JSON.parse(localStorage.getItem(feedStoreKey(key, 'comments')) || '[]'); } catch (_) { return []; }
+    }
+
+    function feedComments(key) {
+      var merged = [];
+      var seen = {};
+      function add(comment) {
+        if (!comment || !comment.text) return;
+        var sig = String(comment.user || '') + '|' + String(comment.text || '');
+        if (seen[sig]) return;
+        seen[sig] = true;
+        merged.push(comment);
+      }
+      (feedCommentCache[key] || []).forEach(add);
+      readFeedComments(key).forEach(add);
+      return merged.sort(function (a, b) {
+        return Number(new Date(a.ts || 0)) - Number(new Date(b.ts || 0));
+      });
+    }
+
+    function renderCommentList(key) {
+      var comments = feedComments(key);
+      return comments.map(function (comment) {
+        return '<p class="feed-comment"><strong>' + esc(comment.user || 'guest') + ':</strong> ' + esc(comment.text || '') + '</p>';
+      }).join('');
+    }
+
+    function updateFeedCommentUi(item, key) {
+      if (!item) return;
+      var comments = feedComments(key);
+      var commentsEl = item.querySelector('.feed-comments');
+      var countEl = item.querySelector('[data-feed-comment] span');
+      if (commentsEl) commentsEl.innerHTML = renderCommentList(key);
+      if (countEl) countEl.textContent = String(comments.length);
+    }
+
+    function normalizeFeedCommentRow(row) {
+      return {
+        user: row.author_username || row.username || 'member',
+        text: row.body_text || row.post_text || '',
+        ts: row.created_at || Date.now()
+      };
+    }
+
+    function loadPersistedFeedComments(keys, root) {
+      keys = (keys || []).filter(Boolean);
+      if (!keys.length) return Promise.resolve();
+      var wanted = {};
+      keys.forEach(function (key) { wanted[commentCategory(key)] = key; });
+      var headers = {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+      };
+      var signalUrl = SUPABASE_URL
+        + '/rest/v1/signal_posts'
+        + '?select=author_username,body_text,category,post_type,created_at'
+        + '&moderation_state=eq.approved'
+        + '&visibility=eq.public'
+        + '&category=like.comment:%25'
+        + '&order=created_at.asc'
+        + '&limit=200';
+      var boardUrl = SUPABASE_URL
+        + '/rest/v1/board_posts'
+        + '?select=username,post_text,category,created_at'
+        + '&is_approved=eq.true'
+        + '&visibility_status=eq.visible'
+        + '&category=like.comment:%25'
+        + '&order=created_at.asc'
+        + '&limit=200';
+
+      return Promise.all([
+        fetch(signalUrl, { headers: headers }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
+        fetch(boardUrl, { headers: headers }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; })
+      ]).then(function (sets) {
+        keys.forEach(function (key) { feedCommentCache[key] = []; });
+        sets.reduce(function (all, rows) { return all.concat(rows || []); }, []).forEach(function (row) {
+          var key = wanted[String(row.category || '')];
+          if (!key) return;
+          feedCommentCache[key].push(normalizeFeedCommentRow(row));
+        });
+        keys.forEach(function (key) {
+          var escapedKey = window.CSS && CSS.escape ? CSS.escape(key) : key.replace(/"/g, '\\"');
+          updateFeedCommentUi((root || document).querySelector('.feed-item[data-feed-key="' + escapedKey + '"]'), key);
+        });
+      });
+    }
+
+    function persistFeedComment(key, session, text) {
+      var category = commentCategory(key);
+      var signalPayload = {
+        author_username: String(session && session.username || 'guest').toLowerCase(),
+        post_type: 'comment',
+        category: category,
+        body_text: text,
+        moderation_state: 'approved',
+        visibility: 'public'
+      };
+      return fetch(SUPABASE_URL + '/rest/v1/signal_posts?select=author_username,body_text,category,created_at', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(signalPayload)
+      }).then(function (r) {
+        if (r.ok) return r.json();
+        return fetch(SUPABASE_URL + '/rest/v1/board_posts?select=username,post_text,category,created_at', {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({
+            username: String(session && session.username || 'guest').toLowerCase(),
+            post_text: text,
+            category: category,
+            is_approved: true,
+            visibility_status: 'visible'
+          })
+        }).then(function (fallback) {
+          if (!fallback.ok) throw new Error('Comment saved locally.');
+          return fallback.json();
+        });
+      });
+    }
+
+    function feedLikeCount(key) {
+      return Number(localStorage.getItem(feedStoreKey(key, 'likes')) || 0);
+    }
+
+    function bindFeedVideos(root) {
+      (root || document).querySelectorAll('.feed-video-wrap').forEach(function (wrap) {
+        if (wrap.dataset.bound === '1') return;
+        wrap.dataset.bound = '1';
+        var video = wrap.querySelector('.feed-video');
+        var label = wrap.querySelector('.feed-video-play');
+        var hoverTimer = null;
+
+        function syncFeedVideoRatio() {
+          if (!video) return;
+          var width = Number(video.videoWidth || 0);
+          var height = Number(video.videoHeight || 0);
+          var portrait = width > 0 && height > width;
+          wrap.classList.toggle('is-portrait', portrait);
+          wrap.classList.toggle('is-landscape', width > 0 && !portrait);
+        }
+
+        function pauseOtherFeedVideos() {
+          (root || document).querySelectorAll('.feed-video').forEach(function (other) {
+            if (other === video) return;
+            other.pause();
+            other.controls = false;
+            var otherLabel = other.closest('.feed-video-wrap') && other.closest('.feed-video-wrap').querySelector('.feed-video-play');
+            if (otherLabel) otherLabel.textContent = 'Play';
+          });
+        }
+
+        function playWithSound() {
+          if (!video) return;
+          pauseOtherFeedVideos();
+          video.muted = false;
+          video.volume = 1;
+          video.controls = true;
+          var attempt = video.play();
+          if (attempt && attempt.catch) {
+            attempt.then(function () {
+              if (label) label.textContent = video.muted ? 'Muted' : 'Pause';
+            }).catch(function () {
+              if (label) label.textContent = 'Tap';
+            });
+          } else if (label) {
+            label.textContent = 'Pause';
+          }
+        }
+
+        function pauseVideo() {
+          if (!video) return;
+          window.clearTimeout(hoverTimer);
+          video.pause();
+          video.controls = false;
+          if (label) label.textContent = 'Play';
+        }
+
+        video.addEventListener('loadedmetadata', syncFeedVideoRatio);
+        video.addEventListener('loadeddata', syncFeedVideoRatio);
+        video.addEventListener('canplay', syncFeedVideoRatio);
+        [120, 420, 1100].forEach(function (delay) {
+          window.setTimeout(syncFeedVideoRatio, delay);
+        });
+
+        wrap.addEventListener('mouseenter', function () {
+          hoverTimer = window.setTimeout(playWithSound, 850);
+        });
+        wrap.addEventListener('mouseleave', pauseVideo);
+        wrap.addEventListener('click', function () {
+          window.clearTimeout(hoverTimer);
+          if (video && !video.paused) {
+            pauseVideo();
+          } else {
+            playWithSound();
+          }
+        });
+      });
+    }
+
+    function findPostFromHash() {
+      var hash = decodeURIComponent((window.location.hash || '').replace(/^#/, ''));
+      var key = '';
+      if (hash && hash.indexOf('post-') === 0) key = hash.slice(5);
+      if (!key) {
+        try {
+          key = new URLSearchParams(window.location.search).get('post') || '';
+        } catch (_) {
+          key = '';
+        }
+      }
+      if (!key) return null;
+      var escapedKey = window.CSS && CSS.escape ? CSS.escape(key) : key.replace(/"/g, '\\"');
+      return document.querySelector('.feed-item[data-feed-key="' + escapedKey + '"]') || document.getElementById(hash);
+    }
+
+    function revealSharedPost() {
+      var item = findPostFromHash();
+      if (!item) return;
+      item.classList.add('is-shared-target');
+      item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      window.setTimeout(function () {
+        item.classList.remove('is-shared-target');
+      }, 3000);
+    }
+
+    function sharedPostUrl(key) {
+      var url = new URL(window.location.href);
+      url.searchParams.set('post', key);
+      url.hash = 'post-' + key;
+      return url.toString();
+    }
+
+    function postShareText(item) {
+      var user = item.getAttribute('data-feed-user') || 'member';
+      var body = (item.getAttribute('data-feed-text') || '').trim().replace(/\s+/g, ' ');
+      var text = 'Faceless Animal Studios post by @' + user;
+      if (body) text += ': ' + (body.length > 140 ? body.slice(0, 137) + '...' : body);
+      return text;
+    }
+
+    function bindFeedActions(root) {
+      (root || document).querySelectorAll('.feed-item[data-feed-key]').forEach(function (item) {
+        if (item.dataset.actionsBound === '1') return;
+        item.dataset.actionsBound = '1';
+        var key = item.getAttribute('data-feed-key');
+        var likeBtn = item.querySelector('[data-feed-like]');
+        var commentBtn = item.querySelector('[data-feed-comment]');
+        var shareBtn = item.querySelector('[data-feed-share]');
+        var form = item.querySelector('[data-feed-comment-form]');
+        var commentsEl = item.querySelector('.feed-comments');
+
+        if (likeBtn) {
+          likeBtn.addEventListener('click', function () {
+            var likedKey = feedStoreKey(key, 'liked');
+            var liked = localStorage.getItem(likedKey) === '1';
+            var next = Math.max(0, feedLikeCount(key) + (liked ? -1 : 1));
+            localStorage.setItem(feedStoreKey(key, 'likes'), String(next));
+            localStorage.setItem(likedKey, liked ? '0' : '1');
+            likeBtn.classList.toggle('is-active', !liked);
+            var span = likeBtn.querySelector('span');
+            if (span) span.textContent = String(next);
+          });
+        }
+
+        if (commentBtn) {
+          commentBtn.addEventListener('click', function () {
+            item.classList.toggle('show-comments');
+            var input = form && form.querySelector('input');
+            if (item.classList.contains('show-comments') && input) input.focus();
+          });
+        }
+
+        if (form) {
+          form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var input = form.querySelector('input');
+            var text = input && input.value ? input.value.trim() : '';
+            if (!text) return;
+            var session = getSession();
+            var comments = readFeedComments(key);
+            var localComment = { user: session && session.username || 'guest', text: text, ts: Date.now() };
+            comments.push(localComment);
+            localStorage.setItem(feedStoreKey(key, 'comments'), JSON.stringify(comments.slice(-20)));
+            updateFeedCommentUi(item, key);
+            input.value = '';
+            persistFeedComment(key, session, text).then(function (rows) {
+              if (rows && rows[0]) {
+                feedCommentCache[key] = (feedCommentCache[key] || []).concat(normalizeFeedCommentRow(rows[0]));
+                updateFeedCommentUi(item, key);
+              }
+            }).catch(function () {
+              updateFeedCommentUi(item, key);
+            });
+          });
+        }
+
+        if (shareBtn) {
+          shareBtn.addEventListener('click', function () {
+            var url = sharedPostUrl(key);
+            var text = postShareText(item);
+            if (navigator.share) {
+              navigator.share({ title: text, text: text, url: url }).catch(function () {});
+              return;
+            }
+            if (!navigator.clipboard || !navigator.clipboard.writeText) {
+              shareBtn.textContent = url;
+              return;
+            }
+            navigator.clipboard.writeText(text + '\n' + url).then(function () {
+              var old = shareBtn.textContent;
+              shareBtn.textContent = 'Copied';
+              setTimeout(function () { shareBtn.textContent = old; }, 1200);
+            }).catch(function () {
+              shareBtn.textContent = url;
+            });
+          });
+        }
+      });
     }
 
     function initials(name) {
@@ -1314,11 +2440,16 @@
       var activeNow = isRecentlyActive(m.last_active_at);
       var routePrefix = categoryToRoutePrefix(cat);
       var publicSlug = p.slug || m.page_slug || m.username;
+      var pageHref = isFounder ? 'artists/djfacelessanimal.html' : (hasPage ? routePrefix + publicSlug : 'start.html');
+      var pageLabel = isFounder || hasPage ? 'Open' : 'Start';
+      var publicUrl = isFounder
+        ? 'facelessanimalstudios.com/artists/djfacelessanimal'
+        : (hasPage ? 'facelessanimalstudios.com' + routePrefix + publicSlug : 'No public URL yet');
       var link = isFounder
-        ? '<a href="artists/djfacelessanimal.html" class="dir-card-link">View Page →</a>'
+        ? '<a href="artists/djfacelessanimal.html" class="dir-card-link">Open</a>'
         : hasPage
-          ? '<a href="' + esc(routePrefix + publicSlug) + '" class="dir-card-link">' + (isVeiled ? 'View Veiled Page →' : 'View Page →') + '</a>'
-          : '<span class="dir-card-link" style="color:var(--text-dim);cursor:default;">Building →</span>';
+          ? '<a href="' + esc(routePrefix + publicSlug) + '" class="dir-card-link">Open</a>'
+          : '<a href="start.html" class="dir-card-link" style="color:var(--text-dim);">Start</a>';
 
       var liveStatus = activeNow
         ? '<span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Active</span>'
@@ -1344,23 +2475,17 @@
         + '<div class="dir-avatar" aria-hidden="true" style="' + esc(avatarBg(m.username, m.plan_type)) + '">' + avatarNode + '</div>'
         + '<div class="dir-card-meta">'
         + '<p class="dir-card-name">' + esc(cardName) + '</p>'
-        + '<p class="dir-card-slug">@' + esc(m.username) + ' · ' + esc(location) + '</p>'
+        + '<p class="dir-card-slug">@' + esc(m.username) + ' · ' + esc(cat) + ' · ' + esc(location) + '</p>'
         + '</div>'
         + '</div>'
-        + '<div class="dir-card-tags">'
-        + liveStatus
-        + '<span class="access-tag ' + esc(planBadgeClass(m.plan_type)) + '">' + esc(planLabel(m.plan_type)) + '</span>'
-        + founderTag
-        + veilTag
-        + '</div>'
-        + '<p class="dir-card-bio">' + esc(bio) + '</p>'
+        + '<p class="dir-card-bio">' + esc(publicUrl) + '</p>'
         + link
         + '</article>';
     }
 
     function buildOpenSlot() {
       return '<article class="dir-card" data-category="open" role="listitem"'
-        + ' style="border-style:dashed;border-color:rgba(139,92,246,0.25);background:rgba(139,92,246,0.03);">'
+        + '>'
         + '<div class="dir-card-top">'
         + '<div class="dir-avatar" aria-hidden="true" style="background:rgba(139,92,246,0.15);color:var(--purple-bright);font-size:1.2rem;border-style:dashed;">+</div>'
         + '<div class="dir-card-meta">'
@@ -1368,14 +2493,14 @@
         + '<p class="dir-card-slug">Add your channel</p>'
         + '</div>'
         + '</div>'
-        + '<p class="dir-card-bio" style="color:var(--text-dim);">Create a public page so people can find your music, work, brand, or community profile.</p>'
-        + '<a href="start.html" class="dir-card-link">Start Your Page →</a>'
+        + '<p class="dir-card-bio" style="color:var(--text-dim);">facelessanimalstudios.com/start</p>'
+        + '<a href="start.html" class="dir-card-link">Start</a>'
         + '</article>';
     }
 
     function buildServicesCard() {
       return '<article class="dir-card" data-category="services" role="listitem"'
-        + ' style="border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.02);">'
+        + '>'
         + '<div class="dir-card-top">'
         + '<div class="dir-avatar" aria-hidden="true" style="background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.18);color:var(--text-dim);">↗</div>'
         + '<div class="dir-card-meta">'
@@ -1383,9 +2508,147 @@
         + '<p class="dir-card-slug">Faceless Animal Studios</p>'
         + '</div>'
         + '</div>'
-        + '<p class="dir-card-bio">Need a custom website, creator page, or branded build? Start with the studio.</p>'
-        + '<a href="services.html" class="dir-card-link">View Services →</a>'
+        + '<p class="dir-card-bio">facelessanimalstudios.com/services</p>'
+        + '<a href="services.html" class="dir-card-link">Open</a>'
         + '</article>';
+    }
+
+    function slugify(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/^@/, '')
+        .replace(/[^a-z0-9_-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 80);
+    }
+
+    function profileLinkForUsername(username) {
+      var u = slugify(username);
+      return u ? '/creator/' + encodeURIComponent(u) : '';
+    }
+
+    function buildChannelCard(channel) {
+      var slug = slugify(channel.channel_slug || channel.channel_name || channel.id);
+      var name = channel.channel_name || channel.channel_slug || 'Creator Channel';
+      var username = channel.username || channel.owner_username || '';
+      var cover = channel.cover_url || channel.avatar_url || 'assets/neon-dreams/covers/cover-thumb.jpg';
+      var description = channel.description || 'Creator video channel on Faceless TV.';
+      var profileUrl = profileLinkForUsername(username);
+      var profileAction = profileUrl
+        ? '<a href="' + esc(profileUrl) + '">User Page</a>'
+        : '<a href="start.html">Claim Page</a>';
+
+      return '<article class="channel-card">'
+        + '<div class="channel-card-top">'
+        + '<img class="channel-card-img" src="' + esc(cover) + '" alt="" loading="lazy" />'
+        + '<div>'
+        + '<h3>' + esc(name) + '</h3>'
+        + '<p>' + (username ? '@' + esc(username) + ' · ' : '') + esc(channel.visibility || 'public') + '</p>'
+        + '</div>'
+        + '</div>'
+        + '<p>' + esc(description.slice(0, 180)) + '</p>'
+        + '<div class="channel-card-actions">'
+        + '<a href="tv.html?channel=' + encodeURIComponent(slug) + '#tv-channel-page">Channel</a>'
+        + profileAction
+        + '<a href="tv.html?channel=' + encodeURIComponent(slug) + '#tv-watch">Videos</a>'
+        + '</div>'
+        + '</article>';
+    }
+
+    function getVideoItems(payload) {
+      if (Array.isArray(payload)) return payload;
+      if (!payload || typeof payload !== 'object') return [];
+      return []
+        .concat(payload.uploads || [])
+        .concat(payload.videos || [])
+        .concat(payload.items || [])
+        .concat(payload.data || [])
+        .concat(payload.mine_uploads || []);
+    }
+
+    function buildVideoCard(video) {
+      var id = video.id || video.video_id || video.slug || video.storage_path || '';
+      var title = video.title || video.name || video.original_filename || 'Faceless TV video';
+      var channel = video.channel_name || video.channel_slug || video.username || 'Faceless TV';
+      var thumb = video.thumbnail_url || video.thumb_url || video.poster_url || video.cover_url || 'assets/neon-dreams/covers/cover-thumb.jpg';
+      var source = video.source_url || video.external_video_url || video.video_url || '';
+      var href = 'tv.html' + (id ? '?video=' + encodeURIComponent(id) : '') + '#tv-watch';
+      var media = source
+        ? '<video class="video-thumb" muted playsinline preload="metadata" src="' + esc(source) + '#t=0.1"></video>'
+        : '<img class="video-thumb" src="' + esc(thumb) + '" alt="" loading="lazy">';
+
+      return '<a class="video-card" href="' + esc(href) + '">'
+        + media
+        + '<h3>' + esc(title) + '</h3>'
+        + '<p>' + esc(channel) + '</p>'
+        + '</a>';
+    }
+
+    function loadTvVideos() {
+      var grid = document.getElementById('dir-tv-video-grid');
+      if (!grid) return;
+
+      function tryEndpoint(urls) {
+        var url = urls.shift();
+        if (!url) return Promise.reject(new Error('videos unavailable'));
+
+        return fetch(url)
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('videos unavailable')); })
+          .catch(function () { return tryEndpoint(urls); });
+      }
+
+      tryEndpoint(['/api/tv/uploads'])
+        .then(function (payload) {
+          var seen = {};
+          var videos = getVideoItems(payload).filter(function (video) {
+            var key = String(video && (video.id || video.external_video_id || video.storage_path || video.source_url || video.title) || '').toLowerCase();
+            if (!key || seen[key]) return false;
+            seen[key] = true;
+            return true;
+          }).slice(0, 8);
+          if (!videos.length) {
+            grid.innerHTML = '<div class="feed-item" style="grid-column:1/-1;">TV videos appear here after public uploads are available.</div>';
+            return;
+          }
+
+          grid.innerHTML = videos.map(buildVideoCard).join('');
+        })
+        .catch(function () {
+          grid.innerHTML = '<div class="feed-item" style="grid-column:1/-1;">TV videos are unavailable right now.</div>';
+        });
+    }
+
+    function loadTvChannels() {
+      var grid = document.getElementById('dir-channel-grid');
+      if (!grid) return;
+
+      fetch('/api/tv/channels')
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('channels unavailable')); })
+        .then(function (payload) {
+          var channels = []
+            .concat(payload && payload.channels ? payload.channels : [])
+            .concat(payload && payload.mine ? payload.mine : [])
+            .filter(function (channel) { return channel && !channel.is_owner; });
+
+          var seen = {};
+          channels = channels.filter(function (channel) {
+            var key = String(channel.channel_slug || channel.id || channel.channel_name || '').toLowerCase();
+            if (!key || seen[key]) return false;
+            seen[key] = true;
+            return true;
+          });
+
+          if (!channels.length) {
+            grid.innerHTML = '<div class="feed-item" style="grid-column:1/-1;">No creator channels are public yet. Channels appear here after members create them.</div>';
+            return;
+          }
+
+          grid.innerHTML = channels.map(buildChannelCard).join('');
+        })
+        .catch(function () {
+          grid.innerHTML = '<div class="feed-item" style="grid-column:1/-1;">Creator channels are unavailable right now.</div>';
+        });
     }
 
     function initFilter() {
@@ -1518,11 +2781,11 @@
 
       var signalUrl = SUPABASE_URL
         + '/rest/v1/signal_posts'
-        + '?select=author_username,post_type,category,body_text,media_url,created_at'
+        + '?select=id,author_username,post_type,category,body_text,media_url,created_at'
         + '&moderation_state=eq.approved'
         + '&visibility=eq.public'
         + '&order=created_at.desc'
-        + '&limit=6';
+        + '&limit=24';
 
       function showRows(rows) {
         if (loading) loading.style.display = 'none';
@@ -1539,25 +2802,57 @@
         if (empty) empty.style.display = 'none';
         if (!list) return;
 
+        var visibleRows = (rows || []).filter(function (row) { return row && !isCommentRow(row); }).slice(0, 6);
+
+        if (!visibleRows.length) {
+          if (empty) empty.style.display = '';
+          list.style.display = 'none';
+          list.innerHTML = '';
+          return;
+        }
+
         list.style.display = '';
-        list.innerHTML = rows.map(function (row) {
+        var feedKeys = [];
+        list.innerHTML = visibleRows.map(function (row) {
           var when = row.created_at
-            ? new Date(row.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            ? new Date(row.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
             : 'now';
 
-          var body = esc((row.body_text || '').slice(0, 260));
-          var type = esc(row.post_type || 'text');
-          var cat = esc(row.category || 'update');
-          var media = row.media_url
-            ? '<p style="margin:0.45rem 0 0;font-size:0.74rem;color:var(--purple-bright);word-break:break-all;">' + esc(row.media_url) + '</p>'
-            : '';
+          var username = row.author_username || 'member';
+          var key = feedPostKey(row);
+          feedKeys.push(key);
+          var likes = feedLikeCount(key);
+          var comments = feedComments(key);
+          var body = esc((row.body_text || '').slice(0, 420));
+          var type = row.post_type || row.category || 'update';
+          var media = renderFeedMedia(row.media_url);
 
-          return '<article class="feed-item">'
-            + '<div class="feed-item-top">@' + esc(row.author_username || 'member') + ' · ' + type + ' · ' + cat + ' · ' + when + '</div>'
+          return '<article class="feed-item" id="post-' + esc(key) + '" data-feed-key="' + esc(key) + '" data-feed-user="' + esc(username) + '" data-feed-text="' + esc(row.body_text || '') + '">'
+            + '<div class="feed-item-top">'
+            + '<div class="feed-avatar" aria-hidden="true">' + esc(initials(username)) + '</div>'
+            + '<div>'
+            + '<p class="feed-author">@' + esc(username) + '</p>'
+            + '<p class="feed-meta">' + esc(type) + ' ? ' + esc(when) + '</p>'
+            + '</div>'
+            + '</div>'
             + '<p class="feed-item-text">' + body + '</p>'
             + media
+            + '<div class="feed-actions" aria-label="Post actions">'
+            + '<button type="button" data-feed-like>Like <span>' + esc(likes || 0) + '</span></button>'
+            + '<button type="button" data-feed-comment>Comment <span>' + esc(comments.length || 0) + '</span></button>'
+            + '<button type="button" data-feed-share>Share</button>'
+            + '</div>'
+            + '<div class="feed-comments">' + renderCommentList(key) + '</div>'
+            + '<form class="feed-comment-box" data-feed-comment-form>'
+            + '<input type="text" maxlength="220" placeholder="Write a comment..." aria-label="Write a comment">'
+            + '<button type="submit">Send</button>'
+            + '</form>'
             + '</article>';
         }).join('');
+        bindFeedVideos(list);
+        bindFeedActions(list);
+        loadPersistedFeedComments(feedKeys, list);
+        window.setTimeout(revealSharedPost, 80);
       }
 
       fetch(signalUrl, {
@@ -1575,11 +2870,11 @@
 
         var fallbackUrl = SUPABASE_URL
           + '/rest/v1/board_posts'
-          + '?select=username,category,post_text,image_url,created_at'
+          + '?select=id,username,category,post_text,image_url,created_at'
           + '&is_approved=eq.true'
           + '&visibility_status=eq.visible'
           + '&order=created_at.desc'
-          + '&limit=6';
+          + '&limit=24';
 
         return fetch(fallbackUrl, {
           headers: {
@@ -1591,6 +2886,7 @@
         .then(function (boardRows) {
           var normalized = (boardRows || []).map(function (b) {
             return {
+              id: b.id,
               author_username: b.username,
               post_type: 'text',
               category: b.category,
@@ -1598,7 +2894,7 @@
               media_url: b.image_url,
               created_at: b.created_at
             };
-          });
+          }).filter(function (row) { return !isCommentRow(row); });
           showRows(normalized);
         });
       })
@@ -1643,7 +2939,7 @@
 
       var postsUrl = SUPABASE_URL
         + '/rest/v1/signal_posts'
-        + '?select=author_username,created_at'
+        + '?select=author_username,created_at,post_type,category'
         + '&moderation_state=eq.approved'
         + '&visibility=eq.public'
         + '&order=created_at.desc'
@@ -1674,6 +2970,7 @@
         var members = Array.isArray(results[1]) ? results[1] : [];
 
         posts.forEach(function (row) {
+          if (isCommentRow(row)) return;
           if (!row || !row.author_username) return;
           addEvent('@' + row.author_username + ' dropped a signal', row.created_at);
         });
@@ -1700,11 +2997,337 @@
       });
     }
 
+    function getSession() {
+      try { return JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch (_) { return null; }
+    }
+
+    function formatBytes(bytes) {
+      var size = Number(bytes || 0);
+      if (!size) return '0 MB';
+      return size >= 1024 * 1024 * 1024
+        ? (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
+        : (size / (1024 * 1024)).toFixed(size >= 10 * 1024 * 1024 ? 1 : 2) + ' MB';
+    }
+
+    function setInputFile(input, file) {
+      if (!input || !file || typeof DataTransfer === 'undefined') return;
+      var dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function uploadPostAttachment(username, file) {
+      if (!file) return Promise.resolve('');
+      var safeName = String(file.name || 'file.bin').replace(/[^a-z0-9._-]+/gi, '-').toLowerCase();
+      var path = encodeURIComponent(String(username || 'guest').toLowerCase()) + '/directory-' + Date.now() + '-' + encodeURIComponent(safeName);
+      return fetch(SUPABASE_URL + '/storage/v1/object/profile-images/' + path, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': file.type || 'application/octet-stream',
+          'x-upsert': 'true'
+        },
+        body: file
+      }).then(function (r) {
+        if (!r.ok) throw new Error('File upload failed.');
+        return SUPABASE_URL + '/storage/v1/object/public/profile-images/' + path;
+      });
+    }
+
+    function createDirectoryPost(session, body, type, mediaUrl) {
+      var signalPayload = {
+        author_username: String(session.username || '').toLowerCase(),
+        post_type: type || 'drop',
+        category: type || 'drop',
+        body_text: body,
+        media_url: mediaUrl || null,
+        moderation_state: 'approved',
+        visibility: 'public'
+      };
+      return fetch(SUPABASE_URL + '/rest/v1/signal_posts?select=id,author_username,body_text,category,media_url,created_at', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(signalPayload)
+      }).then(function (r) {
+        if (r.ok) return r.json();
+        return fetch(SUPABASE_URL + '/rest/v1/board_posts?select=id,username,post_text,category,image_url,created_at', {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({
+            username: String(session.username || '').toLowerCase(),
+            post_text: body,
+            category: type || 'drop',
+            image_url: mediaUrl || null,
+            is_approved: true,
+            visibility_status: 'visible'
+          })
+        }).then(function (fallback) {
+          if (!fallback.ok) throw new Error('Post failed.');
+          return fallback.json();
+        });
+      });
+    }
+
+    function compressVideoFile(file, statusNode) {
+      return new Promise(function (resolve, reject) {
+        if (!file || !/^video\//i.test(file.type || '')) return reject(new Error('Choose a video file first.'));
+        if (!window.MediaRecorder) return reject(new Error('Video compression is not supported in this browser.'));
+
+        var video = document.createElement('video');
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
+        var chunks = [];
+        var url = URL.createObjectURL(file);
+
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'metadata';
+        video.src = url;
+
+        video.onloadedmetadata = function () {
+          var width = video.videoWidth || 640;
+          var height = video.videoHeight || 360;
+          var scale = Math.min(1, 676 / Math.max(width, height));
+          canvas.width = Math.max(214, Math.round(width * scale));
+          canvas.height = Math.max(380, Math.round(height * scale));
+          if (height < width) canvas.height = Math.max(380, Math.round(height * scale));
+
+          var stream = canvas.captureStream(24);
+          var recorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp8') ? 'video/webm;codecs=vp8' : 'video/webm' });
+          var drawTimer = setInterval(function () {
+            try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch (_) {}
+          }, 1000 / 24);
+
+          recorder.ondataavailable = function (event) {
+            if (event.data && event.data.size) chunks.push(event.data);
+          };
+          recorder.onstop = function () {
+            clearInterval(drawTimer);
+            URL.revokeObjectURL(url);
+            var blob = new Blob(chunks, { type: 'video/webm' });
+            resolve(new File([blob], (file.name || 'video').replace(/\.[^.]+$/, '') + '-compressed.webm', { type: 'video/webm' }));
+          };
+          video.onended = function () { if (recorder.state !== 'inactive') recorder.stop(); };
+          if (statusNode) statusNode.textContent = 'Compressing in this browser. This can take about as long as the video.';
+          recorder.start(1000);
+          video.play().catch(function () {
+            clearInterval(drawTimer);
+            URL.revokeObjectURL(url);
+            reject(new Error('Your browser blocked compression playback. Try from the TV page.'));
+          });
+        };
+        video.onerror = function () {
+          URL.revokeObjectURL(url);
+          reject(new Error('This video could not be prepared for compression.'));
+        };
+      });
+    }
+
+    function bindDirectoryPostWidget() {
+      var widget = document.getElementById('dir-post-widget');
+      var panel = document.getElementById('dir-post-panel');
+      var toggle = document.getElementById('dir-post-toggle');
+      var close = document.getElementById('dir-post-close');
+      var form = document.getElementById('dir-post-form');
+      var text = document.getElementById('dir-post-text');
+      var type = document.getElementById('dir-post-type');
+      var file = document.getElementById('dir-post-file');
+      var note = document.getElementById('dir-post-file-note');
+      var status = document.getElementById('dir-post-status');
+      var compress = document.getElementById('dir-post-compress');
+
+      function open() {
+        widget.classList.add('is-open');
+        panel.hidden = false;
+        panel.setAttribute('aria-hidden', 'false');
+        toggle.setAttribute('aria-expanded', 'true');
+        setTimeout(function () { if (text) text.focus(); }, 30);
+      }
+      function shut() {
+        widget.classList.remove('is-open');
+        panel.hidden = true;
+        panel.setAttribute('aria-hidden', 'true');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+
+      document.querySelectorAll('[data-open-post-widget]').forEach(function (btn) { btn.addEventListener('click', open); });
+      if (toggle) toggle.addEventListener('click', function () { panel.hidden ? open() : shut(); });
+      if (close) close.addEventListener('click', shut);
+
+      if (file) file.addEventListener('change', function () {
+        var f = file.files && file.files[0];
+        if (!f) { note.textContent = 'Choose a file to see its size. Files over 50MB cannot post here.'; return; }
+        if (type && /^image\//i.test(f.type || '')) type.value = 'picture';
+        if (type && /^video\//i.test(f.type || '')) type.value = 'video';
+        if (type && /^audio\//i.test(f.type || '')) type.value = 'music';
+        note.textContent = f.name + ' · ' + formatBytes(f.size) + (f.size > 50 * 1024 * 1024 ? ' · Over 50MB. Compress or choose a smaller file.' : ' · Ready.');
+      });
+
+      if (compress) compress.addEventListener('click', function () {
+        var f = file && file.files && file.files[0];
+        compressVideoFile(f, status).then(function (compressed) {
+          setInputFile(file, compressed);
+          status.textContent = 'Compressed file ready: ' + formatBytes(compressed.size) + '. Quality may be lower.';
+        }).catch(function (err) { status.textContent = err.message || 'Compression failed.'; });
+      });
+
+      if (form) form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var session = getSession();
+        if (!session || !session.username) { status.textContent = 'Sign in first to post.'; return; }
+        var body = String(text.value || '').trim();
+        var f = file.files && file.files[0];
+        if (!body && !f) { status.textContent = 'Write something or attach a file.'; return; }
+        if (f && f.size > 50 * 1024 * 1024) { status.textContent = 'That file is over 50MB. Compress it or choose a smaller file.'; return; }
+        status.textContent = 'Posting...';
+        uploadPostAttachment(session.username, f)
+          .then(function (url) {
+            var mediaUrl = url || pendingPostMediaUrl;
+            return createDirectoryPost(session, body || (mediaUrl ? 'Posted media.' : 'Posted a file.'), type.value, mediaUrl);
+          })
+          .then(function () {
+            status.textContent = 'Posted.';
+            pendingPostMediaUrl = '';
+            form.reset();
+            loadSignalFeedPreview();
+          })
+          .catch(function (err) { status.textContent = err.message || 'Post failed.'; });
+      });
+    }
+
+    function bindDirectoryVideoUpload() {
+      var panel = document.getElementById('dir-video-panel');
+      var close = document.getElementById('dir-video-close');
+      var form = document.getElementById('dir-video-form');
+      var title = document.getElementById('dir-video-title');
+      var desc = document.getElementById('dir-video-description');
+      var target = document.getElementById('dir-video-target');
+      var channel = document.getElementById('dir-video-channel');
+      var file = document.getElementById('dir-video-file');
+      var size = document.getElementById('dir-video-size');
+      var status = document.getElementById('dir-video-status');
+      var compress = document.getElementById('dir-video-compress');
+
+      function open() {
+        panel.hidden = false;
+        panel.setAttribute('aria-hidden', 'false');
+        loadMyTvChannels();
+      }
+      function shut() {
+        panel.hidden = true;
+        panel.setAttribute('aria-hidden', 'true');
+      }
+      document.querySelectorAll('[data-open-video-upload]').forEach(function (btn) { btn.addEventListener('click', open); });
+      if (close) close.addEventListener('click', shut);
+
+      function loadMyTvChannels() {
+        var session = getSession();
+        channel.innerHTML = '';
+        if (!session || !session.username) {
+          status.textContent = 'Sign in to use your own channel. Main channel upload still needs sign-in too.';
+          return;
+        }
+        fetch('/api/tv/channels', { headers: { 'x-fas-user': JSON.stringify(session) } })
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('channels unavailable')); })
+          .then(function (payload) {
+            var mine = (payload.mine || payload.channels || []).filter(function (c) {
+              return c && !c.is_owner && String(c.username || '').toLowerCase() === String(session.username || '').toLowerCase();
+            });
+            if (!mine.length) {
+              channel.hidden = true;
+              status.innerHTML = 'No personal channel found. <a href="tv.html#tv-studio">Create one on TV</a>, or upload to the main channel.';
+              return;
+            }
+            channel.hidden = false;
+            channel.innerHTML = mine.map(function (c) {
+              var slug = c.channel_slug || c.channel_name || '';
+              return '<option value="' + esc(slug) + '">' + esc(c.channel_name || slug) + '</option>';
+            }).join('');
+          })
+          .catch(function () { status.textContent = 'Could not load your channels. Main channel is still available.'; });
+      }
+
+      if (target) target.addEventListener('change', function () {
+        channel.hidden = target.value !== 'mine';
+      });
+      if (file) file.addEventListener('change', function () {
+        var f = file.files && file.files[0];
+        if (!f) { size.textContent = 'Choose a video to see its file size. 50MB max.'; return; }
+        size.textContent = f.name + ' · ' + formatBytes(f.size) + (f.size > 50 * 1024 * 1024 ? ' · Over 50MB. Compress before upload.' : ' · Ready.');
+        if (!title.value) title.value = (f.name || '').replace(/\.[^.]+$/, '');
+      });
+      if (compress) compress.addEventListener('click', function () {
+        var f = file && file.files && file.files[0];
+        compressVideoFile(f, status).then(function (compressed) {
+          setInputFile(file, compressed);
+          status.textContent = 'Compressed video ready: ' + formatBytes(compressed.size) + '.';
+        }).catch(function (err) { status.textContent = err.message || 'Compression failed.'; });
+      });
+      if (form) form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var session = getSession();
+        var f = file.files && file.files[0];
+        if (!session || !session.username) { status.textContent = 'Sign in first to upload video.'; return; }
+        if (!f) { status.textContent = 'Choose a video.'; return; }
+        if (f.size > 50 * 1024 * 1024) { status.textContent = 'That video is over 50MB. Compress it or choose a smaller video.'; return; }
+        var channelSlug = target.value === 'mine' && channel.value ? channel.value : 'faceless-animal-studios';
+        var data = new FormData();
+        data.append('channel_slug', channelSlug);
+        data.append('title', title.value || f.name);
+        data.append('description', desc.value || '');
+        data.append('visibility', 'public');
+        data.append('file', f, f.name);
+        status.textContent = 'Uploading to ' + (channelSlug === 'faceless-animal-studios' ? 'Faceless Animal Studios' : channelSlug) + '...';
+
+        function videoPostCopy(upload) {
+          var uploadTitle = String((upload && upload.title) || title.value || f.name || '').trim();
+          var uploadDescription = String((upload && upload.description) || desc.value || '').trim();
+          return [uploadTitle, uploadDescription].filter(Boolean).join('\n\n') || 'Posted a video.';
+        }
+
+        fetch('/api/tv/uploads', { method: 'POST', headers: { 'x-fas-user': JSON.stringify(session) }, body: data })
+          .then(function (r) { return r.ok ? r.json() : r.json().then(function (j) { throw new Error(j.error || 'Upload failed.'); }); })
+          .then(function (payload) {
+            var upload = payload.upload || payload.video || payload;
+            var videoUrl = upload.source_url || upload.external_video_url || '';
+            status.textContent = 'Video uploaded. It is ready to use in a post.';
+            var postText = document.getElementById('dir-post-text');
+            var postType = document.getElementById('dir-post-type');
+            if (videoUrl) pendingPostMediaUrl = videoUrl;
+            if (postText && (!postText.value || /^Posted (a video|media)\.?$/i.test(postText.value.trim()))) {
+              postText.value = videoPostCopy(upload);
+            }
+            if (postType) postType.value = 'video';
+            loadTvVideos();
+            document.querySelector('[data-open-post-widget]')?.click();
+          })
+          .catch(function (err) { status.textContent = err.message || 'Upload failed.'; });
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
       initFilter();
+      bindDirectoryPostWidget();
+      bindDirectoryVideoUpload();
       loadDirectory();
+      loadTvVideos();
+      loadTvChannels();
       loadSignalFeedPreview();
-      loadSignalPulseStrip();
+      window.addEventListener('hashchange', function () {
+        window.setTimeout(revealSharedPost, 80);
+      });
     });
   }());
   </script>

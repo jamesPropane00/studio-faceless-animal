@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -362,38 +362,46 @@
 </head>
 <body>
 
-  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <nav class="navbar waffle-nav tv-waffle-nav" role="navigation" aria-label="Main navigation">
     <div class="container">
       <div class="navbar-inner">
         <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
+          <li><a href="radio.html">Radio</a></li>
+          <li><a href="pulse.html">Pulse Stage</a></li>
+          <li><a href="chat.html">Rooms</a></li>
+          <li><a href="tv.html">TV</a></li>
+          <li><a href="neon-dreams.html">Neon Dreams</a></li>
+          <li><a href="news.html">News</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="wallet.html">Vault</a></li>
           <li><a href="apps.html">Apps</a></li>
-          <li><a href="radio.html" style="color:var(--purple-bright);">Radio</a></li>
-          <li><a href="games.html">Games</a></li>
-          <li><a href="pricing.html">Pricing</a></li>
-          <li><a href="login.html" class="nav-cta">Sign In / Sign Up</a></li>
+          <li><a href="dashboard.html" aria-current="page">Dashboard</a></li>
+          <li><a href="login.html" class="nav-cta">Enter The System</a></li>
         </ul>
-        <button class="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu">
+        <button class="nav-toggle tv-waffle-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
           <span></span><span></span><span></span>
         </button>
       </div>
     </div>
   </nav>
 
-  <div class="mobile-nav" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+  <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
     <a href="directory.html">Directory</a>
+    <a href="radio.html">Radio</a>
+    <a href="pulse.html">Pulse Stage</a>
+    <a href="chat.html">Rooms</a>
+    <a href="tv.html">TV</a>
+    <a href="neon-dreams.html">Neon Dreams</a>
+    <a href="news.html">News</a>
+    <a href="store.html">Store</a>
+    <a href="wallet.html">Vault</a>
     <a href="apps.html">Apps</a>
-    <a href="games.html">Games</a>
-    <a href="music.html">Music</a>
-    <a href="radio.html" style="color:var(--purple-bright);">Radio</a>
-    <a href="pricing.html">Pricing</a>
-    <a href="login.html" style="font-weight:700;color:var(--gold-bright);">Sign In / Sign Up</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="about.html">About</a>
+    <a href="dashboard.html" aria-current="page">Dashboard</a>
+    <a href="login.html" class="waffle-menu-cta tv-waffle-cta">Enter The System</a>
   </div>
-
-  <div class="msg-wrap">
+<div class="msg-wrap">
 
     <!-- Gate -->
     <div class="msg-gate" id="msg-gate">

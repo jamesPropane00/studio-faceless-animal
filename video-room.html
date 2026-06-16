@@ -1,0 +1,2098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DJ Faceless Animal camera rooms for group and solo rooms." />
+  <title>Camera Room - DJ Faceless Animal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&family=VT323&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css?v=20260610-waffle-main" />
+  <style>
+    :root {
+      --signal-bg: #050507;
+      --signal-panel: rgba(10, 9, 15, 0.92);
+      --signal-border: rgba(255,255,255,0.12);
+      --signal-gold: #d8b66f;
+      --signal-green: #39ff88;
+      --signal-pink: #ff3da5;
+      --signal-soft: #b8b2c8;
+      --signal-text: #f7f3ff;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background:
+        radial-gradient(circle at 12% 10%, rgba(255,61,165,0.18), transparent 30%),
+        radial-gradient(circle at 86% 12%, rgba(57,255,136,0.12), transparent 28%),
+        linear-gradient(180deg, #07060b 0%, #111018 54%, #050507 100%);
+      color: var(--signal-text);
+      font-family: Inter, system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    .video-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .video-shell.is-lobby {
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .video-shell.is-lobby .video-topbar,
+    .video-shell.is-lobby .video-stage {
+      display: none;
+    }
+
+    .video-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      border-bottom: 1px solid var(--signal-border);
+      background: rgba(5,5,7,0.88);
+      padding: 0.72rem clamp(0.8rem, 3vw, 1.2rem);
+    }
+
+    .video-brand {
+      min-width: 0;
+    }
+
+    .video-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      color: var(--signal-green);
+      font-family: VT323, monospace;
+      font-size: 1.05rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .video-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--signal-green);
+      box-shadow: 0 0 16px rgba(57,255,136,0.8);
+    }
+
+    .video-title {
+      margin: 0.12rem 0 0;
+      overflow: hidden;
+      color: var(--signal-text);
+      font-size: clamp(1.05rem, 3vw, 1.6rem);
+      font-weight: 1000;
+      letter-spacing: 0;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .video-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .video-btn {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      color: var(--signal-text);
+      padding: 0.62rem 0.82rem;
+      font-size: 0.74rem;
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .video-btn--live {
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--signal-gold), #fff0b8);
+      color: #09080b;
+    }
+
+    .video-stage {
+      min-height: 0;
+      position: relative;
+      display: block;
+      background:
+        linear-gradient(rgba(57,255,136,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,61,165,0.035) 1px, transparent 1px),
+        #050507;
+      background-size: 38px 38px;
+    }
+
+    .dj-visual-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.82;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 44%, rgba(57,255,136,0.2), transparent 34%),
+        linear-gradient(90deg, rgba(255,61,165,0.12), transparent 34%, rgba(216,182,111,0.12));
+      mix-blend-mode: screen;
+      transition: opacity 180ms ease, filter 180ms ease;
+    }
+
+    .dj-visual-layer::before,
+    .dj-visual-layer::after {
+      content: "";
+      position: absolute;
+      inset: -20%;
+      opacity: 0.84;
+    }
+
+    .video-stage[data-dj-visual="smoke"] .dj-visual-layer::before {
+      background:
+        radial-gradient(circle at 18% 64%, rgba(255,255,255,0.28), transparent 24%),
+        radial-gradient(circle at 54% 72%, rgba(57,255,136,0.22), transparent 28%),
+        radial-gradient(circle at 78% 58%, rgba(255,61,165,0.24), transparent 24%),
+        radial-gradient(circle at 44% 42%, rgba(216,182,111,0.2), transparent 30%);
+      filter: blur(18px) saturate(1.25);
+      animation: pulse-smoke 9s ease-in-out infinite;
+    }
+
+    .video-stage[data-dj-visual="smoke"] .dj-visual-layer::after {
+      background:
+        linear-gradient(115deg, transparent 0 28%, rgba(255,255,255,0.12) 30% 34%, transparent 38%),
+        linear-gradient(250deg, transparent 0 52%, rgba(57,255,136,0.12) 54% 58%, transparent 62%);
+      filter: blur(10px);
+      animation: pulse-haze 6.8s ease-in-out infinite;
+    }
+
+    .video-stage[data-dj-visual="strobe"] .dj-visual-layer::before {
+      background:
+        linear-gradient(90deg, rgba(57,255,136,0.7), transparent 26%, rgba(255,61,165,0.62), transparent 58%, rgba(216,182,111,0.55)),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.55), transparent 32%);
+      animation: pulse-strobe 0.92s steps(2, end) infinite;
+    }
+
+    .video-stage[data-dj-visual="strobe"] .dj-visual-layer::after {
+      background:
+        repeating-linear-gradient(90deg, transparent 0 30px, rgba(255,255,255,0.12) 31px 34px, transparent 35px 64px);
+      animation: pulse-sweep 1.6s linear infinite;
+    }
+
+    .video-stage[data-dj-visual="lasers"] .dj-visual-layer::before {
+      background:
+        linear-gradient(24deg, transparent 0 45%, rgba(57,255,136,0.72) 46% 47%, transparent 48%),
+        linear-gradient(151deg, transparent 0 42%, rgba(255,61,165,0.64) 43% 44%, transparent 45%),
+        linear-gradient(88deg, transparent 0 52%, rgba(216,182,111,0.58) 53% 54%, transparent 55%);
+      filter: drop-shadow(0 0 14px rgba(57,255,136,0.45));
+      animation: pulse-lasers 3.8s ease-in-out infinite;
+    }
+
+    .video-stage[data-dj-visual="lasers"] .dj-visual-layer::after {
+      background:
+        repeating-linear-gradient(90deg, transparent 0 17px, rgba(57,255,136,0.2) 18px 20px, transparent 21px 34px);
+      animation: pulse-rain 1.4s linear infinite;
+    }
+
+    .video-stage[data-dj-visual="color"] .dj-visual-layer::before {
+      background:
+        conic-gradient(from 0deg at 50% 50%, rgba(57,255,136,0.3), rgba(255,61,165,0.34), rgba(70,117,255,0.32), rgba(216,182,111,0.28), rgba(57,255,136,0.3)),
+        radial-gradient(circle at 28% 38%, rgba(255,61,165,0.36), transparent 21%),
+        radial-gradient(circle at 70% 48%, rgba(57,255,136,0.3), transparent 24%);
+      filter: blur(4px) saturate(1.6);
+      animation: pulse-colorwheel 7s linear infinite;
+    }
+
+    .video-stage[data-dj-visual="color"] .dj-visual-layer::after {
+      background:
+        radial-gradient(circle at 20% 70%, rgba(70,117,255,0.26), transparent 24%),
+        radial-gradient(circle at 84% 30%, rgba(255,61,165,0.22), transparent 22%);
+      animation: pulse-glow 3.2s ease-in-out infinite;
+    }
+
+    .video-stage[data-dj-visual="blackout"] .dj-visual-layer {
+      opacity: 0.12;
+      filter: saturate(0.4);
+    }
+
+    @keyframes pulse-smoke {
+      50% { transform: translate3d(3%, -4%, 0) scale(1.08); opacity: 0.94; }
+    }
+
+    @keyframes pulse-haze {
+      50% { transform: translate3d(-5%, 3%, 0) scale(1.05); opacity: 0.62; }
+    }
+
+    @keyframes pulse-rain {
+      to { transform: translateY(42px); }
+    }
+
+    @keyframes pulse-strobe {
+      50% { opacity: 0.26; filter: hue-rotate(120deg); }
+    }
+
+    @keyframes pulse-sweep {
+      to { transform: translateX(72px); }
+    }
+
+    @keyframes pulse-lasers {
+      50% { transform: skewY(-5deg) translateX(5%); filter: hue-rotate(95deg) drop-shadow(0 0 18px rgba(255,61,165,0.42)); }
+    }
+
+    @keyframes pulse-colorwheel {
+      to { transform: rotate(360deg) scale(1.08); }
+    }
+
+    @keyframes pulse-glow {
+      50% { transform: scale(1.08); filter: saturate(1.45); }
+    }
+
+    .video-frame {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      border: 0;
+      background: #050507;
+      object-fit: cover;
+    }
+
+    .video-frame[hidden] {
+      display: none;
+    }
+
+    .camera-panel {
+      position: absolute;
+      inset: clamp(0.55rem, 2vw, 1rem);
+      bottom: calc(clamp(0.55rem, 2vw, 1rem) + min(34vh, 260px) + 0.8rem);
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+      gap: 0.6rem;
+      align-content: start;
+      justify-items: center;
+      overflow: auto;
+    }
+
+    .camera-tile {
+      min-height: 0;
+      width: min(100%, 150px);
+      aspect-ratio: 9 / 16;
+      position: relative;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(57,255,136,0.08), rgba(255,61,165,0.08)),
+        rgba(0,0,0,0.36);
+      overflow: hidden;
+    }
+
+    .video-shell.is-solo .camera-panel {
+      align-content: center;
+      justify-content: center;
+      justify-items: center;
+      grid-template-columns: minmax(0, min(100%, 420px));
+      overflow: hidden;
+    }
+
+    .video-shell.is-solo .camera-tile {
+      width: min(100%, 420px);
+      max-height: 100%;
+      aspect-ratio: 9 / 16;
+    }
+
+    .video-shell.is-dj .camera-panel {
+      align-content: start;
+      bottom: calc(clamp(0.55rem, 2vw, 1rem) + min(16vh, 130px) + 0.8rem);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0.7rem;
+      justify-items: center;
+    }
+
+    .video-shell.is-dj .camera-tile {
+      flex: 0 0 auto;
+      width: min(100%, 124px);
+    }
+
+    .dj-camera-row {
+      width: min(100%, 560px);
+      display: grid;
+      grid-template-columns: minmax(76px, 96px) minmax(150px, 230px) minmax(76px, 96px);
+      gap: 0.46rem;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .dj-camera-row .camera-tile {
+      width: 100%;
+    }
+
+    .dj-camera-row .camera-tile--main {
+      min-height: 0;
+      aspect-ratio: 9 / 16;
+    }
+
+    .dj-camera-rail {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: 0.44rem;
+    }
+
+    .dj-camera-rail .camera-tile {
+      aspect-ratio: 9 / 16;
+      min-height: 0;
+      border-color: rgba(216,182,111,0.2);
+    }
+
+    .dj-camera-rail .camera-placeholder strong {
+      width: 34px;
+      height: 34px;
+      font-size: 0.72rem;
+    }
+
+    .dj-camera-rail .camera-placeholder span {
+      font-size: 0.62rem;
+      line-height: 1.12;
+    }
+
+    .dj-booth {
+      width: min(100%, 820px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 0.48rem;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      background: rgba(5,5,7,0.84);
+      padding: 0.54rem;
+      box-shadow: 0 18px 54px rgba(0,0,0,0.36);
+    }
+
+    .dj-stage-strip,
+    .dj-speaker-strip,
+    .dj-record-strip,
+    .dj-visual-strip {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 0.5rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.045);
+      padding: 0.58rem;
+    }
+
+    .video-shell.is-dj .dj-deck {
+      gap: 0.36rem;
+      padding: 0.48rem;
+    }
+
+    .video-shell.is-dj .video-chat {
+      max-height: min(16vh, 130px);
+      grid-template-rows: auto auto;
+    }
+
+    .video-shell.is-dj .video-chat-feed {
+      display: none;
+    }
+
+    .dj-stage-strip {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      align-items: center;
+    }
+
+    .dj-visual-strip {
+      grid-template-columns: minmax(0, 1fr) repeat(5, minmax(54px, 0.72fr));
+      align-items: center;
+      background:
+        linear-gradient(90deg, rgba(57,255,136,0.08), rgba(255,61,165,0.07)),
+        rgba(255,255,255,0.045);
+    }
+
+    .dj-visual-strip .dj-stage-label strong {
+      color: var(--signal-gold);
+    }
+
+    .dj-speaker-strip {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+    }
+
+    .dj-record-strip {
+      grid-template-columns: auto auto minmax(0, 1fr);
+      align-items: center;
+    }
+
+    .dj-stage-label,
+    .dj-speaker-list,
+    .dj-stage-status {
+      min-width: 0;
+      color: var(--signal-soft);
+      font-size: 0.72rem;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dj-stage-label strong {
+      display: block;
+      color: var(--signal-green);
+      font-family: VT323, monospace;
+      font-size: 1.02rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .dj-meter {
+      height: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(57,255,136,0.18);
+      border-radius: 999px;
+      background: rgba(0,0,0,0.34);
+    }
+
+    .dj-meter span {
+      width: 0%;
+      height: 100%;
+      display: block;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--signal-green), var(--signal-gold), var(--signal-pink));
+      transition: width 80ms linear;
+    }
+
+    .dj-badge {
+      justify-self: start;
+      border: 1px solid rgba(216,182,111,0.22);
+      border-radius: 999px;
+      background: rgba(216,182,111,0.12);
+      color: var(--signal-gold);
+      padding: 0.28rem 0.5rem;
+      font-size: 0.66rem;
+      font-weight: 1000;
+      text-transform: uppercase;
+    }
+
+    .dj-deck {
+      min-width: 0;
+      display: grid;
+      gap: 0.48rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at 50% 18%, rgba(216,182,111,0.2), transparent 30%),
+        rgba(255,255,255,0.055);
+      padding: 0.58rem;
+    }
+
+    .dj-deck.is-playing {
+      border-color: rgba(57,255,136,0.34);
+      box-shadow: 0 0 26px rgba(57,255,136,0.1);
+    }
+
+    .dj-deck strong {
+      color: var(--signal-green);
+      font-family: VT323, monospace;
+      font-size: 1.02rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .dj-platter-row {
+      display: grid;
+      grid-template-columns: minmax(82px, 112px) minmax(0, 1fr);
+      gap: 0.58rem;
+      align-items: center;
+    }
+
+    .dj-platter {
+      aspect-ratio: 1;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 50%, #050507 0 12%, rgba(216,182,111,0.92) 13% 16%, #111018 17% 23%, #050507 24% 100%),
+        repeating-radial-gradient(circle, rgba(255,255,255,0.12) 0 1px, rgba(0,0,0,0) 1px 6px);
+      box-shadow:
+        inset 0 0 24px rgba(0,0,0,0.82),
+        0 14px 30px rgba(0,0,0,0.32);
+    }
+
+    .dj-platter::before {
+      content: "";
+      position: absolute;
+      inset: 10%;
+      border-radius: inherit;
+      background:
+        linear-gradient(90deg, transparent 48%, rgba(57,255,136,0.72) 49% 51%, transparent 52%),
+        radial-gradient(circle, rgba(255,255,255,0.12), transparent 60%);
+      opacity: 0.68;
+    }
+
+    .dj-platter-label {
+      position: absolute;
+      inset: 24%;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(216,182,111,0.28);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle, rgba(255,255,255,0.12), rgba(0,0,0,0.78) 62%),
+        linear-gradient(135deg, rgba(57,255,136,0.1), rgba(255,61,165,0.12));
+      box-shadow: inset 0 0 18px rgba(0,0,0,0.72);
+      overflow: hidden;
+    }
+
+    .dj-record-ring {
+      position: absolute;
+      left: 50%;
+      width: 150%;
+      transform: translateX(-50%);
+      color: var(--signal-gold);
+      font-size: 0.48rem;
+      font-weight: 1000;
+      letter-spacing: 0.1em;
+      text-align: center;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .dj-record-ring--top {
+      top: 7%;
+    }
+
+    .dj-record-ring--bottom {
+      bottom: 7%;
+      color: var(--signal-green);
+    }
+
+    .dj-record-name {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #fff;
+      font-family: VT323, monospace;
+      font-size: 0.72rem;
+      font-weight: 1000;
+      letter-spacing: 0.06em;
+      line-height: 0.92;
+      text-align: center;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.92);
+      text-transform: uppercase;
+    }
+
+    .dj-record-name span {
+      display: block;
+      color: var(--signal-green);
+      font-family: Inter, system-ui, sans-serif;
+      font-size: 0.36rem;
+      letter-spacing: 0.12em;
+      line-height: 1.15;
+    }
+
+    .dj-deck.is-playing .dj-platter {
+      animation: dj-spin 1.15s linear infinite;
+    }
+
+    @keyframes dj-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .dj-deck-face {
+      min-width: 0;
+      display: grid;
+      gap: 0.42rem;
+    }
+
+    .dj-waveform {
+      height: 34px;
+      overflow: hidden;
+      border: 1px solid rgba(57,255,136,0.16);
+      border-radius: 6px;
+      background:
+        linear-gradient(90deg, rgba(57,255,136,0.38) 0 2px, transparent 2px 9px),
+        linear-gradient(90deg, transparent, rgba(255,61,165,0.18), transparent),
+        rgba(0,0,0,0.28);
+      background-size: 11px 100%, 100% 100%, 100% 100%;
+    }
+
+    .dj-deck.is-playing .dj-waveform {
+      animation: dj-wave 0.75s linear infinite;
+    }
+
+    @keyframes dj-wave {
+      to { background-position: 44px 0, 0 0, 0 0; }
+    }
+
+    .dj-cue-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.32rem;
+    }
+
+    .dj-cue {
+      min-height: 22px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      color: var(--signal-soft);
+      font-size: 0.58rem;
+      font-weight: 1000;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .dj-cue.is-hot {
+      border-color: rgba(255,61,165,0.32);
+      color: #ffd9ef;
+      background: rgba(255,61,165,0.14);
+    }
+
+    .dj-track-name {
+      min-height: 1.1rem;
+      color: var(--signal-soft);
+      font-size: 0.72rem;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dj-controls {
+      display: grid;
+      grid-template-columns: auto auto minmax(0, 1fr);
+      gap: 0.42rem;
+      align-items: center;
+    }
+
+    .dj-btn {
+      min-height: 34px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      color: var(--signal-text);
+      padding: 0.42rem 0.58rem;
+      font-size: 0.68rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .dj-btn--load {
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--signal-gold), #fff0b8);
+      color: #09080b;
+    }
+
+    .dj-btn.is-active {
+      border-color: rgba(57,255,136,0.42);
+      color: #dcffe9;
+      background: rgba(57,255,136,0.16);
+      box-shadow: 0 0 18px rgba(57,255,136,0.1);
+    }
+
+    .dj-slider {
+      width: 100%;
+      accent-color: var(--signal-green);
+    }
+
+    .dj-crossfader {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 0.5rem;
+      align-items: center;
+      color: var(--signal-soft);
+      font-size: 0.68rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .camera-tile--main {
+      border-color: rgba(57,255,136,0.34);
+    }
+
+    .camera-tile video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .camera-tile-label {
+      position: absolute;
+      left: 0.45rem;
+      bottom: 0.4rem;
+      border-radius: 999px;
+      background: rgba(5,5,7,0.72);
+      color: var(--signal-text);
+      padding: 0.24rem 0.45rem;
+      font-size: 0.66rem;
+      font-weight: 900;
+    }
+
+    .camera-placeholder {
+      display: grid;
+      place-items: center;
+      gap: 0.2rem;
+      color: var(--signal-soft);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .camera-placeholder strong {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(255,61,165,0.42), rgba(57,255,136,0.22));
+      color: #fff;
+      font-size: 0.82rem;
+    }
+
+    .video-chat {
+      position: absolute;
+      left: clamp(0.55rem, 2vw, 1rem);
+      right: clamp(0.55rem, 2vw, 1rem);
+      bottom: clamp(0.55rem, 2vw, 1rem);
+      z-index: 3;
+      max-height: min(34vh, 260px);
+      display: grid;
+      grid-template-rows: auto minmax(76px, 1fr) auto;
+      gap: 0.5rem;
+      border: 1px solid var(--signal-border);
+      border-radius: 8px;
+      background: rgba(5,5,7,0.86);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      padding: 0.65rem clamp(0.65rem, 2vw, 0.9rem) calc(0.65rem + env(safe-area-inset-bottom));
+      box-shadow: 0 18px 54px rgba(0,0,0,0.44);
+    }
+
+    .video-chat-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      color: var(--signal-soft);
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+
+    .video-chat-head strong {
+      color: var(--signal-green);
+      font-family: VT323, monospace;
+      font-size: 0.96rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .video-chat-feed {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      align-content: start;
+      gap: 0.42rem;
+    }
+
+    .video-chat-msg {
+      max-width: 86%;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.055);
+      padding: 0.46rem 0.55rem;
+      overflow-wrap: anywhere;
+    }
+
+    .video-chat-msg.is-me {
+      justify-self: end;
+      border-color: rgba(216,182,111,0.3);
+      background: rgba(216,182,111,0.12);
+    }
+
+    .video-chat-msg strong {
+      display: block;
+      color: var(--signal-soft);
+      font-size: 0.62rem;
+    }
+
+    .video-chat-msg p {
+      margin: 0.16rem 0 0;
+      font-size: 0.88rem;
+      line-height: 1.38;
+      white-space: pre-wrap;
+    }
+
+    .video-chat-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.5rem;
+    }
+
+    .video-chat-form input {
+      min-height: 42px;
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.075);
+      color: var(--signal-text);
+      padding: 0 0.75rem;
+      font: inherit;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .video-empty {
+      max-width: 560px;
+      place-self: center;
+      border: 1px solid var(--signal-border);
+      border-radius: 8px;
+      background: var(--signal-panel);
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .video-empty h1 {
+      margin: 0;
+      color: var(--signal-green);
+      font-family: VT323, monospace;
+      font-size: 2rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .video-empty p {
+      margin: 0.5rem 0 0;
+      color: var(--signal-soft);
+      line-height: 1.55;
+    }
+
+    .lobby-frame {
+      width: 100%;
+      height: 100vh;
+      border: 0;
+      background: #050507;
+    }
+
+    .lobby-frame[hidden] {
+      display: none;
+    }
+
+    .restore-camera {
+      position: fixed;
+      right: clamp(0.8rem, 3vw, 1.2rem);
+      top: calc(0.8rem + env(safe-area-inset-top));
+      z-index: 20;
+      box-shadow: 0 18px 46px rgba(0,0,0,0.42);
+    }
+
+    .restore-camera[hidden] {
+      display: none;
+    }
+
+    @media (max-width: 720px) {
+      html,
+      body {
+        overflow: auto;
+      }
+
+      .video-shell {
+        min-height: 100svh;
+      }
+
+      .video-topbar {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.58rem;
+        padding: calc(0.62rem + env(safe-area-inset-top)) 0.72rem 0.62rem;
+      }
+
+      .video-actions {
+        justify-content: stretch;
+      }
+
+      .video-btn {
+        flex: 1;
+        min-height: 38px;
+        padding: 0.54rem 0.58rem;
+      }
+
+      .video-stage {
+        min-height: calc(100svh - 142px);
+      }
+
+      .video-chat {
+        max-height: min(42vh, 320px);
+        grid-template-rows: auto minmax(104px, 1fr) auto;
+      }
+
+      .camera-panel {
+        grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+        bottom: calc(clamp(0.55rem, 2vw, 1rem) + min(42vh, 320px) + 0.7rem);
+      }
+
+      .camera-tile {
+        width: min(100%, 128px);
+      }
+
+      .video-shell.is-solo .camera-panel {
+        inset: 0.58rem;
+        bottom: calc(0.58rem + min(30vh, 220px) + 0.58rem);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        place-items: center;
+        overflow: hidden;
+      }
+
+      .video-shell.is-solo .camera-tile {
+        width: min(100%, 54vh);
+        max-width: calc(100vw - 1.16rem);
+        max-height: 100%;
+      }
+
+      .video-shell.is-solo .video-chat {
+        left: 0.58rem;
+        right: 0.58rem;
+        bottom: 0.58rem;
+        max-height: min(30vh, 220px);
+        grid-template-rows: auto minmax(58px, 1fr) auto;
+        gap: 0.42rem;
+        padding: 0.52rem 0.58rem calc(0.52rem + env(safe-area-inset-bottom));
+      }
+
+      .video-shell.is-solo .video-chat-feed {
+        font-size: 0.76rem;
+      }
+
+      .video-shell.is-solo .video-chat-head {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
+
+      .video-shell.is-dj .camera-panel {
+        inset: 0.58rem;
+        bottom: calc(0.58rem + min(18vh, 132px) + 0.58rem);
+        overflow: auto;
+        gap: 0.46rem;
+      }
+
+      .video-shell.is-dj .camera-tile {
+        width: min(100%, 82px);
+      }
+
+      .video-shell.is-dj .dj-camera-row {
+        width: min(100%, 322px);
+        grid-template-columns: minmax(50px, 58px) minmax(132px, 1fr) minmax(50px, 58px);
+        gap: 0.3rem;
+      }
+
+      .video-shell.is-dj .dj-camera-row .camera-tile--main {
+        width: 100%;
+      }
+
+      .video-shell.is-dj .dj-camera-rail {
+        gap: 0.3rem;
+      }
+
+      .video-shell.is-dj .dj-camera-rail .camera-placeholder strong {
+        width: 28px;
+        height: 28px;
+        font-size: 0.62rem;
+      }
+
+      .video-shell.is-dj .dj-camera-rail .camera-placeholder span {
+        font-size: 0.55rem;
+      }
+
+      .video-shell.is-dj .dj-booth {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.36rem;
+        max-height: min(34vh, 286px);
+        overflow: auto;
+        padding: 0.42rem;
+      }
+
+      .video-shell.is-dj .dj-stage-strip,
+      .video-shell.is-dj .dj-speaker-strip,
+      .video-shell.is-dj .dj-record-strip,
+      .video-shell.is-dj .dj-visual-strip {
+        grid-template-columns: 1fr;
+        gap: 0.42rem;
+        padding: 0.5rem;
+      }
+
+      .video-shell.is-dj .dj-stage-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .video-shell.is-dj .dj-speaker-strip,
+      .video-shell.is-dj .dj-record-strip {
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      .video-shell.is-dj .dj-stage-label {
+        grid-column: 1 / -1;
+      }
+
+      .video-shell.is-dj .dj-visual-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .video-shell.is-dj .dj-visual-strip .dj-stage-label {
+        grid-column: 1 / -1;
+      }
+
+      .video-shell.is-dj .dj-deck {
+        gap: 0.28rem;
+        padding: 0.38rem;
+      }
+
+      .video-shell.is-dj .dj-deck strong {
+        font-size: 0.86rem;
+      }
+
+      .video-shell.is-dj .dj-platter-row {
+        grid-template-columns: 56px minmax(0, 1fr);
+        gap: 0.34rem;
+      }
+
+      .video-shell.is-dj .dj-record-name {
+        font-size: 0.48rem;
+      }
+
+      .video-shell.is-dj .dj-record-name span {
+        font-size: 0.26rem;
+      }
+
+      .video-shell.is-dj .dj-record-ring {
+        font-size: 0.34rem;
+      }
+
+      .video-shell.is-dj .dj-waveform {
+        height: 20px;
+      }
+
+      .video-shell.is-dj .dj-cue-row {
+        display: none;
+      }
+
+      .video-shell.is-dj .dj-track-name {
+        font-size: 0.6rem;
+        min-height: 0.9rem;
+      }
+
+      .video-shell.is-dj .dj-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.3rem;
+      }
+
+      .video-shell.is-dj .dj-controls .dj-slider {
+        grid-column: 1 / -1;
+      }
+
+      .video-shell.is-dj .dj-crossfader {
+        gap: 0.36rem;
+        font-size: 0.6rem;
+      }
+
+      .video-shell.is-dj .dj-btn {
+        min-height: 30px;
+        padding: 0.32rem 0.42rem;
+        font-size: 0.58rem;
+      }
+
+      .video-shell.is-dj .video-chat {
+        left: 0.58rem;
+        right: 0.58rem;
+        bottom: 0.58rem;
+        max-height: min(18vh, 132px);
+        grid-template-rows: auto auto;
+        gap: 0.4rem;
+        padding: 0.5rem 0.58rem calc(0.5rem + env(safe-area-inset-bottom));
+      }
+
+      .video-shell.is-dj .video-chat-head {
+        gap: 0.32rem;
+      }
+
+      .video-shell.is-dj .video-chat-head span {
+        font-size: 0.62rem;
+        line-height: 1.25;
+      }
+
+      .video-shell.is-dj .video-chat-feed {
+        display: none;
+      }
+
+      .video-shell.is-dj .video-chat-form {
+        grid-template-columns: 1fr;
+      }
+
+      .video-shell.is-dj .video-chat-form input,
+      .video-shell.is-dj .video-chat-form button {
+        min-height: 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="video-shell">
+    <header class="video-topbar">
+      <div class="video-brand">
+        <span class="video-kicker"><span class="video-dot"></span> DJ Faceless Animal live room</span>
+        <h1 class="video-title" id="video-title">Camera Room</h1>
+      </div>
+      <div class="video-actions">
+        <a class="video-btn" href="chat.html">Back To Rooms</a>
+        <button class="video-btn" id="end-room" type="button" hidden>End Room</button>
+        <button class="video-btn video-btn--live" id="camera-toggle" type="button">Start Camera</button>
+      </div>
+    </header>
+    <section class="video-stage" id="video-stage" aria-label="Camera Room">
+      <div class="video-empty" id="video-empty">
+        <h1>No Room Selected</h1>
+        <p>Start a group camera room or solo room from Signal Rooms first.</p>
+      </div>
+      <section class="video-chat" id="video-chat" hidden>
+        <div class="video-chat-head">
+          <strong id="video-chat-title">Room Chat</strong>
+          <span id="video-chat-status">Connecting...</span>
+        </div>
+        <div class="video-chat-feed" id="video-chat-feed"></div>
+        <form class="video-chat-form" id="video-chat-form">
+          <input id="video-chat-input" maxlength="2000" autocomplete="off" placeholder="Type in the room..." />
+          <button class="video-btn video-btn--live" type="submit">Send</button>
+        </form>
+      </section>
+    </section>
+    <iframe class="lobby-frame" id="lobby-frame" title="Signal Rooms Lobby" src="chat.html" hidden></iframe>
+    <button class="video-btn video-btn--live restore-camera" id="restore-camera" type="button" hidden>Maximize Camera</button>
+  </main>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var room = params.get('room') || '';
+      var mode = params.get('mode') || 'room';
+      var roomLabelParam = params.get('label') || '';
+      var roomOwnerParam = params.get('owner') || '';
+      var stage = document.getElementById('video-stage');
+      var empty = document.getElementById('video-empty');
+      var title = document.getElementById('video-title');
+      var cameraToggle = document.getElementById('camera-toggle');
+      var endRoomButton = document.getElementById('end-room');
+      var chat = document.getElementById('video-chat');
+      var chatTitle = document.getElementById('video-chat-title');
+      var chatStatus = document.getElementById('video-chat-status');
+      var chatFeed = document.getElementById('video-chat-feed');
+      var chatForm = document.getElementById('video-chat-form');
+      var chatInput = document.getElementById('video-chat-input');
+      var shell = document.querySelector('.video-shell');
+      var lobbyFrame = document.getElementById('lobby-frame');
+      var restoreCameraButton = document.getElementById('restore-camera');
+      var matrixBase = 'https://matrix.org';
+      var cameraRoomsKey = 'fas_camera_rooms';
+      var heartbeatTimer = null;
+      var matrixSession = readMatrixSession();
+      var siteSession = readSiteSession();
+
+      if (shell) {
+        shell.classList.toggle('is-solo', mode === 'solo');
+        shell.classList.toggle('is-group', mode === 'group');
+        shell.classList.toggle('is-dj', mode === 'dj');
+      }
+
+      function safeRoomLabel(value) {
+        return String(value || '').replace(/[<>"]/g, '').slice(0, 120);
+      }
+
+      function slugLabel(value) {
+        var cleaned = String(value || 'camera-room').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        return cleaned || 'camera-room';
+      }
+
+      function esc(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+          return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[ch];
+        });
+      }
+
+      function readMatrixSession() {
+        try { return JSON.parse(localStorage.getItem('fas_matrix_session') || 'null'); }
+        catch (_) { return null; }
+      }
+
+      function readSiteSession() {
+        try { return JSON.parse(localStorage.getItem('fas_user') || 'null'); }
+        catch (_) { return null; }
+      }
+
+      function siteUsername() {
+        return siteSession && (siteSession.username || siteSession.display_name || siteSession.name) || '';
+      }
+
+      function isRoomOwner() {
+        return !!roomOwnerParam && !!siteUsername() && roomOwnerParam.toLowerCase() === siteUsername().toLowerCase();
+      }
+
+      function displaySender(sender) {
+        if (matrixSession && sender === matrixSession.user_id && siteUsername()) return '@' + siteUsername();
+        var clean = String(sender || '').replace(/^@/, '').split(':')[0];
+        return clean ? '@' + clean : '@faceless';
+      }
+
+      function matrixApi(path, options) {
+        var init = options || {};
+        var headers = init.headers || {};
+        headers.Accept = 'application/json';
+        if (init.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+        if (matrixSession && matrixSession.access_token) headers.Authorization = 'Bearer ' + matrixSession.access_token;
+        return fetch(matrixBase + '/_matrix/client/v3' + path, Object.assign({}, init, { headers: headers }))
+          .then(function (res) {
+            return res.text().then(function (text) {
+              var data = text ? JSON.parse(text) : {};
+              if (!res.ok) throw new Error(data.error || data.errcode || ('Room request failed: ' + res.status));
+              return data;
+            });
+          });
+      }
+
+      function removeCameraRoomMeta() {
+        try {
+          var all = JSON.parse(localStorage.getItem(cameraRoomsKey) || '{}');
+          delete all[room];
+          localStorage.setItem(cameraRoomsKey, JSON.stringify(all));
+          localStorage.setItem('fas_camera_rooms_updated', String(Date.now()));
+        } catch (_) {}
+      }
+
+      function heartbeatCameraRoom() {
+        if (!room || !isRoomOwner()) return;
+        try {
+          var all = JSON.parse(localStorage.getItem(cameraRoomsKey) || '{}');
+          all[room] = Object.assign({}, all[room] || {}, {
+            roomId: room,
+            mode: mode,
+            label: safeRoomLabel(roomLabelParam || (mode === 'solo' && siteUsername() ? siteUsername() + ' Camera Room' : 'Camera Room')),
+            owner: roomOwnerParam || siteUsername(),
+            hostSeenAt: Date.now(),
+            createdAt: all[room] && all[room].createdAt || Date.now()
+          });
+          localStorage.setItem(cameraRoomsKey, JSON.stringify(all));
+          localStorage.setItem('fas_camera_rooms_updated', String(Date.now()));
+        } catch (_) {}
+      }
+
+      function cleanupOwnedRoom() {
+        if (!room || !matrixSession || !matrixSession.access_token || !isRoomOwner()) return;
+        if (heartbeatTimer) clearInterval(heartbeatTimer);
+        removeCameraRoomMeta();
+        var headers = {
+          Authorization: 'Bearer ' + matrixSession.access_token,
+          'Content-Type': 'application/json'
+        };
+        fetch(matrixBase + '/_matrix/client/v3/rooms/' + encodeURIComponent(room) + '/leave', {
+          method: 'POST',
+          headers: headers,
+          body: '{}',
+          keepalive: true
+        }).catch(function () {});
+        fetch(matrixBase + '/_matrix/client/v3/rooms/' + encodeURIComponent(room) + '/forget', {
+          method: 'POST',
+          headers: headers,
+          body: '{}',
+          keepalive: true
+        }).catch(function () {});
+      }
+
+      function eventText(event) {
+        if (!event || event.type !== 'm.room.message' || !event.content) return '';
+        if (event.content.msgtype === 'm.text' || event.content.msgtype === 'm.notice') return event.content.body || '';
+        return event.content.body || '';
+      }
+
+      function friendlyRoomStatus(message) {
+        var text = String(message || '');
+        var lower = text.toLowerCase();
+        if (!text) return '';
+        if (lower.indexOf('not in room') !== -1 || lower.indexOf('forbidden') !== -1 || lower.indexOf('m_forbidden') !== -1) {
+          return mode === 'dj'
+            ? 'Signal Room chat is waiting for access. Join from Signal Rooms to unlock live chat.'
+            : 'Join this Signal Room to unlock live chat.';
+        }
+        if (lower.indexOf('room previews') !== -1 || lower.indexOf('preview') !== -1) {
+          return 'Signal Room preview is locked until you join the room.';
+        }
+        if (lower.indexOf('not found') !== -1 || lower.indexOf('m_not_found') !== -1) {
+          return 'Signal Room is not ready yet. The stage can still run locally.';
+        }
+        if (lower.indexOf('matrix') !== -1 || lower.indexOf('m_') !== -1 || lower.indexOf('@') !== -1) {
+          return 'Signal Room chat is not connected yet.';
+        }
+        return text;
+      }
+
+      function setChatStatus(message) {
+        if (chatStatus) chatStatus.textContent = friendlyRoomStatus(message);
+      }
+
+      function renderChat(events) {
+        if (!chatFeed) return;
+        var messages = (events || []).filter(function (event) { return !!eventText(event); });
+        if (!messages.length) {
+          chatFeed.innerHTML = '<div class="video-chat-msg"><strong>Signal Room</strong><p>No chat yet. Say something.</p></div>';
+          return;
+        }
+        chatFeed.innerHTML = messages.map(function (event) {
+          var mine = matrixSession && event.sender === matrixSession.user_id;
+          return '<article class="video-chat-msg' + (mine ? ' is-me' : '') + '">'
+            + '<strong>' + esc(displaySender(event.sender)) + '</strong>'
+            + '<p>' + esc(eventText(event)) + '</p>'
+            + '</article>';
+        }).join('');
+        chatFeed.scrollTop = chatFeed.scrollHeight;
+      }
+
+      function applyPulseVisualEvents(events) {
+        if (mode !== 'dj') return;
+        var visualEvents = (events || []).filter(function (event) {
+          return event && event.type === 'com.faceless.pulse.visual' && event.content && event.content.visual;
+        });
+        if (!visualEvents.length) return;
+        var latest = visualEvents[visualEvents.length - 1].content.visual;
+        if (latest && latest !== djCurrentVisual) applyDjVisual(latest, { silent: true });
+      }
+
+      function loadChat() {
+        if (!room || !matrixSession || !matrixSession.access_token) {
+          setChatStatus('Connect from Signal Rooms to chat.');
+          return;
+        }
+        setChatStatus('Loading chat...');
+        matrixApi('/rooms/' + encodeURIComponent(room) + '/messages?dir=b&limit=30')
+          .then(function (data) {
+            var events = (data.chunk || []).reverse();
+            applyPulseVisualEvents(events);
+            renderChat(events);
+            setChatStatus(siteUsername() ? '@' + siteUsername() : 'Room chat live');
+          })
+          .catch(function (err) {
+            setChatStatus(err && err.message || 'Signal Room chat is not connected yet.');
+            if (mode === 'dj') renderChat([]);
+          });
+      }
+
+      if (!room) {
+        if (cameraToggle) cameraToggle.style.display = 'none';
+        return;
+      }
+
+      var userLabel = siteUsername();
+      var roomLabel = safeRoomLabel(roomLabelParam || (mode === 'solo' && userLabel ? userLabel + ' Camera Room' : mode === 'dj' ? 'DJ Room' : 'Camera Room'));
+      var displayName = userLabel || (matrixSession && matrixSession.user_id ? matrixSession.user_id.replace(/^@/, '').split(':')[0] : 'Faceless');
+      var cameraStream = null;
+      if (title) title.textContent = roomLabel;
+      if (chatTitle) chatTitle.textContent = mode === 'dj' ? 'DJ Room Chat' : mode === 'solo' && displayName ? displayName + ' Room Chat' : 'Room Chat';
+      if (endRoomButton) endRoomButton.hidden = !isRoomOwner();
+      if (empty) empty.remove();
+      if (chat) chat.hidden = false;
+
+      var panel = document.createElement('section');
+      panel.className = 'camera-panel';
+      panel.setAttribute('aria-label', 'Camera panel');
+      stage.appendChild(panel);
+
+      var frame = document.createElement('video');
+      frame.className = 'video-frame';
+      frame.title = 'Camera Room';
+      frame.autoplay = true;
+      frame.playsInline = true;
+      frame.muted = true;
+      frame.hidden = true;
+
+      function createDjDeck(name) {
+        var deck = document.createElement('article');
+        deck.className = 'dj-deck';
+        deck.innerHTML = ''
+          + '<strong>' + name + '</strong>'
+          + '<div class="dj-platter-row">'
+          + '<div class="dj-platter" aria-hidden="true">'
+          + '<span class="dj-record-ring dj-record-ring--top">DJ FACELESS ANIMAL</span>'
+          + '<span class="dj-platter-label"><span class="dj-record-name">FACELESS<br>ANIMAL<span>STUDIOS</span></span></span>'
+          + '<span class="dj-record-ring dj-record-ring--bottom">' + name + ' LIVE CUT</span>'
+          + '</div>'
+          + '<div class="dj-deck-face">'
+          + '<div class="dj-track-name">No file loaded</div>'
+          + '<div class="dj-waveform" aria-hidden="true"></div>'
+          + '<div class="dj-cue-row" aria-hidden="true"><span class="dj-cue is-hot">Cue</span><span class="dj-cue">Loop</span><span class="dj-cue">FX</span></div>'
+          + '</div>'
+          + '</div>'
+          + '<div class="dj-controls">'
+          + '<button class="dj-btn dj-btn--load" type="button">Load</button>'
+          + '<button class="dj-btn" type="button">Play</button>'
+          + '<input class="dj-slider" type="range" min="0" max="100" value="100" aria-label="' + name + ' volume">'
+          + '</div>';
+
+        var fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'audio/*';
+        fileInput.hidden = true;
+        var audio = document.createElement('audio');
+        audio.preload = 'metadata';
+        audio.crossOrigin = 'anonymous';
+        deck.appendChild(fileInput);
+        deck.appendChild(audio);
+
+        var label = deck.querySelector('.dj-track-name');
+        var loadBtn = deck.querySelector('.dj-btn--load');
+        var playBtn = deck.querySelectorAll('.dj-btn')[1];
+        var volume = deck.querySelector('.dj-slider');
+
+        loadBtn.addEventListener('click', function () {
+          fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function () {
+          var file = fileInput.files && fileInput.files[0];
+          if (!file) return;
+          if (audio.src) URL.revokeObjectURL(audio.src);
+          audio.src = URL.createObjectURL(file);
+          label.textContent = file.name;
+          playBtn.textContent = 'Play';
+          connectDjDeck(deckState);
+          updateDjMix();
+        });
+
+        playBtn.addEventListener('click', function () {
+          if (!audio.src) {
+            fileInput.click();
+            return;
+          }
+          if (audio.paused) {
+            audio.play().then(function () {
+              playBtn.textContent = 'Pause';
+              deck.classList.add('is-playing');
+            }).catch(function (err) {
+              setChatStatus(err && err.message ? err.message : 'Could not play track.');
+            });
+          } else {
+            audio.pause();
+            playBtn.textContent = 'Play';
+          }
+        });
+
+        audio.addEventListener('pause', function () {
+          playBtn.textContent = 'Play';
+          deck.classList.remove('is-playing');
+        });
+
+        audio.addEventListener('play', function () {
+          playBtn.textContent = 'Pause';
+          deck.classList.add('is-playing');
+        });
+
+        audio.addEventListener('ended', function () {
+          deck.classList.remove('is-playing');
+        });
+
+        volume.addEventListener('input', updateDjMix);
+
+        var deckState = {
+          el: deck,
+          audio: audio,
+          volume: volume,
+          source: null,
+          gain: null
+        };
+        return deckState;
+      }
+
+      var djDeckA = null;
+      var djDeckB = null;
+      var djCrossfader = null;
+      var djMicStream = null;
+      var djMicSource = null;
+      var djMicGain = null;
+      var djAudioContext = null;
+      var djStageDestination = null;
+      var djMeterAnalyser = null;
+      var djMeterData = null;
+      var djMeterFill = null;
+      var djStatus = null;
+      var djSpeakers = null;
+      var djRecorder = null;
+      var djRecordingChunks = [];
+      var djFreestyleNames = [];
+      var djCameraRails = [];
+      var djVisualLayer = null;
+      var djVisualButtons = [];
+      var djCurrentVisual = 'smoke';
+      var djVisualEventType = 'com.faceless.pulse.visual';
+      var djVisualPollTimer = null;
+
+      function setDjStatus(message) {
+        if (djStatus) djStatus.textContent = message || 'Stage ready';
+        setChatStatus(message || '');
+      }
+
+      function persistDjVisual(visual) {
+        try {
+          localStorage.setItem('fas_pulse_visual_' + (room || 'faceless-dj-room'), visual);
+          localStorage.setItem('fas_pulse_visual_updated', String(Date.now()));
+        } catch (_) {}
+      }
+
+      function applyDjVisual(modeName, options) {
+        var visual = modeName || 'smoke';
+        djCurrentVisual = visual;
+        if (stage) stage.setAttribute('data-dj-visual', visual);
+        djVisualButtons.forEach(function (button) {
+          button.classList.toggle('is-active', button.getAttribute('data-dj-visual') === visual);
+        });
+        if (!options || !options.silent) setDjStatus('Pulse visual: ' + visual + '.');
+        persistDjVisual(visual);
+        publishDjStageState('visual');
+      }
+
+      function syncDjVisual(visual) {
+        if (!room || !matrixSession || !matrixSession.access_token) return;
+        var txn = Date.now().toString(36) + Math.random().toString(36).slice(2);
+        matrixApi('/rooms/' + encodeURIComponent(room) + '/send/' + encodeURIComponent(djVisualEventType) + '/' + txn, {
+          method: 'PUT',
+          body: JSON.stringify({
+            visual: visual,
+            room: room || 'faceless-dj-room',
+            host: displayName || 'Host',
+            at: Date.now()
+          })
+        }).catch(function () {});
+      }
+
+      function setDjVisual(modeName) {
+        var visual = modeName || 'smoke';
+        applyDjVisual(visual);
+        syncDjVisual(visual);
+      }
+
+      function ensureDjVisualLayer() {
+        if (mode !== 'dj' || !stage) return;
+        if (!djVisualLayer) {
+          djVisualLayer = document.createElement('div');
+          djVisualLayer.className = 'dj-visual-layer';
+          djVisualLayer.setAttribute('aria-hidden', 'true');
+          stage.insertBefore(djVisualLayer, panel);
+        }
+        if (!stage.getAttribute('data-dj-visual')) {
+          try {
+            djCurrentVisual = localStorage.getItem('fas_pulse_visual_' + (room || 'faceless-dj-room')) || djCurrentVisual;
+          } catch (_) {}
+          stage.setAttribute('data-dj-visual', djCurrentVisual);
+        }
+      }
+
+      function publishDjStageState(status) {
+        var stageState = {
+          mode: 'dj',
+          room: room || 'faceless-dj-room',
+          label: roomLabel || 'DJ Room',
+          host: displayName || 'Host',
+          visual: djCurrentVisual || 'smoke',
+          status: status || 'local',
+          stream: djStageDestination ? djStageDestination.stream : null,
+          attachTransport: function (transport) {
+            if (!transport || typeof transport.attachStream !== 'function') {
+              setDjStatus('Transport needs attachStream(stream, meta).');
+              return false;
+            }
+            transport.attachStream(this.stream, {
+              room: this.room,
+              label: this.label,
+              host: this.host,
+              mode: this.mode,
+              visual: this.visual
+            });
+            setDjStatus('Live transport attached.');
+            return true;
+          }
+        };
+        window.FAS_PULSE_STAGE = stageState;
+        if (document.body) {
+          document.body.dataset.pulseStageMode = stageState.mode;
+          document.body.dataset.pulseStageStatus = stageState.status;
+          document.body.dataset.pulseStageRoom = stageState.room;
+          document.body.dataset.pulseStageVisual = stageState.visual;
+        }
+        try {
+          document.dispatchEvent(new CustomEvent('fas:pulse-stage-ready', {
+            detail: {
+              mode: stageState.mode,
+              room: stageState.room,
+              label: stageState.label,
+              host: stageState.host,
+              visual: stageState.visual,
+              status: stageState.status,
+              stream: stageState.stream
+            }
+          }));
+        } catch (_) {}
+        return stageState;
+      }
+
+      function ensureDjAudio() {
+        if (djAudioContext) {
+          if (djAudioContext.state === 'suspended') djAudioContext.resume().catch(function () {});
+          return;
+        }
+        var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) {
+          setDjStatus('Audio engine is not available in this browser.');
+          return;
+        }
+        djAudioContext = new AudioContextClass();
+        djStageDestination = djAudioContext.createMediaStreamDestination();
+        publishDjStageState('armed');
+        djMeterAnalyser = djAudioContext.createAnalyser();
+        djMeterAnalyser.fftSize = 256;
+        djMeterData = new Uint8Array(djMeterAnalyser.frequencyBinCount);
+        djMeterAnalyser.connect(djAudioContext.destination);
+        if (djDeckA) connectDjDeck(djDeckA);
+        if (djDeckB) connectDjDeck(djDeckB);
+        requestAnimationFrame(updateDjMeter);
+      }
+
+      function connectDjDeck(deck) {
+        if (!deck || !deck.audio || deck.source || !djAudioContext || !djStageDestination) return;
+        try {
+          deck.source = djAudioContext.createMediaElementSource(deck.audio);
+          deck.gain = djAudioContext.createGain();
+          deck.source.connect(deck.gain);
+          deck.gain.connect(djMeterAnalyser);
+          deck.gain.connect(djStageDestination);
+          updateDjMix();
+        } catch (err) {
+          setDjStatus(err && err.message ? err.message : 'Could not connect deck.');
+        }
+      }
+
+      function updateDjMeter() {
+        if (djMeterAnalyser && djMeterData && djMeterFill) {
+          djMeterAnalyser.getByteFrequencyData(djMeterData);
+          var total = 0;
+          for (var i = 0; i < djMeterData.length; i += 1) total += djMeterData[i];
+          var level = Math.min(100, Math.round((total / djMeterData.length) / 2.1));
+          djMeterFill.style.width = level + '%';
+        }
+        requestAnimationFrame(updateDjMeter);
+      }
+
+      function updateDjMix() {
+        if (!djDeckA || !djDeckB || !djCrossfader) return;
+        var cross = Number(djCrossfader.value || 50) / 100;
+        var aVol = Number(djDeckA.volume.value || 100) / 100;
+        var bVol = Number(djDeckB.volume.value || 100) / 100;
+        var left = Math.max(0, Math.min(1, aVol * (1 - cross)));
+        var right = Math.max(0, Math.min(1, bVol * cross));
+        if (djDeckA.gain) djDeckA.gain.gain.value = left;
+        else djDeckA.audio.volume = left;
+        if (djDeckB.gain) djDeckB.gain.gain.value = right;
+        else djDeckB.audio.volume = right;
+      }
+
+      function updateDjSpeakerList(name) {
+        if (!djSpeakers) return;
+        var base = displayName || 'Host';
+        var guests = djFreestyleNames.length ? ' + ' + djFreestyleNames.join(' + ') : '';
+        djSpeakers.textContent = name ? base + guests : base + ' on stage';
+      }
+
+      function initialsForName(value) {
+        return String(value || 'Guest')
+          .split(/\s+/)
+          .map(function (part) { return part.charAt(0); })
+          .join('')
+          .slice(0, 2)
+          .toUpperCase() || 'MC';
+      }
+
+      function renderDjCameraRail() {
+        if (!djCameraRails.length) return;
+        var slots = 4;
+        djCameraRails.forEach(function (rail) { rail.innerHTML = ''; });
+        for (var i = 0; i < slots; i += 1) {
+          var name = djFreestyleNames[i] || '';
+          var tile = document.createElement('article');
+          tile.className = 'camera-tile';
+          tile.innerHTML = name
+            ? '<span class="camera-placeholder"><strong>' + esc(initialsForName(name)) + '</strong><span>' + esc(name) + '<br>mic requested</span></span>'
+            : '<span class="camera-placeholder"><strong>' + String(i + 1).padStart(2, '0') + '</strong><span>Open mic slot</span></span>';
+          djCameraRails[i < 2 ? 0 : 1].appendChild(tile);
+        }
+      }
+
+      function startDjMic() {
+        ensureDjAudio();
+        if (!djAudioContext || !djStageDestination) return;
+        if (djMicStream) {
+          if (djMicGain) djMicGain.gain.value = djMicGain.gain.value > 0 ? 0 : 1;
+          setDjStatus(djMicGain && djMicGain.gain.value > 0 ? 'Mic live in local mix.' : 'Mic muted.');
+          return;
+        }
+        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+          .then(function (stream) {
+            djMicStream = stream;
+            djMicSource = djAudioContext.createMediaStreamSource(stream);
+            djMicGain = djAudioContext.createGain();
+            djMicGain.gain.value = 1;
+            djMicSource.connect(djMicGain);
+            djMicGain.connect(djMeterAnalyser);
+            djMicGain.connect(djStageDestination);
+            setDjStatus('Mic live in local mix.');
+          })
+          .catch(function (err) {
+            setDjStatus(err && err.message ? err.message : 'Could not start mic.');
+          });
+      }
+
+      function toggleDjRecording(button) {
+        ensureDjAudio();
+        if (!djStageDestination || typeof MediaRecorder === 'undefined') {
+          setDjStatus('Recording is not available in this browser.');
+          return;
+        }
+        if (djRecorder && djRecorder.state === 'recording') {
+          djRecorder.stop();
+          button.textContent = 'Record';
+          setDjStatus('Saving recording...');
+          return;
+        }
+        djRecordingChunks = [];
+        try {
+          djRecorder = new MediaRecorder(djStageDestination.stream);
+          djRecorder.addEventListener('dataavailable', function (event) {
+            if (event.data && event.data.size) djRecordingChunks.push(event.data);
+          });
+          djRecorder.addEventListener('stop', function () {
+            var blob = new Blob(djRecordingChunks, { type: djRecorder.mimeType || 'audio/webm' });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            link.href = url;
+            link.download = 'faceless-dj-room-session.webm';
+            link.click();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1200);
+            setDjStatus('Recording saved.');
+          });
+          djRecorder.start();
+          button.textContent = 'Stop Rec';
+          setDjStatus('Recording local mix.');
+        } catch (err) {
+          setDjStatus(err && err.message ? err.message : 'Could not start recording.');
+        }
+      }
+
+      function requestMicSlot() {
+        var name = siteUsername() || 'Guest';
+        try {
+          var requests = JSON.parse(localStorage.getItem('fas_stage_mic_requests') || '[]');
+          requests = requests.filter(function (item) { return item && item.name !== name; });
+          requests.unshift({ name: name, room: room || 'faceless-dj-room', at: Date.now() });
+          localStorage.setItem('fas_stage_mic_requests', JSON.stringify(requests.slice(0, 12)));
+        } catch (_) {}
+        djFreestyleNames = djFreestyleNames.filter(function (item) { return item !== name; });
+        djFreestyleNames.unshift(name);
+        djFreestyleNames = djFreestyleNames.slice(0, 4);
+        renderDjCameraRail();
+        updateDjSpeakerList(name);
+        setDjStatus(name + ' requested the mic.');
+      }
+
+      function buildDjBooth() {
+        if (mode !== 'dj') return;
+        var booth = document.createElement('section');
+        booth.className = 'dj-booth';
+        booth.setAttribute('aria-label', 'DJ room turntables');
+
+        djDeckA = createDjDeck('Deck A');
+        djDeckB = createDjDeck('Deck B');
+
+        var stageStrip = document.createElement('section');
+        stageStrip.className = 'dj-stage-strip';
+        stageStrip.innerHTML = ''
+          + '<div class="dj-stage-label"><strong>Pulse Stage</strong><span>DJ Room</span></div>'
+          + '<button class="dj-btn dj-btn--load" type="button" data-dj-action="broadcast">Broadcast</button>'
+          + '<button class="dj-btn" type="button" data-dj-action="mic">Mic</button>'
+          + '<div class="dj-meter" aria-label="Stage level"><span></span></div>';
+        booth.appendChild(stageStrip);
+
+        booth.appendChild(djDeckA.el);
+        booth.appendChild(djDeckB.el);
+
+        var visualStrip = document.createElement('section');
+        visualStrip.className = 'dj-visual-strip';
+        visualStrip.innerHTML = ''
+          + '<div class="dj-stage-label"><strong>Pulse Visuals</strong><span>Stage FX</span></div>'
+          + '<button class="dj-btn" type="button" data-dj-visual="smoke">Smoke</button>'
+          + '<button class="dj-btn" type="button" data-dj-visual="strobe">Strobe</button>'
+          + '<button class="dj-btn" type="button" data-dj-visual="lasers">Lasers</button>'
+          + '<button class="dj-btn" type="button" data-dj-visual="color">Color</button>'
+          + '<button class="dj-btn" type="button" data-dj-visual="blackout">Blackout</button>';
+        booth.appendChild(visualStrip);
+
+        var fader = document.createElement('div');
+        fader.className = 'dj-crossfader';
+        fader.innerHTML = '<span>A</span><input class="dj-slider" type="range" min="0" max="100" value="50" aria-label="Crossfader"><span>B</span>';
+        djCrossfader = fader.querySelector('input');
+        djCrossfader.addEventListener('input', updateDjMix);
+        booth.appendChild(fader);
+
+        var speakerStrip = document.createElement('section');
+        speakerStrip.className = 'dj-speaker-strip';
+        speakerStrip.innerHTML = ''
+          + '<div class="dj-speaker-list">Host on stage</div>'
+          + '<button class="dj-btn" type="button" data-dj-action="request">Request Mic</button>'
+          + '<button class="dj-btn" type="button" data-dj-action="cypher">Join Cypher</button>';
+        booth.appendChild(speakerStrip);
+
+        var recordStrip = document.createElement('section');
+        recordStrip.className = 'dj-record-strip';
+        recordStrip.innerHTML = ''
+          + '<button class="dj-btn" type="button" data-dj-action="record">Record</button>'
+          + '<span class="dj-badge">Local Mix</span>'
+          + '<div class="dj-stage-status">Stage ready</div>';
+        booth.appendChild(recordStrip);
+
+        panel.appendChild(booth);
+        djMeterFill = stageStrip.querySelector('.dj-meter span');
+        djStatus = recordStrip.querySelector('.dj-stage-status');
+        djSpeakers = speakerStrip.querySelector('.dj-speaker-list');
+        djVisualButtons = Array.prototype.slice.call(visualStrip.querySelectorAll('[data-dj-visual]'));
+        applyDjVisual(stage && stage.getAttribute('data-dj-visual') || djCurrentVisual, { silent: true });
+        updateDjSpeakerList('');
+        booth.addEventListener('click', function (event) {
+          var action = event.target && event.target.getAttribute('data-dj-action');
+          var visual = event.target && event.target.getAttribute('data-dj-visual');
+          if (visual) {
+            setDjVisual(visual);
+            return;
+          }
+          if (!action) return;
+          if (action === 'broadcast') {
+            ensureDjAudio();
+            publishDjStageState('armed');
+            setDjStatus('Local stage mix armed. Live transport can attach here.');
+          }
+          if (action === 'mic') startDjMic();
+          if (action === 'request' || action === 'cypher') requestMicSlot();
+          if (action === 'record') toggleDjRecording(event.target);
+        });
+        updateDjMix();
+      }
+
+      function buildCameraPanel() {
+        var slots = mode === 'group' ? 6 : 1;
+        panel.innerHTML = '';
+        if (mode === 'dj') {
+          ensureDjVisualLayer();
+          var cameraRow = document.createElement('section');
+          cameraRow.className = 'dj-camera-row';
+          cameraRow.setAttribute('aria-label', 'DJ host and freestyle cameras');
+
+          var leftRail = document.createElement('section');
+          leftRail.className = 'dj-camera-rail dj-camera-rail--left';
+          leftRail.setAttribute('aria-label', 'Left freestyle camera slots');
+          cameraRow.appendChild(leftRail);
+
+          var mainTile = document.createElement('article');
+          mainTile.className = 'camera-tile camera-tile--main';
+          mainTile.appendChild(frame);
+          var mainLabel = document.createElement('span');
+          mainLabel.className = 'camera-tile-label';
+          mainLabel.textContent = (displayName || 'Host') + ' / Host';
+          mainTile.appendChild(mainLabel);
+          cameraRow.appendChild(mainTile);
+
+          var rightRail = document.createElement('section');
+          rightRail.className = 'dj-camera-rail dj-camera-rail--right';
+          rightRail.setAttribute('aria-label', 'Right freestyle camera slots');
+          cameraRow.appendChild(rightRail);
+          djCameraRails = [leftRail, rightRail];
+
+          panel.appendChild(cameraRow);
+          renderDjCameraRail();
+          buildDjBooth();
+          return;
+        }
+        for (var i = 0; i < slots; i += 1) {
+          var tile = document.createElement('article');
+          tile.className = 'camera-tile' + (i === 0 ? ' camera-tile--main' : '');
+          if (i === 0) {
+            tile.appendChild(frame);
+            var label = document.createElement('span');
+            label.className = 'camera-tile-label';
+            label.textContent = displayName || 'You';
+            tile.appendChild(label);
+          } else {
+            tile.innerHTML = '<span class="camera-placeholder"><strong>' + String(i + 1).padStart(2, '0') + '</strong><span>Waiting on camera</span></span>';
+          }
+          panel.appendChild(tile);
+        }
+        buildDjBooth();
+      }
+
+      buildCameraPanel();
+      if (isRoomOwner()) {
+        heartbeatCameraRoom();
+        heartbeatTimer = setInterval(heartbeatCameraRoom, 30000);
+      }
+
+      function startCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          setChatStatus('Camera is not available in this browser.');
+          return;
+        }
+        if (cameraStream) {
+          frame.hidden = false;
+          if (cameraToggle) cameraToggle.textContent = 'Hide Camera';
+          return;
+        }
+        setChatStatus('Starting camera...');
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+          .then(function (stream) {
+            cameraStream = stream;
+            frame.srcObject = stream;
+            frame.hidden = false;
+            if (cameraToggle) cameraToggle.textContent = 'Hide Camera';
+            setChatStatus(siteUsername() ? '@' + siteUsername() : 'Camera ready');
+          })
+          .catch(function (err) {
+            setChatStatus(err && err.message ? err.message : 'Could not start camera.');
+          });
+      }
+
+      function toggleCamera() {
+        if (frame.hidden) {
+          startCamera();
+          return;
+        }
+        frame.hidden = true;
+        if (cameraToggle) cameraToggle.textContent = 'Start Camera';
+      }
+
+      cameraToggle?.addEventListener('click', toggleCamera);
+
+      function requestPiP() {
+        if (!frame || frame.hidden || !cameraStream) return Promise.resolve(false);
+        if (document.pictureInPictureElement === frame) return Promise.resolve(true);
+        if (frame.requestPictureInPicture) {
+          return frame.requestPictureInPicture().then(function () { return true; }).catch(function () { return false; });
+        }
+        if (frame.webkitSupportsPresentationMode && typeof frame.webkitSetPresentationMode === 'function') {
+          try {
+            frame.webkitSetPresentationMode('picture-in-picture');
+            return Promise.resolve(true);
+          } catch (_) {}
+        }
+        return Promise.resolve(false);
+      }
+
+      function showLobbyWithCamera() {
+        requestPiP().finally(function () {
+          if (lobbyFrame) lobbyFrame.hidden = false;
+          if (shell) shell.classList.add('is-lobby');
+          if (restoreCameraButton) restoreCameraButton.hidden = false;
+          if (title) title.textContent = 'Rooms Lobby';
+          setChatStatus('Camera minimized. Lobby is open.');
+        });
+      }
+
+      function restoreCameraRoom() {
+        if (document.pictureInPictureElement && document.exitPictureInPicture) {
+          document.exitPictureInPicture().catch(function () {});
+        }
+        if (frame.webkitPresentationMode && typeof frame.webkitSetPresentationMode === 'function') {
+          try { frame.webkitSetPresentationMode('inline'); } catch (_) {}
+        }
+        if (lobbyFrame) lobbyFrame.hidden = true;
+        if (shell) shell.classList.remove('is-lobby');
+        if (restoreCameraButton) restoreCameraButton.hidden = true;
+        if (title) title.textContent = roomLabel;
+        if (cameraStream) {
+          frame.hidden = false;
+          if (cameraToggle) cameraToggle.textContent = 'Hide Camera';
+        }
+        setChatStatus(siteUsername() ? '@' + siteUsername() : 'Camera ready');
+      }
+
+      document.querySelector('a[href="chat.html"]')?.addEventListener('click', function (event) {
+        if (!cameraStream) return;
+        event.preventDefault();
+        showLobbyWithCamera();
+      });
+
+      endRoomButton?.addEventListener('click', function () {
+        cleanupOwnedRoom();
+        if (cameraStream) cameraStream.getTracks().forEach(function (track) { track.stop(); });
+        window.location.href = 'chat.html';
+      });
+
+      restoreCameraButton?.addEventListener('click', restoreCameraRoom);
+
+      window.addEventListener('pagehide', function () {
+        if (shell && shell.classList.contains('is-lobby')) return;
+        if (djVisualPollTimer) clearInterval(djVisualPollTimer);
+        cleanupOwnedRoom();
+      });
+
+      history.replaceState({ cameraRoom: true }, document.title, window.location.href);
+      history.pushState({ cameraRoomOpen: true }, document.title, window.location.href);
+      window.addEventListener('popstate', function () {
+        if (cameraStream) {
+          showLobbyWithCamera();
+          history.pushState({ cameraRoomOpen: true }, document.title, window.location.href);
+        } else {
+          window.location.href = 'chat.html';
+        }
+      });
+
+      document.title = 'Camera Room - DJ Faceless Animal';
+      if (safeRoomLabel(room)) {
+        history.replaceState({}, document.title, 'video-room.html?room=' + encodeURIComponent(room) + '&mode=' + encodeURIComponent(mode) + '&label=' + encodeURIComponent(roomLabel));
+      }
+
+      loadChat();
+      if (mode === 'dj') {
+        djVisualPollTimer = setInterval(loadChat, 5000);
+      }
+      chatForm?.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var text = chatInput ? chatInput.value.trim() : '';
+        if (!text || !room || !matrixSession || !matrixSession.access_token) return;
+        var txn = Date.now().toString(36) + Math.random().toString(36).slice(2);
+        setChatStatus('Sending...');
+        matrixApi('/rooms/' + encodeURIComponent(room) + '/send/m.room.message/' + txn, {
+          method: 'PUT',
+          body: JSON.stringify({ msgtype: 'm.text', body: text })
+        }).then(function () {
+          if (chatInput) chatInput.value = '';
+          return loadChat();
+        }).catch(function (err) {
+          setChatStatus(err.message || 'Could not send.');
+        });
+      });
+    }());
+  </script>
+</body>
+</html>
