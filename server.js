@@ -1509,6 +1509,94 @@ async function handleContactForm(req, res) {
 }
 
 
+// ── AI CHAT HANDLER (free, no key needed) ──────────────────────────
+const AI_MODELS = [
+  { id: 'TinyLlama/TinyLlama-1.1B-Chat-v1.0', name: 'TinyLlama 1.1B (fast)' },
+  { id: 'HuggingFaceH4/zephyr-7b-beta',       name: 'Zephyr 7B (smart)' },
+  { id: 'microsoft/phi-2',                     name: 'Phi-2 2.7B' },
+];
+
+function buildAIPrompt(modelId, message) {
+  if (modelId.includes('zephyr')) {
+    return '<|system|>\nYou are a helpful AI assistant named Faceless AI.</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
+  }
+  if (modelId.includes('phi')) {
+    return 'Instruct: ' + message + '\nOutput:';
+  }
+  if (modelId.includes('tinyllama')) {
+    return '<|system|>\nYou are a helpful AI assistant named Faceless AI.</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
+  }
+  return message;
+}
+
+async function handleAIChat(req, res) {
+  const HF_TOKEN = process.env.HF_TOKEN || '';
+  let rawBody;
+  try {
+    rawBody = await readBody(req, 65536);
+  } catch {
+    return sendJSON(res, 413, { error: 'Request too large.' });
+  }
+
+  let body;
+  try {
+    body = JSON.parse(rawBody.toString('utf8'));
+  } catch {
+    return sendJSON(res, 400, { error: 'Invalid JSON body.' });
+  }
+
+  const message = String(body.message || '').trim();
+  if (!message) {
+    return sendJSON(res, 400, { error: 'Message is required.' });
+  }
+
+  const modelIndex = Math.min(Math.max(parseInt(body.model) || 0, 0), AI_MODELS.length - 1);
+  const model = AI_MODELS[modelIndex].id;
+
+  try {
+    const prompt = buildAIPrompt(model, message);
+    const hfRes = await fetch('https://api-inference.huggingface.co/models/' + model, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(HF_TOKEN ? { 'Authorization': 'Bearer ' + HF_TOKEN } : {}),
+      },
+      body: JSON.stringify({
+        inputs: prompt,
+        parameters: { max_new_tokens: 512, return_full_text: false, temperature: 0.7 },
+      }),
+      signal: AbortSignal.timeout(25000),
+    });
+
+    if (!hfRes.ok) {
+      const errText = await hfRes.text();
+      const isModelLoading = hfRes.status === 503 || errText.includes('loading');
+      return sendJSON(res, isModelLoading ? 503 : 502, {
+        error: isModelLoading ? 'AI model is waking up — please try again in a moment.' : 'AI service unavailable.',
+        detail: isModelLoading ? 'Model cold-starting' : errText.slice(0, 200),
+        retryable: isModelLoading,
+      });
+    }
+
+    const data = await hfRes.json();
+    let text = Array.isArray(data) && data[0]
+      ? (data[0].generated_text || '')
+      : (data.generated_text || JSON.stringify(data));
+
+    if (text.startsWith(prompt)) text = text.slice(prompt.length).trim();
+    text = text.trim();
+
+    return sendJSON(res, 200, { reply: text || '...' });
+  } catch (e) {
+    const isTimeout = e.name === 'AbortError' || e.code === 'ETIMEDOUT' || e.code === 'ESOCKETTIMEDOUT';
+    return sendJSON(res, 502, {
+      error: isTimeout ? 'AI is taking too long — please try again.' : 'AI request failed',
+      detail: isTimeout ? 'Request timed out after 25s' : e.message,
+      retryable: true,
+    });
+  }
+}
+
 // ── Server helpers ────────────────────────────────────────────────────
 
 function readBody(req, maxBytes) {

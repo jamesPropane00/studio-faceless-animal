@@ -126,7 +126,12 @@
 
     <div class="chat-input-area">
       <div class="model-bar">
-        <span style="color:var(--dim);font-size:0.75rem">Free open source AI &mdash; no account needed</span>
+        <select id="modelSelect">
+          <option value="0">TinyLlama 1.1B (fast)</option>
+          <option value="1">Zephyr 7B (smart)</option>
+          <option value="2">Phi-2 2.7B</option>
+        </select>
+        <span style="color:var(--dim);font-size:0.75rem">Free open source AI</span>
       </div>
       <div class="input-row">
         <textarea id="input" rows="1" placeholder="Message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}"></textarea>
@@ -149,16 +154,21 @@
       showTyping();
       document.getElementById('sendBtn').disabled = true;
 
+      const modelIdx = document.getElementById('modelSelect').value;
       try {
         const res = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text }),
+          body: JSON.stringify({ message: text, model: parseInt(modelIdx) }),
         });
         removeTyping();
         if (!res.ok) {
           const err = await res.json();
-          addMessage('system', 'Error: ' + (err.error || 'Request failed.'));
+          const msg = 'Error: ' + (err.error || 'Request failed.');
+          addMessage('system', msg);
+          if (err.retryable) {
+            addRetryButton(text, modelIdx);
+          }
           return;
         }
         const data = await res.json();
@@ -206,6 +216,24 @@
       dots.className = 'typing';
       dots.innerHTML = '<span></span><span></span><span></span>';
       el.appendChild(dots);
+      document.getElementById('messages').appendChild(el);
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function addRetryButton(msg, modelIdx) {
+      const el = document.createElement('div');
+      el.className = 'msg system';
+      const btn = document.createElement('button');
+      btn.textContent = 'Retry';
+      btn.style.cssText = 'margin-top:0.5rem;padding:0.4rem 1rem;border-radius:8px;border:none;background:linear-gradient(135deg,var(--purple),var(--bright));color:#fff;font-size:0.82rem;cursor:pointer;';
+      btn.onclick = async () => {
+        el.remove();
+        input.value = msg;
+        document.getElementById('modelSelect').value = String(modelIdx);
+        send();
+      };
+      el.textContent = 'Model may need a moment. ';
+      el.appendChild(btn);
       document.getElementById('messages').appendChild(el);
       el.scrollIntoView({ behavior: 'smooth' });
     }
