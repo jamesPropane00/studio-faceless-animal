@@ -29,6 +29,9 @@ const TEXT_MODELS = [
   { id: '@cf/mistral/mistral-small-3.1-24b-instruct', name: 'Legal Counsel', type: 'text', group: '⚖️ Legal', system: 'You are an experienced legal practitioner with deep knowledge of US state law, criminal law, and family law. You understand that laws vary by state and you always note which jurisdictions have which rules. You explain legal concepts clearly in plain language while also citing relevant statutes, precedents, and legal principles when appropriate. For criminal law, you cover charges, defenses, sentencing guidelines, plea bargaining, constitutional rights (Miranda, Fourth Amendment, right to counsel), and the criminal procedure process from arrest through appeal. For family law, you cover divorce, child custody, child support, alimony, adoption, paternity, domestic violence restraining orders, and prenuptial agreements. You always include the disclaimer that you are an AI and not a substitute for a licensed attorney, and you strongly recommend consulting a local attorney for specific cases. You never give false certainty — you distinguish between well-settled law, unsettled areas, and things that depend heavily on specific facts and jurisdiction.' },
   // 🎵 Music Producer — composition, production, sound design
   { id: '@cf/mistral/mistral-small-3.1-24b-instruct', name: 'Music Producer', type: 'text', group: '🎵 Music', system: 'You are a world-class music producer, composer, and sound designer with expertise across all genres — metal, trap, hardstyle, dubstep, orchestral, cinematic, lo-fi, hip-hop, electronic, rock, and experimental. You know every DAW (Ableton Live, FL Studio, Logic Pro, Cubase, Pro Tools) inside out. You give detailed, practical advice on composition, arrangement, sound design, mixing, mastering, and music theory. You can write chord progressions, melody lines, basslines, and drum patterns in any genre. You recommend specific VSTs, synths (Serum, Massive, Vital, Phase Plant), effects, and processing chains. You explain how to get specific sounds — how to make a kick hit harder, a bass growl, a lead scream, or a cinematic build. You reference techniques from legendary producers and engineers. When asked to create something, you output detailed production recipes with specific parameters, effects chains, and arrangement structures. Your tone is intense, passionate, and direct — you treat music production as a craft that demands dedication and technical mastery.' },
+  // 👁️ Vision — read images, documents, screenshots
+  { id: '@cf/meta/llama-3.2-11b-vision-instruct', name: 'Vision (Llama 3.2)', type: 'vision', group: '👁️ Vision', system: 'You analyze images, documents, screenshots, and photos. You read text, describe visual content, extract information, and answer questions about what you see.' },
+  { id: '@cf/llava-hf/llava-1.5-7b-hf', name: 'Vision (LLaVA 1.5)', type: 'vision', group: '👁️ Vision', system: 'You describe and analyze images. You read text from photos and documents and answer questions about visual content.' },
 ];
 
 const AUDIO_MODELS = [
@@ -464,6 +467,48 @@ export async function onRequest(context) {
       }), { headers: { 'content-type': 'application/json' } });
     } catch (e) {
       return new Response(JSON.stringify({ error: 'Image request failed', detail: e.message }), {
+        status: 502, headers: { 'content-type': 'application/json' },
+      });
+    }
+  }
+
+  // ── VISION MODELS (image/document reading) ────────────────
+  if (selectedModel.type === 'vision') {
+    const visionImg = uploadedFiles.find(f => f.type.startsWith('image/'));
+    if (!visionImg) {
+      return new Response(JSON.stringify({ error: 'Please upload an image or document screenshot first, then ask a question about it.' }), {
+        status: 400, headers: { 'content-type': 'application/json' },
+      });
+    }
+    try {
+      const imgBytes = Uint8Array.from(atob(visionImg.data), c => c.charCodeAt(0));
+      const visionRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: selectedModel.system || '' },
+            { role: 'user', content: message || 'Describe this image in detail.' },
+          ],
+          image: [...imgBytes],
+          max_tokens: maxTokens,
+        }),
+      });
+      if (!visionRes.ok) {
+        const err = await visionRes.text();
+        return new Response(JSON.stringify({ error: 'Vision request failed', detail: err.slice(0, 200) }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const data = await visionRes.json();
+      const reply = data && data.result && data.result.response ? data.result.response : 'Could not analyze the image.';
+      return new Response(JSON.stringify({
+        reply, model: selectedModel.name,
+        conversation_id: conversationId || 'default',
+        username,
+      }), { headers: { 'content-type': 'application/json' } });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Vision request failed', detail: e.message }), {
         status: 502, headers: { 'content-type': 'application/json' },
       });
     }

@@ -325,6 +325,12 @@
         </div>
       </div>
       <div class="setting-group">
+        <div class="setting-row">
+          <label>Auto-switch models</label>
+          <div class="toggle-switch on" id="autoSwitchToggle" onclick="this.classList.toggle('on'); localStorage.setItem('fas_autoswitch', this.classList.contains('on'))"></div>
+        </div>
+      </div>
+      <div class="setting-group">
         <label for="maxTokens">Max response length</label>
         <select id="maxTokens">
           <option value="512">Short (512 tokens)</option>
@@ -474,6 +480,8 @@
 
     function detectModel(text) {
       const lower = text.toLowerCase().trim();
+      const visionKw = ['what is this','describe this','what does this say','read this','analyze this image',
+        'what do you see','extract text','ocr','document'];
       const imgKw = ['draw','generate','create','make','paint','render','imagine',
         'image of','picture of','photo of','art of','a realistic','a cartoon',
         'a painting','a photo','a portrait','a landscape','a futuristic',
@@ -484,6 +492,7 @@
       const videoKw = ['generate a video','make a video','create a video','animate',
         'video of','a video','generate video'];
       if (videoKw.some(k => lower.includes(k))) return 'video';
+      if (visionKw.some(k => lower.includes(k))) return 'vision';
       if (imgKw.some(k => lower.includes(k))) return 'image';
       if (audioKw.some(k => lower.includes(k))) return 'audio';
       return null;
@@ -558,20 +567,29 @@
       const convId = currentConvId || 'default';
       let model = availableModels[modelIdx] || availableModels[0];
 
-      // Auto-switch to image/video/audio model if prompt matches
-      const intent = detectModel(text);
+      // Auto-switch model based on prompt intent & attached files (unless disabled)
+      const autoSwitch = localStorage.getItem('fas_autoswitch') !== 'false';
+      const textIntent = autoSwitch ? detectModel(text) : null;
+      const hasImageFile = pendingFiles.some(f => f.type.startsWith('image/'));
+      let intent = textIntent;
+      // Prefer vision if user uploaded an image and asked a question about it
+      if (hasImageFile && !intent && (model.type === 'text' || model.type === 'book')) intent = 'vision';
       if (intent && model.type !== intent) {
-        // Prefer SDXL Lightning for images (fastest, less likely to timeout)
         if (intent === 'image') {
           const fastIdx = availableModels.findIndex(m => m.id && m.id.includes('lightning'));
-          if (fastIdx !== -1) { modelIdx = fastIdx; model = availableModels[fastIdx]; }
-          else { modelIdx = availableModels.findIndex(m => m.type === 'image'); model = availableModels[modelIdx]; }
+          modelIdx = fastIdx !== -1 ? fastIdx : availableModels.findIndex(m => m.type === 'image');
+        } else if (intent === 'vision') {
+          // Check if user also uploaded a file — prefer vision if they did
+          modelIdx = availableModels.findIndex(m => m.type === 'vision');
+          if (modelIdx === -1) modelIdx = availableModels.findIndex(m => m.type === 'text');
         } else {
-          const targetIdx = availableModels.findIndex(m => m.type === intent);
-          if (targetIdx !== -1) { modelIdx = targetIdx; model = availableModels[targetIdx]; }
+          modelIdx = availableModels.findIndex(m => m.type === intent);
         }
-        document.getElementById('modelSelect').value = modelIdx;
-        addMessage('system', 'Auto-switched to ' + model.name + ' for ' + intent + ' generation.');
+        if (modelIdx !== -1) {
+          model = availableModels[modelIdx];
+          document.getElementById('modelSelect').value = modelIdx;
+          addMessage('system', 'Auto-switched to ' + model.name + ' for ' + intent + '.');
+        }
       }
 
       // Attach pending files
@@ -771,6 +789,7 @@
       document.getElementById('ttsRate').oninput = applySettings;
       document.getElementById('ttsVoice').onchange = function() { localStorage.setItem('fas_tts_voice', this.value); };
       if (localStorage.getItem('fas_autoread') === 'true') document.getElementById('autoReadToggle').classList.add('on');
+      if (localStorage.getItem('fas_autoswitch') === 'false') document.getElementById('autoSwitchToggle').classList.remove('on');
       if (window.speechSynthesis) {
         loadVoices();
         window.speechSynthesis.onvoiceschanged = loadVoices;
