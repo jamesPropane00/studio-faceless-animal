@@ -468,6 +468,16 @@
       window.speechSynthesis.speak(utter);
     }
 
+    function downloadText(content, filename) {
+      const clean = content.replace(/<[^>]*>/g, '').replace(/<br\s*\/?>/g, '\n').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+      const blob = new Blob([clean], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename || 'faceless-ai-content.txt';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
     function addMessage(role, content, skipScroll) {
       const el = document.createElement('div');
       el.className = 'msg ' + role;
@@ -484,6 +494,12 @@
           speakBtn.title = 'Read aloud';
           speakBtn.onclick = function(e) { e.stopPropagation(); speakText(content); };
           label.after(speakBtn);
+          const dlBtn = document.createElement('button');
+          dlBtn.className = 'speak-btn';
+          dlBtn.textContent = '\u2B07';
+          dlBtn.title = 'Download as text file';
+          dlBtn.onclick = function(e) { e.stopPropagation(); downloadText(content, 'faceless-book-' + Date.now() + '.txt'); };
+          speakBtn.after(dlBtn);
         }
         const text = document.createElement('div');
         if (content.indexOf('<img') !== -1) {
