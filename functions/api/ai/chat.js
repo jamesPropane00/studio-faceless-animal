@@ -3,17 +3,24 @@ export async function onRequest(context) {
     return new Response(null, { status: 405 });
   }
 
-  // Test basic fetch to a public API
+  const token = context.env.CF_AI_TOKEN || '';
+  const accountId = context.env.CF_ACCOUNT_ID || '';
+
+  let result = { tokenLen: token.length, accountId };
+
+  // Test fetch to api.cloudflare.com
   try {
-    const resp = await fetch('https://httpbin.org/json');
-    const text = await resp.text();
-    return new Response(text.slice(0, 500), {
-      headers: { 'content-type': 'application/json' },
+    const testUrl = 'https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/models/search?search=llama';
+    const resp = await fetch(testUrl, {
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
     });
+    const bodyText = await resp.text();
+    result = { status: resp.status, body: bodyText.slice(0, 500), tokenLen: token.length, accountId };
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message, stack: (e.stack || '').slice(0, 300) }), {
-      status: 502,
-      headers: { 'content-type': 'application/json' },
-    });
+    result = { error: e.message, name: e.name, stack: (e.stack || '').slice(0, 300) };
   }
+
+  return new Response(JSON.stringify(result), {
+    headers: { 'content-type': 'application/json' },
+  });
 }
