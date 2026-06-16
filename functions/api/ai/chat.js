@@ -22,7 +22,10 @@ const TEXT_MODELS = [
 ];
 
 const AUDIO_MODELS = [
-  { id: '@cf/deepgram/aura-2-en', name: 'Deepgram TTS', type: 'audio' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Luna (fem)', type: 'audio', voice: 'luna' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Apollo (male)', type: 'audio', voice: 'apollo' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Athena (fem)', type: 'audio', voice: 'athena' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Orion (male)', type: 'audio', voice: 'orion' },
 ];
 
 const IMAGE_MODELS = [
@@ -255,7 +258,7 @@ export async function onRequest(context) {
       const audioRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: message }),
+        body: JSON.stringify({ text: message, voice: selectedModel.voice || 'luna', encoding: 'mp3', container: 'none' }),
       });
       if (!audioRes.ok) {
         const err = await audioRes.text();
@@ -270,7 +273,7 @@ export async function onRequest(context) {
       for (let i = 0; i < bytes.length; i += chunkSize) {
         binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, bytes.length)));
       }
-      const audioUrl = 'data:audio/wav;base64,' + btoa(binary);
+      const audioUrl = 'data:audio/mpeg;base64,' + btoa(binary);
 
       return new Response(JSON.stringify({
         audio: audioUrl,
