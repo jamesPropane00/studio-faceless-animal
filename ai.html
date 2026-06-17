@@ -491,6 +491,13 @@
         'text to speech','talk','tell me out loud'];
       const videoKw = ['generate a video','make a video','create a video','animate',
         'video of','a video','generate video'];
+      const musicKw = ['make a beat','make a drill beat','make some music','produce a beat',
+        'create a beat','write a beat','drill beat','trap beat','make a melody',
+        'create a melody','write a melody','create a song','make a song','make music',
+        'generate music','generate a beat','produce music','create music',
+        'make a track','write a track','produce a track','instrumental',
+        'make a loop','create a loop','beats','make an instrumental'];
+      if (musicKw.some(k => lower.includes(k))) return 'music';
       if (videoKw.some(k => lower.includes(k))) return 'video';
       if (visionKw.some(k => lower.includes(k))) return 'vision';
       if (imgKw.some(k => lower.includes(k))) return 'image';
@@ -625,8 +632,9 @@
           addMessage('assistant', '<strong>' + model.name + ':</strong><br><img src="' + data.image + '" alt="Generated image" style="max-width:100%;border-radius:10px;margin-bottom:8px" /><br><a href="' + data.image + '" download="faceless-ai-' + Date.now() + '.png" class="download-btn">Download Image</a>');
         } else if (model.type === 'video' && data.video) {
           addMessage('assistant', '<strong>' + model.name + ':</strong><br><video src="' + data.video + '" controls style="max-width:100%;border-radius:10px;margin-bottom:8px"></video><br><a href="' + data.video + '" download="faceless-ai-' + Date.now() + '.mp4" class="download-btn">Download Video</a>');
-        } else if (model.type === 'audio' && data.audio) {
-          addMessage('assistant', '<strong>' + model.name + ':</strong><br><audio src="' + data.audio + '" controls style="width:100%;margin-bottom:8px"></audio><br><a href="' + data.audio + '" download="faceless-ai-' + Date.now() + '.mp3" class="download-btn">Download Audio</a>');
+        } else if ((model.type === 'music' || model.type === 'audio') && data.audio) {
+          const ext = data.audio.startsWith('data:audio/wav') ? '.wav' : data.audio.startsWith('data:audio/mpeg') ? '.mp3' : '.mp3';
+          addMessage('assistant', '<strong>' + model.name + ':</strong><br><audio src="' + data.audio + '" controls style="width:100%;margin-bottom:8px"></audio><br><a href="' + data.audio + '" download="faceless-ai-' + Date.now() + ext + '" class="download-btn">Download Audio</a>');
         } else {
           addMessage('assistant', data.reply || 'No response.');
         }

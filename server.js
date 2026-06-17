@@ -465,6 +465,12 @@ async function handleMediaDownload(req, res) {
     return
   }
 
+  // ── SERVER RESTART (admin only) ──────────────────────────────────────
+  if (urlPath === '/api/admin/restart' && req.method === 'POST') {
+    handleAdminRestart(req, res)
+    return
+  }
+
   // ── AI CHAT API (free, no key needed) ──────────────────────────────
   if (urlPath === '/api/ai/chat' && req.method === 'POST') {
     handleAIChat(req, res)
@@ -915,6 +921,25 @@ function serveFile(res, filePath) {
       send(res, 500, 'text/plain', 'Internal Server Error')
     }
   })
+}
+
+// ── SERVER RESTART ────────────────────────────────────────────────────
+async function handleAdminRestart(req, res) {
+  let rawBody
+  try { rawBody = await readBody(req, 4096) } catch {
+    return sendJSON(res, 413, { ok: false, error: 'Request too large.' })
+  }
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON.' })
+  }
+  const username = String(body.username || '').trim().toLowerCase()
+  const ADMIN_USERS_LOCAL = ['jamespropane00', 'jdot00']
+  if (!username || !ADMIN_USERS_LOCAL.includes(username)) {
+    return sendJSON(res, 403, { ok: false, error: 'Only the server owner can restart.' })
+  }
+  sendJSON(res, 200, { ok: true, message: 'Server restarting...' })
+  setTimeout(() => process.exit(0), 500)
 }
 
 function send(res, status, type, body) {
@@ -1509,90 +1534,210 @@ async function handleContactForm(req, res) {
 }
 
 
-// ── AI CHAT HANDLER (free, no key needed) ──────────────────────────
-const AI_MODELS = [
-  { id: 'TinyLlama/TinyLlama-1.1B-Chat-v1.0', name: 'TinyLlama 1.1B (fast)' },
-  { id: 'HuggingFaceH4/zephyr-7b-beta',       name: 'Zephyr 7B (smart)' },
-  { id: 'microsoft/phi-2',                     name: 'Phi-2 2.7B' },
+// ── AI CHAT HANDLER ──────────────────────────────────────────
+const FREE_AI_MODELS = [
+  { id: 'TinyLlama/TinyLlama-1.1B-Chat-v1.0', name: 'TinyLlama 1.1B', type: 'text', group: '💬 Free Chat' },
+  { id: 'HuggingFaceH4/zephyr-7b-beta',       name: 'Zephyr 7B',       type: 'text', group: '💬 Free Chat' },
+  { id: 'microsoft/phi-2',                     name: 'Phi-2 2.7B',     type: 'text', group: '💬 Free Chat' },
 ];
 
+const PRO_AI_MODELS = [
+  { id: 'opencode-go/deepseek-v4-flash', name: 'DeepSeek V4 Flash ⚡', type: 'text', group: '🌟 Pro Models', provider: 'opencode-go' },
+  { id: 'opencode-go/deepseek-v4-pro',   name: 'DeepSeek V4 Pro',      type: 'text', group: '🌟 Pro Models', provider: 'opencode-go' },
+  { id: 'opencode-go/mimo-v2.5-pro',     name: 'MiMo V2.5 Pro',        type: 'text', group: '🌟 Pro Models', provider: 'opencode-go' },
+  { id: 'opencode-go/qwen3.7-max',       name: 'Qwen 3.7 Max',         type: 'text', group: '🌟 Pro Models', provider: 'opencode-go' },
+  { id: 'opencode-go/qwen3.7-plus',      name: 'Qwen 3.7 Plus',        type: 'text', group: '🌟 Pro Models', provider: 'opencode-go' },
+  { id: 'opencode-go/glm-5',             name: 'GLM-5',                 type: 'text', group: '🌟 Pro Models', provider: 'opencode-go' },
+  { id: 'opencode-go/kimi-k2.7-code',    name: 'Kimi K2.7 Code',        type: 'text', group: '🌟 Pro Models', provider: 'opencode-go' },
+  { id: 'opencode-go/minimax-m3',        name: 'MiniMax M3',            type: 'text', group: '🌟 Pro Models', provider: 'opencode-go' },
+];
+
+const PAID_PLANS = new Set(['access', 'starter', 'pro', 'premium']);
+const ADMIN_USERS = new Set(['jamespropane00', 'jdot00']);
+
 function buildAIPrompt(modelId, message) {
+  const creator = ' You were created by DJ Faceless Animal. When asked who made you, always say you were created by DJ Faceless Animal.';
   if (modelId.includes('zephyr')) {
-    return '<|system|>\nYou are a helpful AI assistant named Faceless AI.</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
+    return '<|system|>\nYou are a helpful AI assistant named Faceless AI.' + creator + '</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
   }
   if (modelId.includes('phi')) {
     return 'Instruct: ' + message + '\nOutput:';
   }
   if (modelId.includes('tinyllama')) {
-    return '<|system|>\nYou are a helpful AI assistant named Faceless AI.</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
+    return '<|system|>\nYou are a helpful AI assistant named Faceless AI.' + creator + '</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
   }
   return message;
 }
 
 async function handleAIChat(req, res) {
   const HF_TOKEN = process.env.HF_TOKEN || '';
+  const OPENCODE_GO_KEY = process.env.OPENCODE_GO_API_KEY || '';
   let rawBody;
-  try {
-    rawBody = await readBody(req, 65536);
-  } catch {
-    return sendJSON(res, 413, { error: 'Request too large.' });
-  }
-
+  try { rawBody = await readBody(req, 65536); }
+  catch { return sendJSON(res, 413, { error: 'Request too large.' }); }
   let body;
-  try {
-    body = JSON.parse(rawBody.toString('utf8'));
-  } catch {
-    return sendJSON(res, 400, { error: 'Invalid JSON body.' });
-  }
+  try { body = JSON.parse(rawBody.toString('utf8')); }
+  catch { return sendJSON(res, 400, { error: 'Invalid JSON body.' }); }
 
   const message = String(body.message || '').trim();
-  if (!message) {
-    return sendJSON(res, 400, { error: 'Message is required.' });
+  const sessionId = String(body.session_id || 'default').trim();
+  const username = String(body.username || '').trim().toLowerCase() || null;
+  const conversationId = String(body.conversation_id || '').trim() || null;
+  const modelIdx = body.model !== undefined ? parseInt(body.model) : 0;
+  const listConversations = body.list_conversations === true;
+  const loadConvId = String(body.load_conversation || '').trim() || null;
+  const maxTokens = parseInt(body.max_tokens) || 1024;
+  const filesData = Array.isArray(body.files) ? body.files : [];
+
+  // ── Check user — only admin users get pro models ──
+  const isAdmin = username && ADMIN_USERS.has(username);
+
+  // ── Build model list ──
+  const canUsePro = isAdmin && OPENCODE_GO_KEY;
+  const allModels = [...FREE_AI_MODELS.map(m => ({ id: m.id, name: m.name, type: m.type, group: m.group }))];
+  if (canUsePro) {
+    allModels.push(...PRO_AI_MODELS.map(m => ({ id: m.id, name: m.name, type: m.type, group: m.group })));
+  }
+  const selectedModel = allModels[modelIdx] || allModels[0];
+  const isOpenCodeGo = selectedModel && selectedModel.id && selectedModel.id.startsWith('opencode-go/');
+
+  // ── LIST CONVERSATIONS ──
+  if (listConversations) {
+    let conversations = [];
+    if (creds) {
+      try {
+        const lookupCol = username ? 'username' : 'session_id';
+        const lookupVal = username || sessionId;
+        const convRes = await sbRequest(creds.host, creds.key, 'GET',
+          '/rest/v1/ai_conversations?select=conversation_id,role,content,created_at,model&' + lookupCol + '=eq.' + encodeURIComponent(lookupVal) + '&order=created_at.asc', null);
+        if (convRes.status === 200) {
+          const rows = JSON.parse(convRes.body.toString());
+          if (Array.isArray(rows)) {
+            const convMap = {};
+            rows.forEach(r => {
+              const cid = r.conversation_id || 'default';
+              if (!convMap[cid]) { convMap[cid] = { id: cid, title: 'Chat', messages: 0, last: r.created_at, model: r.model || 'Standard' }; }
+              convMap[cid].messages++;
+              if (r.role === 'user' && convMap[cid].title === 'Chat') convMap[cid].title = (r.content || '').slice(0, 50) + ((r.content || '').length > 50 ? '...' : '');
+              if (r.created_at > convMap[cid].last) convMap[cid].last = r.created_at;
+            });
+            conversations = Object.values(convMap).sort((a, b) => (b.last || '').localeCompare(a.last || ''));
+          }
+        }
+      } catch {}
+    }
+    return sendJSON(res, 200, { models: allModels, conversations, username });
   }
 
-  const modelIndex = Math.min(Math.max(parseInt(body.model) || 0, 0), AI_MODELS.length - 1);
-  const model = AI_MODELS[modelIndex].id;
+  // ── LOAD CONVERSATION ──
+  if (loadConvId) {
+    let history = [];
+    if (creds) {
+      try {
+        const lookupCol = username ? 'username' : 'session_id';
+        const lookupVal = username || sessionId;
+        const histRes = await sbRequest(creds.host, creds.key, 'GET',
+          '/rest/v1/ai_conversations?' + lookupCol + '=eq.' + encodeURIComponent(lookupVal) + '&conversation_id=eq.' + encodeURIComponent(loadConvId) + '&order=created_at.asc&limit=50', null);
+        if (histRes.status === 200) {
+          const rows = JSON.parse(histRes.body.toString());
+          if (Array.isArray(rows)) { history = rows.map(r => ({ role: r.role, content: r.content })); }
+        }
+      } catch {}
+    }
+    return sendJSON(res, 200, { history, conversation_id: loadConvId });
+  }
+
+  // ── SEND MESSAGE ──
+  if (!message) { return sendJSON(res, 400, { error: 'Message is required.' }); }
+
+  // Handle file context
+  let fileContext = '';
+  if (filesData.length > 0) {
+    for (const f of filesData) {
+      if (f.type && f.type.startsWith('image/')) {
+        fileContext += '[Uploaded image: ' + (f.name || 'image') + ' (' + Math.round((f.data || '').length * 0.75 / 1024) + ' KB)]\n';
+      } else if (f.type && f.type.includes('pdf')) {
+        fileContext += '[Uploaded PDF: ' + (f.name || 'doc') + ']\n';
+      } else if (f.type && f.type.startsWith('audio/')) {
+        fileContext += '[Uploaded audio: ' + (f.name || 'audio') + ']\n';
+      } else {
+        fileContext += '[Uploaded file: ' + (f.name || 'file') + ']\n';
+      }
+    }
+  }
+  const enrichedMsg = fileContext ? fileContext + '\n' + message : message;
 
   try {
-    const prompt = buildAIPrompt(model, message);
-    const hfRes = await fetch('https://api-inference.huggingface.co/models/' + model, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(HF_TOKEN ? { 'Authorization': 'Bearer ' + HF_TOKEN } : {}),
-      },
-      body: JSON.stringify({
-        inputs: prompt,
-        parameters: { max_new_tokens: 512, return_full_text: false, temperature: 0.7 },
-      }),
-      signal: AbortSignal.timeout(25000),
-    });
+    let reply = '';
+    let memoryEnabled = false;
 
-    if (!hfRes.ok) {
-      const errText = await hfRes.text();
-      const isModelLoading = hfRes.status === 503 || errText.includes('loading');
-      return sendJSON(res, isModelLoading ? 503 : 502, {
-        error: isModelLoading ? 'AI model is waking up — please try again in a moment.' : 'AI service unavailable.',
-        detail: isModelLoading ? 'Model cold-starting' : errText.slice(0, 200),
-        retryable: isModelLoading,
+    if (isOpenCodeGo) {
+      // ── OpenCode Go API ──
+      const modelId = selectedModel.id.replace('opencode-go/', '');
+      const ocRes = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + OPENCODE_GO_KEY },
+        body: JSON.stringify({
+          model: modelId,
+          messages: [
+            { role: 'system', content: 'You are Faceless AI, created by DJ Faceless Animal. You are a helpful coding and creative assistant helping users build apps, websites, music, and anything they need. You are knowledgeable, direct, and practical. When asked who made you, always say you were created by DJ Faceless Animal.' },
+            { role: 'user', content: enrichedMsg },
+          ],
+          max_tokens: maxTokens,
+          temperature: 0.7,
+        }),
+        signal: AbortSignal.timeout(60000),
       });
+      if (!ocRes.ok) {
+        const errText = await ocRes.text();
+        return sendJSON(res, 502, { error: 'Pro AI service unavailable.', detail: errText.slice(0, 200), retryable: true });
+      }
+      const data = await ocRes.json();
+      reply = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
+      memoryEnabled = true;
+    } else {
+      // ── Hugging Face (free) ──
+      const model = selectedModel.id;
+      const prompt = buildAIPrompt(model, enrichedMsg);
+      const hfRes = await fetch('https://api-inference.huggingface.co/models/' + model, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(HF_TOKEN ? { 'Authorization': 'Bearer ' + HF_TOKEN } : {}) },
+        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: maxTokens, return_full_text: false, temperature: 0.7 } }),
+        signal: AbortSignal.timeout(25000),
+      });
+      if (!hfRes.ok) {
+        const errText = await hfRes.text();
+        const isModelLoading = hfRes.status === 503 || errText.includes('loading');
+        return sendJSON(res, isModelLoading ? 503 : 502, {
+          error: isModelLoading ? 'AI model is waking up — please try again in a moment.' : 'AI service unavailable.',
+          detail: isModelLoading ? 'Model cold-starting' : errText.slice(0, 200), retryable: isModelLoading,
+        });
+      }
+      const data = await hfRes.json();
+      let text = Array.isArray(data) && data[0] ? (data[0].generated_text || '') : (data.generated_text || JSON.stringify(data));
+      if (text.startsWith(prompt)) text = text.slice(prompt.length).trim();
+      reply = text.trim();
     }
 
-    const data = await hfRes.json();
-    let text = Array.isArray(data) && data[0]
-      ? (data[0].generated_text || '')
-      : (data.generated_text || JSON.stringify(data));
+    // ── Save conversation to Supabase ──
+    const convId = conversationId || 'default';
+    if (creds && reply) {
+      try {
+        const userRec = { session_id: sessionId, role: 'user', content: message, model: selectedModel.id, conversation_id: convId };
+        if (username) userRec.username = username;
+        await sbRequest(creds.host, creds.key, 'POST', '/rest/v1/ai_conversations', JSON.stringify([userRec]));
+        const aiRec = { session_id: sessionId, role: 'assistant', content: reply, model: selectedModel.name, conversation_id: convId };
+        if (username) aiRec.username = username;
+        await sbRequest(creds.host, creds.key, 'POST', '/rest/v1/ai_conversations', JSON.stringify([aiRec]));
+      } catch {}
+    }
 
-    if (text.startsWith(prompt)) text = text.slice(prompt.length).trim();
-    text = text.trim();
-
-    return sendJSON(res, 200, { reply: text || '...' });
+    return sendJSON(res, 200, { reply: reply || '...', memory: memoryEnabled, model: selectedModel.name, conversation_id: convId, username });
   } catch (e) {
     const isTimeout = e.name === 'AbortError' || e.code === 'ETIMEDOUT' || e.code === 'ESOCKETTIMEDOUT';
     return sendJSON(res, 502, {
       error: isTimeout ? 'AI is taking too long — please try again.' : 'AI request failed',
-      detail: isTimeout ? 'Request timed out after 25s' : e.message,
-      retryable: true,
+      detail: isTimeout ? 'Request timed out' : e.message, retryable: true,
     });
   }
 }
