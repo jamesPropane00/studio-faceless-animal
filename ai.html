@@ -288,6 +288,12 @@
     }
     .file-preview .file-chip .rm-file:hover { color: #f87171; }
 
+    .preview-btn {
+      display: inline-block; margin: 0.3rem 0 0.5rem; padding: 0.3rem 0.8rem;
+      border-radius: 8px; border: 1px solid var(--bright); background: rgba(167,139,250,0.1);
+      color: var(--bright); font-size: 0.75rem; font-weight: 600; cursor: pointer;
+    }
+    .preview-btn:hover { background: rgba(167,139,250,0.2); }
     .overlay { position: fixed; inset: 0; top: var(--nav-h, 72px); background: rgba(0,0,0,0.5); z-index: 199; display: none; }
     .overlay.open { display: block; }
   </style>
@@ -707,7 +713,11 @@
         body.max_tokens = parseInt(document.getElementById('maxTokens').value) || 1024;
         if (filesData.length > 0) body.files = filesData;
         if (currentUser && currentUser.username) body.username = currentUser.username;
-        if (localStorage.getItem('fas_agent_mode') === 'true') body.agent_mode = true;
+        if (localStorage.getItem('fas_agent_mode') === 'true') {
+          body.agent_mode = true;
+          const searchKey = localStorage.getItem('fas_search_api_key');
+          if (searchKey) body.search_api_key = searchKey;
+        }
         const res = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -872,9 +882,32 @@
     }
 
     function formatContent(text) {
-      return text.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-                 .replace(/`([^`]+)`/g, '<code>$1</code>')
-                 .replace(/\n/g, '<br/>');
+      let html = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+        const clean = escHtml(code);
+        const btn = lang === 'html' ? '<button class="preview-btn" onclick="previewHTML(this)" data-code="' + encodeURIComponent(code) + '">\u25B6 Preview</button>' : '';
+        return '<pre><code>' + clean + '</code></pre>' + btn;
+      });
+      return html.replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n/g, '<br/>');
+    }
+
+    function previewHTML(btn) {
+      let existing = document.getElementById('preview-overlay');
+      if (existing) existing.remove();
+      const code = decodeURIComponent(btn.dataset.code);
+      const overlay = document.createElement('div');
+      overlay.id = 'preview-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;';
+      const frame = document.createElement('iframe');
+      frame.style.cssText = 'width:90vw;height:85vh;border:none;border-radius:12px;background:#fff;box-shadow:0 24px 80px rgba(0,0,0,0.6);';
+      frame.srcdoc = code;
+      const close = document.createElement('button');
+      close.textContent = '\u2716';
+      close.style.cssText = 'position:absolute;top:1.5rem;right:1.5rem;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:1.5rem;width:44px;height:44px;border-radius:50%;cursor:pointer;z-index:100000;';
+      close.onclick = () => overlay.remove();
+      overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+      overlay.appendChild(frame);
+      overlay.appendChild(close);
+      document.body.appendChild(overlay);
     }
 
     function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

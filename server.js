@@ -1561,11 +1561,13 @@ const AGENT_TOOLS_FULL = [
   { type: 'function', function: { name: 'write_file', description: 'Write content to a file. Creates the file or overwrites if it exists. Use this to create new files or modify existing ones.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'File path relative to project root' }, content: { type: 'string', description: 'Full file content' } }, required: ['path', 'content'] } } },
   { type: 'function', function: { name: 'list_dir', description: 'List files and directories in a folder to explore the project structure.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'Directory path relative to project root, empty string for root' } }, required: ['path'] } } },
   { type: 'function', function: { name: 'execute_command', description: 'Run a shell command in the project directory. Use for npm, git, build tools, etc.', parameters: { type: 'object', properties: { command: { type: 'string', description: 'Shell command to execute' } }, required: ['command'] } } },
+  { type: 'function', function: { name: 'web_search', description: 'Search the web for current information, news, documentation, or anything online. Use this to find up-to-date answers, APIs, tutorials, and resources.', parameters: { type: 'object', properties: { query: { type: 'string', description: 'The search query' } }, required: ['query'] } } },
 ];
 
 const AGENT_TOOLS_LIMITED = [
   { type: 'function', function: { name: 'read_file', description: 'Read a file to help understand the project codebase. Can read HTML, JS, CSS, and text files.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'File path relative to project root' } }, required: ['path'] } } },
   { type: 'function', function: { name: 'list_dir', description: 'List files and directories to explore the project structure.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'Directory path relative to project root, empty string for root' } }, required: ['path'] } } },
+  { type: 'function', function: { name: 'web_search', description: 'Search the web to find answers, documentation, and resources.', parameters: { type: 'object', properties: { query: { type: 'string', description: 'The search query' } }, required: ['query'] } } },
 ];
 
 function sanitizePath(p, root) {
@@ -1608,6 +1610,32 @@ async function executeAgentTool(tc, root) {
           });
         });
       }
+      case 'web_search': {
+        const searxngUrl = process.env.SEARXNG_URL || '';
+        const searchApiKey = process.env.SEARCH_API_KEY || global.__SEARCH_API_KEY || '';
+        const searchEngine = process.env.SEARCH_ENGINE || 'duckduckgo';
+        const q = encodeURIComponent(args.query);
+        let results = '';
+        if (searxngUrl) {
+          try {
+            const sRes = await fetch(searxngUrl.replace(/\/+$/, '') + '/search?q=' + q + '&format=json&pageno=1&language=en-US', { signal: AbortSignal.timeout(10000) });
+            if (sRes.ok) { const d = await sRes.json(); results = (d.results || []).slice(0, 6).map(r => r.title + ': ' + r.url + '\n' + (r.content || '').slice(0, 300)).join('\n\n'); }
+          } catch {}
+        }
+        if (!results) {
+          try {
+            const dRes = await fetch('https://html.duckduckgo.com/html/?q=' + q, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(10000) });
+            const html = await dRes.text();
+            const links = html.match(/<a[^>]+class="result__a"[^>]*>([\s\S]*?)<\/a>/g) || [];
+            results = links.slice(0, 5).map((a, i) => {
+              const title = a.replace(/<[^>]*>/g, '').trim();
+              const urlMatch = a.match(/href="([^"]+)"/);
+              return (i + 1) + '. ' + title + (urlMatch ? ' (' + urlMatch[1] + ')' : '');
+            }).join('\n');
+          } catch {}
+        }
+        return { results: results || 'No results found.', query: args.query };
+      }
       default: return { error: 'Unknown tool: ' + name };
     }
   } catch (e) { return { error: e.message }; }
@@ -1620,8 +1648,8 @@ async function runAgentLoop(messages, tools, root, modelId, apiKey, maxIter) {
     const res = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-      body: JSON.stringify({ model: modelId, messages: msgs, tools, tool_choice: 'auto', max_tokens: 4096, temperature: 0.7 }),
-      signal: AbortSignal.timeout(60000),
+      body: JSON.stringify({ model: modelId, messages: msgs, tools, tool_choice: 'auto', max_tokens: 8192, temperature: 0.7 }),
+      signal: AbortSignal.timeout(90000),
     });
     if (!res.ok) { const t = await res.text(); throw new Error('API error: ' + t.slice(0, 200)); }
     const data = await res.json();
@@ -1672,6 +1700,7 @@ async function handleAIChat(req, res) {
   const maxTokens = parseInt(body.max_tokens) || 1024;
   const filesData = Array.isArray(body.files) ? body.files : [];
   const agentMode = body.agent_mode === true;
+  if (body.search_api_key) global.__SEARCH_API_KEY = body.search_api_key;
 
   // ── Check user — only admin users get pro models ──
   const isAdmin = username && ADMIN_USERS.has(username);
