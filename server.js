@@ -37,10 +37,12 @@ const https = require('https')
 const fs    = require('fs')
 const path  = require('path')
 const { createClient } = require('@supabase/supabase-js')
+const crypto = require('crypto')
 
 const PORT = parseInt(process.env.PORT || '3000', 10)
 const ROOT = __dirname
 const USE_TUNNEL = process.argv.includes('--tunnel')
+const USE_HTTPS = process.argv.includes('--https')
 
 const SUPABASE_URL = process.env.SUPABASE_URL || ''
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
@@ -3462,44 +3464,75 @@ async function runSignalCodeBackfillOnBoot() {
   }
 }
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`[FAS] Studio running → http://localhost:${PORT}`)
-  if (USE_TUNNEL) {
-    const { spawn } = require('child_process');
-    const tunnel = spawn('cloudflared', ['tunnel', '--url', 'http://localhost:' + PORT], { stdio: 'pipe' });
-    tunnel.stdout.on('data', (d) => {
-      const line = d.toString();
-      process.stdout.write('[FAS:tunnel] ' + line);
-      const m = line.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);
-      if (m) console.log('\n[FAS] 🔗 HTTPS tunnel ready: ' + m[0] + '\n[FAS] Use this URL for Google SSO to work!\n');
+function startServer(portToUse) {
+  if (USE_HTTPS) {
+    const { execSync } = require('child_process');
+    let certPem, keyPem;
+    const certPath = path.join(ROOT, '.localhost-cert.pem');
+    const keyPath = path.join(ROOT, '.localhost-key.pem');
+    try {
+      if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+        certPem = fs.readFileSync(certPath, 'utf8');
+        keyPem = fs.readFileSync(keyPath, 'utf8');
+      } else {
+        execSync('openssl req -x509 -newkey rsa:2048 -keyout "' + keyPath + '" -out "' + certPath + '" -days 365 -nodes -subj "/C=US/ST=State/L=City/O=Faceless Animal Studios/CN=localhost" 2>nul', { timeout: 10000 });
+        certPem = fs.readFileSync(certPath, 'utf8');
+        keyPem = fs.readFileSync(keyPath, 'utf8');
+      }
+    } catch {
+      console.warn('[FAS] openssl not available — install it or place .localhost-cert.pem / .localhost-key.pem in the project root');
+      process.exit(1);
+    }
+    const secureServer = https.createServer({ key: keyPem, cert: certPem }, (req, res) => server.emit('request', req, res));
+    secureServer.listen(portToUse, '0.0.0.0', () => {
+      console.log(`[FAS] Studio running → https://localhost:${portToUse} (self-signed — click "Advanced" then "Proceed" in browser)`)
+      console.log('[FAS] Google SSO will work on this URL since it\'s HTTPS.')
+      if (USE_TUNNEL) startTunnel();
+      runSignalCodeBackfillOnBoot()
     });
-    tunnel.stderr.on('data', (d) => process.stderr.write('[FAS:tunnel:err] ' + d.toString()));
-    tunnel.on('error', (e) => console.warn('[FAS] Tunnel unavailable — install cloudflared or remove --tunnel. Error:', e.message));
+    secureServer.on('error', (err) => handleServerError(err, portToUse));
+  } else {
+    const httpServer = server;
+    httpServer.listen(portToUse, '0.0.0.0', () => {
+      console.log(`[FAS] Studio running → http://localhost:${portToUse}`)
+      if (USE_TUNNEL) startTunnel();
+      runSignalCodeBackfillOnBoot()
+    });
+    httpServer.on('error', (err) => handleServerError(err, portToUse));
   }
-  runSignalCodeBackfillOnBoot()
-})
+}
 
-server.on('error', (err) => {
+function startTunnel() {
+  const { spawn } = require('child_process');
+  const tunnel = spawn('cloudflared', ['tunnel', '--url', (USE_HTTPS ? 'https' : 'http') + '://localhost:' + PORT], { stdio: 'pipe' });
+  tunnel.stdout.on('data', (d) => {
+    const line = d.toString();
+    process.stdout.write('[FAS:tunnel] ' + line);
+    const m = line.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);
+    if (m) console.log('\n[FAS] 🔗 HTTPS tunnel ready: ' + m[0] + '\n[FAS] Use this URL for Google SSO to work!\n');
+  });
+  tunnel.stderr.on('data', (d) => process.stderr.write('[FAS:tunnel:err] ' + d.toString()));
+  tunnel.on('error', (e) => console.warn('[FAS] Tunnel unavailable — install cloudflared or remove --tunnel. Error:', e.message));
+}
+
+function handleServerError(err, portToUse) {
   if (err.code === 'EADDRINUSE') {
-    console.warn(`[FAS] Port ${PORT} is in use — finding and killing the holder...`)
-    const killed = killPortHolder(PORT)
+    console.warn(`[FAS] Port ${portToUse} is in use — finding and killing the holder...`)
+    const killed = killPortHolder(portToUse)
     if (killed) {
-      console.log(`[FAS] Killed PID ${killed} holding port ${PORT}. Retrying in 1s...`)
-      setTimeout(() => {
-        server.listen(PORT, '0.0.0.0', () => {
-          console.log(`[FAS] Studio running → http://localhost:${PORT}`)
-          runSignalCodeBackfillOnBoot()
-        })
-      }, 1000)
+      console.log(`[FAS] Killed PID ${killed} holding port ${portToUse}. Retrying in 1s...`)
+      setTimeout(() => startServer(portToUse), 1000)
     } else {
-      console.error(`[FAS] Could not find the process holding port ${PORT}. Restart the workflow manually to clear it.`)
+      console.error(`[FAS] Could not find the process holding port ${portToUse}. Restart manually.`)
       process.exit(1)
     }
   } else {
     console.error('[FAS] Server error:', err.message)
     process.exit(1)
   }
-})
+}
+
+startServer(PORT);
 
 /**
  * Find and kill the process holding a TCP port using /proc/net/tcp.
