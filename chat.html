@@ -787,6 +787,8 @@
       var roomCreationLock = false;
       var lastRoomCreationTime = 0;
       var ROOM_CREATION_COOLDOWN = 6000;
+      var syncRunning = false;
+      var syncAbortController = null;
 
       function esc(value) {
         return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
@@ -1084,10 +1086,59 @@
             lastSyncToken = data.next_batch || lastSyncToken;
             hydrateRooms(data);
             setStatus('Rooms loaded.', 'good');
+            startSync();
           })
           .catch(function (err) {
             setStatus(err.message || 'Could not load rooms.', 'error');
           });
+      }
+
+      function startSync() {
+        if (syncRunning || !session || !session.access_token) return;
+        syncRunning = true;
+        setStatus('Connected', 'good');
+        syncLoop();
+      }
+
+      function syncLoop() {
+        if (!syncRunning || !session || !session.access_token) return;
+        var syncPath = '/sync?timeout=30000&limit=20';
+        if (lastSyncToken) syncPath += '&since=' + encodeURIComponent(lastSyncToken);
+        syncAbortController = new AbortController();
+        var headers = { Accept: 'application/json' };
+        if (session && session.access_token) headers.Authorization = 'Bearer ' + session.access_token;
+        fetch(matrixBase + '/_matrix/client/v3' + syncPath, { headers: headers, signal: syncAbortController.signal })
+          .then(function (res) { return res.text().then(function (text) { return text ? JSON.parse(text) : {}; }); })
+          .then(function (data) {
+            if (!syncRunning) return;
+            lastSyncToken = data.next_batch || lastSyncToken;
+            var joined = (data.rooms && data.rooms.join) || {};
+            var hasNewEvents = Object.keys(joined).some(function (roomId) {
+              var timeline = joined[roomId].timeline || {};
+              return (timeline.events && timeline.events.length > 0);
+            });
+            if (hasNewEvents) {
+              hydrateRooms(data);
+              if (currentRoomId && joined[currentRoomId]) {
+                openRoom(currentRoomId, false);
+              }
+            }
+            syncLoop();
+          })
+          .catch(function (err) {
+            if (!syncRunning) return;
+            if (err.name === 'AbortError') return;
+            setStatus('Reconnecting...', null);
+            setTimeout(syncLoop, 5000);
+          });
+      }
+
+      function stopSync() {
+        syncRunning = false;
+        if (syncAbortController) {
+          syncAbortController.abort();
+          syncAbortController = null;
+        }
       }
 
       function openRoom(roomId, useCached) {
@@ -1241,9 +1292,11 @@
       });
 
       $('matrix-logout')?.addEventListener('click', function () {
+        stopSync();
         matrixApi('/logout', { method: 'POST', body: JSON.stringify({}) }).catch(function () {}).finally(function () {
           rooms = [];
           currentRoomId = '';
+          lastSyncToken = '';
           saveMatrixSession(null);
           renderRooms();
           renderTimeline([]);
