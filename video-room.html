@@ -1430,6 +1430,17 @@
       if (empty) empty.remove();
       if (chat) chat.hidden = false;
 
+      // For DJ room, show the lobby iframe for chat (more reliable than direct Matrix)
+      if (mode === 'dj' && lobbyFrame) {
+        lobbyFrame.hidden = false;
+        lobbyFrame.style.display = 'block';
+        lobbyFrame.style.width = '100%';
+        lobbyFrame.style.height = 'min(40vh, 300px)';
+        lobbyFrame.style.borderTop = '1px solid rgba(255,255,255,0.1)';
+        lobbyFrame.style.marginTop = 'auto';
+        if (chat) chat.hidden = true;
+      }
+
       var panel = document.createElement('section');
       panel.className = 'camera-panel';
       panel.setAttribute('aria-label', 'Camera panel');
@@ -1462,7 +1473,7 @@
           + '</div>'
           + '<div class="dj-controls">'
           + '<button class="dj-btn dj-btn--load" type="button">+ Add Tracks</button>'
-          + '<button class="dj-btn" type="button">Play</button>'
+          + '<button class="dj-btn dj-btn--play" type="button">Play</button>'
           + '<input class="dj-slider" type="range" min="0" max="100" value="100" aria-label="' + name + ' volume">'
           + '</div>'
           + '<div class="dj-queue" style="max-height:80px;overflow-y:auto;border-top:1px solid rgba(255,255,255,0.08);padding:0.25rem 0.35rem;font-size:0.68rem;color:var(--dim);"></div>';
