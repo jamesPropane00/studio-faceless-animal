@@ -167,23 +167,20 @@ export function initRadioChat(config) {
 
   if (!feedEl) return;
 
-  function buildMsgEl(username, message, isSelf, avatarHint) {
-    const av = avatarHint || initials(username);
-    const el = document.createElement('div');
-    el.className = cssPrefix + '-msg' + (isSelf ? ' ' + cssPrefix + '-msg--self' : '');
-    el.innerHTML =
-      `<div class="${cssPrefix}-avatar" aria-hidden="true">${esc(av)}</div>` +
-      `<div class="${cssPrefix}-msg-body">` +
-        `<span class="${cssPrefix}-handle">${esc(username)}</span>` +
-        `<p class="${cssPrefix}-msg-text">${esc(message)}</p>` +
-      `</div>`;
+  function buildMsgEl(username, message, isSelf) {
+    const el = document.createElement('article');
+    el.className = 'matrix-message' + (isSelf ? ' is-me' : '');
+    el.innerHTML = 
+      '<strong>' + esc(username) + '</strong>' +
+      '<time>' + new Date().toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'}) + '</time>' +
+      '<p>' + esc(message) + '</p>';
     return el;
   }
 
   function buildSystemEl(text) {
-    const el = document.createElement('div');
-    el.className = cssPrefix + '-msg ' + cssPrefix + '-msg--system';
-    el.innerHTML = `<p>${esc(text)}</p>`;
+    const el = document.createElement('p');
+    el.className = 'matrix-empty';
+    el.textContent = text;
     return el;
   }
 
@@ -480,6 +477,15 @@ export function initRadioChat(config) {
       if (inputEl.value.length > MAX_MSG_LEN) {
         inputEl.value = inputEl.value.slice(0, MAX_MSG_LEN);
       }
+    });
+  }
+
+  // Also handle form submit if the compose area is a form
+  var composeForm = inputEl ? inputEl.closest('form') : null;
+  if (composeForm) {
+    composeForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      sendMessage();
     });
   }
 

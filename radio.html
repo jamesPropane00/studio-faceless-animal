@@ -1425,6 +1425,169 @@
     .rp-phase-note a { color: var(--purple-bright); text-decoration: none; }
     .rp-phase-note a:hover { text-decoration: underline; }
 
+    /* ── Matrix Chat Styles ── */
+    .matrix-timeline {
+      min-height: 280px;
+      max-height: 420px;
+      overflow: auto;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px 12px 0 0;
+      background: rgba(0,0,0,0.22);
+      padding: 0.7rem;
+      display: grid;
+      align-content: start;
+      gap: 0.55rem;
+      scroll-behavior: smooth;
+    }
+    .matrix-timeline::-webkit-scrollbar { width: 4px; }
+    .matrix-timeline::-webkit-scrollbar-track { background: transparent; }
+    .matrix-timeline::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 2px; }
+
+    .matrix-message {
+      max-width: 88%;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.055);
+      padding: 0.58rem 0.65rem;
+      animation: matrix-fade-in 0.2s ease;
+    }
+    @keyframes matrix-fade-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .matrix-message.is-me {
+      justify-self: end;
+      border-color: rgba(216,182,111,0.3);
+      background: rgba(216,182,111,0.12);
+    }
+    .matrix-message strong,
+    .matrix-message time {
+      display: block;
+      color: var(--text-3);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .matrix-message.is-me strong {
+      color: var(--gold);
+    }
+    .matrix-message time {
+      font-weight: 500;
+      margin-bottom: 0.15rem;
+    }
+    .matrix-message p {
+      margin: 0.2rem 0 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      line-height: 1.45;
+      font-size: 0.875rem;
+      color: var(--text-2);
+    }
+    .matrix-message.is-me p {
+      color: var(--text);
+    }
+
+    .matrix-empty {
+      text-align: center;
+      color: var(--text-3);
+      font-size: 0.75rem;
+      padding: 2rem 1rem;
+      margin: 0;
+      letter-spacing: 0.04em;
+    }
+
+    .matrix-compose {
+      display: flex;
+      position: relative;
+      z-index: 10030;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.25);
+    }
+    .matrix-compose input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 0.9rem 1rem;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: var(--font-body);
+      outline: none;
+      min-width: 0;
+    }
+    .matrix-compose input::placeholder { color: var(--text-3); }
+    .matrix-compose input:focus { background: rgba(139,92,246,0.05); }
+    .matrix-compose button {
+      flex-shrink: 0;
+      width: 52px;
+      min-height: 44px;
+      touch-action: manipulation;
+      background: var(--purple);
+      border: none;
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-body);
+    }
+    .matrix-compose button:hover { background: var(--purple-bright); }
+    .matrix-compose button:active { transform: scale(0.94); }
+
+    .matrix-status {
+      font-size: 0.66rem;
+      color: var(--text-3);
+      text-align: center;
+      padding: 0.6rem 0 0;
+      letter-spacing: 0.04em;
+    }
+    .matrix-status.is-error { color: #f87171; }
+    .matrix-status.is-good { color: #4ade80; }
+
+    /* ── Matrix Chat Responsive ── */
+    @media (max-width: 560px) {
+      .matrix-timeline {
+        min-height: 220px;
+        max-height: 50vh;
+        padding: 0.5rem;
+        gap: 0.45rem;
+      }
+      .matrix-message {
+        max-width: 92%;
+        padding: 0.5rem 0.55rem;
+      }
+      .matrix-message strong,
+      .matrix-message time {
+        font-size: 0.62rem;
+      }
+      .matrix-message p {
+        font-size: 0.82rem;
+      }
+      .matrix-compose input {
+        padding: 0.75rem 0.85rem;
+        font-size: 0.85rem;
+      }
+      .matrix-compose button {
+        width: 44px;
+        min-height: 40px;
+        font-size: 1rem;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .matrix-timeline {
+        min-height: 180px;
+        max-height: 45vh;
+      }
+      .matrix-message {
+        max-width: 95%;
+      }
+    }
+
     /* ── Modal ── */
     .rp-modal-overlay {
       position: fixed;
@@ -2182,44 +2345,8 @@
       <div class="rp-user-list" id="rp-user-list" aria-label="Users in this chat room"></div>
 
       <!-- Chat feed -->
-      <div class="rp-chat-feed" id="rp-chat-feed" role="log" aria-label="Live chat" aria-live="polite">
-
-        <div class="rp-msg">
-          <div class="rp-avatar" aria-hidden="true">FA</div>
-          <div class="rp-msg-body">
-            <span class="rp-handle">FacelessFanz1</span>
-            <p class="rp-msg-text">Yo this track go hard 🔥</p>
-          </div>
-        </div>
-
-        <div class="rp-msg">
-          <div class="rp-avatar" aria-hidden="true">LS</div>
-          <div class="rp-msg-body">
-            <span class="rp-handle">LoverOfSoundz</span>
-            <p class="rp-msg-text">This mix is fire — Faceless never misses</p>
-          </div>
-        </div>
-
-        <div class="rp-msg">
-          <div class="rp-avatar" aria-hidden="true">MI</div>
-          <div class="rp-msg-body">
-            <span class="rp-handle">mfiniterlames</span>
-            <p class="rp-msg-text">Tracklist looking sick, can't wait for the uploads 🎧</p>
-          </div>
-        </div>
-
-        <div class="rp-msg">
-          <div class="rp-avatar" aria-hidden="true">NG</div>
-          <div class="rp-msg-body">
-            <span class="rp-handle">NightGroover</span>
-            <p class="rp-msg-text">When's the next drop? Need this in my rotation</p>
-          </div>
-        </div>
-
-        <div class="rp-msg rp-msg--system">
-          <p>Room is open. Move with the mix.</p>
-        </div>
-
+      <div class="matrix-timeline" id="rp-chat-feed" role="log" aria-label="Live chat" aria-live="polite">
+        <p class="matrix-empty">Room is open. Move with the mix.</p>
       </div>
 
       <!-- Chat gate banner — shown when no username in session -->
@@ -2227,30 +2354,29 @@
         <div class="rp-gate-inner">
           <span class="rp-gate-icon" aria-hidden="true">◎</span>
           <p class="rp-gate-title">Who Are You?</p>
-          <p class="rp-gate-sub">Set a handle to jump into the room — no account required.</p>
+          <p class="rp-gate-sub">Sign in to Signal Rooms or set a handle to jump into the chat.</p>
           <div class="rp-gate-actions">
-            <button class="btn btn-primary" id="rp-set-handle-btn" style="font-size:0.85rem;padding:0.6rem 1.25rem;">Set Your Handle →</button>
-            <a href="start.html?plan=free" class="btn btn-ghost" style="font-size:0.85rem;padding:0.6rem 1.25rem;">Get a Free Page</a>
+            <a href="chat.html" class="btn btn-primary" style="font-size:0.85rem;padding:0.6rem 1.25rem;">Enter Signal Rooms →</a>
+            <button class="btn btn-ghost" id="rp-set-handle-btn" style="font-size:0.85rem;padding:0.6rem 1.25rem;">Set Handle Instead</button>
           </div>
-          <p style="font-size:0.7rem;color:var(--text-3);margin:0;">Already have an account? <a href="login.html?redirect=radio.html" style="color:var(--gold-dim);text-decoration:underline;">Sign in →</a></p>
+          <p style="font-size:0.7rem;color:var(--text-3);margin:0;">Already signed in to Signal Rooms? <a href="javascript:void(0)" onclick="window.location.reload()" style="color:var(--gold-dim);text-decoration:underline;">Refresh page →</a></p>
         </div>
       </div>
 
       <!-- Input bar -->
-      <div class="rp-input-wrap" id="rp-input-wrap">
+      <form class="matrix-compose" id="matrix-compose" style="display:none;">
         <input
           type="text"
-          class="rp-input"
           id="rp-chat-input"
-          placeholder="Move with the mix…"
+          placeholder="Drop a signal…"
           maxlength="300"
           autocomplete="off"
           aria-label="Chat message"
         />
-        <button class="rp-send" id="rp-send-btn" aria-label="Send message">→</button>
-      </div>
+        <button type="button" id="rp-send-btn" aria-label="Send message">→</button>
+      </form>
 
-      <p class="rp-phase-note">Phase 1 · Live backend launching soon · <a href="start.html">Get early access</a></p>
+      <p class="rp-phase-note">Powered by Signal Rooms · <a href="chat.html">Open full chat →</a></p>
 
     </div>
 
@@ -2387,7 +2513,22 @@
       }
 
       var chatGate    = document.getElementById('rp-chat-gate');
-      var inputWrap   = document.getElementById('rp-input-wrap');
+      var inputWrap   = document.getElementById('matrix-compose');
+
+      function readMatrixSession() {
+        try { return JSON.parse(localStorage.getItem('fas_matrix_session') || 'null'); }
+        catch (_) { return null; }
+      }
+
+      function getDisplayName() {
+        var siteSession = getSession();
+        if (siteSession && siteSession.username) return siteSession.username;
+        var matrixSession = readMatrixSession();
+        if (matrixSession && matrixSession.user_id) {
+          return matrixSession.user_id.replace(/^@/, '').split(':')[0];
+        }
+        return null;
+      }
 
       function showUsernameBar(username) {
         var existingBar = document.getElementById('rp-username-bar');
@@ -2410,6 +2551,7 @@
         if (signoutBtn) {
           signoutBtn.addEventListener('click', function() {
             clearSession();
+            localStorage.removeItem('fas_matrix_session');
             window.location.reload();
           });
           signoutBtn.addEventListener('keydown', function(e) {
@@ -2426,10 +2568,12 @@
 
       function initChatGate() {
         var session = getSession();
-        if (session && session.username) {
-          activateChat(session.username);
+        var matrixSession = readMatrixSession();
+        var displayName = getDisplayName();
+
+        if (displayName) {
+          activateChat(displayName);
         } else {
-          /* Not logged in — show in-page gate form, hide input */
           if (chatGate)  chatGate.hidden = false;
           if (inputWrap) inputWrap.style.display = 'none';
         }
