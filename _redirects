@@ -19,56 +19,6 @@
 /creator/*   /templates/creator.html   200
 /business/*  /templates/business.html  200
 
-# ── CLEAN URL REWRITES FOR ROOT-LEVEL PAGES ──────────────────────
-# These allow /video-room to serve /video-room.html without the extension
-
-/about           /about.html           200
-/admin-radio     /admin-radio.html     200
-/ai              /ai.html              200
-/apps            /apps.html            200
-/audio-room      /audio-room.html      200
-/chat            /chat.html            200
-/create          /create.html          200
-/dashboard       /dashboard.html       200
-/directory       /directory.html       200
-/drops           /drops.html           200
-/faq             /faq.html             200
-/free            /free.html            200
-/games           /games.html           200
-/game-beat       /game-beat.html       200
-/game-quick      /game-quick.html      200
-/game-rush       /game-rush.html       200
-/game-word       /game-word.html       200
-/landingpage     /landingpage.html     200
-/login           /login.html           200
-/messages        /messages.html        200
-/miner           /miner.html           200
-/music           /music.html           200
-/my-media        /my-media.html        200
-/my-page         /my-page.html         200
-/my-pages        /my-pages.html        200
-/neon-dreams     /neon-dreams.html     200
-/network         /network.html         200
-/news            /news.html            200
-/newsletter-admin /newsletter-admin.html 200
-/paid            /paid.html            200
-/phone           /phone.html           200
-/presence        /presence.html        200
-/pricing         /pricing.html         200
-/pulse           /pulse.html           200
-/quick-template  /quick-template.html  200
-/radio           /radio.html           200
-/radio-original  /radio-original.html  200
-/services        /services.html        200
-/start           /start.html           200
-/storage         /storage.html         200
-/store           /store.html           200
-/supabase-setup  /supabase-setup.html  200
-/thankyou        /thankyou.html        200
-/tv              /tv.html              200
-/video-room      /video-room.html      200
-/wallet          /wallet.html          200
-
 # ── DOMAIN ALIASES ─────────────────────────────────────────────────
 # djfacelessanimal.com → DJ Faceless Animal artist page
 
