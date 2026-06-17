@@ -1556,11 +1556,16 @@ const PAID_PLANS = new Set(['access', 'starter', 'pro', 'premium']);
 const ADMIN_USERS = new Set(['jamespropane00', 'jdot00']);
 
 // ── AGENT TOOLS ────────────────────────────────────────────────────────
-const AGENT_TOOLS = [
+const AGENT_TOOLS_FULL = [
   { type: 'function', function: { name: 'read_file', description: 'Read a file from the project. Use this to read code, configs, or any text file.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'File path relative to project root, e.g. server.js or src/index.js' } }, required: ['path'] } } },
   { type: 'function', function: { name: 'write_file', description: 'Write content to a file. Creates the file or overwrites if it exists. Use this to create new files or modify existing ones.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'File path relative to project root' }, content: { type: 'string', description: 'Full file content' } }, required: ['path', 'content'] } } },
   { type: 'function', function: { name: 'list_dir', description: 'List files and directories in a folder to explore the project structure.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'Directory path relative to project root, empty string for root' } }, required: ['path'] } } },
   { type: 'function', function: { name: 'execute_command', description: 'Run a shell command in the project directory. Use for npm, git, build tools, etc.', parameters: { type: 'object', properties: { command: { type: 'string', description: 'Shell command to execute' } }, required: ['command'] } } },
+];
+
+const AGENT_TOOLS_LIMITED = [
+  { type: 'function', function: { name: 'read_file', description: 'Read a file to help understand the project codebase. Can read HTML, JS, CSS, and text files.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'File path relative to project root' } }, required: ['path'] } } },
+  { type: 'function', function: { name: 'list_dir', description: 'List files and directories to explore the project structure.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'Directory path relative to project root, empty string for root' } }, required: ['path'] } } },
 ];
 
 function sanitizePath(p, root) {
@@ -1756,8 +1761,9 @@ async function handleAIChat(req, res) {
       const systemMsg = 'You are Faceless AI, created by DJ Faceless Animal. You are a helpful coding and creative assistant helping users build apps, websites, music, and anything they need. You are knowledgeable, direct, and practical. When asked who made you, always say you were created by DJ Faceless Animal.';
       const baseMessages = [{ role: 'system', content: systemMsg }, ...history.map(h => ({ role: h.role, content: h.content })), { role: 'user', content: enrichedMsg }];
 
-      if (agentMode && isAdmin) {
-        const agentResult = await runAgentLoop(baseMessages, AGENT_TOOLS, ROOT, modelId, OPENCODE_GO_KEY, 10);
+      if (agentMode) {
+        const tools = isAdmin ? AGENT_TOOLS_FULL : AGENT_TOOLS_LIMITED;
+        const agentResult = await runAgentLoop(baseMessages, tools, ROOT, modelId, OPENCODE_GO_KEY, isAdmin ? 10 : 5);
         reply = agentResult.reply;
         toolLog = agentResult.log;
         memoryEnabled = true;
@@ -1775,8 +1781,25 @@ async function handleAIChat(req, res) {
       }
     } else {
       // ── Hugging Face (free) ──
+      let agentContext = '';
+      if (agentMode && !isAdmin) {
+        try {
+          const rootFiles = fs.readdirSync(ROOT).slice(0, 30);
+          agentContext = '[Project root contains: ' + rootFiles.filter(f => !f.startsWith('.') && f !== 'node_modules').join(', ') + ']\n';
+          const match = message.match(/([\w\-.]+\.\w+)/);
+          if (match) {
+            const foundFile = match[1];
+            const fp = path.resolve(ROOT, foundFile);
+            if (fp.startsWith(ROOT) && fs.existsSync(fp) && !fp.includes('node_modules') && !fp.includes('.git')) {
+              const content = fs.readFileSync(fp, 'utf-8').slice(0, 3000);
+              agentContext += '[Reading ' + foundFile + ':\n' + content + '\n(truncated if over 3KB)]\n';
+            }
+          }
+        } catch {}
+      }
+      const finalMsg = agentContext ? agentContext + enrichedMsg : enrichedMsg;
       const model = selectedModel.id;
-      const prompt = buildAIPrompt(model, enrichedMsg);
+      const prompt = buildAIPrompt(model, finalMsg);
       const hfRes = await fetch('https://api-inference.huggingface.co/models/' + model, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(HF_TOKEN ? { 'Authorization': 'Bearer ' + HF_TOKEN } : {}) },

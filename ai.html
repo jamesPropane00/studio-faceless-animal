@@ -368,9 +368,16 @@
       currentUser = getFasUser();
       const loggedIn = currentUser && currentUser.username;
       const isAdmin = loggedIn && ADMIN_USERS.includes(currentUser.username);
-      document.getElementById('agentModeGroup').style.display = isAdmin ? 'block' : 'none';
-      if (isAdmin && localStorage.getItem('fas_agent_mode') === 'true') {
+      document.getElementById('agentModeGroup').style.display = loggedIn ? 'block' : 'none';
+      if (localStorage.getItem('fas_agent_mode') === 'true') {
         document.getElementById('agentModeToggle').classList.add('on');
+      }
+      // Label differently for users vs admin
+      const label = document.querySelector('#agentModeGroup label');
+      if (label) {
+        label.innerHTML = isAdmin
+          ? '⚡ Agent Mode <span style="font-size:0.68rem;color:var(--dim);font-weight:400;">(read/write/exec)</span>'
+          : '🔍 Explore Mode <span style="font-size:0.68rem;color:var(--dim);font-weight:400;">(ask about the codebase)</span>';
       }
       document.getElementById('loginPrompt').style.display = loggedIn ? 'none' : 'block';
       document.getElementById('convItems').style.display = loggedIn ? 'block' : 'none';
