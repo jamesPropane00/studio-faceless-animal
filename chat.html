@@ -784,6 +784,9 @@
       var rooms = [];
       var currentRoomId = '';
       var lastSyncToken = '';
+      var roomCreationLock = false;
+      var lastRoomCreationTime = 0;
+      var ROOM_CREATION_COOLDOWN = 6000;
 
       function esc(value) {
         return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
@@ -887,7 +890,12 @@
           .then(function (res) {
             return res.text().then(function (text) {
               var data = text ? JSON.parse(text) : {};
-              if (!res.ok) throw new Error(data.error || data.errcode || ('Room request failed: ' + res.status));
+              if (!res.ok) {
+                var err = new Error(data.error || data.errcode || ('Room request failed: ' + res.status));
+                err.status = res.status;
+                err.retryAfterMs = data.retry_after_ms || 0;
+                throw err;
+              }
               return data;
             });
           });
@@ -1146,18 +1154,34 @@
       function createMatrixRoom(options, retries) {
         retries = retries || 3;
         if (!ensureMatrixSession()) return Promise.resolve(null);
+        if (roomCreationLock) {
+          setStatus('A room is already being created. Please wait...', null);
+          return Promise.resolve(null);
+        }
+        var now = Date.now();
+        if (lastRoomCreationTime > 0 && now - lastRoomCreationTime < ROOM_CREATION_COOLDOWN) {
+          var waitMs = ROOM_CREATION_COOLDOWN - (now - lastRoomCreationTime);
+          setStatus('Slow down — creating another room in ' + Math.ceil(waitMs / 1000) + 's...', null);
+          return new Promise(function (resolve) { setTimeout(resolve, waitMs); }).then(function () {
+            return createMatrixRoom(options, retries);
+          });
+        }
+        roomCreationLock = true;
+        lastRoomCreationTime = Date.now();
         return matrixApi('/createRoom', {
           method: 'POST',
           body: JSON.stringify(options)
         }).then(function (data) {
+          roomCreationLock = false;
           if (!data || !data.room_id) throw new Error('Empty room_id');
           currentRoomId = data.room_id;
           return loadRooms().then(function () { return data.room_id; });
         }).catch(function (err) {
-          var isRateLimit = err && (String(err.message || '').indexOf('429') !== -1 || String(err.message || '').indexOf('rate') !== -1 || String(err.message || '').indexOf('too many') !== -1);
+          roomCreationLock = false;
+          var isRateLimit = err && (err.status === 429 || /429|rate|too many|limit_exceeded/i.test(String(err.message || '')));
           if (isRateLimit && retries > 0) {
-            var delay = (4 - retries) * 3000;
-            setStatus('Room creation rate-limited, retrying in ' + (delay / 1000) + 's...', null);
+            var delay = Math.max(err.retryAfterMs || 0, (4 - retries) * 5000);
+            setStatus('Room creation rate-limited, retrying in ' + Math.ceil(delay / 1000) + 's...', null);
             return new Promise(function (resolve) { setTimeout(resolve, delay); }).then(function () {
               return createMatrixRoom(options, retries - 1);
             });
