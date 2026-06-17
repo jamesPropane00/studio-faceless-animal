@@ -1209,6 +1209,9 @@
       var heartbeatTimer = null;
       var matrixSession = readMatrixSession();
       var siteSession = readSiteSession();
+      var videoSyncRunning = false;
+      var videoSyncAbortController = null;
+      var videoLastSyncToken = '';
 
       if (shell) {
         shell.classList.toggle('is-solo', mode === 'solo');
@@ -1298,6 +1301,7 @@
       }
 
       function cleanupOwnedRoom() {
+        stopVideoSync();
         if (!room || !matrixSession || !matrixSession.access_token || !isRoomOwner()) return;
         if (heartbeatTimer) clearInterval(heartbeatTimer);
         removeCameraRoomMeta();
@@ -1389,10 +1393,59 @@
             applyPulseVisualEvents(events);
             renderChat(events);
             setChatStatus(siteUsername() ? '@' + siteUsername() : 'Room chat live');
+            startVideoSync();
           })
           .catch(function (err) {
             setChatStatus(err && err.message || 'Signal Room chat is not connected yet.');
             if (mode === 'dj') renderChat([]);
+          });
+      }
+
+      function startVideoSync() {
+        if (videoSyncRunning || !matrixSession || !matrixSession.access_token || !room) return;
+        videoSyncRunning = true;
+        videoSyncLoop();
+      }
+
+      function stopVideoSync() {
+        videoSyncRunning = false;
+        if (videoSyncAbortController) {
+          videoSyncAbortController.abort();
+          videoSyncAbortController = null;
+        }
+      }
+
+      function videoSyncLoop() {
+        if (!videoSyncRunning || !matrixSession || !matrixSession.access_token || !room) return;
+        var syncPath = '/sync?timeout=30000&limit=20';
+        if (videoLastSyncToken) syncPath += '&since=' + encodeURIComponent(videoLastSyncToken);
+        videoSyncAbortController = new AbortController();
+        var headers = { Accept: 'application/json', Authorization: 'Bearer ' + matrixSession.access_token };
+        fetch(matrixBase + '/_matrix/client/v3' + syncPath, { headers: headers, signal: videoSyncAbortController.signal })
+          .then(function (res) { return res.text().then(function (text) { return text ? JSON.parse(text) : {}; }); })
+          .then(function (data) {
+            if (!videoSyncRunning) return;
+            videoLastSyncToken = data.next_batch || videoLastSyncToken;
+            var joined = (data.rooms && data.rooms.join) || {};
+            var roomData = joined[room];
+            if (roomData) {
+              var timeline = roomData.timeline || {};
+              if (timeline.events && timeline.events.length > 0) {
+                matrixApi('/rooms/' + encodeURIComponent(room) + '/messages?dir=b&limit=30')
+                  .then(function (msgData) {
+                    var events = (msgData.chunk || []).reverse();
+                    applyPulseVisualEvents(events);
+                    renderChat(events);
+                  })
+                  .catch(function () {});
+              }
+            }
+            videoSyncLoop();
+          })
+          .catch(function (err) {
+            if (!videoSyncRunning) return;
+            if (err.name === 'AbortError') return;
+            setTimeout(videoSyncLoop, 5000);
           });
       }
 
@@ -2073,9 +2126,6 @@
       }
 
       loadChat();
-      if (mode === 'dj') {
-        djVisualPollTimer = setInterval(loadChat, 5000);
-      }
       chatForm?.addEventListener('submit', function (event) {
         event.preventDefault();
         var text = chatInput ? chatInput.value.trim() : '';
