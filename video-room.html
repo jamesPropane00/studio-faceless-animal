@@ -484,6 +484,8 @@
       text-transform: uppercase;
     }
 
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
     .dj-deck {
       min-width: 0;
       display: grid;
@@ -499,6 +501,18 @@
     .dj-deck.is-playing {
       border-color: rgba(57,255,136,0.34);
       box-shadow: 0 0 26px rgba(57,255,136,0.1);
+    }
+
+    .dj-deck.is-playing .dj-platter {
+      animation: spin 2s linear infinite;
+    }
+
+    .dj-deck.is-scratching .dj-platter {
+      animation: none;
+      cursor: grab;
+    }
+    .dj-deck.is-scratching .dj-platter:active {
+      cursor: grabbing;
     }
 
     .dj-deck strong {
@@ -1442,14 +1456,16 @@
           + '</div>'
           + '</div>'
           + '<div class="dj-controls">'
-          + '<button class="dj-btn dj-btn--load" type="button">Load</button>'
+          + '<button class="dj-btn dj-btn--load" type="button">+ Add Tracks</button>'
           + '<button class="dj-btn" type="button">Play</button>'
           + '<input class="dj-slider" type="range" min="0" max="100" value="100" aria-label="' + name + ' volume">'
-          + '</div>';
+          + '</div>'
+          + '<div class="dj-queue" style="max-height:80px;overflow-y:auto;border-top:1px solid rgba(255,255,255,0.08);padding:0.25rem 0.35rem;font-size:0.68rem;color:var(--dim);"></div>';
 
         var fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = 'audio/*';
+        fileInput.multiple = true;
         fileInput.hidden = true;
         var audio = document.createElement('audio');
         audio.preload = 'metadata';
@@ -1458,30 +1474,111 @@
         deck.appendChild(audio);
 
         var label = deck.querySelector('.dj-track-name');
+        var queueEl = deck.querySelector('.dj-queue');
         var loadBtn = deck.querySelector('.dj-btn--load');
         var playBtn = deck.querySelectorAll('.dj-btn')[1];
         var volume = deck.querySelector('.dj-slider');
+        var trackQueue = [];
+        var queueIndex = -1;
+
+        function renderQueue() {
+          queueEl.innerHTML = trackQueue.length ? trackQueue.map(function (t, i) {
+            return '<div style="display:flex;justify-content:space-between;gap:0.3rem;' + (i === queueIndex ? 'color:var(--bright);font-weight:600;' : '') + '"><span>' + esc(t.name) + '</span><span style="color:var(--dim);font-size:0.62rem;">' + (i === queueIndex ? '\u25B6 Now' : '') + '</span></div>';
+          }).join('') : 'No tracks loaded';
+        }
+
+        function playIndex(i) {
+          if (i < 0 || i >= trackQueue.length) return;
+          queueIndex = i;
+          if (audio.src) URL.revokeObjectURL(audio.src);
+          audio.src = URL.createObjectURL(trackQueue[i].blob);
+          label.textContent = trackQueue[i].name;
+          renderQueue();
+          audio.play().then(function () {
+            playBtn.textContent = 'Pause';
+            deck.classList.add('is-playing');
+            deck.classList.remove('is-scratching');
+            connectDjDeck(deckState);
+            updateDjMix();
+          }).catch(function (err) {
+            setChatStatus(err && err.message ? err.message : 'Could not play track.');
+          });
+        }
+
+        // ── Scratch on platter ──
+        var platter = deck.querySelector('.dj-platter');
+        var scratchCtx = null;
+        function initScratch() {
+          if (!scratchCtx) scratchCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (scratchCtx.state === 'suspended') scratchCtx.resume();
+          var bufSize = scratchCtx.sampleRate * 0.05;
+          var buf = scratchCtx.createBuffer(1, bufSize, scratchCtx.sampleRate);
+          var data = buf.getChannelData(0);
+          for (var i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSize, 3);
+          var src = scratchCtx.createBufferSource();
+          src.buffer = buf;
+          var gain = scratchCtx.createGain();
+          gain.gain.value = 0.3;
+          src.connect(gain);
+          gain.connect(scratchCtx.destination);
+          src.start();
+        }
+        platter.addEventListener('mousedown', function (e) {
+          if (!trackQueue.length) return;
+          deck.classList.add('is-scratching');
+          initScratch();
+          audio.playbackRate = 0.3;
+        });
+        platter.addEventListener('mouseup', function () {
+          if (!trackQueue.length) return;
+          deck.classList.remove('is-scratching');
+          audio.playbackRate = 1.0;
+          initScratch();
+        });
+        platter.addEventListener('mouseleave', function () {
+          deck.classList.remove('is-scratching');
+          if (audio.src) audio.playbackRate = 1.0;
+        });
+        // Touch support
+        platter.addEventListener('touchstart', function (e) {
+          if (!trackQueue.length) return;
+          deck.classList.add('is-scratching');
+          initScratch();
+          audio.playbackRate = 0.3;
+        }, { passive: true });
+        platter.addEventListener('touchend', function () {
+          if (!trackQueue.length) return;
+          deck.classList.remove('is-scratching');
+          audio.playbackRate = 1.0;
+          initScratch();
+        });
 
         loadBtn.addEventListener('click', function () {
           fileInput.click();
         });
 
         fileInput.addEventListener('change', function () {
-          var file = fileInput.files && fileInput.files[0];
-          if (!file) return;
-          if (audio.src) URL.revokeObjectURL(audio.src);
-          audio.src = URL.createObjectURL(file);
-          label.textContent = file.name;
-          playBtn.textContent = 'Play';
-          connectDjDeck(deckState);
-          updateDjMix();
+          var files = Array.from(fileInput.files || []);
+          if (!files.length) return;
+          files.forEach(function (f) {
+            trackQueue.push({ name: f.name, blob: f });
+          });
+          fileInput.value = '';
+          if (queueIndex === -1) {
+            queueIndex = 0;
+            playIndex(0);
+          } else {
+            renderQueue();
+            if (!audio.src || audio.paused) playIndex(queueIndex);
+          }
         });
 
         playBtn.addEventListener('click', function () {
-          if (!audio.src) {
+          if (!trackQueue.length) {
             fileInput.click();
             return;
           }
+          if (queueIndex === -1) { playIndex(0); return; }
           if (audio.paused) {
             audio.play().then(function () {
               playBtn.textContent = 'Pause';
@@ -1492,6 +1589,7 @@
           } else {
             audio.pause();
             playBtn.textContent = 'Play';
+            deck.classList.remove('is-playing');
           }
         });
 
@@ -1507,6 +1605,15 @@
 
         audio.addEventListener('ended', function () {
           deck.classList.remove('is-playing');
+          playBtn.textContent = 'Play';
+          // Auto-advance to next track
+          if (queueIndex < trackQueue.length - 1) {
+            playIndex(queueIndex + 1);
+          } else {
+            queueIndex = -1;
+            label.textContent = 'No file loaded';
+            renderQueue();
+          }
         });
 
         volume.addEventListener('input', updateDjMix);
@@ -1516,7 +1623,8 @@
           audio: audio,
           volume: volume,
           source: null,
-          gain: null
+          gain: null,
+          queue: trackQueue
         };
         return deckState;
       }
