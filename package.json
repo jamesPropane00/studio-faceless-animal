@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "pnpm --filter @workspace/studio run dev",
-    "build": "node scripts/generate-env.js"
+    "build": "node scripts/generate-env.js",
+    "start": "node server.js",
+    "tunnel": "node server.js --tunnel"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1",

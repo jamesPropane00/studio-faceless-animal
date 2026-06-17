@@ -40,6 +40,7 @@ const { createClient } = require('@supabase/supabase-js')
 
 const PORT = parseInt(process.env.PORT || '3000', 10)
 const ROOT = __dirname
+const USE_TUNNEL = process.argv.includes('--tunnel')
 
 const SUPABASE_URL = process.env.SUPABASE_URL || ''
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
@@ -3463,6 +3464,18 @@ async function runSignalCodeBackfillOnBoot() {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`[FAS] Studio running → http://localhost:${PORT}`)
+  if (USE_TUNNEL) {
+    const { spawn } = require('child_process');
+    const tunnel = spawn('cloudflared', ['tunnel', '--url', 'http://localhost:' + PORT], { stdio: 'pipe' });
+    tunnel.stdout.on('data', (d) => {
+      const line = d.toString();
+      process.stdout.write('[FAS:tunnel] ' + line);
+      const m = line.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);
+      if (m) console.log('\n[FAS] 🔗 HTTPS tunnel ready: ' + m[0] + '\n[FAS] Use this URL for Google SSO to work!\n');
+    });
+    tunnel.stderr.on('data', (d) => process.stderr.write('[FAS:tunnel:err] ' + d.toString()));
+    tunnel.on('error', (e) => console.warn('[FAS] Tunnel unavailable — install cloudflared or remove --tunnel. Error:', e.message));
+  }
   runSignalCodeBackfillOnBoot()
 })
 
