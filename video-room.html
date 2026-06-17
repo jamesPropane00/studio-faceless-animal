@@ -485,6 +485,7 @@
     }
 
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     .dj-deck {
       min-width: 0;
@@ -498,13 +499,17 @@
       padding: 0.58rem;
     }
 
-    .dj-deck.is-playing {
-      border-color: rgba(57,255,136,0.34);
-      box-shadow: 0 0 26px rgba(57,255,136,0.1);
+    .dj-platter {
+      animation: spin-slow 10s linear infinite;
     }
 
     .dj-deck.is-playing .dj-platter {
-      animation: spin 2s linear infinite;
+      animation: spin 1.5s linear infinite;
+    }
+
+    .dj-deck.is-playing {
+      border-color: rgba(57,255,136,0.34);
+      box-shadow: 0 0 26px rgba(57,255,136,0.1);
     }
 
     .dj-deck.is-scratching .dj-platter {
