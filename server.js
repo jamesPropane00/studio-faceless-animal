@@ -1555,6 +1555,84 @@ const PRO_AI_MODELS = [
 const PAID_PLANS = new Set(['access', 'starter', 'pro', 'premium']);
 const ADMIN_USERS = new Set(['jamespropane00', 'jdot00']);
 
+// ── AGENT TOOLS ────────────────────────────────────────────────────────
+const AGENT_TOOLS = [
+  { type: 'function', function: { name: 'read_file', description: 'Read a file from the project. Use this to read code, configs, or any text file.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'File path relative to project root, e.g. server.js or src/index.js' } }, required: ['path'] } } },
+  { type: 'function', function: { name: 'write_file', description: 'Write content to a file. Creates the file or overwrites if it exists. Use this to create new files or modify existing ones.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'File path relative to project root' }, content: { type: 'string', description: 'Full file content' } }, required: ['path', 'content'] } } },
+  { type: 'function', function: { name: 'list_dir', description: 'List files and directories in a folder to explore the project structure.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'Directory path relative to project root, empty string for root' } }, required: ['path'] } } },
+  { type: 'function', function: { name: 'execute_command', description: 'Run a shell command in the project directory. Use for npm, git, build tools, etc.', parameters: { type: 'object', properties: { command: { type: 'string', description: 'Shell command to execute' } }, required: ['command'] } } },
+];
+
+function sanitizePath(p, root) {
+  const resolved = path.resolve(root, p || '');
+  if (!resolved.startsWith(root)) throw new Error('Path outside project directory');
+  return resolved;
+}
+
+async function executeAgentTool(tc, root) {
+  const { name, arguments: raw } = tc.function;
+  let args;
+  try { args = JSON.parse(raw); } catch { return { error: 'Invalid tool arguments JSON' }; }
+  try {
+    switch (name) {
+      case 'read_file': {
+        const fp = sanitizePath(args.path, root);
+        if (!fs.existsSync(fp)) return { error: 'File not found: ' + args.path };
+        const content = fs.readFileSync(fp, 'utf-8');
+        const preview = content.length > 5000 ? content.slice(0, 5000) + '\n... (truncated, ' + content.length + ' bytes total)' : content;
+        return { content: preview, path: args.path, size: content.length };
+      }
+      case 'write_file': {
+        const fp = sanitizePath(args.path, root);
+        fs.mkdirSync(path.dirname(fp), { recursive: true });
+        fs.writeFileSync(fp, args.content, 'utf-8');
+        return { success: true, path: args.path, bytes: Buffer.byteLength(args.content, 'utf-8') };
+      }
+      case 'list_dir': {
+        const dp = args.path ? sanitizePath(args.path, root) : root;
+        const entries = fs.readdirSync(dp, { withFileTypes: true });
+        return { files: entries.map(e => ({ name: e.name, type: e.isDirectory() ? 'dir' : 'file' })), path: args.path || '/' };
+      }
+      case 'execute_command': {
+        const { exec } = require('child_process');
+        return new Promise(resolve => {
+          exec(args.command, { cwd: root, timeout: 30000, maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
+            const out = (stdout || '').slice(0, 10000);
+            const errOut = (stderr || '').slice(0, 5000);
+            resolve({ stdout: out, stderr: errOut, exitCode: err ? (err.code || err.killed ? 137 : 1) : 0 });
+          });
+        });
+      }
+      default: return { error: 'Unknown tool: ' + name };
+    }
+  } catch (e) { return { error: e.message }; }
+}
+
+async function runAgentLoop(messages, tools, root, modelId, apiKey, maxIter) {
+  const log = [];
+  let msgs = [...messages];
+  for (let i = 0; i < maxIter; i++) {
+    const res = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      body: JSON.stringify({ model: modelId, messages: msgs, tools, tool_choice: 'auto', max_tokens: 4096, temperature: 0.7 }),
+      signal: AbortSignal.timeout(60000),
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error('API error: ' + t.slice(0, 200)); }
+    const data = await res.json();
+    const msg = data.choices && data.choices[0] ? data.choices[0].message : null;
+    if (!msg) throw new Error('Empty response from model');
+    if (!msg.tool_calls) return { reply: msg.content || '', log };
+    msgs.push(msg);
+    for (const tc of msg.tool_calls) {
+      const result = await executeAgentTool(tc, root);
+      log.push({ id: tc.id, name: tc.function.name, args: JSON.parse(tc.function.arguments), result });
+      msgs.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) });
+    }
+  }
+  return { reply: 'Reached maximum iteration limit.', log };
+}
+
 function buildAIPrompt(modelId, message) {
   const creator = ' You were created by DJ Faceless Animal. When asked who made you, always say you were created by DJ Faceless Animal.';
   if (modelId.includes('zephyr')) {
@@ -1588,6 +1666,7 @@ async function handleAIChat(req, res) {
   const loadConvId = String(body.load_conversation || '').trim() || null;
   const maxTokens = parseInt(body.max_tokens) || 1024;
   const filesData = Array.isArray(body.files) ? body.files : [];
+  const agentMode = body.agent_mode === true;
 
   // ── Check user — only admin users get pro models ──
   const isAdmin = username && ADMIN_USERS.has(username);
@@ -1670,31 +1749,30 @@ async function handleAIChat(req, res) {
   try {
     let reply = '';
     let memoryEnabled = false;
+    let toolLog = null;
 
     if (isOpenCodeGo) {
-      // ── OpenCode Go API ──
       const modelId = selectedModel.id.replace('opencode-go/', '');
-      const ocRes = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + OPENCODE_GO_KEY },
-        body: JSON.stringify({
-          model: modelId,
-          messages: [
-            { role: 'system', content: 'You are Faceless AI, created by DJ Faceless Animal. You are a helpful coding and creative assistant helping users build apps, websites, music, and anything they need. You are knowledgeable, direct, and practical. When asked who made you, always say you were created by DJ Faceless Animal.' },
-            { role: 'user', content: enrichedMsg },
-          ],
-          max_tokens: maxTokens,
-          temperature: 0.7,
-        }),
-        signal: AbortSignal.timeout(60000),
-      });
-      if (!ocRes.ok) {
-        const errText = await ocRes.text();
-        return sendJSON(res, 502, { error: 'Pro AI service unavailable.', detail: errText.slice(0, 200), retryable: true });
+      const systemMsg = 'You are Faceless AI, created by DJ Faceless Animal. You are a helpful coding and creative assistant helping users build apps, websites, music, and anything they need. You are knowledgeable, direct, and practical. When asked who made you, always say you were created by DJ Faceless Animal.';
+      const baseMessages = [{ role: 'system', content: systemMsg }, ...history.map(h => ({ role: h.role, content: h.content })), { role: 'user', content: enrichedMsg }];
+
+      if (agentMode && isAdmin) {
+        const agentResult = await runAgentLoop(baseMessages, AGENT_TOOLS, ROOT, modelId, OPENCODE_GO_KEY, 10);
+        reply = agentResult.reply;
+        toolLog = agentResult.log;
+        memoryEnabled = true;
+      } else {
+        const ocRes = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + OPENCODE_GO_KEY },
+          body: JSON.stringify({ model: modelId, messages: baseMessages, max_tokens: maxTokens, temperature: 0.7 }),
+          signal: AbortSignal.timeout(60000),
+        });
+        if (!ocRes.ok) { const errText = await ocRes.text(); return sendJSON(res, 502, { error: 'Pro AI service unavailable.', detail: errText.slice(0, 200), retryable: true }); }
+        const data = await ocRes.json();
+        reply = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
+        memoryEnabled = true;
       }
-      const data = await ocRes.json();
-      reply = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
-      memoryEnabled = true;
     } else {
       // ── Hugging Face (free) ──
       const model = selectedModel.id;
@@ -1732,7 +1810,9 @@ async function handleAIChat(req, res) {
       } catch {}
     }
 
-    return sendJSON(res, 200, { reply: reply || '...', memory: memoryEnabled, model: selectedModel.name, conversation_id: convId, username });
+    const resp = { reply: reply || '...', memory: memoryEnabled, model: selectedModel.name, conversation_id: convId, username };
+    if (toolLog) resp.tool_log = toolLog;
+    return sendJSON(res, 200, resp);
   } catch (e) {
     const isTimeout = e.name === 'AbortError' || e.code === 'ETIMEDOUT' || e.code === 'ESOCKETTIMEDOUT';
     return sendJSON(res, 502, {

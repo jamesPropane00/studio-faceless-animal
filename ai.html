@@ -330,6 +330,12 @@
           <div class="toggle-switch on" id="autoSwitchToggle" onclick="this.classList.toggle('on'); localStorage.setItem('fas_autoswitch', this.classList.contains('on'))"></div>
         </div>
       </div>
+      <div class="setting-group" id="agentModeGroup" style="display:none">
+        <div class="setting-row">
+          <label>⚡ Agent Mode <span style="font-size:0.68rem;color:var(--dim);font-weight:400;">(read/write files, run commands)</span></label>
+          <div class="toggle-switch" id="agentModeToggle" onclick="this.classList.toggle('on'); localStorage.setItem('fas_agent_mode', this.classList.contains('on'))"></div>
+        </div>
+      </div>
       <div class="setting-group">
         <label for="maxTokens">Max response length</label>
         <select id="maxTokens">
@@ -356,9 +362,16 @@
       try { return JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch { return null; }
     }
 
+    const ADMIN_USERS = ['jamespropane00', 'jdot00'];
+
     function updateAuthUI() {
       currentUser = getFasUser();
       const loggedIn = currentUser && currentUser.username;
+      const isAdmin = loggedIn && ADMIN_USERS.includes(currentUser.username);
+      document.getElementById('agentModeGroup').style.display = isAdmin ? 'block' : 'none';
+      if (isAdmin && localStorage.getItem('fas_agent_mode') === 'true') {
+        document.getElementById('agentModeToggle').classList.add('on');
+      }
       document.getElementById('loginPrompt').style.display = loggedIn ? 'none' : 'block';
       document.getElementById('convItems').style.display = loggedIn ? 'block' : 'none';
       document.getElementById('sidebarFooter').style.display = loggedIn ? 'block' : 'none';
@@ -615,6 +628,7 @@
         body.max_tokens = parseInt(document.getElementById('maxTokens').value) || 1024;
         if (filesData.length > 0) body.files = filesData;
         if (currentUser && currentUser.username) body.username = currentUser.username;
+        if (localStorage.getItem('fas_agent_mode') === 'true') body.agent_mode = true;
         const res = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -636,7 +650,7 @@
           const ext = data.audio.startsWith('data:audio/wav') ? '.wav' : data.audio.startsWith('data:audio/mpeg') ? '.mp3' : '.mp3';
           addMessage('assistant', '<strong>' + model.name + ':</strong><br><audio src="' + data.audio + '" controls style="width:100%;margin-bottom:8px"></audio><br><a href="' + data.audio + '" download="faceless-ai-' + Date.now() + ext + '" class="download-btn">Download Audio</a>');
         } else {
-          addMessage('assistant', data.reply || 'No response.');
+          addMessage('assistant', data.reply || 'No response.', false, data.tool_log);
         }
 
         // Auto-read if enabled
@@ -714,7 +728,7 @@
       URL.revokeObjectURL(a.href);
     }
 
-    function addMessage(role, content, skipScroll) {
+    function addMessage(role, content, skipScroll, toolLog) {
       const el = document.createElement('div');
       el.className = 'msg ' + role;
       if (role === 'system') { el.textContent = content; }
@@ -744,6 +758,31 @@
           text.innerHTML = formatContent(content);
         }
         el.appendChild(text);
+        if (toolLog && Array.isArray(toolLog) && toolLog.length) {
+          const toolEl = document.createElement('details');
+          toolEl.style.cssText = 'margin-top:0.5rem;background:rgba(167,139,250,0.05);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.6rem;font-size:0.78rem;';
+          const summary = document.createElement('summary');
+          summary.style.cssText = 'cursor:pointer;color:var(--bright);font-weight:600;';
+          summary.textContent = '\u{1F6E0} Agent (' + toolLog.length + ' tool call' + (toolLog.length > 1 ? 's' : '') + ')';
+          toolEl.appendChild(summary);
+          toolLog.forEach(tc => {
+            const tcDiv = document.createElement('div');
+            tcDiv.style.cssText = 'margin-top:0.3rem;padding:0.3rem 0.4rem;background:rgba(0,0,0,0.2);border-radius:6px;';
+            const icon = tc.name === 'read_file' ? '\uD83D\uDCD6' : tc.name === 'write_file' ? '\u270F\uFE0F' : tc.name === 'execute_command' ? '\uD83D\uDCBB' : '\uD83D\uDCC1';
+            tcDiv.innerHTML = '<span style="color:var(--cyan);font-weight:600;">' + icon + ' ' + tc.name + '</span> <span style="color:var(--dim);">' + escHtml(JSON.stringify(tc.args)) + '</span>';
+            if (tc.result) {
+              const rDiv = document.createElement('div');
+              rDiv.style.cssText = 'margin-top:0.2rem;color:var(--text-2);font-size:0.72rem;max-height:120px;overflow-y:auto;white-space:pre-wrap;font-family:monospace;';
+              const hasContent = tc.result.content || tc.result.stdout;
+              const hasError = tc.result.error || tc.result.stderr;
+              const resultPreview = hasError ? '\u274C ' + (tc.result.error || tc.result.stderr).slice(0, 300) : hasContent ? (tc.result.content || tc.result.stdout).slice(0, 300) : tc.result.success ? '\u2705 Done' : '\uD83D\uDC4D OK';
+              rDiv.textContent = resultPreview;
+              tcDiv.appendChild(rDiv);
+            }
+            toolEl.appendChild(tcDiv);
+          });
+          el.appendChild(toolEl);
+        }
       }
       document.getElementById('messages').appendChild(el);
       if (!skipScroll) el.scrollIntoView({ behavior: 'smooth' });
