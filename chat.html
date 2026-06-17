@@ -1379,6 +1379,18 @@
       renderRooms();
       finishMatrixSsoIfNeeded().then(function (handled) {
         if (!handled && session && session.access_token) loadRooms();
+
+        // Auto-join room from URL param
+        var roomParam = new URLSearchParams(window.location.search).get('room');
+        if (roomParam && session && session.access_token) {
+          matrixApi('/rooms/' + encodeURIComponent(roomParam) + '/join', { method: 'POST' }).catch(function () {});
+          matrixApi('/rooms/' + encodeURIComponent(roomParam) + '/messages?dir=b&limit=30').then(function (data) {
+            currentRoomId = roomParam;
+            if (session) session.focusedRoomId = roomParam;
+            renderRooms();
+            renderTimeline((data.chunk || []).reverse());
+          }).catch(function () {});
+        }
       });
     }());
   </script>
