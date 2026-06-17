@@ -1332,11 +1332,11 @@
       $('matrix-open-text-room')?.addEventListener('click', function () {
         var name = prompt('Audio room name', 'Faceless Audio Chat');
         if (!name) return;
-        var win = window.open('video-room.html?mode=audio', '_blank');
+        var win = window.open('audio-room.html', '_blank');
         setStatus('Creating audio room...', null);
         createMatrixRoom({ name: name.trim(), preset: 'private_chat', visibility: 'private', topic: 'Faceless Animal group audio chat' }).then(function (roomId) {
           if (!roomId) { if (win && !win.closed) win.close(); return; }
-          var url = 'video-room.html?room=' + encodeURIComponent(roomId) + '&mode=audio&label=' + encodeURIComponent(name.trim());
+          var url = 'audio-room.html?room=' + encodeURIComponent(roomId) + '&label=' + encodeURIComponent(name.trim());
           if (win && !win.closed) win.location.href = url; else window.open(url, '_blank');
           setStatus('Audio room created!', 'good');
           loadRooms();
@@ -1345,11 +1345,11 @@
       $('matrix-audio-room')?.addEventListener('click', function () {
         var name = prompt('Audio room name', 'Faceless Audio Chat');
         if (!name) return;
-        var win = window.open('video-room.html?mode=audio', '_blank');
+        var win = window.open('audio-room.html', '_blank');
         setStatus('Creating audio room...', null);
         createMatrixRoom({ name: name.trim(), preset: 'private_chat', visibility: 'private', topic: 'Faceless Animal group audio chat' }).then(function (roomId) {
           if (!roomId) { if (win && !win.closed) win.close(); return; }
-          var url = 'video-room.html?room=' + encodeURIComponent(roomId) + '&mode=audio&label=' + encodeURIComponent(name.trim());
+          var url = 'audio-room.html?room=' + encodeURIComponent(roomId) + '&label=' + encodeURIComponent(name.trim());
           if (win && !win.closed) win.location.href = url; else window.open(url, '_blank');
           setStatus('Audio room created!', 'good');
           loadRooms();

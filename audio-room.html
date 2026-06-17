@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Faceless Audio Rooms — group voice chat with round avatars. No video, just talk." />
+  <meta name="robots" content="index, follow" />
+  <title>Audio Room — Faceless Animal Studios</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0b0f; --surface: #11131a; --border: rgba(167,139,250,0.16);
+      --text: #f3f3fa; --soft: #c9cae5; --dim: #9da0bc;
+      --purple: #7c3aed; --bright: #a78bfa; --gold: #f5c451; --cyan: #22d3ee;
+    }
+    html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+    body { display: flex; flex-direction: column; }
+
+    .ar-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1rem; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .ar-topbar a { color: var(--bright); text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+    .ar-topbar a:hover { color: #fff; }
+    .ar-topbar h1 { font-size: 0.95rem; font-weight: 800; }
+    .ar-topbar span { color: var(--dim); font-size: 0.72rem; }
+
+    .ar-stage {
+      flex: 1; display: flex; flex-wrap: wrap; align-content: center; justify-content: center;
+      gap: 1rem; padding: 1.5rem; overflow-y: auto;
+    }
+    .ar-bubble {
+      display: flex; flex-direction: column; align-items: center; gap: 0.4rem; width: 90px;
+      animation: fade 0.3s ease;
+    }
+    @keyframes fade { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
+    .ar-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--bright), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; font-weight: 800; color: #fff;
+      box-shadow: 0 4px 24px rgba(124,58,237,0.3);
+      border: 2px solid rgba(33,244,208,0.15);
+      transition: transform 0.15s;
+    }
+    .ar-avatar:hover { transform: scale(1.05); }
+    .ar-name { font-size: 0.75rem; font-weight: 600; color: var(--soft); text-align: center; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .ar-chat {
+      border-top: 1px solid var(--border); background: var(--surface);
+      display: grid; grid-template-rows: auto 1fr auto; max-height: 35vh;
+    }
+    .ar-chat-head { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; }
+    .ar-chat-head strong { font-size: 0.78rem; }
+    .ar-chat-head span { font-size: 0.68rem; color: var(--dim); }
+    .ar-chat-feed { overflow-y: auto; padding: 0.5rem 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .ar-msg { font-size: 0.82rem; line-height: 1.5; }
+    .ar-msg strong { color: var(--bright); font-weight: 600; margin-right: 0.4rem; }
+    .ar-msg p { display: inline; color: var(--text); }
+    .ar-msg.is-me strong { color: var(--cyan); }
+
+    .ar-form { display: flex; gap: 0.5rem; padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); }
+    .ar-form input { flex: 1; padding: 0.55rem 0.75rem; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.85rem; outline: none; }
+    .ar-form input:focus { border-color: var(--bright); }
+    .ar-form button { padding: 0.55rem 1rem; border-radius: 10px; border: none; background: linear-gradient(135deg, var(--purple), var(--bright)); color: #fff; font-weight: 600; cursor: pointer; font-size: 0.82rem; }
+
+    .ar-empty { text-align: center; padding: 2rem; color: var(--dim); }
+    .ar-empty h2 { font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--soft); }
+    .ar-empty p { font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header class="ar-topbar">
+    <a href="chat.html">&larr; Back To Rooms</a>
+    <div>
+      <h1 id="ar-title">Audio Room</h1>
+      <span id="ar-status">Connecting...</span>
+    </div>
+    <button id="ar-end" hidden style="background:none;border:1px solid #f87171;color:#f87171;padding:0.3rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.75rem;">End Room</button>
+  </header>
+
+  <div class="ar-stage" id="ar-stage">
+    <div class="ar-empty" id="ar-empty">
+      <h2>No Room Selected</h2>
+      <p>Create or join an audio room from Signal Rooms first.</p>
+    </div>
+  </div>
+
+  <section class="ar-chat" id="ar-chat" hidden>
+    <div class="ar-chat-head">
+      <strong>Chat</strong>
+      <span id="ar-chat-status">Connected</span>
+    </div>
+    <div class="ar-chat-feed" id="ar-chat-feed"></div>
+    <form class="ar-form" id="ar-form">
+      <input id="ar-input" maxlength="2000" autocomplete="off" placeholder="Type in the room..." />
+      <button type="submit">Send</button>
+    </form>
+  </section>
+
+  <script>
+    (function () {
+      var p = new URLSearchParams(window.location.search);
+      var room = p.get('room') || '';
+      var label = p.get('label') || 'Audio Room';
+      var ownerParam = p.get('owner') || '';
+      var matrixBase = 'https://matrix.org';
+      var session = (function () { try { return JSON.parse(localStorage.getItem('fas_matrix_session') || 'null'); } catch { return null; } })();
+      var siteSession = (function () { try { return JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch { return null; } })();
+      var siteName = siteSession ? (siteSession.display || siteSession.username || '') : '';
+
+      var title = document.getElementById('ar-title');
+      var status = document.getElementById('ar-status');
+      var stage = document.getElementById('ar-stage');
+      var empty = document.getElementById('ar-empty');
+      var chat = document.getElementById('ar-chat');
+      var chatFeed = document.getElementById('ar-chat-feed');
+      var chatForm = document.getElementById('ar-form');
+      var chatInput = document.getElementById('ar-input');
+      var endBtn = document.getElementById('ar-end');
+
+      function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      function matrixApi(path, opts) {
+        var headers = { 'Content-Type': 'application/json' };
+        if (session && session.access_token) headers.Authorization = 'Bearer ' + session.access_token;
+        return fetch(matrixBase + '/_matrix/client/v3' + path, Object.assign({}, opts || {}, { headers: Object.assign(headers, (opts && opts.headers) || {}) }))
+          .then(function (r) { return r.json().then(function (d) { if (!r.ok) { var e = new Error(d.error || r.statusText); e.status = r.status; throw e; } return d; }); });
+      }
+
+      function isOwner() {
+        return session && ownerParam && (session.user_id || '').replace(/^@/, '').split(':')[0] === ownerParam;
+      }
+      if (endBtn) endBtn.hidden = !isOwner();
+      endBtn?.addEventListener('click', function () {
+        if (!room || !session || !session.access_token || !isOwner()) return;
+        matrixApi('/rooms/' + encodeURIComponent(room) + '/leave', { method: 'POST' }).then(function () {
+          window.location.href = 'chat.html';
+        }).catch(function () {});
+      });
+
+      function renderBubbles(members) {
+        if (empty) empty.style.display = members.length ? 'none' : '';
+        var html = members.map(function (uid) {
+          var name = uid.replace(/^@/, '').split(':')[0];
+          var initial = name.charAt(0).toUpperCase();
+          return '<div class="ar-bubble"><div class="ar-avatar">' + esc(initial) + '</div><div class="ar-name">' + esc(name) + '</div></div>';
+        }).join('');
+        if (!html && session && session.user_id) {
+          var me = session.user_id.replace(/^@/, '').split(':')[0];
+          html = '<div class="ar-bubble"><div class="ar-avatar">' + esc(me.charAt(0).toUpperCase()) + '</div><div class="ar-name">' + esc(me) + '</div></div>';
+        }
+        stage.innerHTML = html;
+      }
+
+      function renderChat(events) {
+        if (!chatFeed) return;
+        var msgs = (events || []).filter(function (e) { return e && e.type === 'm.room.message' && e.content && e.content.body; });
+        if (!msgs.length) {
+          chatFeed.innerHTML = '<div class="ar-msg"><strong>Audio Room</strong><p>No messages yet.</p></div>';
+          return;
+        }
+        chatFeed.innerHTML = msgs.map(function (e) {
+          var mine = session && e.sender === session.user_id;
+          var name = e.sender.replace(/^@/, '').split(':')[0];
+          return '<div class="ar-msg' + (mine ? ' is-me' : '') + '"><strong>' + esc(name) + '</strong><p>' + esc(e.content.body) + '</p></div>';
+        }).join('');
+        chatFeed.scrollTop = chatFeed.scrollHeight;
+      }
+
+      if (title) title.textContent = label;
+      if (status) status.textContent = room ? 'Connecting...' : 'No room';
+
+      if (!room || !session || !session.access_token) {
+        if (status) status.textContent = 'Sign in from Signal Rooms first.';
+        return;
+      }
+
+      if (empty) empty.style.display = 'none';
+      if (chat) chat.hidden = false;
+
+      // Load members
+      matrixApi('/rooms/' + encodeURIComponent(room) + '/joined_members').then(function (d) {
+        var members = d && d.joined ? Object.keys(d.joined) : [];
+        renderBubbles(members);
+        if (status) status.textContent = members.length + (members.length === 1 ? ' user' : ' users');
+      }).catch(function () {
+        renderBubbles([]);
+        if (status) status.textContent = 'Room not found';
+      });
+
+      // Load chat history
+      matrixApi('/rooms/' + encodeURIComponent(room) + '/messages?dir=b&limit=30').then(function (d) {
+        var events = (d.chunk || []).reverse();
+        renderChat(events);
+        if (status) status.textContent = (siteName ? '@' + siteName : 'Connected');
+      }).catch(function () {
+        renderChat([]);
+      });
+
+      // Poll for new messages
+      var since = null;
+      function poll() {
+        if (!room || !session || !session.access_token) return;
+        matrixApi('/rooms/' + encodeURIComponent(room) + '/messages?dir=b&limit=30' + (since ? '&from=' + since : '')).then(function (d) {
+          if (d.chunk && d.chunk.length) {
+            var events = d.chunk.reverse();
+            renderChat(events);
+            // Update members
+            matrixApi('/rooms/' + encodeURIComponent(room) + '/joined_members').then(function (md) {
+              if (md && md.joined) renderBubbles(Object.keys(md.joined));
+            }).catch(function () {});
+          }
+          since = d.end || since;
+        }).catch(function () {}).then(function () {
+          setTimeout(poll, 5000);
+        });
+      }
+      poll();
+
+      // Send
+      chatForm?.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var text = chatInput ? chatInput.value.trim() : '';
+        if (!text || !room || !session || !session.access_token) return;
+        var txn = 'txn-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+        matrixApi('/rooms/' + encodeURIComponent(room) + '/send/m.room.message/' + txn, {
+          method: 'PUT',
+          body: JSON.stringify({ msgtype: 'm.text', body: text })
+        }).then(function () {
+          if (chatInput) chatInput.value = '';
+        }).catch(function (err) {
+          if (status) status.textContent = err.message || 'Send failed';
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
