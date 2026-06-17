@@ -395,7 +395,6 @@
 
     if (!visible.length) {
       el.grid.innerHTML = '<div class="tv-empty">No playable videos are available in this channel archive yet.</div>';
-      renderFirstChannelVideo(sourceItems);
       return;
     }
 
