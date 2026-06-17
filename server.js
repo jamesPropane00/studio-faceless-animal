@@ -539,8 +539,12 @@ async function handleMediaDownload(req, res) {
 
   // ── PUBLIC MEMBER PAGE ROUTE ─────────────────────────────
   // /username → render saved member page from Supabase
+  // Only intercept if no static file exists for this path
   if (parts.length === 1 && /^[a-z0-9_-]{3,32}$/i.test(parts[0])) {
-    return handleServeMemberPage(parts[0], res)
+    const staticHtmlPath = path.join(ROOT, parts[0] + '.html')
+    if (!fs.existsSync(staticHtmlPath)) {
+      return handleServeMemberPage(parts[0], res)
+    }
   }
 
   // ── Dynamic creator/business page routing ─────────────────────
