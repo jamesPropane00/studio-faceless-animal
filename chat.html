@@ -955,6 +955,12 @@
           var siteName = siteUsername();
           userLabel.textContent = siteName ? '@' + siteName + ' on Faceless' : 'Faceless chat';
         }
+        // Update the simple button text
+        var simpleBtn = $('matrix-sso-simple');
+        if (simpleBtn) {
+          var u = readSiteSession();
+          simpleBtn.textContent = (u && u.username) ? 'Enter The Rooms, ' + (u.display || u.username) : 'Sign In To Enter The Rooms';
+        }
         if (siteUser) {
           var username = siteUsername();
           if (username) {
@@ -1129,7 +1135,14 @@
 
       $('matrix-sso-google')?.addEventListener('click', function () { startMatrixSso(); });
       $('matrix-create-google')?.addEventListener('click', function () { startMatrixSso(); });
-      $('matrix-sso-simple')?.addEventListener('click', function () { startMatrixSso(); });
+      $('matrix-sso-simple')?.addEventListener('click', function () {
+        var user = readSiteSession();
+        if (user && user.username) {
+          startMatrixSso();
+        } else {
+          window.location.href = 'login.html?redirect=chat.html';
+        }
+      });
 
       $('matrix-login')?.addEventListener('submit', function (event) {
         event.preventDefault();
