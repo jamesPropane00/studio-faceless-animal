@@ -1701,12 +1701,14 @@ async function handleAIChat(req, res) {
   const filesData = Array.isArray(body.files) ? body.files : [];
   const agentMode = body.agent_mode === true;
   if (body.search_api_key) global.__SEARCH_API_KEY = body.search_api_key;
+  const requestOcKey = body.oc_api_key || '';
 
   // ── Check user — only admin users get pro models ──
   const isAdmin = username && ADMIN_USERS.has(username);
 
   // ── Build model list ──
-  const canUsePro = isAdmin && OPENCODE_GO_KEY;
+  const effectiveKey = requestOcKey || OPENCODE_GO_KEY;
+  const canUsePro = isAdmin && effectiveKey;
   const allModels = [...FREE_AI_MODELS.map(m => ({ id: m.id, name: m.name, type: m.type, group: m.group }))];
   if (canUsePro) {
     allModels.push(...PRO_AI_MODELS.map(m => ({ id: m.id, name: m.name, type: m.type, group: m.group })));
@@ -1792,14 +1794,14 @@ async function handleAIChat(req, res) {
 
       if (agentMode) {
         const tools = isAdmin ? AGENT_TOOLS_FULL : AGENT_TOOLS_LIMITED;
-        const agentResult = await runAgentLoop(baseMessages, tools, ROOT, modelId, OPENCODE_GO_KEY, isAdmin ? 10 : 5);
+        const agentResult = await runAgentLoop(baseMessages, tools, ROOT, modelId, effectiveKey, isAdmin ? 10 : 5);
         reply = agentResult.reply;
         toolLog = agentResult.log;
         memoryEnabled = true;
       } else {
         const ocRes = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + OPENCODE_GO_KEY },
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + effectiveKey },
           body: JSON.stringify({ model: modelId, messages: baseMessages, max_tokens: maxTokens, temperature: 0.7 }),
           signal: AbortSignal.timeout(60000),
         });

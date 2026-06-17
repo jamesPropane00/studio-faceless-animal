@@ -371,7 +371,7 @@
 
     el.recentUploads.innerHTML = playable.slice(0, 10).map(function (item) {
       var source = videoSource(item);
-      var preview = source ? '<video class="tv-upload-preview" controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>' : '';
+      var preview = source ? '<video class="tv-upload-preview" controls muted playsinline preload="metadata" src="' + escapeHtml(source) + '"></video>' : '';
       return [
         '<div class="tv-list-item">',
           '<strong>' + escapeHtml(item.title || 'Untitled broadcast') + '</strong>',
@@ -412,7 +412,7 @@
         '<article class="tv-card" tabindex="0" data-key="' + escapeHtml(key) + '" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '" data-embed="' + escapeHtml(embed) + '">',
           '<div class="tv-thumb">',
             source
-              ? '<video class="tv-thumb-video" controls autoplay loop muted playsinline preload="auto" src="' + escapeHtml(source) + '" poster="' + escapeHtml(image) + '"></video>'
+              ? '<video class="tv-thumb-video" controls muted playsinline preload="none" src="' + escapeHtml(source) + '" poster="' + escapeHtml(image) + '"></video>'
               : '<iframe src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>',
             '<span class="tv-play" aria-hidden="true">&gt;</span>',
             '<span class="tv-meta">' + escapeHtml(duration) + '</span>',
@@ -550,6 +550,16 @@
         video.muted = true;
         video.defaultMuted = true;
         video.playsInline = true;
+
+        if (video.classList.contains('tv-thumb-video')) {
+          // Archive thumbnails — poster only, no autoplay (saves mobile devices)
+          video.preload = 'none';
+          video.autoplay = false;
+          video.loop = false;
+          video.pause();
+          return;
+        }
+
         video.autoplay = true;
         video.loop = !video.classList.contains('tv-main-video');
         video.preload = 'auto';
@@ -576,7 +586,6 @@
         } else {
           video.addEventListener('loadeddata', startPreview, { once: true });
           video.addEventListener('canplay', startPreview, { once: true });
-          video.load();
         }
       } catch (err) {}
     });

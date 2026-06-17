@@ -414,6 +414,10 @@
           <div class="toggle-switch" id="agentModeToggle" onclick="this.classList.toggle('on'); localStorage.setItem('fas_agent_mode', this.classList.contains('on'))"></div>
         </div>
       </div>
+      <div class="setting-group" id="apiKeyGroup" style="display:none">
+        <label for="ocApiKey">OpenCode API Key <span style="font-size:0.68rem;color:var(--dim);font-weight:400;">(from opencode.ai/auth)</span></label>
+        <input type="password" id="ocApiKey" placeholder="oc_go_..." style="width:100%;padding:0.45rem 0.55rem;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:0.8rem;outline:none;" onchange="localStorage.setItem('fas_oc_api_key', this.value)" />
+      </div>
       <div class="setting-group">
         <label for="maxTokens">Max response length</label>
         <select id="maxTokens">
@@ -447,6 +451,11 @@
       const loggedIn = currentUser && currentUser.username;
       const isAdmin = loggedIn && ADMIN_USERS.includes(currentUser.username);
       document.getElementById('agentModeGroup').style.display = loggedIn ? 'block' : 'none';
+      document.getElementById('apiKeyGroup').style.display = isAdmin ? 'block' : 'none';
+      if (isAdmin) {
+        const savedKey = localStorage.getItem('fas_oc_api_key');
+        if (savedKey) document.getElementById('ocApiKey').value = savedKey;
+      }
       if (localStorage.getItem('fas_agent_mode') === 'true') {
         document.getElementById('agentModeToggle').classList.add('on');
       }
@@ -718,6 +727,8 @@
           const searchKey = localStorage.getItem('fas_search_api_key');
           if (searchKey) body.search_api_key = searchKey;
         }
+        const apiKey = localStorage.getItem('fas_oc_api_key');
+        if (apiKey) body.oc_api_key = apiKey;
         const res = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
