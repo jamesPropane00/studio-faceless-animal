@@ -733,7 +733,7 @@
     <button class="rooms-btn rooms-btn--primary" type="button" id="matrix-group-video">Group Chat</button>
     <button class="rooms-btn rooms-btn--green" type="button" id="matrix-private-video">Start Solo</button>
     <button class="rooms-btn rooms-btn--green" type="button" id="matrix-audio-room">Audio Room</button>
-    <a class="rooms-btn" href="video-room.html?room=faceless-dj-room&mode=dj&label=DJ%20Room">DJ Room</a>
+    <button class="rooms-btn" type="button" id="matrix-dj-room">DJ Room</button>
   </div>
               </div>
               <div class="matrix-room-list" id="matrix-room-list">
@@ -1327,6 +1327,19 @@
 
       $('matrix-video')?.addEventListener('click', function () {
         window.open(currentCallLink(), '_blank', 'noopener');
+      });
+
+      $('matrix-dj-room')?.addEventListener('click', function () {
+        var name = 'DJ Room';
+        var win = window.open('video-room.html?mode=dj&label=DJ%20Room', '_blank');
+        setStatus('Opening DJ room...', null);
+        createMatrixRoom({ name: name, preset: 'private_chat', visibility: 'private', topic: 'DJ Faceless Animal turntables and chat' }).then(function (roomId) {
+          if (!roomId) { if (win && !win.closed) win.close(); return; }
+          var url = 'video-room.html?room=' + encodeURIComponent(roomId) + '&mode=dj&label=' + encodeURIComponent(name) + '&owner=' + encodeURIComponent(siteUsername() || 'faceless');
+          if (win && !win.closed) win.location.href = url; else window.open(url, '_blank');
+          setStatus('DJ room ready!', 'good');
+          loadRooms();
+        }).catch(function (err) { setStatus(err.message || 'Could not open DJ room.', 'error'); if (win && !win.closed) win.close(); });
       });
 
       $('matrix-open-text-room')?.addEventListener('click', function () {
