@@ -885,7 +885,7 @@
       flex-shrink: 0;
     }
 
-    /* ── Chat gate ── */
+    /* ── Chat gate (kept for sign-in prompt) ── */
     .rp-chat-gate {
       border: 1px solid rgba(139,92,246,0.25);
       border-radius: 14px;
@@ -925,21 +925,6 @@
       justify-content: center;
       margin-top: 0.4rem;
     }
-    .rp-gate-input {
-      flex: 1;
-      min-width: 0;
-      padding: 0.55rem 0.85rem;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 0.9rem;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .rp-gate-input::placeholder { color: var(--text-3); }
-    .rp-gate-input:focus { border-color: rgba(139,92,246,0.5); }
 
     .rp-chat-username-bar {
       display: flex;
@@ -1220,200 +1205,14 @@
       white-space: nowrap;
     }
 
-    .rp-user-list {
-      margin: 0 0 0.75rem;
-      padding: 0.72rem;
-      background: rgba(255,255,255,0.035);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 10px;
-    }
-    .rp-user-list-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.65rem;
-      margin-bottom: 0.58rem;
-    }
-    .rp-user-list-head strong {
-      color: var(--text-2);
-      font-size: 0.76rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-    .rp-user-list-head span {
-      color: var(--text-3);
-      font-size: 0.68rem;
-      white-space: nowrap;
-    }
-    .rp-user-list-grid {
-      display: flex;
-      gap: 0.45rem;
-      overflow-x: auto;
-      padding-bottom: 0.05rem;
-      scrollbar-width: thin;
-    }
-    .rp-user-pill {
-      flex: 0 0 auto;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.38rem;
-      max-width: 160px;
-      padding: 0.34rem 0.5rem;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(0,0,0,0.2);
-      color: var(--text-2);
-      font-size: 0.72rem;
-      font-weight: 700;
-      font-family: var(--font-body);
-      cursor: pointer;
-    }
-    .rp-user-pill:disabled {
-      cursor: default;
-      opacity: 0.72;
-    }
-    .rp-user-pill--self {
-      border-color: rgba(212,181,108,0.45);
-      color: var(--gold);
-      background: rgba(212,181,108,0.08);
-    }
-    .rp-user-pill--pending {
-      opacity: 0.72;
-    }
-    .rp-user-pill--requested {
-      border-color: rgba(33,244,208,0.35);
-      color: var(--text);
-      background: rgba(33,244,208,0.08);
-    }
-    .rp-user-avatar {
-      width: 21px;
-      height: 21px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex: 0 0 auto;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--purple), var(--purple-bright));
-      color: #fff;
-      font-size: 0.58rem;
-      font-weight: 900;
-    }
-    .rp-user-name {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+    /* Old .rp-user-list styles removed - user list not used in Matrix chat */
 
-    /* Chat feed */
-    .rp-chat-feed {
-      flex: 1;
-      min-height: 280px;
-      max-height: 420px;
-      overflow-y: auto;
-      background: rgba(0,0,0,0.18);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 12px 12px 0 0;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.85rem;
-      scroll-behavior: smooth;
-    }
-    .rp-chat-feed::-webkit-scrollbar { width: 4px; }
-    .rp-chat-feed::-webkit-scrollbar-track { background: transparent; }
-    .rp-chat-feed::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 2px; }
+    /* Chat feed - using Matrix styles now */
+    /* Old .rp-chat-feed styles removed - now using .matrix-timeline */
 
-    .rp-msg {
-      display: flex;
-      gap: 0.65rem;
-      align-items: flex-start;
-    }
-    .rp-avatar {
-      width: 32px; height: 32px;
-      flex-shrink: 0;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--purple), var(--purple-bright));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.58rem;
-      font-weight: 900;
-      color: #fff;
-    }
-    .rp-msg-body { flex: 1; min-width: 0; }
-    .rp-handle {
-      font-size: 0.7rem;
-      font-weight: 800;
-      color: var(--purple-bright);
-      display: block;
-      margin-bottom: 0.15rem;
-      letter-spacing: 0.04em;
-    }
-    .rp-msg-text {
-      font-size: 0.875rem;
-      color: var(--text-2);
-      line-height: 1.55;
-      margin: 0;
-      word-break: break-word;
-    }
-    .rp-msg--self .rp-handle { color: var(--gold); }
-    .rp-msg--self .rp-avatar { background: linear-gradient(135deg, #d4af37, #f59e0b); }
-    .rp-msg--system {
-      justify-content: center;
-      padding: 0.25rem 0;
-    }
-    .rp-msg--system p {
-      font-size: 0.66rem;
-      color: var(--text-3);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin: 0;
-      text-align: center;
-    }
+    /* Old .rp-msg styles removed - now using .matrix-message */
 
-    /* Input bar — sticky-feel at bottom of chat card */
-    .rp-input-wrap {
-      display: flex;
-      position: relative;
-      z-index: 10030;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-top: none;
-      border-radius: 0 0 12px 12px;
-      overflow: hidden;
-      background: rgba(0,0,0,0.25);
-    }
-    .rp-input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      padding: 0.9rem 1rem;
-      color: var(--text);
-      font-size: 0.9rem;
-      font-family: var(--font-body);
-      outline: none;
-      min-width: 0;
-    }
-    .rp-input::placeholder { color: var(--text-3); }
-    .rp-input:focus { background: rgba(139,92,246,0.05); }
-    .rp-send {
-      flex-shrink: 0;
-      width: 52px;
-      min-height: 44px;
-      touch-action: manipulation;
-      background: var(--purple);
-      border: none;
-      color: #fff;
-      font-size: 1.1rem;
-      cursor: pointer;
-      transition: background 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-body);
-    }
-    .rp-send:hover { background: var(--purple-bright); }
-    .rp-send:active { transform: scale(0.94); }
+    /* Old .rp-input-wrap styles removed - now using .matrix-compose */
 
     .rp-phase-note {
       font-size: 0.66rem;

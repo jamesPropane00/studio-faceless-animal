@@ -234,7 +234,7 @@ export function initRadioChat(config) {
       const idx = simMsgIdxs[activeRoom] % msgs.length;
       simMsgIdxs[activeRoom]++;
       const m = msgs[idx];
-      appendMsg(buildMsgEl(m.username, m.message, false, m.av));
+      appendMsg(buildMsgEl(m.username, m.message, false));
     }, SIM_MSG_INTERVAL);
   }
 
