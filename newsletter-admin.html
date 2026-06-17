@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Newsletter Admin — Faceless Animal Studios</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #f0f0f0; padding: 1.5rem; max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 1.2rem; margin-bottom: 0.25rem; }
+    p { color: #888; font-size: 0.82rem; margin-bottom: 1rem; }
+    label { display: block; font-size: 0.78rem; font-weight: 600; margin-bottom: 0.3rem; color: #ccc; }
+    input, textarea, select { width: 100%; padding: 0.5rem 0.65rem; border-radius: 6px; border: 1px solid #333; background: #111; color: #f0f0f0; font-size: 0.85rem; font-family: inherit; margin-bottom: 0.75rem; }
+    textarea { min-height: 120px; resize: vertical; }
+    button { padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #7c3aed, #a78bfa); color: #fff; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    button.danger { background: #dc2626; }
+    .status { margin-top: 0.75rem; font-size: 0.82rem; }
+    .articles { margin-top: 1.5rem; }
+    .article-row { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #222; font-size: 0.82rem; }
+    .article-row strong { flex: 1; }
+    .article-row span { color: #666; font-size: 0.72rem; margin: 0 0.5rem; }
+    a { color: #a78bfa; text-decoration: none; }
+    .back { display: inline-block; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <a class="back" href="news.html">&larr; Back to News</a>
+  <h1>Newsletter Admin</h1>
+  <p>Create and manage Signal Wire articles.</p>
+
+  <form id="article-form">
+    <label for="article-title">Title</label>
+    <input id="article-title" maxlength="200" required />
+
+    <label for="article-body">Body</label>
+    <textarea id="article-body"></textarea>
+
+    <label for="article-category">Category</label>
+    <select id="article-category">
+      <option value="General">General</option>
+      <option value="Music">Music</option>
+      <option value="Tech">Tech</option>
+      <option value="Culture">Culture</option>
+      <option value="Release">Release</option>
+    </select>
+
+    <label for="article-media">Media URL (optional)</label>
+    <input id="article-media" placeholder="https://example.com/image.jpg" />
+
+    <label for="article-link">External Link (optional)</label>
+    <input id="article-link" placeholder="https://example.com" />
+
+    <button type="submit">Publish Article</button>
+    <div class="status" id="article-status"></div>
+  </form>
+
+  <div class="articles">
+    <h2>Recent Articles</h2>
+    <div id="article-list"></div>
+  </div>
+
+  <script>
+    (function () {
+      var supabaseUrl = 'https://ghufaozjwondqcrcucjs.supabase.co';
+      var supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdodWZhb3pqd29uZHFjcmN1Y2pzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NDg2MTcsImV4cCI6MjA4OTMyNDYxN30.YxAgndazRJxFX-XQJ2VllxgzxPHHd3zPSfDnfnFlD38';
+
+      function esc(s) { return String(s).replace(/[&<>"']/g, function(c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+
+      var statusEl = document.getElementById('article-status');
+      var listEl = document.getElementById('article-list');
+      var form = document.getElementById('article-form');
+      var titleInput = document.getElementById('article-title');
+      var bodyInput = document.getElementById('article-body');
+      var categoryInput = document.getElementById('article-category');
+      var mediaInput = document.getElementById('article-media');
+      var linkInput = document.getElementById('article-link');
+
+      function loadArticles() {
+        fetch(supabaseUrl + '/rest/v1/signal_wire_posts?select=id,title,category,published_at&order=published_at.desc&limit=20', {
+          headers: { apikey: supabaseKey, Authorization: 'Bearer ' + supabaseKey }
+        }).then(function (r) { return r.json(); }).then(function (data) {
+          if (!Array.isArray(data)) return;
+          listEl.innerHTML = data.length ? data.map(function (a) {
+            return '<div class="article-row"><strong>' + esc(a.title || 'Untitled') + '</strong><span>' + esc(a.category || '') + '</span><span>' + (a.published_at ? a.published_at.slice(0, 10) : '') + '</span></div>';
+          }).join('') : '<p style="color:#666;">No articles yet.</p>';
+        }).catch(function () {});
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var title = titleInput.value.trim();
+        var body = bodyInput.value.trim();
+        if (!title) { statusEl.textContent = 'Title is required.'; return; }
+        statusEl.textContent = 'Publishing...';
+        var payload = {
+          title: title,
+          body: body || null,
+          category: categoryInput.value,
+          media_url: mediaInput.value.trim() || null,
+          link_url: linkInput.value.trim() || null,
+          status: 'published',
+          published_at: new Date().toISOString(),
+          content_html: body ? '<p>' + esc(body).replace(/\n/g, '<br>') + '</p>' : null
+        };
+        fetch(supabaseUrl + '/rest/v1/signal_wire_posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: supabaseKey, Authorization: 'Bearer ' + supabaseKey, Prefer: 'return=minimal' },
+          body: JSON.stringify(payload)
+        }).then(function (r) {
+          if (!r.ok) throw new Error('Failed: ' + r.status);
+          statusEl.textContent = 'Article published!';
+          form.reset();
+          loadArticles();
+        }).catch(function (err) {
+          statusEl.textContent = err.message || 'Publish failed.';
+        });
+      });
+
+      loadArticles();
+    })();
+  </script>
+</body>
+</html>
