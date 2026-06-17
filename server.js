@@ -1781,6 +1781,7 @@ async function handleAIChat(req, res) {
       }
     } else {
       // ── Hugging Face (free) ──
+      if (creds) memoryEnabled = true;
       let agentContext = '';
       if (agentMode && !isAdmin) {
         try {
