@@ -3,8 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Signal Rooms is the DJ Faceless Animal chat and camera room lobby." />
-  <title>Signal Rooms - DJ Faceless Animal</title>
+  <meta name="description" content="Signal Rooms — DJ Faceless Animal's private chat, group audio rooms, video rooms, and camera rooms. Free real-time chat with Google sign-in. Join the Faceless network." />
+  <meta name="keywords" content="Signal Rooms, DJ Faceless Animal, chat, audio chat, video rooms, group chat, Faceless Animal Studios, free chat, camera rooms" />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://facelessanimalstudios.com/chat.html" />
+  <meta property="og:title" content="Signal Rooms — DJ Faceless Animal" />
+  <meta property="og:description" content="Free group chat, audio rooms, video rooms, and camera rooms. Join the Faceless Animal network with Google sign-in." />
+  <meta property="og:image" content="https://facelessanimalstudios.com/assets/mascot-animal.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Signal Rooms — DJ Faceless Animal" />
+  <meta name="twitter:description" content="Free real-time group chat, audio rooms, and video rooms. Google sign-in." />
+  <meta name="twitter:image" content="https://facelessanimalstudios.com/assets/mascot-animal.png" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Signal Rooms",
+    "url": "https://facelessanimalstudios.com/chat.html",
+    "description": "Free group chat, audio rooms, video rooms, and camera rooms by DJ Faceless Animal.",
+    "author": { "@type": "Person", "name": "DJ Faceless Animal" },
+    "applicationCategory": "Communication",
+    "operatingSystem": "All",
+    "browserRequirements": "JavaScript"
+  }
+  </script>
+  <title>Signal Rooms — Free Chat, Audio & Video Rooms by DJ Faceless Animal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=VT323&display=swap" rel="stylesheet" />
@@ -705,11 +729,12 @@
               <div class="matrix-video-lobby" id="video-room-lobby">
                 <strong>Video Room Lobby</strong>
                 <span>Group rooms like the old live chat rooms, private solo camera rooms, and the DJ room.</span>
-                <div class="matrix-video-actions">
-                  <button class="rooms-btn rooms-btn--primary" type="button" id="matrix-group-video">Group Chat</button>
-                  <button class="rooms-btn rooms-btn--green" type="button" id="matrix-private-video">Start Solo</button>
-                  <a class="rooms-btn" href="video-room.html?room=faceless-dj-room&mode=dj&label=DJ%20Room">DJ Room</a>
-                </div>
+  <div class="matrix-video-actions">
+    <button class="rooms-btn rooms-btn--primary" type="button" id="matrix-group-video">Group Chat</button>
+    <button class="rooms-btn rooms-btn--green" type="button" id="matrix-private-video">Start Solo</button>
+    <button class="rooms-btn rooms-btn--green" type="button" id="matrix-audio-room">Audio Room</button>
+    <a class="rooms-btn" href="video-room.html?room=faceless-dj-room&mode=dj&label=DJ%20Room">DJ Room</a>
+  </div>
               </div>
               <div class="matrix-room-list" id="matrix-room-list">
                 <p class="matrix-empty">Connect your chat account and the rooms light up.</p>
@@ -723,8 +748,8 @@
                   <div class="matrix-user" id="matrix-room-subtitle">Text room, group video room, or private camera room. No gatekeeper energy.</div>
                 </div>
                 <div class="matrix-room-actions">
-                  <button class="rooms-btn rooms-btn--green" type="button" id="matrix-video">Open Video Room</button>
-                  <button class="rooms-btn" type="button" id="matrix-open-text-room">Open Text Room</button>
+              <button class="rooms-btn rooms-btn--green" type="button" id="matrix-video">Open Video Room</button>
+              <button class="rooms-btn" type="button" id="matrix-open-text-room">Open Audio Room</button>
                 </div>
               </div>
               <div class="matrix-timeline" id="matrix-timeline">
@@ -1305,8 +1330,30 @@
       });
 
       $('matrix-open-text-room')?.addEventListener('click', function () {
-        setStatus('Text room is open here.', 'good');
-        $('matrix-timeline')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        var name = prompt('Audio room name', 'Faceless Audio Chat');
+        if (!name) return;
+        var win = window.open('video-room.html?mode=audio', '_blank');
+        setStatus('Creating audio room...', null);
+        createMatrixRoom({ name: name.trim(), preset: 'private_chat', visibility: 'private', topic: 'Faceless Animal group audio chat' }).then(function (roomId) {
+          if (!roomId) { if (win && !win.closed) win.close(); return; }
+          var url = 'video-room.html?room=' + encodeURIComponent(roomId) + '&mode=audio&label=' + encodeURIComponent(name.trim());
+          if (win && !win.closed) win.location.href = url; else window.open(url, '_blank');
+          setStatus('Audio room created!', 'good');
+          loadRooms();
+        }).catch(function (err) { setStatus(err.message || 'Could not create audio room.', 'error'); if (win && !win.closed) win.close(); });
+      });
+      $('matrix-audio-room')?.addEventListener('click', function () {
+        var name = prompt('Audio room name', 'Faceless Audio Chat');
+        if (!name) return;
+        var win = window.open('video-room.html?mode=audio', '_blank');
+        setStatus('Creating audio room...', null);
+        createMatrixRoom({ name: name.trim(), preset: 'private_chat', visibility: 'private', topic: 'Faceless Animal group audio chat' }).then(function (roomId) {
+          if (!roomId) { if (win && !win.closed) win.close(); return; }
+          var url = 'video-room.html?room=' + encodeURIComponent(roomId) + '&mode=audio&label=' + encodeURIComponent(name.trim());
+          if (win && !win.closed) win.location.href = url; else window.open(url, '_blank');
+          setStatus('Audio room created!', 'good');
+          loadRooms();
+        }).catch(function (err) { setStatus(err.message || 'Could not create audio room.', 'error'); if (win && !win.closed) win.close(); });
       });
 
       window.addEventListener('storage', function (event) {

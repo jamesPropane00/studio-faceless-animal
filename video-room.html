@@ -1147,6 +1147,51 @@
         min-height: 34px;
       }
     }
+
+    /* ── AUDIO ROOM ───────────────────────────────────── */
+    .video-shell.is-audio .audio-stage {
+      display: flex; flex-wrap: wrap; gap: 0.75rem;
+      align-items: center; justify-content: center;
+      padding: 1.5rem; width: 100%; max-width: 100%;
+    }
+    .video-shell.is-audio .audio-bubble {
+      display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
+      width: 80px;
+    }
+    .video-shell.is-audio .audio-bubble .audio-avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--bright, #a78bfa), var(--purple, #7c3aed));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; font-weight: 800; color: #fff;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.3);
+      transition: transform 0.15s;
+      border: 2px solid rgba(33,244,208,0.2);
+    }
+    .video-shell.is-audio .audio-bubble .audio-name {
+      font-size: 0.72rem; font-weight: 600; color: var(--soft, #c9cae5);
+      text-align: center; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; max-width: 80px;
+    }
+    .video-shell.is-audio .video-chat {
+      position: relative; bottom: 0; left: 0; right: 0;
+      max-height: min(30vh, 200px);
+      grid-template-rows: auto 1fr auto;
+    }
+    .video-shell.is-audio .video-chat-feed {
+      display: block;
+    }
+    .video-shell.is-audio #video-empty {
+      display: none;
+    }
+    .video-shell.is-audio .camera-panel {
+      display: none;
+    }
+    .video-shell.is-audio .video-frame {
+      display: none;
+    }
+    .video-shell.is-audio #camera-toggle {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -1167,6 +1212,7 @@
         <h1>No Room Selected</h1>
         <p>Start a group camera room or solo room from Signal Rooms first.</p>
       </div>
+      <div class="audio-stage" id="audio-stage" style="display:none;"></div>
       <section class="video-chat" id="video-chat" hidden>
         <div class="video-chat-head">
           <strong id="video-chat-title">Room Chat</strong>
@@ -1214,6 +1260,7 @@
         shell.classList.toggle('is-solo', mode === 'solo');
         shell.classList.toggle('is-group', mode === 'group');
         shell.classList.toggle('is-dj', mode === 'dj');
+        shell.classList.toggle('is-audio', mode === 'audio');
       }
 
       function safeRoomLabel(value) {
@@ -1406,10 +1453,36 @@
       var displayName = userLabel || (matrixSession && matrixSession.user_id ? matrixSession.user_id.replace(/^@/, '').split(':')[0] : 'Faceless');
       var cameraStream = null;
       if (title) title.textContent = roomLabel;
-      if (chatTitle) chatTitle.textContent = mode === 'dj' ? 'DJ Room Chat' : mode === 'solo' && displayName ? displayName + ' Room Chat' : 'Room Chat';
+      if (chatTitle) chatTitle.textContent = mode === 'dj' ? 'DJ Room Chat' : mode === 'solo' && displayName ? displayName + ' Room Chat' : mode === 'audio' ? 'Audio Room' : 'Room Chat';
       if (endRoomButton) endRoomButton.hidden = !isRoomOwner();
       if (empty) empty.remove();
       if (chat) chat.hidden = false;
+
+      // ── Audio room mode ──
+      if (mode === 'audio') {
+        var audioStage = document.getElementById('audio-stage');
+        if (audioStage) { audioStage.style.display = 'flex'; audioStage.innerHTML = ''; }
+        if (cameraToggle) cameraToggle.style.display = 'none';
+        // Load members and render bubbles
+        if (room && matrixSession && matrixSession.access_token) {
+          matrixApi('/rooms/' + encodeURIComponent(room) + '/joined_members').then(function (data) {
+            var members = data && data.joined ? Object.keys(data.joined) : [];
+            if (audioStage) {
+              audioStage.innerHTML = members.map(function (uid) {
+                var name = uid.replace(/^@/, '').split(':')[0];
+                var initial = name.charAt(0).toUpperCase();
+                return '<div class="audio-bubble"><div class="audio-avatar">' + esc(initial) + '</div><div class="audio-name">' + esc(name) + '</div></div>';
+              }).join('');
+              // Always keep the current user visible
+              if (members.length === 0 && matrixSession.user_id) {
+                var me = matrixSession.user_id.replace(/^@/, '').split(':')[0];
+                audioStage.innerHTML = '<div class="audio-bubble"><div class="audio-avatar">' + esc(me.charAt(0).toUpperCase()) + '</div><div class="audio-name">' + esc(me) + '</div></div>';
+              }
+            }
+          }).catch(function () {});
+        }
+        return; // skip camera setup
+      }
 
       var panel = document.createElement('section');
       panel.className = 'camera-panel';
