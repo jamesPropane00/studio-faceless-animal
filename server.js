@@ -3466,21 +3466,17 @@ async function runSignalCodeBackfillOnBoot() {
 
 function startServer(portToUse) {
   if (USE_HTTPS) {
-    const { execSync } = require('child_process');
     let certPem, keyPem;
     const certPath = path.join(ROOT, '.localhost-cert.pem');
     const keyPath = path.join(ROOT, '.localhost-key.pem');
     try {
-      if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
-        certPem = fs.readFileSync(certPath, 'utf8');
-        keyPem = fs.readFileSync(keyPath, 'utf8');
-      } else {
-        execSync('openssl req -x509 -newkey rsa:2048 -keyout "' + keyPath + '" -out "' + certPath + '" -days 365 -nodes -subj "/C=US/ST=State/L=City/O=Faceless Animal Studios/CN=localhost" 2>nul', { timeout: 10000 });
-        certPem = fs.readFileSync(certPath, 'utf8');
-        keyPem = fs.readFileSync(keyPath, 'utf8');
+      if (!fs.existsSync(certPath) || !fs.existsSync(keyPath)) {
+        require('./scripts/generate-cert.js');
       }
-    } catch {
-      console.warn('[FAS] openssl not available — install it or place .localhost-cert.pem / .localhost-key.pem in the project root');
+      certPem = fs.readFileSync(certPath, 'utf8');
+      keyPem = fs.readFileSync(keyPath, 'utf8');
+    } catch (e) {
+      console.warn('[FAS] Failed to load HTTPS cert:', e.message);
       process.exit(1);
     }
     const secureServer = https.createServer({ key: keyPem, cert: certPem }, (req, res) => server.emit('request', req, res));
