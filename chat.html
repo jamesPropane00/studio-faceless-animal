@@ -1143,14 +1143,27 @@
         openCallForRoom(roomId);
       }
 
-      function createMatrixRoom(options) {
+      function createMatrixRoom(options, retries) {
+        retries = retries || 3;
         if (!ensureMatrixSession()) return Promise.resolve(null);
         return matrixApi('/createRoom', {
           method: 'POST',
           body: JSON.stringify(options)
         }).then(function (data) {
+          if (!data || !data.room_id) throw new Error('Empty room_id');
           currentRoomId = data.room_id;
           return loadRooms().then(function () { return data.room_id; });
+        }).catch(function (err) {
+          var isRateLimit = err && (String(err.message || '').indexOf('429') !== -1 || String(err.message || '').indexOf('rate') !== -1 || String(err.message || '').indexOf('too many') !== -1);
+          if (isRateLimit && retries > 0) {
+            var delay = (4 - retries) * 3000;
+            setStatus('Room creation rate-limited, retrying in ' + (delay / 1000) + 's...', null);
+            return new Promise(function (resolve) { setTimeout(resolve, delay); }).then(function () {
+              return createMatrixRoom(options, retries - 1);
+            });
+          }
+          setStatus(err && err.message ? err.message : 'Could not create room.', 'error');
+          return null;
         });
       }
 
