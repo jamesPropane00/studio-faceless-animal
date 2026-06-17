@@ -659,12 +659,22 @@
             </div>
             <div class="matrix-site-user" id="matrix-site-user">Checking your Faceless signal...</div>
             <div class="matrix-sso-actions">
-              <button class="rooms-btn rooms-btn--primary" type="button" id="matrix-sso-google" style="width:100%;padding:1rem;font-size:1rem;">Enter The Rooms</button>
-              <div style="text-align:center;margin-top:0.5rem;">
-                <a href="#" id="matrix-show-password" style="color:var(--tv-muted);font-size:0.78rem;text-decoration:none;">Use room password instead</a>
+              <button class="rooms-btn rooms-btn--primary" type="button" id="matrix-sso-simple" style="width:100%;padding:1rem;font-size:1rem;margin-bottom:0.75rem;">Enter The Rooms</button>
+              <div class="matrix-account-lanes">
+                <div class="matrix-account-lane">
+                  <strong>Already Have A Chat Account?</strong>
+                  <span>Use Google or your room password and the rooms open here.</span>
+                  <button class="rooms-btn rooms-btn--primary" type="button" id="matrix-sso-google">Sign In With Google</button>
+                </div>
+                <div class="matrix-account-lane">
+                  <strong>Need A Chat Account?</strong>
+                  <span>Create one, then come back and connect it to Signal Rooms.</span>
+                  <button class="rooms-btn rooms-btn--green" type="button" id="matrix-create-google">Create With Google</button>
+                </div>
               </div>
+              <div class="matrix-divider">or use room password</div>
             </div>
-            <div class="matrix-fields" id="matrix-password-fields" style="display:none;">
+            <div class="matrix-fields">
               <label class="matrix-field">
                 Room ID
                 <input id="matrix-login-user" name="matrixUser" value="" placeholder="your room username" autocomplete="username" inputmode="email" />
@@ -674,9 +684,6 @@
                 <input id="matrix-login-password" name="matrixPassword" type="password" autocomplete="current-password" />
               </label>
               <button class="rooms-btn rooms-btn--primary" type="submit">Sign In</button>
-              <div style="text-align:center;margin-top:0.5rem;">
-                <a href="#" id="matrix-hide-password" style="color:var(--tv-muted);font-size:0.78rem;text-decoration:none;">Use Google sign in</a>
-              </div>
             </div>
             <div class="matrix-status" id="matrix-login-status" role="status" aria-live="polite"></div>
           </form>
@@ -1120,20 +1127,9 @@
         return null;
       }
 
-      $('matrix-sso-google')?.addEventListener('click', function () {
-        startMatrixSso();
-      });
-
-      $('matrix-show-password')?.addEventListener('click', function (e) {
-        e.preventDefault();
-        document.querySelector('.matrix-sso-actions').style.display = 'none';
-        document.getElementById('matrix-password-fields').style.display = '';
-      });
-      $('matrix-hide-password')?.addEventListener('click', function (e) {
-        e.preventDefault();
-        document.querySelector('.matrix-sso-actions').style.display = '';
-        document.getElementById('matrix-password-fields').style.display = 'none';
-      });
+      $('matrix-sso-google')?.addEventListener('click', function () { startMatrixSso(); });
+      $('matrix-create-google')?.addEventListener('click', function () { startMatrixSso(); });
+      $('matrix-sso-simple')?.addEventListener('click', function () { startMatrixSso(); });
 
       $('matrix-login')?.addEventListener('submit', function (event) {
         event.preventDefault();
