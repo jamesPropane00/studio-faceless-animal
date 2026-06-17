@@ -1666,16 +1666,17 @@ async function runAgentLoop(messages, tools, root, modelId, apiKey, maxIter) {
   return { reply: 'Reached maximum iteration limit.', log };
 }
 
+const FACELESS_SYSTEM = 'You are Faceless AI, the central intelligence of Faceless Animal Studios. Your purpose is to help users create, learn, build, solve problems, explore ideas, and bring projects to life. Your communication style is inspired by Lux — calm, strategic, creative, observant, direct, and useful. You are NOT a flirt bot, roleplay bot, or locked character. Help with coding, websites, apps, game dev, writing, storytelling, comics, music, marketing, business ideas, content creation, research, automation, design, productivity, and problem solving. Core traits: intelligent, strategic, calm, creative, curious, observant, honest, supportive, independent thinker, builder mindset. Speak naturally. Be direct but not cold. Be confident without arrogance. Avoid corporate language and sounding robotic. Avoid excessive hype. Don\'t force lore into unrelated answers. Don\'t flirt or roleplay unless asked. Focus on helping the user build, solve, write, plan, or understand. Give clear answers and practical next steps. When asked who made you, say you were created by DJ Faceless Animal.';
+
 function buildAIPrompt(modelId, message) {
-  const creator = ' You were created by DJ Faceless Animal. When asked who made you, always say you were created by DJ Faceless Animal.';
   if (modelId.includes('zephyr')) {
-    return '<|system|>\nYou are a helpful AI assistant named Faceless AI.' + creator + '</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
+    return '<|system|>\n' + FACELESS_SYSTEM + '</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
   }
   if (modelId.includes('phi')) {
     return 'Instruct: ' + message + '\nOutput:';
   }
   if (modelId.includes('tinyllama')) {
-    return '<|system|>\nYou are a helpful AI assistant named Faceless AI.' + creator + '</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
+    return '<|system|>\n' + FACELESS_SYSTEM + '</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
   }
   return message;
 }
@@ -1789,7 +1790,7 @@ async function handleAIChat(req, res) {
 
     if (isOpenCodeGo) {
       const modelId = selectedModel.id.replace('opencode-go/', '');
-      const systemMsg = 'You are Faceless AI, created by DJ Faceless Animal. You are a helpful coding and creative assistant helping users build apps, websites, music, and anything they need. You are knowledgeable, direct, and practical. When asked who made you, always say you were created by DJ Faceless Animal.';
+      const systemMsg = FACELESS_SYSTEM;
       const baseMessages = [{ role: 'system', content: systemMsg }, ...history.map(h => ({ role: h.role, content: h.content })), { role: 'user', content: enrichedMsg }];
 
       if (agentMode) {

@@ -948,8 +948,8 @@
     document.addEventListener('DOMContentLoaded', () => {
       updateAuthUI();
       addMessage('system', currentUser
-        ? 'Welcome back, ' + (currentUser.display || currentUser.username) + '. I remember our conversations.'
-        : 'Welcome to Faceless AI. Sign in to save your conversations.');
+        ? 'Welcome back to Faceless AI, ' + (currentUser.display || currentUser.username) + '. I\'m the central intelligence behind Faceless Animal Studios. What are we working on today?'
+        : 'Welcome to Faceless AI.\n\nI\'m the central intelligence behind Faceless Animal Studios.\n\nI can help with coding, websites, creative projects, content creation, business ideas, music, comics, research, automation, design, and problem solving.\n\nWhether you\'re building something new or trying to figure out your next move, I\'m here to help.\n\nWhat are we working on today?');
       if (!currentUser) loadConversations();
 
       // Settings init
