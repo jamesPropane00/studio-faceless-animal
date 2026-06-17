@@ -27,29 +27,67 @@
     body { display: flex; flex-direction: column; }
 
     .app-layout { display: flex; flex: 1; overflow: hidden; padding-top: var(--nav-h, 72px); }
-  /* Match site nav */
+  /* ── Navbar (waffle style, matching dashboard) ── */
   .navbar {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 300;
-    background: rgba(7,8,12,0.92); backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--border);
+    position: fixed; top: 0; left: 0; right: 0; z-index: 12000;
+    background: rgba(3, 4, 7, 0.9) !important;
+    border-bottom: 1px solid rgba(33,244,208,0.13) !important;
+    backdrop-filter: blur(18px);
     padding: 0 1rem; height: var(--nav-h, 72px);
   }
-  .navbar-inner { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
-  .navbar-logo { font-size: 0.95rem; font-weight: 900; color: #fff; white-space: nowrap; text-decoration: none; }
-  .navbar-logo span { color: var(--bright); }
-  .navbar-links { display: flex; gap: 0.75rem; list-style: none; flex-wrap: wrap; align-items: center; }
-  .navbar-links a { color: var(--soft); font-size: 0.82rem; font-weight: 600; text-decoration: none; }
-  .navbar-links a:hover { color: #fff; }
+  .navbar-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .navbar-logo { font-size: 0.92rem; font-weight: 800; color: #fff; white-space: nowrap; text-decoration: none; letter-spacing: 0.01em; }
+  .navbar-logo span { color: var(--gold); }
+  .navbar-links { display: none !important; }
   .nav-cta {
-    padding: 0.5rem 0.85rem; border-radius: 999px;
-    background: linear-gradient(120deg, var(--purple), var(--bright));
-    color: #fff !important; font-size: 0.78rem !important; white-space: nowrap;
+    background: linear-gradient(135deg, #f9d97d, #f3d47a) !important;
+    color: #08090d !important;
+    padding: 0.42rem 1.1rem !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    font-size: 0.82rem !important;
+    white-space: nowrap !important;
+    text-decoration: none !important;
   }
+  .nav-toggle {
+    display: inline-flex !important;
+    align-items: center; justify-content: center;
+    width: 46px; height: 46px; padding: 0;
+    border: 1px solid rgba(33,244,208,0.22) !important;
+    background: rgba(255,255,255,0.045) !important;
+    border-radius: 8px; cursor: pointer; position: relative; z-index: 12002;
+    box-shadow: 0 14px 34px rgba(0,0,0,0.28);
+    pointer-events: auto; touch-action: manipulation;
+  }
+  .nav-toggle span { display: block; width: 4px; height: 4px; border-radius: 50%; background: #21f4d0 !important; box-shadow: 8px 0 0 #21f4d0, 16px 0 0 #21f4d0 !important; }
+  .nav-toggle:hover, .nav-toggle.open { border-color: rgba(33,244,208,0.52) !important; background: rgba(33,244,208,0.1) !important; box-shadow: 0 0 28px rgba(33,244,208,0.12); }
   .mobile-nav { display: none; }
-  @media (max-width: 768px) {
-    .navbar-links li { display: none; }
-    .navbar-links li:last-child { display: list-item; }
+  .mobile-nav.open {
+    display: grid !important;
+    position: fixed; top: calc(var(--nav-h, 72px) + 0.75rem);
+    right: max(0.75rem, calc((100vw - 1180px) / 2)); left: auto; bottom: auto;
+    width: min(320px, calc(100vw - 1.5rem)); z-index: 12040;
+    padding: 0.72rem;
+    border: 1px solid rgba(33,244,208,0.2) !important;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(33,244,208,0.08), rgba(139,92,246,0.08)), rgba(8,9,13,0.96) !important;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+    backdrop-filter: blur(20px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
   }
+  .mobile-nav a {
+    display: flex; min-height: 54px; align-items: center; justify-content: center;
+    padding: 0.75rem 0.6rem !important;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+    background: rgba(255,255,255,0.035);
+    color: #eef3ff !important; font-size: 0.76rem; font-weight: 900;
+    letter-spacing: 0.08em; text-align: center; text-transform: uppercase;
+    text-decoration: none;
+  }
+  .mobile-nav a:hover, .mobile-nav a:focus-visible { border-color: rgba(33,244,208,0.34); background: rgba(33,244,208,0.08); color: #fff !important; outline: none; transform: translateY(-1px); }
+  .mobile-nav a[aria-current="page"] { border-color: rgba(139,92,246,0.42); background: rgba(139,92,246,0.14); }
+  .mobile-nav .waffle-menu-cta { grid-column: 1 / -1; min-height: 48px; color: #08090d !important; background: linear-gradient(135deg, #f9d97d, #f3d47a); border-color: rgba(255,255,255,0.18); }
 
     /* ── SIDEBAR ── */
     .sidebar {
@@ -225,25 +263,29 @@
   </style>
 </head>
 <body>
-  <nav class="navbar" role="navigation" aria-label="Main navigation">
+  <nav class="navbar waffle-nav tv-waffle-nav" role="navigation" aria-label="Main navigation">
     <div class="navbar-inner">
       <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
-      <ul class="navbar-links" role="list">
-        <li><a href="directory.html">Directory</a></li>
-        <li><a href="radio.html">Radio</a></li>
-        <li><a href="pulse.html">Pulse Stage</a></li>
-        <li><a href="chat.html">Rooms</a></li>
-        <li><a href="tv.html">TV</a></li>
-        <li><a href="neon-dreams.html">Neon Dreams</a></li>
-        <li><a href="news.html">News</a></li>
-        <li><a href="store.html">Store</a></li>
-        <li><a href="wallet.html">Vault</a></li>
-        <li><a href="apps.html">Apps</a></li>
-        <li><a href="dashboard.html">Dashboard</a></li>
-        <li><a href="login.html" class="nav-cta">Enter The System</a></li>
-      </ul>
+      <button class="nav-toggle tv-waffle-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </nav>
+  <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
+    <a href="directory.html">Directory</a>
+    <a href="radio.html">Radio</a>
+    <a href="pulse.html">Pulse Stage</a>
+    <a href="chat.html">Rooms</a>
+    <a href="tv.html">TV</a>
+    <a href="ai.html" aria-current="page">AI</a>
+    <a href="neon-dreams.html">Neon Dreams</a>
+    <a href="news.html">News</a>
+    <a href="store.html">Store</a>
+    <a href="wallet.html">Vault</a>
+    <a href="apps.html">Apps</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="login.html" class="waffle-menu-cta tv-waffle-cta">Enter The System</a>
+  </div>
   <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
   <div class="overlay" id="settingsOverlay" onclick="toggleSettings()" style="z-index:249"></div>
   <div class="app-layout">
@@ -854,5 +896,6 @@
       ta.focus();
     });
   </script>
+  <script src="assets/script.js?v=20260617-ai"></script>
 </body>
 </html>
