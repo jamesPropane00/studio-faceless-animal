@@ -4,6 +4,7 @@
   var API = {
     channels: '/api/tv/channels',
     uploads: '/api/tv/uploads',
+    reactions: '/api/tv/reactions',
   };
 
   var state = {
@@ -18,6 +19,8 @@
     playlistIndex: -1,
     autoplaying: false,
     localMode: true,
+    activeReactionTarget: null,
+    activeShareTarget: null,
   };
 
   var el = {};
@@ -408,11 +411,14 @@
       var source = videoSource(item);
       var embed = embedSource(item);
       var key = uploadKey(item);
+      var uploadId = String(item.id || item.external_video_id || '');
+      var likes = numberFromItem(item, ['likes', 'like_count', 'upvotes', 'upvote_count']);
+      var dislikes = numberFromItem(item, ['dislikes', 'dislike_count', 'downvotes', 'downvote_count']);
       return [
-        '<article class="tv-card" tabindex="0" data-key="' + escapeHtml(key) + '" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '" data-embed="' + escapeHtml(embed) + '">',
+        '<article class="tv-card" tabindex="0" data-key="' + escapeHtml(key) + '" data-upload-id="' + escapeHtml(uploadId) + '" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '" data-embed="' + escapeHtml(embed) + '" data-likes="' + likes + '" data-dislikes="' + dislikes + '">',
           '<div class="tv-thumb">',
             source
-              ? '<video class="tv-thumb-video" controls muted playsinline preload="metadata" src="' + escapeHtml(source) + '#t=0.1"></video>'
+              ? '<video class="tv-thumb-video" controls muted playsinline preload="metadata" src="' + escapeHtml(source) + '"></video>'
               : '<iframe src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>',
             '<span class="tv-play" aria-hidden="true">&gt;</span>',
             '<span class="tv-meta">' + escapeHtml(duration) + '</span>',
@@ -458,7 +464,8 @@
     if (!el.screen || !el.featureTitle || !el.featureCopy) return;
     el.featureTitle.textContent = 'No Videos Loaded';
     el.featureCopy.textContent = 'The TV page is waiting for published videos from the channel archive.';
-    setReactionsEnabled(false);
+    renderReactions(null);
+    renderShare(null);
     el.screen.innerHTML = [
       '<div class="tv-screen-placeholder">',
         '<div>',
@@ -483,11 +490,12 @@
     el.featureTitle.textContent = title;
     el.featureCopy.textContent = copy;
     setActiveCard(key);
-    setReactionsEnabled(true);
-    updateReactionUi(key);
+    var target = reactionTargetFromCard(card);
+    renderReactions(target);
+    renderShare(target);
 
     if (source) {
-      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
+      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
       activateVideos(el.screen);
       return;
     }
@@ -512,11 +520,12 @@
     el.featureTitle.textContent = title;
     el.featureCopy.textContent = copy;
     setActiveCard(key);
-    setReactionsEnabled(true);
-    updateReactionUi(key);
+    var target = reactionTargetFromItem(item);
+    renderReactions(target);
+    renderShare(target);
 
     if (source) {
-      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
+      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
       activateVideos(el.screen);
       return;
     }
@@ -554,15 +563,18 @@
     if (!root) return;
     qsa('video', root).forEach(function (video) {
       try {
-        video.muted = true;
-        video.defaultMuted = true;
         video.playsInline = true;
 
         if (video.classList.contains('tv-thumb-video')) {
-          // Archive thumbnails — metadata only, no autoplay (saves mobile devices)
+          video.muted = true;
+          video.defaultMuted = true;
           video.autoplay = false;
           video.loop = false;
-          video.pause();
+          video.preload = 'metadata';
+          video.addEventListener('loadedmetadata', function onMeta() {
+            video.removeEventListener('loadedmetadata', onMeta);
+            try { video.currentTime = 0.1; } catch (e) {}
+          });
           return;
         }
 
@@ -872,92 +884,244 @@
     });
   }
 
-  function tvStoreKey(key, suffix) {
-    return 'tv_reaction_' + key + '_' + suffix;
+  function localReactionKey(target) {
+    return 'reaction_' + (target && (target.uploadId || target.uploadKey) || 'none');
   }
 
-  function tvReactionCount(key, type) {
-    return Number(localStorage.getItem(tvStoreKey(key, type)) || 0);
+  function localReactionCountsKey(target) {
+    return 'reaction_counts_' + (target && (target.uploadId || target.uploadKey) || 'none');
   }
 
-  function setReactionsEnabled(enabled) {
-    if (el.likeButton) el.likeButton.disabled = !enabled;
-    if (el.dislikeButton) el.dislikeButton.disabled = !enabled;
-    if (el.shareButton) el.shareButton.disabled = !enabled;
+  function readReactionChoice(target) {
+    try {
+      return localStorage.getItem(localCacheKey(localReactionKey(target))) || '';
+    } catch (err) {
+      return '';
+    }
   }
 
-  function updateReactionUi(key) {
-    if (!key) return;
-    if (el.likeCount) el.likeCount.textContent = String(tvReactionCount(key, 'likes'));
-    if (el.dislikeCount) el.dislikeCount.textContent = String(tvReactionCount(key, 'dislikes'));
-    if (el.likeButton) el.likeButton.classList.toggle('active', localStorage.getItem(tvStoreKey(key, 'liked')) === '1');
-    if (el.dislikeButton) el.dislikeButton.classList.toggle('active', localStorage.getItem(tvStoreKey(key, 'disliked')) === '1');
+  function writeReactionChoice(target, choice) {
+    try {
+      var key = localCacheKey(localReactionKey(target));
+      if (choice) {
+        localStorage.setItem(key, choice);
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch (err) {}
   }
 
-  function bindReactions() {
+  function numberFromItem(item, names) {
+    for (var i = 0; i < names.length; i += 1) {
+      var value = Number(item && item[names[i]]);
+      if (Number.isFinite(value) && value >= 0) return Math.floor(value);
+    }
+    return 0;
+  }
+
+  function commentTargetFromItem(item) {
+    if (!item) return {};
+    return {
+      uploadKey: uploadKey(item),
+      uploadId: String(item.id || item.external_video_id || ''),
+    };
+  }
+
+  function commentTargetFromCard(card) {
+    if (!card) return {};
+    return {
+      uploadKey: card.getAttribute('data-key') || '',
+      uploadId: card.getAttribute('data-upload-id') || '',
+    };
+  }
+
+  function reactionTargetFromItem(item) {
+    var target = commentTargetFromItem(item);
+    target.likes = numberFromItem(item, ['likes', 'like_count', 'upvotes', 'upvote_count']);
+    target.dislikes = numberFromItem(item, ['dislikes', 'dislike_count', 'downvotes', 'downvote_count']);
+    target.title = item && (item.title || item.name) || '';
+    return target;
+  }
+
+  function reactionTargetFromCard(card) {
+    var target = commentTargetFromCard(card);
+    target.likes = Number(card.getAttribute('data-likes') || 0);
+    target.dislikes = Number(card.getAttribute('data-dislikes') || 0);
+    target.title = card.getAttribute('data-title') || '';
+    return target;
+  }
+
+  function reactionTargetFromKey(uploadKeyValue) {
+    var item = (state.uploads || []).find(function (upload) {
+      return uploadKey(upload) === uploadKeyValue;
+    });
+    return item ? reactionTargetFromItem(item) : { uploadKey: uploadKeyValue, uploadId: '', likes: 0, dislikes: 0 };
+  }
+
+  function seedReactionCounts(target) {
+    var cached = readLocalJson(localReactionCountsKey(target), null);
+    if (cached) return cached;
+    return {
+      likes: Math.max(0, Number(target && target.likes || 0)),
+      dislikes: Math.max(0, Number(target && target.dislikes || 0)),
+    };
+  }
+
+  function renderReactions(target) {
+    if (!el.likeButton || !el.dislikeButton || !el.likeCount || !el.dislikeCount || !el.reactionNote) return;
+    state.activeReactionTarget = target || null;
+    if (!target || !target.uploadKey) {
+      el.likeCount.textContent = '0';
+      el.dislikeCount.textContent = '0';
+      el.likeButton.classList.remove('active');
+      el.dislikeButton.classList.remove('active');
+      el.likeButton.disabled = true;
+      el.dislikeButton.disabled = true;
+      el.reactionNote.textContent = '';
+      return;
+    }
+
+    var counts = seedReactionCounts(target);
+    var choice = readReactionChoice(target);
+    el.likeCount.textContent = String(counts.likes || 0);
+    el.dislikeCount.textContent = String(counts.dislikes || 0);
+    el.likeButton.classList.toggle('active', choice === 'like');
+    el.dislikeButton.classList.toggle('active', choice === 'dislike');
+    el.likeButton.disabled = false;
+    el.dislikeButton.disabled = false;
+    el.reactionNote.textContent = choice ? 'Reaction saved.' : '';
+  }
+
+  function shareUrlForTarget(target) {
+    var base = window.location && window.location.href ? window.location.href : 'tv.html';
+    var url;
+    try {
+      url = new URL(base);
+    } catch (err) {
+      url = new URL('tv.html', window.location && window.location.origin ? window.location.origin : document.baseURI);
+    }
+    url.searchParams.delete('v');
+    if (target && target.uploadKey) {
+      url.searchParams.set('video', target.uploadKey);
+    }
+    url.hash = 'tv-watch';
+    return url.toString();
+  }
+
+  function titleForTarget(target) {
+    return target && (target.title || target.name) || 'Faceless TV video';
+  }
+
+  function renderShare(target) {
+    state.activeShareTarget = target || null;
+    if (!el.shareButton || !el.shareNote) return;
+    if (!target || !target.uploadKey) {
+      el.shareButton.disabled = true;
+      el.shareNote.textContent = '';
+      return;
+    }
+    el.shareButton.disabled = false;
+    el.shareNote.textContent = '';
+  }
+
+  function fallbackCopyText(text) {
+    var input = document.createElement('textarea');
+    input.value = text;
+    input.setAttribute('readonly', '');
+    input.style.position = 'fixed';
+    input.style.left = '-9999px';
+    document.body.appendChild(input);
+    input.select();
+    input.setSelectionRange(0, input.value.length);
+    var copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } catch (err) {
+      copied = false;
+    }
+    document.body.removeChild(input);
+    return copied;
+  }
+
+  async function shareActiveVideo() {
+    var target = state.activeShareTarget || state.activeReactionTarget;
+    if (!target || !target.uploadKey || !el.shareNote) return;
+    var url = shareUrlForTarget(target);
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: titleForTarget(target),
+          text: titleForTarget(target),
+          url: url,
+        });
+        el.shareNote.textContent = 'Shared.';
+        return;
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else if (!fallbackCopyText(url)) {
+        throw new Error('copy failed');
+      }
+      el.shareNote.textContent = 'Link copied.';
+    } catch (err) {
+      el.shareNote.textContent = url;
+    }
+  }
+
+  async function saveVideoReaction(target, choice, afterRender) {
+    if (!target || !target.uploadKey || !choice) return;
+    var previous = readReactionChoice(target);
+    var next = previous === choice ? '' : choice;
+    var counts = seedReactionCounts(target);
+
+    if (previous === 'like') counts.likes = Math.max(0, counts.likes - 1);
+    if (previous === 'dislike') counts.dislikes = Math.max(0, counts.dislikes - 1);
+    if (next === 'like') counts.likes += 1;
+    if (next === 'dislike') counts.dislikes += 1;
+
+    writeReactionChoice(target, next);
+    writeLocalJson(localReactionCountsKey(target), counts);
+    if (afterRender) afterRender(target);
+
+    fetchJson(API.reactions, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        upload_id: target.uploadId || null,
+        upload_key: target.uploadKey,
+        reaction: next || 'clear',
+      }),
+    }).then(function (payload) {
+      if (!payload || !payload.counts) return;
+      writeLocalJson(localReactionCountsKey(target), {
+        likes: Math.max(0, Number(payload.counts.likes || 0)),
+        dislikes: Math.max(0, Number(payload.counts.dislikes || 0)),
+      });
+      if (afterRender) afterRender(target);
+    }).catch(function () {});
+  }
+
+  async function reactToVideo(choice) {
+    saveVideoReaction(state.activeReactionTarget, choice, renderReactions);
+  }
+
+  function bindReactionButtons() {
     if (el.likeButton) {
       el.likeButton.addEventListener('click', function () {
-        var key = state.currentKey;
-        if (!key) return;
-        var likedKey = tvStoreKey(key, 'liked');
-        var liked = localStorage.getItem(likedKey) === '1';
-        if (liked) {
-          localStorage.setItem(likedKey, '0');
-          localStorage.setItem(tvStoreKey(key, 'likes'), String(Math.max(0, tvReactionCount(key, 'likes') - 1)));
-        } else {
-          localStorage.setItem(likedKey, '1');
-          localStorage.setItem(tvStoreKey(key, 'likes'), String(tvReactionCount(key, 'likes') + 1));
-          if (localStorage.getItem(tvStoreKey(key, 'disliked')) === '1') {
-            localStorage.setItem(tvStoreKey(key, 'disliked'), '0');
-            localStorage.setItem(tvStoreKey(key, 'dislikes'), String(Math.max(0, tvReactionCount(key, 'dislikes') - 1)));
-          }
-        }
-        updateReactionUi(key);
-        if (el.reactionNote) el.reactionNote.textContent = '';
+        reactToVideo('like');
       });
     }
     if (el.dislikeButton) {
       el.dislikeButton.addEventListener('click', function () {
-        var key = state.currentKey;
-        if (!key) return;
-        var dislikedKey = tvStoreKey(key, 'disliked');
-        var disliked = localStorage.getItem(dislikedKey) === '1';
-        if (disliked) {
-          localStorage.setItem(dislikedKey, '0');
-          localStorage.setItem(tvStoreKey(key, 'dislikes'), String(Math.max(0, tvReactionCount(key, 'dislikes') - 1)));
-        } else {
-          localStorage.setItem(dislikedKey, '1');
-          localStorage.setItem(tvStoreKey(key, 'dislikes'), String(tvReactionCount(key, 'dislikes') + 1));
-          if (localStorage.getItem(tvStoreKey(key, 'liked')) === '1') {
-            localStorage.setItem(tvStoreKey(key, 'liked'), '0');
-            localStorage.setItem(tvStoreKey(key, 'likes'), String(Math.max(0, tvReactionCount(key, 'likes') - 1)));
-          }
-        }
-        updateReactionUi(key);
-        if (el.reactionNote) el.reactionNote.textContent = '';
+        reactToVideo('dislike');
       });
     }
-    if (el.shareButton) {
-      el.shareButton.addEventListener('click', function () {
-        var key = state.currentKey;
-        if (!key) return;
-        var url = window.location.origin + window.location.pathname + '?v=' + encodeURIComponent(key);
-        var title = (el.featureTitle && el.featureTitle.textContent) || 'Faceless TV';
-        if (navigator.share) {
-          navigator.share({ title: title, url: url }).catch(function () {});
-          return;
-        }
-        if (!navigator.clipboard || !navigator.clipboard.writeText) {
-          if (el.shareNote) el.shareNote.textContent = url;
-          return;
-        }
-        navigator.clipboard.writeText(url).then(function () {
-          if (el.shareNote) el.shareNote.textContent = 'Link copied!';
-        }).catch(function () {
-          if (el.shareNote) el.shareNote.textContent = url;
-        });
-      });
-    }
+  }
+
+  function bindShareButton() {
+    if (!el.shareButton) return;
+    el.shareButton.addEventListener('click', function () {
+      shareActiveVideo();
+    });
   }
 
   function initDom() {
@@ -972,6 +1136,13 @@
     el.dislikeCount = qs('#tv-dislike-count');
     el.reactionNote = qs('#tv-reaction-note');
     el.shareNote = qs('#tv-share-note');
+    el.compressOpen = qs('#tv-compress-open');
+    el.compressWidget = qs('#tv-compress-widget');
+    el.compressClose = qs('#tv-compress-close');
+    el.compressStart = qs('#tv-compress-start');
+    el.compressStatus = qs('#tv-compress-status');
+    el.compressEstimate = qs('#tv-compress-estimate');
+    el.compressProgress = qs('#tv-compress-progress');
     el.sourceLabel = qs('#tv-source-label');
     el.uploadLink = qs('#tv-upload-link');
     el.channelSelect = qs('#tv-upload-channel');
@@ -992,7 +1163,8 @@
     bindFilterRail();
     bindChannelForm();
     bindUploadForm();
-    bindReactions();
+    bindReactionButtons();
+    bindShareButton();
     loadNetwork();
   }
 
