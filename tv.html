@@ -1424,100 +1424,7 @@
       min-height: 1.1em;
     }
 
-    .tv-compress-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.7rem;
-      margin: -0.18rem 0 0.75rem;
-      padding: 0.72rem;
-      border: 1px solid rgba(33,244,208,0.16);
-      border-radius: 8px;
-      background: rgba(0,0,0,0.22);
-    }
-
-    .tv-compress-row small {
-      color: var(--tv-muted);
-      font-size: 0.72rem;
-      line-height: 1.35;
-    }
-
-    .tv-compress-widget[hidden] {
-      display: none;
-    }
-
-    .tv-compress-widget {
-      position: fixed;
-      right: clamp(0.75rem, 3vw, 1.5rem);
-      bottom: clamp(0.75rem, 3vw, 1.5rem);
-      z-index: 50;
-      width: min(360px, calc(100vw - 1.5rem));
-      padding: 0.95rem;
-      border: 1px solid rgba(33,244,208,0.28);
-      border-radius: 8px;
-      background: rgba(8,9,13,0.96);
-      box-shadow: 0 24px 80px rgba(0,0,0,0.46);
-      backdrop-filter: blur(16px);
-    }
-
-    .tv-compress-head {
-      display: flex;
-      align-items: start;
-      justify-content: space-between;
-      gap: 0.75rem;
-      margin-bottom: 0.7rem;
-    }
-
-    .tv-compress-head strong {
-      display: block;
-      color: #fff;
-      font-size: 0.95rem;
-      line-height: 1.15;
-      text-transform: uppercase;
-    }
-
-    .tv-compress-head small,
-    .tv-compress-copy,
-    .tv-compress-status {
-      display: block;
-      color: var(--tv-muted);
-      font-size: 0.72rem;
-      line-height: 1.42;
-    }
-
-    .tv-compress-close {
-      width: 32px;
-      height: 32px;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 50%;
-      background: rgba(255,255,255,0.06);
-      color: #fff;
-      cursor: pointer;
-      font-weight: 900;
-    }
-
-    .tv-compress-meter {
-      --progress: 0%;
-      height: 8px;
-      margin: 0.72rem 0;
-      border-radius: 999px;
-      overflow: hidden;
-      background: rgba(255,255,255,0.1);
-    }
-
-    .tv-compress-meter::before {
-      content: "";
-      display: block;
-      width: var(--progress);
-      height: 100%;
-      background: linear-gradient(90deg, var(--tv-cyan), var(--tv-gold));
-    }
-
-    .tv-compress-actions {
-      display: grid;
-      gap: 0.55rem;
-      margin-top: 0.72rem;
-    }
+    /* compression handled inline in floating panel */
 
     .tv-list {
       display: grid;
@@ -1891,10 +1798,6 @@
         grid-template-columns: 1fr;
       }
 
-      .tv-compress-row {
-        align-items: stretch;
-        flex-direction: column;
-      }
     }
 
     @media (max-width: 620px) {
@@ -1981,11 +1884,6 @@
         white-space: normal;
       }
 
-      .tv-compress-widget {
-        right: 0.5rem;
-        bottom: 0.5rem;
-        width: calc(100vw - 1rem);
-      }
 
       .tv-subbar {
         top: 0;
@@ -2159,17 +2057,54 @@
       align-items: center;
       justify-content: center;
       box-shadow: 0 8px 32px rgba(33,244,208,0.4), 0 0 0 1px rgba(255,255,255,0.08) inset;
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
       touch-action: manipulation;
+      animation: fasFabFloat 3s ease-in-out infinite;
+    }
+    .tv-upload-fab::before {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: inherit;
+      filter: blur(12px);
+      opacity: 0.5;
+      z-index: -1;
+      animation: fasFabGlow 3s ease-in-out infinite;
+    }
+    .tv-upload-fab::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(33,244,208,0.3);
+      transform: scale(0);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .tv-upload-fab:active::after {
+      animation: fasFabBurst 0.5s ease-out forwards;
     }
     .tv-upload-fab:hover,
     .tv-upload-fab:focus-visible {
       transform: scale(1.06);
       box-shadow: 0 12px 40px rgba(33,244,208,0.55), 0 0 0 1px rgba(255,255,255,0.12) inset;
       outline: none;
+      animation: none;
     }
     .tv-upload-fab:active {
       transform: scale(0.94);
+    }
+    @keyframes fasFabFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes fasFabGlow {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.7; }
+    }
+    @keyframes fasFabBurst {
+      0% { transform: scale(0); opacity: 0.6; }
+      100% { transform: scale(2.5); opacity: 0; }
     }
     @media (max-width: 520px) {
       .tv-upload-fab {
@@ -2181,61 +2116,73 @@
       }
     }
 
-    /* ── Mini Upload Floating Panel ── */
-    .tv-upload-panel {
+    /* ── Upload Floating Panel – Glass Card ── */
+    .tv-floating-panel {
       position: fixed;
       right: max(5.5rem, calc(env(safe-area-inset-right) + 4.5rem));
       bottom: max(0.85rem, env(safe-area-inset-bottom));
       z-index: 54;
       width: min(380px, calc(100vw - 7rem));
       max-height: calc(100vh - 6rem);
-      overflow-y: auto;
-      background: rgba(12, 13, 18, 0.88);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(33,244,208,0.28);
-      border-radius: 12px;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(10, 11, 16, 0.72);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
       opacity: 0;
       pointer-events: none;
       transform: translateY(12px) scale(0.96);
       transition: opacity 0.22s ease, transform 0.22s ease;
     }
-    .tv-upload-panel.open {
+    .tv-floating-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(33,244,208,0.06), rgba(139,92,246,0.04));
+    }
+    .tv-floating-panel.open {
       opacity: 1;
       pointer-events: all;
       transform: translateY(0) scale(1);
     }
-    .tv-upload-panel-header {
+    .tv-floating-panel-watermark {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-image: var(--watermark, none);
+      background-size: cover;
+      background-position: center;
+      opacity: 0.04;
+      filter: blur(4px);
+      pointer-events: none;
+      border-radius: inherit;
+    }
+    .tv-floating-panel > *:not(.tv-floating-panel-watermark) {
+      position: relative;
+      z-index: 1;
+    }
+    .tv-floating-panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.85rem 1rem;
+      padding: 0.8rem 1rem;
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      background: linear-gradient(135deg, rgba(33,244,208,0.06), rgba(139,92,246,0.04));
-      border-radius: 12px 12px 0 0;
     }
-    .tv-upload-panel-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
-    .tv-upload-panel-logo {
-      width: 28px;
-      height: 28px;
-      object-fit: contain;
-      filter: drop-shadow(0 0 8px rgba(33,244,208,0.25));
-    }
-    .tv-upload-panel-header h3 {
+    .tv-floating-panel-header h3 {
       margin: 0;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       font-weight: 800;
       color: #fff;
-      letter-spacing: -0.01em;
     }
-    .tv-upload-panel-close {
+    .tv-floating-panel-close {
       background: none;
       border: none;
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       color: var(--tv-muted);
       cursor: pointer;
       width: 28px;
@@ -2246,29 +2193,33 @@
       justify-content: center;
       transition: all 0.18s ease;
     }
-    .tv-upload-panel-close:hover {
+    .tv-floating-panel-close:hover {
       background: rgba(255,255,255,0.08);
       color: #fff;
     }
-    .tv-upload-panel-body {
-      padding: 1rem;
+    .tv-floating-panel-body {
+      padding: 0.85rem;
+      display: grid;
+      gap: 0.75rem;
+      overflow-y: auto;
+      max-height: calc(100vh - 10rem);
     }
     @media (max-width: 520px) {
-      .tv-upload-panel {
+      .tv-floating-panel {
         right: max(0.62rem, env(safe-area-inset-right));
         bottom: max(4.5rem, calc(env(safe-area-inset-bottom) + 3.8rem));
         width: calc(100vw - 1.24rem);
         max-height: calc(100vh - 6rem);
       }
     }
+    /* drop zone */
     .tv-upload-dropzone {
       border: 2px dashed rgba(33,244,208,0.3);
-      border-radius: 8px;
-      padding: 2rem 1.5rem;
+      border-radius: 10px;
+      padding: 1.25rem 1rem;
       text-align: center;
       cursor: pointer;
       transition: all 0.18s ease;
-      margin-bottom: 1rem;
     }
     .tv-upload-dropzone:hover,
     .tv-upload-dropzone.drag-over {
@@ -2276,34 +2227,35 @@
       background: rgba(33,244,208,0.05);
     }
     .tv-upload-dropzone-icon {
-      font-size: 2.5rem;
+      font-size: 1.8rem;
       display: block;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.3rem;
       color: var(--tv-cyan);
     }
     .tv-upload-dropzone p {
       margin: 0;
       color: #fff;
       font-weight: 700;
+      font-size: 0.85rem;
     }
     .tv-upload-dropzone small {
       color: var(--tv-muted);
-      font-size: 0.78rem;
+      font-size: 0.7rem;
     }
+    /* file preview */
     .tv-upload-file-preview {
       background: rgba(0,0,0,0.24);
-      border: 1px solid var(--tv-line);
-      border-radius: 8px;
-      padding: 0.85rem;
-      margin-bottom: 1rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 0.7rem;
     }
     .tv-upload-file-info {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.6rem;
     }
     .tv-upload-file-icon {
-      font-size: 1.8rem;
+      font-size: 1.4rem;
     }
     .tv-upload-file-details {
       flex: 1;
@@ -2312,74 +2264,171 @@
     .tv-upload-file-details strong {
       display: block;
       color: #fff;
-      font-size: 0.92rem;
+      font-size: 0.85rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .tv-upload-file-details small {
       color: var(--tv-muted);
-      font-size: 0.78rem;
+      font-size: 0.7rem;
     }
     .tv-upload-file-remove {
       background: none;
       border: none;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       color: var(--tv-muted);
       cursor: pointer;
-      padding: 0.25rem;
+      padding: 0.2rem;
       transition: color 0.18s ease;
     }
     .tv-upload-file-remove:hover {
       color: var(--tv-red);
     }
-    .tv-upload-compress-section {
-      background: rgba(33,244,208,0.06);
-      border: 1px solid rgba(33,244,208,0.2);
-      border-radius: 8px;
-      padding: 0.85rem;
-      margin-bottom: 1rem;
+    /* branded progress bar */
+    .fas-progress {
+      display: grid;
+      gap: 0.3rem;
     }
-    .tv-upload-compress-info {
+    .fas-progress[hidden] {
+      display: none;
+    }
+    .fas-progress-track {
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .fas-progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--tv-cyan), var(--tv-violet));
+      transition: width 0.35s ease;
+      box-shadow: 0 0 14px rgba(33,244,208,0.35);
+    }
+    .fas-progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--tv-muted);
+    }
+    .fas-progress-labels span:last-child {
+      color: var(--tv-cyan);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    /* compression */
+    .tv-upload-compress {
+      background: rgba(33,244,208,0.05);
+      border: 1px solid rgba(33,244,208,0.18);
+      border-radius: 10px;
+      padding: 0.7rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+    .tv-upload-compress[hidden] {
+      display: none;
+    }
+    .tv-upload-compress-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.7rem;
     }
-    .tv-upload-compress-info small {
+    .tv-upload-compress-row small {
       color: var(--tv-muted);
-      font-size: 0.78rem;
+      font-size: 0.7rem;
+      line-height: 1.3;
     }
-    .tv-upload-compress-progress {
-      margin-top: 0.75rem;
-    }
-    .tv-upload-compress-meter {
-      height: 8px;
-      background: rgba(255,255,255,0.1);
+    .tv-upload-compress-meter-wrap {
+      height: 6px;
       border-radius: 999px;
       overflow: hidden;
-      margin-bottom: 0.5rem;
+      background: rgba(255,255,255,0.1);
     }
-    .tv-upload-compress-meter::before {
-      content: "";
-      display: block;
+    .tv-upload-compress-meter-fill {
       height: 100%;
-      width: var(--progress, 0%);
+      width: var(--cp, 0%);
+      border-radius: 999px;
       background: linear-gradient(90deg, var(--tv-cyan), var(--tv-gold));
       transition: width 0.3s ease;
     }
-    @media (max-width: 620px) {
-      .tv-upload-modal {
-        max-width: 100%;
-        max-height: 100vh;
-        border-radius: 0;
-      }
-      .tv-upload-modal-overlay {
-        padding: 0;
-      }
-      .tv-upload-modal-body {
-        padding: 1rem;
-      }
+    /* form fields */
+    .tv-upload-form {
+      display: grid;
+      gap: 0.6rem;
+    }
+    .fas-field {
+      display: grid;
+      gap: 0.25rem;
+    }
+    .fas-field label {
+      font-size: 0.65rem;
+      color: var(--tv-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 900;
+    }
+    .fas-input,
+    .fas-select,
+    .fas-textarea {
+      width: 100%;
+      min-height: 36px;
+      padding: 0.5rem 0.65rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font: inherit;
+      font-size: 0.82rem;
+    }
+    .fas-textarea {
+      min-height: 64px;
+      resize: vertical;
+    }
+    .fas-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+    .fas-form-status {
+      min-height: 1.1em;
+      font-size: 0.75rem;
+      line-height: 1.35;
+    }
+    .fas-btn {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.13);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      font-weight: 900;
+      font-size: 0.82rem;
+      line-height: 1.1;
+      text-align: center;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .fas-btn-primary {
+      border-color: rgba(255,47,79,0.42);
+      background: linear-gradient(135deg, rgba(255,47,79,0.95), rgba(139,92,246,0.9));
+      box-shadow: 0 18px 42px rgba(255,47,79,0.22);
+    }
+    .fas-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .fas-btn-small {
+      min-height: 30px;
+      padding: 0.35rem 0.55rem;
+      font-size: 0.72rem;
     }
   </style>
 </head>
@@ -2650,10 +2699,6 @@
                 <p class="tv-form-note" id="tv-upload-size" aria-live="polite">Choose a video to see its file size.</p>
               </div>
             </div>
-            <div class="tv-compress-row">
-              <small>Over 50MB? Try one quick compression before uploading.</small>
-              <button class="tv-btn" id="tv-compress-open" type="button">Compress For Upload</button>
-            </div>
             <div class="tv-field">
               <label for="tv-upload-description">Description</label>
               <textarea class="tv-textarea" id="tv-upload-description" name="description" maxlength="500" placeholder="What the audience should know."></textarea>
@@ -2664,22 +2709,7 @@
           </form>
         </div>
 
-        <aside class="tv-compress-widget" id="tv-compress-widget" hidden aria-hidden="true" aria-label="Video compression">
-          <div class="tv-compress-head">
-            <div>
-              <strong>Compress Video</strong>
-              <small>One button. It stays on this page.</small>
-            </div>
-            <button class="tv-compress-close" id="tv-compress-close" type="button" aria-label="Close compression">X</button>
-          </div>
-          <small class="tv-compress-copy" id="tv-compress-estimate">Choose a video first.</small>
-          <div class="tv-compress-meter" id="tv-compress-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
-          <small class="tv-compress-copy">This tries to shrink the video under 50MB without going below about 380p. Quality may go down, and compression can take longer than uploading.</small>
-          <div class="tv-compress-actions">
-            <button class="tv-btn primary" id="tv-compress-start" type="button">Compress For Upload</button>
-            <small class="tv-compress-status" id="tv-compress-status" aria-live="polite"></small>
-          </div>
-        </aside>
+        <!-- compression now inline in the floating panel -->
 
         <div class="tv-studio-grid">
           <div class="tv-panel">
@@ -2738,19 +2768,17 @@
     </div>
   </main>
 
-  <!-- Mini Upload Floating Panel -->
-  <div class="tv-upload-panel" id="tv-upload-panel" aria-hidden="true">
-    <div class="tv-upload-panel-header">
-      <div class="tv-upload-panel-brand">
-        <img src="assets/mascot.png" alt="" class="tv-upload-panel-logo" />
-        <h3 id="tv-upload-panel-title">Quick Upload</h3>
-      </div>
-      <button class="tv-upload-panel-close" id="tv-upload-panel-close" type="button" aria-label="Close">×</button>
+  <!-- Upload Floating Panel – Glass Card -->
+  <div class="tv-floating-panel" id="tv-upload-panel" aria-hidden="true">
+    <div class="tv-floating-panel-watermark" id="tv-upload-watermark"></div>
+    <div class="tv-floating-panel-header">
+      <h3>Upload to TV</h3>
+      <button class="tv-floating-panel-close" id="tv-upload-panel-close" type="button" aria-label="Close">×</button>
     </div>
-    <div class="tv-upload-panel-body">
+    <div class="tv-floating-panel-body">
       <div class="tv-upload-dropzone" id="tv-upload-dropzone">
         <span class="tv-upload-dropzone-icon">⬆</span>
-        <p>Drag video here or click to browse</p>
+        <p>Drag video or click to browse</p>
         <small>MP4, WebM, MOV • Max 50MB</small>
         <input type="file" id="tv-upload-modal-file" accept="video/*" hidden />
       </div>
@@ -2764,38 +2792,50 @@
           <button class="tv-upload-file-remove" id="tv-upload-file-remove" type="button" aria-label="Remove file">×</button>
         </div>
       </div>
-      <form class="tv-upload-modal-form" id="tv-upload-modal-form">
-        <div class="tv-field">
+      <!-- branded progress bar -->
+      <div class="fas-progress" id="tv-upload-progress" hidden>
+        <div class="fas-progress-track"><div class="fas-progress-fill" id="tv-upload-progress-fill"></div></div>
+        <div class="fas-progress-labels">
+          <span id="tv-upload-progress-label">Preparing...</span>
+          <span id="tv-upload-progress-pct">0%</span>
+        </div>
+      </div>
+      <!-- inline compression -->
+      <div class="tv-upload-compress" id="tv-upload-compress-section" hidden>
+        <div class="tv-upload-compress-row">
+          <small>Over 30MB? Compress before uploading.</small>
+          <button class="fas-btn fas-btn-small" id="tv-upload-modal-compress" type="button">Compress</button>
+        </div>
+        <div class="tv-upload-compress-row" id="tv-upload-compress-meter-row" hidden>
+          <div class="tv-upload-compress-meter-wrap"><div class="tv-upload-compress-meter-fill" id="tv-upload-compress-meter-fill"></div></div>
+          <small id="tv-upload-compress-status" style="color:var(--tv-muted);font-size:0.7rem"></small>
+        </div>
+      </div>
+      <!-- form -->
+      <form class="tv-upload-form" id="tv-upload-modal-form">
+        <div class="fas-field">
           <label for="tv-upload-modal-title">Title</label>
-          <input class="tv-input" id="tv-upload-modal-title" name="title" maxlength="120" required />
+          <input class="fas-input" id="tv-upload-modal-title" name="title" maxlength="120" required />
         </div>
-        <div class="tv-field">
-          <label for="tv-upload-modal-channel">Channel</label>
-          <select class="tv-select" id="tv-upload-modal-channel" name="channel_id" required></select>
+        <div class="fas-form-row">
+          <div class="fas-field">
+            <label for="tv-upload-modal-channel">Channel</label>
+            <select class="fas-select" id="tv-upload-modal-channel" name="channel_id" required></select>
+          </div>
+          <div class="fas-field">
+            <label for="tv-upload-modal-visibility">Visibility</label>
+            <select class="fas-select" id="tv-upload-modal-visibility" name="visibility">
+              <option value="public">Public</option>
+              <option value="private">Private</option>
+            </select>
+          </div>
         </div>
-        <div class="tv-field">
-          <label for="tv-upload-modal-visibility">Visibility</label>
-          <select class="tv-select" id="tv-upload-modal-visibility" name="visibility">
-            <option value="public">Public</option>
-            <option value="private">Private</option>
-          </select>
-        </div>
-        <div class="tv-field">
+        <div class="fas-field">
           <label for="tv-upload-modal-description">Description</label>
-          <textarea class="tv-textarea" id="tv-upload-modal-description" name="description" maxlength="500" rows="3"></textarea>
+          <textarea class="fas-textarea" id="tv-upload-modal-description" name="description" maxlength="500" rows="2"></textarea>
         </div>
-        <div class="tv-upload-compress-section" id="tv-upload-compress-section" hidden>
-          <div class="tv-upload-compress-info">
-            <small>File over 30MB? Compress before uploading.</small>
-            <button class="tv-btn" id="tv-upload-modal-compress" type="button">Compress Video</button>
-          </div>
-          <div class="tv-upload-compress-progress" id="tv-upload-compress-progress" hidden>
-            <div class="tv-upload-compress-meter" id="tv-upload-compress-meter"></div>
-            <small id="tv-upload-compress-status">Compressing...</small>
-          </div>
-        </div>
-        <div class="tv-form-status" id="tv-upload-modal-status" aria-live="polite"></div>
-        <button class="tv-btn primary" type="submit" id="tv-upload-modal-submit">Upload Video</button>
+        <div class="fas-form-status" id="tv-upload-modal-status" aria-live="polite"></div>
+        <button class="fas-btn fas-btn-primary" type="submit" id="tv-upload-modal-submit">Upload Video</button>
       </form>
     </div>
   </div>
@@ -2814,413 +2854,233 @@
   </script>
   <script type="module" src="assets/js/tv-network.js?v=20260618-reaction-system"></script>
 
-  <!-- ── TV Compression JS ── -->
+  <!-- compression now handled inline in the panel JS below -->
+
+  <!-- ── Upload Panel JS — Glass card, XHR, watermark, dir post ── -->
   <script>
     (function() {
-      var fileInput  = document.getElementById('tv-upload-file');
-      var compressOpen  = document.getElementById('tv-compress-open');
-      var compressClose = document.getElementById('tv-compress-close');
-      var compressStart = document.getElementById('tv-compress-start');
-      var compressWidget= document.getElementById('tv-compress-widget');
-      var compressStatus= document.getElementById('tv-compress-status');
-      var compressEstimate= document.getElementById('tv-compress-estimate');
-      var compressMeter = document.getElementById('tv-compress-progress');
-      var compressRow   = document.querySelector('.tv-compress-row');
-      var compressInProgress = false;
-      var tvPendingFile = null;
-      var uploadFab = document.getElementById('tv-upload-fab');
+      var CHARACTERS = [
+        'Faceless%20Animal%20Studios/Characters/file_00000000020471f5bfd56238a2c55242.png',
+        'Faceless%20Animal%20Studios/Characters/file_00000000065071f58f80b8ccb3997a9a.png',
+        'Faceless%20Animal%20Studios/Characters/file_000000001200720ca655cd8473ef2541.png',
+        'Faceless%20Animal%20Studios/Characters/file_00000000424c71f58d53c77417910885.png',
+        'Faceless%20Animal%20Studios/Characters/file_00000000a14c71fd915d9466c77ec0d1.png',
+        'Faceless%20Animal%20Studios/Characters/file_00000000e96471fdb1f49655921c9a67.png'
+      ];
 
-      function formatBytes(b) {
-        if (!b) return '';
-        if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
-        return (b/(1024*1024)).toFixed(1) + ' MB';
-      }
-
-      function getVideoFile() {
-        if (tvPendingFile) return tvPendingFile;
-        return fileInput && fileInput.files && fileInput.files[0];
-      }
-
-      if (fileInput) {
-        fileInput.addEventListener('change', function() {
-          tvPendingFile = null;
-          var file = fileInput.files && fileInput.files[0];
-          if (compressRow) compressRow.style.display = (file && file.size > 30*1024*1024) ? 'flex' : 'none';
-        });
-      }
-
-      if (compressOpen) {
-        compressOpen.addEventListener('click', function() {
-          var file = getVideoFile();
-          if (!file) { if (compressStatus) compressStatus.textContent = 'Select a video first.'; return; }
-          if (compressInProgress) return;
-          if (compressEstimate) compressEstimate.textContent = file.size > 0 ? 'Size: ' + formatBytes(file.size) : 'Size unknown.';
-          if (compressStatus) compressStatus.textContent = '';
-          if (compressMeter) compressMeter.style.setProperty('--progress', '0%');
-          if (compressWidget) { compressWidget.hidden = false; compressWidget.removeAttribute('aria-hidden'); }
-          if (compressStart) compressStart.disabled = false;
-        });
-      }
-
-      if (compressClose) {
-        compressClose.addEventListener('click', function() {
-          if (compressInProgress) return;
-          if (compressWidget) { compressWidget.hidden = true; compressWidget.setAttribute('aria-hidden', 'true'); }
-        });
-      }
-
-      if (compressStart) {
-        compressStart.addEventListener('click', async function() {
-          var file = getVideoFile();
-          if (!file || compressInProgress) return;
-          compressInProgress = true;
-          compressStart.disabled = true;
-          if (compressStatus) compressStatus.textContent = 'Compressing video…';
-
-          if (compressMeter) compressMeter.style.setProperty('--progress', '10%');
-
-          try {
-            var video = document.createElement('video');
-            video.muted = true;
-            video.playsInline = true;
-            video.preload = 'metadata';
-
-            var url = URL.createObjectURL(file);
-            video.src = url;
-
-            await new Promise(function(resolve, reject) {
-              video.onloadedmetadata = resolve;
-              video.onerror = reject;
-              setTimeout(reject, 10000);
-            });
-
-            if (compressMeter) compressMeter.style.setProperty('--progress', '30%');
-
-            var canvas = document.createElement('canvas');
-            var maxW = 640;
-            var w = Math.min(video.videoWidth || 640, maxW);
-            var h = Math.round(w * ((video.videoHeight || 360) / (video.videoWidth || 640)));
-            canvas.width = w;
-            canvas.height = h;
-            var ctx = canvas.getContext('2d');
-
-            video.currentTime = 0;
-            await new Promise(function(resolve, reject) {
-              video.onseeked = resolve;
-              setTimeout(reject, 5000);
-            });
-
-            if (compressMeter) compressMeter.style.setProperty('--progress', '50%');
-
-            // Wait a frame for seek to render
-            await new Promise(function(r) { requestAnimationFrame(r); });
-            ctx.drawImage(video, 0, 0, w, h);
-
-            if (compressMeter) compressMeter.style.setProperty('--progress', '70%');
-
-            var mime = 'video/webm;codecs=vp8';
-            var chunks = [];
-            var stream = canvas.captureStream(30);
-            var recorder = new MediaRecorder(stream, { mimeType: mime });
-
-            recorder.ondataavailable = function(e) {
-              if (e.data && e.data.size > 0) chunks.push(e.data);
-            };
-
-            var recordingDone = new Promise(function(resolve) {
-              recorder.onstop = resolve;
-            });
-
-            recorder.start();
-
-            // Record for 1 second + a bit
-            await new Promise(function(r) { setTimeout(r, 1500); });
-            recorder.stop();
-            await recordingDone;
-
-            if (compressMeter) compressMeter.style.setProperty('--progress', '85%');
-
-            var compressedBlob = new Blob(chunks, { type: 'video/webm' });
-            var compressedFile = new File([compressedBlob], file.name.replace(/\.[^.]+$/, '.webm'), {
-              type: 'video/webm',
-              lastModified: Date.now()
-            });
-
-            // Replace file in input
-            var dt = new DataTransfer();
-            dt.items.add(compressedFile);
-            fileInput.files = dt.files;
-            tvPendingFile = compressedFile;
-
-            if (compressMeter) compressMeter.style.setProperty('--progress', '100%');
-            if (compressStatus) compressStatus.textContent = 'Compressed to ' + formatBytes(compressedFile.size);
-            if (compressEstimate) compressEstimate.textContent = 'Compressed to ~' + formatBytes(compressedFile.size);
-            if (compressRow) compressRow.style.display = 'none';
-            compressInProgress = false;
-            if (compressStart) compressStart.disabled = false;
-            URL.revokeObjectURL(url);
-
-          } catch(e) {
-            console.warn('[tv] Compression failed:', e);
-            if (compressStatus) compressStatus.textContent = 'Compression not available — upload original.';
-            if (compressMeter) compressMeter.style.setProperty('--progress', '0%');
-            compressInProgress = false;
-            if (compressStart) compressStart.disabled = false;
-          }
-        });
-      }
-      if (uploadFab) {
-        uploadFab.addEventListener('click', function() {
-          openUploadPanel();
-        });
-      }
-    })();
-  </script>
-
-  <!-- ── Mini Upload Panel JS ── -->
-  <script>
-    (function() {
-      var uploadPanel = document.getElementById('tv-upload-panel');
-      var uploadPanelClose = document.getElementById('tv-upload-panel-close');
+      var panel = document.getElementById('tv-upload-panel');
+      var watermarkEl = document.getElementById('tv-upload-watermark');
+      var closeBtn = document.getElementById('tv-upload-panel-close');
       var dropzone = document.getElementById('tv-upload-dropzone');
-      var modalFileInput = document.getElementById('tv-upload-modal-file');
+      var fileInput = document.getElementById('tv-upload-modal-file');
       var filePreview = document.getElementById('tv-upload-file-preview');
       var fileName = document.getElementById('tv-upload-file-name');
       var fileSize = document.getElementById('tv-upload-file-size');
       var fileRemove = document.getElementById('tv-upload-file-remove');
-      var modalForm = document.getElementById('tv-upload-modal-form');
-      var modalStatus = document.getElementById('tv-upload-modal-status');
-      var modalChannelSelect = document.getElementById('tv-upload-modal-channel');
+      var form = document.getElementById('tv-upload-modal-form');
+      var statusEl = document.getElementById('tv-upload-modal-status');
+      var channelSelect = document.getElementById('tv-upload-modal-channel');
       var compressSection = document.getElementById('tv-upload-compress-section');
       var compressBtn = document.getElementById('tv-upload-modal-compress');
-      var compressProgress = document.getElementById('tv-upload-compress-progress');
-      var compressMeter = document.getElementById('tv-upload-compress-meter');
+      var compressMeterRow = document.getElementById('tv-upload-compress-meter-row');
+      var compressMeterFill = document.getElementById('tv-upload-compress-meter-fill');
       var compressStatus = document.getElementById('tv-upload-compress-status');
+      var progressEl = document.getElementById('tv-upload-progress');
+      var progressFill = document.getElementById('tv-upload-progress-fill');
+      var progressLabel = document.getElementById('tv-upload-progress-label');
+      var progressPct = document.getElementById('tv-upload-progress-pct');
 
-      var modalPendingFile = null;
-      var modalCompressing = false;
+      var pendingFile = null;
+      var isCompressing = false;
+      var isUploading = false;
 
       function formatBytes(b) {
         if (!b) return '';
-        if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
-        return (b/(1024*1024)).toFixed(1) + ' MB';
+        if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+        return (b / (1024 * 1024)).toFixed(1) + ' MB';
       }
 
-      function setModalStatus(message, tone) {
-        if (!modalStatus) return;
-        modalStatus.textContent = message || '';
-        modalStatus.style.color = tone === 'error' ? '#ff7a8c' : '#21f4d0';
+      function setStatus(msg, tone) {
+        if (!statusEl) return;
+        statusEl.textContent = msg || '';
+        statusEl.style.color = tone === 'error' ? '#ff7a8c' : tone === 'success' ? '#21f4d0' : '';
+      }
+
+      function isDesktop() {
+        return navigator.maxTouchPoints < 2;
+      }
+
+      function pickWatermark() {
+        if (!watermarkEl) return;
+        var idx = Math.floor(Math.random() * CHARACTERS.length);
+        watermarkEl.style.setProperty('--watermark', 'url(' + CHARACTERS[idx] + ')');
       }
 
       function openUploadPanel() {
-        if (!uploadPanel) return;
-        uploadPanel.classList.add('open');
-        uploadPanel.setAttribute('aria-hidden', 'false');
-        populateModalChannelSelect();
+        if (!panel) return;
+        pickWatermark();
+        panel.classList.add('open');
+        panel.setAttribute('aria-hidden', 'false');
+        populateChannelSelect();
       }
 
       function closeUploadPanel() {
-        if (!uploadPanel) return;
-        uploadPanel.classList.remove('open');
-        uploadPanel.setAttribute('aria-hidden', 'true');
-        resetUploadPanel();
+        if (!panel) return;
+        panel.classList.remove('open');
+        panel.setAttribute('aria-hidden', 'true');
+        resetPanel();
       }
 
-      function resetUploadPanel() {
-        modalPendingFile = null;
-        if (modalForm) modalForm.reset();
+      function resetPanel() {
+        pendingFile = null;
+        isUploading = false;
+        if (form) form.reset();
         if (filePreview) filePreview.hidden = true;
         if (dropzone) dropzone.style.display = '';
         if (compressSection) compressSection.hidden = true;
-        if (compressProgress) compressProgress.hidden = true;
-        if (modalStatus) modalStatus.textContent = '';
+        if (compressMeterRow) compressMeterRow.hidden = true;
+        if (progressEl) progressEl.hidden = true;
+        if (progressFill) progressFill.style.width = '0%';
+        if (statusEl) statusEl.textContent = '';
+        var subBtn = document.getElementById('tv-upload-modal-submit');
+        if (subBtn) subBtn.disabled = false;
       }
 
-      function populateModalChannelSelect() {
-        if (!modalChannelSelect) return;
-        modalChannelSelect.innerHTML = '';
-
-        // Try to get channels from tv-network.js state
+      function populateChannelSelect() {
+        if (!channelSelect) return;
+        channelSelect.innerHTML = '';
         var channels = [];
         if (window.FAS_TV && window.FAS_TV.state && window.FAS_TV.state.channels) {
           channels = window.FAS_TV.state.channels;
         }
-
         var session = null;
-        try { session = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
-
+        try { session = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch (e) {}
         if (!channels.length || !session) {
-          modalChannelSelect.innerHTML = '<option value="">Sign in to load channels</option>';
-          modalChannelSelect.disabled = true;
+          channelSelect.innerHTML = '<option value="">Sign in to load channels</option>';
+          channelSelect.disabled = true;
           return;
         }
-
-        // Filter to owned channels
-        var ownedChannels = channels.filter(function(item) {
-          if (item.is_owner) return true;
-          return session && String(item.username || '').toLowerCase() === String(session.username || '').toLowerCase();
+        var owned = channels.filter(function(c) {
+          if (c.is_owner) return true;
+          return session && String(c.username || '').toLowerCase() === String(session.username || '').toLowerCase();
         });
-
-        if (!ownedChannels.length) {
-          modalChannelSelect.innerHTML = '<option value="">No channels available</option>';
-          modalChannelSelect.disabled = true;
+        if (!owned.length) {
+          channelSelect.innerHTML = '<option value="">No channels available</option>';
+          channelSelect.disabled = true;
           return;
         }
-
-        // Build options
-        var html = ownedChannels.map(function(ch) {
-          var label = ch.is_owner ? 'Main / ' + (ch.channel_name || ch.channel_slug) : (ch.channel_name || ch.channel_slug);
-          return '<option value="' + (ch.channel_slug || '') + '">' + label + '</option>';
+        channelSelect.innerHTML = owned.map(function(c) {
+          var label = c.is_owner ? 'Main / ' + (c.channel_name || c.channel_slug) : (c.channel_name || c.channel_slug);
+          return '<option value="' + (c.channel_slug || '') + '">' + label + '</option>';
         }).join('');
-
-        modalChannelSelect.innerHTML = html;
-        modalChannelSelect.disabled = false;
-
-        // Auto-select: user's first non-owner channel, or owner channel
-        var userChannel = ownedChannels.find(function(item) {
-          return !item.is_owner && session && String(item.username || '').toLowerCase() === String(session.username || '').toLowerCase();
+        channelSelect.disabled = false;
+        var userCh = owned.find(function(c) {
+          return !c.is_owner && session && String(c.username || '').toLowerCase() === String(session.username || '').toLowerCase();
         });
-
-        if (userChannel) {
-          modalChannelSelect.value = userChannel.channel_slug;
-        } else {
-          var ownerChannel = ownedChannels.find(function(item) { return item.is_owner; });
-          if (ownerChannel) {
-            modalChannelSelect.value = ownerChannel.channel_slug;
-          }
+        if (userCh) channelSelect.value = userCh.channel_slug;
+        else {
+          var owner = owned.find(function(c) { return c.is_owner; });
+          if (owner) channelSelect.value = owner.channel_slug;
         }
       }
 
-      // Close panel handlers
-      if (uploadPanelClose) {
-        uploadPanelClose.addEventListener('click', closeUploadPanel);
-      }
+      // close
+      if (closeBtn) closeBtn.addEventListener('click', closeUploadPanel);
       document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && uploadPanel && uploadPanel.classList.contains('open')) {
-          closeUploadPanel();
-        }
+        if (e.key === 'Escape' && panel && panel.classList.contains('open')) closeUploadPanel();
       });
 
-      // Drop zone click to browse
-      if (dropzone) {
-        dropzone.addEventListener('click', function() {
-          if (modalFileInput) modalFileInput.click();
-        });
-      }
+      // dropzone click
+      if (dropzone) dropzone.addEventListener('click', function() { if (fileInput) fileInput.click(); });
 
-      // File selected
-      if (modalFileInput) {
-        modalFileInput.addEventListener('change', function() {
-          if (modalFileInput.files && modalFileInput.files[0]) {
-            handleModalFileSelect(modalFileInput.files[0]);
-          }
-        });
-      }
+      // file input change
+      if (fileInput) fileInput.addEventListener('change', function() {
+        if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+      });
 
-      // Drag & drop
+      // drag-drop (desktop only)
       if (dropzone) {
         dropzone.addEventListener('dragover', function(e) {
+          if (!isDesktop()) return;
           e.preventDefault();
           dropzone.classList.add('drag-over');
         });
-        dropzone.addEventListener('dragleave', function() {
-          dropzone.classList.remove('drag-over');
-        });
+        dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('drag-over'); });
         dropzone.addEventListener('drop', function(e) {
+          if (!isDesktop()) return;
           e.preventDefault();
           dropzone.classList.remove('drag-over');
-          var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-          if (file && file.type && file.type.startsWith('video/')) {
-            handleModalFileSelect(file);
-          }
+          var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f && f.type && f.type.startsWith('video/')) handleFile(f);
         });
       }
 
-      function handleModalFileSelect(file) {
-        modalPendingFile = file;
+      function handleFile(file) {
+        pendingFile = file;
         if (fileName) fileName.textContent = file.name;
         if (fileSize) fileSize.textContent = formatBytes(file.size);
         if (filePreview) filePreview.hidden = false;
         if (dropzone) dropzone.style.display = 'none';
+        if (compressSection) compressSection.hidden = !(file.size > 30 * 1024 * 1024);
+        if (compressMeterRow) compressMeterRow.hidden = true;
+      }
 
-        // Show compression option if > 30MB
-        if (compressSection) {
-          compressSection.hidden = !(file.size > 30 * 1024 * 1024);
+      // remove file
+      if (fileRemove) fileRemove.addEventListener('click', function() {
+        pendingFile = null;
+        if (fileInput) fileInput.value = '';
+        if (filePreview) filePreview.hidden = true;
+        if (dropzone) dropzone.style.display = '';
+        if (compressSection) compressSection.hidden = true;
+        if (compressMeterRow) compressMeterRow.hidden = true;
+      });
+
+      // ── Compression (inline) ──
+      if (compressBtn) compressBtn.addEventListener('click', async function() {
+        if (!pendingFile || isCompressing || isUploading) return;
+        isCompressing = true;
+        compressBtn.disabled = true;
+        if (compressMeterRow) compressMeterRow.hidden = false;
+        if (compressStatus) compressStatus.textContent = 'Compressing...';
+        if (compressMeterFill) compressMeterFill.style.setProperty('--cp', '5%');
+        try {
+          var out = await compressVideo(pendingFile, function(pct) {
+            if (compressMeterFill) compressMeterFill.style.setProperty('--cp', pct + '%');
+          });
+          pendingFile = out;
+          if (fileSize) fileSize.textContent = formatBytes(out.size);
+          if (compressStatus) compressStatus.textContent = 'Compressed: ' + formatBytes(out.size);
+          if (compressMeterFill) compressMeterFill.style.setProperty('--cp', '100%');
+          setTimeout(function() {
+            if (compressMeterRow) compressMeterRow.hidden = true;
+            if (compressSection) compressSection.hidden = true;
+          }, 2000);
+        } catch (e) {
+          console.warn('[tv] compress fail:', e);
+          if (compressStatus) compressStatus.textContent = 'Compression failed';
+          if (compressMeterFill) compressMeterFill.style.setProperty('--cp', '0%');
         }
-      }
+        isCompressing = false;
+        compressBtn.disabled = false;
+      });
 
-      // Remove file
-      if (fileRemove) {
-        fileRemove.addEventListener('click', function() {
-          modalPendingFile = null;
-          if (modalFileInput) modalFileInput.value = '';
-          if (filePreview) filePreview.hidden = true;
-          if (dropzone) dropzone.style.display = '';
-          if (compressSection) compressSection.hidden = true;
-        });
-      }
-
-      // Compression
-      if (compressBtn) {
-        compressBtn.addEventListener('click', async function() {
-          if (!modalPendingFile || modalCompressing) return;
-
-          modalCompressing = true;
-          compressBtn.disabled = true;
-          if (compressProgress) compressProgress.hidden = false;
-          if (compressStatus) compressStatus.textContent = 'Compressing video...';
-          if (compressMeter) compressMeter.style.setProperty('--progress', '10%');
-
-          try {
-            var compressedFile = await compressModalVideo(modalPendingFile, function(progress) {
-              if (compressMeter) compressMeter.style.setProperty('--progress', progress + '%');
-            });
-
-            modalPendingFile = compressedFile;
-            if (fileSize) fileSize.textContent = formatBytes(compressedFile.size);
-            if (compressStatus) compressStatus.textContent = 'Compressed: ' + formatBytes(compressedFile.size);
-            if (compressMeter) compressMeter.style.setProperty('--progress', '100%');
-
-            setTimeout(function() {
-              if (compressProgress) compressProgress.hidden = true;
-              if (compressSection) compressSection.hidden = true;
-            }, 2000);
-
-          } catch (e) {
-            console.warn('[tv-modal] Compression failed:', e);
-            if (compressStatus) compressStatus.textContent = 'Compression failed. Upload original.';
-            if (compressMeter) compressMeter.style.setProperty('--progress', '0%');
-          }
-
-          modalCompressing = false;
-          compressBtn.disabled = false;
-        });
-      }
-
-      async function compressModalVideo(file, onProgress) {
+      async function compressVideo(file, onProgress) {
         return new Promise(async function(resolve, reject) {
           try {
             var video = document.createElement('video');
             video.muted = true;
             video.playsInline = true;
             video.src = URL.createObjectURL(file);
-
             await new Promise(function(res, rej) {
               video.onloadedmetadata = res;
               video.onerror = rej;
+              setTimeout(rej, 10000);
             });
-
-            var duration = video.duration;
-            if (!duration || duration < 0.1) { reject(new Error('Invalid video duration')); return; }
-
-            // Calculate target bitrate to stay under 50MB
-            var targetBytes = 45 * 1024 * 1024; // 45MB to leave room
-            var targetBitrate = Math.floor((targetBytes * 8) / duration);
-            var videoBitrate = Math.min(targetBitrate, 2000000); // Cap at 2Mbps
-
-            // Determine resolution based on duration
-            var maxDim = duration > 300 ? 480 : (duration > 120 ? 640 : 854);
-
+            var dur = video.duration;
+            if (!dur || dur < 0.1) { reject(new Error('bad duration')); return; }
+            var targetBytes = 45 * 1024 * 1024;
+            var br = Math.min(Math.floor((targetBytes * 8) / dur), 2000000);
+            var maxDim = dur > 300 ? 480 : (dur > 120 ? 640 : 854);
             var canvas = document.createElement('canvas');
             var aspect = video.videoWidth / video.videoHeight;
             if (aspect > 1) {
@@ -3231,158 +3091,179 @@
               canvas.width = Math.round(canvas.height * aspect);
             }
             var ctx = canvas.getContext('2d');
-
-            // Set up audio capture
-            var audioCtx = null;
-            var audioDest = null;
+            var audioCtx, audioDest;
             try {
               audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-              var source = audioCtx.createMediaElementSource(video);
+              var src = audioCtx.createMediaElementSource(video);
               audioDest = audioCtx.createMediaStreamDestination();
-              source.connect(audioDest);
-              source.connect(audioCtx.destination);
-            } catch(e) {
-              console.warn('[tv-modal] Audio capture not available:', e);
-            }
-
-            // Combine video and audio streams
-            var videoStream = canvas.captureStream(30);
-            var combinedStream = videoStream;
+              src.connect(audioDest);
+              src.connect(audioCtx.destination);
+            } catch (e) {}
+            var vStream = canvas.captureStream(30);
+            var combined = vStream;
             if (audioDest && audioDest.stream && audioDest.stream.getAudioTracks().length) {
-              var combinedTracks = videoStream.getTracks().concat(audioDest.stream.getAudioTracks());
-              combinedStream = new MediaStream(combinedTracks);
+              combined = new MediaStream(vStream.getTracks().concat(audioDest.stream.getAudioTracks()));
             }
-
-            // Find supported mime type
-            var mimeType = 'video/webm;codecs=vp9,opus';
-            if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm;codecs=vp8,opus';
-            if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
-
-            var recorder = new MediaRecorder(combinedStream, {
-              mimeType: mimeType,
-              videoBitsPerSecond: videoBitrate,
-              audioBitsPerSecond: 64000
-            });
-
+            var mt = 'video/webm;codecs=vp9,opus';
+            if (!MediaRecorder.isTypeSupported(mt)) mt = 'video/webm;codecs=vp8,opus';
+            if (!MediaRecorder.isTypeSupported(mt)) mt = 'video/webm';
+            var rec = new MediaRecorder(combined, { mimeType: mt, videoBitsPerSecond: br, audioBitsPerSecond: 64000 });
             var chunks = [];
-            recorder.ondataavailable = function(e) { if (e.data && e.data.size > 0) chunks.push(e.data); };
-            recorder.onstop = function() {
-              var blob = new Blob(chunks, { type: mimeType });
-              var ext = mimeType.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
-              var compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, '') + '-compressed.' + ext, { type: mimeType });
-              resolve(compressedFile);
+            rec.ondataavailable = function(e) { if (e.data && e.data.size > 0) chunks.push(e.data); };
+            rec.onstop = function() {
+              var blob = new Blob(chunks, { type: mt });
+              var ext = mt.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
+              resolve(new File([blob], file.name.replace(/\.[^.]+$/, '') + '-compressed.' + ext, { type: mt }));
             };
-
-            recorder.start(1000);
+            rec.start(1000);
             video.currentTime = 0;
             await video.play();
-
-            // Draw frames and track progress
-            function drawFrame() {
-              if (video.ended || video.paused) {
-                recorder.stop();
-                video.pause();
-                if (audioCtx) audioCtx.close();
-                return;
-              }
+            (function draw() {
+              if (video.ended || video.paused) { rec.stop(); video.pause(); if (audioCtx) audioCtx.close(); return; }
               ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-              var progress = Math.min(95, Math.round((video.currentTime / duration) * 100));
-              if (onProgress) onProgress(progress);
-              requestAnimationFrame(drawFrame);
-            }
-            drawFrame();
-
-            video.onended = function() {
-              setTimeout(function() { if (recorder.state !== 'inactive') recorder.stop(); }, 200);
-            };
-
-          } catch(e) {
-            reject(e);
-          }
+              if (onProgress) onProgress(Math.min(95, Math.round((video.currentTime / dur) * 100)));
+              requestAnimationFrame(draw);
+            })();
+            video.onended = function() { setTimeout(function() { if (rec.state !== 'inactive') rec.stop(); }, 200); };
+          } catch (e) { reject(e); }
         });
       }
 
-      // Form submission
-      if (modalForm) {
-        modalForm.addEventListener('submit', async function(e) {
-          e.preventDefault();
+      // ── Upload: XHR with real progress ──
+      async function postToDirectory(session, title) {
+        try {
+          var mod = await import('./assets/js/services/board.js');
+          var username = (session && session.username) || 'unknown';
+          var display_name = (session && session.display) || username;
+          var postText = '\uD83C\uDFAC "' + title + '" \u2014 ' + display_name + ' uploaded to Faceless TV';
+          var result = await mod.createBoardPost({
+            username: username,
+            content: postText,
+            signal_type: 'video',
+            display_name: display_name
+          });
+          if (result.error) console.warn('[tv] dir post err:', result.error);
+        } catch (e) {
+          console.warn('[tv] dir post fail:', e);
+        }
+      }
 
-          var session = null;
-          try { session = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
+      function setProgress(pct, label, isError) {
+        if (!progressEl || !progressFill || !progressLabel || !progressPct) return;
+        progressEl.hidden = false;
+        progressFill.style.width = pct + '%';
+        progressLabel.textContent = label || 'Uploading...';
+        if (isError) progressLabel.style.color = '#ff7a8c';
+        else progressLabel.style.color = '';
+        var pctText = pct + '%';
+        if (pct >= 100) pctText = 'Done';
+        progressPct.textContent = pctText;
+      }
 
-          if (!session) {
-            setModalStatus('Sign in first.', 'error');
-            return;
-          }
+      if (form) form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (isUploading) return;
 
-          var channelSlug = modalChannelSelect ? modalChannelSelect.value : '';
-          var titleEl = document.getElementById('tv-upload-modal-title');
-          var title = titleEl ? titleEl.value.trim() : '';
-          var descEl = document.getElementById('tv-upload-modal-description');
-          var description = descEl ? descEl.value.trim() : '';
-          var visEl = document.getElementById('tv-upload-modal-visibility');
-          var visibility = visEl ? visEl.value : 'public';
-          var file = modalPendingFile;
+        var session = null;
+        try { session = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch (e) {}
+        if (!session) { setStatus('Sign in first.', 'error'); return; }
 
-          if (!channelSlug) { setModalStatus('Choose a channel.', 'error'); return; }
-          if (!title) { setModalStatus('Enter a title.', 'error'); return; }
-          if (!file) { setModalStatus('Choose a video file.', 'error'); return; }
-          if (file.size > 50 * 1024 * 1024) { setModalStatus('50MB max. Compress or choose smaller file.', 'error'); return; }
+        var ch = channelSelect ? channelSelect.value : '';
+        var titleEl = document.getElementById('tv-upload-modal-title');
+        var title = titleEl ? titleEl.value.trim() : '';
+        var descEl = document.getElementById('tv-upload-modal-description');
+        var desc = descEl ? descEl.value.trim() : '';
+        var visEl = document.getElementById('tv-upload-modal-visibility');
+        var vis = visEl ? visEl.value : 'public';
+        var file = pendingFile;
 
-          setModalStatus('Uploading...', 'success');
+        if (!ch) { setStatus('Choose a channel.', 'error'); return; }
+        if (!title) { setStatus('Enter a title.', 'error'); return; }
+        if (!file) { setStatus('Choose a video.', 'error'); return; }
+        if (file.size > 50 * 1024 * 1024) { setStatus('50MB max.', 'error'); return; }
 
-          try {
-            // Read file as base64
-            var fileB64 = await new Promise(function(resolve, reject) {
-              var reader = new FileReader();
-              reader.onload = function() {
-                var result = String(reader.result || '');
-                var comma = result.indexOf(',');
-                resolve(comma >= 0 ? result.slice(comma + 1) : result);
-              };
-              reader.onerror = function() { reject(new Error('Could not read file.')); };
-              reader.readAsDataURL(file);
-            });
+        isUploading = true;
+        var subBtn = document.getElementById('tv-upload-modal-submit');
+        if (subBtn) subBtn.disabled = true;
+        setStatus('Preparing...', '');
+        setProgress(0, 'Reading file...');
 
-            var response = await fetch('/api/tv/uploads', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-fas-user': JSON.stringify(session)
-              },
-              body: JSON.stringify({
-                channel_slug: channelSlug,
-                title: title,
-                description: description,
-                visibility: visibility,
-                file_name: file.name,
-                file_type: file.type,
-                file_size_bytes: file.size,
-                file_b64: fileB64
-              })
-            });
-
-            var result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'Upload failed.');
-
-            setModalStatus('Upload published: ' + (result.upload ? result.upload.title : title), 'success');
-
-            // Reset form but keep modal open
-            setTimeout(function() {
-              resetUploadPanel();
-              // Reload network to refresh channels/uploads
-              if (window.FAS_TV && window.FAS_TV.loadNetwork) {
-                window.FAS_TV.loadNetwork();
+        try {
+          // Phase 1: Read file as base64 (0-85%)
+          var fileB64 = await new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onprogress = function(e) {
+              if (e.lengthComputable) {
+                var p = Math.round((e.loaded / e.total) * 85);
+                setProgress(p, 'Reading file...');
               }
-            }, 2000);
+            };
+            reader.onload = function() {
+              var r = String(reader.result || '');
+              var c = r.indexOf(',');
+              resolve(c >= 0 ? r.slice(c + 1) : r);
+            };
+            reader.onerror = function() { reject(new Error('Could not read file.')); };
+            reader.readAsDataURL(file);
+          });
 
-          } catch (err) {
-            setModalStatus(err.message || 'Upload failed.', 'error');
-          }
-        });
-      }
+          setProgress(88, 'Uploading...');
 
-      // Expose open function globally for FAB
+          // Phase 2: XHR upload (85-100%)
+          var result = await new Promise(function(resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.upload.addEventListener('progress', function(e) {
+              if (e.lengthComputable) {
+                var p = 85 + Math.round((e.loaded / e.total) * 12);
+                setProgress(Math.min(p, 97), 'Uploading...');
+              }
+            });
+            xhr.onload = function() {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                try { resolve(JSON.parse(xhr.responseText)); } catch (e) { resolve({}); }
+              } else {
+                try {
+                  var err = JSON.parse(xhr.responseText);
+                  reject(new Error(err.error || 'Upload failed (' + xhr.status + ').'));
+                } catch (e) { reject(new Error('Upload failed (' + xhr.status + ').')); }
+              }
+            };
+            xhr.onerror = function() { reject(new Error('Network error.')); };
+            xhr.open('POST', '/api/tv/uploads');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('x-fas-user', JSON.stringify(session));
+            xhr.send(JSON.stringify({
+              channel_slug: ch,
+              title: title,
+              description: desc,
+              visibility: vis,
+              file_name: file.name,
+              file_type: file.type,
+              file_size_bytes: file.size,
+              file_b64: fileB64
+            }));
+          });
+
+          setProgress(100, 'Published!');
+          postToDirectory(session, title);
+
+          setTimeout(function() {
+            closeUploadPanel();
+            if (window.FAS_TV && window.FAS_TV.loadNetwork) window.FAS_TV.loadNetwork();
+          }, 1200);
+
+        } catch (err) {
+          setProgress(0, err.message || 'Upload failed', true);
+          setStatus(err.message || 'Upload failed.', 'error');
+          isUploading = false;
+          if (subBtn) subBtn.disabled = false;
+        }
+      });
+
+      // FAB click → open panel
+      var fab = document.getElementById('tv-upload-fab');
+      if (fab) fab.addEventListener('click', openUploadPanel);
+
       window.openUploadPanel = openUploadPanel;
     })();
   </script>

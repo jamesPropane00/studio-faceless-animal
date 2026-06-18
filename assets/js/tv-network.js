@@ -386,7 +386,7 @@
 
     el.recentUploads.innerHTML = playable.slice(0, 10).map(function (item) {
       var source = videoSource(item);
-      var preview = source ? '<video class="tv-upload-preview" controls muted playsinline preload="metadata" src="' + escapeHtml(source) + '"></video>' : '';
+      var preview = source ? '<video class="tv-upload-preview" muted playsinline preload="metadata" src="' + escapeHtml(source) + '"></video>' : '';
       return [
         '<div class="tv-list-item">',
           '<strong>' + escapeHtml(item.title || 'Untitled broadcast') + '</strong>',
@@ -429,7 +429,7 @@
         '<article class="tv-card" tabindex="0" data-key="' + escapeHtml(key) + '" data-upload-id="' + escapeHtml(uploadId) + '" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '" data-embed="' + escapeHtml(embed) + '" data-likes="' + likes + '" data-dislikes="' + dislikes + '">',
           '<div class="tv-thumb">',
             source
-              ? '<video class="tv-thumb-video" controls muted playsinline preload="metadata" src="' + escapeHtml(source) + '"></video>'
+              ? '<video class="tv-thumb-video" muted playsinline preload="metadata" src="' + escapeHtml(source) + '"></video>'
               : '<iframe src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>',
             '<span class="tv-play" aria-hidden="true">&gt;</span>',
             '<span class="tv-meta">' + escapeHtml(duration) + '</span>',
@@ -603,7 +603,7 @@
           video.defaultMuted = true;
           video.autoplay = false;
           video.loop = false;
-          video.preload = 'none';
+          video.preload = 'metadata';
           video.addEventListener('loadedmetadata', function onMeta() {
             video.removeEventListener('loadedmetadata', onMeta);
             try { video.currentTime = 0.1; } catch (e) {}

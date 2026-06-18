@@ -29,6 +29,23 @@ const HISTORY_LIMIT = 40;
 const MAX_MSG_LEN = 300;
 const SEND_DEBOUNCE = 1200;
 
+// Character avatar pool — actual files from Faceless Animal Studios/Characters/
+const CHAR_IMAGES = [
+  'Faceless%20Animal%20Studios/Characters/file_00000000020471f5bfd56238a2c55242.png',
+  'Faceless%20Animal%20Studios/Characters/file_00000000065071f58f80b8ccb3997a9a.png',
+  'Faceless%20Animal%20Studios/Characters/file_000000001200720ca655cd8473ef2541.png',
+  'Faceless%20Animal%20Studios/Characters/file_00000000424c71f58d53c77417910885.png',
+  'Faceless%20Animal%20Studios/Characters/file_00000000a14c71fd915d9466c77ec0d1.png',
+  'Faceless%20Animal%20Studios/Characters/file_00000000e96471fdb1f49655921c9a67.png',
+  'Faceless%20Animal%20Studios/Characters/file_00000000048871fdb6116fd7d4db2321.png',
+  'Faceless%20Animal%20Studios/Characters/file_000000000f38722f95a2252be10185bb.png',
+];
+const CHAR_NAMES = [
+  'Artio & Nita', 'Milo & Vex', 'Rei & Shiro', 'Kalvin & Hara',
+  'Roux & Roux', 'Sage & Olive', 'Luna & Ash', 'Nyx & Jax',
+];
+const BUBBLE_INTERVAL_MS = 28000; // ~28s between video room entry bubbles
+
 // Room ID mapping - these are the Matrix room aliases/IDs for each radio room
 const ROOM_MAP = {
   radio: '#radio:matrix.org',
@@ -141,6 +158,25 @@ function matrixApi(path, options, session) {
     });
 }
 
+// ── Guest auto-registration ──────────────────────────────────────────
+
+function registerGuest() {
+  return fetch(MATRIX_BASE + '/_matrix/client/v3/register?kind=guest', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({})
+  }).then(function(res) {
+    return res.text().then(function(text) {
+      if (!res.ok) throw new Error('Guest registration failed: ' + res.status);
+      var data = text ? JSON.parse(text) : {};
+      if (!data.access_token) throw new Error('No access_token in guest response');
+      var session = { access_token: data.access_token, user_id: data.user_id, device_id: data.device_id, home_server: 'matrix.org', _guest: true };
+      try { localStorage.setItem(MATRIX_SESSION_KEY, JSON.stringify(session)); } catch(e) {}
+      return session;
+    });
+  });
+}
+
 // ── Main export ───────────────────────────────────────────────────────
 
 export function initRadioChat(config) {
@@ -162,10 +198,27 @@ export function initRadioChat(config) {
     tierLimited = false,
   } = config;
 
-  const matrixSession = readMatrixSession();
+  let matrixSession = readMatrixSession();
   let useLive = !!matrixSession && !!matrixSession.access_token && !simulationMode;
 
   if (!feedEl) return;
+
+  // If no Matrix session, try guest auto-registration in background.
+  // On success, hot-swap from simulation to live mode.
+  if (!useLive && !simulationMode && !(matrixSession && matrixSession._guest)) {
+    registerGuest()
+      .then(function(guestSession) {
+        if (guestSession && guestSession.access_token) {
+          stopSimulation();
+          matrixSession = readMatrixSession();
+          useLive = true;
+          switchRoom(activeRoom);
+        }
+      })
+      .catch(function() {
+        // Guest registration failed — stay in simulation mode
+      });
+  }
 
   function buildMsgEl(username, message, isSelf) {
     const el = document.createElement('article');
@@ -182,6 +235,31 @@ export function initRadioChat(config) {
     el.className = 'matrix-empty';
     el.textContent = text;
     return el;
+  }
+
+  function randomCharIdx() {
+    return Math.floor(Math.random() * CHAR_IMAGES.length);
+  }
+
+  function buildBubbleEl() {
+    const idx = randomCharIdx();
+    const el = document.createElement('div');
+    el.className = 'room-chat-bubble';
+    el.innerHTML =
+      '<img src="' + CHAR_IMAGES[idx] + '" alt="" class="room-chat-bubble-avatar" loading="lazy">' +
+      '<span class="room-chat-bubble-label"><strong>' + CHAR_NAMES[idx] + '</strong> joined video</span>' +
+      '<span class="room-chat-bubble-icon">🎥</span>';
+    return el;
+  }
+
+  function buildAvatarImg() {
+    const idx = randomCharIdx();
+    const img = document.createElement('img');
+    img.className = 'room-chat-user-avatar';
+    img.src = CHAR_IMAGES[idx];
+    img.alt = '';
+    img.loading = 'lazy';
+    return img;
   }
 
   function appendMsg(msgEl) {
@@ -214,6 +292,7 @@ export function initRadioChat(config) {
   let simMsgIdxs = Object.fromEntries(Object.keys(SIM_MESSAGES).map(r => [r, 0]));
   let simCountTimerId = null;
   let simMsgTimerId = null;
+  let simBubbleTimerId = null;
 
   function startSimulation() {
     renderSimMessages(activeRoom);
@@ -236,13 +315,20 @@ export function initRadioChat(config) {
       const m = msgs[idx];
       appendMsg(buildMsgEl(m.username, m.message, false));
     }, SIM_MSG_INTERVAL);
+
+    // Video room entry bubbles
+    simBubbleTimerId = setInterval(function() {
+      appendMsg(buildBubbleEl());
+    }, BUBBLE_INTERVAL_MS);
   }
 
   function stopSimulation() {
     clearInterval(simCountTimerId);
     clearInterval(simMsgTimerId);
+    clearInterval(simBubbleTimerId);
     simCountTimerId = null;
     simMsgTimerId = null;
+    simBubbleTimerId = null;
   }
 
   function renderSimMessages(roomId) {
@@ -250,8 +336,10 @@ export function initRadioChat(config) {
     const msgs = SIM_MESSAGES[roomId] || [];
     const show = msgs.slice(0, 4);
     show.forEach(function(m) {
-      feedEl.appendChild(buildMsgEl(m.username, m.message, false, m.av));
+      feedEl.appendChild(buildMsgEl(m.username, m.message, false, null));
     });
+    // Start with a welcome bubble
+    feedEl.appendChild(buildBubbleEl());
     feedEl.appendChild(buildSystemEl('Room is open. Move with the mix.'));
     feedEl.scrollTop = feedEl.scrollHeight;
 
@@ -267,6 +355,7 @@ export function initRadioChat(config) {
   let lastSyncToken = '';
   let sendDebouncing = false;
   let joinedRoomId = null;
+  let liveBubbleTimerId = null;
 
   async function resolveRoomId(roomAlias) {
     if (!matrixSession || !matrixSession.access_token) return null;
@@ -326,6 +415,10 @@ export function initRadioChat(config) {
     if (syncRunning || !matrixSession || !matrixSession.access_token || !roomId) return;
     syncRunning = true;
     syncLoop(roomId);
+    // Add occasional video room bubbles in live mode
+    liveBubbleTimerId = setInterval(function() {
+      appendMsg(buildBubbleEl());
+    }, BUBBLE_INTERVAL_MS * 1.6);
   }
 
   function stopSync() {
@@ -333,6 +426,10 @@ export function initRadioChat(config) {
     if (syncAbortController) {
       syncAbortController.abort();
       syncAbortController = null;
+    }
+    if (liveBubbleTimerId) {
+      clearInterval(liveBubbleTimerId);
+      liveBubbleTimerId = null;
     }
   }
 

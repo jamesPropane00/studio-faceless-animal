@@ -309,6 +309,56 @@
       box-shadow: 0 10px 24px rgba(245, 196, 81, 0.18);
     }
 
+    .btn-start {
+      background: linear-gradient(135deg, #21f4d0, #b794f4);
+      color: #050505;
+      box-shadow: 0 12px 32px rgba(33, 244, 208, 0.25);
+      font-size: 1rem;
+      padding: 0.85rem 1.6rem;
+      min-height: 48px;
+      border: none;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-start:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 16px 40px rgba(33, 244, 208, 0.35);
+    }
+    .btn-start::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 60%, transparent 80%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .btn-start:hover::after {
+      opacity: 1;
+    }
+
+    .guest-link {
+      display: inline-block;
+      font-size: 0.72rem;
+      color: var(--text-3);
+      text-decoration: none;
+      padding: 0.35rem 0.6rem;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.02);
+      transition: all 0.15s;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      font-family: var(--font-body);
+    }
+    .guest-link:hover {
+      color: var(--text-2);
+      border-color: rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+    }
+
     .hero-side {
       padding: 1.2rem;
       display: flex;
@@ -1303,9 +1353,11 @@
             TV, radio, rooms, street posts, creator channels, Neon Dreams, vault energy, and whatever else gets dragged out of the wire.
           </p>
           <div class="signal-actions">
+            <a href="login.html?focus=create" class="btn btn-start">Start Free →</a>
             <a href="tv.html" class="btn btn-gold">Watch TV</a>
             <a href="radio.html" class="btn btn-primary">Run Radio</a>
             <a href="pulse.html" class="btn btn-secondary">Pulse Stage</a>
+            <button class="guest-link" id="guest-link" type="button">Continue as Guest</button>
           </div>
           <div class="signal-chip-row" aria-label="Featured sections">
             <a href="news.html">Signal Wire</a>
@@ -1461,6 +1513,18 @@
         const expanded = this.getAttribute('aria-expanded') === 'true';
         this.setAttribute('aria-expanded', String(!expanded));
         mobileMenu.classList.toggle('open');
+      });
+    }
+
+    /* ── Guest mode ── */
+    var guestLink = document.getElementById('guest-link');
+    if (guestLink) {
+      guestLink.addEventListener('click', function() {
+        var guests = ['Listener','Beatz','Wave','Signal','Echo','Pulse','Vinyl','Riddim','Groove','Bass'];
+        var name = guests[Math.floor(Math.random() * guests.length)] + Math.floor(Math.random() * 900 + 100);
+        var session = { username: name, display: name, _guest: true, ts: Date.now() };
+        try { localStorage.setItem('fas_user', JSON.stringify(session)); } catch(e) {}
+        window.location.href = 'dashboard.html';
       });
     }
   </script>

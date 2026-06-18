@@ -260,6 +260,9 @@
       const firstInput = document.getElementById('create-username');
       if (firstInput) setTimeout(() => firstInput.focus(), 30);
     }
+    if (new URLSearchParams(window.location.search).get('focus') === 'create') {
+      showCreateModal();
+    }
     function hideCreateModal() {
       createModal.style.display = 'none';
       createError.textContent = '';
