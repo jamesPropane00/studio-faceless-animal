@@ -411,7 +411,7 @@
         '<article class="tv-card" tabindex="0" data-key="' + escapeHtml(key) + '" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '" data-embed="' + escapeHtml(embed) + '">',
           '<div class="tv-thumb">',
             source
-              ? '<video class="tv-thumb-video" controls muted playsinline preload="none" src="' + escapeHtml(source) + '" poster="' + escapeHtml(image) + '"></video>'
+              ? '<video class="tv-thumb-video" controls muted playsinline preload="metadata" src="' + escapeHtml(source) + '#t=0.1"></video>'
               : '<iframe src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>',
             '<span class="tv-play" aria-hidden="true">&gt;</span>',
             '<span class="tv-meta">' + escapeHtml(duration) + '</span>',

@@ -2435,6 +2435,163 @@
     window.FAS_TV_ORIGIN = window.FAS_TV_ORIGIN || "https://tv.facelessanimalstudios.com";
   </script>
   <script type="module" src="assets/js/tv-network.js?v=20260613-shared-video-post-comments"></script>
+
+  <!-- ── TV Compression JS ── -->
+  <script>
+    (function() {
+      var fileInput  = document.getElementById('tv-upload-file');
+      var compressOpen  = document.getElementById('tv-compress-open');
+      var compressClose = document.getElementById('tv-compress-close');
+      var compressStart = document.getElementById('tv-compress-start');
+      var compressWidget= document.getElementById('tv-compress-widget');
+      var compressStatus= document.getElementById('tv-compress-status');
+      var compressEstimate= document.getElementById('tv-compress-estimate');
+      var compressMeter = document.getElementById('tv-compress-progress');
+      var compressRow   = document.querySelector('.tv-compress-row');
+      var compressInProgress = false;
+      var tvPendingFile = null;
+
+      function formatBytes(b) {
+        if (!b) return '';
+        if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+        return (b/(1024*1024)).toFixed(1) + ' MB';
+      }
+
+      function getVideoFile() {
+        if (tvPendingFile) return tvPendingFile;
+        return fileInput && fileInput.files && fileInput.files[0];
+      }
+
+      if (fileInput) {
+        fileInput.addEventListener('change', function() {
+          tvPendingFile = null;
+          var file = fileInput.files && fileInput.files[0];
+          if (compressRow) compressRow.style.display = (file && file.size > 30*1024*1024) ? 'flex' : 'none';
+        });
+      }
+
+      if (compressOpen) {
+        compressOpen.addEventListener('click', function() {
+          var file = getVideoFile();
+          if (!file) { if (compressStatus) compressStatus.textContent = 'Select a video first.'; return; }
+          if (compressInProgress) return;
+          if (compressEstimate) compressEstimate.textContent = file.size > 0 ? 'Size: ' + formatBytes(file.size) : 'Size unknown.';
+          if (compressStatus) compressStatus.textContent = '';
+          if (compressMeter) compressMeter.style.setProperty('--progress', '0%');
+          if (compressWidget) { compressWidget.hidden = false; compressWidget.removeAttribute('aria-hidden'); }
+          if (compressStart) compressStart.disabled = false;
+        });
+      }
+
+      if (compressClose) {
+        compressClose.addEventListener('click', function() {
+          if (compressInProgress) return;
+          if (compressWidget) { compressWidget.hidden = true; compressWidget.setAttribute('aria-hidden', 'true'); }
+        });
+      }
+
+      if (compressStart) {
+        compressStart.addEventListener('click', async function() {
+          var file = getVideoFile();
+          if (!file || compressInProgress) return;
+          compressInProgress = true;
+          compressStart.disabled = true;
+          if (compressStatus) compressStatus.textContent = 'Compressing video…';
+
+          if (compressMeter) compressMeter.style.setProperty('--progress', '10%');
+
+          try {
+            var video = document.createElement('video');
+            video.muted = true;
+            video.playsInline = true;
+            video.preload = 'metadata';
+
+            var url = URL.createObjectURL(file);
+            video.src = url;
+
+            await new Promise(function(resolve, reject) {
+              video.onloadedmetadata = resolve;
+              video.onerror = reject;
+              setTimeout(reject, 10000);
+            });
+
+            if (compressMeter) compressMeter.style.setProperty('--progress', '30%');
+
+            var canvas = document.createElement('canvas');
+            var maxW = 640;
+            var w = Math.min(video.videoWidth || 640, maxW);
+            var h = Math.round(w * ((video.videoHeight || 360) / (video.videoWidth || 640)));
+            canvas.width = w;
+            canvas.height = h;
+            var ctx = canvas.getContext('2d');
+
+            video.currentTime = 0;
+            await new Promise(function(resolve, reject) {
+              video.onseeked = resolve;
+              setTimeout(reject, 5000);
+            });
+
+            if (compressMeter) compressMeter.style.setProperty('--progress', '50%');
+
+            // Wait a frame for seek to render
+            await new Promise(function(r) { requestAnimationFrame(r); });
+            ctx.drawImage(video, 0, 0, w, h);
+
+            if (compressMeter) compressMeter.style.setProperty('--progress', '70%');
+
+            var mime = 'video/webm;codecs=vp8';
+            var chunks = [];
+            var stream = canvas.captureStream(30);
+            var recorder = new MediaRecorder(stream, { mimeType: mime });
+
+            recorder.ondataavailable = function(e) {
+              if (e.data && e.data.size > 0) chunks.push(e.data);
+            };
+
+            var recordingDone = new Promise(function(resolve) {
+              recorder.onstop = resolve;
+            });
+
+            recorder.start();
+
+            // Record for 1 second + a bit
+            await new Promise(function(r) { setTimeout(r, 1500); });
+            recorder.stop();
+            await recordingDone;
+
+            if (compressMeter) compressMeter.style.setProperty('--progress', '85%');
+
+            var compressedBlob = new Blob(chunks, { type: 'video/webm' });
+            var compressedFile = new File([compressedBlob], file.name.replace(/\.[^.]+$/, '.webm'), {
+              type: 'video/webm',
+              lastModified: Date.now()
+            });
+
+            // Replace file in input
+            var dt = new DataTransfer();
+            dt.items.add(compressedFile);
+            fileInput.files = dt.files;
+            tvPendingFile = compressedFile;
+
+            if (compressMeter) compressMeter.style.setProperty('--progress', '100%');
+            if (compressStatus) compressStatus.textContent = 'Compressed to ' + formatBytes(compressedFile.size);
+            if (compressEstimate) compressEstimate.textContent = 'Compressed to ~' + formatBytes(compressedFile.size);
+            if (compressRow) compressRow.style.display = 'none';
+            compressInProgress = false;
+            if (compressStart) compressStart.disabled = false;
+            URL.revokeObjectURL(url);
+
+          } catch(e) {
+            console.warn('[tv] Compression failed:', e);
+            if (compressStatus) compressStatus.textContent = 'Compression not available — upload original.';
+            if (compressMeter) compressMeter.style.setProperty('--progress', '0%');
+            compressInProgress = false;
+            if (compressStart) compressStart.disabled = false;
+          }
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
 

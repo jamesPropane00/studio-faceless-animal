@@ -14,9 +14,14 @@
     label { display: block; font-size: 0.78rem; font-weight: 600; margin-bottom: 0.3rem; color: #ccc; }
     input, textarea, select { width: 100%; padding: 0.5rem 0.65rem; border-radius: 6px; border: 1px solid #333; background: #111; color: #f0f0f0; font-size: 0.85rem; font-family: inherit; margin-bottom: 0.75rem; }
     textarea { min-height: 120px; resize: vertical; }
+    input[type="file"] { padding: 0.4rem; }
+    input[type="color"] { width: 60px; height: 36px; padding: 2px; cursor: pointer; }
     button { padding: 0.55rem 1.2rem; border-radius: 6px; border: none; background: linear-gradient(135deg, #7c3aed, #a78bfa); color: #fff; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
     button.danger { background: #dc2626; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
     .status { margin-top: 0.75rem; font-size: 0.82rem; }
+    .image-preview { margin: 0.5rem 0 0.75rem; display: none; }
+    .image-preview img { max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid #333; }
     .articles { margin-top: 1.5rem; }
     .article-row { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #222; font-size: 0.82rem; }
     .article-row strong { flex: 1; }
@@ -34,6 +39,9 @@
     <label for="article-title">Title</label>
     <input id="article-title" maxlength="200" required />
 
+    <label for="article-dek">Subtitle / Deck</label>
+    <input id="article-dek" maxlength="300" placeholder="Brief summary or subtitle" />
+
     <label for="article-body">Body</label>
     <textarea id="article-body"></textarea>
 
@@ -46,7 +54,19 @@
       <option value="Release">Release</option>
     </select>
 
-    <label for="article-media">Media URL (optional)</label>
+    <div class="form-row">
+      <div>
+        <label for="article-accent">Accent Color</label>
+        <input id="article-accent" type="color" value="#c9a96e" />
+      </div>
+      <div></div>
+    </div>
+
+    <label for="article-image">Upload Image</label>
+    <input id="article-image" type="file" accept="image/*" />
+    <div class="image-preview" id="image-preview"><img id="image-preview-img" alt="Preview" /></div>
+
+    <label for="article-media">Or paste Media URL (optional)</label>
     <input id="article-media" placeholder="https://example.com/image.jpg" />
 
     <label for="article-link">External Link (optional)</label>
@@ -65,6 +85,7 @@
     (function () {
       var supabaseUrl = 'https://ghufaozjwondqcrcucjs.supabase.co';
       var supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdodWZhb3pqd29uZHFjcmN1Y2pzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NDg2MTcsImV4cCI6MjA4OTMyNDYxN30.YxAgndazRJxFX-XQJ2VllxgzxPHHd3zPSfDnfnFlD38';
+      var STORAGE_BUCKET = 'article-media';
 
       function esc(s) { return String(s).replace(/[&<>"']/g, function(c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
 
@@ -72,10 +93,44 @@
       var listEl = document.getElementById('article-list');
       var form = document.getElementById('article-form');
       var titleInput = document.getElementById('article-title');
+      var dekInput = document.getElementById('article-dek');
       var bodyInput = document.getElementById('article-body');
       var categoryInput = document.getElementById('article-category');
+      var accentInput = document.getElementById('article-accent');
+      var imageInput = document.getElementById('article-image');
       var mediaInput = document.getElementById('article-media');
       var linkInput = document.getElementById('article-link');
+      var imagePreview = document.getElementById('image-preview');
+      var imagePreviewImg = document.getElementById('image-preview-img');
+
+      var uploadedMediaUrl = null;
+
+      imageInput.addEventListener('change', function() {
+        var file = imageInput.files && imageInput.files[0];
+        if (!file) { imagePreview.style.display = 'none'; uploadedMediaUrl = null; return; }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          imagePreviewImg.src = e.target.result;
+          imagePreview.style.display = '';
+        };
+        reader.readAsDataURL(file);
+        uploadedMediaUrl = null;
+      });
+
+      async function uploadToSupabase(file) {
+        var fileName = Date.now().toString(36) + '-' + file.name.replace(/[^a-zA-Z0-9._-]/g, '');
+        var resp = await fetch(supabaseUrl + '/storage/v1/object/' + STORAGE_BUCKET + '/' + fileName, {
+          method: 'POST',
+          headers: {
+            apikey: supabaseKey,
+            Authorization: 'Bearer ' + supabaseKey,
+            'Content-Type': file.type,
+          },
+          body: file
+        });
+        if (!resp.ok) throw new Error('Upload failed: ' + resp.status);
+        return supabaseUrl + '/storage/v1/object/public/' + STORAGE_BUCKET + '/' + fileName;
+      }
 
       function loadArticles() {
         fetch(supabaseUrl + '/rest/v1/signal_wire_posts?select=id,title,category,published_at&order=published_at.desc&limit=20', {
@@ -88,22 +143,39 @@
         }).catch(function () {});
       }
 
-      form.addEventListener('submit', function (e) {
+      form.addEventListener('submit', async function (e) {
         e.preventDefault();
         var title = titleInput.value.trim();
         var body = bodyInput.value.trim();
         if (!title) { statusEl.textContent = 'Title is required.'; return; }
         statusEl.textContent = 'Publishing...';
+
+        var mediaUrl = mediaInput.value.trim() || null;
+        var file = imageInput.files && imageInput.files[0];
+
+        if (file && !mediaUrl) {
+          statusEl.textContent = 'Uploading image...';
+          try {
+            mediaUrl = await uploadToSupabase(file);
+          } catch (err) {
+            statusEl.textContent = 'Image upload failed: ' + (err.message || '');
+            return;
+          }
+        }
+
         var payload = {
           title: title,
+          dek: dekInput.value.trim() || null,
           body: body || null,
           category: categoryInput.value,
-          media_url: mediaInput.value.trim() || null,
+          accent_color: accentInput.value || null,
+          media_url: mediaUrl,
           link_url: linkInput.value.trim() || null,
           status: 'published',
           published_at: new Date().toISOString(),
           content_html: body ? '<p>' + esc(body).replace(/\n/g, '<br>') + '</p>' : null
         };
+
         fetch(supabaseUrl + '/rest/v1/signal_wire_posts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', apikey: supabaseKey, Authorization: 'Bearer ' + supabaseKey, Prefer: 'return=minimal' },
@@ -112,6 +184,8 @@
           if (!r.ok) throw new Error('Failed: ' + r.status);
           statusEl.textContent = 'Article published!';
           form.reset();
+          imagePreview.style.display = 'none';
+          uploadedMediaUrl = null;
           loadArticles();
         }).catch(function (err) {
           statusEl.textContent = err.message || 'Publish failed.';
