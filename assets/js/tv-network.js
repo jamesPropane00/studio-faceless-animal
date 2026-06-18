@@ -551,8 +551,7 @@
         video.playsInline = true;
 
         if (video.classList.contains('tv-thumb-video')) {
-          // Archive thumbnails — poster only, no autoplay (saves mobile devices)
-          video.preload = 'none';
+          // Archive thumbnails — metadata only, no autoplay (saves mobile devices)
           video.autoplay = false;
           video.loop = false;
           video.pause();
