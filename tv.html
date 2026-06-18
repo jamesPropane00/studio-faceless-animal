@@ -2128,6 +2128,210 @@
         font-size: 1.5rem;
       }
     }
+
+    /* ── Mini Upload Modal ── */
+    .tv-upload-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .tv-upload-modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .tv-upload-modal {
+      background: 
+        linear-gradient(135deg, rgba(33,244,208,0.12), rgba(139,92,246,0.1) 48%, rgba(255,47,79,0.08)),
+        rgba(12,13,18,0.96);
+      border: 1px solid rgba(33,244,208,0.28);
+      border-radius: 8px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.46);
+      transform: translateY(16px) scale(0.98);
+      transition: transform 0.2s ease;
+    }
+    .tv-upload-modal-overlay.open .tv-upload-modal {
+      transform: translateY(0) scale(1);
+    }
+    .tv-upload-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--tv-line);
+      background: linear-gradient(135deg, rgba(33,244,208,0.08), rgba(139,92,246,0.06));
+    }
+    .tv-upload-modal-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .tv-upload-modal-logo {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 12px rgba(33,244,208,0.3));
+    }
+    .tv-upload-modal-header h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+    .tv-upload-modal-close {
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      color: var(--tv-muted);
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.18s ease;
+    }
+    .tv-upload-modal-close:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+    .tv-upload-modal-body {
+      padding: 1.5rem;
+    }
+    .tv-upload-dropzone {
+      border: 2px dashed rgba(33,244,208,0.3);
+      border-radius: 8px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      margin-bottom: 1rem;
+    }
+    .tv-upload-dropzone:hover,
+    .tv-upload-dropzone.drag-over {
+      border-color: rgba(33,244,208,0.7);
+      background: rgba(33,244,208,0.05);
+    }
+    .tv-upload-dropzone-icon {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--tv-cyan);
+    }
+    .tv-upload-dropzone p {
+      margin: 0;
+      color: #fff;
+      font-weight: 700;
+    }
+    .tv-upload-dropzone small {
+      color: var(--tv-muted);
+      font-size: 0.78rem;
+    }
+    .tv-upload-file-preview {
+      background: rgba(0,0,0,0.24);
+      border: 1px solid var(--tv-line);
+      border-radius: 8px;
+      padding: 0.85rem;
+      margin-bottom: 1rem;
+    }
+    .tv-upload-file-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .tv-upload-file-icon {
+      font-size: 1.8rem;
+    }
+    .tv-upload-file-details {
+      flex: 1;
+      min-width: 0;
+    }
+    .tv-upload-file-details strong {
+      display: block;
+      color: #fff;
+      font-size: 0.92rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tv-upload-file-details small {
+      color: var(--tv-muted);
+      font-size: 0.78rem;
+    }
+    .tv-upload-file-remove {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--tv-muted);
+      cursor: pointer;
+      padding: 0.25rem;
+      transition: color 0.18s ease;
+    }
+    .tv-upload-file-remove:hover {
+      color: var(--tv-red);
+    }
+    .tv-upload-compress-section {
+      background: rgba(33,244,208,0.06);
+      border: 1px solid rgba(33,244,208,0.2);
+      border-radius: 8px;
+      padding: 0.85rem;
+      margin-bottom: 1rem;
+    }
+    .tv-upload-compress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .tv-upload-compress-info small {
+      color: var(--tv-muted);
+      font-size: 0.78rem;
+    }
+    .tv-upload-compress-progress {
+      margin-top: 0.75rem;
+    }
+    .tv-upload-compress-meter {
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+    .tv-upload-compress-meter::before {
+      content: "";
+      display: block;
+      height: 100%;
+      width: var(--progress, 0%);
+      background: linear-gradient(90deg, var(--tv-cyan), var(--tv-gold));
+      transition: width 0.3s ease;
+    }
+    @media (max-width: 620px) {
+      .tv-upload-modal {
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+      }
+      .tv-upload-modal-overlay {
+        padding: 0;
+      }
+      .tv-upload-modal-body {
+        padding: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2479,6 +2683,70 @@
     </div>
   </main>
 
+  <!-- Mini Upload Modal -->
+  <div class="tv-upload-modal-overlay" id="tv-upload-modal" aria-hidden="true">
+    <div class="tv-upload-modal" role="dialog" aria-modal="true" aria-labelledby="tv-upload-modal-title">
+      <div class="tv-upload-modal-header">
+        <div class="tv-upload-modal-brand">
+          <img src="assets/mascot.png" alt="" class="tv-upload-modal-logo" />
+          <h2 id="tv-upload-modal-title">Quick Upload</h2>
+        </div>
+        <button class="tv-upload-modal-close" id="tv-upload-modal-close" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="tv-upload-modal-body">
+        <div class="tv-upload-dropzone" id="tv-upload-dropzone">
+          <span class="tv-upload-dropzone-icon">⬆</span>
+          <p>Drag video here or click to browse</p>
+          <small>MP4, WebM, MOV • Max 50MB</small>
+          <input type="file" id="tv-upload-modal-file" accept="video/*" hidden />
+        </div>
+        <div class="tv-upload-file-preview" id="tv-upload-file-preview" hidden>
+          <div class="tv-upload-file-info">
+            <span class="tv-upload-file-icon">🎬</span>
+            <div class="tv-upload-file-details">
+              <strong id="tv-upload-file-name">filename.mp4</strong>
+              <small id="tv-upload-file-size">0 MB</small>
+            </div>
+            <button class="tv-upload-file-remove" id="tv-upload-file-remove" type="button" aria-label="Remove file">×</button>
+          </div>
+        </div>
+        <form class="tv-upload-modal-form" id="tv-upload-modal-form">
+          <div class="tv-field">
+            <label for="tv-upload-modal-title">Title</label>
+            <input class="tv-input" id="tv-upload-modal-title" name="title" maxlength="120" required />
+          </div>
+          <div class="tv-field">
+            <label for="tv-upload-modal-channel">Channel</label>
+            <select class="tv-select" id="tv-upload-modal-channel" name="channel_id" required></select>
+          </div>
+          <div class="tv-field">
+            <label for="tv-upload-modal-visibility">Visibility</label>
+            <select class="tv-select" id="tv-upload-modal-visibility" name="visibility">
+              <option value="public">Public</option>
+              <option value="private">Private</option>
+            </select>
+          </div>
+          <div class="tv-field">
+            <label for="tv-upload-modal-description">Description</label>
+            <textarea class="tv-textarea" id="tv-upload-modal-description" name="description" maxlength="500" rows="3"></textarea>
+          </div>
+          <div class="tv-upload-compress-section" id="tv-upload-compress-section" hidden>
+            <div class="tv-upload-compress-info">
+              <small>File over 30MB? Compress before uploading.</small>
+              <button class="tv-btn" id="tv-upload-modal-compress" type="button">Compress Video</button>
+            </div>
+            <div class="tv-upload-compress-progress" id="tv-upload-compress-progress" hidden>
+              <div class="tv-upload-compress-meter" id="tv-upload-compress-meter"></div>
+              <small id="tv-upload-compress-status">Compressing...</small>
+            </div>
+          </div>
+          <div class="tv-form-status" id="tv-upload-modal-status" aria-live="polite"></div>
+          <button class="tv-btn primary" type="submit" id="tv-upload-modal-submit">Upload Video</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <button id="tv-upload-fab" class="tv-upload-fab" type="button" aria-label="Upload video" title="Upload video">
     <span>+</span>
   </button>
@@ -2650,15 +2918,424 @@
       }
       if (uploadFab) {
         uploadFab.addEventListener('click', function() {
-          var studio = document.getElementById('tv-studio');
-          if (studio) {
-            studio.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            if (fileInput) {
-              setTimeout(function() { try { fileInput.click(); } catch(e) {} }, 500);
-            }
+          openUploadModal();
+        });
+      }
+    })();
+  </script>
+
+  <!-- ── Mini Upload Modal JS ── -->
+  <script>
+    (function() {
+      var uploadModal = document.getElementById('tv-upload-modal');
+      var uploadModalClose = document.getElementById('tv-upload-modal-close');
+      var dropzone = document.getElementById('tv-upload-dropzone');
+      var modalFileInput = document.getElementById('tv-upload-modal-file');
+      var filePreview = document.getElementById('tv-upload-file-preview');
+      var fileName = document.getElementById('tv-upload-file-name');
+      var fileSize = document.getElementById('tv-upload-file-size');
+      var fileRemove = document.getElementById('tv-upload-file-remove');
+      var modalForm = document.getElementById('tv-upload-modal-form');
+      var modalStatus = document.getElementById('tv-upload-modal-status');
+      var modalChannelSelect = document.getElementById('tv-upload-modal-channel');
+      var compressSection = document.getElementById('tv-upload-compress-section');
+      var compressBtn = document.getElementById('tv-upload-modal-compress');
+      var compressProgress = document.getElementById('tv-upload-compress-progress');
+      var compressMeter = document.getElementById('tv-upload-compress-meter');
+      var compressStatus = document.getElementById('tv-upload-compress-status');
+
+      var modalPendingFile = null;
+      var modalCompressing = false;
+
+      function formatBytes(b) {
+        if (!b) return '';
+        if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+        return (b/(1024*1024)).toFixed(1) + ' MB';
+      }
+
+      function setModalStatus(message, tone) {
+        if (!modalStatus) return;
+        modalStatus.textContent = message || '';
+        modalStatus.style.color = tone === 'error' ? '#ff7a8c' : '#21f4d0';
+      }
+
+      function openUploadModal() {
+        if (!uploadModal) return;
+        uploadModal.classList.add('open');
+        uploadModal.setAttribute('aria-hidden', 'false');
+        populateModalChannelSelect();
+      }
+
+      function closeUploadModal() {
+        if (!uploadModal) return;
+        uploadModal.classList.remove('open');
+        uploadModal.setAttribute('aria-hidden', 'true');
+        resetUploadModal();
+      }
+
+      function resetUploadModal() {
+        modalPendingFile = null;
+        if (modalForm) modalForm.reset();
+        if (filePreview) filePreview.hidden = true;
+        if (dropzone) dropzone.style.display = '';
+        if (compressSection) compressSection.hidden = true;
+        if (compressProgress) compressProgress.hidden = true;
+        if (modalStatus) modalStatus.textContent = '';
+      }
+
+      function populateModalChannelSelect() {
+        if (!modalChannelSelect) return;
+        modalChannelSelect.innerHTML = '';
+
+        // Try to get channels from tv-network.js state
+        var channels = [];
+        if (window.FAS_TV && window.FAS_TV.state && window.FAS_TV.state.channels) {
+          channels = window.FAS_TV.state.channels;
+        }
+
+        var session = null;
+        try { session = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
+
+        if (!channels.length || !session) {
+          modalChannelSelect.innerHTML = '<option value="">Sign in to load channels</option>';
+          modalChannelSelect.disabled = true;
+          return;
+        }
+
+        // Filter to owned channels
+        var ownedChannels = channels.filter(function(item) {
+          if (item.is_owner) return true;
+          return session && String(item.username || '').toLowerCase() === String(session.username || '').toLowerCase();
+        });
+
+        if (!ownedChannels.length) {
+          modalChannelSelect.innerHTML = '<option value="">No channels available</option>';
+          modalChannelSelect.disabled = true;
+          return;
+        }
+
+        // Build options
+        var html = ownedChannels.map(function(ch) {
+          var label = ch.is_owner ? 'Main / ' + (ch.channel_name || ch.channel_slug) : (ch.channel_name || ch.channel_slug);
+          return '<option value="' + (ch.channel_slug || '') + '">' + label + '</option>';
+        }).join('');
+
+        modalChannelSelect.innerHTML = html;
+        modalChannelSelect.disabled = false;
+
+        // Auto-select: user's first non-owner channel, or owner channel
+        var userChannel = ownedChannels.find(function(item) {
+          return !item.is_owner && session && String(item.username || '').toLowerCase() === String(session.username || '').toLowerCase();
+        });
+
+        if (userChannel) {
+          modalChannelSelect.value = userChannel.channel_slug;
+        } else {
+          var ownerChannel = ownedChannels.find(function(item) { return item.is_owner; });
+          if (ownerChannel) {
+            modalChannelSelect.value = ownerChannel.channel_slug;
+          }
+        }
+      }
+
+      // Close modal handlers
+      if (uploadModalClose) {
+        uploadModalClose.addEventListener('click', closeUploadModal);
+      }
+      if (uploadModal) {
+        uploadModal.addEventListener('click', function(e) {
+          if (e.target === uploadModal) closeUploadModal();
+        });
+      }
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && uploadModal && uploadModal.classList.contains('open')) {
+          closeUploadModal();
+        }
+      });
+
+      // Drop zone click to browse
+      if (dropzone) {
+        dropzone.addEventListener('click', function() {
+          if (modalFileInput) modalFileInput.click();
+        });
+      }
+
+      // File selected
+      if (modalFileInput) {
+        modalFileInput.addEventListener('change', function() {
+          if (modalFileInput.files && modalFileInput.files[0]) {
+            handleModalFileSelect(modalFileInput.files[0]);
           }
         });
       }
+
+      // Drag & drop
+      if (dropzone) {
+        dropzone.addEventListener('dragover', function(e) {
+          e.preventDefault();
+          dropzone.classList.add('drag-over');
+        });
+        dropzone.addEventListener('dragleave', function() {
+          dropzone.classList.remove('drag-over');
+        });
+        dropzone.addEventListener('drop', function(e) {
+          e.preventDefault();
+          dropzone.classList.remove('drag-over');
+          var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+          if (file && file.type && file.type.startsWith('video/')) {
+            handleModalFileSelect(file);
+          }
+        });
+      }
+
+      function handleModalFileSelect(file) {
+        modalPendingFile = file;
+        if (fileName) fileName.textContent = file.name;
+        if (fileSize) fileSize.textContent = formatBytes(file.size);
+        if (filePreview) filePreview.hidden = false;
+        if (dropzone) dropzone.style.display = 'none';
+
+        // Show compression option if > 30MB
+        if (compressSection) {
+          compressSection.hidden = !(file.size > 30 * 1024 * 1024);
+        }
+      }
+
+      // Remove file
+      if (fileRemove) {
+        fileRemove.addEventListener('click', function() {
+          modalPendingFile = null;
+          if (modalFileInput) modalFileInput.value = '';
+          if (filePreview) filePreview.hidden = true;
+          if (dropzone) dropzone.style.display = '';
+          if (compressSection) compressSection.hidden = true;
+        });
+      }
+
+      // Compression
+      if (compressBtn) {
+        compressBtn.addEventListener('click', async function() {
+          if (!modalPendingFile || modalCompressing) return;
+
+          modalCompressing = true;
+          compressBtn.disabled = true;
+          if (compressProgress) compressProgress.hidden = false;
+          if (compressStatus) compressStatus.textContent = 'Compressing video...';
+          if (compressMeter) compressMeter.style.setProperty('--progress', '10%');
+
+          try {
+            var compressedFile = await compressModalVideo(modalPendingFile, function(progress) {
+              if (compressMeter) compressMeter.style.setProperty('--progress', progress + '%');
+            });
+
+            modalPendingFile = compressedFile;
+            if (fileSize) fileSize.textContent = formatBytes(compressedFile.size);
+            if (compressStatus) compressStatus.textContent = 'Compressed: ' + formatBytes(compressedFile.size);
+            if (compressMeter) compressMeter.style.setProperty('--progress', '100%');
+
+            setTimeout(function() {
+              if (compressProgress) compressProgress.hidden = true;
+              if (compressSection) compressSection.hidden = true;
+            }, 2000);
+
+          } catch (e) {
+            console.warn('[tv-modal] Compression failed:', e);
+            if (compressStatus) compressStatus.textContent = 'Compression failed. Upload original.';
+            if (compressMeter) compressMeter.style.setProperty('--progress', '0%');
+          }
+
+          modalCompressing = false;
+          compressBtn.disabled = false;
+        });
+      }
+
+      async function compressModalVideo(file, onProgress) {
+        return new Promise(async function(resolve, reject) {
+          try {
+            var video = document.createElement('video');
+            video.muted = true;
+            video.playsInline = true;
+            video.src = URL.createObjectURL(file);
+
+            await new Promise(function(res, rej) {
+              video.onloadedmetadata = res;
+              video.onerror = rej;
+            });
+
+            var duration = video.duration;
+            if (!duration || duration < 0.1) { reject(new Error('Invalid video duration')); return; }
+
+            // Calculate target bitrate to stay under 50MB
+            var targetBytes = 45 * 1024 * 1024; // 45MB to leave room
+            var targetBitrate = Math.floor((targetBytes * 8) / duration);
+            var videoBitrate = Math.min(targetBitrate, 2000000); // Cap at 2Mbps
+
+            // Determine resolution based on duration
+            var maxDim = duration > 300 ? 480 : (duration > 120 ? 640 : 854);
+
+            var canvas = document.createElement('canvas');
+            var aspect = video.videoWidth / video.videoHeight;
+            if (aspect > 1) {
+              canvas.width = Math.min(maxDim, video.videoWidth);
+              canvas.height = Math.round(canvas.width / aspect);
+            } else {
+              canvas.height = Math.min(maxDim, video.videoHeight);
+              canvas.width = Math.round(canvas.height * aspect);
+            }
+            var ctx = canvas.getContext('2d');
+
+            // Set up audio capture
+            var audioCtx = null;
+            var audioDest = null;
+            try {
+              audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+              var source = audioCtx.createMediaElementSource(video);
+              audioDest = audioCtx.createMediaStreamDestination();
+              source.connect(audioDest);
+              source.connect(audioCtx.destination);
+            } catch(e) {
+              console.warn('[tv-modal] Audio capture not available:', e);
+            }
+
+            // Combine video and audio streams
+            var videoStream = canvas.captureStream(30);
+            var combinedStream = videoStream;
+            if (audioDest && audioDest.stream && audioDest.stream.getAudioTracks().length) {
+              var combinedTracks = videoStream.getTracks().concat(audioDest.stream.getAudioTracks());
+              combinedStream = new MediaStream(combinedTracks);
+            }
+
+            // Find supported mime type
+            var mimeType = 'video/webm;codecs=vp9,opus';
+            if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm;codecs=vp8,opus';
+            if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
+
+            var recorder = new MediaRecorder(combinedStream, {
+              mimeType: mimeType,
+              videoBitsPerSecond: videoBitrate,
+              audioBitsPerSecond: 64000
+            });
+
+            var chunks = [];
+            recorder.ondataavailable = function(e) { if (e.data && e.data.size > 0) chunks.push(e.data); };
+            recorder.onstop = function() {
+              var blob = new Blob(chunks, { type: mimeType });
+              var ext = mimeType.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
+              var compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, '') + '-compressed.' + ext, { type: mimeType });
+              resolve(compressedFile);
+            };
+
+            recorder.start(1000);
+            video.currentTime = 0;
+            await video.play();
+
+            // Draw frames and track progress
+            function drawFrame() {
+              if (video.ended || video.paused) {
+                recorder.stop();
+                video.pause();
+                if (audioCtx) audioCtx.close();
+                return;
+              }
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              var progress = Math.min(95, Math.round((video.currentTime / duration) * 100));
+              if (onProgress) onProgress(progress);
+              requestAnimationFrame(drawFrame);
+            }
+            drawFrame();
+
+            video.onended = function() {
+              setTimeout(function() { if (recorder.state !== 'inactive') recorder.stop(); }, 200);
+            };
+
+          } catch(e) {
+            reject(e);
+          }
+        });
+      }
+
+      // Form submission
+      if (modalForm) {
+        modalForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+
+          var session = null;
+          try { session = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
+
+          if (!session) {
+            setModalStatus('Sign in first.', 'error');
+            return;
+          }
+
+          var channelSlug = modalChannelSelect ? modalChannelSelect.value : '';
+          var titleEl = document.getElementById('tv-upload-modal-title');
+          var title = titleEl ? titleEl.value.trim() : '';
+          var descEl = document.getElementById('tv-upload-modal-description');
+          var description = descEl ? descEl.value.trim() : '';
+          var visEl = document.getElementById('tv-upload-modal-visibility');
+          var visibility = visEl ? visEl.value : 'public';
+          var file = modalPendingFile;
+
+          if (!channelSlug) { setModalStatus('Choose a channel.', 'error'); return; }
+          if (!title) { setModalStatus('Enter a title.', 'error'); return; }
+          if (!file) { setModalStatus('Choose a video file.', 'error'); return; }
+          if (file.size > 50 * 1024 * 1024) { setModalStatus('50MB max. Compress or choose smaller file.', 'error'); return; }
+
+          setModalStatus('Uploading...', 'success');
+
+          try {
+            // Read file as base64
+            var fileB64 = await new Promise(function(resolve, reject) {
+              var reader = new FileReader();
+              reader.onload = function() {
+                var result = String(reader.result || '');
+                var comma = result.indexOf(',');
+                resolve(comma >= 0 ? result.slice(comma + 1) : result);
+              };
+              reader.onerror = function() { reject(new Error('Could not read file.')); };
+              reader.readAsDataURL(file);
+            });
+
+            var response = await fetch('/api/tv/uploads', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-fas-user': JSON.stringify(session)
+              },
+              body: JSON.stringify({
+                channel_slug: channelSlug,
+                title: title,
+                description: description,
+                visibility: visibility,
+                file_name: file.name,
+                file_type: file.type,
+                file_size_bytes: file.size,
+                file_b64: fileB64
+              })
+            });
+
+            var result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Upload failed.');
+
+            setModalStatus('Upload published: ' + (result.upload ? result.upload.title : title), 'success');
+
+            // Reset form but keep modal open
+            setTimeout(function() {
+              resetUploadModal();
+              // Reload network to refresh channels/uploads
+              if (window.FAS_TV && window.FAS_TV.loadNetwork) {
+                window.FAS_TV.loadNetwork();
+              }
+            }, 2000);
+
+          } catch (err) {
+            setModalStatus(err.message || 'Upload failed.', 'error');
+          }
+        });
+      }
+
+      // Expose open function globally for FAB
+      window.openUploadModal = openUploadModal;
     })();
   </script>
 </body>
