@@ -28,6 +28,7 @@
     rel="stylesheet"
   />
   <link rel="stylesheet" href="assets/style.css?v=20260610-waffle-main" />
+  <link rel="stylesheet" href="assets/css/widget.css?v=20260618-widget" />
 
   <style>
     :root {
@@ -1290,159 +1291,6 @@
       overflow-wrap: anywhere;
     }
 
-    .post-widget {
-      position: fixed;
-      right: clamp(0.75rem, 3vw, 1.35rem);
-      bottom: clamp(0.75rem, 3vw, 1.35rem);
-      z-index: 999;
-      display: grid;
-      justify-items: end;
-      gap: 0.65rem;
-      max-width: calc(100vw - 1rem);
-    }
-
-    .post-widget-panel[hidden] {
-      display: none;
-    }
-
-    .post-widget-panel {
-      width: min(390px, calc(100vw - 1.2rem));
-      padding: 0.9rem;
-      border-radius: 20px;
-      border: 1px solid rgba(167,139,250,0.22);
-      background: rgba(12,13,19,0.97);
-      box-shadow: 0 22px 70px rgba(0,0,0,0.56);
-      backdrop-filter: blur(18px);
-    }
-
-    #dir-video-panel {
-      position: fixed;
-      right: clamp(0.75rem, 3vw, 1.35rem);
-      bottom: clamp(0.75rem, 3vw, 1.35rem);
-      z-index: 1000;
-    }
-
-    .post-widget-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 0.75rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .post-widget-head strong {
-      display: block;
-      color: #fff;
-      font-size: 0.95rem;
-      text-transform: uppercase;
-    }
-
-    .post-widget-head small,
-    .post-widget-note,
-    .post-widget-status {
-      display: block;
-      color: var(--text-dim);
-      font-size: 0.72rem;
-      line-height: 1.42;
-    }
-
-    .post-widget-close,
-    .post-widget-toggle {
-      border: 1px solid rgba(255,255,255,0.12);
-      cursor: pointer;
-    }
-
-    .post-widget-close {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.06);
-      color: #fff;
-    }
-
-    .post-widget-form {
-      display: grid;
-      gap: 0.62rem;
-    }
-
-    .post-widget-form textarea,
-    .post-widget-form select,
-    .post-widget-form input[type="text"],
-    .post-widget-form input[type="file"] {
-      width: 100%;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 13px;
-      background: rgba(255,255,255,0.045);
-      color: #fff;
-      padding: 0.72rem;
-      font: inherit;
-      font-size: 0.86rem;
-    }
-
-    .post-widget-form textarea {
-      min-height: 108px;
-      resize: vertical;
-    }
-
-    .post-widget-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
-    }
-
-    .post-widget-btn {
-      min-height: 42px;
-      border: 1px solid rgba(167,139,250,0.2);
-      border-radius: 999px;
-      background: rgba(255,255,255,0.045);
-      color: #fff;
-      font-size: 0.8rem;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .post-widget-btn.primary {
-      background: rgba(167,139,250,0.16);
-      color: var(--purple-bright);
-    }
-
-    .post-widget-toggle {
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, rgba(167,139,250,0.96), rgba(245,196,81,0.92));
-      color: #090a10;
-      box-shadow: 0 18px 45px rgba(0,0,0,0.42);
-      font-size: 0;
-      transform-origin: center;
-      animation: postWidgetFloat 3.2s ease-in-out infinite;
-    }
-
-    .post-widget-toggle::before,
-    .post-widget-toggle::after {
-      content: "";
-      position: absolute;
-      width: 22px;
-      height: 4px;
-      border-radius: 999px;
-      background: #090a10;
-    }
-
-    .post-widget-toggle::after {
-      transform: rotate(90deg);
-    }
-
-    .post-widget.is-open .post-widget-toggle {
-      animation-play-state: paused;
-      transform: rotate(45deg);
-    }
-
-    @keyframes postWidgetFloat {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-7px) rotate(8deg); }
-    }
 
     .bottom-cta {
       display: none;
@@ -1892,16 +1740,18 @@
     </div>
   </footer>
 
-  <aside class="post-widget" id="dir-post-widget" aria-label="Quick post widget">
-    <section class="post-widget-panel" id="dir-post-panel" hidden aria-hidden="true">
-      <div class="post-widget-head">
+  <aside class="uw-root" id="dir-post-widget" aria-label="Quick post widget">
+    <section class="uw-panel" id="dir-post-panel" hidden aria-hidden="true">
+      <div class="uw-watermark" id="dir-post-watermark"></div>
+      <div class="uw-head">
         <div>
           <strong>Add A Post</strong>
           <small>Text, pictures, videos, PDFs, audio, or other files. 50MB max.</small>
         </div>
-        <button class="post-widget-close" id="dir-post-close" type="button" aria-label="Close post widget">X</button>
+        <button class="uw-close" id="dir-post-close" type="button" aria-label="Close post widget">X</button>
       </div>
-      <form class="post-widget-form" id="dir-post-form">
+      <div class="uw-body">
+      <form class="uw-form" id="dir-post-form">
         <textarea id="dir-post-text" maxlength="800" placeholder="What do you want to post?"></textarea>
         <select id="dir-post-type" aria-label="Post type">
           <option value="drop">Post</option>
@@ -1913,27 +1763,29 @@
           <option value="question">Question</option>
         </select>
         <input id="dir-post-file" type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.zip,.csv,.xlsx,.ppt,.pptx" />
-        <small class="post-widget-note" id="dir-post-file-note">Choose a file to see its size. Files over 50MB cannot post here.</small>
-        <div class="post-widget-actions">
-          <button class="post-widget-btn" id="dir-post-compress" type="button">Compress File</button>
-          <button class="post-widget-btn primary" type="submit">Post</button>
+        <small class="uw-note" id="dir-post-file-note">Choose a file to see its size. Files over 50MB cannot post here.</small>
+        <div class="uw-actions">
+          <button class="uw-btn" id="dir-post-compress" type="button">Compress File</button>
+          <button class="uw-btn primary" type="submit">Post</button>
         </div>
-        <small class="post-widget-note">Compression is for video files when supported. It can take longer and quality may go down.</small>
-        <small class="post-widget-status" id="dir-post-status" aria-live="polite"></small>
+        <small class="uw-note">Compression is for video files when supported. It can take longer and quality may go down.</small>
+        <small class="uw-status" id="dir-post-status" aria-live="polite"></small>
       </form>
+      </div>
     </section>
-    <button class="post-widget-toggle" id="dir-post-toggle" type="button" aria-label="Open post widget" aria-expanded="false"></button>
+    <button class="uw-toggle" id="dir-post-toggle" type="button" aria-label="Open post widget" aria-expanded="false"></button>
   </aside>
 
-  <aside class="post-widget-panel" id="dir-video-panel" hidden aria-hidden="true" aria-label="Video upload">
-    <div class="post-widget-head">
+  <aside class="uw-panel" id="dir-video-panel" hidden aria-hidden="true" aria-label="Video upload">
+    <div class="uw-head">
       <div>
         <strong>Upload Video</strong>
         <small>Main Faceless Animal Studios channel is selected by default.</small>
       </div>
-      <button class="post-widget-close" id="dir-video-close" type="button" aria-label="Close video upload">X</button>
+      <button class="uw-close" id="dir-video-close" type="button" aria-label="Close video upload">X</button>
     </div>
-    <form class="post-widget-form" id="dir-video-form">
+    <div class="uw-body">
+    <form class="uw-form" id="dir-video-form">
       <input id="dir-video-title" type="text" maxlength="120" placeholder="Video title" required />
       <textarea id="dir-video-description" maxlength="500" placeholder="Short description for the post or archive."></textarea>
       <select id="dir-video-target" aria-label="Video channel target">
@@ -1942,14 +1794,15 @@
       </select>
       <select id="dir-video-channel" aria-label="My channel" hidden></select>
       <input id="dir-video-file" type="file" accept="video/*" required />
-      <small class="post-widget-note" id="dir-video-size">Choose a video to see its file size. 50MB max.</small>
-      <div class="post-widget-actions">
-        <button class="post-widget-btn" id="dir-video-compress" type="button">Compress Video</button>
-        <button class="post-widget-btn primary" type="submit">Upload</button>
+      <small class="uw-note" id="dir-video-size">Choose a video to see its file size. 50MB max.</small>
+      <div class="uw-actions">
+        <button class="uw-btn" id="dir-video-compress" type="button">Compress Video</button>
+        <button class="uw-btn primary" type="submit">Upload</button>
       </div>
-      <small class="post-widget-note">If you use your own channel, the video can still be used in your directory post. Create a channel on the TV page if none appears.</small>
-      <small class="post-widget-status" id="dir-video-status" aria-live="polite"></small>
+      <small class="uw-note">If you use your own channel, the video can still be used in your directory post. Create a channel on the TV page if none appears.</small>
+      <small class="uw-status" id="dir-video-status" aria-live="polite"></small>
     </form>
+    </div>
   </aside>
 
   <script src="assets/script.js?v=20260322"></script>
@@ -3149,6 +3002,7 @@
       var compress = document.getElementById('dir-post-compress');
 
       function open() {
+        if (window.__uwWatermark) window.__uwWatermark();
         widget.classList.add('is-open');
         panel.hidden = false;
         panel.setAttribute('aria-hidden', 'false');
@@ -3165,7 +3019,7 @@
       document.querySelectorAll('[data-open-post-widget]').forEach(function (btn) { btn.addEventListener('click', open); });
       if (toggle) toggle.addEventListener('click', function () { panel.hidden ? open() : shut(); });
       if (close) close.addEventListener('click', shut);
-
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && widget.classList.contains('is-open')) shut(); });
       if (file) file.addEventListener('change', function () {
         var f = file.files && file.files[0];
         if (!f) { note.textContent = 'Choose a file to see its size. Files over 50MB cannot post here.'; return; }
@@ -3330,6 +3184,12 @@
       });
     });
   }());
+  </script>
+  <script type="module">
+    import { pickWatermark } from './assets/js/widget.js';
+    var wm = document.getElementById('dir-post-watermark');
+    window.__uwWatermark = function() { pickWatermark(wm); };
+    window.__uwWatermark();
   </script>
 </body>
 </html>

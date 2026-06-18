@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/style.css?v=20260610-waffle-main" />
   <link rel="stylesheet" href="assets/css/widget-hub.css?v=20260611-widget-hub" />
+  <link rel="stylesheet" href="assets/css/widget.css?v=20260618-widget" />
   <style>
     /* ── Radio page shell ── */
     body {
@@ -1538,482 +1539,6 @@
       to   { transform: scaleY(1); }
     }
 
-    /* ── Upload FAB (Plus button) ── */
-    .rp-upload-fab {
-      position: fixed;
-      right: clamp(0.75rem, 3vw, 1.5rem);
-      bottom: clamp(0.75rem, 3vw, 1.5rem);
-      z-index: 60;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      border: 2px solid rgba(139,92,246,0.5);
-      background: linear-gradient(135deg, rgba(139,92,246,0.95), rgba(99,102,241,0.9));
-      color: #fff;
-      font-size: 1.8rem;
-      font-weight: 300;
-      line-height: 1;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 8px 32px rgba(139,92,246,0.4), 0 0 0 1px rgba(255,255,255,0.08) inset;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-      animation: rpFabFloat 3s ease-in-out infinite;
-    }
-    .rp-upload-fab::before {
-      content: "";
-      position: absolute;
-      inset: -4px;
-      border-radius: 50%;
-      background: inherit;
-      filter: blur(12px);
-      opacity: 0.5;
-      z-index: -1;
-      animation: rpFabGlow 3s ease-in-out infinite;
-    }
-    .rp-upload-fab::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background: rgba(139,92,246,0.3);
-      transform: scale(0);
-      opacity: 0;
-      pointer-events: none;
-    }
-    .rp-upload-fab:active::after {
-      animation: rpFabBurst 0.5s ease-out forwards;
-    }
-    .rp-upload-fab:hover,
-    .rp-upload-fab:focus-visible {
-      transform: scale(1.06);
-      box-shadow: 0 12px 40px rgba(139,92,246,0.55), 0 0 0 1px rgba(255,255,255,0.12) inset;
-      outline: none;
-      animation: none;
-    }
-    .rp-upload-fab:active {
-      transform: scale(0.94);
-    }
-    .rp-upload-fab span {
-      display: block;
-      transform: translateY(-1px);
-    }
-    @keyframes rpFabFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-    }
-    @keyframes rpFabGlow {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.7; }
-    }
-    @keyframes rpFabBurst {
-      0% { transform: scale(0); opacity: 0.6; }
-      100% { transform: scale(2.5); opacity: 0; }
-    }
-
-    /* ── Upload Floating Panel – Glass Card ── */
-    .rp-floating-panel {
-      position: fixed;
-      right: max(6rem, calc(env(safe-area-inset-right) + 5rem));
-      bottom: max(0.85rem, env(safe-area-inset-bottom));
-      z-index: 59;
-      width: min(380px, calc(100vw - 7rem));
-      max-height: calc(100vh - 6rem);
-      overflow: hidden;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(10, 11, 16, 0.72);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(12px) scale(0.96);
-      transition: opacity 0.22s ease, transform 0.22s ease;
-    }
-    .rp-floating-panel::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      border-radius: inherit;
-      background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(99,102,241,0.04));
-    }
-    .rp-floating-panel.open {
-      opacity: 1;
-      pointer-events: all;
-      transform: translateY(0) scale(1);
-    }
-    .rp-floating-panel-watermark {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      background-image: var(--watermark, none);
-      background-size: cover;
-      background-position: center;
-      opacity: 0.04;
-      filter: blur(4px);
-      pointer-events: none;
-      border-radius: inherit;
-    }
-    .rp-floating-panel > *:not(.rp-floating-panel-watermark) {
-      position: relative;
-      z-index: 1;
-    }
-    .rp-floating-panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.8rem 1rem;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-    .rp-floating-panel-header h3 {
-      margin: 0;
-      font-size: 0.92rem;
-      font-weight: 800;
-      color: #fff;
-    }
-    .rp-floating-panel-close {
-      background: none;
-      border: none;
-      font-size: 1.3rem;
-      color: var(--text-2);
-      cursor: pointer;
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.18s ease;
-    }
-    .rp-floating-panel-close:hover {
-      background: rgba(255,255,255,0.08);
-      color: #fff;
-    }
-    .rp-floating-panel-body {
-      padding: 0.85rem;
-      display: grid;
-      gap: 0.75rem;
-      overflow-y: auto;
-      max-height: calc(100vh - 10rem);
-    }
-    @media (max-width: 520px) {
-      .rp-floating-panel {
-        right: max(0.62rem, env(safe-area-inset-right));
-        bottom: max(4.5rem, calc(env(safe-area-inset-bottom) + 3.8rem));
-        width: calc(100vw - 1.24rem);
-        max-height: calc(100vh - 6rem);
-      }
-    }
-    /* drop zone */
-    .rp-drop-zone {
-      border: 2px dashed rgba(139,92,246,0.35);
-      border-radius: 12px;
-      padding: 1.25rem 1rem;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: rgba(139,92,246,0.04);
-    }
-    .rp-drop-zone:hover {
-      border-color: rgba(139,92,246,0.6);
-      background: rgba(139,92,246,0.08);
-    }
-    .rp-drop-icon {
-      font-size: 1.6rem;
-      margin-bottom: 0.25rem;
-    }
-    .rp-drop-text {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--text);
-      margin: 0 0 0.15rem;
-    }
-    .rp-drop-sub {
-      font-size: 0.75rem;
-      color: var(--text-3);
-      margin: 0;
-    }
-
-    /* ── Selected file preview ── */
-    .rp-file-selected {
-      display: flex;
-      align-items: center;
-      gap: 0.55rem;
-      padding: 0.55rem 0.75rem;
-      background: rgba(139,92,246,0.08);
-      border: 1px solid rgba(139,92,246,0.22);
-      border-radius: 8px;
-      font-size: 0.82rem;
-      color: var(--text-2);
-    }
-    .rp-file-icon {
-      font-size: 1rem;
-      flex-shrink: 0;
-    }
-    .rp-file-name {
-      flex: 1;
-      min-width: 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .rp-file-size {
-      font-size: 0.72rem;
-      color: var(--text-3);
-      flex-shrink: 0;
-    }
-    .rp-file-remove {
-      background: none;
-      border: none;
-      color: var(--text-3);
-      cursor: pointer;
-      font-size: 1rem;
-      padding: 0.1rem 0.2rem;
-      line-height: 1;
-      flex-shrink: 0;
-    }
-    .rp-file-remove:hover { color: #f87171; }
-
-    /* ── Shared fas- UI (used by panel JS) ── */
-    .fas-compress-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.7rem;
-      padding: 0.55rem 0.7rem;
-      border: 1px solid rgba(139,92,246,0.18);
-      border-radius: 8px;
-      background: rgba(0,0,0,0.22);
-    }
-    .fas-compress-row small {
-      color: var(--text-3);
-      font-size: 0.72rem;
-      line-height: 1.35;
-      flex: 1;
-    }
-    .fas-btn {
-      flex-shrink: 0;
-      min-height: 32px;
-      padding: 0.4rem 0.75rem;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 6px;
-      background: rgba(255,255,255,0.06);
-      color: var(--text-2);
-      cursor: pointer;
-      font-size: 0.68rem;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      transition: background 0.15s, border-color 0.15s;
-      font-family: var(--font-body);
-    }
-    .fas-btn:hover {
-      background: rgba(255,255,255,0.1);
-      border-color: rgba(255,255,255,0.2);
-    }
-    .fas-btn-primary {
-      min-height: 32px;
-      padding: 0.4rem 0.75rem;
-      border: 1px solid rgba(139,92,246,0.35);
-      border-radius: 6px;
-      background: rgba(139,92,246,0.12);
-      color: #b794f4;
-      cursor: pointer;
-      font-size: 0.68rem;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      transition: background 0.15s, border-color 0.15s;
-      font-family: var(--font-body);
-    }
-    .fas-btn-primary:hover {
-      border-color: rgba(139,92,246,0.55);
-      background: rgba(139,92,246,0.2);
-    }
-    .fas-btn-primary:disabled,
-    .fas-btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-    .fas-progress {
-      display: none;
-      gap: 0.3rem;
-    }
-    .fas-progress-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.72rem;
-      color: var(--text-3);
-    }
-    .fas-progress-pct {
-      font-weight: 700;
-      color: #b794f4;
-    }
-    .fas-progress-track {
-      height: 5px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 999px;
-      overflow: hidden;
-      position: relative;
-    }
-    .fas-progress-fill {
-      height: 100%;
-      width: 0%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #b794f4, #7c3aed);
-      transition: width 0.35s ease;
-      position: relative;
-    }
-    .fas-progress-fill::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15));
-    }
-    .fas-progress-phases {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.62rem;
-      color: var(--text-3);
-      margin-top: 0.15rem;
-    }
-    .fas-progress-phases span.done { color: #b794f4; }
-    .fas-progress-label {
-      font-size: 0.65rem;
-      color: var(--text-3);
-      text-align: right;
-    }
-    .fas-field {
-      display: grid;
-      gap: 0.25rem;
-    }
-    .fas-label {
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-3);
-    }
-    .fas-input {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 8px;
-      padding: 0.55rem 0.75rem;
-      font-size: 0.82rem;
-      color: var(--text);
-      font-family: var(--font-body);
-      outline: none;
-      width: 100%;
-      box-sizing: border-box;
-      transition: border-color 0.15s;
-    }
-    .fas-input:focus {
-      border-color: rgba(139,92,246,0.5);
-    }
-    .fas-input.error {
-      border-color: #f87171;
-    }
-
-    /* ── Form field ── */
-    .rp-field {
-      display: grid;
-      gap: 0.3rem;
-    }
-    .rp-field label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-3);
-    }
-    .rp-required {
-      color: #f87171;
-    }
-    .rp-input {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 8px;
-      padding: 0.6rem 0.85rem;
-      font-size: 0.85rem;
-      color: var(--text);
-      font-family: var(--font-body);
-      outline: none;
-      width: 100%;
-      box-sizing: border-box;
-      transition: border-color 0.15s;
-    }
-    .rp-input:focus {
-      border-color: rgba(139,92,246,0.5);
-    }
-
-    /* ── Error ── */
-    .rp-sub-error {
-      font-size: 0.78rem;
-      color: #f87171;
-      display: none;
-      margin: 0;
-      padding: 0.5rem 0.75rem;
-      background: rgba(248,113,113,0.08);
-      border-radius: 6px;
-      border: 1px solid rgba(248,113,113,0.2);
-    }
-
-    /* ── Submit button ── */
-    .rp-sub-btn {
-      min-height: 44px;
-      padding: 0.65rem 1rem;
-      border-radius: 8px;
-      border: 1px solid rgba(139,92,246,0.4);
-      background: rgba(139,92,246,0.12);
-      color: var(--purple-bright);
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      transition: background 0.15s, border-color 0.15s;
-      font-family: var(--font-body);
-    }
-    .rp-sub-btn:hover {
-      background: rgba(139,92,246,0.2);
-      border-color: rgba(139,92,246,0.55);
-    }
-    .rp-sub-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    /* ── Success ── */
-    .rp-sub-success {
-      margin-top: 0.5rem;
-      padding: 1rem;
-      background: rgba(74,222,128,0.08);
-      border: 1px solid rgba(74,222,128,0.2);
-      border-radius: 10px;
-    }
-    .rp-success-title {
-      font-size: 0.88rem;
-      color: #4ade80;
-      font-weight: 700;
-      margin: 0 0 0.25rem;
-    }
-    .rp-success-detail {
-      font-size: 0.8rem;
-      color: var(--text-2);
-      margin: 0;
-    }
-    .rp-success-remaining {
-      font-size: 0.75rem;
-      color: var(--text-3);
-      margin: 0.5rem 0 0;
-    }
-
     /* ── Responsive ── */
     .radio-page-wrap .fas-widget-hub {
       right: auto;
@@ -2325,77 +1850,64 @@
         <div id="rp-submit-form-wrap">
 
           <!-- FAB trigger -->
-          <button id="rp-upload-fab" class="rp-upload-fab" type="button" aria-label="Upload music" title="Upload music">
-            <span>+</span>
-          </button>
-
-          <!-- Upload floating panel (glass-card) -->
-          <div id="rp-floating-panel" class="rp-floating-panel" role="dialog" aria-label="Upload track">
-            <div class="rp-floating-panel-watermark"></div>
-            <div class="rp-floating-panel-header">
-              <h3>🎵&ensp;Upload Track</h3>
-              <button class="rp-floating-panel-close" id="rp-panel-close" type="button" aria-label="Close upload">✕</button>
-            </div>
-            <div class="rp-floating-panel-body">
-              <!-- Drop zone -->
-              <div id="rp-drop-zone" class="rp-drop-zone"
-                onclick="document.getElementById('rp-file-input').click()"
-                ondragover="event.preventDefault();this.style.borderColor='rgba(139,92,246,0.7)';this.style.background='rgba(139,92,246,0.1)';"
-                ondragleave="this.style.borderColor='rgba(139,92,246,0.35)';this.style.background='rgba(139,92,246,0.04)';"
-                ondrop="rpHandleDrop(event)">
-                <div class="rp-drop-icon">🎵</div>
-                <p class="rp-drop-text">Drop your audio file here</p>
-                <p class="rp-drop-sub">or tap to browse</p>
-              </div>
-              <input type="file" id="rp-file-input" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/flac,audio/x-m4a,audio/mp4,audio/aac,audio/aiff" style="display:none;">
-
-              <!-- Selected file preview -->
-              <div id="rp-file-selected" class="rp-file-selected" style="display:none;">
-                <span class="rp-file-icon">🎵</span>
-                <span class="rp-file-name" id="rp-file-name"></span>
-                <span class="rp-file-size" id="rp-file-size"></span>
-                <button class="rp-file-remove" onclick="rpClearFile()" title="Remove file">×</button>
-              </div>
-
-              <!-- Compress row (inline) -->
-              <div class="fas-compress-row" id="rp-compress-row" style="display:none;">
-                <small>Over 30MB? Compress before uploading.</small>
-                <button class="fas-btn-primary" id="rp-compress-btn" type="button">Compress</button>
-              </div>
-
-              <!-- Branded progress (fas- classes) -->
-              <div class="fas-progress" id="rp-progress">
-                <div class="fas-progress-header">
-                  <span class="fas-progress-label" id="rp-progress-label">Reading file…</span>
-                  <span class="fas-progress-pct" id="rp-progress-pct">0%</span>
+          <!-- ── Unified Widget – Radio Upload ── -->
+          <aside class="uw-root" id="radio-upload-widget" aria-label="Upload track">
+            <section class="uw-panel" id="radio-upload-panel" hidden aria-hidden="true">
+              <div class="uw-watermark" id="radio-upload-watermark"></div>
+              <div class="uw-head">
+                <div>
+                  <strong>Upload Track</strong>
+                  <small>Upload an audio file to Station 1</small>
                 </div>
-                <div class="fas-progress-track">
-                  <div class="fas-progress-fill" id="rp-progress-fill"></div>
+                <button class="uw-close" id="radio-upload-close" type="button" aria-label="Close upload">X</button>
+              </div>
+              <div class="uw-body" id="radio-upload-body">
+                <div class="uw-dropzone" id="radio-drop-zone"
+                  onclick="document.getElementById('radio-file-input').click()">
+                  <span class="uw-dropzone-icon">🎵</span>
+                  <p>Drop your audio file here</p>
+                  <small>or tap to browse</small>
                 </div>
-                <div class="fas-progress-phases">
-                  <span id="rp-phase-read">Read</span>
-                  <span id="rp-phase-compress">Compress</span>
-                  <span id="rp-phase-upload">Upload</span>
-                  <span id="rp-phase-save">Save</span>
+                <input type="file" id="radio-file-input" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/flac,audio/x-m4a,audio/mp4,audio/aac,audio/aiff" style="display:none;">
+
+                <div class="uw-file-preview" id="radio-file-selected" style="display:none;">
+                  <span class="uw-file-icon">🎵</span>
+                  <div class="uw-file-details">
+                    <strong class="uw-file-name" id="radio-file-name"></strong>
+                    <small class="uw-file-size" id="radio-file-size"></small>
+                  </div>
+                  <button class="uw-file-remove" onclick="window.__radioClearFile()" title="Remove file">×</button>
+                </div>
+
+                <div class="uw-progress" id="radio-progress" style="display:none;">
+                  <div class="uw-progress-header">
+                    <span class="uw-progress-label" id="radio-progress-label">Reading file…</span>
+                    <span class="uw-progress-pct" id="radio-progress-pct">0%</span>
+                  </div>
+                  <div class="uw-progress-track"><div class="uw-progress-fill" id="radio-progress-fill"></div></div>
+                </div>
+
+                <div id="radio-compress-row" style="display:none;">
+                  <div class="uw-compress-row">
+                    <small>Over 30MB? Compress before uploading.</small>
+                    <button class="uw-btn" id="radio-compress-btn" type="button">Compress</button>
+                  </div>
+                </div>
+
+                <input id="radio-sub-title" type="text" maxlength="100" placeholder="Track title" style="width:100%;border:1px solid rgba(255,255,255,0.1);border-radius:13px;background:rgba(255,255,255,0.045);color:#fff;padding:0.72rem;font:inherit;font-size:0.86rem;box-sizing:border-box;" />
+
+                <p id="radio-sub-error" style="font-size:0.78rem;color:#f87171;display:none;margin:0;padding:0.5rem 0.75rem;background:rgba(248,113,113,0.08);border-radius:6px;border:1px solid rgba(248,113,113,0.2);"></p>
+                <button class="uw-btn primary" id="radio-sub-btn" style="min-height:42px;width:100%;font-size:0.8rem;">Upload to Station 1 →</button>
+
+                <div id="radio-sub-success" style="display:none;margin-top:0.5rem;padding:1rem;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;">
+                  <p style="font-size:0.88rem;color:#4ade80;font-weight:700;margin:0 0 0.25rem;">Track added to Station 1! 🎶</p>
+                  <p id="radio-success-detail" style="font-size:0.8rem;color:var(--text-2);margin:0;"></p>
+                  <p id="radio-remaining-msg" style="font-size:0.75rem;color:var(--text-3);margin:0.5rem 0 0;"></p>
                 </div>
               </div>
-
-              <!-- Title -->
-              <div class="fas-field">
-                <label class="fas-label" for="rp-sub-title">Track Title <span style="color:#f87171">*</span></label>
-                <input id="rp-sub-title" type="text" maxlength="100" placeholder="Name of your track" class="fas-input">
-              </div>
-
-              <!-- Error / Submit / Success -->
-              <p id="rp-sub-error" class="rp-sub-error"></p>
-              <button id="rp-sub-btn" class="fas-btn-primary" style="min-height:42px;width:100%;font-size:0.8rem;">Upload to Station 1 →</button>
-              <div id="rp-sub-success" class="rp-sub-success" style="display:none;">
-                <p class="rp-success-title">Track added to Station 1! 🎶</p>
-                <p class="rp-success-detail" id="rp-sub-success-detail"></p>
-                <p class="rp-success-remaining" id="rp-sub-remaining-msg"></p>
-              </div>
-            </div>
-          </div>
+            </section>
+            <button class="uw-toggle" id="radio-upload-toggle" type="button" aria-label="Upload music" aria-expanded="false"></button>
+          </aside>
 
         </div>
 
@@ -2403,364 +1915,247 @@
       </div>
     </section>
 
-    <script>
-    /* ── Radio Floating Panel – Upload + Audio Compression ── */
-    var rpPendingFile = null;
-    var rpOriginalFile = null;
-    var characters = [];
+    <script type="module">
+      import { formatBytes, postToDirectory, initFloatingWidget } from './assets/js/widget.js';
+      import { pickWatermark } from './assets/js/widget.js';
 
-    // Character watermark list (actual files matching TV)
-    (function() {
-      var names = [
-        '/Faceless%20Animal%20Studios/Characters/file_00000000020471f5bfd56238a2c55242.png',
-        '/Faceless%20Animal%20Studios/Characters/file_00000000065071f58f80b8ccb3997a9a.png',
-        '/Faceless%20Animal%20Studios/Characters/file_000000001200720ca655cd8473ef2541.png',
-        '/Faceless%20Animal%20Studios/Characters/file_00000000424c71f58d53c77417910885.png',
-        '/Faceless%20Animal%20Studios/Characters/file_00000000a14c71fd915d9466c77ec0d1.png',
-        '/Faceless%20Animal%20Studios/Characters/file_00000000e96471fdb1f49655921c9a67.png'
-      ];
-      characters = names;
-    })();
+      var rpPendingFile = null;
+      var rpOriginalFile = null;
+      var rpCompressInProgress = false;
 
-    function rpFormatBytes(b) {
-      if (!b) return '';
-      return b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
-    }
+      var uw = initFloatingWidget({ rootId: 'radio-upload-widget' });
 
-    var rpPanel = document.getElementById('rp-floating-panel');
-    var rpFab   = document.getElementById('rp-upload-fab');
-    var rpClose = document.getElementById('rp-panel-close');
-    var rpDropZone = document.getElementById('rp-drop-zone');
-    var rpFileInput = document.getElementById('rp-file-input');
+      var dropZone = document.getElementById('radio-drop-zone');
+      var fileInput = document.getElementById('radio-file-input');
+      var fileNameEl = document.getElementById('radio-file-name');
+      var fileSizeEl = document.getElementById('radio-file-size');
+      var fileSelected = document.getElementById('radio-file-selected');
+      var titleEl = document.getElementById('radio-sub-title');
+      var errorEl = document.getElementById('radio-sub-error');
+      var subBtn = document.getElementById('radio-sub-btn');
+      var progress = document.getElementById('radio-progress');
+      var progressFill = document.getElementById('radio-progress-fill');
+      var progressPct = document.getElementById('radio-progress-pct');
+      var progressLabel = document.getElementById('radio-progress-label');
+      var compressRow = document.getElementById('radio-compress-row');
+      var compressBtn = document.getElementById('radio-compress-btn');
+      var successEl = document.getElementById('radio-sub-success');
+      var successDetail = document.getElementById('radio-success-detail');
+      var remainingMsg = document.getElementById('radio-remaining-msg');
 
-    function rpOpenPanel() {
-      if (!rpPanel) return;
-      // Rotate watermark
-      var wm = rpPanel.querySelector('.rp-floating-panel-watermark');
-      if (wm && characters.length) {
-        var idx = Math.floor(Math.random() * characters.length);
-        wm.style.setProperty('--watermark', 'url(' + characters[idx] + ')');
+      function rpShowError(msg) { if (errorEl) { errorEl.textContent = msg; errorEl.style.display = ''; } }
+      function rpClearError() { if (errorEl) errorEl.style.display = 'none'; }
+      function rpHideProgress() { if (progress) progress.style.display = 'none'; }
+      function rpSetProgress(pct) {
+        if (progress) progress.style.display = 'grid';
+        if (progressFill) progressFill.style.width = pct + '%';
+        if (progressPct) progressPct.textContent = pct + '%';
       }
-      rpPanel.classList.add('open');
-      rpFab && (rpFab.style.display = 'none');
-    }
-    function rpClosePanel() {
-      if (!rpPanel) return;
-      rpPanel.classList.remove('open');
-      rpFab && (rpFab.style.display = '');
-      rpClearFile();
-      var titleEl = document.getElementById('rp-sub-title');
-      if (titleEl) titleEl.value = '';
-      rpHideProgress();
-      rpClearError();
-      var succ = document.getElementById('rp-sub-success');
-      if (succ) succ.style.display = 'none';
-      var compRow = document.getElementById('rp-compress-row');
-      if (compRow) compRow.style.display = 'none';
-    }
 
-    if (rpFab) rpFab.addEventListener('click', rpOpenPanel);
-    if (rpClose) rpClose.addEventListener('click', rpClosePanel);
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && rpPanel && rpPanel.classList.contains('open')) rpClosePanel();
-    });
+      function rpClearFile() {
+        rpPendingFile = null; rpOriginalFile = null;
+        if (fileInput) fileInput.value = '';
+        if (fileSelected) fileSelected.style.display = 'none';
+      }
+      window.__radioClearFile = rpClearFile;
 
-    /* ── File handling ── */
-    function rpSetFile(file) {
-      if (!file) return;
-      var ALLOWED = ['audio/mpeg','audio/mp3','audio/wav','audio/ogg','audio/flac',
-                     'audio/x-m4a','audio/mp4','audio/aac','audio/aiff','audio/x-aiff'];
-      if (ALLOWED.indexOf(file.type) === -1 && !file.type.startsWith('audio/')) {
-        rpShowError('Only audio files are supported (MP3, WAV, OGG, FLAC, M4A, AAC).');
-        return;
-      }
-      if (file.size > 50 * 1024 * 1024) {
-        rpShowError('File too large — max 50MB.');
-        return;
-      }
-      rpPendingFile = file;
-      rpOriginalFile = file;
-      document.getElementById('rp-file-name').textContent = file.name;
-      document.getElementById('rp-file-size').textContent = rpFormatBytes(file.size);
-      document.getElementById('rp-file-selected').style.display = 'flex';
-      var titleEl = document.getElementById('rp-sub-title');
-      if (titleEl && !titleEl.value.trim()) {
-        titleEl.value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
-      }
-      rpClearError();
-      // Show compress row if >30MB
-      var compRow = document.getElementById('rp-compress-row');
-      if (compRow) compRow.style.display = file.size > 30 * 1024 * 1024 ? '' : 'none';
-    }
-    function rpClearFile() {
-      rpPendingFile = null;
-      rpOriginalFile = null;
-      if (rpFileInput) rpFileInput.value = '';
-      var selEl = document.getElementById('rp-file-selected');
-      if (selEl) selEl.style.display = 'none';
-    }
-    function rpHandleDrop(e) {
-      e.preventDefault();
-      if (rpDropZone) {
-        rpDropZone.style.borderColor = 'rgba(139,92,246,0.35)';
-        rpDropZone.style.background = 'rgba(139,92,246,0.04)';
-      }
-      var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-      if (file && navigator.maxTouchPoints < 2) rpSetFile(file);
-    }
-    if (rpFileInput) {
-      rpFileInput.addEventListener('change', function(e) {
-        var file = e.target.files && e.target.files[0];
-        if (file) rpSetFile(file);
-      });
-    }
-
-    /* ── Error / Progress ── */
-    function rpShowError(msg) {
-      var el = document.getElementById('rp-sub-error');
-      if (el) { el.textContent = msg; el.style.display = ''; }
-    }
-    function rpClearError() {
-      var el = document.getElementById('rp-sub-error');
-      if (el) el.style.display = 'none';
-    }
-    function rpHideProgress() {
-      var wrap = document.getElementById('rp-progress');
-      if (wrap) wrap.style.display = 'none';
-    }
-    function rpSetProgress(pct, phase) {
-      var wrap = document.getElementById('rp-progress');
-      var fill = document.getElementById('rp-progress-fill');
-      var pctEl = document.getElementById('rp-progress-pct');
-      var lblEl = document.getElementById('rp-progress-label');
-      if (wrap) wrap.style.display = 'grid';
-      if (fill) fill.style.width = pct + '%';
-      if (pctEl) pctEl.textContent = pct + '%';
-      // Phase labels
-      var phases = ['rp-phase-read','rp-phase-compress','rp-phase-upload','rp-phase-save'];
-      var phaseLabels = ['Read','Compress','Upload','Save'];
-      phases.forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) el.classList.remove('done');
-      });
-      if (phase) {
-        var idx = phaseLabels.indexOf(phase);
-        for (var i = 0; i <= idx; i++) {
-          var el = document.getElementById(phases[i]);
-          if (el) el.classList.add('done');
+      function rpSetFile(file) {
+        if (!file) return;
+        var ALLOWED = ['audio/mpeg','audio/mp3','audio/wav','audio/ogg','audio/flac','audio/x-m4a','audio/mp4','audio/aac','audio/aiff','audio/x-aiff'];
+        if (ALLOWED.indexOf(file.type) === -1 && !file.type.startsWith('audio/')) {
+          rpShowError('Only audio files are supported (MP3, WAV, OGG, FLAC, M4A, AAC).');
+          return;
         }
+        if (file.size > 50 * 1024 * 1024) { rpShowError('File too large — max 50MB.'); return; }
+        rpPendingFile = file; rpOriginalFile = file;
+        if (fileNameEl) fileNameEl.textContent = file.name;
+        if (fileSizeEl) fileSizeEl.textContent = formatBytes(file.size);
+        if (fileSelected) fileSelected.style.display = 'flex';
+        if (titleEl && !titleEl.value.trim()) {
+          titleEl.value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+        }
+        rpClearError();
+        if (compressRow) compressRow.style.display = file.size > 30 * 1024 * 1024 ? '' : 'none';
       }
-      if (lblEl) lblEl.textContent = phase || '';
-    }
 
-    /* ── Inline Audio Compression ── */
-    var rpCompressBtn = document.getElementById('rp-compress-btn');
-    var rpCompressInProgress = false;
+      function rpHandleDrop(e) {
+        e.preventDefault();
+        var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f && navigator.maxTouchPoints < 2) rpSetFile(f);
+      }
+      window.__radioHandleDrop = rpHandleDrop;
 
-    if (rpCompressBtn) {
-      rpCompressBtn.addEventListener('click', async function() {
-        if (!rpPendingFile) { rpShowError('Select a file first.'); return; }
-        if (rpCompressInProgress) return;
-        rpCompressInProgress = true;
-        rpCompressBtn.disabled = true;
-        rpCompressBtn.textContent = 'Compressing…';
-        rpSetProgress(8, 'Read');
+      // Drag-drop styling
+      if (dropZone) {
+        dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('drag-over'); });
+        dropZone.addEventListener('drop', rpHandleDrop);
+      }
 
-        try {
-          var arrayBuf = await rpPendingFile.arrayBuffer();
-          rpSetProgress(30, 'Read');
+      if (fileInput) fileInput.addEventListener('change', function(e) {
+        var f = e.target.files && e.target.files[0];
+        if (f) rpSetFile(f);
+      });
 
-          var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          rpSetProgress(40, 'Compress');
-          var audioBuf = await audioCtx.decodeAudioData(arrayBuf.slice(0));
-          rpSetProgress(55, 'Compress');
-
-          // Downmix to mono 22050Hz
-          var targetSampleRate = 22050;
-          var ratio = targetSampleRate / audioBuf.sampleRate;
-          var newLength = Math.round(audioBuf.length * ratio);
-          var offlineCtx = new OfflineAudioContext(1, newLength, targetSampleRate);
-          var source = offlineCtx.createBufferSource();
-          source.buffer = audioBuf;
-          source.connect(offlineCtx.destination);
-          source.start(0);
-          var rendered = await offlineCtx.startRendering();
-          rpSetProgress(75, 'Compress');
-
-          // Convert to mono WAV
-          var frames = rendered.length;
-          var channelData = rendered.getChannelData(0);
-          var wavBuf = new ArrayBuffer(44 + frames * 2);
-          var view = new DataView(wavBuf);
-          function writeStr(v, o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
-          writeStr(view, 0, 'RIFF');
-          view.setUint32(4, 36 + frames * 2, true);
-          writeStr(view, 8, 'WAVE');
-          writeStr(view, 12, 'fmt ');
-          view.setUint32(16, 16, true);
-          view.setUint16(20, 1, true);
-          view.setUint16(22, 1, true);
-          view.setUint32(24, targetSampleRate, true);
-          view.setUint32(28, targetSampleRate * 2, true);
-          view.setUint16(32, 2, true);
-          view.setUint16(34, 16, true);
-          writeStr(view, 36, 'data');
-          view.setUint32(40, frames * 2, true);
-          for (var i = 0; i < frames; i++) {
-            var s = Math.max(-1, Math.min(1, channelData[i]));
-            s = s < 0 ? s * 0x8000 : s * 0x7FFF;
-            view.setInt16(44 + i * 2, s, true);
+      // ── Compression ──
+      if (compressBtn) {
+        compressBtn.addEventListener('click', async function() {
+          if (!rpPendingFile) { rpShowError('Select a file first.'); return; }
+          if (rpCompressInProgress) return;
+          rpCompressInProgress = true; compressBtn.disabled = true;
+          compressBtn.textContent = 'Compressing…';
+          rpSetProgress(8);
+          try {
+            var arrayBuf = await rpPendingFile.arrayBuffer();
+            rpSetProgress(30);
+            var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            rpSetProgress(40);
+            var audioBuf = await audioCtx.decodeAudioData(arrayBuf.slice(0));
+            rpSetProgress(55);
+            var targetSampleRate = 22050;
+            var ratio = targetSampleRate / audioBuf.sampleRate;
+            var newLength = Math.round(audioBuf.length * ratio);
+            var offlineCtx = new OfflineAudioContext(1, newLength, targetSampleRate);
+            var source = offlineCtx.createBufferSource();
+            source.buffer = audioBuf;
+            source.connect(offlineCtx.destination);
+            source.start(0);
+            var rendered = await offlineCtx.startRendering();
+            rpSetProgress(75);
+            var frames = rendered.length;
+            var channelData = rendered.getChannelData(0);
+            var wavBuf = new ArrayBuffer(44 + frames * 2);
+            var view = new DataView(wavBuf);
+            function writeStr(v, o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); }
+            writeStr(view, 0, 'RIFF'); view.setUint32(4, 36 + frames * 2, true); writeStr(view, 8, 'WAVE');
+            writeStr(view, 12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true); view.setUint32(24, targetSampleRate, true);
+            view.setUint32(28, targetSampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+            writeStr(view, 36, 'data'); view.setUint32(40, frames * 2, true);
+            for (var i = 0; i < frames; i++) {
+              var s = Math.max(-1, Math.min(1, channelData[i]));
+              s = s < 0 ? s * 0x8000 : s * 0x7FFF;
+              view.setInt16(44 + i * 2, s, true);
+            }
+            var compressedBlob = new Blob([wavBuf], { type: 'audio/wav' });
+            var compressedFile = new File([compressedBlob], rpPendingFile.name.replace(/\.[^.]+$/, '.wav'), { type: 'audio/wav', lastModified: Date.now() });
+            rpPendingFile = compressedFile;
+            if (fileNameEl) fileNameEl.textContent = compressedFile.name;
+            if (fileSizeEl) fileSizeEl.textContent = formatBytes(compressedFile.size);
+            rpSetProgress(90);
+            rpHideProgress();
+            if (compressRow) compressRow.style.display = 'none';
+          } catch(e) {
+            console.warn('[radio] Compression failed:', e);
+            rpHideProgress();
+            rpPendingFile = rpOriginalFile;
           }
-          var compressedBlob = new Blob([wavBuf], { type: 'audio/wav' });
-          var compressedFile = new File([compressedBlob], rpPendingFile.name.replace(/\.[^.]+$/, '.wav'), {
-            type: 'audio/wav',
-            lastModified: Date.now()
-          });
-          rpPendingFile = compressedFile;
-          document.getElementById('rp-file-name').textContent = compressedFile.name;
-          document.getElementById('rp-file-size').textContent = rpFormatBytes(compressedFile.size);
-          rpSetProgress(90, 'Compress');
-          rpHideProgress();
-          var compRow = document.getElementById('rp-compress-row');
-          if (compRow) compRow.style.display = 'none';
-          rpCompressBtn.textContent = 'Compress';
-          rpCompressBtn.disabled = false;
+          compressBtn.textContent = 'Compress';
+          compressBtn.disabled = false;
           rpCompressInProgress = false;
-        } catch(e) {
-          console.warn('[radio] Compression failed:', e);
-          rpHideProgress();
-          rpPendingFile = rpOriginalFile;
-          rpCompressBtn.textContent = 'Compress';
-          rpCompressBtn.disabled = false;
-          rpCompressInProgress = false;
-        }
-      });
-    }
-
-    /* ── Upload (XHR with real progress) ── */
-    var rpSubBtn = document.getElementById('rp-sub-btn');
-
-    async function rpUploadTrack() {
-      rpClearError();
-      var sess = null;
-      try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
-      if (!sess || !sess.ph) {
-        rpShowError('Your session has expired. Please sign in again.');
-        return;
-      }
-      var titleEl = document.getElementById('rp-sub-title');
-      var title = titleEl ? titleEl.value.trim() : '';
-      if (!title) { rpShowError('Enter a track title.'); titleEl && titleEl.focus(); return; }
-      if (!rpPendingFile) { rpShowError('Select an audio file to upload.'); return; }
-
-      if (rpSubBtn) { rpSubBtn.disabled = true; rpSubBtn.textContent = 'Uploading…'; }
-      rpSetProgress(10, 'Read');
-
-      // Encode as base64 with progress
-      var base64;
-      try {
-        var bytes = new Uint8Array(await rpPendingFile.arrayBuffer());
-        rpSetProgress(40, 'Read');
-        var binary = '';
-        var CHUNK = 8192;
-        for (var i = 0; i < bytes.length; i += CHUNK) {
-          binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
-        }
-        base64 = btoa(binary);
-      } catch(e) {
-        rpHideProgress();
-        if (rpSubBtn) { rpSubBtn.disabled = false; rpSubBtn.textContent = 'Upload to Station 1 →'; }
-        rpShowError('Could not read file. Try a smaller file or a different format.');
-        return;
-      }
-
-      rpSetProgress(50, 'Upload');
-      var payload = JSON.stringify({
-        username:  (sess.username || sess.display || '').toLowerCase(),
-        ph:        sess.ph,
-        file_b64:  base64,
-        file_type: rpPendingFile.type,
-        file_name: rpPendingFile.name,
-        title:     title,
-        station:   '1',
-      });
-
-      var resp, data;
-      try {
-        resp = await fetch('/api/radio/community-upload', {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    payload,
         });
-        data = await resp.json();
-      } catch(e) {
-        rpHideProgress();
-        if (rpSubBtn) { rpSubBtn.disabled = false; rpSubBtn.textContent = 'Upload to Station 1 →'; }
-        rpShowError('Network error. Check your connection and try again.');
-        return;
       }
 
-      rpSetProgress(95, 'Save');
-      if (!resp.ok || data.error) {
-        rpHideProgress();
-        if (rpSubBtn) { rpSubBtn.disabled = false; rpSubBtn.textContent = 'Upload to Station 1 →'; }
-        rpShowError(data.error || 'Upload failed (' + resp.status + '). Try again.');
-        return;
-      }
+      // ── Upload ──
+      async function rpUploadTrack() {
+        rpClearError();
+        var sess = null;
+        try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) {}
+        if (!sess || !sess.ph) { rpShowError('Your session has expired. Please sign in again.'); return; }
+        var title = titleEl ? titleEl.value.trim() : '';
+        if (!title) { rpShowError('Enter a track title.'); if (titleEl) titleEl.focus(); return; }
+        if (!rpPendingFile) { rpShowError('Select an audio file to upload.'); return; }
 
-      // Success
-      rpSetProgress(100, 'Save');
-      var remaining = data.remaining ?? data.remaining_this_month ?? null;
-      rpClearFile();
-      if (titleEl) titleEl.value = '';
+        if (subBtn) { subBtn.disabled = true; subBtn.textContent = 'Uploading…'; }
+        rpSetProgress(10);
 
-      // Update quota badge
-      var badge = document.getElementById('rp-quota-badge');
-      if (badge) {
-        badge.style.display = '';
-        if (remaining === 0) {
-          badge.textContent = '0 uploads left this month';
-          badge.style.background = 'rgba(248,113,113,0.12)';
-          badge.style.borderColor = 'rgba(248,113,113,0.3)';
-          badge.style.color = '#f87171';
-        } else {
-          badge.textContent = remaining + ' of 2 uploads left';
+        var base64;
+        try {
+          var bytes = new Uint8Array(await rpPendingFile.arrayBuffer());
+          rpSetProgress(40);
+          var binary = '';
+          var CHUNK = 8192;
+          for (var i = 0; i < bytes.length; i += CHUNK) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+          }
+          base64 = btoa(binary);
+        } catch(e) {
+          rpHideProgress();
+          if (subBtn) { subBtn.disabled = false; subBtn.textContent = 'Upload to Station 1 →'; }
+          rpShowError('Could not read file. Try a smaller file or a different format.');
+          return;
         }
-      }
 
-      // Show success
-      var detailEl = document.getElementById('rp-sub-success-detail');
-      if (detailEl) detailEl.textContent = '"' + title + '" is now live on Station 1. Refresh the player to hear it.';
-      var remEl = document.getElementById('rp-sub-remaining-msg');
-      if (remEl) {
-        remEl.textContent = remaining === 0
-          ? "That was your last upload for this month."
-          : remaining + " upload" + (remaining === 1 ? '' : 's') + " remaining this month.";
-      }
-      document.getElementById('rp-sub-success').style.display = '';
-      if (rpSubBtn) { rpSubBtn.disabled = false; rpSubBtn.textContent = 'Upload to Station 1 →'; }
+        rpSetProgress(50);
+        var payload = JSON.stringify({
+          username: (sess.username || sess.display || '').toLowerCase(),
+          ph: sess.ph,
+          file_b64: base64,
+          file_type: rpPendingFile.type,
+          file_name: rpPendingFile.name,
+          title: title,
+          station: '1',
+        });
 
-      // Auto-close panel after 2s
-      setTimeout(function() {
-        rpHideProgress();
-        rpClosePanel();
-      }, 2000);
-
-      // Directory auto-post
-      try {
-        var boardMod = await import('./assets/js/services/board.js');
-        if (boardMod && boardMod.createBoardPost) {
-          boardMod.createBoardPost({
-            username: (sess.username || sess.display || '').toLowerCase(),
-            content: '🎵 "' + title + '" — ' + (sess.username || sess.display || '') + ' uploaded to Station 1 on Faceless Radio',
-            signal_type: 'music',
-            display_name: sess.display || sess.username || '',
+        var resp, data;
+        try {
+          resp = await fetch('/api/radio/community-upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
           });
+          data = await resp.json();
+        } catch(e) {
+          rpHideProgress();
+          if (subBtn) { subBtn.disabled = false; subBtn.textContent = 'Upload to Station 1 →'; }
+          rpShowError('Network error. Check your connection and try again.');
+          return;
         }
-      } catch(e) { /* board post non-critical */ }
-    }
 
-    if (rpSubBtn) rpSubBtn.addEventListener('click', rpUploadTrack);
+        rpSetProgress(95);
+        if (!resp.ok || data.error) {
+          rpHideProgress();
+          if (subBtn) { subBtn.disabled = false; subBtn.textContent = 'Upload to Station 1 →'; }
+          rpShowError(data.error || 'Upload failed (' + resp.status + '). Try again.');
+          return;
+        }
+
+        rpSetProgress(100);
+        var remaining = data.remaining ?? data.remaining_this_month ?? null;
+        rpClearFile();
+        if (titleEl) titleEl.value = '';
+
+        var badge = document.getElementById('rp-quota-badge');
+        if (badge) {
+          badge.style.display = '';
+          if (remaining === 0) {
+            badge.textContent = '0 uploads left this month';
+            badge.style.background = 'rgba(248,113,113,0.12)';
+            badge.style.borderColor = 'rgba(248,113,113,0.3)';
+            badge.style.color = '#f87171';
+          } else {
+            badge.textContent = remaining + ' of 2 uploads left';
+          }
+        }
+
+        if (successDetail) successDetail.textContent = '"' + title + '" is now live on Station 1. Refresh the player to hear it.';
+        if (remainingMsg) {
+          remainingMsg.textContent = remaining === 0
+            ? "That was your last upload for this month."
+            : remaining + " upload" + (remaining === 1 ? '' : 's') + " remaining this month.";
+        }
+        if (successEl) successEl.style.display = '';
+        if (subBtn) { subBtn.disabled = false; subBtn.textContent = 'Upload to Station 1 →'; }
+
+        setTimeout(function() {
+          rpHideProgress();
+          if (uw) uw.close();
+        }, 2000);
+
+        postToDirectory(sess, title, 'music', '🎵 "{title}" — {display} uploaded to Station 1 on Faceless Radio');
+      }
+
+      if (subBtn) subBtn.addEventListener('click', rpUploadTrack);
     </script>
 
     <section class="rp-section-panel" id="pulse-stage-showcase" aria-label="Faceless Pulse Stage">
