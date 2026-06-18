@@ -27,6 +27,7 @@
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
+      overflow-x: clip;
     }
 
     .radio-page-main {
@@ -319,7 +320,7 @@
     @media (max-width: 560px) {
       .rp-shell {
         width: 100%;
-        padding-top: 0.5rem;
+        padding: 0.5rem 0.75rem;
       }
       .rp-intro-panel,
       .rp-player-card,
@@ -351,6 +352,13 @@
       .rp-hero-actions .rp-chip,
       .rp-section-actions .rp-chip {
         width: 100%;
+      }
+      .rp-strip-actions .rp-strip-action {
+        font-size: 0.6rem;
+        padding: 0.35rem 0.55rem;
+      }
+      .rp-strip-listeners {
+        font-size: 0.62rem;
       }
     }
 
@@ -1437,6 +1445,40 @@
       }
     }
 
+    @media (max-width: 400px) {
+      .rp-shell {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+      }
+      .rp-boombox-header {
+        padding: 0.75rem 0.85rem;
+      }
+      .rp-stations-bar {
+        padding: 0.6rem 0.85rem 0;
+      }
+      .rp-audio-player {
+        padding: 0.75rem 0.85rem 0.4rem;
+      }
+      .rp-controls {
+        padding: 0.65rem 0.85rem 0.4rem;
+      }
+      .rp-vol-bar {
+        padding: 0.65rem 0.85rem;
+      }
+      .rp-station-strip {
+        padding: 0.6rem 0.75rem;
+      }
+      .rp-mini-card {
+        padding: 0.65rem;
+      }
+      .rp-mini-card strong {
+        font-size: 0.65rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
     @media (max-width: 380px) {
       .room-chat-feed {
         min-height: 180px;
@@ -1444,6 +1486,12 @@
       }
       .room-chat-msg {
         max-width: 95%;
+      }
+      .rp-top-track-item {
+        grid-template-columns: 30px minmax(0, 1fr) 64px;
+        gap: 0.45rem;
+        padding: 0.55rem 0.6rem;
+        font-size: 0.72rem;
       }
     }
 
