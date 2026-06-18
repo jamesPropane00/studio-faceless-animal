@@ -358,6 +358,58 @@
       aspect-ratio: 9 / 16;
     }
 
+    .tv-nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.6);
+      color: var(--tv-cyan);
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s ease, background 0.2s ease, transform 0.2s ease;
+      backdrop-filter: blur(8px);
+    }
+    .tv-nav-btn:hover {
+      background: rgba(0,0,0,0.8);
+      border-color: var(--tv-cyan);
+      transform: translateY(-50%) scale(1.1);
+    }
+    .tv-nav-btn:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+    .tv-nav-prev {
+      left: 1rem;
+    }
+    .tv-nav-next {
+      right: 1rem;
+    }
+    .tv-screen:hover .tv-nav-btn {
+      opacity: 1;
+    }
+    @media (max-width: 620px) {
+      .tv-nav-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+        opacity: 0.7;
+      }
+      .tv-nav-prev {
+        left: 0.5rem;
+      }
+      .tv-nav-next {
+        right: 0.5rem;
+      }
+    }
+
     .tv-sound-toggle {
       position: absolute;
       right: 0.75rem;
@@ -2415,6 +2467,12 @@
                   <span>The first public channel video loads here when the archive responds.</span>
                 </div>
               </div>
+              <button class="tv-nav-btn tv-nav-prev" id="tv-nav-prev" type="button" aria-label="Previous video">
+                <span>⏮</span>
+              </button>
+              <button class="tv-nav-btn tv-nav-next" id="tv-nav-next" type="button" aria-label="Next video">
+                <span>⏭</span>
+              </button>
             </div>
             <div class="tv-control-body">
               <h2 class="tv-control-title" id="tv-feature-title">The Network Is Being Built</h2>

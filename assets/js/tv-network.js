@@ -213,6 +213,17 @@
     featureUpload(currentPlaylistUpload());
   }
 
+  function playPrevUpload() {
+    if (!state.playlist.length) return;
+    if (state.playlist.length === 1) {
+      state.playlistIndex = 0;
+    } else {
+      state.playlistIndex = (state.playlistIndex - 1 + state.playlist.length) % state.playlist.length;
+    }
+    state.autoplaying = true;
+    featureUpload(currentPlaylistUpload());
+  }
+
   function slugify(value) {
     return String(value || '')
       .trim()
@@ -585,8 +596,24 @@
         if (video.classList.contains('tv-main-video')) {
           video.addEventListener('ended', playNextUpload, { once: true });
           video.addEventListener('error', function () {
+            // Prevent infinite skip loops by tracking consecutive errors
+            if (!state.consecutiveErrors) state.consecutiveErrors = 0;
+            state.consecutiveErrors++;
+            
+            // Stop auto-advance after 3 consecutive errors
+            if (state.consecutiveErrors >= 3) {
+              console.warn('[tv] Stopping auto-advance after 3 consecutive errors');
+              state.consecutiveErrors = 0;
+              return;
+            }
+            
             window.setTimeout(playNextUpload, 800);
           }, { once: true });
+          
+          // Reset error counter when video plays successfully
+          video.addEventListener('play', function () {
+            state.consecutiveErrors = 0;
+          });
         }
 
         var startPreview = function () {
@@ -1124,6 +1151,19 @@
     });
   }
 
+  function bindNavigationButtons() {
+    if (el.navPrev) {
+      el.navPrev.addEventListener('click', function () {
+        playPrevUpload();
+      });
+    }
+    if (el.navNext) {
+      el.navNext.addEventListener('click', function () {
+        playNextUpload();
+      });
+    }
+  }
+
   function initDom() {
     el.grid = qs('#tv-grid');
     el.screen = qs('#tv-screen');
@@ -1155,6 +1195,8 @@
     el.uploadStatus = qs('#tv-upload-status');
     el.channelForm = qs('#tv-channel-form');
     el.uploadForm = qs('#tv-upload-form');
+    el.navPrev = qs('#tv-nav-prev');
+    el.navNext = qs('#tv-nav-next');
     state.activeChannelSlug = currentChannelSlug();
   }
 
@@ -1165,6 +1207,7 @@
     bindUploadForm();
     bindReactionButtons();
     bindShareButton();
+    bindNavigationButtons();
     loadNetwork();
   }
 
