@@ -2075,6 +2075,59 @@
         word-break: break-word;
       }
     }
+
+    body .fas-widget-hub {
+      right: auto;
+      left: max(0.85rem, env(safe-area-inset-left));
+      align-items: flex-start;
+    }
+    @media (max-width: 520px) {
+      body .fas-widget-hub {
+        right: auto;
+        left: max(0.62rem, env(safe-area-inset-left));
+      }
+    }
+
+    .tv-upload-fab {
+      position: fixed;
+      right: max(0.85rem, env(safe-area-inset-right));
+      bottom: max(0.85rem, env(safe-area-inset-bottom));
+      z-index: 55;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 2px solid rgba(33,244,208,0.5);
+      background: linear-gradient(135deg, rgba(33,244,208,0.95), rgba(139,92,246,0.9));
+      color: #050509;
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 32px rgba(33,244,208,0.4), 0 0 0 1px rgba(255,255,255,0.08) inset;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      touch-action: manipulation;
+    }
+    .tv-upload-fab:hover,
+    .tv-upload-fab:focus-visible {
+      transform: scale(1.06);
+      box-shadow: 0 12px 40px rgba(33,244,208,0.55), 0 0 0 1px rgba(255,255,255,0.12) inset;
+      outline: none;
+    }
+    .tv-upload-fab:active {
+      transform: scale(0.94);
+    }
+    @media (max-width: 520px) {
+      .tv-upload-fab {
+        right: max(0.62rem, env(safe-area-inset-right));
+        bottom: max(0.62rem, env(safe-area-inset-bottom));
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2426,6 +2479,10 @@
     </div>
   </main>
 
+  <button id="tv-upload-fab" class="tv-upload-fab" type="button" aria-label="Upload video" title="Upload video">
+    <span>+</span>
+  </button>
+
   <script>
     window.FAS_DISABLE_PHONE_LAUNCHER = true;
   </script>
@@ -2450,6 +2507,7 @@
       var compressRow   = document.querySelector('.tv-compress-row');
       var compressInProgress = false;
       var tvPendingFile = null;
+      var uploadFab = document.getElementById('tv-upload-fab');
 
       function formatBytes(b) {
         if (!b) return '';
@@ -2587,6 +2645,17 @@
             if (compressMeter) compressMeter.style.setProperty('--progress', '0%');
             compressInProgress = false;
             if (compressStart) compressStart.disabled = false;
+          }
+        });
+      }
+      if (uploadFab) {
+        uploadFab.addEventListener('click', function() {
+          var studio = document.getElementById('tv-studio');
+          if (studio) {
+            studio.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (fileInput) {
+              setTimeout(function() { try { fileInput.click(); } catch(e) {} }, 500);
+            }
           }
         });
       }
