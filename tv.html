@@ -2181,88 +2181,85 @@
       }
     }
 
-    /* ── Mini Upload Modal ── */
-    .tv-upload-modal-overlay {
+    /* ── Mini Upload Floating Panel ── */
+    .tv-upload-panel {
       position: fixed;
-      inset: 0;
-      z-index: 1000;
-      background: rgba(0,0,0,0.72);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
+      right: max(5.5rem, calc(env(safe-area-inset-right) + 4.5rem));
+      bottom: max(0.85rem, env(safe-area-inset-bottom));
+      z-index: 54;
+      width: min(380px, calc(100vw - 7rem));
+      max-height: calc(100vh - 6rem);
+      overflow-y: auto;
+      background: rgba(12, 13, 18, 0.88);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(33,244,208,0.28);
+      border-radius: 12px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s ease;
+      transform: translateY(12px) scale(0.96);
+      transition: opacity 0.22s ease, transform 0.22s ease;
     }
-    .tv-upload-modal-overlay.open {
+    .tv-upload-panel.open {
       opacity: 1;
       pointer-events: all;
-    }
-    .tv-upload-modal {
-      background: 
-        linear-gradient(135deg, rgba(33,244,208,0.12), rgba(139,92,246,0.1) 48%, rgba(255,47,79,0.08)),
-        rgba(12,13,18,0.96);
-      border: 1px solid rgba(33,244,208,0.28);
-      border-radius: 8px;
-      width: 100%;
-      max-width: 520px;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.46);
-      transform: translateY(16px) scale(0.98);
-      transition: transform 0.2s ease;
-    }
-    .tv-upload-modal-overlay.open .tv-upload-modal {
       transform: translateY(0) scale(1);
     }
-    .tv-upload-modal-header {
+    .tv-upload-panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid var(--tv-line);
-      background: linear-gradient(135deg, rgba(33,244,208,0.08), rgba(139,92,246,0.06));
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(135deg, rgba(33,244,208,0.06), rgba(139,92,246,0.04));
+      border-radius: 12px 12px 0 0;
     }
-    .tv-upload-modal-brand {
+    .tv-upload-panel-brand {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.6rem;
     }
-    .tv-upload-modal-logo {
-      width: 42px;
-      height: 42px;
+    .tv-upload-panel-logo {
+      width: 28px;
+      height: 28px;
       object-fit: contain;
-      filter: drop-shadow(0 0 12px rgba(33,244,208,0.3));
+      filter: drop-shadow(0 0 8px rgba(33,244,208,0.25));
     }
-    .tv-upload-modal-header h2 {
+    .tv-upload-panel-header h3 {
       margin: 0;
-      font-size: 1.3rem;
-      font-weight: 900;
+      font-size: 0.95rem;
+      font-weight: 800;
       color: #fff;
       letter-spacing: -0.01em;
     }
-    .tv-upload-modal-close {
+    .tv-upload-panel-close {
       background: none;
       border: none;
-      font-size: 1.8rem;
+      font-size: 1.4rem;
       color: var(--tv-muted);
       cursor: pointer;
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.18s ease;
     }
-    .tv-upload-modal-close:hover {
+    .tv-upload-panel-close:hover {
       background: rgba(255,255,255,0.08);
       color: #fff;
     }
-    .tv-upload-modal-body {
-      padding: 1.5rem;
+    .tv-upload-panel-body {
+      padding: 1rem;
+    }
+    @media (max-width: 520px) {
+      .tv-upload-panel {
+        right: max(0.62rem, env(safe-area-inset-right));
+        bottom: max(4.5rem, calc(env(safe-area-inset-bottom) + 3.8rem));
+        width: calc(100vw - 1.24rem);
+        max-height: calc(100vh - 6rem);
+      }
     }
     .tv-upload-dropzone {
       border: 2px dashed rgba(33,244,208,0.3);
@@ -2741,67 +2738,65 @@
     </div>
   </main>
 
-  <!-- Mini Upload Modal -->
-  <div class="tv-upload-modal-overlay" id="tv-upload-modal" aria-hidden="true">
-    <div class="tv-upload-modal" role="dialog" aria-modal="true" aria-labelledby="tv-upload-modal-title">
-      <div class="tv-upload-modal-header">
-        <div class="tv-upload-modal-brand">
-          <img src="assets/mascot.png" alt="" class="tv-upload-modal-logo" />
-          <h2 id="tv-upload-modal-title">Quick Upload</h2>
-        </div>
-        <button class="tv-upload-modal-close" id="tv-upload-modal-close" type="button" aria-label="Close">×</button>
+  <!-- Mini Upload Floating Panel -->
+  <div class="tv-upload-panel" id="tv-upload-panel" aria-hidden="true">
+    <div class="tv-upload-panel-header">
+      <div class="tv-upload-panel-brand">
+        <img src="assets/mascot.png" alt="" class="tv-upload-panel-logo" />
+        <h3 id="tv-upload-panel-title">Quick Upload</h3>
       </div>
-      <div class="tv-upload-modal-body">
-        <div class="tv-upload-dropzone" id="tv-upload-dropzone">
-          <span class="tv-upload-dropzone-icon">⬆</span>
-          <p>Drag video here or click to browse</p>
-          <small>MP4, WebM, MOV • Max 50MB</small>
-          <input type="file" id="tv-upload-modal-file" accept="video/*" hidden />
-        </div>
-        <div class="tv-upload-file-preview" id="tv-upload-file-preview" hidden>
-          <div class="tv-upload-file-info">
-            <span class="tv-upload-file-icon">🎬</span>
-            <div class="tv-upload-file-details">
-              <strong id="tv-upload-file-name">filename.mp4</strong>
-              <small id="tv-upload-file-size">0 MB</small>
-            </div>
-            <button class="tv-upload-file-remove" id="tv-upload-file-remove" type="button" aria-label="Remove file">×</button>
-          </div>
-        </div>
-        <form class="tv-upload-modal-form" id="tv-upload-modal-form">
-          <div class="tv-field">
-            <label for="tv-upload-modal-title">Title</label>
-            <input class="tv-input" id="tv-upload-modal-title" name="title" maxlength="120" required />
-          </div>
-          <div class="tv-field">
-            <label for="tv-upload-modal-channel">Channel</label>
-            <select class="tv-select" id="tv-upload-modal-channel" name="channel_id" required></select>
-          </div>
-          <div class="tv-field">
-            <label for="tv-upload-modal-visibility">Visibility</label>
-            <select class="tv-select" id="tv-upload-modal-visibility" name="visibility">
-              <option value="public">Public</option>
-              <option value="private">Private</option>
-            </select>
-          </div>
-          <div class="tv-field">
-            <label for="tv-upload-modal-description">Description</label>
-            <textarea class="tv-textarea" id="tv-upload-modal-description" name="description" maxlength="500" rows="3"></textarea>
-          </div>
-          <div class="tv-upload-compress-section" id="tv-upload-compress-section" hidden>
-            <div class="tv-upload-compress-info">
-              <small>File over 30MB? Compress before uploading.</small>
-              <button class="tv-btn" id="tv-upload-modal-compress" type="button">Compress Video</button>
-            </div>
-            <div class="tv-upload-compress-progress" id="tv-upload-compress-progress" hidden>
-              <div class="tv-upload-compress-meter" id="tv-upload-compress-meter"></div>
-              <small id="tv-upload-compress-status">Compressing...</small>
-            </div>
-          </div>
-          <div class="tv-form-status" id="tv-upload-modal-status" aria-live="polite"></div>
-          <button class="tv-btn primary" type="submit" id="tv-upload-modal-submit">Upload Video</button>
-        </form>
+      <button class="tv-upload-panel-close" id="tv-upload-panel-close" type="button" aria-label="Close">×</button>
+    </div>
+    <div class="tv-upload-panel-body">
+      <div class="tv-upload-dropzone" id="tv-upload-dropzone">
+        <span class="tv-upload-dropzone-icon">⬆</span>
+        <p>Drag video here or click to browse</p>
+        <small>MP4, WebM, MOV • Max 50MB</small>
+        <input type="file" id="tv-upload-modal-file" accept="video/*" hidden />
       </div>
+      <div class="tv-upload-file-preview" id="tv-upload-file-preview" hidden>
+        <div class="tv-upload-file-info">
+          <span class="tv-upload-file-icon">🎬</span>
+          <div class="tv-upload-file-details">
+            <strong id="tv-upload-file-name">filename.mp4</strong>
+            <small id="tv-upload-file-size">0 MB</small>
+          </div>
+          <button class="tv-upload-file-remove" id="tv-upload-file-remove" type="button" aria-label="Remove file">×</button>
+        </div>
+      </div>
+      <form class="tv-upload-modal-form" id="tv-upload-modal-form">
+        <div class="tv-field">
+          <label for="tv-upload-modal-title">Title</label>
+          <input class="tv-input" id="tv-upload-modal-title" name="title" maxlength="120" required />
+        </div>
+        <div class="tv-field">
+          <label for="tv-upload-modal-channel">Channel</label>
+          <select class="tv-select" id="tv-upload-modal-channel" name="channel_id" required></select>
+        </div>
+        <div class="tv-field">
+          <label for="tv-upload-modal-visibility">Visibility</label>
+          <select class="tv-select" id="tv-upload-modal-visibility" name="visibility">
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
+        <div class="tv-field">
+          <label for="tv-upload-modal-description">Description</label>
+          <textarea class="tv-textarea" id="tv-upload-modal-description" name="description" maxlength="500" rows="3"></textarea>
+        </div>
+        <div class="tv-upload-compress-section" id="tv-upload-compress-section" hidden>
+          <div class="tv-upload-compress-info">
+            <small>File over 30MB? Compress before uploading.</small>
+            <button class="tv-btn" id="tv-upload-modal-compress" type="button">Compress Video</button>
+          </div>
+          <div class="tv-upload-compress-progress" id="tv-upload-compress-progress" hidden>
+            <div class="tv-upload-compress-meter" id="tv-upload-compress-meter"></div>
+            <small id="tv-upload-compress-status">Compressing...</small>
+          </div>
+        </div>
+        <div class="tv-form-status" id="tv-upload-modal-status" aria-live="polite"></div>
+        <button class="tv-btn primary" type="submit" id="tv-upload-modal-submit">Upload Video</button>
+      </form>
     </div>
   </div>
 
@@ -2976,17 +2971,17 @@
       }
       if (uploadFab) {
         uploadFab.addEventListener('click', function() {
-          openUploadModal();
+          openUploadPanel();
         });
       }
     })();
   </script>
 
-  <!-- ── Mini Upload Modal JS ── -->
+  <!-- ── Mini Upload Panel JS ── -->
   <script>
     (function() {
-      var uploadModal = document.getElementById('tv-upload-modal');
-      var uploadModalClose = document.getElementById('tv-upload-modal-close');
+      var uploadPanel = document.getElementById('tv-upload-panel');
+      var uploadPanelClose = document.getElementById('tv-upload-panel-close');
       var dropzone = document.getElementById('tv-upload-dropzone');
       var modalFileInput = document.getElementById('tv-upload-modal-file');
       var filePreview = document.getElementById('tv-upload-file-preview');
@@ -3017,21 +3012,21 @@
         modalStatus.style.color = tone === 'error' ? '#ff7a8c' : '#21f4d0';
       }
 
-      function openUploadModal() {
-        if (!uploadModal) return;
-        uploadModal.classList.add('open');
-        uploadModal.setAttribute('aria-hidden', 'false');
+      function openUploadPanel() {
+        if (!uploadPanel) return;
+        uploadPanel.classList.add('open');
+        uploadPanel.setAttribute('aria-hidden', 'false');
         populateModalChannelSelect();
       }
 
-      function closeUploadModal() {
-        if (!uploadModal) return;
-        uploadModal.classList.remove('open');
-        uploadModal.setAttribute('aria-hidden', 'true');
-        resetUploadModal();
+      function closeUploadPanel() {
+        if (!uploadPanel) return;
+        uploadPanel.classList.remove('open');
+        uploadPanel.setAttribute('aria-hidden', 'true');
+        resetUploadPanel();
       }
 
-      function resetUploadModal() {
+      function resetUploadPanel() {
         modalPendingFile = null;
         if (modalForm) modalForm.reset();
         if (filePreview) filePreview.hidden = true;
@@ -3096,18 +3091,13 @@
         }
       }
 
-      // Close modal handlers
-      if (uploadModalClose) {
-        uploadModalClose.addEventListener('click', closeUploadModal);
-      }
-      if (uploadModal) {
-        uploadModal.addEventListener('click', function(e) {
-          if (e.target === uploadModal) closeUploadModal();
-        });
+      // Close panel handlers
+      if (uploadPanelClose) {
+        uploadPanelClose.addEventListener('click', closeUploadPanel);
       }
       document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && uploadModal && uploadModal.classList.contains('open')) {
-          closeUploadModal();
+        if (e.key === 'Escape' && uploadPanel && uploadPanel.classList.contains('open')) {
+          closeUploadPanel();
         }
       });
 
@@ -3379,7 +3369,7 @@
 
             // Reset form but keep modal open
             setTimeout(function() {
-              resetUploadModal();
+              resetUploadPanel();
               // Reload network to refresh channels/uploads
               if (window.FAS_TV && window.FAS_TV.loadNetwork) {
                 window.FAS_TV.loadNetwork();
@@ -3393,7 +3383,7 @@
       }
 
       // Expose open function globally for FAB
-      window.openUploadModal = openUploadModal;
+      window.openUploadPanel = openUploadPanel;
     })();
   </script>
 </body>

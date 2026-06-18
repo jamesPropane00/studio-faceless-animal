@@ -487,6 +487,24 @@
     ].join('');
   }
 
+  function cleanupCurrentVideo() {
+    if (!el.screen) return;
+    var currentVideo = el.screen.querySelector('video.tv-main-video');
+    if (currentVideo) {
+      try {
+        currentVideo.pause();
+        currentVideo.removeAttribute('src');
+        currentVideo.load();
+      } catch (err) {}
+    }
+    var currentIframe = el.screen.querySelector('iframe');
+    if (currentIframe) {
+      try {
+        currentIframe.removeAttribute('src');
+      } catch (err) {}
+    }
+  }
+
   function featureCard(card) {
     if (!el.screen || !el.featureTitle || !el.featureCopy) return;
     var title = card.getAttribute('data-title') || 'Selected Broadcast';
@@ -504,6 +522,8 @@
     var target = reactionTargetFromCard(card);
     renderReactions(target);
     renderShare(target);
+
+    cleanupCurrentVideo();
 
     if (source) {
       el.screen.innerHTML = '<video class="tv-main-video" controls autoplay playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
@@ -534,6 +554,8 @@
     var target = reactionTargetFromItem(item);
     renderReactions(target);
     renderShare(target);
+
+    cleanupCurrentVideo();
 
     if (source) {
       el.screen.innerHTML = '<video class="tv-main-video" controls autoplay playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
@@ -581,7 +603,7 @@
           video.defaultMuted = true;
           video.autoplay = false;
           video.loop = false;
-          video.preload = 'metadata';
+          video.preload = 'none';
           video.addEventListener('loadedmetadata', function onMeta() {
             video.removeEventListener('loadedmetadata', onMeta);
             try { video.currentTime = 0.1; } catch (e) {}
@@ -589,18 +611,16 @@
           return;
         }
 
-        video.autoplay = true;
-        video.loop = !video.classList.contains('tv-main-video');
-        video.preload = 'auto';
-
         if (video.classList.contains('tv-main-video')) {
+          video.autoplay = true;
+          video.loop = false;
+          video.preload = 'auto';
+          
           video.addEventListener('ended', playNextUpload, { once: true });
           video.addEventListener('error', function () {
-            // Prevent infinite skip loops by tracking consecutive errors
             if (!state.consecutiveErrors) state.consecutiveErrors = 0;
             state.consecutiveErrors++;
             
-            // Stop auto-advance after 3 consecutive errors
             if (state.consecutiveErrors >= 3) {
               console.warn('[tv] Stopping auto-advance after 3 consecutive errors');
               state.consecutiveErrors = 0;
@@ -610,27 +630,26 @@
             window.setTimeout(playNextUpload, 800);
           }, { once: true });
           
-          // Reset error counter when video plays successfully
           video.addEventListener('play', function () {
             state.consecutiveErrors = 0;
           });
-        }
 
-        var startPreview = function () {
-          try {
-            if (video.ended && Number.isFinite(video.duration)) video.currentTime = 0;
-            var playPromise = video.play();
-            if (playPromise && typeof playPromise.catch === 'function') {
-              playPromise.catch(function () {});
-            }
-          } catch (err) {}
-        };
+          var startPreview = function () {
+            try {
+              if (video.ended && Number.isFinite(video.duration)) video.currentTime = 0;
+              var playPromise = video.play();
+              if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(function () {});
+              }
+            } catch (err) {}
+          };
 
-        if (video.readyState >= 2) {
-          startPreview();
-        } else {
-          video.addEventListener('loadeddata', startPreview, { once: true });
-          video.addEventListener('canplay', startPreview, { once: true });
+          if (video.readyState >= 2) {
+            startPreview();
+          } else {
+            video.addEventListener('loadeddata', startPreview, { once: true });
+            video.addEventListener('canplay', startPreview, { once: true });
+          }
         }
       } catch (err) {}
     });
