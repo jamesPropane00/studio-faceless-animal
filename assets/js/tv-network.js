@@ -13,6 +13,7 @@
     uploads: [],
     activeFilter: 'all',
     activeChannelSlug: '',
+    currentKey: '',
     playlist: [],
     playlistIndex: -1,
     autoplaying: false,
@@ -457,6 +458,7 @@
     if (!el.screen || !el.featureTitle || !el.featureCopy) return;
     el.featureTitle.textContent = 'No Videos Loaded';
     el.featureCopy.textContent = 'The TV page is waiting for published videos from the channel archive.';
+    setReactionsEnabled(false);
     el.screen.innerHTML = [
       '<div class="tv-screen-placeholder">',
         '<div>',
@@ -475,11 +477,14 @@
     var embed = card.getAttribute('data-embed') || '';
     var key = card.getAttribute('data-key') || '';
 
+    state.currentKey = key;
     state.autoplaying = false;
     syncPlaylistToKey(key);
     el.featureTitle.textContent = title;
     el.featureCopy.textContent = copy;
     setActiveCard(key);
+    setReactionsEnabled(true);
+    updateReactionUi(key);
 
     if (source) {
       el.screen.innerHTML = '<video class="tv-main-video" controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
@@ -503,9 +508,12 @@
     var embed = embedSource(item);
     var key = uploadKey(item);
 
+    state.currentKey = key;
     el.featureTitle.textContent = title;
     el.featureCopy.textContent = copy;
     setActiveCard(key);
+    setReactionsEnabled(true);
+    updateReactionUi(key);
 
     if (source) {
       el.screen.innerHTML = '<video class="tv-main-video" controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
@@ -864,11 +872,106 @@
     });
   }
 
+  function tvStoreKey(key, suffix) {
+    return 'tv_reaction_' + key + '_' + suffix;
+  }
+
+  function tvReactionCount(key, type) {
+    return Number(localStorage.getItem(tvStoreKey(key, type)) || 0);
+  }
+
+  function setReactionsEnabled(enabled) {
+    if (el.likeButton) el.likeButton.disabled = !enabled;
+    if (el.dislikeButton) el.dislikeButton.disabled = !enabled;
+    if (el.shareButton) el.shareButton.disabled = !enabled;
+  }
+
+  function updateReactionUi(key) {
+    if (!key) return;
+    if (el.likeCount) el.likeCount.textContent = String(tvReactionCount(key, 'likes'));
+    if (el.dislikeCount) el.dislikeCount.textContent = String(tvReactionCount(key, 'dislikes'));
+    if (el.likeButton) el.likeButton.classList.toggle('active', localStorage.getItem(tvStoreKey(key, 'liked')) === '1');
+    if (el.dislikeButton) el.dislikeButton.classList.toggle('active', localStorage.getItem(tvStoreKey(key, 'disliked')) === '1');
+  }
+
+  function bindReactions() {
+    if (el.likeButton) {
+      el.likeButton.addEventListener('click', function () {
+        var key = state.currentKey;
+        if (!key) return;
+        var likedKey = tvStoreKey(key, 'liked');
+        var liked = localStorage.getItem(likedKey) === '1';
+        if (liked) {
+          localStorage.setItem(likedKey, '0');
+          localStorage.setItem(tvStoreKey(key, 'likes'), String(Math.max(0, tvReactionCount(key, 'likes') - 1)));
+        } else {
+          localStorage.setItem(likedKey, '1');
+          localStorage.setItem(tvStoreKey(key, 'likes'), String(tvReactionCount(key, 'likes') + 1));
+          if (localStorage.getItem(tvStoreKey(key, 'disliked')) === '1') {
+            localStorage.setItem(tvStoreKey(key, 'disliked'), '0');
+            localStorage.setItem(tvStoreKey(key, 'dislikes'), String(Math.max(0, tvReactionCount(key, 'dislikes') - 1)));
+          }
+        }
+        updateReactionUi(key);
+        if (el.reactionNote) el.reactionNote.textContent = '';
+      });
+    }
+    if (el.dislikeButton) {
+      el.dislikeButton.addEventListener('click', function () {
+        var key = state.currentKey;
+        if (!key) return;
+        var dislikedKey = tvStoreKey(key, 'disliked');
+        var disliked = localStorage.getItem(dislikedKey) === '1';
+        if (disliked) {
+          localStorage.setItem(dislikedKey, '0');
+          localStorage.setItem(tvStoreKey(key, 'dislikes'), String(Math.max(0, tvReactionCount(key, 'dislikes') - 1)));
+        } else {
+          localStorage.setItem(dislikedKey, '1');
+          localStorage.setItem(tvStoreKey(key, 'dislikes'), String(tvReactionCount(key, 'dislikes') + 1));
+          if (localStorage.getItem(tvStoreKey(key, 'liked')) === '1') {
+            localStorage.setItem(tvStoreKey(key, 'liked'), '0');
+            localStorage.setItem(tvStoreKey(key, 'likes'), String(Math.max(0, tvReactionCount(key, 'likes') - 1)));
+          }
+        }
+        updateReactionUi(key);
+        if (el.reactionNote) el.reactionNote.textContent = '';
+      });
+    }
+    if (el.shareButton) {
+      el.shareButton.addEventListener('click', function () {
+        var key = state.currentKey;
+        if (!key) return;
+        var url = window.location.origin + window.location.pathname + '?v=' + encodeURIComponent(key);
+        var title = (el.featureTitle && el.featureTitle.textContent) || 'Faceless TV';
+        if (navigator.share) {
+          navigator.share({ title: title, url: url }).catch(function () {});
+          return;
+        }
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          if (el.shareNote) el.shareNote.textContent = url;
+          return;
+        }
+        navigator.clipboard.writeText(url).then(function () {
+          if (el.shareNote) el.shareNote.textContent = 'Link copied!';
+        }).catch(function () {
+          if (el.shareNote) el.shareNote.textContent = url;
+        });
+      });
+    }
+  }
+
   function initDom() {
     el.grid = qs('#tv-grid');
     el.screen = qs('#tv-screen');
     el.featureTitle = qs('#tv-feature-title');
     el.featureCopy = qs('#tv-feature-copy');
+    el.likeButton = qs('#tv-like-button');
+    el.dislikeButton = qs('#tv-dislike-button');
+    el.shareButton = qs('#tv-share-button');
+    el.likeCount = qs('#tv-like-count');
+    el.dislikeCount = qs('#tv-dislike-count');
+    el.reactionNote = qs('#tv-reaction-note');
+    el.shareNote = qs('#tv-share-note');
     el.sourceLabel = qs('#tv-source-label');
     el.uploadLink = qs('#tv-upload-link');
     el.channelSelect = qs('#tv-upload-channel');
@@ -889,6 +992,7 @@
     bindFilterRail();
     bindChannelForm();
     bindUploadForm();
+    bindReactions();
     loadNetwork();
   }
 
