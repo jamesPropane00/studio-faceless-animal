@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="assets/css/widget.css?v=20260618-widget" />
   <style>
     /* ── Radio page shell ── */
+    html { overflow-x: hidden; }
     body {
       background:
         linear-gradient(rgba(33,244,208,0.03) 1px, transparent 1px),
@@ -109,6 +110,8 @@
       line-height: 0.9;
       letter-spacing: 0;
       color: #fff;
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
     .rp-hero-title span {
       color: #ff2f4f;
@@ -332,6 +335,9 @@
       }
       .rp-intro-panel {
         min-height: 330px;
+      }
+      .rp-hero-title {
+        font-size: clamp(1.6rem, 6vw, 2.7rem);
       }
       .rp-station-guide,
       .rp-upload-flow,
