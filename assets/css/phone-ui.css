@@ -1,0 +1,729 @@
+/* ── Signal Phone UI ── DJ Faceless Animal Neon Theme ── */
+
+:root {
+  --phone-bg: #0a0a0f;
+  --phone-surface: #111118;
+  --phone-border: rgba(0, 255, 65, 0.15);
+  --phone-neon: #00ff41;
+  --phone-neon-dim: rgba(0, 255, 65, 0.4);
+  --phone-neon-glow: 0 0 8px rgba(0, 255, 65, 0.3);
+  --phone-text: #e0e0e0;
+  --phone-text-dim: rgba(224, 224, 224, 0.5);
+  --phone-red: #ff3232;
+  --phone-green: #00ff41;
+  --phone-blue: #0096ff;
+  --phone-purple: #8b5cf6;
+  --phone-radius: 16px;
+  --phone-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Phone Shell ── */
+.phone-shell {
+  position: relative;
+  width: min(420px, 100%);
+  margin: 0 auto;
+  background: var(--phone-bg);
+  border-radius: 32px;
+  border: 1px solid var(--phone-border);
+  overflow: hidden;
+  box-shadow: 0 0 40px rgba(0, 255, 65, 0.05), inset 0 0 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  min-height: 700px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ── Status Bar ── */
+.phone-statusbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 20px 4px;
+  font-size: 0.72rem;
+  color: var(--phone-text);
+  background: rgba(0,0,0,0.3);
+  flex-shrink: 0;
+}
+.phone-statusbar-time { font-weight: 700; letter-spacing: 0.02em; }
+.phone-statusbar-icons { display: flex; gap: 6px; align-items: center; }
+.phone-statusbar-icons svg { width: 14px; height: 14px; fill: var(--phone-text-dim); }
+.phone-statusbar-mode {
+  font-size: 0.6rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--phone-neon-dim);
+  color: var(--phone-neon);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Screen Content ── */
+.phone-screen {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--phone-neon-dim) transparent;
+}
+.phone-screen::-webkit-scrollbar { width: 3px; }
+.phone-screen::-webkit-scrollbar-track { background: transparent; }
+.phone-screen::-webkit-scrollbar-thumb { background: var(--phone-neon-dim); border-radius: 3px; }
+
+/* ── Home Screen ── */
+.phone-home {
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+.phone-home-header {
+  text-align: center;
+  margin-bottom: 4px;
+}
+.phone-home-header h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--phone-neon);
+  margin: 0;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+}
+.phone-home-header p {
+  font-size: 0.72rem;
+  color: var(--phone-text-dim);
+  margin: 2px 0 0;
+}
+
+/* ── Screen Sections ── */
+.phone-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--phone-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 8px 16px 6px;
+  padding: 0;
+}
+
+/* ── Contact / Thread List Items ── */
+.phone-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background var(--phone-transition);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.phone-item:hover { background: rgba(0, 255, 65, 0.04); }
+.phone-item:active { background: rgba(0, 255, 65, 0.08); }
+
+.phone-item-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--phone-neon-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--phone-bg);
+  flex-shrink: 0;
+  border: 1px solid var(--phone-neon-dim);
+}
+.phone-item-avatar--call {
+  border-color: var(--phone-red);
+  background: rgba(255,50,50,0.2);
+  color: var(--phone-red);
+  animation: pulse-border 1.5s infinite;
+}
+
+.phone-item-body {
+  flex: 1;
+  min-width: 0;
+}
+.phone-item-body strong {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--phone-text);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.phone-item-body small {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--phone-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.phone-item-time {
+  font-size: 0.62rem;
+  color: var(--phone-text-dim);
+  flex-shrink: 0;
+}
+.phone-item-badge {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--phone-neon);
+  color: var(--phone-bg);
+  font-size: 0.6rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Dialer ── */
+.phone-dialer {
+  padding: 16px;
+  text-align: center;
+}
+.phone-dialer-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--phone-text);
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.15em;
+  padding: 12px 0;
+  outline: none;
+  font-family: 'Inter', monospace;
+}
+.phone-dialer-input::placeholder { color: var(--phone-text-dim); font-size: 1rem; letter-spacing: 0.05em; }
+.phone-dialer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 280px;
+  margin: 8px auto 0;
+}
+.phone-dial-key {
+  aspect-ratio: 1;
+  border: 1px solid var(--phone-border);
+  border-radius: 50%;
+  background: var(--phone-surface);
+  color: var(--phone-text);
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+}
+.phone-dial-key:hover { background: rgba(0, 255, 65, 0.08); border-color: var(--phone-neon-dim); }
+.phone-dial-key:active { background: var(--phone-neon-dim); transform: scale(0.92); }
+.phone-dial-key small {
+  display: block;
+  font-size: 0.5rem;
+  font-weight: 400;
+  color: var(--phone-text-dim);
+  margin-top: -4px;
+}
+.phone-dial-key--action {
+  border-color: transparent;
+  font-size: 1rem;
+}
+.phone-dial-key--call {
+  background: var(--phone-neon);
+  color: var(--phone-bg);
+  border-color: var(--phone-neon);
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+}
+.phone-dial-key--call:hover { background: #00cc36; }
+.phone-dial-key--delete { color: var(--phone-text-dim); border-color: transparent; font-size: 1rem; }
+.phone-dialer-suggestions {
+  margin-top: 8px;
+  text-align: left;
+}
+.phone-dialer-suggestion {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: var(--phone-text-dim);
+  transition: background 0.15s;
+}
+.phone-dialer-suggestion:hover { background: rgba(0, 255, 65, 0.06); color: var(--phone-text); }
+
+/* ── Chat / Message Thread ── */
+.phone-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.phone-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.phone-chat-back {
+  background: none;
+  border: none;
+  color: var(--phone-neon);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+}
+.phone-chat-header h3 { margin: 0; font-size: 0.9rem; color: var(--phone-text); font-weight: 600; flex: 1; }
+.phone-chat-header .phone-chat-actions { display: flex; gap: 8px; }
+.phone-chat-header .phone-chat-actions button {
+  background: none;
+  border: 1px solid var(--phone-border);
+  border-radius: 8px;
+  color: var(--phone-text-dim);
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.phone-chat-header .phone-chat-actions button:hover { border-color: var(--phone-neon-dim); color: var(--phone-neon); }
+
+.phone-chat-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--phone-neon-dim) transparent;
+}
+.phone-chat-feed::-webkit-scrollbar { width: 3px; }
+.phone-chat-feed::-webkit-scrollbar-thumb { background: var(--phone-neon-dim); border-radius: 3px; }
+
+.phone-chat-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  position: relative;
+  word-wrap: break-word;
+}
+.phone-chat-bubble--sent {
+  align-self: flex-end;
+  background: var(--phone-neon);
+  color: var(--phone-bg);
+  border-bottom-right-radius: 6px;
+}
+.phone-chat-bubble--recv {
+  align-self: flex-start;
+  background: var(--phone-surface);
+  color: var(--phone-text);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-bottom-left-radius: 6px;
+}
+.phone-chat-bubble small {
+  display: block;
+  font-size: 0.6rem;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+.phone-chat-bubble--sent small { color: var(--phone-bg); }
+
+.phone-chat-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.phone-chat-input {
+  flex: 1;
+  border: 1px solid var(--phone-border);
+  border-radius: 24px;
+  background: var(--phone-surface);
+  color: var(--phone-text);
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  outline: none;
+  font-family: inherit;
+}
+.phone-chat-input:focus { border-color: var(--phone-neon-dim); }
+.phone-chat-send {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--phone-neon);
+  color: var(--phone-bg);
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.phone-chat-send:hover { background: #00cc36; }
+.phone-chat-send:disabled { opacity: 0.3; cursor: default;}
+
+/* ── Contacts ── */
+.phone-contacts-search {
+  padding: 8px 16px;
+}
+.phone-contacts-search input {
+  width: 100%;
+  border: 1px solid var(--phone-border);
+  border-radius: 24px;
+  background: var(--phone-surface);
+  color: var(--phone-text);
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.phone-contacts-search input:focus { border-color: var(--phone-neon-dim); }
+
+/* ── Recents ── */
+.phone-recents-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px 4px;
+}
+.phone-recents-header button {
+  background: none;
+  border: 1px solid var(--phone-red);
+  border-radius: 8px;
+  color: var(--phone-red);
+  padding: 6px 12px;
+  font-size: 0.68rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.phone-recents-header button:hover { background: rgba(255,50,50,0.1); }
+
+/* ── Keypad View (inside dialer) ── */
+.phone-keypad-view {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ── Settings ── */
+.phone-settings {
+  padding: 16px;
+}
+.phone-settings-group {
+  margin-bottom: 16px;
+}
+.phone-settings-group h4 {
+  font-size: 0.7rem;
+  color: var(--phone-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 8px;
+}
+.phone-settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.phone-settings-row:last-child { border-bottom: none; }
+.phone-settings-row label { font-size: 0.82rem; color: var(--phone-text); cursor: pointer; }
+.phone-settings-row small { font-size: 0.68rem; color: var(--phone-text-dim); }
+.phone-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.phone-toggle.active { background: var(--phone-neon); }
+.phone-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s;
+}
+.phone-toggle.active::after { transform: translateX(20px); }
+
+/* ── Call Overlay ── */
+.phone-call-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: linear-gradient(180deg, #0a0a0f 0%, #050510 50%, #000 100%);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.phone-call-overlay.active { display: flex; }
+
+.phone-call-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--phone-neon-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--phone-bg);
+  margin-bottom: 16px;
+  border: 2px solid var(--phone-neon-dim);
+}
+.phone-call-avatar--ringing { animation: pulse-border 1.5s infinite; border-color: var(--phone-neon); }
+
+.phone-call-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--phone-text);
+  margin: 0;
+}
+.phone-call-status {
+  font-size: 0.82rem;
+  color: var(--phone-text-dim);
+  margin: 4px 0 20px;
+}
+.phone-call-timer {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--phone-text);
+  margin: 0 0 20px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.phone-call-actions {
+  display: flex;
+  gap: 24px;
+  margin-top: 12px;
+}
+.phone-call-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255,255,255,0.06);
+  color: var(--phone-text);
+}
+.phone-call-btn:hover { transform: scale(1.05); }
+.phone-call-btn:active { transform: scale(0.92); }
+.phone-call-btn small { font-size: 0.55rem; font-weight: 600; letter-spacing: 0.04em; }
+
+.phone-call-btn--end { background: var(--phone-red); color: white; }
+.phone-call-btn--end:hover { background: #cc2828; }
+.phone-call-btn--answer { background: var(--phone-green); color: var(--phone-bg); }
+.phone-call-btn--answer:hover { background: #00cc36; }
+.phone-call-btn--active { background: var(--phone-neon); color: var(--phone-bg); }
+
+/* Incoming call incoming state */
+.incoming-call-buttons {
+  display: flex;
+  gap: 40px;
+  margin-top: 20px;
+}
+.incoming-decline {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: var(--phone-red);
+  color: white;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.incoming-decline:hover { transform: scale(1.05); }
+.incoming-decline small { font-size: 0.55rem; font-weight: 600; }
+
+.incoming-message-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 1px solid var(--phone-text-dim);
+  background: transparent;
+  color: var(--phone-text);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.incoming-message-btn:hover { border-color: var(--phone-neon-dim); color: var(--phone-neon); }
+.incoming-message-btn small { font-size: 0.55rem; font-weight: 600; }
+
+.incoming-answer {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: var(--phone-green);
+  color: var(--phone-bg);
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.incoming-answer:hover { transform: scale(1.05); }
+.incoming-answer small { font-size: 0.55rem; font-weight: 600; }
+
+/* Minimized call bar at top */
+.phone-call-minibar {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99;
+  background: var(--phone-neon);
+  color: var(--phone-bg);
+  padding: 6px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  align-items: center;
+  gap: 8px;
+}
+.phone-call-minibar.visible { display: flex; }
+.phone-call-minibar span { flex: 1; }
+.phone-call-minibar button {
+  background: rgba(0,0,0,0.2);
+  border: none;
+  color: var(--phone-bg);
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.68rem;
+}
+
+/* ── Dock ── */
+.phone-dock {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--phone-surface);
+  border-top: 1px solid var(--phone-border);
+  flex-shrink: 0;
+  gap: 4px;
+}
+.phone-dock-btn {
+  background: none;
+  border: none;
+  color: var(--phone-text-dim);
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: all 0.15s;
+  flex: 1;
+  max-width: 64px;
+  font-family: inherit;
+}
+.phone-dock-btn:hover { color: var(--phone-text); background: rgba(255,255,255,0.04); }
+.phone-dock-btn--active { color: var(--phone-neon); }
+.phone-dock-btn--active .dock-icon { filter: drop-shadow(0 0 4px var(--phone-neon)); }
+.phone-dock-btn .dock-icon { font-size: 1.3rem; line-height: 1; }
+.phone-dock-btn .dock-label { font-weight: 600; letter-spacing: 0.03em; }
+
+/* ── Incognito badge ── */
+.phone-incognito-badge {
+  position: absolute;
+  top: 32px;
+  right: 16px;
+  font-size: 0.55rem;
+  color: var(--phone-text-dim);
+  background: rgba(255,255,255,0.04);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Misc ── */
+.phone-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--phone-text-dim);
+  font-size: 0.8rem;
+}
+.phone-gate {
+  text-align: center;
+  padding: 48px 16px;
+}
+.phone-gate h2 { color: var(--phone-neon); font-size: 1.5rem; margin: 0 0 8px; }
+.phone-gate p { color: var(--phone-text-dim); font-size: 0.82rem; margin: 0 0 20px; }
+.phone-gate .btn { margin: 4px; }
+
+/* ── Animations ── */
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--phone-neon); box-shadow: 0 0 6px rgba(0,255,65,0.2); }
+  50% { border-color: var(--phone-neon-dim); box-shadow: 0 0 16px rgba(0,255,65,0.4); }
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.phone-screen > * { animation: fade-in 0.2s ease; }
+
+/* ── Scroll Handling ── */
+.phone-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .phone-shell {
+    width: 100%;
+    border-radius: 0;
+    border: none;
+    min-height: 100dvh;
+    box-shadow: none;
+  }
+  .phone-dialer-grid { max-width: 260px; }
+}

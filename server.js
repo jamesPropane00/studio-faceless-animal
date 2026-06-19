@@ -369,6 +369,15 @@ async function handleMediaDownload(req, res) {
       return
     }
 
+    if (urlPath === '/api/dm/call-signal') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { error: 'Method not allowed.' }); return }
+      handleDMCallSignal(req, res).catch(err => {
+        console.error('[FAS:dm:call-signal] Unhandled error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+      })
+      return
+    }
+
     sendJSON(res, 404, { error: 'Not found.' })
     return
   }
@@ -3535,6 +3544,55 @@ async function handleDMResolveByCode(req, res) {
     })
   } catch {
     return sendJSON(res, 500, { error: 'Lookup failed.' })
+  }
+}
+
+/**
+ * POST /api/dm/call-signal  { type, data, username, ph }
+ * Relays WebRTC signaling for incognito mode via Supabase Realtime broadcast.
+ * The client listens on channel 'webrtc-audio-{callId}' after subscribing.
+ */
+async function handleDMCallSignal(req, res) {
+  let body
+  try { body = JSON.parse((await readBody(req, 16384)).toString('utf8')) } catch {
+    return sendJSON(res, 400, { error: 'Invalid JSON body.' })
+  }
+
+  const { username, ph, type, data } = body || {}
+  if (!username || !ph || !type || !data) {
+    return sendJSON(res, 400, { error: 'Missing required fields: username, ph, type, data.' })
+  }
+
+  const identity = await verifyIdentity(username, ph)
+  if (!identity || !identity.ok) {
+    return sendJSON(res, 403, { error: 'Identity verification failed.' })
+  }
+
+  try {
+    if (type === 'webrtc_offer' || type === 'webrtc_answer' || type === 'ice_candidate' || type === 'webrtc_hangup') {
+      const supabase = getSupabaseClient()
+      const callId = (data && data.callId) || 'unknown'
+      const channelName = 'webrtc-audio-' + callId
+
+      if (type === 'webrtc_hangup') {
+        await supabase.channel(channelName).send({
+          type: 'broadcast',
+          event: 'signal',
+          payload: { type, sender: username, data }
+        })
+      } else {
+        await supabase.channel(channelName).send({
+          type: 'broadcast',
+          event: 'signal',
+          payload: { type, sender: username, data }
+        })
+      }
+    }
+
+    return sendJSON(res, 200, { ok: true })
+  } catch (err) {
+    console.error('[FAS:dm:call-signal] Error:', err.message)
+    return sendJSON(res, 500, { error: 'Signal relay failed.' })
   }
 }
 
