@@ -8,7 +8,6 @@ const WIDGETS = [
   { id: 'tv', label: 'TV', icon: 'TV' },
   { id: 'vault', label: 'Vault', icon: 'VT' },
   { id: 'profile', label: 'Profile', icon: 'ME' },
-  { id: 'phone', label: 'Phone', icon: 'PH' },
 ];
 
 let hubEl = null;
@@ -134,7 +133,6 @@ function openWidget(id) {
   if (id === 'tv') renderTVWidget();
   if (id === 'vault') renderVaultWidget();
   if (id === 'profile') renderProfileWidget();
-  if (id === 'phone') renderPhoneWidget();
 }
 
 function renderRadioWidget() {
@@ -279,23 +277,6 @@ function renderProfileWidget() {
     const handleBtn = document.getElementById('rp-set-handle-btn');
     if (handleBtn) handleBtn.click();
   });
-}
-
-function renderPhoneWidget() {
-  const sess = getSession();
-  const page = currentPage();
-  bodyEl().innerHTML = `
-    <div class="fas-widget-pane">
-      <div class="fas-widget-pane__hero">
-        <p class="fas-widget-pane__label">Signal Phone</p>
-        <h3 class="fas-widget-pane__title">${sess && sess.username ? '@' + esc(sess.username) : 'Sign in required'}</h3>
-        <p class="fas-widget-pane__text">Calls, messages, contacts, and secure communication through the Signal network.</p>
-      </div>
-      <div class="fas-widget-pane__actions">
-        <a class="fas-widget-hub__btn fas-widget-hub__btn--primary" href="phone.html">Open Phone</a>
-        <a class="fas-widget-hub__btn" href="${sess && sess.username ? 'messages.html' : 'login.html?redirect=' + encodeURIComponent(page)}">${sess && sess.username ? 'Open Messenger' : 'Sign In'}</a>
-      </div>
-    </div>`;
 }
 
 async function requestChatConnection(targetUsername, ctx) {
