@@ -828,7 +828,6 @@
 .phone-scroll {
   overflow-y: auto;
   overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* ── Responsive ── */

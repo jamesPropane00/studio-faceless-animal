@@ -976,10 +976,18 @@ async function handleAdminRestart(req, res) {
   setTimeout(() => process.exit(0), 500)
 }
 
-const CSP_HEADER = "default-src 'self'; connect-src 'self' https://ghufaozjwondqcrcucjs.supabase.co https://*.supabase.co wss://ghufaozjwondqcrcucjs.supabase.co wss://*.supabase.co https://esm.sh https://unpkg.com https://app.grapesjs.com https://matrix.org https://*.matrix.org; script-src 'self' 'unsafe-inline' https://esm.sh https://unpkg.com https://www.youtube.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src * data: blob:; media-src 'self' https://ghufaozjwondqcrcucjs.supabase.co https://*.supabase.co https://www.soundhelix.com blob:; frame-src 'self' https://www.youtube.com https://open.spotify.com https://matrix.org; form-action 'self' https://matrix.org;"
+const CSP_HEADER = "default-src 'self'; connect-src 'self' https://ghufaozjwondqcrcucjs.supabase.co https://*.supabase.co wss://ghufaozjwondqcrcucjs.supabase.co wss://*.supabase.co https://esm.sh https://unpkg.com https://app.grapesjs.com https://matrix.org https://*.matrix.org; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://esm.sh https://unpkg.com https://www.youtube.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src * data: blob:; media-src 'self' https://ghufaozjwondqcrcucjs.supabase.co https://*.supabase.co https://www.soundhelix.com blob:; frame-src 'self' https://www.youtube.com https://open.spotify.com https://matrix.org; form-action 'self' https://matrix.org;"
+
+const CACHE_MAX = 'public, max-age=31536000, immutable'
+const CACHE_HTML = 'no-cache'
 
 function send(res, status, type, body) {
-  res.writeHead(status, { 'Content-Type': type, 'Content-Security-Policy': CSP_HEADER })
+  const isHtml = type.startsWith('text/html')
+  res.writeHead(status, {
+    'Content-Type': type,
+    'Content-Security-Policy': CSP_HEADER,
+    'Cache-Control': isHtml ? CACHE_HTML : CACHE_MAX
+  })
   res.end(body)
 }
 
