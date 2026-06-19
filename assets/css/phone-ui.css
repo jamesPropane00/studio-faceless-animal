@@ -182,7 +182,7 @@
 
 /* ── Dialer ── */
 .phone-dialer {
-  padding: 16px;
+  padding: 16px 16px 4px;
   text-align: center;
 }
 .phone-dialer-input {
@@ -194,63 +194,112 @@
   font-weight: 700;
   text-align: center;
   letter-spacing: 0.15em;
-  padding: 12px 0;
+  padding: 12px 0 4px;
   outline: none;
   font-family: 'Inter', monospace;
+  text-transform: uppercase;
 }
-.phone-dialer-input::placeholder { color: var(--phone-text-dim); font-size: 1rem; letter-spacing: 0.05em; }
+.phone-dialer-input::placeholder { color: var(--phone-text-dim); font-size: 0.9rem; letter-spacing: 0.05em; }
+.phone-dialer-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  margin: 2px auto 6px;
+  border: 1px solid var(--phone-border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.phone-dialer-mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--phone-text-dim);
+  padding: 4px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.phone-dialer-mode-btn:hover { color: var(--phone-text); }
+.phone-dialer-mode-btn--active {
+  background: var(--phone-neon-dim);
+  color: var(--phone-neon);
+}
 .phone-dialer-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  max-width: 280px;
-  margin: 8px auto 0;
+  gap: 8px;
+  max-width: 264px;
+  margin: 6px auto 0;
 }
 .phone-dial-key {
-  aspect-ratio: 1;
   border: 1px solid var(--phone-border);
-  border-radius: 50%;
+  border-radius: 12px;
   background: var(--phone-surface);
   color: var(--phone-text);
-  font-size: 1.4rem;
-  font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   font-family: 'Inter', sans-serif;
+  padding: 10px 0 8px;
+  min-height: 58px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .phone-dial-key:hover { background: rgba(0, 255, 65, 0.08); border-color: var(--phone-neon-dim); }
-.phone-dial-key:active { background: var(--phone-neon-dim); transform: scale(0.92); }
-.phone-dial-key small {
-  display: block;
-  font-size: 0.5rem;
-  font-weight: 400;
+.phone-dial-key:active { background: var(--phone-neon-dim); transform: scale(0.94); }
+.phone-dial-key-num {
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.phone-dial-key-letters {
+  font-size: 0.55rem;
+  font-weight: 500;
   color: var(--phone-text-dim);
-  margin-top: -4px;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  margin-top: 1px;
 }
 .phone-dial-key--action {
   border-color: transparent;
   font-size: 1rem;
 }
 .phone-dial-key--call {
-  background: var(--phone-neon);
+  background: var(--phone-green);
   color: var(--phone-bg);
-  border-color: var(--phone-neon);
+  border-color: var(--phone-green);
   box-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
 }
 .phone-dial-key--call:hover { background: #00cc36; }
-.phone-dial-key--delete { color: var(--phone-text-dim); border-color: transparent; font-size: 1rem; }
+.phone-dial-key--call .phone-dial-key-num { font-size: 1.5rem; }
+.phone-dial-key--delete {
+  color: var(--phone-text-dim);
+  border-color: transparent;
+  font-size: 1.2rem;
+  font-weight: 400;
+}
+.phone-dial-key--video {
+  background: var(--phone-blue);
+  color: white;
+  border-color: var(--phone-blue);
+}
+.phone-dial-key--video:hover { background: #0080dd; }
+.phone-dial-key--video .phone-dial-key-num { font-size: 1.2rem; }
 .phone-dialer-suggestions {
-  margin-top: 8px;
+  margin-top: 6px;
   text-align: left;
 }
 .phone-dialer-suggestion {
-  padding: 8px 12px;
+  padding: 6px 12px;
   cursor: pointer;
   border-radius: 8px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--phone-text-dim);
   transition: background 0.15s;
 }

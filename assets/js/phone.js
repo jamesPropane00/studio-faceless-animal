@@ -33,6 +33,32 @@ let missedCalls = 0
 let callHistory = []
 let isOfflineFallback = false
 
+/* ── Dialer State ── */
+let dialMode = '123'
+let dialTapKey = null
+let dialTapIndex = 0
+let dialTapTimer = null
+let dialLastPos = -1
+
+const KEY_LETTERS = {
+  '1': '.,!?\'"1',
+  '2': 'ABC2',
+  '3': 'DEF3',
+  '4': 'GHI4',
+  '5': 'JKL5',
+  '6': 'MNO6',
+  '7': 'PQRS7',
+  '8': 'TUV8',
+  '9': 'WXYZ9',
+  '0': ' 0',
+  '*': '*',
+  '#': '#'
+}
+const KEY_LETTERS_DISPLAY = {
+  '2': 'ABC', '3': 'DEF', '4': 'GHI', '5': 'JKL',
+  '6': 'MNO', '7': 'PQRS', '8': 'TUV', '9': 'WXYZ'
+}
+
 const CONTACTS_KEY = 'fas_phone_contacts_v1'
 const CALL_HISTORY_KEY = 'fas_phone_call_history'
 const SETTINGS_KEY = 'fas_phone_settings_v1'
@@ -516,20 +542,83 @@ async function loadChatMessages(contact) {
   feed.scrollTop = feed.scrollHeight
 }
 
+/* ── Dialer State helpers ── */
+function resetDialTap() {
+  dialTapKey = null
+  dialTapIndex = 0
+  dialLastPos = -1
+  if (dialTapTimer) { clearTimeout(dialTapTimer); dialTapTimer = null }
+}
+
+function toggleDialMode() {
+  dialMode = dialMode === '123' ? 'ABC' : '123'
+  resetDialTap()
+  renderScreen('dialer')
+}
+
+function insertDialChar(input, key, screen) {
+  const letters = KEY_LETTERS[key] || key
+  if (dialMode === 'ABC' && letters.length > 1) {
+    if (dialTapKey === key && dialTapTimer) {
+      dialTapIndex = (dialTapIndex + 1) % letters.length
+      if (dialTapTimer) clearTimeout(dialTapTimer)
+      dialTapTimer = setTimeout(resetDialTap, 600)
+      if (dialLastPos >= 0 && dialLastPos <= input.value.length) {
+        const before = input.value.slice(0, dialLastPos)
+        const after = input.value.slice(dialLastPos + 1)
+        input.value = before + letters[dialTapIndex] + after
+        input.setSelectionRange(dialLastPos + 1, dialLastPos + 1)
+        screen.dataset.dialValue = input.value
+        showDialSuggestions(input.value)
+        return
+      }
+    }
+    const pos = input.selectionStart || input.value.length
+    dialTapKey = key
+    dialTapIndex = 0
+    dialLastPos = pos
+    if (dialTapTimer) clearTimeout(dialTapTimer)
+    dialTapTimer = setTimeout(resetDialTap, 600)
+    const before = input.value.slice(0, pos)
+    const after = input.value.slice(pos)
+    input.value = before + letters[0] + after
+    input.setSelectionRange(pos + 1, pos + 1)
+    screen.dataset.dialValue = input.value
+    showDialSuggestions(input.value)
+  } else {
+    resetDialTap()
+    const pos = input.selectionStart || input.value.length
+    if (input.value.length >= 19) return
+    const before = input.value.slice(0, pos)
+    const after = input.value.slice(pos)
+    input.value = before + key + after
+    input.setSelectionRange(pos + 1, pos + 1)
+    screen.dataset.dialValue = input.value
+    showDialSuggestions(input.value)
+  }
+}
+
 /* ── Dialer Screen ── */
 function renderDialerScreen(screen) {
   const dialValue = screen.dataset.dialValue || ''
   screen.innerHTML = `
     <div class="phone-dialer">
-      <input class="phone-dialer-input" id="phone-dial-input" type="text" placeholder="SIG-XXXX-XXXX" value="${esc(dialValue)}" maxlength="19" />
+      <input class="phone-dialer-input" id="phone-dial-input" type="text" placeholder="SIG-XXXX-XXXX" value="${esc(dialValue)}" maxlength="19" spellcheck="false" autocomplete="off" />
+      <div class="phone-dialer-mode-switch">
+        <button class="phone-dialer-mode-btn${dialMode === '123' ? ' phone-dialer-mode-btn--active' : ''}" id="phone-dial-mode-123">123</button>
+        <button class="phone-dialer-mode-btn${dialMode === 'ABC' ? ' phone-dialer-mode-btn--active' : ''}" id="phone-dial-mode-abc">ABC</button>
+      </div>
       <div class="phone-dialer-grid">
         ${['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map(k => {
-          const letters = { '2': 'ABC', '3': 'DEF', '4': 'GHI', '5': 'JKL', '6': 'MNO', '7': 'PQRS', '8': 'TUV', '9': 'WXYZ' }[k] || ''
-          return `<button class="phone-dial-key" data-key="${k}">${k}${letters ? `<small>${letters}</small>` : ''}</button>`
+          const letters = KEY_LETTERS_DISPLAY[k] || ''
+          return `<button class="phone-dial-key" data-key="${k}">
+            <span class="phone-dial-key-num">${k}</span>
+            ${letters ? `<span class="phone-dial-key-letters">${letters}</span>` : ''}
+          </button>`
         }).join('')}
-        <button class="phone-dial-key phone-dial-key--delete" id="phone-dial-delete">⌫</button>
-        <button class="phone-dial-key phone-dial-key--call" id="phone-dial-call">📞</button>
-        <button class="phone-dial-key phone-dial-key--action" id="phone-dial-video">📹</button>
+        <button class="phone-dial-key phone-dial-key--delete" id="phone-dial-delete"><span class="phone-dial-key-num">⌫</span></button>
+        <button class="phone-dial-key phone-dial-key--call" id="phone-dial-call"><span class="phone-dial-key-num">📞</span></button>
+        <button class="phone-dial-key phone-dial-key--video" id="phone-dial-video"><span class="phone-dial-key-num">📹</span></button>
       </div>
       <div class="phone-dialer-suggestions" id="phone-dial-suggestions"></div>
     </div>
@@ -537,10 +626,14 @@ function renderDialerScreen(screen) {
 
   const input = $('phone-dial-input')
   if (input) {
-    input.addEventListener('input', () => {
+    const onInput = () => {
+      const raw = input.value
+      const upper = raw.toUpperCase()
+      if (upper !== raw) input.value = upper
       screen.dataset.dialValue = input.value
       showDialSuggestions(input.value)
-    })
+    }
+    input.addEventListener('input', onInput)
     input.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         e.preventDefault()
@@ -550,24 +643,20 @@ function renderDialerScreen(screen) {
     })
   }
 
+  $('phone-dial-mode-123')?.addEventListener('click', () => { dialMode = '123'; resetDialTap(); renderScreen('dialer') })
+  $('phone-dial-mode-abc')?.addEventListener('click', () => { dialMode = 'ABC'; resetDialTap(); renderScreen('dialer') })
+
   screen.querySelectorAll('[data-key]').forEach(btn => {
     btn.addEventListener('click', () => {
       const key = btn.dataset.key
       if (!input) return
-      const val = input.value
-      if (val.length >= 19) return
-      const pos = input.selectionStart || val.length
-      const newVal = val.slice(0, pos) + key + val.slice(pos)
-      input.value = newVal
-      screen.dataset.dialValue = newVal
-      showDialSuggestions(newVal)
-      input.focus()
-      input.setSelectionRange(pos + 1, pos + 1)
+      insertDialChar(input, key, screen)
     })
   })
 
   $('phone-dial-delete')?.addEventListener('click', () => {
     if (!input) return
+    resetDialTap()
     const val = input.value
     const pos = input.selectionStart || val.length
     if (pos === 0) return
