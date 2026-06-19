@@ -296,6 +296,92 @@
     .preview-btn:hover { background: rgba(167,139,250,0.2); }
     .overlay { position: fixed; inset: 0; top: var(--nav-h, 72px); background: rgba(0,0,0,0.5); z-index: 199; display: none; }
     .overlay.open { display: block; }
+
+    /* ── Inline code editing ── */
+    .code-toolbar { display: flex; gap: 0.3rem; justify-content: flex-end; margin-bottom: 0.3rem; }
+    .code-toolbar button {
+      background: rgba(167,139,250,0.1); border: 1px solid var(--border); color: var(--dim);
+      border-radius: 6px; padding: 0.15rem 0.45rem; font-size: 0.68rem; cursor: pointer; font-family: inherit;
+    }
+    .code-toolbar button:hover { background: rgba(167,139,250,0.2); color: var(--bright); }
+    pre { position: relative; }
+    .msg.assistant pre { margin-top: 0.3rem; }
+    pre code { display: block; padding: 0.6rem; overflow-x: auto; }
+    .code-edit-textarea {
+      width: 100%; min-height: 80px; background: var(--bg); color: var(--text); border: 1px solid var(--bright);
+      border-radius: 8px; padding: 0.5rem; font-family: monospace; font-size: 0.82rem; outline: none; resize: vertical;
+    }
+    .code-edit-actions { display: flex; gap: 0.4rem; margin-top: 0.3rem; }
+    .code-edit-actions button {
+      padding: 0.25rem 0.7rem; border-radius: 6px; border: none; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+    }
+    .code-edit-actions .save-btn { background: linear-gradient(135deg, var(--purple), var(--bright)); color: #fff; }
+    .code-edit-actions .cancel-btn { background: rgba(255,255,255,0.05); color: var(--dim); border: 1px solid var(--border); }
+
+    /* ── @-mention autocomplete ── */
+    .mention-dropdown {
+      position: absolute; bottom: 100%; left: 0; right: 0; z-index: 300; max-height: 200px; overflow-y: auto;
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      display: none; margin-bottom: 0.25rem;
+    }
+    .mention-dropdown.open { display: block; }
+    .mention-item {
+      padding: 0.45rem 0.65rem; cursor: pointer; font-size: 0.78rem; display: flex; align-items: center; gap: 0.4rem;
+      color: var(--soft); border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .mention-item:last-child { border-bottom: none; }
+    .mention-item:hover, .mention-item.active { background: rgba(167,139,250,0.1); color: var(--text); }
+    .mention-item .mention-icon { font-size: 0.85rem; flex-shrink: 0; }
+    .mention-item .mention-name { font-weight: 600; }
+    .mention-item .mention-path { font-size: 0.65rem; color: var(--dim); margin-left: auto; }
+
+    /* ── Project tree ── */
+    .sidebar-section { border-top: 1px solid var(--border); }
+    .sidebar-section-header {
+      padding: 0.6rem 0.85rem; font-size: 0.75rem; font-weight: 700; color: var(--dim); text-transform: uppercase;
+      letter-spacing: 0.08em; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+    }
+    .sidebar-section-header:hover { color: var(--soft); }
+    .sidebar-section-body { padding: 0 0.5rem 0.5rem; max-height: 300px; overflow-y: auto; display: none; }
+    .sidebar-section-body.open { display: block; }
+    .tree-item {
+      display: flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.4rem; border-radius: 6px;
+      font-size: 0.75rem; color: var(--dim); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .tree-item:hover { background: rgba(167,139,250,0.06); color: var(--soft); }
+    .tree-item .tree-icon { flex-shrink: 0; font-size: 0.7rem; }
+    .tree-item .tree-name { overflow: hidden; text-overflow: ellipsis; }
+    .tree-item .tree-ref-btn {
+      margin-left: auto; flex-shrink: 0; background: none; border: none; color: var(--dim);
+      font-size: 0.65rem; cursor: pointer; padding: 0.1rem 0.3rem; border-radius: 4px; opacity: 0;
+    }
+    .tree-item:hover .tree-ref-btn { opacity: 1; }
+    .tree-item .tree-ref-btn:hover { background: rgba(167,139,250,0.15); color: var(--bright); }
+    .tree-nested { padding-left: 1rem; }
+
+    /* ── Agent mode improvements ── */
+    .agent-thinking {
+      display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0; font-size: 0.78rem; color: var(--bright);
+    }
+    .agent-thinking .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .agent-tool-call {
+      margin: 0.3rem 0; padding: 0.4rem 0.6rem; background: rgba(167,139,250,0.04);
+      border: 1px solid rgba(167,139,250,0.1); border-radius: 8px; font-size: 0.75rem;
+    }
+    .agent-tool-call .tool-name { color: var(--cyan); font-weight: 600; }
+    .agent-tool-call .tool-result {
+      margin-top: 0.2rem; padding: 0.25rem; background: rgba(0,0,0,0.15); border-radius: 6px;
+      font-family: monospace; font-size: 0.7rem; color: var(--soft); max-height: 100px; overflow-y: auto; white-space: pre-wrap;
+    }
+    .agent-tool-call .tool-error { color: #f87171; }
+
+    /* ── Streaming cursor ── */
+    .stream-cursor::after {
+      content: ''; display: inline-block; width: 2px; height: 1em; background: var(--bright);
+      margin-left: 2px; animation: blink 0.7s step-end infinite; vertical-align: text-bottom;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
   </style>
   <link rel="stylesheet" href="assets/css/widget-hub.css" />
 </head>
@@ -343,6 +429,14 @@
         </div>
         <div style="display:none" id="convItems"></div>
       </div>
+      <!-- Project Tree -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          &#128451; Project <span style="font-size:0.65rem">&#9660;</span>
+        </div>
+        <div class="sidebar-section-body" id="projectTree"></div>
+      </div>
+
       <div class="sidebar-footer" id="sidebarFooter" style="display:none">
         <div class="user-info">
           <div class="user-avatar" id="userAvatar">?</div>
@@ -373,8 +467,11 @@
             <input type="file" id="fileInput" accept="image/*,application/pdf,audio/*" multiple style="display:none" onchange="onFileSelect(event)" />
             <div id="filePreview" class="file-preview" style="display:none"></div>
           </div>
-          <textarea id="input" rows="1" placeholder="Message DJ Faceless Animal..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}"></textarea>
-          <button id="sendBtn" onclick="send()">&#10148;</button>
+          <div style="position:relative;flex:1;display:flex">
+            <div class="mention-dropdown" id="mentionDropdown"></div>
+            <textarea id="input" rows="1" placeholder="Message DJ Faceless Animal... (type @ to reference files)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendStream()}"></textarea>
+          </div>
+          <button id="sendBtn" onclick="sendStream()">&#10148;</button>
         </div>
       </div>
     </main>
@@ -668,7 +765,10 @@
     }
 
     // ── CHAT ──
-    async function send() {
+    let streamMsgEl = null;
+    let streamFullContent = '';
+
+    async function sendStream() {
       const input = document.getElementById('input');
       const text = input.value.trim();
       if (!text) return;
@@ -676,7 +776,6 @@
       input.style.height = 'auto';
 
       addMessage('user', text);
-      showTyping();
       document.getElementById('sendBtn').disabled = true;
 
       let modelIdx = parseInt(document.getElementById('modelSelect').value);
@@ -688,14 +787,12 @@
       const textIntent = autoSwitch ? detectModel(text) : null;
       const hasImageFile = pendingFiles.some(f => f.type.startsWith('image/'));
       let intent = textIntent;
-      // Prefer vision if user uploaded an image and asked a question about it
       if (hasImageFile && !intent && (model.type === 'text' || model.type === 'book')) intent = 'vision';
       if (intent && model.type !== intent) {
         if (intent === 'image') {
           const fastIdx = availableModels.findIndex(m => m.id && m.id.includes('lightning'));
           modelIdx = fastIdx !== -1 ? fastIdx : availableModels.findIndex(m => m.type === 'image');
         } else if (intent === 'vision') {
-          // Check if user also uploaded a file — prefer vision if they did
           modelIdx = availableModels.findIndex(m => m.type === 'vision');
           if (modelIdx === -1) modelIdx = availableModels.findIndex(m => m.type === 'text');
         } else {
@@ -708,7 +805,6 @@
         }
       }
 
-      // Attach pending files
       let filesData = [];
       if (pendingFiles.length > 0) {
         for (const f of pendingFiles) {
@@ -719,6 +815,213 @@
         renderFilePreview();
       }
 
+      // For non-text models, fall back to regular POST
+      if (model.type !== 'text' && model.type !== 'book') {
+        return sendFallback(text, modelIdx, convId, model, filesData);
+      }
+
+      streamFullContent = '';
+      streamMsgEl = null;
+      showStreamingMessage();
+
+      const agentMode = localStorage.getItem('fas_agent_mode') === 'true';
+
+      try {
+        const body = { message: text, session_id: SESSION_ID, model: modelIdx, conversation_id: convId, mode: agentMode ? 'agent' : 'chat' };
+        body.max_tokens = parseInt(document.getElementById('maxTokens').value) || 1024;
+        body.history = getConversationHistory();
+        body.username = (currentUser && currentUser.username) || undefined;
+        if (filesData.length > 0) body.files = filesData;
+        if (agentMode) {
+          const searchKey = localStorage.getItem('fas_search_api_key');
+          if (searchKey) body.search_api_key = searchKey;
+        }
+        const apiKey = localStorage.getItem('fas_oc_api_key');
+        if (apiKey) body.oc_api_key = apiKey;
+
+        const res = await fetch('/api/ai/chat/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          removeStreamingMessage();
+          const errText = await res.text().catch(() => '');
+          addMessage('system', 'Error: ' + (errText ? errText.slice(0, 200) : 'Request failed (' + res.status + ')'));
+          return;
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const payload = line.slice(6).trim();
+            if (!payload || payload === '[DONE]') continue;
+            try {
+              const ev = JSON.parse(payload);
+              handleStreamEvent(ev);
+            } catch {}
+          }
+        }
+        // Process remaining buffer
+        if (buffer.startsWith('data: ')) {
+          try {
+            const ev = JSON.parse(buffer.slice(6));
+            handleStreamEvent(ev);
+          } catch {}
+        }
+
+        finalizeStreamMessage();
+      } catch (e) {
+        removeStreamingMessage();
+        addMessage('system', 'Error: ' + e.message);
+      } finally {
+        document.getElementById('sendBtn').disabled = false;
+      }
+    }
+
+    function handleStreamEvent(ev) {
+      switch (ev.type) {
+        case 'meta':
+          if (streamMsgEl) {
+            const label = streamMsgEl.querySelector('.label');
+            if (label) label.textContent = ev.model || 'Faceless AI';
+          }
+          break;
+        case 'token':
+          if (ev.content) {
+            streamFullContent += ev.content;
+            updateStreamContent(streamFullContent);
+          }
+          break;
+        case 'tool_call':
+          appendToolCall(ev);
+          break;
+        case 'tool_result':
+          updateToolResult(ev);
+          break;
+        case 'done':
+          if (ev.history) {
+            // Replace streaming message with finalized one
+            removeStreamingMessage();
+            if (streamFullContent) {
+              addMessage('assistant', streamFullContent, false, ev.tool_log || null);
+            }
+            // Update conversation ID if returned
+            if (ev.conversation_id && currentConvId === null) {
+              currentConvId = ev.conversation_id;
+            }
+            if (currentUser) loadConversations();
+            // Auto-read
+            if (streamFullContent && localStorage.getItem('fas_autoread') === 'true') {
+              speakText(streamFullContent);
+            }
+          }
+          break;
+        case 'error':
+          removeStreamingMessage();
+          addMessage('system', 'Error: ' + (ev.error || 'Unknown error'));
+          break;
+      }
+    }
+
+    function showStreamingMessage() {
+      const el = document.createElement('div');
+      el.className = 'msg assistant';
+      el.id = 'stream-msg';
+      const label = document.createElement('span');
+      label.className = 'label';
+      label.textContent = 'Faceless AI';
+      el.appendChild(label);
+      const text = document.createElement('div');
+      text.className = 'stream-cursor';
+      text.textContent = '';
+      el.appendChild(text);
+      document.getElementById('messages').appendChild(el);
+      el.scrollIntoView({ behavior: 'smooth' });
+      streamMsgEl = el;
+    }
+
+    function updateStreamContent(content) {
+      if (!streamMsgEl) return;
+      const textDiv = streamMsgEl.querySelector('div:last-child');
+      if (!textDiv) return;
+      textDiv.innerHTML = formatContent(content);
+      textDiv.classList.add('stream-cursor');
+      streamMsgEl.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function removeStreamingMessage() {
+      const el = document.getElementById('stream-msg');
+      if (el) el.remove();
+      streamMsgEl = null;
+    }
+
+    function finalizeStreamMessage() {
+      if (streamFullContent && streamMsgEl) {
+        removeStreamingMessage();
+        addMessage('assistant', streamFullContent);
+        if (streamFullContent && localStorage.getItem('fas_autoread') === 'true') {
+          speakText(streamFullContent);
+        }
+      }
+      streamMsgEl = null;
+    }
+
+    function getConversationHistory() {
+      const msgs = document.querySelectorAll('#messages .msg:not(.system)');
+      const history = [];
+      msgs.forEach(m => {
+        const role = m.classList.contains('user') ? 'user' : 'assistant';
+        const textDiv = m.querySelector('div:last-child');
+        const content = textDiv ? textDiv.textContent.trim() : '';
+        if (content && !m.id) history.push({ role, content });
+      });
+      return history.slice(-20); // Last 20 messages as context
+    }
+
+    function appendToolCall(ev) {
+      if (!streamMsgEl) return;
+      let toolArea = streamMsgEl.querySelector('.agent-tool-area');
+      if (!toolArea) {
+        toolArea = document.createElement('div');
+        toolArea.className = 'agent-tool-area';
+        toolArea.style.cssText = 'margin-top:0.5rem;';
+        streamMsgEl.querySelector('div:last-child').after(toolArea);
+      }
+      const tc = document.createElement('div');
+      tc.className = 'agent-tool-call';
+      tc.id = 'tool-' + (ev.id || Date.now());
+      const icon = ev.name === 'read_file' ? '\uD83D\uDCD6' : ev.name === 'write_file' ? '\u270F\uFE0F' : ev.name === 'execute_command' ? '\uD83D\uDCBB' : '\uD83D\uDCC1';
+      tc.innerHTML = '<span class="tool-name">' + icon + ' ' + ev.name + '</span> <span style="color:var(--dim);font-size:0.72rem">' + escHtml(JSON.stringify(ev.arguments)) + '</span><div class="tool-result" style="color:var(--dim)">\u23F3 Running...</div>';
+      toolArea.appendChild(tc);
+    }
+
+    function updateToolResult(ev) {
+      const tc = document.getElementById('tool-' + ev.id);
+      if (!tc) return;
+      const resultDiv = tc.querySelector('.tool-result');
+      if (!resultDiv) return;
+      const hasError = ev.error || ev.stderr;
+      const preview = hasError
+        ? (ev.error || ev.stderr).slice(0, 300)
+        : (ev.content || ev.stdout || (ev.success ? '\u2705 Done' : '\uD83D\uDC4D OK')).slice(0, 300);
+      resultDiv.textContent = preview;
+      resultDiv.className = 'tool-result' + (hasError ? ' tool-error' : '');
+      streamMsgEl.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Fallback for non-text (image/audio/video) models
+    async function sendFallback(text, modelIdx, convId, model, filesData) {
+      showTyping();
       try {
         const body = { message: text, session_id: SESSION_ID, model: modelIdx, conversation_id: convId };
         body.max_tokens = parseInt(document.getElementById('maxTokens').value) || 1024;
@@ -726,22 +1029,15 @@
         if (currentUser && currentUser.username) body.username = currentUser.username;
         if (localStorage.getItem('fas_agent_mode') === 'true') {
           body.agent_mode = true;
-          const searchKey = localStorage.getItem('fas_search_api_key');
-          if (searchKey) body.search_api_key = searchKey;
         }
         const apiKey = localStorage.getItem('fas_oc_api_key');
         if (apiKey) body.oc_api_key = apiKey;
         const res = await fetch('/api/ai/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         });
         removeTyping();
-        if (!res.ok) {
-          const err = await res.json();
-          addMessage('system', 'Error: ' + (err.error || 'Request failed.'));
-          return;
-        }
+        if (!res.ok) { const err = await res.json(); addMessage('system', 'Error: ' + (err.error || 'Request failed.')); return; }
         const data = await res.json();
 
         if (model.type === 'image' && data.image) {
@@ -754,27 +1050,15 @@
         } else {
           addMessage('assistant', data.reply || 'No response.', false, data.tool_log);
         }
-
-        // Auto-read if enabled
-        if (data.reply && localStorage.getItem('fas_autoread') === 'true') {
-          speakText(data.reply);
-        }
-
+        if (data.reply && localStorage.getItem('fas_autoread') === 'true') speakText(data.reply);
         if (data.memory) {
-          const badge = document.getElementById('memoryBadge');
-          badge.className = 'memory-badge on';
-          badge.textContent = '\u25CF memory on' + (data.username ? ' (' + data.username + ')' : '');
+          document.getElementById('memoryBadge').className = 'memory-badge on';
+          document.getElementById('memoryBadge').textContent = '\u25CF memory on' + (data.username ? ' (' + data.username + ')' : '');
         }
-        if (currentConvId === null && data.conversation_id) {
-          currentConvId = data.conversation_id;
-        }
+        if (currentConvId === null && data.conversation_id) currentConvId = data.conversation_id;
         if (currentUser) loadConversations();
-      } catch (e) {
-        removeTyping();
-        addMessage('system', 'Error: ' + e.message);
-      } finally {
-        document.getElementById('sendBtn').disabled = false;
-      }
+      } catch (e) { removeTyping(); addMessage('system', 'Error: ' + e.message); }
+      finally { document.getElementById('sendBtn').disabled = false; }
     }
 
     // ── SETTINGS ──
@@ -897,10 +1181,210 @@
     function formatContent(text) {
       let html = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
         const clean = escHtml(code);
-        const btn = lang === 'html' ? '<button class="preview-btn" onclick="previewHTML(this)" data-code="' + encodeURIComponent(code) + '">\u25B6 Preview</button>' : '';
-        return '<pre><code>' + clean + '</code></pre>' + btn;
+        const id = 'c' + Date.now() + Math.random().toString(36).slice(2, 6);
+        let buttons = '<div class="code-toolbar">';
+        buttons += '<button onclick="copyCode(\'' + id + '\')" title="Copy code">\uD83D\uDCCB Copy</button>';
+        buttons += '<button onclick="editCode(\'' + id + '\')" title="Edit code">\u270F\uFE0F Edit</button>';
+        if (lang === 'html') {
+          buttons += '<button class="preview-btn" onclick="previewHTML(this)" data-code="' + encodeURIComponent(code) + '">\u25B6 Preview</button>';
+        }
+        buttons += '</div>';
+        return buttons + '<pre><code id="' + id + '">' + clean + '</code></pre>';
       });
       return html.replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\n/g, '<br/>');
+    }
+
+    function copyCode(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const text = el.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = el.closest('pre')?.previousElementSibling?.querySelector('button');
+        if (btn) { const orig = btn.textContent; btn.textContent = '\u2705 Copied!'; setTimeout(() => { btn.textContent = orig; }, 1500); }
+      }).catch(() => {});
+    }
+
+    function editCode(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const pre = el.closest('pre');
+      if (!pre) return;
+      const original = el.textContent;
+      const textarea = document.createElement('textarea');
+      textarea.className = 'code-edit-textarea';
+      textarea.value = original;
+      textarea.rows = Math.min(original.split('\n').length, 15);
+      const actions = document.createElement('div');
+      actions.className = 'code-edit-actions';
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'save-btn'; saveBtn.textContent = 'Save';
+      saveBtn.onclick = function() {
+        const newCode = textarea.value;
+        pre.innerHTML = '<code id="' + id + '">' + escHtml(newCode) + '</code>';
+        actions.remove();
+        textarea.remove();
+      };
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'cancel-btn'; cancelBtn.textContent = 'Cancel';
+      cancelBtn.onclick = function() { textarea.remove(); actions.remove(); };
+      actions.appendChild(saveBtn);
+      actions.appendChild(cancelBtn);
+      pre.style.display = 'none';
+      pre.parentNode.insertBefore(textarea, pre);
+      pre.parentNode.insertBefore(actions, pre);
+      textarea.focus();
+    }
+
+    // ── @-mention autocomplete ──
+    let mentionFiles = [];
+    let mentionIdx = -1;
+
+    function setupMentionAutocomplete() {
+      const input = document.getElementById('input');
+      if (!input) return;
+      input.addEventListener('input', function() {
+        const pos = this.selectionStart;
+        const val = this.value;
+        // Find the @ being typed
+        const before = val.slice(0, pos);
+        const atMatch = before.lastIndexOf('@');
+        if (atMatch === -1 || (atMatch > 0 && !/\s/.test(val[atMatch - 1]))) {
+          document.getElementById('mentionDropdown').classList.remove('open');
+          mentionIdx = -1;
+          return;
+        }
+        const query = val.slice(atMatch + 1, pos).toLowerCase();
+        const matches = mentionFiles.filter(f =>
+          f.name.toLowerCase().includes(query) || f.path.toLowerCase().includes(query)
+        ).slice(0, 8);
+
+        if (matches.length === 0) {
+          document.getElementById('mentionDropdown').classList.remove('open');
+          mentionIdx = -1;
+          return;
+        }
+
+        const dd = document.getElementById('mentionDropdown');
+        dd.innerHTML = '';
+        matches.forEach((f, i) => {
+          const item = document.createElement('div');
+          item.className = 'mention-item' + (i === 0 ? ' active' : '');
+          item.dataset.index = i;
+          item.innerHTML = '<span class="mention-icon">' + (f.type === 'dir' ? '\uD83D\uDCC1' : '\uD83D\uDCC4') + '</span><span class="mention-name">' + escHtml(f.name) + '</span><span class="mention-path">' + escHtml(f.path) + '</span>';
+          item.onclick = function() { selectMention(atMatch, val, pos, f.path || f.name); };
+          dd.appendChild(item);
+        });
+        dd.classList.add('open');
+        mentionIdx = 0;
+      });
+
+      input.addEventListener('keydown', function(e) {
+        const dd = document.getElementById('mentionDropdown');
+        if (!dd.classList.contains('open')) return;
+        const items = dd.querySelectorAll('.mention-item');
+        if (items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          items[mentionIdx]?.classList.remove('active');
+          mentionIdx = (mentionIdx + 1) % items.length;
+          items[mentionIdx]?.classList.add('active');
+          items[mentionIdx]?.scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          items[mentionIdx]?.classList.remove('active');
+          mentionIdx = (mentionIdx - 1 + items.length) % items.length;
+          items[mentionIdx]?.classList.add('active');
+          items[mentionIdx]?.scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter' || e.key === 'Tab') {
+          if (mentionIdx >= 0 && mentionIdx < items.length) {
+            e.preventDefault();
+            items[mentionIdx]?.click();
+          }
+        } else if (e.key === 'Escape') {
+          dd.classList.remove('open');
+          mentionIdx = -1;
+        }
+      });
+    }
+
+    function selectMention(atIdx, val, pos, replacement) {
+      const input = document.getElementById('input');
+      const newVal = val.slice(0, atIdx) + '@' + replacement + ' ' + val.slice(pos);
+      input.value = newVal;
+      input.selectionStart = input.selectionEnd = atIdx + replacement.length + 2;
+      input.focus();
+      document.getElementById('mentionDropdown').classList.remove('open');
+      mentionIdx = -1;
+    }
+
+    // ── Project tree ──
+    async function loadProjectTree() {
+      try {
+        const res = await fetch('/api/project/tree');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.tree) return;
+        renderTree(data.tree, document.getElementById('projectTree'), '');
+        // Flatten for mention autocomplete
+        flattenTree(data.tree, '');
+      } catch {}
+    }
+
+    function renderTree(items, container, basePath) {
+      container.innerHTML = '';
+      if (!items || items.length === 0) {
+        container.innerHTML = '<div style="padding:0.5rem;font-size:0.72rem;color:var(--dim)">No files loaded.</div>';
+        return;
+      }
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'tree-item';
+        const fullPath = basePath ? basePath + '/' + item.name : item.name;
+        div.innerHTML = '<span class="tree-icon">' + (item.type === 'dir' ? '\uD83D\uDCC1' : '\uD83D\uDCC4') + '</span><span class="tree-name">' + escHtml(item.name) + '</span>';
+        const refBtn = document.createElement('button');
+        refBtn.className = 'tree-ref-btn';
+        refBtn.textContent = '@';
+        refBtn.title = 'Reference in chat';
+        refBtn.onclick = function(e) {
+          e.stopPropagation();
+          const input = document.getElementById('input');
+          input.value += (input.value ? ' ' : '') + '@' + fullPath + ' ';
+          input.focus();
+        };
+        div.appendChild(refBtn);
+        if (item.type === 'dir' && item.children) {
+          div.style.cursor = 'pointer';
+          const nested = document.createElement('div');
+          nested.className = 'tree-nested';
+          nested.style.display = 'none';
+          const toggle = function() {
+            if (nested.style.display === 'none') {
+              nested.style.display = 'block';
+              if (nested.children.length === 0) {
+                renderTree(item.children, nested, fullPath);
+              }
+            } else {
+              nested.style.display = 'none';
+            }
+          };
+          div.onclick = toggle;
+          container.appendChild(div);
+          container.appendChild(nested);
+        } else {
+          container.appendChild(div);
+        }
+      });
+    }
+
+    function flattenTree(items, basePath) {
+      items.forEach(item => {
+        const fullPath = basePath ? basePath + '/' + item.name : item.name;
+        mentionFiles.push({ name: item.name, path: fullPath, type: item.type });
+        if (item.type === 'dir' && item.children) {
+          flattenTree(item.children, fullPath);
+        }
+      });
     }
 
     function previewHTML(btn) {
@@ -949,6 +1433,11 @@
     // ── INIT ──
     document.addEventListener('DOMContentLoaded', () => {
       updateAuthUI();
+
+      // Load project tree and setup mentions
+      loadProjectTree();
+      setupMentionAutocomplete();
+
       addMessage('system', currentUser
         ? 'Welcome back to Faceless AI, ' + (currentUser.display || currentUser.username) + '. I\'m the central intelligence behind Faceless Animal Studios. What are we working on today?'
         : 'Welcome to Faceless AI.\n\nI\'m the central intelligence behind Faceless Animal Studios.\n\nI can help with coding, websites, creative projects, content creation, business ideas, music, comics, research, automation, design, and problem solving.\n\nWhether you\'re building something new or trying to figure out your next move, I\'m here to help.\n\nWhat are we working on today?');

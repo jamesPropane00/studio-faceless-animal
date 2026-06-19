@@ -436,6 +436,7 @@ async function handleMediaDownload(req, res) {
       })
       return
     }
+  }
     // ...existing code continues...
 
   // ΓöÇΓöÇ CONTACT FORM API ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
@@ -4056,5 +4057,4 @@ function killPortHolder(port) {
   }
 }
 
-// Close the parent scope that was opened by code preceding this section
-}
+
