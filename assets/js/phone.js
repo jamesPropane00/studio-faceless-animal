@@ -39,63 +39,76 @@ const normalizeUser = raw => String(raw || '').trim().replace(/^@+/, '').toLower
 function loadJSON(key, def) { try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v != null ? v : def } catch { return def } }
 function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)) }
 
+function showError(msg) {
+  $('phone-loading').style.display = 'none'
+  const errEl = $('phone-error')
+  const errMsg = $('phone-error-message')
+  if (errEl) errEl.style.display = ''
+  if (errMsg) errMsg.textContent = msg || 'The Signal Phone could not start. Check your connection and try again.'
+}
+
 /* ── Initialization ── */
 async function init() {
-  session = getSession()
-  if (!session || !session.username) {
-    $('phone-loading').style.display = 'none'
-    $('phone-gate').style.display = ''
-    return
-  }
-  myUsername = String(session.username).toLowerCase()
-
-  const settings = loadJSON(SETTINGS_KEY, {})
-  incognitoMode = settings.incognito || false
-  callHistory = loadJSON(CALL_HISTORY_KEY, [])
-
-  notifs.requestPermission()
-
-  callManager = new CallManager({
-    localName: myUsername,
-    onStateChange: onCallStateChange,
-    onRemoteStream: onRemoteStream
-  })
-
-  if (incognitoMode) {
-    backend = new ServerDMBackend()
-  } else {
-    backend = new MatrixBackend()
-  }
-
-  const ok = await backend.init()
-  if (!ok && !incognitoMode) {
-    const guestOk = await backend.guestLogin()
-    if (!guestOk) {
-      backend = new ServerDMBackend()
-      await backend.init()
+  try {
+    session = getSession()
+    if (!session || !session.username) {
+      $('phone-loading').style.display = 'none'
+      $('phone-gate').style.display = ''
+      return
     }
-  }
+    myUsername = String(session.username).toLowerCase()
 
-  $('phone-loading').style.display = 'none'
-  $('phone-shell').style.display = ''
+    const settings = loadJSON(SETTINGS_KEY, {})
+    incognitoMode = settings.incognito || false
+    callHistory = loadJSON(CALL_HISTORY_KEY, [])
 
-  updateStatusBar()
-  updateModeBadge()
-  bindDock()
-  bindCallUI()
+    notifs.requestPermission()
 
-  await refreshContacts()
-  await refreshThreads()
-  showScreen('home')
+    callManager = new CallManager({
+      localName: myUsername,
+      onStateChange: onCallStateChange,
+      onRemoteStream: onRemoteStream
+    })
 
-  backend.startSync(onBackendMessage, onBackendCallEvent)
-  startStatusBarClock()
+    if (incognitoMode) {
+      backend = new ServerDMBackend()
+    } else {
+      backend = new MatrixBackend()
+    }
 
-  const params = new URLSearchParams(window.location.search)
-  const openChat = params.get('chat')
-  if (openChat) {
-    showScreen('messages')
-    openConversation(normalizeUser(openChat))
+    const ok = await backend.init()
+    if (!ok && !incognitoMode) {
+      const guestOk = await backend.guestLogin()
+      if (!guestOk) {
+        backend = new ServerDMBackend()
+        await backend.init()
+      }
+    }
+
+    $('phone-loading').style.display = 'none'
+    $('phone-shell').style.display = ''
+
+    updateStatusBar()
+    updateModeBadge()
+    bindDock()
+    bindCallUI()
+
+    await refreshContacts()
+    await refreshThreads()
+    showScreen('home')
+
+    backend.startSync(onBackendMessage, onBackendCallEvent)
+    startStatusBarClock()
+
+    const params = new URLSearchParams(window.location.search)
+    const openChat = params.get('chat')
+    if (openChat) {
+      showScreen('messages')
+      openConversation(normalizeUser(openChat))
+    }
+  } catch (err) {
+    console.error('[FAS] Phone init error:', err)
+    showError(err.message || 'Unknown error during initialization.')
   }
 }
 

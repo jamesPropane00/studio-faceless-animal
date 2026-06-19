@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/style.css" />
   <link rel="stylesheet" href="assets/css/phone-ui.css" />
+  <link rel="stylesheet" href="assets/css/widget-hub.css" />
 </head>
 <body>
   <nav class="navbar waffle-nav" role="navigation" aria-label="Main navigation">
@@ -62,9 +63,15 @@
       </div>
     </div>
 
-    <!-- Loading -->
-    <div id="phone-loading" class="phone-gate" style="display:none;">
+    <!-- Loading (visible by default, hidden by JS after init) -->
+    <div id="phone-loading" class="phone-gate">
       <h2 style="font-size:1rem;color:var(--phone-text-dim);">Starting Signal Phone...</h2>
+    </div>
+    <!-- Error (hidden by default, shown if init fails) -->
+    <div id="phone-error" class="phone-gate" style="display:none;">
+      <h2 style="color:var(--phone-red);font-size:1.2rem;margin:0 0 8px;">Something went wrong</h2>
+      <p id="phone-error-message" style="color:var(--phone-text-dim);font-size:0.82rem;margin:0 0 20px;">The Signal Phone could not start. Check your connection and try again.</p>
+      <button class="btn btn-primary" onclick="location.reload()">Retry</button>
     </div>
 
     <!-- Phone Shell -->
@@ -162,5 +169,6 @@
   <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
   <script src="assets/js/env.js" onerror="void 0"></script>
   <script type="module" src="assets/js/phone.js"></script>
+  <script type="module" src="assets/js/widget-hub.js"></script>
 </body>
 </html>
