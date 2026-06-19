@@ -87,6 +87,11 @@
 
       <div class="phone-incognito-badge" id="phone-incognito-badge" style="display:none;">Incognito</div>
 
+      <!-- Video Container (hidden by default, shown during video calls) -->
+      <div class="phone-call-video-container" id="phone-call-video-container">
+        <video id="phone-remote-video" autoplay playsinline muted></video>
+      </div>
+
       <!-- Call Overlay -->
       <div class="phone-call-overlay" id="phone-call-overlay">
         <div class="phone-call-avatar" id="phone-call-avatar">?</div>
@@ -138,6 +143,22 @@
         <!-- Rendered dynamically by phone.js -->
       </div>
 
+      <!-- Action Bar (persistent call/chat/video buttons above dock) -->
+      <div class="phone-actionbar" id="phone-actionbar">
+        <button class="phone-actionbar-btn" id="phone-action-call" title="Call / End Call">
+          <span class="action-icon">📞</span>
+          <span class="action-label">Call</span>
+        </button>
+        <button class="phone-actionbar-btn" id="phone-action-chat" title="Chat / Message">
+          <span class="action-icon">💬</span>
+          <span class="action-label">Chat</span>
+        </button>
+        <button class="phone-actionbar-btn" id="phone-action-video" title="Video Call">
+          <span class="action-icon">📹</span>
+          <span class="action-label">Video</span>
+        </button>
+      </div>
+
       <!-- Dock -->
       <div class="phone-dock" id="phone-dock">
         <button class="phone-dock-btn phone-dock-btn--active" data-screen="home">
@@ -168,6 +189,7 @@
   <script src="assets/js/access-gate.js"></script>
   <script>window.__FAS_CONFIG = window.__FAS_CONFIG || {}</script>
   <script src="assets/js/env.js" onerror="void 0"></script>
+  <script>window.__phoneReady = false; window.__phoneLoadFailed = false; setTimeout(function(){ if(!window.__phoneReady && !window.__phoneLoadFailed) { var el=document.getElementById('phone-loading'); var err=document.getElementById('phone-error'); var msg=document.getElementById('phone-error-message'); if(el) el.style.display='none'; if(err) err.style.display=''; if(msg) msg.textContent='Timed out loading modules. Check your network connection and try again.'; } }, 15000);</script>
   <script type="module" src="assets/js/phone.js"></script>
   <script type="module" src="assets/js/widget-hub.js"></script>
 </body>

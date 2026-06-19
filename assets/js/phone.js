@@ -4,11 +4,19 @@
  * Handles calls, messages, contacts, dialer, recents, and settings.
  */
 
-import { getSession } from './member-db.js'
-import { CallManager } from './call-manager.js'
-import { MatrixBackend } from './matrix-backend.js'
-import { ServerDMBackend } from './server-dm-backend.js'
-import { notifs } from './notification-manager.js'
+/* getSession inlined — no static import (member-db.js depends on supabase-client which may fail) */
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('fas_user') || 'null') } catch { return null }
+}
+
+const DYNAMIC_IMPORTS = [
+  { module: () => import('./call-manager.js'), key: 'CallManager' },
+  { module: () => import('./matrix-backend.js'), key: 'MatrixBackend' },
+  { module: () => import('./server-dm-backend.js'), key: 'ServerDMBackend' },
+  { module: () => import('./notification-manager.js'), key: 'notifs' }
+]
+
+let CallManager, MatrixBackend, ServerDMBackend, notifs
 
 /* ── State ── */
 let session = null
@@ -23,7 +31,7 @@ let recentsCache = []
 let incognitoMode = false
 let missedCalls = 0
 let callHistory = []
-let callHistoryWiped = false
+let isOfflineFallback = false
 
 const CONTACTS_KEY = 'fas_phone_contacts_v1'
 const CALL_HISTORY_KEY = 'fas_phone_call_history'
@@ -47,8 +55,37 @@ function showError(msg) {
   if (errMsg) errMsg.textContent = msg || 'The Signal Phone could not start. Check your connection and try again.'
 }
 
+/* ── Offline Backend Stub ── */
+function createOfflineBackend() {
+  return {
+    init: async () => true,
+    startSync: () => {},
+    stopSync: () => {},
+    getContacts: async () => [],
+    getMessages: async () => [],
+    sendMessage: async () => ({ ok: false, error: 'Offline mode' }),
+    resolveSignalCode: async () => null,
+    getRoomIdForUser: async () => null,
+    setCallContext: () => {},
+    sendCallSignal: async () => {},
+    getThreads: async () => []
+  }
+}
+
 /* ── Initialization ── */
 async function init() {
+  try {
+    const moduleResults = await Promise.all(DYNAMIC_IMPORTS.map(d => d.module()))
+    CallManager = moduleResults[0].CallManager
+    MatrixBackend = moduleResults[1].MatrixBackend
+    ServerDMBackend = moduleResults[2].ServerDMBackend
+    notifs = moduleResults[3].notifs
+  } catch (err) {
+    console.error('[FAS] Dynamic module load failed:', err)
+    showError('Failed to load phone modules. Check your network connection.')
+    return
+  }
+
   try {
     session = getSession()
     if (!session || !session.username) {
@@ -85,19 +122,41 @@ async function init() {
       }
     }
 
+    /* If backend still not ready, fall back to offline mode */
+    const backendReady = await (async () => {
+      try {
+        if (incognitoMode) return true
+        const test = await backend.getContacts()
+        return Array.isArray(test)
+      } catch { return false }
+    })()
+    if (!backendReady) {
+      console.warn('[FAS] No backend available — falling back to offline mode')
+      backend = createOfflineBackend()
+      isOfflineFallback = true
+    }
+
     $('phone-loading').style.display = 'none'
     $('phone-shell').style.display = ''
 
+    if (isOfflineFallback) {
+      notifs.showToast({ title: 'Offline Mode', message: 'Phone is offline. Contacts and history from local storage.', type: 'info', duration: 4000 })
+    }
+
+    window.__phoneReady = true
     updateStatusBar()
     updateModeBadge()
     bindDock()
     bindCallUI()
+    bindActionBar()
 
     await refreshContacts()
     await refreshThreads()
     showScreen('home')
 
-    backend.startSync(onBackendMessage, onBackendCallEvent)
+    if (!isOfflineFallback) {
+      backend.startSync(onBackendMessage, onBackendCallEvent)
+    }
     startStatusBarClock()
 
     const params = new URLSearchParams(window.location.search)
@@ -173,7 +232,7 @@ function renderHome(screen) {
     <div class="phone-home">
       <div class="phone-home-header">
         <h2>Signal Phone</h2>
-        <p>@${esc(myUsername)}</p>
+        <p>@${esc(myUsername)}${isOfflineFallback ? ' <span style="color:var(--phone-red);font-size:0.7rem;">OFFLINE</span>' : ''}</p>
       </div>
 
       <div class="phone-section-title">${missed > 0 ? `Missed Calls (${missed})` : 'Recent Calls'}</div>
@@ -183,7 +242,7 @@ function renderHome(screen) {
             <div class="phone-item-avatar ${c.type === 'missed' ? 'phone-item-avatar--call' : ''}">${esc((c.displayName || c.contact || '?')[0].toUpperCase())}</div>
             <div class="phone-item-body">
               <strong>${esc(c.displayName || c.contact)}</strong>
-              <small>${c.type === 'missed' ? 'Missed call' : c.type === 'incoming' ? 'Incoming call' : 'Outgoing call'} · ${c.duration ? callManager.formatTime(c.duration) : 'No answer'}</small>
+              <small>${c.type === 'missed' ? 'Missed call' : c.type === 'incoming' ? 'Incoming call' : 'Outgoing call'} · ${c.duration ? (callManager ? callManager.formatTime(c.duration) : Math.floor(c.duration/60)+'m') : 'No answer'}</small>
             </div>
             <span class="phone-item-time">${fmtTime(c.ts)}</span>
           </div>
@@ -319,7 +378,7 @@ function showContactActions(c) {
         showScreen('messages')
         openConversation(contact)
       } else if (action === 'copy-matrix') {
-        try { await navigator.clipboard.writeText(contact); notifs.showToast({ title: 'Copied', message: 'Matrix ID copied', type: 'info', duration: 2000 }) } catch {}
+        try { await navigator.clipboard.writeText(contact); if(notifs) notifs.showToast({ title: 'Copied', message: 'Matrix ID copied', type: 'info', duration: 2000 }) } catch {}
       }
     })
   })
@@ -421,6 +480,9 @@ function renderChat(screen) {
       if (r.ok) {
         input.value = ''
         loadChatMessages(contact)
+      } else if (isOfflineFallback) {
+        input.value = ''
+        notifs.showToast({ title: 'Offline', message: 'Message queued locally (backend unavailable)', type: 'info', duration: 3000 })
       } else {
         notifs.showToast({ title: 'Error', message: r.error || 'Send failed', type: 'error', duration: 3000 })
       }
@@ -520,13 +582,21 @@ function renderDialerScreen(screen) {
   $('phone-dial-call')?.addEventListener('click', () => {
     const code = normalizeCode(input?.value || '')
     if (sigCodeRegex.test(code)) startCall(code, false)
-    else notifs.showToast({ title: 'Invalid', message: 'Enter a valid Signal Code (SIG-XXXX-XXXX)', type: 'error', duration: 3000 })
+    else if(isOfflineFallback) {
+      notifs.showToast({ title: 'Offline', message: 'Cannot place calls in offline mode', type: 'info', duration: 3000 })
+    } else {
+      notifs.showToast({ title: 'Invalid', message: 'Enter a valid Signal Code (SIG-XXXX-XXXX)', type: 'error', duration: 3000 })
+    }
   })
 
   $('phone-dial-video')?.addEventListener('click', () => {
     const code = normalizeCode(input?.value || '')
     if (sigCodeRegex.test(code)) startCall(code, true)
-    else notifs.showToast({ title: 'Invalid', message: 'Enter a valid Signal Code (SIG-XXXX-XXXX)', type: 'error', duration: 3000 })
+    else if(isOfflineFallback) {
+      notifs.showToast({ title: 'Offline', message: 'Cannot place calls in offline mode', type: 'info', duration: 3000 })
+    } else {
+      notifs.showToast({ title: 'Invalid', message: 'Enter a valid Signal Code (SIG-XXXX-XXXX)', type: 'error', duration: 3000 })
+    }
   })
 
   showDialSuggestions(dialValue)
@@ -536,6 +606,10 @@ async function showDialSuggestions(query) {
   const el = $('phone-dial-suggestions')
   if (!el) return
   const code = normalizeCode(query)
+  if (isOfflineFallback) {
+    el.innerHTML = '<div class="phone-empty" style="text-align:left;padding:4px 0;">Offline — dialing unavailable</div>'
+    return
+  }
   if (!sigCodeRegex.test(code) || code.length < 14) {
     el.innerHTML = query.length >= 3 ? '<div class="phone-empty" style="text-align:left;padding:4px 0;">Enter a full Signal Code to call</div>' : ''
     return
@@ -580,7 +654,7 @@ function renderRecentsScreen(screen) {
             <div class="phone-item-avatar ${c.type === 'missed' ? 'phone-item-avatar--call' : ''}">${esc(initial)}</div>
             <div class="phone-item-body">
               <strong>${esc(c.displayName || c.contact)}</strong>
-              <small><span style="color:${typeColor}">${typeIcon}</span> ${c.type} ${c.duration ? '· ' + callManager.formatTime(c.duration) : ''}</small>
+              <small><span style="color:${typeColor}">${typeIcon}</span> ${c.type} ${c.duration ? '· ' + (callManager ? callManager.formatTime(c.duration) : Math.floor(c.duration/60)+'m') : ''}</small>
             </div>
             <span class="phone-item-time">${fmtTime(c.ts)}</span>
           </div>
@@ -683,17 +757,41 @@ function onCallStateChange(state, data) {
     notifs.stopRingtone()
     hideCallOverlay()
   }
+  updateActionBar()
 }
 
 function onRemoteStream(stream) {
-  let audio = document.getElementById('phone-call-remote-audio')
-  if (!audio) {
-    audio = document.createElement('audio')
-    audio.id = 'phone-call-remote-audio'
-    audio.autoplay = true
-    document.body.appendChild(audio)
+  const isVideo = stream.getVideoTracks().length > 0
+  const videoContainer = $('phone-call-video-container')
+  const videoEl = $('phone-remote-video')
+
+  if (isVideo && videoContainer && videoEl) {
+    videoContainer.style.display = ''
+    videoEl.srcObject = stream
+    videoEl.play().catch(() => {})
+    /* also keep audio for the audio track */
+    const audioTrack = stream.getAudioTracks()[0]
+    if (audioTrack) {
+      let audio = document.getElementById('phone-call-remote-audio')
+      if (!audio) {
+        audio = document.createElement('audio')
+        audio.id = 'phone-call-remote-audio'
+        audio.autoplay = true
+        document.body.appendChild(audio)
+      }
+      audio.srcObject = new MediaStream([audioTrack])
+    }
+  } else {
+    if (videoContainer) videoContainer.style.display = 'none'
+    let audio = document.getElementById('phone-call-remote-audio')
+    if (!audio) {
+      audio = document.createElement('audio')
+      audio.id = 'phone-call-remote-audio'
+      audio.autoplay = true
+      document.body.appendChild(audio)
+    }
+    audio.srcObject = stream
   }
-  audio.srcObject = stream
 }
 
 /* ── Call Overlay UI ── */
@@ -738,11 +836,12 @@ function hideCallOverlay() {
   if (overlay) overlay.classList.remove('active')
   const minibar = $('phone-call-minibar')
   if (minibar) minibar.classList.remove('visible')
+  const videoContainer = $('phone-call-video-container')
+  if (videoContainer) videoContainer.style.display = 'none'
 }
 
 /* ── Call UI Bindings ── */
 function bindCallUI() {
-  // Incoming call buttons
   $('phone-call-decline')?.addEventListener('click', declineCall)
   $('phone-call-answer-audio')?.addEventListener('click', () => answerCall(false))
   $('phone-call-msg')?.addEventListener('click', () => {
@@ -753,7 +852,6 @@ function bindCallUI() {
     }
   })
 
-  // Active call buttons
   $('phone-call-end')?.addEventListener('click', endCall)
   $('phone-call-mute')?.addEventListener('click', () => {
     if (callManager) {
@@ -775,18 +873,15 @@ function bindCallUI() {
   })
   $('phone-call-msg-during')?.addEventListener('click', () => {
     if (callManager?.remoteName) {
-      // minimize call to bar, open chat
       showScreen('messages')
       openConversation(callManager.remoteName)
     }
   })
 
-  // Minibar
   $('phone-minibar-expand')?.addEventListener('click', () => {
     if (callManager) showCallOverlay(callManager.state, callManager.remoteName, callManager.elapsed)
   })
 
-  // Update timer during connected call
   setInterval(() => {
     if (callManager?.state === 'connected') {
       const timerEl = $('phone-call-timer')
@@ -795,6 +890,49 @@ function bindCallUI() {
       }
     }
   }, 1000)
+}
+
+/* ── Action Bar ── */
+function bindActionBar() {
+  $('phone-action-call')?.addEventListener('click', onActionCall)
+  $('phone-action-chat')?.addEventListener('click', onActionChat)
+  $('phone-action-video')?.addEventListener('click', onActionVideo)
+}
+
+function updateActionBar() {
+  const bar = $('phone-actionbar')
+  if (!bar) return
+  const inCall = callManager && callManager.state !== 'idle'
+  bar.classList.toggle('phone-actionbar--calling', inCall)
+  const callBtn = $('phone-action-call')
+  const videoBtn = $('phone-action-video')
+  if (callBtn) callBtn.querySelector('.action-label').textContent = inCall ? 'End' : 'Call'
+  if (videoBtn) videoBtn.querySelector('.action-icon').textContent = inCall ? '🔴' : '📞'
+}
+
+function onActionCall() {
+  if (callManager && callManager.state !== 'idle') {
+    endCall()
+  } else {
+    showScreen('dialer')
+  }
+}
+
+function onActionChat() {
+  if (callManager && callManager.state === 'connected' && callManager.remoteName) {
+    showScreen('messages')
+    openConversation(callManager.remoteName)
+  } else {
+    showScreen('messages')
+  }
+}
+
+function onActionVideo() {
+  if (callManager && callManager.state !== 'idle') {
+    callManager.toggleVideo()
+  } else {
+    showScreen('dialer')
+  }
 }
 
 /* ── Backend Message Handler ── */
@@ -844,6 +982,10 @@ function onBackendCallEvent(event) {
 async function refreshContacts() {
   try {
     const local = loadJSON(CONTACTS_KEY, [])
+    if (isOfflineFallback) {
+      contactsCache = local
+      return
+    }
     const backendContacts = await backend.getContacts()
     const merged = [...local]
     for (const bc of backendContacts) {
@@ -857,7 +999,15 @@ async function refreshContacts() {
 
 async function refreshThreads() {
   try {
-    if (incognitoMode) {
+    if (isOfflineFallback) {
+      threadsCache = contactsCache.map(c => ({
+        username: c.username || '',
+        display_name: c.displayName || c.username,
+        last_message: '',
+        last_ts: null,
+        unread: 0
+      }))
+    } else if (incognitoMode) {
       const r = await fetch(`/api/dm/threads?username=${encodeURIComponent(myUsername)}`, {
         headers: { 'Authorization': 'Bearer ' + (session?.ph || ''), 'X-FAS-Username': myUsername }
       })

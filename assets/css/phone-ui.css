@@ -635,6 +635,55 @@
   font-size: 0.68rem;
 }
 
+/* ── Action Bar (persistent Call/Chat/Video above dock) ── */
+.phone-actionbar {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--phone-bg);
+  border-top: 1px solid var(--phone-border);
+  border-bottom: 1px solid var(--phone-border);
+  flex-shrink: 0;
+  gap: 8px;
+}
+.phone-actionbar-btn {
+  background: none;
+  border: 1px solid var(--phone-border);
+  border-radius: 16px;
+  color: var(--phone-text);
+  cursor: pointer;
+  padding: 8px 16px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+  flex: 1;
+  justify-content: center;
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.phone-actionbar-btn:hover { border-color: var(--phone-neon-dim); color: var(--phone-neon); background: rgba(0,255,65,0.04); }
+.phone-actionbar-btn:active { transform: scale(0.96); }
+.phone-actionbar-btn .action-icon { font-size: 1.1rem; line-height: 1; }
+.phone-actionbar-btn .action-label { white-space: nowrap; }
+
+/* Call state overrides */
+.phone-actionbar--calling .phone-actionbar-btn { border-color: var(--phone-neon-dim); }
+.phone-actionbar--calling #phone-action-call {
+  background: var(--phone-red);
+  border-color: var(--phone-red);
+  color: white;
+}
+.phone-actionbar--calling #phone-action-call:hover { background: #cc2828; }
+.phone-actionbar--calling #phone-action-video {
+  background: var(--phone-blue);
+  border-color: var(--phone-blue);
+  color: white;
+}
+
 /* ── Dock ── */
 .phone-dock {
   display: flex;
@@ -668,6 +717,23 @@
 .phone-dock-btn--active .dock-icon { filter: drop-shadow(0 0 4px var(--phone-neon)); }
 .phone-dock-btn .dock-icon { font-size: 1.3rem; line-height: 1; }
 .phone-dock-btn .dock-label { font-weight: 600; letter-spacing: 0.03em; }
+
+/* ── Video Container ── */
+.phone-call-video-container {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.phone-call-video-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
 /* ── Incognito badge ── */
 .phone-incognito-badge {
