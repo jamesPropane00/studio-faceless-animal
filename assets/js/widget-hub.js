@@ -8,6 +8,7 @@ const WIDGETS = [
   { id: 'tv', label: 'TV', icon: 'TV' },
   { id: 'vault', label: 'Vault', icon: 'VT' },
   { id: 'profile', label: 'Profile', icon: 'ME' },
+  { id: 'phone', label: 'Phone', icon: 'PH' },
 ];
 
 let hubEl = null;
@@ -133,6 +134,7 @@ function openWidget(id) {
   if (id === 'tv') renderTVWidget();
   if (id === 'vault') renderVaultWidget();
   if (id === 'profile') renderProfileWidget();
+  if (id === 'phone') renderPhoneWidget();
 }
 
 function renderRadioWidget() {
@@ -277,6 +279,20 @@ function renderProfileWidget() {
     const handleBtn = document.getElementById('rp-set-handle-btn');
     if (handleBtn) handleBtn.click();
   });
+}
+
+function renderPhoneWidget() {
+  bodyEl().innerHTML = `
+    <div class="fas-widget-pane">
+      <div class="fas-widget-pane__hero">
+        <p class="fas-widget-pane__label">Phone</p>
+        <h3 class="fas-widget-pane__title">Signal Phone</h3>
+        <p class="fas-widget-pane__text">Make Signal calls, send DMs, or join the chat.</p>
+      </div>
+      <div class="fas-widget-pane__actions">
+        <a class="fas-widget-hub__btn fas-widget-hub__btn--primary" href="phone.html">Open Phone</a>
+      </div>
+    </div>`;
 }
 
 async function requestChatConnection(targetUsername, ctx) {

@@ -501,9 +501,13 @@ async function handleMediaDownload(req, res) {
     return
   }
 
-  // ΓöÇΓöÇ AI CHAT API (free, no key needed) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  // ΓöÇΓöÇ AI CHAT API ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   if (urlPath === '/api/ai/chat' && req.method === 'POST') {
     handleAIChat(req, res)
+    return
+  }
+  if (urlPath === '/api/ai/chat/stream' && req.method === 'POST') {
+    handleAIStream(req, res)
     return
   }
 
@@ -1525,7 +1529,7 @@ async function handleContactForm(req, res) {
   const name    = (body.name    || '').trim().slice(0, 200)
   const email   = (body.email   || '').trim().slice(0, 200)
   const type    = (body.type    || body.request_type || body.subject || body.package || '').trim().slice(0, 200)
-  const message = (body.message || body.details || body.description || body.bio || '').trim().slice(0, 5000)
+  const message = (body.message || body.details || body.desc || body.bio || '').trim().slice(0, 5000)
   const social  = (body.social  || body.social_handle || body.instagram || '').trim().slice(0, 200)
   const page    = (body.page    || body.source || 'unknown').trim()
 
@@ -1543,7 +1547,7 @@ async function handleContactForm(req, res) {
 
   // Capture any extra form fields not already mapped
   const { name: _n, email: _e, type: _t, request_type: _rt, subject: _s, package: _pkg,
-          message: _m, details: _d, description: _dd, bio: _b,
+          message: _m, details: _d, desc: _dd, bio: _b,
           social: _so, social_handle: _sh, instagram: _ig, page: _pg, source: _src, ...rest } = body
   const extra  = JSON.stringify({ type, social, page, ...rest })
 
@@ -1583,6 +1587,10 @@ const FREE_AI_MODELS = [
   { id: 'TinyLlama/TinyLlama-1.1B-Chat-v1.0', name: 'TinyLlama 1.1B', type: 'text', group: '≡ƒÆ¼ Free Chat' },
   { id: 'HuggingFaceH4/zephyr-7b-beta',       name: 'Zephyr 7B',       type: 'text', group: '≡ƒÆ¼ Free Chat' },
   { id: 'microsoft/phi-2',                     name: 'Phi-2 2.7B',     type: 'text', group: '≡ƒÆ¼ Free Chat' },
+  // Cloudflare Workers AI models (free, supports function calling)
+  { id: '@cf/meta/llama-3.3-70b-instruct-fp8-fast', name: 'Llama 3.3 70B (CF)', type: 'text', group: '💬 Free Chat', provider: 'cloudflare' },
+  { id: '@cf/meta/llama-3.2-3b-instruct',           name: 'Llama 3.2 3B (CF)',  type: 'text', group: '💬 Free Chat', provider: 'cloudflare' },
+  { id: '@cf/mistral/mistral-7b-instruct-v0.1',     name: 'Mistral 7B (CF)',    type: 'text', group: '💬 Free Chat', provider: 'cloudflare' },
 ];
 
 const PRO_AI_MODELS = [
@@ -1601,17 +1609,25 @@ const ADMIN_USERS = new Set(['jamespropane00', 'jdot00']);
 
 // ΓöÇΓöÇ AGENT TOOLS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 const AGENT_TOOLS_FULL = [
-  { type: 'function', function: { name: 'read_file', description: 'Read a file from the project. Use this to read code, configs, or any text file.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'File path relative to project root, e.g. server.js or src/index.js' } }, required: ['path'] } } },
-  { type: 'function', function: { name: 'write_file', description: 'Write content to a file. Creates the file or overwrites if it exists. Use this to create new files or modify existing ones.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'File path relative to project root' }, content: { type: 'string', description: 'Full file content' } }, required: ['path', 'content'] } } },
-  { type: 'function', function: { name: 'list_dir', description: 'List files and directories in a folder to explore the project structure.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'Directory path relative to project root, empty string for root' } }, required: ['path'] } } },
-  { type: 'function', function: { name: 'execute_command', description: 'Run a shell command in the project directory. Use for npm, git, build tools, etc.', parameters: { type: 'object', properties: { command: { type: 'string', description: 'Shell command to execute' } }, required: ['command'] } } },
-  { type: 'function', function: { name: 'web_search', description: 'Search the web for current information, news, documentation, or anything online. Use this to find up-to-date answers, APIs, tutorials, and resources.', parameters: { type: 'object', properties: { query: { type: 'string', description: 'The search query' } }, required: ['query'] } } },
+  { type: 'function', function: { name: 'read_file', desc: 'Read a file from the project. Use this to read code, configs, or any text file.', parameters: { type: 'object', properties: { path: { type: 'string', desc: 'File path relative to project root, e.g. server.js or src/index.js' } }, required: ['path'] } } },
+  { type: 'function', function: { name: 'write_file', desc: 'Write content to a file. Creates the file or overwrites if it exists. Use this to create new files or modify existing ones.', parameters: { type: 'object', properties: { path: { type: 'string', desc: 'File path relative to project root' }, content: { type: 'string', desc: 'Full file content' } }, required: ['path', 'content'] } } },
+  { type: 'function', function: { name: 'list_dir', desc: 'List files and directories in a folder to explore the project structure.', parameters: { type: 'object', properties: { path: { type: 'string', desc: 'Directory path relative to project root, empty string for root' } }, required: ['path'] } } },
+  { type: 'function', function: { name: 'execute_command', desc: 'Run a shell command in the project directory. Use for npm, git, build tools, etc.', parameters: { type: 'object', properties: { command: { type: 'string', desc: 'Shell command to execute' } }, required: ['command'] } } },
+  { type: 'function', function: { name: 'web_search', desc: 'Search the web for current information, news, documentation, or anything online. Use this to find up-to-date answers, APIs, tutorials, and resources.', parameters: { type: 'object', properties: { query: { type: 'string', desc: 'The search query' } }, required: ['query'] } } },
+  { type: 'function', function: { name: 'search_code', desc: 'Search the codebase using regular expressions across all files. Returns paths, line numbers, and matching lines.', parameters: { type: 'object', properties: { pattern: { type: 'string', desc: 'Regex pattern to search for' }, include: { type: 'string', desc: 'Optional file glob filter (e.g. *.js)' } }, required: ['pattern'] } } },
+  { type: 'function', function: { name: 'find_files', desc: 'Find files by name pattern using glob matching. Use when you know part of a filename.', parameters: { type: 'object', properties: { pattern: { type: 'string', desc: 'Glob pattern (e.g. **/*.tsx or src/**/*.css)' } }, required: ['pattern'] } } },
+  { type: 'function', function: { name: 'edit_file', desc: 'Make an exact string replacement in a file. Use for targeted edits instead of rewriting the whole file.', parameters: { type: 'object', properties: { path: { type: 'string', desc: 'File path relative to project root' }, old_string: { type: 'string', desc: 'The exact text to find and replace' }, new_string: { type: 'string', desc: 'The replacement text' } }, required: ['path', 'old_string', 'new_string'] } } },
+  { type: 'function', function: { name: 'read_file_range', desc: 'Read a specific range of lines from a file. Use for large files where you only need a section.', parameters: { type: 'object', properties: { path: { type: 'string', desc: 'File path relative to project root' }, start_line: { type: 'number', desc: 'Starting line number (1-indexed)' }, end_line: { type: 'number', desc: 'Ending line number (inclusive)' } }, required: ['path', 'start_line', 'end_line'] } } },
+  { type: 'function', function: { name: 'git_status', desc: 'Show the working tree status: changed, staged, and untracked files.', parameters: { type: 'object', properties: {}, required: [] } } },
+  { type: 'function', function: { name: 'git_diff', desc: 'Show unstaged changes in the working tree. Optionally filter to one file.', parameters: { type: 'object', properties: { path: { type: 'string', desc: 'Optional file path to show diff for' } }, required: [] } } },
 ];
 
 const AGENT_TOOLS_LIMITED = [
-  { type: 'function', function: { name: 'read_file', description: 'Read a file to help understand the project codebase. Can read HTML, JS, CSS, and text files.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'File path relative to project root' } }, required: ['path'] } } },
-  { type: 'function', function: { name: 'list_dir', description: 'List files and directories to explore the project structure.', parameters: { type: 'object', properties: { path: { type: 'string', description: 'Directory path relative to project root, empty string for root' } }, required: ['path'] } } },
-  { type: 'function', function: { name: 'web_search', description: 'Search the web to find answers, documentation, and resources.', parameters: { type: 'object', properties: { query: { type: 'string', description: 'The search query' } }, required: ['query'] } } },
+  { type: 'function', function: { name: 'read_file', desc: 'Read a file to help understand the project codebase. Can read HTML, JS, CSS, and text files.', parameters: { type: 'object', properties: { path: { type: 'string', desc: 'File path relative to project root' } }, required: ['path'] } } },
+  { type: 'function', function: { name: 'list_dir', desc: 'List files and directories to explore the project structure.', parameters: { type: 'object', properties: { path: { type: 'string', desc: 'Directory path relative to project root, empty string for root' } }, required: ['path'] } } },
+  { type: 'function', function: { name: 'web_search', desc: 'Search the web to find answers, documentation, and resources.', parameters: { type: 'object', properties: { query: { type: 'string', desc: 'The search query' } }, required: ['query'] } } },
+  { type: 'function', function: { name: 'read_file_range', desc: 'Read a specific range of lines from a file without loading the whole file.', parameters: { type: 'object', properties: { path: { type: 'string', desc: 'File path relative to project root' }, start_line: { type: 'number', desc: 'Starting line number (1-indexed)' }, end_line: { type: 'number', desc: 'Ending line number (inclusive)' } }, required: ['path', 'start_line', 'end_line'] } } },
+  { type: 'function', function: { name: 'search_code', desc: 'Search the codebase using regular expressions for patterns in code and config files.', parameters: { type: 'object', properties: { pattern: { type: 'string', desc: 'Regex pattern to search for' }, include: { type: 'string', desc: 'Optional file glob filter (e.g. *.js)' } }, required: ['pattern'] } } },
 ];
 
 function sanitizePath(p, root) {
@@ -1680,7 +1696,87 @@ async function executeAgentTool(tc, root) {
         }
         return { results: results || 'No results found.', query: args.query };
       }
+      case 'search_code': {
+        const results = [];
+        function walk(dir) {
+          const entries = fs.readdirSync(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) walk(full);
+            else if (entry.isFile()) {
+              try {
+                const content = fs.readFileSync(full, 'utf-8');
+                const lines = content.split('\n');
+                for (let i = 0; i < lines.length; i++) {
+                  if (lines[i].match(new RegExp(args.pattern, 'i'))) {
+                    const rel = path.relative(root, full);
+                    results.push({ file: rel, line: i + 1, content: lines[i].trim() });
+                  }
+                }
+              } catch {}
+            }
+          }
+        }
+        walk(root);
+        return { matches: results.slice(0, 50), total: results.length };
+      }
+      case 'find_files': {
+        const results = [];
+        function walk(dir, depth) {
+          if (depth > 8) return;
+          try {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            for (const e of entries) {
+              if (e.name.startsWith('.') || e.name === 'node_modules') continue;
+              const full = path.join(dir, e.name);
+              const rel = path.relative(root, full);
+              if (args.pattern) {
+                const regex = new RegExp('^' + args.pattern.replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
+                if (regex.test(rel)) results.push(rel);
+              }
+              if (e.isDirectory()) walk(full, depth + 1);
+            }
+          } catch {}
+        }
+        walk(root, 0);
+        return { files: results.slice(0, 100), total: results.length };
+      }
+      case 'edit_file': {
+        const fp = sanitizePath(args.path, root);
+        if (!fs.existsSync(fp)) return { error: 'File not found: ' + args.path };
+        let c = fs.readFileSync(fp, 'utf-8');
+        if (!c.includes(args.old_string)) return { error: 'old_string not found in ' + args.path };
+        c = c.replace(args.old_string, args.new_string);
+        fs.writeFileSync(fp, c, 'utf-8');
+        return { success: true, path: args.path };
+      }
+      case 'read_file_range': {
+        const fp = sanitizePath(args.path, root);
+        if (!fs.existsSync(fp)) return { error: 'File not found: ' + args.path };
+        const c = fs.readFileSync(fp, 'utf-8');
+        const lines = c.split('\n');
+        const start = Math.max(0, (args.start_line || 1) - 1);
+        const end = Math.min(lines.length, args.end_line || lines.length);
+        return { content: lines.slice(start, end).join('\n'), path: args.path, lines: args.start_line + '-' + args.end_line, total_lines: lines.length };
+      }
+      case 'git_status': {
+        const { execSync } = require('child_process');
+        try {
+          const out = execSync('git status', { cwd: root, timeout: 10000, encoding: 'utf-8' });
+          return { output: out };
+        } catch { return { error: 'Not a git repository or git unavailable' }; }
+      }
+      case 'git_diff': {
+        const { execSync } = require('child_process');
+        try {
+          const cmd = args.path ? 'git diff -- "' + args.path + '"' : 'git diff';
+          const out = execSync(cmd, { cwd: root, timeout: 10000, encoding: 'utf-8' });
+          return { output: out || '(no changes)' };
+        } catch { return { error: 'Not a git repository or git unavailable' }; }
+      }
       default: return { error: 'Unknown tool: ' + name };
+
     }
   } catch (e) { return { error: e.message }; }
 }
@@ -1712,6 +1808,34 @@ async function runAgentLoop(messages, tools, root, modelId, apiKey, maxIter) {
 
 const FACELESS_SYSTEM = 'You are Faceless AI, the central intelligence of Faceless Animal Studios. Your purpose is to help users create, learn, build, solve problems, explore ideas, and bring projects to life. Your communication style is inspired by Lux ΓÇö calm, strategic, creative, observant, direct, and useful. You are NOT a flirt bot, roleplay bot, or locked character. Help with coding, websites, apps, game dev, writing, storytelling, comics, music, marketing, business ideas, content creation, research, automation, design, productivity, and problem solving. Core traits: intelligent, strategic, calm, creative, curious, observant, honest, supportive, independent thinker, builder mindset. Speak naturally. Be direct but not cold. Be confident without arrogance. Avoid corporate language and sounding robotic. Avoid excessive hype. Don\'t force lore into unrelated answers. Don\'t flirt or roleplay unless asked. Focus on helping the user build, solve, write, plan, or understand. Give clear answers and practical next steps. When asked who made you, say you were created by DJ Faceless Animal.';
 
+function buildProjectContext() {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const root = __dirname;
+    let tree = '';
+    function walk(dir, depth) {
+      if (depth > 3) return;
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const e of entries) {
+        if (e.name.startsWith('.') || e.name === 'node_modules') continue;
+        tree += '  '.repeat(depth) + (e.isDirectory() ? '[DIR] ' : '[FILE] ') + e.name + '\n';
+        if (e.isDirectory()) walk(path.join(dir, e.name), depth + 1);
+      }
+    }
+    walk(root, 0);
+    let git = '';
+    try {
+      const { execSync } = require('child_process');
+      const branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: root, encoding: 'utf-8', timeout: 5000 }).trim();
+      const last = execSync('git log -1 --oneline', { cwd: root, encoding: 'utf-8', timeout: 5000 }).trim();
+      const status = execSync('git status --short', { cwd: root, encoding: 'utf-8', timeout: 5000 }).trim();
+      git = 'Branch: ' + branch + '\nLast: ' + last + '\n' + (status ? 'Status:\n' + status : 'Clean');
+    } catch { git = '(git unavailable)'; }
+    return '\n\n## Project Context\n\n### File Tree\n' + tree + '\n### Git\n' + git;
+  } catch { return ''; }
+}
+
 function buildAIPrompt(modelId, message) {
   if (modelId.includes('zephyr')) {
     return '<|system|>\n' + FACELESS_SYSTEM + '</s>\n<|user|>\n' + message + '</s>\n<|assistant|>\n';
@@ -1725,7 +1849,45 @@ function buildAIPrompt(modelId, message) {
   return message;
 }
 
-async function handleAIChat(req, res) {
+// ── Cloudflare Workers AI query ──
+async function queryCloudflare(modelId, messages) {
+  const cfAccountId = process.env.CF_ACCOUNT_ID
+  const cfApiToken = process.env.CF_AI_TOKEN
+  if (!cfAccountId || !cfApiToken) {
+    throw new Error('Cloudflare Workers AI not configured (CF_ACCOUNT_ID / CF_AI_TOKEN)')
+  }
+  const url = 'https://api.cloudflare.com/client/v4/accounts/' + cfAccountId + '/ai/v1/chat/completions'
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfApiToken, 'cf-aig-gateway-id': 'default' },
+    body: JSON.stringify({ model: modelId, messages: messages.map(m => ({ role: m.role, content: m.content })), max_tokens: 2048, temperature: 0.7 })
+  })
+  if (!response.ok) { const errText = await response.text(); throw new Error('Cloudflare AI error: ' + errText.slice(0, 500)) }
+  const data = await response.json()
+  const content = data.choices?.[0]?.message?.content
+  if (!content) { throw new Error('Cloudflare AI error: empty response') }
+  return content
+}
+
+// ── Rate Limiter (in-memory, per-session) ──
+const agentRateLimits = new Map()
+function checkRateLimit(sessionId, isAdmin) {
+  const maxCalls = isAdmin ? 100 : 25
+  const now = Date.now()
+  const windowMs = 3600000
+  if (!agentRateLimits.has(sessionId)) {
+    agentRateLimits.set(sessionId, { count: 0, resetAt: now + windowMs })
+    return { allowed: true, remaining: maxCalls }
+  }
+  const record = agentRateLimits.get(sessionId)
+  if (now > record.resetAt) { record.count = 0; record.resetAt = now + windowMs }
+  record.count++
+  const remaining = maxCalls - record.count
+  return { allowed: remaining >= 0, remaining: Math.max(0, remaining) }
+}
+
+async function handleAIChat
+(req, res) {
   const HF_TOKEN = process.env.HF_TOKEN || '';
   const OPENCODE_GO_KEY = process.env.OPENCODE_GO_API_KEY || '';
   let rawBody;
@@ -1768,12 +1930,12 @@ async function handleAIChat(req, res) {
       try {
         const lookupCol = username ? 'username' : 'session_id';
         const lookupVal = username || sessionId;
-        const convRes = await sbRequest(creds.host, creds.key, 'GET',
+          const convIdRes = await sbRequest(creds.host, creds.key, 'GET',
           '/rest/v1/ai_conversations?select=conversation_id,role,content,created_at,model&' + lookupCol + '=eq.' + encodeURIComponent(lookupVal) + '&order=created_at.asc', null);
         if (convRes.status === 200) {
           const rows = JSON.parse(convRes.body.toString());
           if (Array.isArray(rows)) {
-            const convMap = {};
+              const convIdMap = {};
             rows.forEach(r => {
               const cid = r.conversation_id || 'default';
               if (!convMap[cid]) { convMap[cid] = { id: cid, title: 'Chat', messages: 0, last: r.created_at, model: r.model || 'Standard' }; }
@@ -1834,7 +1996,8 @@ async function handleAIChat(req, res) {
 
     if (isOpenCodeGo) {
       const modelId = selectedModel.id.replace('opencode-go/', '');
-      const systemMsg = FACELESS_SYSTEM;
+      const projectCtx = agentMode ? buildProjectContext() : '';
+      const systemMsg = FACELESS_SYSTEM + projectCtx;
       const baseMessages = [{ role: 'system', content: systemMsg }, ...history.map(h => ({ role: h.role, content: h.content })), { role: 'user', content: enrichedMsg }];
 
       if (agentMode) {
@@ -1856,49 +2019,69 @@ async function handleAIChat(req, res) {
         memoryEnabled = true;
       }
     } else {
-      // ΓöÇΓöÇ Hugging Face (free) ΓöÇΓöÇ
+      // ── Cloudflare or Hugging Face (free) ──
       if (creds) memoryEnabled = true;
-      let agentContext = '';
+
+      // Rate limit check for agent mode
       if (agentMode && !isAdmin) {
+        const sid = username || req.socket.remoteAddress || 'anon'
+        const rateCheck = checkRateLimit(sid, false)
+        if (!rateCheck.allowed) {
+          return sendJSON(res, 429, { error: 'Rate limit exceeded for agent mode. Please wait.', retryable: true })
+        }
+      }
+
+      if (selectedModel.provider === 'cloudflare') {
+        // Cloudflare Workers AI
         try {
-          const rootFiles = fs.readdirSync(ROOT).slice(0, 30);
-          agentContext = '[Project root contains: ' + rootFiles.filter(f => !f.startsWith('.') && f !== 'node_modules').join(', ') + ']\n';
-          const match = message.match(/([\w\-.]+\.\w+)/);
-          if (match) {
-            const foundFile = match[1];
-            const fp = path.resolve(ROOT, foundFile);
-            if (fp.startsWith(ROOT) && fs.existsSync(fp) && !fp.includes('node_modules') && !fp.includes('.git')) {
-              const content = fs.readFileSync(fp, 'utf-8').slice(0, 3000);
-              agentContext += '[Reading ' + foundFile + ':\n' + content + '\n(truncated if over 3KB)]\n';
+          reply = await queryCloudflare(selectedModel.id, [{ role: 'system', content: FACELESS_SYSTEM + (agentMode ? buildProjectContext() : '') }, { role: 'user', content: enrichedMsg }])
+        } catch (e) {
+          return sendJSON(res, 502, { error: 'Cloudflare AI error: ' + e.message, retryable: true })
+        }
+      } else {
+        // Hugging Face
+        let agentContext = '';
+        if (agentMode && !isAdmin) {
+          try {
+            const rootFiles = fs.readdirSync(ROOT).slice(0, 30);
+            agentContext = '[Project root contains: ' + rootFiles.filter(f => !f.startsWith('.') && f !== 'node_modules').join(', ') + ']\n';
+            const match = message.match(/([\w\-.]+\.\w+)/);
+            if (match) {
+              const foundFile = match[1];
+              const fp = path.resolve(ROOT, foundFile);
+              if (fp.startsWith(ROOT) && fs.existsSync(fp) && !fp.includes('node_modules') && !fp.includes('.git')) {
+                const content = fs.readFileSync(fp, 'utf-8').slice(0, 3000);
+                agentContext += '[Reading ' + foundFile + ':\n' + content + '\n(truncated if over 3KB)]\n';
+              }
             }
-          }
-        } catch {}
-      }
-      const finalMsg = agentContext ? agentContext + enrichedMsg : enrichedMsg;
-      const model = selectedModel.id;
-      const prompt = buildAIPrompt(model, finalMsg);
-      const hfRes = await fetch('https://api-inference.huggingface.co/models/' + model, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(HF_TOKEN ? { 'Authorization': 'Bearer ' + HF_TOKEN } : {}) },
-        body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: maxTokens, return_full_text: false, temperature: 0.7 } }),
-        signal: AbortSignal.timeout(25000),
-      });
-      if (!hfRes.ok) {
-        const errText = await hfRes.text();
-        const isModelLoading = hfRes.status === 503 || errText.includes('loading');
-        return sendJSON(res, isModelLoading ? 503 : 502, {
-          error: isModelLoading ? 'AI model is waking up ΓÇö please try again in a moment.' : 'AI service unavailable.',
-          detail: isModelLoading ? 'Model cold-starting' : errText.slice(0, 200), retryable: isModelLoading,
+          } catch {}
+        }
+        const finalMsg = agentContext ? agentContext + enrichedMsg : enrichedMsg;
+        const model = selectedModel.id;
+        const prompt = buildAIPrompt(model, finalMsg);
+        const hfRes = await fetch('https://api-inference.huggingface.co/models/' + model, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(HF_TOKEN ? { 'Authorization': 'Bearer ' + HF_TOKEN } : {}) },
+          body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: maxTokens, return_full_text: false, temperature: 0.7 } }),
+          signal: AbortSignal.timeout(25000),
         });
+        if (!hfRes.ok) {
+          const errText = await hfRes.text();
+          const isModelLoading = hfRes.status === 503 || errText.includes('loading');
+          return sendJSON(res, isModelLoading ? 503 : 502, {
+            error: isModelLoading ? 'AI model is waking up — please try again in a moment.' : 'AI service unavailable.',
+            detail: isModelLoading ? 'Model cold-starting' : errText.slice(0, 200), retryable: isModelLoading,
+          });
+        }
+        const data = await hfRes.json();
+        let text = Array.isArray(data) && data[0] ? (data[0].generated_text || '') : (data.generated_text || JSON.stringify(data));
+        if (text.startsWith(prompt)) text = text.slice(prompt.length).trim();
+        reply = text.trim();
       }
-      const data = await hfRes.json();
-      let text = Array.isArray(data) && data[0] ? (data[0].generated_text || '') : (data.generated_text || JSON.stringify(data));
-      if (text.startsWith(prompt)) text = text.slice(prompt.length).trim();
-      reply = text.trim();
     }
 
-    // ΓöÇΓöÇ Save conversation to Supabase ΓöÇΓöÇ
-    const convId = conversationId || 'default';
+      // ── Save conversation to Supabase ΓöÇΓöÇ
+      const convId = conversationId || 'default';
     if (creds && reply) {
       try {
         const userRec = { session_id: sessionId, role: 'user', content: message, model: selectedModel.id, conversation_id: convId };
@@ -1919,6 +2102,116 @@ async function handleAIChat(req, res) {
       error: isTimeout ? 'AI is taking too long ΓÇö please try again.' : 'AI request failed',
       detail: isTimeout ? 'Request timed out' : e.message, retryable: true,
     });
+  }
+
+}
+
+// ── SSE Stream Handler ──
+async function handleAIStream(req, res) {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  })
+  const sse = (data) => { try { res.write('data: ' + JSON.stringify(data) + '\n\n') } catch {} }
+  try {
+    let body = ''
+    req.on('data', chunk => body += chunk)
+    req.on('end', async () => {
+      try {
+        const parsed = JSON.parse(body)
+        const { message, history, mode, model: modelIdx } = parsed
+        const username = String(parsed.username || '').trim().toLowerCase() || null
+        const sessionId = String(parsed.session_id || 'default').trim()
+        const isAdmin = username && ADMIN_USERS.has(username)
+        const requestOcKey = parsed.oc_api_key || ''
+        const OPENCODE_GO_KEY = process.env.OPENCODE_GO_API_KEY || ''
+        const effectiveKey = requestOcKey || OPENCODE_GO_KEY
+
+        if (!message) { sse({ error: 'Message is required' }); res.end(); return }
+
+        const allModels = [...FREE_AI_MODELS]
+        if (isAdmin && effectiveKey) allModels.push(...PRO_AI_MODELS)
+        const selectedModel = allModels[parseInt(modelIdx)] || allModels[0]
+        sse({ type: 'meta', model: selectedModel.name })
+
+        // Rate limit
+        const sid = username || req.socket.remoteAddress || 'anon'
+        const rateCheck = checkRateLimit(sid, isAdmin)
+        if (!rateCheck.allowed) { sse({ error: 'Rate limit exceeded', remaining: 0 }); res.end(); return }
+
+        // Build messages
+        let messages = history || []
+        const projectCtx = buildProjectContext();
+        const systemMsg = { role: 'system', content: FACELESS_SYSTEM + projectCtx }
+        if (!messages.some(m => m.role === 'system')) messages.unshift(systemMsg)
+        messages.push({ role: 'user', content: message })
+        const isOpenCodeGo = selectedModel && selectedModel.id && selectedModel.id.startsWith('opencode-go/')
+        const isCF = selectedModel && selectedModel.provider === 'cloudflare'
+
+        if (isOpenCodeGo) {
+          const modelId = selectedModel.id.replace('opencode-go/', '')
+          const apiRes = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + effectiveKey },
+            body: JSON.stringify({ model: modelId, messages, max_tokens: 4096, temperature: 0.7, stream: true })
+          })
+          if (!apiRes.ok) { sse({ error: 'Pro AI unavailable' }); res.end(); return }
+          const reader = apiRes.body.getReader()
+          const decoder = new TextDecoder()
+          let fullContent = ''
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+            const chunk = decoder.decode(value, { stream: true })
+            const lines = chunk.split('\n').filter(l => l.startsWith('data: '))
+            for (const line of lines) {
+              const d = line.slice(6)
+              if (d === '[DONE]') continue
+              try {
+                const parsed = JSON.parse(d)
+                const delta = parsed.choices?.[0]?.delta?.content || ''
+                if (delta) { fullContent += delta; sse({ type: 'token', content: delta }) }
+              } catch {}
+            }
+          }
+          messages.push({ role: 'assistant', content: fullContent })
+          sse({ type: 'done', history: messages })
+        } else if (isCF) {
+          const text = await queryCloudflare(selectedModel.id, messages)
+          messages.push({ role: 'assistant', content: text })
+          sse({ type: 'token', content: text })
+          sse({ type: 'done', history: messages })
+        } else {
+          // HuggingFace inline
+          const HF_TOKEN = process.env.HF_TOKEN || ''
+          const enrichedMsg = message
+          const prompt = buildAIPrompt(selectedModel.id, enrichedMsg)
+          const hfRes = await fetch('https://api-inference.huggingface.co/models/' + selectedModel.id, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(HF_TOKEN ? { 'Authorization': 'Bearer ' + HF_TOKEN } : {}) },
+            body: JSON.stringify({ inputs: prompt, parameters: { max_new_tokens: 1024, return_full_text: false, temperature: 0.7 } })
+          })
+          if (hfRes.ok) {
+            const data = await hfRes.json()
+            let text = Array.isArray(data) && data[0] ? (data[0].generated_text || '') : (data.generated_text || JSON.stringify(data))
+            if (text.startsWith(prompt)) text = text.slice(prompt.length).trim()
+            messages.push({ role: 'assistant', content: text.trim() })
+            sse({ type: 'token', content: text.trim() })
+          } else {
+            sse({ error: 'HF API error: ' + hfRes.status })
+          }
+          sse({ type: 'done', history: messages })
+        }
+        sse({ type: 'done' })
+        res.end()
+      } catch (e) {
+        sse({ error: 'Invalid request: ' + e.message }); res.end()
+      }
+    })
+  } catch (e) {
+    sse({ error: e.message }); res.end()
   }
 }
 
@@ -2125,7 +2418,7 @@ async function handleMusicUpload(req, res) {
     return sendJSON(res, 400, { error: 'Invalid JSON body.' })
   }
 
-  const { username, ph, file_b64, file_type, file_name, file_size, title, description } = body
+  const { username, ph, file_b64, file_type, file_name, file_size, title, desc } = body
   if (!username || !ph || !file_b64 || !file_type || !file_name || !title) {
     return sendJSON(res, 400, { error: 'Missing required fields.' })
   }
@@ -2188,7 +2481,7 @@ async function handleMusicUpload(req, res) {
   const newTrack = {
     id:          storagePath,
     title:       title.trim(),
-    description: (description || '').trim().slice(0, 200),
+    desc: (desc || '').trim().slice(0, 200),
     url:         publicUrl,
     path:        storagePath,
     size:        fileBuffer.length,
