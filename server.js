@@ -410,6 +410,17 @@ async function handleMediaDownload(req, res) {
     return
   }
 
+  // ΓöÇΓöÇ MEDIA SAVE API ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+  if (urlPath === '/api/media/save' && req.method === 'POST') {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    handleMediaSave(req, res).catch(err => {
+      console.error('[FAS:media:save] Unhandled error:', err && err.message ? err.message : err)
+      if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+    })
+    return
+  }
+
   // ΓöÇΓöÇ MEMBER SIGNAL CODE API ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   if (urlPath.startsWith('/api/member/')) {
     res.setHeader('Access-Control-Allow-Origin', '*')
@@ -504,11 +515,20 @@ async function handleMediaDownload(req, res) {
 
   // ΓöÇΓöÇ AI CHAT API ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   if (urlPath === '/api/ai/chat' && req.method === 'POST') {
-    handleAIChat(req, res)
+    handleAIChat(req, res).catch(err => {
+      console.error('[FAS:ai:chat] Unhandled error:', err && err.message ? err.message : err)
+      if (!res.headersSent) sendJSON(res, 502, { error: 'AI chat error', detail: 'Internal error processing request.' })
+    })
     return
   }
   if (urlPath === '/api/ai/chat/stream' && req.method === 'POST') {
-    handleAIStream(req, res)
+    handleAIStream(req, res).catch(err => {
+      console.error('[FAS:ai:stream] Unhandled error:', err && err.message ? err.message : err)
+      if (!res.headersSent) {
+        res.writeHead(502, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ error: 'Stream error', detail: 'Internal error.' }))
+      }
+    })
     return
   }
 
@@ -1896,6 +1916,18 @@ function buildAIPrompt(modelId, message) {
   return message;
 }
 
+// ── Extract clean error from API response (handles HTML error pages) ──
+function cleanApiError(body, fallback) {
+  if (!body || typeof body !== 'string') return fallback || 'Unknown error'
+  const t = body.trim()
+  if (t.startsWith('<')) {
+    const m = t.match(/<title>([^<]+)<\/title>|<h[1-6][^>]*>([^<]+)<\/h[1-6]|(?:Error|error|Error [0-9]{3})[:\s]+([^<.\n]+)/)
+    return m ? (m[1] || m[2] || m[3] || '').trim().slice(0, 120) : 'Cloudflare service error (non-JSON response)'
+  }
+  try { const j = JSON.parse(t); return j.error || j.errors || j.message || j.result || fallback }
+  catch { return t.slice(0, 200) }
+}
+
 // ── Cloudflare Workers AI query ──
 async function queryCloudflare(modelId, messages) {
   const cfAccountId = process.env.CF_ACCOUNT_ID
@@ -2087,7 +2119,7 @@ async function handleAIChat
             stream: false,
           }),
         });
-        if (!ollamaRes.ok) { const err = await ollamaRes.text(); return sendJSON(res, 502, { error: 'Ollama error', detail: err.slice(0, 200) }); }
+        if (!ollamaRes.ok) { const err = await ollamaRes.text(); return sendJSON(res, 502, { error: 'Ollama error', detail: cleanApiError(err) }); }
         const data = await ollamaRes.json();
         reply = data && data.message && data.message.content;
         if (reply) memoryEnabled = true;
@@ -2104,7 +2136,7 @@ async function handleAIChat
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: message, model: selectedModel.id.replace('comfyui-', '') }),
         });
-        if (!comfyRes.ok) { const err = await comfyRes.text(); return sendJSON(res, 502, { error: 'Local ComfyUI error', detail: err.slice(0, 200) }); }
+        if (!comfyRes.ok) { const err = await comfyRes.text(); return sendJSON(res, 502, { error: 'Local ComfyUI error', detail: cleanApiError(err) }); }
         const data = await comfyRes.json();
         const imageData = data.images && data.images[0] && data.images[0].data;
         const videoData = data.video || null;
@@ -2125,7 +2157,7 @@ async function handleAIChat
           headers: { 'Authorization': 'Bearer ' + cfTok, 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: message, voice: selectedModel.voice || 'luna', encoding: 'mp3', container: 'none' }),
         });
-        if (!audioRes.ok) { const err = await audioRes.text(); return sendJSON(res, 502, { error: 'TTS failed', status: audioRes.status, detail: err.slice(0, 200) }); }
+        if (!audioRes.ok) { const err = await audioRes.text(); return sendJSON(res, 502, { error: 'TTS failed', status: audioRes.status, detail: cleanApiError(err) }); }
         const buf = await audioRes.arrayBuffer();
         const b64 = btoa(new TextDecoder('latin1').decode(buf));
         return sendJSON(res, 200, { audio: 'data:audio/mpeg;base64,' + b64, model: selectedModel.name, conversation_id: conversationId || 'default', username });
@@ -2143,7 +2175,7 @@ async function handleAIChat
           method: 'POST', headers: { 'Authorization': 'Bearer ' + cfTok, 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: message }), signal: ctrl.signal,
         });
         clearTimeout(tid);
-        if (!musicRes.ok) { const err = await musicRes.text(); return sendJSON(res, 502, { error: 'Music generation failed', status: musicRes.status, detail: err.slice(0, 200) }); }
+        if (!musicRes.ok) { const err = await musicRes.text(); return sendJSON(res, 502, { error: 'Music generation failed', status: musicRes.status, detail: cleanApiError(err) }); }
         const buf = await musicRes.arrayBuffer();
         const b64 = btoa(new TextDecoder('latin1').decode(buf));
         return sendJSON(res, 200, { audio: 'data:audio/wav;base64,' + b64, model: selectedModel.name, conversation_id: conversationId || 'default', username });
@@ -2165,7 +2197,7 @@ async function handleAIChat
           method: 'POST', headers: { 'Authorization': 'Bearer ' + cfTok, 'Content-Type': 'application/json' }, body: JSON.stringify(cfBody), signal: ctrl.signal,
         });
         clearTimeout(tid);
-        if (!imgRes.ok) { const err = await imgRes.text(); return sendJSON(res, 502, { error: 'Image edit failed', detail: err.slice(0, 200) }); }
+        if (!imgRes.ok) { const err = await imgRes.text(); return sendJSON(res, 502, { error: 'Image edit failed', detail: cleanApiError(err) }); }
         const buf = await imgRes.arrayBuffer();
         return sendJSON(res, 200, { image: 'data:image/png;base64,' + btoa(new TextDecoder('latin1').decode(buf)), model: selectedModel.name, conversation_id: conversationId || 'default', username });
       } catch (e) { return sendJSON(res, 502, { error: 'Image edit request failed', detail: e.message }); }
@@ -2191,7 +2223,7 @@ async function handleAIChat
           method: 'POST', headers: { 'Authorization': 'Bearer ' + cfTok, 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt }), signal: ctrl.signal,
         });
         clearTimeout(tid);
-        if (!imgRes.ok) { const err = await imgRes.text(); return sendJSON(res, 502, { error: 'Image generation failed', status: imgRes.status, detail: err.slice(0, 200) }); }
+        if (!imgRes.ok) { const err = await imgRes.text(); return sendJSON(res, 502, { error: 'Image generation failed', status: imgRes.status, detail: cleanApiError(err) }); }
         const buf = await imgRes.arrayBuffer();
         const convId = conversationId || 'default';
         if (creds) { try { const userRec = { session_id: sessionId, role: 'user', content: message, model: selectedModel.id, conversation_id: convId }; if (username) userRec.username = username; await sbRequest(creds.host, creds.key, 'POST', '/rest/v1/ai_conversations', JSON.stringify([userRec])); } catch {} }
@@ -2210,7 +2242,7 @@ async function handleAIChat
         const visRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + cfAcc + '/ai/v1/chat/completions', {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfTok }, body: JSON.stringify({ model: selectedModel.id, messages: visMsg, max_tokens: 2048 }),
         });
-        if (!visRes.ok) { const err = await visRes.text(); return sendJSON(res, 502, { error: 'Vision request failed', status: visRes.status, detail: err.slice(0, 200) }); }
+        if (!visRes.ok) { const err = await visRes.text(); return sendJSON(res, 502, { error: 'Vision request failed', status: visRes.status, detail: cleanApiError(err) }); }
         const d = await visRes.json();
         reply = d.choices && d.choices[0] && d.choices[0].message ? d.choices[0].message.content : '';
         if (reply) memoryEnabled = true;
@@ -2637,6 +2669,35 @@ function sbStorageUpload(host, serviceKey, bucket, storagePath, contentType, buf
 //  MUSIC UPLOAD ENDPOINTS
 //  POST /api/music/upload  ΓÇö authenticated track upload to creator-media bucket
 //  POST /api/music/delete  ΓÇö authenticated track delete from creator-media bucket
+// ── HANDLE MEDIA SAVE ──────────────────────────────────────────────
+async function handleMediaSave(req, res) {
+  try {
+    const body = JSON.parse((await readBody(req, 5 * 1024 * 1024)).toString('utf8'))
+    const { data, filename, contentType, username } = body || {}
+    if (!data || !filename) return sendJSON(res, 400, { error: 'Missing data or filename.' })
+
+    const buf = Buffer.from(data, 'base64')
+    if (!buf || buf.length === 0) return sendJSON(res, 400, { error: 'Invalid base64 data.' })
+    if (buf.length > 30 * 1024 * 1024) return sendJSON(res, 413, { error: 'File too large (max 30MB).' })
+
+    let creds
+    try { creds = getServiceCreds() } catch { return sendJSON(res, 503, { error: 'Storage not configured.' }) }
+
+    const ext = filename.split('.').pop() || 'bin'
+    const sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const storagePath = (username ? 'uploads/' + username + '/' : 'uploads/anon/') + Date.now() + '-' + sanitized
+    const mimeType = contentType || 'application/octet-stream'
+
+    const result = await sbStorageUpload(creds.host, creds.key, 'user-storage', storagePath, mimeType, buf)
+    if (result.status >= 200 && result.status < 300) {
+      return sendJSON(res, 200, { ok: true, path: storagePath, size: buf.length })
+    }
+    return sendJSON(res, 502, { error: 'Upload failed.', detail: result.body ? result.body.toString().slice(0, 200) : '' })
+  } catch (e) {
+    return sendJSON(res, 500, { error: 'Save failed.', detail: e.message })
+  }
+}
+
 // ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 
 const MUSIC_BUCKET     = 'creator-media'

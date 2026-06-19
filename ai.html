@@ -243,8 +243,11 @@
     .msg.user .label { color: var(--bright); }
     .msg.assistant .label { color: var(--cyan); }
     .msg.assistant img { max-width: 100%; border-radius: 10px; margin-top: 0.5rem; }
-    .download-btn { display: inline-block; padding: 0.4rem 0.8rem; border-radius: 8px; background: linear-gradient(135deg, var(--purple), var(--bright)); color: #fff; font-size: 0.78rem; font-weight: 600; text-decoration: none; margin-top: 0.3rem; transition: opacity 0.15s; }
-    .download-btn:hover { opacity: 0.85; }
+    .download-btn, .save-media-btn { display: inline-flex; align-items: center; padding: 0.4rem 0.8rem; border-radius: 8px; background: linear-gradient(135deg, var(--purple), var(--bright)); color: #fff; font-size: 0.78rem; font-weight: 600; text-decoration: none; cursor: pointer; font-family: inherit; margin-top: 0.3rem; transition: opacity 0.15s; border: none; }
+    .download-btn:hover, .save-media-btn:hover { opacity: 0.85; }
+    .save-media-btn:disabled { opacity: 0.5; cursor: wait; }
+    .gen-image { transition: transform 0.15s; }
+    .gen-image:hover { transform: scale(1.02); }
     .typing { display: flex; gap: 4px; padding: 0.4rem 0; }
     .typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--dim); animation: bounce 1.2s infinite; }
     .typing span:nth-child(2) { animation-delay: 0.2s; }
@@ -1037,16 +1040,26 @@
           body: JSON.stringify(body),
         });
         removeTyping();
-        if (!res.ok) { const err = await res.json(); addMessage('system', 'Error: ' + (err.error || 'Request failed.')); return; }
-        const data = await res.json();
+        if (!res.ok) {
+          let errMsg = 'Request failed (' + res.status + ')';
+          try { const err = await res.json(); errMsg = err.error || errMsg; } catch { try { errMsg = (await res.text()).slice(0, 200); } catch {} }
+          addMessage('system', 'Error: ' + errMsg);
+          return;
+        }
+        let data;
+        try { data = await res.json(); } catch { addMessage('system', 'Error: Invalid response from server.'); return; }
 
         if (model.type === 'image' && data.image) {
-          addMessage('assistant', '<strong>' + model.name + ':</strong><br><img src="' + data.image + '" alt="Generated image" style="max-width:100%;border-radius:10px;margin-bottom:8px" /><br><a href="' + data.image + '" download="faceless-ai-' + Date.now() + '.png" class="download-btn">Download Image</a>');
+          const ts = Date.now();
+          addMessage('assistant', '<strong>' + model.name + ':</strong><br><img src="' + data.image + '" alt="Generated image" class="gen-image" onclick="openLightbox(this.src)" style="max-width:100%;border-radius:10px;margin-bottom:8px;cursor:pointer" /><br><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="' + data.image + '" download="faceless-ai-' + ts + '.png" class="download-btn">Download Image</a><button class="save-media-btn" data-b64="' + data.image.split(',')[1] + '" data-name="faceless-ai-' + ts + '.png" data-type="image/png" onclick="saveGeneratedMedia(this)">Save to My Media</button></div>');
         } else if (model.type === 'video' && data.video) {
-          addMessage('assistant', '<strong>' + model.name + ':</strong><br><video src="' + data.video + '" controls style="max-width:100%;border-radius:10px;margin-bottom:8px"></video><br><a href="' + data.video + '" download="faceless-ai-' + Date.now() + '.mp4" class="download-btn">Download Video</a>');
+          const ts = Date.now();
+          addMessage('assistant', '<strong>' + model.name + ':</strong><br><video src="' + data.video + '" controls style="max-width:100%;border-radius:10px;margin-bottom:8px"></video><br><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="' + data.video + '" download="faceless-ai-' + ts + '.mp4" class="download-btn">Download Video</a><button class="save-media-btn" data-b64="' + data.video.split(',')[1] + '" data-name="faceless-ai-' + ts + '.mp4" data-type="video/mp4" onclick="saveGeneratedMedia(this)">Save to My Media</button></div>');
         } else if ((model.type === 'music' || model.type === 'audio') && data.audio) {
           const ext = data.audio.startsWith('data:audio/wav') ? '.wav' : data.audio.startsWith('data:audio/mpeg') ? '.mp3' : '.mp3';
-          addMessage('assistant', '<strong>' + model.name + ':</strong><br><audio src="' + data.audio + '" controls style="width:100%;margin-bottom:8px"></audio><br><a href="' + data.audio + '" download="faceless-ai-' + Date.now() + ext + '" class="download-btn">Download Audio</a>');
+          const ts = Date.now();
+          const fn = 'faceless-ai-' + ts + ext;
+          addMessage('assistant', '<strong>' + model.name + ':</strong><br><audio src="' + data.audio + '" controls style="width:100%;margin-bottom:8px"></audio><br><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="' + data.audio + '" download="' + fn + '" class="download-btn">Download Audio</a><button class="save-media-btn" data-b64="' + data.audio.split(',')[1] + '" data-name="' + fn + '" data-type="' + (ext === '.wav' ? 'audio/wav' : 'audio/mpeg') + '" onclick="saveGeneratedMedia(this)">Save to My Media</button></div>');
         } else {
           addMessage('assistant', data.reply || 'No response.', false, data.tool_log);
         }
@@ -1408,6 +1421,46 @@
     }
 
     function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // ── SAVE GENERATED MEDIA TO MY MEDIA ──
+    async function saveGeneratedMedia(btn) {
+      const b64 = btn.dataset.b64;
+      const name = btn.dataset.name;
+      const type = btn.dataset.type;
+      if (!b64 || !name) return;
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      try {
+        const body = { data: b64, filename: name, contentType: type };
+        if (currentUser && currentUser.username) body.username = currentUser.username;
+        const res = await fetch('/api/media/save', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+        });
+        if (!res.ok) { const err = await res.json().catch(() => {}); throw new Error((err && err.error) || 'Save failed'); }
+        const result = await res.json();
+        btn.textContent = 'Saved!';
+        btn.style.background = 'rgba(74,222,128,0.15)';
+        btn.style.color = '#4ade80';
+        btn.style.borderColor = 'rgba(74,222,128,0.3)';
+      } catch (e) {
+        btn.textContent = 'Save failed';
+        btn.style.background = 'rgba(248,113,113,0.15)';
+        btn.style.color = '#fb7185';
+        setTimeout(() => { btn.textContent = 'Save to My Media'; btn.disabled = false; btn.style.background = ''; btn.style.color = ''; btn.style.borderColor = ''; }, 3000);
+      }
+    }
+
+    // ── IMAGE LIGHTBOX ──
+    function openLightbox(src) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+      const img = document.createElement('img');
+      img.src = src;
+      img.style.cssText = 'max-width:94vw;max-height:94vh;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,0.6);';
+      overlay.onclick = () => overlay.remove();
+      overlay.appendChild(img);
+      document.body.appendChild(overlay);
+    }
 
     function showTyping() {
       const el = document.createElement('div');

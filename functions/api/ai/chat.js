@@ -1,3 +1,14 @@
+function cleanApiError(body, fallback) {
+  if (!body || typeof body !== 'string') return fallback || 'Unknown error'
+  const t = body.trim()
+  if (t.startsWith('<')) {
+    const m = t.match(/<title>([^<]+)<\/title>|<h[1-6][^>]*>([^<]+)<\/h[1-6]|(?:Error|error|Error [0-9]{3})[:\s]+([^<.\n]+)/)
+    return m ? (m[1] || m[2] || m[3] || '').trim().slice(0, 120) : 'Cloudflare service error (non-JSON response)'
+  }
+  try { const j = JSON.parse(t); return j.error || j.errors || j.message || j.result || fallback }
+  catch { return t.slice(0, 200) }
+}
+
 const SUPABASE_URL = 'https://ghufaozjwondqcrcucjs.supabase.co';
 
 async function sbFetch(path, options, key) {
@@ -277,7 +288,7 @@ export async function onRequest(context) {
       });
       if (!ollamaRes.ok) {
         const err = await ollamaRes.text();
-        return new Response(JSON.stringify({ error: 'Ollama error', detail: err.slice(0, 200) }), {
+        return new Response(JSON.stringify({ error: 'Ollama error', detail: cleanApiError(err) }), {
           status: 502, headers: { 'content-type': 'application/json' },
         });
       }
@@ -307,7 +318,7 @@ export async function onRequest(context) {
       });
       if (!comfyRes.ok) {
         const err = await comfyRes.text();
-        return new Response(JSON.stringify({ error: 'Local ComfyUI error', detail: err.slice(0, 200) }), {
+        return new Response(JSON.stringify({ error: 'Local ComfyUI error', detail: cleanApiError(err) }), {
           status: 502, headers: { 'content-type': 'application/json' },
         });
       }
@@ -352,7 +363,7 @@ export async function onRequest(context) {
       });
       if (!audioRes.ok) {
         const err = await audioRes.text();
-        return new Response(JSON.stringify({ error: 'TTS failed', status: audioRes.status, detail: err.slice(0, 200) }), {
+        return new Response(JSON.stringify({ error: 'TTS failed', status: audioRes.status, detail: cleanApiError(err) }), {
           status: 502, headers: { 'content-type': 'application/json' },
         });
       }
@@ -387,7 +398,7 @@ export async function onRequest(context) {
       clearTimeout(musicTimeout);
       if (!musicRes.ok) {
         const err = await musicRes.text();
-        return new Response(JSON.stringify({ error: 'Music generation failed', status: musicRes.status, detail: err.slice(0, 200) }), {
+        return new Response(JSON.stringify({ error: 'Music generation failed', status: musicRes.status, detail: cleanApiError(err) }), {
           status: 502, headers: { 'content-type': 'application/json' },
         });
       }
@@ -435,7 +446,7 @@ export async function onRequest(context) {
       clearTimeout(imgTimeout);
       if (!imgRes.ok) {
         const err = await imgRes.text();
-        return new Response(JSON.stringify({ error: 'Image edit failed', detail: err.slice(0, 200) }), {
+        return new Response(JSON.stringify({ error: 'Image edit failed', detail: cleanApiError(err) }), {
           status: 502, headers: { 'content-type': 'application/json' },
         });
       }
@@ -486,7 +497,7 @@ export async function onRequest(context) {
       clearTimeout(timeoutId);
       if (!imageRes.ok) {
         const err = await imageRes.text();
-        return new Response(JSON.stringify({ error: 'Image generation failed', status: imageRes.status, detail: err.slice(0, 200) }), {
+        return new Response(JSON.stringify({ error: 'Image generation failed', status: imageRes.status, detail: cleanApiError(err) }), {
           status: 502, headers: { 'content-type': 'application/json' },
         });
       }
@@ -543,7 +554,7 @@ export async function onRequest(context) {
       });
       if (!visionRes.ok) {
         const err = await visionRes.text();
-        return new Response(JSON.stringify({ error: 'Vision request failed', detail: err.slice(0, 200) }), {
+        return new Response(JSON.stringify({ error: 'Vision request failed', detail: cleanApiError(err) }), {
           status: 502, headers: { 'content-type': 'application/json' },
         });
       }
