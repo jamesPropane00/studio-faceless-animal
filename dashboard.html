@@ -451,7 +451,6 @@
       }
 
       .admin-user-row > div,
-      #legacy-admin-user-rows > div > div,
       #admin-user-rows > div > div {
         grid-template-columns: 1fr !important;
         gap: 0.45rem !important;
@@ -527,9 +526,10 @@
           <li><a href="news.html">News</a></li>
           <li><a href="store.html">Store</a></li>
           <li><a href="wallet.html">Vault</a></li>
-        <li><a href="apps.html">Apps</a></li>
-        <li><a href="ai.html">AI</a></li>
-        <li><a href="dashboard.html" aria-current="page">Dashboard</a></li>
+<li><a href="apps.html">Apps</a></li>
+          <li><a href="ai.html">AI</a></li>
+          <li><a href="canvas.html">Canvas</a></li>
+          <li><a href="dashboard.html" aria-current="page">Dashboard</a></li>
         <li><a href="login.html" class="nav-cta">Enter The System</a></li>
       </ul>
         <button class="nav-toggle tv-waffle-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
@@ -552,6 +552,7 @@
     <a href="wallet.html">Vault</a>
   <a href="apps.html">Apps</a>
   <a href="ai.html">AI</a>
+  <a href="canvas.html">Canvas</a>
   <a href="dashboard.html" aria-current="page">Dashboard</a>
   <a href="login.html" class="waffle-menu-cta tv-waffle-cta">Enter The System</a>
   </div>
@@ -732,51 +733,6 @@
             <div class="dash-status-row"><span class="dash-status-label">Momentum</span><span class="dash-status-val" id="dash-momentum">0</span></div>
             <div id="dash-page-link-row" style="display:none;margin-top:0.85rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.06);">
               <a id="dash-page-link" href="#" class="btn btn-ghost btn-sm" style="font-size:0.72rem;">View My Page →</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Feature access -->
-        <div class="dash-section" style="display:none;">
-          <p class="dash-section-title">What You Have Access To</p>
-          <div class="dash-card">
-            <div class="dash-features-grid">
-              <div class="dash-feat-row">
-                <span class="dash-feat-name">📄 Hosted creator page (/yourname)</span>
-                <span class="dash-feat-val dash-feat-val--on">Included</span>
-              </div>
-              <div class="dash-feat-row">
-                <span class="dash-feat-name">📻 Radio + live chat</span>
-                <span class="dash-feat-val dash-feat-val--on">Open</span>
-              </div>
-              <div class="dash-feat-row">
-                <span class="dash-feat-name">💬 Private messaging (text)</span>
-                <span class="dash-feat-val dash-feat-val--on">Included</span>
-              </div>
-              <div class="dash-feat-row">
-                <span class="dash-feat-name">📎 DM file attachments</span>
-                <span class="dash-feat-val" id="feat-attachments" style="color:var(--text-3);">Active Members Only</span>
-              </div>
-              <div class="dash-feat-row">
-                <span class="dash-feat-name">🌐 Network board listing</span>
-                <span class="dash-feat-val dash-feat-val--on">Included</span>
-              </div>
-              <div class="dash-feat-row">
-                <span class="dash-feat-name">🎮 Studio games</span>
-                <span class="dash-feat-val" id="feat-games" style="color:var(--text-3);">Active Members Only</span>
-              </div>
-              <div class="dash-feat-row">
-                <span class="dash-feat-name">📱 Studio apps &amp; tools</span>
-                <span class="dash-feat-val" id="feat-apps" style="color:var(--text-3);">Active Members Only</span>
-              </div>
-              <div class="dash-feat-row">
-                <span class="dash-feat-name">🔥 Member drops &amp; early access</span>
-                <span class="dash-feat-val" id="feat-drops" style="color:var(--text-3);">Active Members Only</span>
-              </div>
-              <div class="dash-feat-row">
-                <span class="dash-feat-name">⭐ Profile page upgrades</span>
-                <span class="dash-feat-val" id="feat-page" style="color:var(--text-3);">Starter / Pro / Premium</span>
-              </div>
             </div>
           </div>
         </div>
@@ -1675,15 +1631,7 @@
       </div><!-- end panel-user-default -->
 
       <!-- Role-based panel: Moderator view (hidden by default) -->
-      <div id="panel-moderator" style="display:none;">
-        <div class="dash-section dash-section-role-panel">
-          <p class="dash-section-title">Moderator Panel</p>
-          <div class="dash-card">
-            <p style="font-size:0.9rem;color:var(--text-2);line-height:1.6;margin-bottom:1rem;">Limited moderation tools — review and moderate community content.</p>
-            <p style="font-size:0.82rem;color:var(--text-3);">Moderation features coming soon.</p>
-          </div>
-        </div>
-      </div><!-- end panel-moderator -->
+      <div id="panel-moderator" style="display:none;"></div><!-- end panel-moderator -->
 
       <!-- Role-based panel: Super admin view (hidden by default) -->
       <div id="panel-super-admin" style="display:none;">
@@ -1711,44 +1659,10 @@
           </div>
         </div>
 
-        <!-- Moderation Queue (UI-only placeholder) -->
         <div class="dash-section">
           <p class="dash-section-title">Moderation Queue</p>
           <div class="dash-card" style="padding:0;overflow:hidden;">
-            <p style="font-size:0.78rem;color:var(--text-3);padding:0.9rem 1rem;border-bottom:1px solid rgba(255,255,255,0.06);">No reports yet</p>
-
-            <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,0.9fr) minmax(0,0.95fr) auto;gap:0.6rem;align-items:center;padding:0.75rem 1rem;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <div style="min-width:0;"><p style="font-size:0.82rem;color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Night Run (Demo)</p></div>
-              <div style="font-size:0.74rem;color:var(--text-2);">Spam</div>
-              <div style="font-size:0.74rem;color:var(--text-2);">@samplecreator</div>
-              <div style="display:flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
-                <button class="btn btn-ghost btn-sm" type="button">Approve</button>
-                <button class="btn btn-ghost btn-sm" type="button">Remove</button>
-                <button class="btn btn-ghost btn-sm" type="button">Restrict User</button>
-              </div>
-            </div>
-
-            <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,0.9fr) minmax(0,0.95fr) auto;gap:0.6rem;align-items:center;padding:0.75rem 1rem;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <div style="min-width:0;"><p style="font-size:0.82rem;color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Street Echoes</p></div>
-              <div style="font-size:0.74rem;color:var(--text-2);">Explicit Content</div>
-              <div style="font-size:0.74rem;color:var(--text-2);">@koldvisual</div>
-              <div style="display:flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
-                <button class="btn btn-ghost btn-sm" type="button">Approve</button>
-                <button class="btn btn-ghost btn-sm" type="button">Remove</button>
-                <button class="btn btn-ghost btn-sm" type="button">Restrict User</button>
-              </div>
-            </div>
-
-            <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,0.9fr) minmax(0,0.95fr) auto;gap:0.6rem;align-items:center;padding:0.75rem 1rem;">
-              <div style="min-width:0;"><p style="font-size:0.82rem;color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">After Hours Loop</p></div>
-              <div style="font-size:0.74rem;color:var(--text-2);">Stolen Content</div>
-              <div style="font-size:0.74rem;color:var(--text-2);">@djfacelessanimal</div>
-              <div style="display:flex;gap:0.35rem;flex-wrap:wrap;justify-content:flex-end;">
-                <button class="btn btn-ghost btn-sm" type="button">Approve</button>
-                <button class="btn btn-ghost btn-sm" type="button">Remove</button>
-                <button class="btn btn-ghost btn-sm" type="button">Restrict User</button>
-              </div>
-            </div>
+            <p style="font-size:0.78rem;color:var(--text-3);padding:0.9rem 1rem;">No reports yet</p>
           </div>
         </div>
       </div><!-- end panel-super-admin -->
@@ -2560,7 +2474,6 @@
 
       vaultTickInFlight = true
       try {
-        // Force API_BASE to deployed endpoint (never localhost)
         const API_BASE = ''
         const res = await withTimeout(fetch(API_BASE + '/api/member/vault-flow-tick', {
           method: 'POST',
@@ -4366,7 +4279,7 @@
       ])
 
       if (!supportedActions.has(action)) {
-        console.log('ACTION:', actionType, targetUser)
+        // console.log('ACTION:', actionType, targetUser)
         notify('This action is not wired yet.')
         return
       }
@@ -4519,7 +4432,7 @@
             return
           }
 
-          console.log('soft_delete success:', targetUsername)
+          // console.log('soft_delete success:', targetUsername)
           await loadAllUsers()
           notify('User soft deleted.')
           return

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Canvas — Visual editor for creating graphics, flyers, social posts, and more. AI image generation built in." />
+  <title>Canvas — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0b10; --surface: #12141e; --border: rgba(167,139,250,0.15);
+      --text: #f3f3fa; --dim: #9da0bc; --bright: #a78bfa; --purple: #7c3aed;
+      --gold: #f5c451; --cyan: #22d3ee; --radius: 10px;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    a { color: var(--bright); text-decoration: none; }
+
+    .app-bar {
+      display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem;
+      background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .app-bar .brand { font-size: 0.85rem; font-weight: 800; color: #fff; margin-right: 1rem; }
+    .app-bar .brand span { color: var(--gold); }
+    .app-bar .sep { width: 1px; height: 28px; background: var(--border); }
+    .tool-group { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+    .tool-btn {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.4rem 0.65rem; border-radius: 6px; border: 1px solid var(--border);
+      background: transparent; color: var(--dim); font-size: 0.72rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: 0.12s; white-space: nowrap;
+    }
+    .tool-btn:hover { background: rgba(167,139,250,0.08); color: var(--text); }
+    .tool-btn.primary { background: linear-gradient(135deg, var(--purple), var(--bright)); color: #fff; border-color: transparent; }
+    .tool-btn.primary:hover { opacity: 0.88; }
+    .tool-btn.active { background: rgba(167,139,250,0.12); color: var(--bright); border-color: var(--bright); }
+    .tool-input {
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 0.3rem 0.5rem; font-size: 0.72rem; font-family: inherit;
+      width: 60px; outline: none;
+    }
+    .tool-input:focus { border-color: var(--bright); }
+    .tool-input[type="color"] { width: 32px; height: 32px; padding: 2px; cursor: pointer; }
+    .tool-select {
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 0.3rem 0.5rem; font-size: 0.72rem; font-family: inherit; outline: none; cursor: pointer;
+    }
+
+    .main-area { display: flex; flex: 1; overflow: hidden; }
+    .sidebar {
+      width: 240px; background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
+    }
+    .sidebar-section { padding: 0.75rem; border-bottom: 1px solid var(--border); }
+    .sidebar-section h3 { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.5rem; }
+    .shape-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+    .shape-item {
+      display: flex; align-items: center; justify-content: center;
+      padding: 0.6rem; border-radius: 6px; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02); cursor: pointer; font-size: 0.7rem; color: var(--dim); transition: 0.12s;
+    }
+    .shape-item:hover { background: rgba(167,139,250,0.08); color: var(--text); border-color: var(--bright); }
+    .layer-item {
+      display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.5rem;
+      border-radius: 6px; cursor: pointer; font-size: 0.72rem; color: var(--dim); margin-bottom: 0.2rem;
+    }
+    .layer-item:hover { background: rgba(255,255,255,0.04); }
+    .layer-item.active { background: rgba(167,139,250,0.1); color: var(--bright); }
+    .layer-item .thumb { width: 24px; height: 24px; border-radius: 4px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; overflow: hidden; flex-shrink: 0; }
+    .layer-item .thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    .canvas-wrap {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 50% 50%, rgba(167,139,250,0.03), transparent), var(--bg);
+      position: relative; overflow: auto; padding: 2rem;
+    }
+    .canvas-container { border-radius: 8px; box-shadow: 0 12px 48px rgba(0,0,0,0.4); }
+
+    .status-bar {
+      display: flex; align-items: center; gap: 1rem; padding: 0.35rem 1rem;
+      background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0;
+      font-size: 0.68rem; color: var(--dim);
+    }
+
+    /* AI Generate Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 1.5rem; width: min(440px, calc(100vw - 2rem)); box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    }
+    .modal h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .modal p { font-size: 0.82rem; color: var(--dim); margin-bottom: 1rem; line-height: 1.6; }
+    .modal textarea {
+      width: 100%; min-height: 80px; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); padding: 0.6rem; font-size: 0.82rem; font-family: inherit;
+      resize: vertical; outline: none; margin-bottom: 0.75rem;
+    }
+    .modal textarea:focus { border-color: var(--bright); }
+    .modal .actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+    .modal .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.15); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .modal .model-select { width: 100%; margin-bottom: 0.75rem; }
+    .gen-preview { max-width: 100%; max-height: 200px; border-radius: 8px; margin-bottom: 0.75rem; display: none; }
+    .gen-preview.show { display: block; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .canvas-wrap { padding: 1rem; }
+      .app-bar { flex-wrap: wrap; }
+      .tool-group { gap: 0.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-bar">
+    <a href="dashboard.html" class="brand">Faceless <span>Animal</span></a>
+    <span class="sep"></span>
+    <div class="tool-group">
+      <button class="tool-btn" onclick="addText()" title="Add text">T Text</button>
+      <button class="tool-btn" onclick="addImage()" title="Upload image">🖼 Image</button>
+      <button class="tool-btn primary" onclick="openAIGen()" title="Generate with AI">✨ AI Generate</button>
+    </div>
+    <span class="sep"></span>
+    <div class="tool-group">
+      <label style="font-size:0.7rem;color:var(--dim);">Fill:</label>
+      <input type="color" class="tool-input" id="fillColor" value="#7c3aed" onchange="applyColor()" title="Fill color" />
+      <label style="font-size:0.7rem;color:var(--dim);">Stroke:</label>
+      <input type="color" class="tool-input" id="strokeColor" value="#a78bfa" onchange="applyColor()" title="Stroke color" />
+      <input type="number" class="tool-input" id="strokeWidth" value="0" min="0" max="20" style="width:40px;" onchange="applyColor()" title="Stroke width" />
+    </div>
+    <span class="sep"></span>
+    <div class="tool-group">
+      <button class="tool-btn" onclick="deleteSelected()" title="Delete selected">🗑 Delete</button>
+      <button class="tool-btn" onclick="duplicateSelected()" title="Duplicate">📋 Duplicate</button>
+      <button class="tool-btn" onclick="exportCanvas()" title="Export as PNG">⬇ Export</button>
+      <button class="tool-btn" onclick="saveCanvas()" title="Save to My Media">💾 Save</button>
+      <button class="tool-btn" onclick="clearCanvas()" title="Clear canvas">✕ Clear</button>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <h3>Layers</h3>
+        <div id="layerList"></div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Shapes</h3>
+        <div class="shape-grid">
+          <div class="shape-item" onclick="addRect()">▬ Rect</div>
+          <div class="shape-item" onclick="addCircle()">● Circle</div>
+          <div class="shape-item" onclick="addTriangle()">▲ Triangle</div>
+          <div class="shape-item" onclick="addLine()">╱ Line</div>
+          <div class="shape-item" onclick="addArrow()">→ Arrow</div>
+          <div class="shape-item" onclick="addStar()">★ Star</div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Canvas</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;">
+          <label style="font-size:0.68rem;color:var(--dim);">Width:</label>
+          <input type="number" class="tool-input" id="canvasW" value="800" min="200" max="4000" style="width:100%;" onchange="resizeCanvas()" />
+          <label style="font-size:0.68rem;color:var(--dim);">Height:</label>
+          <input type="number" class="tool-input" id="canvasH" value="600" min="200" max="4000" style="width:100%;" onchange="resizeCanvas()" />
+        </div>
+        <div style="margin-top:0.5rem;display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;">
+          <button class="tool-btn" onclick="setCanvasSize(1080,1080)">1:1</button>
+          <button class="tool-btn" onclick="setCanvasSize(1080,1920)">9:16</button>
+          <button class="tool-btn" onclick="setCanvasSize(1920,1080)">16:9</button>
+          <button class="tool-btn" onclick="setCanvasSize(1200,630)">OG</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="canvas" width="800" height="600"></canvas>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span id="statusText">Ready</span>
+    <span style="margin-left:auto;" id="objCount">0 objects</span>
+    <span id="canvasSize">800 × 600</span>
+  </div>
+
+  <!-- AI Generate Modal -->
+  <div class="modal-overlay" id="aiModal">
+    <div class="modal">
+      <h2>✨ AI Generate Image</h2>
+      <p>Describe what you want to create. The image will be placed directly on your canvas.</p>
+      <textarea id="aiPrompt" placeholder="e.g. A futuristic cityscape at sunset, neon lights, cyberpunk style..."></textarea>
+      <select class="tool-select model-select" id="aiModelSelect"></select>
+      <button class="tool-btn primary" id="aiGenBtn" onclick="generateWithAI()" style="width:100%;justify-content:center;padding:0.6rem;">
+        <span id="aiGenText">Generate & Place on Canvas</span>
+      </button>
+      <img class="gen-preview" id="aiPreview" />
+      <div class="actions" style="margin-top:0.75rem;">
+        <button class="tool-btn" onclick="closeAIGen()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── INIT CANVAS ──
+    const canvasEl = document.getElementById('canvas');
+    const canvas = new fabric.Canvas('canvas', {
+      backgroundColor: '#1a1c26',
+      selection: true,
+      preserveObjectStacking: true,
+    });
+
+    let availableModels = [];
+    let generatedImageData = null;
+
+    // ── LOAD AI MODELS ──
+    async function loadModels() {
+      try {
+        const res = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: '', list_conversations: true, session_id: 'canvas' }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.models) {
+          availableModels = data.models;
+          const sel = document.getElementById('aiModelSelect');
+          const imgModels = availableModels.filter(m => m.type === 'image' || m.type === 'img2img');
+          if (imgModels.length === 0) {
+            sel.innerHTML = '<option value="">No image models available</option>';
+            return;
+          }
+          const groups = {};
+          imgModels.forEach((m, i) => {
+            const g = m.group || 'Other';
+            if (!groups[g]) groups[g] = [];
+            groups[g].push(i);
+          });
+          sel.innerHTML = '';
+          for (const [gName, indices] of Object.entries(groups)) {
+            const grp = document.createElement('optgroup');
+            grp.label = gName;
+            indices.forEach(i => {
+              const m = imgModels[i];
+              const opt = document.createElement('option');
+              opt.value = i;
+              opt.textContent = m.name;
+              grp.appendChild(opt);
+            });
+            sel.appendChild(grp);
+          }
+        }
+      } catch {}
+    }
+    loadModels();
+
+    // ── OBJECT EVENTS ──
+    canvas.on('selection:created', updateUI);
+    canvas.on('selection:updated', updateUI);
+    canvas.on('selection:cleared', updateUI);
+    canvas.on('object:modified', updateUI);
+    canvas.on('object:added', updateUI);
+    canvas.on('object:removed', updateUI);
+
+    function updateUI() {
+      const active = canvas.getActiveObject();
+      document.getElementById('objCount').textContent = canvas.getObjects().length + ' objects';
+      document.getElementById('canvasSize').textContent = canvas.width + ' × ' + canvas.height;
+      if (active) {
+        document.getElementById('statusText').textContent = 'Selected: ' + (active.type || 'object');
+      } else {
+        document.getElementById('statusText').textContent = 'Ready';
+      }
+      renderLayers();
+    }
+
+    // ── LAYERS ──
+    function renderLayers() {
+      const list = document.getElementById('layerList');
+      const objects = canvas.getObjects();
+      const active = canvas.getActiveObject();
+      list.innerHTML = '';
+      for (let i = objects.length - 1; i >= 0; i--) {
+        const obj = objects[i];
+        const item = document.createElement('div');
+        item.className = 'layer-item' + (active === obj ? ' active' : '');
+        const thumb = document.createElement('div');
+        thumb.className = 'thumb';
+        if (obj.type === 'image') {
+          const img = document.createElement('img');
+          img.src = obj._originalElement ? obj._originalElement.src : '';
+          thumb.appendChild(img);
+        } else {
+          thumb.textContent = obj.type === 'i-text' ? 'T' : obj.type === 'rect' ? '▬' : obj.type === 'circle' ? '●' : obj.type === 'triangle' ? '▲' : obj.type === 'star' ? '★' : obj.type === 'line' ? '╱' : '?';
+        }
+        const label = document.createElement('span');
+        label.textContent = (obj.type === 'i-text' ? (obj.text || 'Text').slice(0, 16) : obj.type) + (obj === active ? '' : '');
+        item.appendChild(thumb);
+        item.appendChild(label);
+        item.onclick = () => { canvas.setActiveObject(obj); canvas.renderAll(); };
+        list.appendChild(item);
+      }
+    }
+
+    // ── ADD TEXT ──
+    function addText() {
+      const text = new fabric.IText('Double-click to edit', {
+        left: 100 + Math.random() * 100, top: 100 + Math.random() * 100,
+        fontSize: 32, fill: '#ffffff', fontFamily: 'Inter, sans-serif',
+        fontWeight: 700, padding: 8,
+      });
+      canvas.add(text);
+      canvas.setActiveObject(text);
+      canvas.renderAll();
+    }
+
+    // ── ADD SHAPES ──
+    function addRect() {
+      const rect = new fabric.Rect({
+        left: 100, top: 100, width: 120, height: 80,
+        fill: document.getElementById('fillColor').value || '#7c3aed',
+        stroke: document.getElementById('strokeColor').value || '#a78bfa',
+        strokeWidth: parseInt(document.getElementById('strokeWidth').value) || 0,
+        rx: 6, ry: 6,
+      });
+      canvas.add(rect);
+      canvas.setActiveObject(rect);
+      canvas.renderAll();
+    }
+
+    function addCircle() {
+      const circle = new fabric.Circle({
+        left: 150, top: 150, radius: 50,
+        fill: document.getElementById('fillColor').value || '#7c3aed',
+        stroke: document.getElementById('strokeColor').value || '#a78bfa',
+        strokeWidth: parseInt(document.getElementById('strokeWidth').value) || 0,
+      });
+      canvas.add(circle);
+      canvas.setActiveObject(circle);
+      canvas.renderAll();
+    }
+
+    function addTriangle() {
+      const triangle = new fabric.Triangle({
+        left: 200, top: 200, width: 100, height: 100,
+        fill: document.getElementById('fillColor').value || '#7c3aed',
+        stroke: document.getElementById('strokeColor').value || '#a78bfa',
+        strokeWidth: parseInt(document.getElementById('strokeWidth').value) || 0,
+      });
+      canvas.add(triangle);
+      canvas.setActiveObject(triangle);
+      canvas.renderAll();
+    }
+
+    function addLine() {
+      const line = new fabric.Line([50, 0, 150, 80], {
+        left: 100, top: 150,
+        stroke: document.getElementById('strokeColor').value || '#a78bfa',
+        strokeWidth: 3,
+      });
+      canvas.add(line);
+      canvas.setActiveObject(line);
+      canvas.renderAll();
+    }
+
+    function addArrow() {
+      const line = new fabric.Line([50, 50, 130, 50], {
+        left: 100, top: 200, stroke: '#a78bfa', strokeWidth: 3,
+      });
+      const head = new fabric.Triangle({
+        left: 215, top: 185, width: 16, height: 16, angle: 90,
+        fill: '#a78bfa', selectable: false, evented: false,
+      });
+      const group = new fabric.Group([line, head], { left: 100, top: 200 });
+      canvas.add(group);
+      canvas.setActiveObject(group);
+      canvas.renderAll();
+    }
+
+    function addStar() {
+      const star = new fabric.Polygon([
+        { x: 0, y: -50 }, { x: 11, y: -16 }, { x: 48, y: -16 },
+        { x: 18, y: 8 }, { x: 30, y: 44 }, { x: 0, y: 22 },
+        { x: -30, y: 44 }, { x: -18, y: 8 }, { x: -48, y: -16 },
+        { x: -11, y: -16 },
+      ], {
+        left: 200, top: 150, fill: '#f5c451', stroke: '#d4a830', strokeWidth: 2,
+      });
+      canvas.add(star);
+      canvas.setActiveObject(star);
+      canvas.renderAll();
+    }
+
+    // ── ADD IMAGE FROM FILE ──
+    function addImage() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          fabric.Image.fromURL(ev.target.result, (img) => {
+            const maxW = canvas.width * 0.6;
+            const maxH = canvas.height * 0.6;
+            const scale = Math.min(1, maxW / img.width, maxH / img.height);
+            img.set({ scaleX: scale, scaleY: scale, left: 50 + Math.random() * 100, top: 50 + Math.random() * 100 });
+            canvas.add(img);
+            canvas.setActiveObject(img);
+            canvas.renderAll();
+          }, { crossOrigin: 'anonymous' });
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    }
+
+    // ── AI GENERATE ──
+    function openAIGen() {
+      document.getElementById('aiModal').classList.add('open');
+      document.getElementById('aiPrompt').focus();
+    }
+
+    function closeAIGen() {
+      document.getElementById('aiModal').classList.remove('open');
+    }
+
+    async function generateWithAI() {
+      const prompt = document.getElementById('aiPrompt').value.trim();
+      if (!prompt) return;
+      const modelIdx = parseInt(document.getElementById('aiModelSelect').value);
+      if (isNaN(modelIdx) || !availableModels[modelIdx]) return;
+
+      const btn = document.getElementById('aiGenBtn');
+      const text = document.getElementById('aiGenText');
+      btn.disabled = true;
+      text.innerHTML = '<span class="spinner"></span> Generating...';
+
+      try {
+        const res = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: prompt, model: modelIdx, session_id: 'canvas-' + Date.now() }),
+        });
+        if (!res.ok) { const err = await res.json().catch(() => {}); alert('Generation failed: ' + ((err && err.error) || res.status)); return; }
+        const data = await res.json();
+        if (data.image) {
+          const preview = document.getElementById('aiPreview');
+          preview.src = data.image;
+          preview.className = 'gen-preview show';
+          generatedImageData = data.image;
+        } else {
+          alert('No image returned. Try a different prompt or model.');
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        text.textContent = 'Generate & Place on Canvas';
+      }
+    }
+
+    // Place generated image on canvas
+    document.getElementById('aiPreview').onclick = function() {
+      if (!generatedImageData) return;
+      fabric.Image.fromURL(generatedImageData, (img) => {
+        const maxW = canvas.width * 0.8;
+        const maxH = canvas.height * 0.8;
+        const scale = Math.min(1, maxW / img.width, maxH / img.height);
+        img.set({ scaleX: scale, scaleY: scale, left: 50, top: 50 });
+        canvas.add(img);
+        canvas.setActiveObject(img);
+        canvas.renderAll();
+        closeAIGen();
+        generatedImageData = null;
+        document.getElementById('aiPreview').className = 'gen-preview';
+        document.getElementById('aiPreview').src = '';
+        document.getElementById('aiPrompt').value = '';
+      }, { crossOrigin: 'anonymous' });
+    };
+
+    // ── COLOR / STROKE ──
+    function applyColor() {
+      const active = canvas.getActiveObject();
+      if (!active) return;
+      const fill = document.getElementById('fillColor').value;
+      const stroke = document.getElementById('strokeColor').value;
+      const sw = parseInt(document.getElementById('strokeWidth').value) || 0;
+      if (active.type === 'i-text' || active.type === 'textbox') {
+        active.set('fill', fill);
+      } else {
+        if (active.type === 'activeSelection') {
+          active.forEachObject(o => { o.set('fill', fill); if (sw > 0) { o.set('stroke', stroke); o.set('strokeWidth', sw); } });
+        } else {
+          active.set('fill', fill);
+          if (sw > 0) { active.set('stroke', stroke); active.set('strokeWidth', sw); }
+        }
+      }
+      canvas.renderAll();
+    }
+
+    // ── DELETE, DUPLICATE ──
+    function deleteSelected() {
+      const active = canvas.getActiveObject();
+      if (!active) return;
+      if (active.type === 'activeSelection') {
+        active.forEachObject(o => canvas.remove(o));
+      } else {
+        canvas.remove(active);
+      }
+      canvas.discardActiveObject();
+      canvas.renderAll();
+    }
+
+    function duplicateSelected() {
+      const active = canvas.getActiveObject();
+      if (!active) return;
+      active.clone((cloned) => {
+        cloned.set({ left: (cloned.left || 0) + 30, top: (cloned.top || 0) + 30 });
+        canvas.add(cloned);
+        canvas.setActiveObject(cloned);
+        canvas.renderAll();
+      });
+    }
+
+    // ── CANVAS SIZE ──
+    function resizeCanvas() {
+      const w = parseInt(document.getElementById('canvasW').value) || 800;
+      const h = parseInt(document.getElementById('canvasH').value) || 600;
+      canvas.setWidth(w);
+      canvas.setHeight(h);
+      canvas.renderAll();
+      updateUI();
+    }
+
+    function setCanvasSize(w, h) {
+      document.getElementById('canvasW').value = w;
+      document.getElementById('canvasH').value = h;
+      resizeCanvas();
+    }
+
+    // ── EXPORT ──
+    function exportCanvas() {
+      const link = document.createElement('a');
+      link.download = 'canvas-' + Date.now() + '.png';
+      link.href = canvas.toDataURL({ format: 'png', multiplier: 2 });
+      link.click();
+    }
+
+    // ── SAVE TO MY MEDIA ──
+    async function saveCanvas() {
+      const btn = event.target;
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      try {
+        const dataUrl = canvas.toDataURL({ format: 'png', multiplier: 2 });
+        const b64 = dataUrl.split(',')[1];
+        const body = { data: b64, filename: 'canvas-' + Date.now() + '.png', contentType: 'image/png' };
+        const session = JSON.parse(localStorage.getItem('fas_user') || 'null');
+        if (session && session.username) body.username = session.username;
+        const res = await fetch('/api/media/save', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+        });
+        if (!res.ok) { const err = await res.json().catch(() => {}); throw new Error((err && err.error) || 'Save failed'); }
+        btn.textContent = 'Saved!';
+        setTimeout(() => { btn.textContent = '💾 Save'; btn.disabled = false; }, 2000);
+      } catch (e) {
+        btn.textContent = 'Failed';
+        setTimeout(() => { btn.textContent = '💾 Save'; btn.disabled = false; }, 3000);
+      }
+    }
+
+    // ── CLEAR ──
+    function clearCanvas() {
+      if (!confirm('Clear all objects from canvas?')) return;
+      canvas.clear();
+      canvas.backgroundColor = '#1a1c26';
+      canvas.renderAll();
+    }
+
+    // ── KEYBOARD SHORTCUTS ──
+    document.addEventListener('keydown', (e) => {
+      if (document.getElementById('aiModal').classList.contains('open')) {
+        if (e.key === 'Escape') closeAIGen();
+        if (e.key === 'Enter' && e.ctrlKey) generateWithAI();
+        return;
+      }
+      if (e.key === 'Delete' || e.key === 'Backspace') { if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') deleteSelected(); }
+      if (e.key === 'Escape') canvas.discardActiveObject();
+      if (e.key === 'd' && e.ctrlKey) { e.preventDefault(); duplicateSelected(); }
+    });
+
+    // ── KEYBOARD FOR TEXT OBJECTS ──
+    canvas.on('text:editing:entered', () => {
+      document.removeEventListener('keydown', handleCanvasKeys);
+    });
+    canvas.on('text:editing:exited', () => {
+      document.addEventListener('keydown', handleCanvasKeys);
+    });
+
+    updateUI();
+  </script>
+</body>
+</html>

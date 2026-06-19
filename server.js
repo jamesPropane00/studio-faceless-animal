@@ -120,8 +120,8 @@ const MIME_TYPES = {
 const server = http.createServer(handleRequest)
 
 function handleRequest(req, res) {
-  // DEBUG: Log all incoming requests
-  console.log(`[DEBUG] ${req.method} ${req.url}`)
+  // Log all incoming requests
+  // console.log(`[DEBUG] ${req.method} ${req.url}`)
 
   // Strip query strings and decode URI
   let urlPath
@@ -438,7 +438,6 @@ async function handleMediaDownload(req, res) {
       return
     }
 
-    // ...existing member API routes...
     if (urlPath === '/api/member/ensure-signal-code') {
       if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
       handleEnsureMemberSignalCode(req, res).catch(err => {
@@ -447,8 +446,57 @@ async function handleMediaDownload(req, res) {
       })
       return
     }
+
+    // --- Vault: spend credits ---
+    if (urlPath === '/api/member/vault-spend') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
+      handleMemberVaultSpend(req, res).catch(err => {
+        console.error('[FAS:vault:spend] Unhandled error:', err && err.message)
+        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
+      })
+      return
+    }
+
+    // --- Vault: activity log ---
+    if (urlPath === '/api/member/vault-activity') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
+      handleMemberVaultActivity(req, res).catch(err => {
+        console.error('[FAS:vault:activity] Unhandled error:', err && err.message)
+        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
+      })
+      return
+    }
+
+    // --- Vault: transfer credits ---
+    if (urlPath === '/api/member/vault-transfer') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
+      handleMemberVaultTransfer(req, res).catch(err => {
+        console.error('[FAS:vault:transfer] Unhandled error:', err && err.message)
+        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
+      })
+      return
+    }
+
+    // --- Vault: flow tick (refresh balance) ---
+    if (urlPath === '/api/member/vault-flow-tick') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
+      handleMemberVaultFlowTick(req, res).catch(err => {
+        console.error('[FAS:vault:flow-tick] Unhandled error:', err && err.message)
+        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
+      })
+      return
+    }
+
+    // --- Backfill Signal Codes (super_admin only) ---
+    if (urlPath === '/api/member/backfill-signal-codes') {
+      if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.' }); return }
+      handleBackfillMemberSignalCodes(req, res).catch(err => {
+        console.error('[FAS:member:backfill] Unhandled error:', err && err.message)
+        if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.' })
+      })
+      return
+    }
   }
-    // ...existing code continues...
 
   // ΓöÇΓöÇ CONTACT FORM API ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
   if (urlPath === '/api/admin/users/set-role') {
@@ -460,6 +508,20 @@ async function handleMediaDownload(req, res) {
 
     handleAdminSetRole(req, res).catch(err => {
       console.error('[FAS:admin:set-role] Unhandled error:', err.message)
+      if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.', code: 'INTERNAL_ERROR' })
+    })
+    return
+  }
+
+  if (urlPath === '/api/admin/users/soft-delete') {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    if (req.method === 'OPTIONS') { send(res, 204, 'text/plain', ''); return }
+    if (req.method !== 'POST') { sendJSON(res, 405, { ok: false, error: 'Method not allowed.', code: 'METHOD_NOT_ALLOWED' }); return }
+
+    handleAdminSoftDelete(req, res).catch(err => {
+      console.error('[FAS:admin:soft-delete] Unhandled error:', err.message)
       if (!res.headersSent) sendJSON(res, 500, { ok: false, error: 'Internal server error.', code: 'INTERNAL_ERROR' })
     })
     return
@@ -4367,6 +4429,102 @@ function killPortHolder(port) {
     console.warn('[FAS] killPortHolder error:', e.message)
     return null
   }
+}
+
+async function handleSaveBuilderPage(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { ok: false, error: 'Server credentials not configured.' })
+  }
+
+  let rawBody
+  try { rawBody = await readBody(req, 65536) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const username = String(body && body.username || '').toLowerCase().trim()
+  const ph = String(body && body.ph || '').trim()
+  if (!username || !ph) return sendJSON(res, 400, { ok: false, error: 'Missing username/ph.' })
+
+  const identityOk = await verifyIdentity(creds.host, creds.key, username, ph)
+  if (!identityOk) return sendJSON(res, 401, { ok: false, error: 'Authentication failed.' })
+
+  const pageSlug = String(body && body.page_slug || '').toLowerCase().trim()
+  const pageData = body && body.page_data || null
+  if (!pageSlug || !pageData) return sendJSON(res, 400, { ok: false, error: 'Missing page_slug or page_data.' })
+
+  const member = await getMemberByUsername(creds.host, creds.key, username)
+  if (!member) return sendJSON(res, 404, { ok: false, error: 'Member not found.' })
+
+  const upsertPayload = JSON.stringify({
+    username,
+    page_slug: pageSlug,
+    page_data: pageData,
+    updated_at: new Date().toISOString(),
+  })
+
+  const pageRes = await sbRequest(
+    creds.host,
+    creds.key,
+    'POST',
+    '/rest/v1/builder_pages?on_conflict=username,page_slug',
+    upsertPayload
+  )
+
+  if (pageRes.status < 200 || pageRes.status >= 300) {
+    const errMsg = String(pageRes.body || '')
+    return sendJSON(res, 500, { ok: false, error: errMsg.includes('{') ? errMsg : 'Could not save builder page.' })
+  }
+
+  return sendJSON(res, 200, { ok: true })
+}
+
+async function handleAdminSoftDelete(req, res) {
+  let creds
+  try { creds = getServiceCreds() } catch {
+    return sendJSON(res, 503, { ok: false, error: 'Server credentials not configured.' })
+  }
+
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const actorUsername = String(body && body.actor_username || '').toLowerCase().trim()
+  const targetUserId = String(body && body.target_user_id || '').trim()
+  const ph = String(body && body.ph || '').trim()
+  if (!actorUsername || !targetUserId || !ph) return sendJSON(res, 400, { ok: false, error: 'Missing actor_username, target_user_id, or ph.' })
+
+  const identityOk = await verifyIdentity(creds.host, creds.key, actorUsername, ph)
+  if (!identityOk) return sendJSON(res, 401, { ok: false, error: 'Authentication failed.' })
+
+  const actorRow = await getMemberByUsername(creds.host, creds.key, actorUsername)
+  const role = String((actorRow && actorRow.role) || '').toLowerCase()
+  if (role !== 'super_admin' && role !== 'admin') {
+    return sendJSON(res, 403, { ok: false, error: 'Only super_admin or admin can soft delete users.' })
+  }
+
+  const softDeleteRes = await sbRequest(
+    creds.host,
+    creds.key,
+    'PATCH',
+    `/rest/v1/member_accounts?id=eq.${encodeURIComponent(targetUserId)}`,
+    JSON.stringify({ soft_deleted: true, deleted_at: new Date().toISOString() })
+  )
+
+  if (softDeleteRes.status < 200 || softDeleteRes.status >= 300) {
+    return sendJSON(res, 500, { ok: false, error: 'Failed to soft delete user.' })
+  }
+
+  return sendJSON(res, 200, { ok: true })
 }
 
 
