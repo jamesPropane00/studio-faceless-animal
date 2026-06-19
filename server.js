@@ -1605,6 +1605,52 @@ const PRO_AI_MODELS = [
   { id: 'opencode-go/minimax-m3',        name: 'MiniMax M3',            type: 'text', group: '≡ƒîƒ Pro Models', provider: 'opencode-go' },
 ];
 
+// ── IMAGE GENERATION MODELS (Cloudflare Workers AI) ──
+const IMAGE_MODELS = [
+  { id: '@cf/black-forest-labs/flux-1-schnell', name: 'Flux 1 Schnell', type: 'image', group: '📷 Photo Realistic' },
+  { id: '@cf/black-forest-labs/flux-2-dev', name: 'Flux 2 Dev', type: 'image', group: '📷 Photo Realistic' },
+  { id: '@cf/black-forest-labs/flux-2-klein-9b', name: 'Flux 2 Klein 9B', type: 'image', group: '📷 Photo Realistic' },
+  { id: '@cf/black-forest-labs/flux-2-klein-4b', name: 'Flux 2 Klein 4B', type: 'image', group: '⚡ Fast' },
+  { id: '@cf/bytedance/stable-diffusion-xl-lightning', name: 'SDXL Lightning', type: 'image', group: '📷 Photo Realistic' },
+  { id: '@cf/stabilityai/stable-diffusion-xl-base-1.0', name: 'SDXL Base', type: 'image', group: '📷 Photo Realistic' },
+  { id: '@cf/lykon/dreamshaper-8-lcm', name: 'Dreamshaper LCM', type: 'image', group: '🎨 Anime & Illustration' },
+  { id: '@cf/leonardo/phoenix-1.0', name: 'Leonardo Phoenix', type: 'image', group: '✨ Artistic' },
+  { id: '@cf/leonardo/lucid-origin', name: 'Leonardo Lucid', type: 'image', group: '✨ Artistic' },
+  { id: '@cf/meta/llama-3.2-11b-vision-instruct', name: 'Vision (Llama 3.2)', type: 'vision', group: '👁️ Vision' },
+  { id: '@cf/llava-hf/llava-1.5-7b-hf', name: 'Vision (LLaVA 1.5)', type: 'vision', group: '👁️ Vision' },
+  { id: '@cf/runwayml/stable-diffusion-v1-5-img2img', name: 'SD 1.5 Img2Img', type: 'img2img', group: '🖌️ Photo Editor' },
+  { id: '@cf/runwayml/stable-diffusion-v1-5-inpainting', name: 'SD 1.5 Inpainting', type: 'img2img', group: '🖌️ Photo Editor' },
+];
+
+// ── TEXT-TO-SPEECH MODELS (Cloudflare Workers AI) ──
+const AUDIO_MODELS = [
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Luna (fem)', type: 'audio', group: '🔊 TTS Voices', voice: 'luna' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Apollo (male)', type: 'audio', group: '🔊 TTS Voices', voice: 'apollo' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Athena (fem)', type: 'audio', group: '🔊 TTS Voices', voice: 'athena' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Orion (male)', type: 'audio', group: '🔊 TTS Voices', voice: 'orion' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Aurora (fem)', type: 'audio', group: '🔊 TTS Voices', voice: 'aurora' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Atlas (male)', type: 'audio', group: '🔊 TTS Voices', voice: 'atlas' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Nova (fem)', type: 'audio', group: '🔊 TTS Voices', voice: 'andromeda' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Jupiter (male)', type: 'audio', group: '🔊 TTS Voices', voice: 'jupiter' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Selene (fem)', type: 'audio', group: '🔊 TTS Voices', voice: 'callista' },
+  { id: '@cf/deepgram/aura-2-en', name: 'TTS Phoenix (fem)', type: 'audio', group: '🔊 TTS Voices', voice: 'phoebe' },
+];
+
+// ── MUSIC GENERATION MODELS (Cloudflare Workers AI) ──
+const MUSIC_MODELS = [
+  { id: '@cf/meta/musicgen-large', name: 'MusicGen Large', type: 'music', group: '🎵 Music' },
+];
+
+// ── LOCAL COMFYUI MODELS (self-hosted GPU) ──
+const COMFYUI_MODELS = [
+  { id: 'comfyui-sdxl', name: 'Local SDXL', type: 'image', group: '🖥️ Local GPU' },
+  { id: 'comfyui-flux-schnell', name: 'Local Flux Schnell', type: 'image', group: '🖥️ Local GPU' },
+  { id: 'comfyui-video', name: 'Local Video (Wan2.1)', type: 'video', group: '🖥️ Local GPU' },
+];
+
+// ── OLLAMA LOCAL MODEL ──
+const OLLAMA_MODEL = { id: 'ollama', name: 'Ollama (local)', type: 'ollama', group: '🖥️ Local GPU', system: 'You are a helpful AI assistant. Answer naturally.' };
+
 const PAID_PLANS = new Set(['access', 'starter', 'pro', 'premium']);
 const ADMIN_USERS = new Set(['jamespropane00', 'jdot00']);
 
@@ -1891,6 +1937,8 @@ async function handleAIChat
 (req, res) {
   const HF_TOKEN = process.env.HF_TOKEN || '';
   const OPENCODE_GO_KEY = process.env.OPENCODE_GO_API_KEY || '';
+  const OLLAMA_TUNNEL = process.env.OLLAMA_TUNNEL_URL || '';
+  const COMFYUI_TUNNEL = process.env.COMFYUI_TUNNEL_URL || '';
   let rawBody;
   try { rawBody = await readBody(req, 65536); }
   catch { return sendJSON(res, 413, { error: 'Request too large.' }); }
@@ -1921,8 +1969,20 @@ async function handleAIChat
   if (canUsePro) {
     allModels.push(...PRO_AI_MODELS.map(m => ({ id: m.id, name: m.name, type: m.type, group: m.group })));
   }
+  allModels.push(...IMAGE_MODELS.map(m => ({ id: m.id, name: m.name, type: m.type, group: m.group, voice: m.voice })));
+  allModels.push(...AUDIO_MODELS.map(m => ({ id: m.id, name: m.name, type: m.type, group: m.group, voice: m.voice })));
+  allModels.push(...MUSIC_MODELS.map(m => ({ id: m.id, name: m.name, type: m.type, group: m.group })));
+  if (COMFYUI_TUNNEL) {
+    allModels.push(...COMFYUI_MODELS.map(m => ({ id: m.id, name: m.name, type: m.type, group: m.group })));
+  }
+  if (OLLAMA_TUNNEL) {
+    allModels.push({ id: 'ollama', name: 'Ollama (local)', type: 'ollama', group: '📷 Local GPU' });
+  }
   const selectedModel = allModels[modelIdx] || allModels[0];
   const isOpenCodeGo = selectedModel && selectedModel.id && selectedModel.id.startsWith('opencode-go/');
+
+  let creds;
+  try { creds = getServiceCreds() } catch { creds = null }
 
   // ΓöÇΓöÇ LIST CONVERSATIONS ΓöÇΓöÇ
   if (listConversations) {
@@ -1977,12 +2037,28 @@ async function handleAIChat
   let fileContext = '';
   if (filesData.length > 0) {
     for (const f of filesData) {
-      if (f.type && f.type.startsWith('image/')) {
+      if (f.type && f.type.startsWith('audio/') && f.data) {
+        try {
+          const audioBytes = Uint8Array.from(atob(f.data), c => c.charCodeAt(0));
+          const whisperRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + process.env.CF_ACCOUNT_ID + '/ai/run/@cf/openai/whisper-large-v3-turbo', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + process.env.CF_AI_TOKEN, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ audio: [...audioBytes] }),
+          });
+          if (whisperRes.ok) {
+            const whisperData = await whisperRes.json();
+            const transcript = whisperData.result && whisperData.result.text ? whisperData.result.text : '';
+            fileContext += '[Transcribed audio "' + (f.name || 'audio') + '": ' + transcript + ']\n';
+          } else {
+            fileContext += '[Uploaded audio: ' + (f.name || 'audio') + ' (transcription failed)]\n';
+          }
+        } catch {
+          fileContext += '[Uploaded audio: ' + (f.name || 'audio') + ' (transcription error)]\n';
+        }
+      } else if (f.type && f.type.startsWith('image/')) {
         fileContext += '[Uploaded image: ' + (f.name || 'image') + ' (' + Math.round((f.data || '').length * 0.75 / 1024) + ' KB)]\n';
       } else if (f.type && f.type.includes('pdf')) {
         fileContext += '[Uploaded PDF: ' + (f.name || 'doc') + ']\n';
-      } else if (f.type && f.type.startsWith('audio/')) {
-        fileContext += '[Uploaded audio: ' + (f.name || 'audio') + ']\n';
       } else {
         fileContext += '[Uploaded file: ' + (f.name || 'file') + ']\n';
       }
@@ -1995,6 +2071,154 @@ async function handleAIChat
     let memoryEnabled = false;
     let toolLog = null;
 
+    // ── OLLAMA PROXY ──
+    if (selectedModel.type === 'ollama') {
+      if (!OLLAMA_TUNNEL) { return sendJSON(res, 503, { error: 'Ollama tunnel not configured' }); }
+      try {
+        const ollamaRes = await fetch(OLLAMA_TUNNEL + '/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'gemma4',
+            messages: [
+              { role: 'system', content: FACELESS_SYSTEM },
+              { role: 'user', content: message },
+            ],
+            stream: false,
+          }),
+        });
+        if (!ollamaRes.ok) { const err = await ollamaRes.text(); return sendJSON(res, 502, { error: 'Ollama error', detail: err.slice(0, 200) }); }
+        const data = await ollamaRes.json();
+        reply = data && data.message && data.message.content;
+        if (reply) memoryEnabled = true;
+      } catch (e) { return sendJSON(res, 502, { error: 'Ollama unreachable', detail: e.message }); }
+    }
+
+    // ── LOCAL COMFYUI ──
+    else if (selectedModel.id && selectedModel.id.startsWith('comfyui-')) {
+      if (!COMFYUI_TUNNEL) { return sendJSON(res, 503, { error: 'ComfyUI tunnel not configured' }); }
+      try {
+        const endpoint = selectedModel.type === 'video' ? '/generate_video' : '/generate';
+        const comfyRes = await fetch(COMFYUI_TUNNEL + endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: message, model: selectedModel.id.replace('comfyui-', '') }),
+        });
+        if (!comfyRes.ok) { const err = await comfyRes.text(); return sendJSON(res, 502, { error: 'Local ComfyUI error', detail: err.slice(0, 200) }); }
+        const data = await comfyRes.json();
+        const imageData = data.images && data.images[0] && data.images[0].data;
+        const videoData = data.video || null;
+        const convId = conversationId || 'default';
+        if (creds) { try { const userRec = { session_id: sessionId, role: 'user', content: message, model: selectedModel.id, conversation_id: convId }; if (username) userRec.username = username; await sbRequest(creds.host, creds.key, 'POST', '/rest/v1/ai_conversations', JSON.stringify([userRec])); } catch {} }
+        return sendJSON(res, 200, { image: imageData || null, video: videoData, model: selectedModel.name + ' (local)', conversation_id: convId, username });
+      } catch (e) { return sendJSON(res, 502, { error: 'ComfyUI unreachable', detail: e.message }); }
+    }
+
+    // ── TEXT-TO-SPEECH ──
+    else if (selectedModel.type === 'audio') {
+      const cfTok = process.env.CF_AI_TOKEN;
+      const cfAcc = process.env.CF_ACCOUNT_ID;
+      if (!cfAcc || !cfTok) { return sendJSON(res, 503, { error: 'Cloudflare AI not configured' }); }
+      try {
+        const audioRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + cfAcc + '/ai/run/' + selectedModel.id, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + cfTok, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: message, voice: selectedModel.voice || 'luna', encoding: 'mp3', container: 'none' }),
+        });
+        if (!audioRes.ok) { const err = await audioRes.text(); return sendJSON(res, 502, { error: 'TTS failed', status: audioRes.status, detail: err.slice(0, 200) }); }
+        const buf = await audioRes.arrayBuffer();
+        const b64 = btoa(new TextDecoder('latin1').decode(buf));
+        return sendJSON(res, 200, { audio: 'data:audio/mpeg;base64,' + b64, model: selectedModel.name, conversation_id: conversationId || 'default', username });
+      } catch (e) { return sendJSON(res, 502, { error: 'TTS request failed', detail: e.message }); }
+    }
+
+    // ── MUSIC GENERATION ──
+    else if (selectedModel.type === 'music') {
+      const cfTok = process.env.CF_AI_TOKEN;
+      const cfAcc = process.env.CF_ACCOUNT_ID;
+      if (!cfAcc || !cfTok) { return sendJSON(res, 503, { error: 'Cloudflare AI not configured' }); }
+      try {
+        const ctrl = new AbortController(); const tid = setTimeout(() => ctrl.abort(), 25000);
+        const musicRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + cfAcc + '/ai/run/' + selectedModel.id, {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + cfTok, 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt: message }), signal: ctrl.signal,
+        });
+        clearTimeout(tid);
+        if (!musicRes.ok) { const err = await musicRes.text(); return sendJSON(res, 502, { error: 'Music generation failed', status: musicRes.status, detail: err.slice(0, 200) }); }
+        const buf = await musicRes.arrayBuffer();
+        const b64 = btoa(new TextDecoder('latin1').decode(buf));
+        return sendJSON(res, 200, { audio: 'data:audio/wav;base64,' + b64, model: selectedModel.name, conversation_id: conversationId || 'default', username });
+      } catch (e) { return sendJSON(res, 502, { error: 'Music generation request failed', detail: e.message }); }
+    }
+
+    // ── IMG2IMG / INPAINTING ──
+    else if (selectedModel.type === 'img2img') {
+      const uploadedImage = filesData.find(f => f.type && f.type.startsWith('image/'));
+      if (!uploadedImage) { return sendJSON(res, 400, { error: 'Please upload an image first, then select ' + selectedModel.name + ' to edit it.' }); }
+      const cfTok = process.env.CF_AI_TOKEN; const cfAcc = process.env.CF_ACCOUNT_ID;
+      if (!cfAcc || !cfTok) { return sendJSON(res, 503, { error: 'Cloudflare AI not configured' }); }
+      try {
+        const imgBytes = Uint8Array.from(atob(uploadedImage.data), c => c.charCodeAt(0));
+        const cfBody = { prompt: message, image: [...imgBytes] };
+        if (selectedModel.id.includes('inpainting')) cfBody.mask = [...imgBytes];
+        const ctrl = new AbortController(); const tid = setTimeout(() => ctrl.abort(), 25000);
+        const imgRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + cfAcc + '/ai/run/' + selectedModel.id, {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + cfTok, 'Content-Type': 'application/json' }, body: JSON.stringify(cfBody), signal: ctrl.signal,
+        });
+        clearTimeout(tid);
+        if (!imgRes.ok) { const err = await imgRes.text(); return sendJSON(res, 502, { error: 'Image edit failed', detail: err.slice(0, 200) }); }
+        const buf = await imgRes.arrayBuffer();
+        return sendJSON(res, 200, { image: 'data:image/png;base64,' + btoa(new TextDecoder('latin1').decode(buf)), model: selectedModel.name, conversation_id: conversationId || 'default', username });
+      } catch (e) { return sendJSON(res, 502, { error: 'Image edit request failed', detail: e.message }); }
+    }
+
+    // ── CF IMAGE GENERATION ──
+    else if (selectedModel.type === 'image') {
+      const cfTok = process.env.CF_AI_TOKEN; const cfAcc = process.env.CF_ACCOUNT_ID;
+      if (!cfAcc || !cfTok) { return sendJSON(res, 503, { error: 'Cloudflare AI not configured' }); }
+      try {
+        let prompt = message;
+        const grp = selectedModel.group || ''; const lc = message.toLowerCase();
+        const an = /anime|manga|cartoon|chibi|anime style|anime girl|anime boy|japanese animation|cel shade/i.test(lc);
+        const ph = (/photo|photorealistic|realistic|portrait|real person|real human|photography/i.test(lc) || (grp.includes('Photo') && !an));
+        const ar = /oil painting|watercolor|concept art|fantasy art|digital painting|painting|artistic/i.test(lc);
+        const hu = /person|woman|man|girl|boy|portrait|face|human|people|model|actor|actress|selfie/i.test(lc);
+        if (an) prompt = message + ', anime style, high quality anime illustration, detailed, vibrant colors, cel shaded, crisp lineart, masterpiece';
+        else if (ph && hu) prompt = message + ', photorealistic, detailed skin texture, professional studio lighting, sharp focus, 8k, canon eos r5, natural skin, pores visible, subsurface scattering';
+        else if (ph) prompt = message + ', photorealistic, sharp focus, natural lighting, 8k, highly detailed, professional photography';
+        else if (ar) prompt = message + ', high quality digital art, masterpiece, detailed, intricate, professional concept art';
+        const ctrl = new AbortController(); const tid = setTimeout(() => ctrl.abort(), 25000);
+        const imgRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + cfAcc + '/ai/run/' + selectedModel.id, {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + cfTok, 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt }), signal: ctrl.signal,
+        });
+        clearTimeout(tid);
+        if (!imgRes.ok) { const err = await imgRes.text(); return sendJSON(res, 502, { error: 'Image generation failed', status: imgRes.status, detail: err.slice(0, 200) }); }
+        const buf = await imgRes.arrayBuffer();
+        const convId = conversationId || 'default';
+        if (creds) { try { const userRec = { session_id: sessionId, role: 'user', content: message, model: selectedModel.id, conversation_id: convId }; if (username) userRec.username = username; await sbRequest(creds.host, creds.key, 'POST', '/rest/v1/ai_conversations', JSON.stringify([userRec])); } catch {} }
+        return sendJSON(res, 200, { image: 'data:image/png;base64,' + btoa(new TextDecoder('latin1').decode(buf)), model: selectedModel.name, conversation_id: convId, username });
+      } catch (e) { return sendJSON(res, 502, { error: 'Image generation request failed', detail: e.message }); }
+    }
+
+    // ── VISION (Image Analysis) ──
+    else if (selectedModel.type === 'vision') {
+      const cfTok = process.env.CF_AI_TOKEN; const cfAcc = process.env.CF_ACCOUNT_ID;
+      if (!cfAcc || !cfTok) { return sendJSON(res, 503, { error: 'Cloudflare AI not configured' }); }
+      const uploadedImage = filesData.find(f => f.type && f.type.startsWith('image/'));
+      try {
+        const visMsg = [{ role: 'user', content: message }];
+        if (uploadedImage) visMsg[0].content = [{ type: 'text', text: message }, { type: 'image_url', image_url: { url: 'data:' + uploadedImage.type + ';base64,' + uploadedImage.data } }];
+        const visRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + cfAcc + '/ai/v1/chat/completions', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfTok }, body: JSON.stringify({ model: selectedModel.id, messages: visMsg, max_tokens: 2048 }),
+        });
+        if (!visRes.ok) { const err = await visRes.text(); return sendJSON(res, 502, { error: 'Vision request failed', status: visRes.status, detail: err.slice(0, 200) }); }
+        const d = await visRes.json();
+        reply = d.choices && d.choices[0] && d.choices[0].message ? d.choices[0].message.content : '';
+        if (reply) memoryEnabled = true;
+      } catch (e) { return sendJSON(res, 502, { error: 'Vision request failed', detail: e.message }); }
+    }
+
+    // ── TEXT MODELS ──
+    else {
     if (isOpenCodeGo) {
       const modelId = selectedModel.id.replace('opencode-go/', '');
       const projectCtx = agentMode ? buildProjectContext() : '';
@@ -2081,8 +2305,25 @@ async function handleAIChat
       }
     }
 
-      // ── Save conversation to Supabase ΓöÇΓöÇ
-      const convId = conversationId || 'default';
+    const convId = conversationId || 'default';
+      if (creds && reply) {
+        try {
+          const userRec = { session_id: sessionId, role: 'user', content: message, model: selectedModel.id, conversation_id: convId };
+          if (username) userRec.username = username;
+          await sbRequest(creds.host, creds.key, 'POST', '/rest/v1/ai_conversations', JSON.stringify([userRec]));
+          const aiRec = { session_id: sessionId, role: 'assistant', content: reply, model: selectedModel.name, conversation_id: convId };
+          if (username) aiRec.username = username;
+          await sbRequest(creds.host, creds.key, 'POST', '/rest/v1/ai_conversations', JSON.stringify([aiRec]));
+        } catch {}
+      }
+
+      const resp = { reply: reply || '...', memory: memoryEnabled, model: selectedModel.name, conversation_id: convId, username };
+      if (toolLog) resp.tool_log = toolLog;
+      return sendJSON(res, 200, resp);
+    }
+
+    // ── Fallthrough for handlers that set reply but don't early-return ──
+    const convId = conversationId || 'default';
     if (creds && reply) {
       try {
         const userRec = { session_id: sessionId, role: 'user', content: message, model: selectedModel.id, conversation_id: convId };
@@ -2132,10 +2373,20 @@ async function handleAIStream(req, res) {
 
         if (!message) { sse({ error: 'Message is required' }); res.end(); return }
 
+        const OLLAMA_TUNNEL = process.env.OLLAMA_TUNNEL_URL || '';
+        const COMFYUI_TUNNEL = process.env.COMFYUI_TUNNEL_URL || '';
         const allModels = [...FREE_AI_MODELS]
         if (isAdmin && effectiveKey) allModels.push(...PRO_AI_MODELS)
+        allModels.push(...IMAGE_MODELS)
+        allModels.push(...AUDIO_MODELS)
+        allModels.push(...MUSIC_MODELS)
+        if (COMFYUI_TUNNEL) allModels.push(...COMFYUI_MODELS)
+        if (OLLAMA_TUNNEL) allModels.push(OLLAMA_MODEL)
         const selectedModel = allModels[parseInt(modelIdx)] || allModels[0]
         sse({ type: 'meta', model: selectedModel.name })
+        if (selectedModel.type !== 'text') {
+          sse({ error: 'Streaming only supported for text models. Use the non-streaming endpoint.' }); res.end(); return
+        }
 
         // Rate limit
         const sid = username || req.socket.remoteAddress || 'anon'
