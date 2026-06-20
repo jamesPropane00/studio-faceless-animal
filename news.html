@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Signal Wire is the official news feed, build log, and development journal of Faceless Animal Studios." />
   <title>News - Signal Wire</title>
+  <link rel="stylesheet" href="assets/css/street-wire.css?v=20260620" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -1282,6 +1283,7 @@
 
   <a class="wire-admin-shortcut" id="wire-admin-shortcut" href="newsletter-admin.html">Newsletter Admin</a>
 
+  <script src="assets/js/street-wire.js?v=20260620"></script>
   <script>
     window.FAS_DISABLE_PHONE_LAUNCHER = true;
   </script>
@@ -1429,7 +1431,7 @@
         return url;
       }
 
-      function safeArticleHtml(html) {
+      function safeArticleHtml(html, heroUrl) {
         var wrapper = document.createElement('div');
         wrapper.innerHTML = html || '';
         wrapper.querySelectorAll('script,style,iframe,object,embed,form,input,button').forEach(function (node) {
@@ -1455,6 +1457,7 @@
           if (tag === 'img' || tag === 'video' || tag === 'source') {
             var src = normalizeUrl(node.getAttribute('src') || '');
             if (!src) node.remove();
+            else if (heroUrl && src.replace(/#t=.*$/, '') === normalizeUrl(heroUrl).replace(/#t=.*$/, '')) node.remove();
             else node.setAttribute('src', src);
           }
           if (tag === 'video') {
@@ -1473,13 +1476,7 @@
         var isSupport = Boolean(post.external_source);
         var key = post.slug || post.id || '';
         var isVideo = /^video/i.test(post.media_type || '') || /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(post.media_url || '');
-        var media = '';
         var thumb = '<span class="signal-article-thumb-fallback">DJ Faceless<br>Animal</span>';
-        if (post.media_url && String(post.content_html || '').indexOf(post.media_url) === -1) {
-          media = isVideo
-            ? '<video class="signal-article-media" controls playsinline preload="metadata" src="' + esc(post.media_url) + '"></video>'
-            : '<img class="signal-article-media" src="' + esc(post.media_url) + '" alt="" loading="lazy">';
-        }
         if (post.media_url) {
           thumb = isVideo
             ? '<video muted playsinline preload="metadata" src="' + esc(post.media_url) + '#t=0.1"></video>'
@@ -1489,8 +1486,10 @@
           ? '<a class="wire-button wire-button--primary" href="' + esc(post.link_url) + '" target="_blank" rel="noopener">' + esc(post.link_label || 'Open link') + '</a>'
           : '';
         var content = post.content_html
-          ? '<div class="signal-article-content">' + safeArticleHtml(post.content_html) + '</div>'
+          ? '<div class="signal-article-content">' + safeArticleHtml(post.content_html, post.media_url) + '</div>'
           : (post.body ? '<p class="signal-article-body">' + esc(post.body) + '</p>' : '');
+        var articleLink = articleUrl(post);
+        var engagementKey = 'news-' + key;
         return '<article class="signal-article' + (featured ? ' is-featured' : '') + (isSupport ? ' is-support' : '') + '" id="post-' + esc(key) + '" data-signal-card="' + esc(key) + '" style="font-family:' + esc(font) + ';color:' + esc(color) + ';">'
           + '<div class="signal-article-preview">'
             + '<div class="signal-article-copy">'
@@ -1504,13 +1503,14 @@
           + '</div>'
           + '<div class="signal-article-full">'
             + (post.dek ? '<p><strong>' + esc(post.dek) + '</strong></p>' : '')
-            + media
             + content
             + '<div class="signal-article-actions">'
             + link
             + '<button class="wire-button" type="button" data-share-post="' + esc(key) + '">Share</button>'
+            + '<button class="wire-button" type="button" data-board-post="' + esc(key) + '">Post Article To Board</button>'
             + '<button class="wire-button wire-button--pdf" type="button" data-print-issue>PDF</button>'
             + '</div>'
+            + window.FASStreetWire.markup(engagementKey, post.title || 'Signal Wire article', articleLink, post.media_url || '')
           + '</div>'
           + '</article>';
       }
@@ -1606,9 +1606,29 @@
             }
           });
         });
+        grid.querySelectorAll('[data-board-post]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            var key = button.getAttribute('data-board-post') || '';
+            var post = list.find(function (item) { return (item.slug || item.id) === key; });
+            if (!post) return;
+            var sess = null;
+            try { sess = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch (_) {}
+            button.disabled = true;
+            button.textContent = 'Posting...';
+            fetch('/api/engagement', {
+              method: 'POST',
+              headers: Object.assign({ 'Content-Type': 'application/json' }, sess ? { 'x-fas-user': JSON.stringify(sess) } : {}),
+              body: JSON.stringify({ action: 'publish_board', key: 'news-' + key, title: post.title, url: articleUrl(post), media_url: post.media_url || '' })
+            }).then(function (r) { return r.json().then(function (d) { return { ok:r.ok, data:d }; }); })
+              .then(function (result) {
+                button.textContent = result.ok ? 'Posted To Board' : (result.data.error || 'Board Post Failed');
+                if (!result.ok) button.disabled = false;
+              }).catch(function () { button.textContent = 'Board Post Failed'; button.disabled = false; });
+          });
+        });
         grid.querySelectorAll('[data-signal-card]').forEach(function (card) {
           card.addEventListener('click', function (event) {
-            if (event.target.closest('a, button, video')) return;
+            if (event.target.closest('a, button, video, input, textarea, form, .street-wire')) return;
             card.classList.toggle('is-open');
           });
         });
@@ -1625,6 +1645,7 @@
             window.print();
           });
         });
+        window.FASStreetWire.bindAll(grid);
         filters.querySelectorAll('[data-signal-category]').forEach(function (button) {
           button.addEventListener('click', function () {
             renderSignalBoard(list, button.getAttribute('data-signal-category') || 'all');
