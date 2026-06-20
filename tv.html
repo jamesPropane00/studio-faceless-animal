@@ -1781,6 +1781,12 @@
       text-align: center;
     }
 
+    .tv-card > .street-wire {
+      grid-column: 1 / -1;
+      width: 100%;
+      margin-top: 0;
+    }
+
     .tv-archive-panel .tv-card:hover,
     .tv-archive-panel .tv-card.is-active {
       background: rgba(255,255,255,0.07);
@@ -2112,6 +2118,7 @@
   </style>
   <link rel="stylesheet" href="assets/css/widget.css?v=20260618-widget" />
   <link rel="stylesheet" href="assets/css/widget-hub.css" />
+  <link rel="stylesheet" href="assets/css/street-wire.css?v=20260620" />
 </head>
 <body>
     <nav class="navbar waffle-nav tv-waffle-nav" role="navigation" aria-label="Main navigation">
@@ -2519,6 +2526,7 @@
     window.FAS_DISABLE_PHONE_LAUNCHER = true;
   </script>
   <script src="assets/script.js?v=20260322"></script>
+  <script src="assets/js/street-wire.js?v=20260620"></script>
   
   <script>
     window.FAS_TV_ORIGIN = window.FAS_TV_ORIGIN || window.location.origin;

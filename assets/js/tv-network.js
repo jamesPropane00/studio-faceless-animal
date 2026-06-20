@@ -439,12 +439,9 @@
             '<h3>' + escapeHtml(title) + '</h3>',
             '<p>' + escapeHtml(channel + ' / ' + description) + '</p>',
           '</div>',
-          '<div class="tv-card-actions" aria-label="Video actions">',
-            '<button type="button" data-card-like>Like <span>' + likes + '</span></button>',
-            '<button type="button" data-card-dislike>Dislike <span>' + dislikes + '</span></button>',
-            '<button type="button" data-card-share>Share</button>',
-            '<small class="tv-card-share-note" data-card-note></small>',
-          '</div>',
+          window.FASStreetWire
+            ? window.FASStreetWire.markup('tv-' + key, title, shareUrlForTarget({ uploadKey: key }), source || image)
+            : '',
         '</article>',
       ].join('');
     }).join('');
@@ -453,7 +450,7 @@
 
     qsa('.tv-card', el.grid).forEach(function (card) {
       card.addEventListener('click', function (event) {
-        if (event.target.closest('.tv-card-actions') || event.target.closest('.tv-inline-controls') || event.target.closest('video')) return;
+        if (event.target.closest('.tv-card-actions') || event.target.closest('.tv-inline-controls') || event.target.closest('.street-wire') || event.target.closest('video')) return;
         playCardInline(card);
       });
       card.addEventListener('keydown', function (event) {
@@ -462,8 +459,8 @@
           playCardInline(card);
         }
       });
-      bindCardActions(card);
     });
+    if (window.FASStreetWire) window.FASStreetWire.bindAll(el.grid);
 
     startShuffledPlaylist(sourceItems);
   }

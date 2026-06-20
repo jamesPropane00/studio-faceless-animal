@@ -1640,6 +1640,7 @@
     }
   </style>
   <link rel="stylesheet" href="assets/css/widget-hub.css" />
+  <link rel="stylesheet" href="assets/css/street-wire.css?v=20260620" />
 </head>
 <body data-disable-phone-launcher>
 
@@ -1982,6 +1983,7 @@
   </aside>
 
   <script src="assets/script.js?v=20260322"></script>
+  <script src="assets/js/street-wire.js?v=20260620"></script>
 
   <script>
   (function () {
@@ -2979,22 +2981,12 @@
             + '</div>'
             + '<p class="feed-item-text">' + body + '</p>'
             + media
-            + '<div class="feed-actions" aria-label="Post actions">'
-            + '<button type="button" data-feed-like>Like <span>' + esc(likes || 0) + '</span></button>'
-            + '<button type="button" data-feed-comment>Comment <span>' + esc(comments.length || 0) + '</span></button>'
-            + '<button type="button" data-feed-share>Share</button>'
-            + '</div>'
-            + '<div class="feed-comments">' + renderCommentList(key) + '</div>'
-            + '<form class="feed-comment-box" data-feed-comment-form>'
-            + '<input type="text" maxlength="220" placeholder="Write a comment..." aria-label="Write a comment">'
-            + '<button type="submit">Send</button>'
-            + '</form>'
+            + window.FASStreetWire.markup('directory-' + key, '@' + username + ' on the Directory', sharedPostUrl(key), row.media_url || '')
             + '</article>';
         }).join('');
         bindFeedVideos(list);
         bindFeedAudio(list);
-        bindFeedActions(list);
-        loadPersistedFeedComments(feedKeys, list);
+        window.FASStreetWire.bindAll(list);
         window.setTimeout(revealSharedPost, 80);
       }
 
