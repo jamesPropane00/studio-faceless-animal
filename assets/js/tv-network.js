@@ -467,7 +467,15 @@
 
   function startShuffledPlaylist(items) {
     buildPlaylist(items);
-    var first = currentPlaylistUpload() || firstPlayableUpload(items);
+    var requestedKey = '';
+    try {
+      requestedKey = String(new URLSearchParams(window.location.search || '').get('video') || '').trim();
+    } catch (err) {}
+    var requested = requestedKey
+      ? (items || []).find(function (item) { return uploadKey(item) === requestedKey && hasPlayableVideo(item); })
+      : null;
+    if (requested) syncPlaylistToKey(uploadKey(requested));
+    var first = requested || currentPlaylistUpload() || firstPlayableUpload(items);
     if (!first) {
       renderEmptyFeature();
       return;
