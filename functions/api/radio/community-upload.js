@@ -122,7 +122,6 @@ async function insertTrack(env, row) {
 
   const minimal = {
     title: row.title,
-    artist: row.artist,
     src: row.src,
     storage_path: row.storage_path,
     channel: row.channel,
@@ -243,7 +242,6 @@ export async function onRequestPost(context) {
     const publicSrc = `${supabaseUrl}/storage/v1/object/public/radio/${storagePath}`;
     const trackRow = {
       title,
-      artist: username,
       src: publicSrc,
       storage_path: storagePath,
       channel: 1,

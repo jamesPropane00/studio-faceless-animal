@@ -40,7 +40,7 @@ export async function onRequestGet(context) {
     const requested = Number(url.searchParams.get('channel'));
     channel = [1, 4, 5].includes(requested) ? requested : 1;
     const query = [
-      'select=id,title,artist,src,storage_path,channel,is_active',
+      'select=id,title,src,storage_path,channel,is_active',
       `channel=eq.${channel}`,
       'is_active=eq.true',
       'order=id.asc',
@@ -51,7 +51,6 @@ export async function onRequestGet(context) {
     const tracks = (Array.isArray(result.data) ? result.data : []).map((row) => ({
       id: row.id,
       title: row.title,
-      artist: row.artist,
       src: row.src,
       storage_path: row.storage_path,
       channel: row.channel,
