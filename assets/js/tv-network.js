@@ -449,7 +449,7 @@
       var likes = numberFromItem(item, ['likes', 'like_count', 'upvotes', 'upvote_count']);
       var dislikes = numberFromItem(item, ['dislikes', 'dislike_count', 'downvotes', 'downvote_count']);
       return [
-        '<article class="tv-card" tabindex="0" data-key="' + escapeHtml(key) + '" data-upload-id="' + escapeHtml(uploadId) + '" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '" data-embed="' + escapeHtml(embed) + '" data-likes="' + likes + '" data-dislikes="' + dislikes + '">',
+        '<article class="tv-card" data-key="' + escapeHtml(key) + '" data-upload-id="' + escapeHtml(uploadId) + '" data-title="' + escapeHtml(title) + '" data-copy="' + escapeHtml(description) + '" data-image="' + escapeHtml(image) + '" data-source="' + escapeHtml(source) + '" data-embed="' + escapeHtml(embed) + '" data-likes="' + likes + '" data-dislikes="' + dislikes + '">',
           '<div class="tv-thumb">',
             source
               ? '<video class="tv-thumb-video" muted playsinline preload="metadata" src="' + escapeHtml(source) + '"></video>'
@@ -472,12 +472,6 @@
       if (playButton) playButton.addEventListener('click', function (event) {
         event.stopPropagation();
         playCardInline(card);
-      });
-      card.addEventListener('keydown', function (event) {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          playCardInline(card);
-        }
       });
     });
 
@@ -675,19 +669,53 @@
 
   function playCardInline(card) {
     if (!card) return;
+    var source = card.getAttribute('data-source') || '';
+    var embed = card.getAttribute('data-embed') || '';
+    var title = card.getAttribute('data-title') || 'Selected Broadcast';
+    var key = card.getAttribute('data-key') || '';
+    var thumb = card.querySelector('.tv-thumb');
+    if (!thumb) return;
+
     closeOtherInlineCards(card);
-    state.inlinePlaying = false;
-    featureCard(card);
-    var video = mainVideo();
-    if (video) {
+    pauseMainTV();
+    state.inlinePlaying = true;
+    state.currentKey = key;
+    state.autoplaying = false;
+    syncPlaylistToKey(key);
+    setActiveCard(key);
+
+    if (source) {
+      thumb.innerHTML = '<video class="tv-inline-video" controls autoplay playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
+      card.classList.add('is-inline-playing');
+      var video = thumb.querySelector('video');
       video.muted = false;
       video.defaultMuted = false;
       video.volume = 1;
+      var syncRatio = function () {
+        var portrait = video.videoHeight > video.videoWidth;
+        card.classList.toggle('is-inline-portrait', portrait);
+        thumb.setAttribute('data-video-ratio', portrait ? 'portrait' : 'landscape');
+      };
+      video.addEventListener('loadedmetadata', syncRatio);
+      video.addEventListener('play', function () {
+        state.inlinePlaying = true;
+        pauseOtherPageVideos(video);
+      });
+      video.addEventListener('pause', function () {
+        if (!video.ended) state.inlinePlaying = false;
+      });
+      video.addEventListener('ended', function () { inlineNavigate(card, 1); });
+      bindSwipeSurface(thumb, function () { inlineNavigate(card, -1); }, function () { inlineNavigate(card, 1); });
+      bindSwipeSurface(video, function () { inlineNavigate(card, -1); }, function () { inlineNavigate(card, 1); });
+      if (video.readyState >= 1) syncRatio();
       var playPromise = video.play();
       if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(function () {});
+      return;
     }
-    if (el.screen && typeof el.screen.scrollIntoView === 'function') {
-      el.screen.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    if (embed) {
+      thumb.innerHTML = '<iframe class="tv-inline-frame" src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="eager" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+      card.classList.add('is-inline-playing');
     }
   }
 
@@ -764,7 +792,7 @@
     cleanupCurrentVideo();
 
     if (source) {
-      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
+      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
       activateVideos(el.screen);
       prepareMainPlayer(mainVideo());
       return;
@@ -801,7 +829,7 @@
     cleanupCurrentVideo();
 
     if (source) {
-      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
+      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
       activateVideos(el.screen);
       prepareMainPlayer(mainVideo());
       return;
