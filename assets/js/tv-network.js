@@ -385,19 +385,41 @@
       return;
     }
 
-    el.recentUploads.innerHTML = playable.slice(0, 10).map(function (item) {
+    var recent = playable.slice(0, 10);
+    el.recentUploads.innerHTML = recent.map(function (item) {
       var source = videoSource(item);
       var preview = source ? '<video class="tv-upload-preview" muted playsinline preload="metadata" src="' + escapeHtml(source) + '"></video>' : '';
       return [
-        '<div class="tv-list-item">',
+        '<button class="tv-list-item tv-recent-video" type="button" data-recent-key="' + escapeHtml(uploadKey(item)) + '">',
           '<strong>' + escapeHtml(item.title || 'Untitled broadcast') + '</strong>',
           '<span>' + escapeHtml((item.channel_slug || 'channel') + ' / ' + (item.visibility || 'public') + ' / ' + (item.status || 'published')) + '</span>',
           preview,
-        '</div>',
+        '</button>',
       ].join('');
     }).join('');
 
     activateVideos(el.recentUploads);
+    qsa('[data-recent-key]', el.recentUploads).forEach(function (button) {
+      button.addEventListener('click', function () {
+        var key = button.getAttribute('data-recent-key') || '';
+        var item = recent.find(function (upload) { return uploadKey(upload) === key; });
+        if (!item) return;
+        closeOtherInlineCards();
+        syncPlaylistToKey(key);
+        featureUpload(item);
+        var video = mainVideo();
+        if (video) {
+          video.muted = false;
+          video.defaultMuted = false;
+          video.volume = 1;
+          var playPromise = video.play();
+          if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(function () {});
+        }
+        if (el.screen && typeof el.screen.scrollIntoView === 'function') {
+          el.screen.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    });
   }
 
   function renderCards(items) {
@@ -432,16 +454,13 @@
             source
               ? '<video class="tv-thumb-video" muted playsinline preload="metadata" src="' + escapeHtml(source) + '"></video>'
               : '<iframe src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>',
-            '<span class="tv-play" aria-hidden="true">&gt;</span>',
+            '<button class="tv-play" type="button" aria-label="Play ' + escapeHtml(title) + '">&#9654;</button>',
             '<span class="tv-meta">' + escapeHtml(duration) + '</span>',
           '</div>',
           '<div class="tv-card-body">',
             '<h3>' + escapeHtml(title) + '</h3>',
             '<p>' + escapeHtml(channel + ' / ' + description) + '</p>',
           '</div>',
-          window.FASStreetWire
-            ? window.FASStreetWire.markup('tv-' + key, title, shareUrlForTarget({ uploadKey: key }), source || image)
-            : '',
         '</article>',
       ].join('');
     }).join('');
@@ -449,8 +468,9 @@
     activateVideos(el.grid);
 
     qsa('.tv-card', el.grid).forEach(function (card) {
-      card.addEventListener('click', function (event) {
-        if (event.target.closest('.tv-card-actions') || event.target.closest('.tv-inline-controls') || event.target.closest('.street-wire') || event.target.closest('video')) return;
+      var playButton = card.querySelector('.tv-play');
+      if (playButton) playButton.addEventListener('click', function (event) {
+        event.stopPropagation();
         playCardInline(card);
       });
       card.addEventListener('keydown', function (event) {
@@ -460,7 +480,6 @@
         }
       });
     });
-    if (window.FASStreetWire) window.FASStreetWire.bindAll(el.grid);
 
     startShuffledPlaylist(sourceItems);
   }
@@ -575,6 +594,28 @@
     if (video.readyState >= 1) syncMainRatio(video);
   }
 
+  function bindSwipeSurface(surface, onRight, onLeft) {
+    if (!surface || surface.dataset.swipeBound === '1') return;
+    surface.dataset.swipeBound = '1';
+    var startX = 0;
+    var startY = 0;
+    surface.addEventListener('touchstart', function (event) {
+      var touch = event.changedTouches && event.changedTouches[0];
+      if (!touch) return;
+      startX = touch.clientX;
+      startY = touch.clientY;
+    }, { passive: true });
+    surface.addEventListener('touchend', function (event) {
+      var touch = event.changedTouches && event.changedTouches[0];
+      if (!touch) return;
+      var dx = touch.clientX - startX;
+      var dy = touch.clientY - startY;
+      if (Math.abs(dx) < 55 || Math.abs(dx) <= Math.abs(dy) * 1.15) return;
+      if (dx > 0) onRight();
+      else onLeft();
+    }, { passive: true });
+  }
+
   function renderFeatureWire(target) {
     if (!el.featureWire) return;
     if (!target || !target.uploadKey || !window.FASStreetWire) {
@@ -604,13 +645,18 @@
     var thumb = card.querySelector('.tv-thumb');
     if (!thumb) return;
     if (source) {
-      thumb.innerHTML = '<video class="tv-thumb-video" muted playsinline preload="metadata" src="' + escapeHtml(source) + '"></video><span class="tv-play" aria-hidden="true">&gt;</span>';
+      thumb.innerHTML = '<video class="tv-thumb-video" muted playsinline preload="metadata" src="' + escapeHtml(source) + '"></video><button class="tv-play" type="button" aria-label="Play ' + escapeHtml(title) + '">&#9654;</button>';
     } else if (embed) {
-      thumb.innerHTML = '<iframe src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe><span class="tv-play" aria-hidden="true">&gt;</span>';
+      thumb.innerHTML = '<iframe src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe><button class="tv-play" type="button" aria-label="Play ' + escapeHtml(title) + '">&#9654;</button>';
     }
     card.classList.remove('is-inline-playing', 'is-inline-portrait');
     if (!qsa('.tv-card.is-inline-playing', el.grid).length) state.inlinePlaying = false;
     activateVideos(thumb);
+    var playButton = thumb.querySelector('.tv-play');
+    if (playButton) playButton.addEventListener('click', function (event) {
+      event.stopPropagation();
+      playCardInline(card);
+    });
   }
 
   function closeOtherInlineCards(activeCard) {
@@ -629,71 +675,19 @@
 
   function playCardInline(card) {
     if (!card) return;
-    var source = card.getAttribute('data-source') || '';
-    var embed = card.getAttribute('data-embed') || '';
-    var title = card.getAttribute('data-title') || 'Selected Broadcast';
-    var key = card.getAttribute('data-key') || '';
-    var thumb = card.querySelector('.tv-thumb');
-    if (!thumb) return;
-
     closeOtherInlineCards(card);
-    pauseMainTV();
-    state.inlinePlaying = true;
-    state.currentKey = key;
-    state.autoplaying = false;
-    syncPlaylistToKey(key);
-    setActiveCard(key);
-    renderReactions(reactionTargetFromCard(card));
-    renderShare(reactionTargetFromCard(card));
-
-    if (source) {
-      thumb.innerHTML = [
-        '<video class="tv-inline-video" controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>',
-        '<div class="tv-inline-controls" aria-label="Inline video navigation">',
-          '<button type="button" data-inline-back aria-label="Back 10 seconds">-10</button>',
-          '<button type="button" data-inline-prev aria-label="Previous video">Prev</button>',
-          '<button type="button" data-inline-next aria-label="Next video">Next</button>',
-          '<button type="button" data-inline-forward aria-label="Forward 10 seconds">+10</button>',
-        '</div>',
-      ].join('');
-      card.classList.add('is-inline-playing');
-      var video = thumb.querySelector('video');
-      var syncRatio = function () {
-        card.classList.toggle('is-inline-portrait', video.videoHeight > video.videoWidth);
-      };
-      video.addEventListener('loadedmetadata', syncRatio);
-      video.addEventListener('play', function () {
-        state.inlinePlaying = true;
-        pauseOtherPageVideos(video);
-      });
-      video.addEventListener('pause', function () {
-        if (!video.ended) state.inlinePlaying = false;
-      });
-      video.addEventListener('ended', function () { inlineNavigate(card, 1); });
-      thumb.querySelector('[data-inline-back]').addEventListener('click', function (event) {
-        event.stopPropagation();
-        video.currentTime = Math.max(0, video.currentTime - 10);
-      });
-      thumb.querySelector('[data-inline-forward]').addEventListener('click', function (event) {
-        event.stopPropagation();
-        video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 10);
-      });
-      thumb.querySelector('[data-inline-prev]').addEventListener('click', function (event) {
-        event.stopPropagation();
-        inlineNavigate(card, -1);
-      });
-      thumb.querySelector('[data-inline-next]').addEventListener('click', function (event) {
-        event.stopPropagation();
-        inlineNavigate(card, 1);
-      });
-      var inlinePlay = video.play();
-      if (inlinePlay && typeof inlinePlay.catch === 'function') inlinePlay.catch(function () {});
-      return;
+    state.inlinePlaying = false;
+    featureCard(card);
+    var video = mainVideo();
+    if (video) {
+      video.muted = false;
+      video.defaultMuted = false;
+      video.volume = 1;
+      var playPromise = video.play();
+      if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(function () {});
     }
-
-    if (embed) {
-      thumb.innerHTML = '<iframe class="tv-inline-frame" src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="eager" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
-      card.classList.add('is-inline-playing');
+    if (el.screen && typeof el.screen.scrollIntoView === 'function') {
+      el.screen.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 
@@ -1440,6 +1434,7 @@
   }
 
   function bindNavigationButtons() {
+    bindSwipeSurface(el.screen, playPrevUpload, playNextUpload);
     if (el.navPrev) {
       el.navPrev.addEventListener('click', function () {
         playPrevUpload();

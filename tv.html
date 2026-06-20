@@ -1226,13 +1226,24 @@
       bottom: 0.65rem;
       width: 38px;
       height: 38px;
+      padding: 0;
+      border: 0;
       border-radius: 50%;
       display: grid;
       place-items: center;
       color: #050507;
       background: var(--tv-cyan);
+      cursor: pointer;
+      font: inherit;
       font-weight: 900;
       box-shadow: 0 0 24px rgba(33,244,208,0.45);
+    }
+
+    .tv-play:hover,
+    .tv-play:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 3px;
+      transform: scale(1.06);
     }
 
     .tv-meta {
@@ -1482,6 +1493,21 @@
       border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(0,0,0,0.24);
+    }
+
+    button.tv-list-item {
+      width: 100%;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    button.tv-list-item:hover,
+    button.tv-list-item:focus-visible {
+      border-color: rgba(33,244,208,0.45);
+      background: rgba(33,244,208,0.06);
+      outline: none;
     }
 
     .tv-list-item strong {
@@ -2287,7 +2313,7 @@
             <header class="tv-archive-head">
               <div>
                 <h2>Video Archive</h2>
-                <p>Tap a video to play it right here. The main TV pauses automatically.</p>
+                <p>Press play for sound. Portrait and landscape videos open at their natural shape.</p>
               </div>
               <span class="tv-chip" id="tv-archive-count">0</span>
             </header>
@@ -2563,7 +2589,7 @@
   <script>
     window.FAS_TV_ORIGIN = window.FAS_TV_ORIGIN || window.location.origin;
   </script>
-  <script type="module" src="assets/js/tv-network.js?v=20260620-player-loop-2"></script>
+  <script type="module" src="assets/js/tv-network.js?v=20260620-simple-archive-swipe"></script>
 
   <!-- compression now handled inline in the panel JS below -->
 
