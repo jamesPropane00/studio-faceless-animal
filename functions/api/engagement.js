@@ -125,6 +125,7 @@ export async function onRequestPost(context) {
         headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
         body: JSON.stringify([{
           author_username: username,
+          username,
           post_type: 'status',
           category: `engagement:${contentKey}`,
           body_text: `${reaction} reaction`,
@@ -143,6 +144,7 @@ export async function onRequestPost(context) {
         headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
         body: JSON.stringify([{
           author_username: username,
+          username,
           post_type: 'status',
           category: `engagement:${contentKey}`,
           body_text: text,
@@ -162,6 +164,7 @@ export async function onRequestPost(context) {
         headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
         body: JSON.stringify([{
           author_username: username,
+          username,
           post_type: 'link',
           category: 'news',
           body_text: postText,
