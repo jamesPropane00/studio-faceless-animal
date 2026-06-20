@@ -1168,50 +1168,221 @@
     }
 
     .feed-audio-card {
-      width: min(100%, 520px);
+      position: relative;
+      width: min(100%, 560px);
       margin-top: 0.82rem;
       display: grid;
-      grid-template-columns: 76px minmax(0, 1fr);
-      gap: 0.8rem;
+      grid-template-columns: 108px minmax(0, 1fr);
+      gap: 1rem;
       align-items: center;
-      padding: 0.78rem;
-      border-radius: 16px;
-      border: 1px solid rgba(33,244,208,0.12);
+      padding: 1rem;
+      overflow: hidden;
+      border-radius: 22px;
+      border: 1px solid rgba(33,244,208,0.24);
       background:
-        radial-gradient(circle at 0% 0%, rgba(33,244,208,0.12), transparent 38%),
-        linear-gradient(135deg, rgba(139,92,246,0.09), rgba(255,255,255,0.025));
+        radial-gradient(circle at 8% 0%, rgba(33,244,208,0.2), transparent 38%),
+        radial-gradient(circle at 92% 110%, rgba(139,92,246,0.28), transparent 48%),
+        linear-gradient(135deg, #111827, #090b14 58%, #120d21);
+      box-shadow: 0 18px 48px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    .feed-audio-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.13;
+      background-image: repeating-linear-gradient(105deg, transparent 0 14px, rgba(255,255,255,0.1) 15px, transparent 16px);
     }
 
     .feed-audio-art {
-      width: 76px;
-      height: 76px;
-      border-radius: 15px;
+      position: relative;
+      z-index: 1;
+      width: 108px;
+      height: 108px;
+      border-radius: 20px;
       display: grid;
       place-items: center;
       overflow: hidden;
-      background: rgba(0,0,0,0.36);
-      border: 1px solid rgba(255,255,255,0.08);
+      background:
+        radial-gradient(circle at 50% 35%, rgba(33,244,208,0.19), transparent 48%),
+        rgba(0,0,0,0.48);
+      border: 1px solid rgba(255,255,255,0.11);
+      box-shadow: inset 0 0 24px rgba(0,0,0,0.34);
     }
 
     .feed-audio-art img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+      width: 92%;
+      height: 92%;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.42));
     }
 
-    .feed-audio-title {
-      margin: 0 0 0.42rem;
+    .feed-audio-live {
+      position: absolute;
+      left: 8px;
+      bottom: 8px;
+      padding: 0.28rem 0.48rem;
+      border-radius: 999px;
+      background: #f43f5e;
       color: #fff;
-      font-size: 0.84rem;
-      font-weight: 900;
-      letter-spacing: 0.08em;
+      font-size: 0.55rem;
+      line-height: 1;
+      font-weight: 1000;
+      letter-spacing: 0.12em;
+      box-shadow: 0 4px 14px rgba(244,63,94,0.35);
+    }
+
+    .feed-audio-main {
+      position: relative;
+      z-index: 1;
+      min-width: 0;
+    }
+
+    .feed-audio-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-bottom: 0.35rem;
+      color: #21f4d0;
+      font-size: 0.62rem;
+      font-weight: 1000;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
     }
 
-    .feed-audio-card audio {
-      width: 100%;
-      height: 34px;
-      display: block;
+    .feed-audio-brand::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .feed-audio-title {
+      margin: 0;
+      color: #fff;
+      font-size: clamp(0.88rem, 2vw, 1.05rem);
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .feed-audio-station {
+      margin: 0.2rem 0 0.68rem;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .feed-audio-controls {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 0.72rem;
+      align-items: center;
+    }
+
+    .feed-audio-toggle {
+      appearance: none;
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      cursor: pointer;
+      background: linear-gradient(135deg, #21f4d0, #8b5cf6);
+      color: #080b12;
+      font-size: 1rem;
+      font-weight: 1000;
+      box-shadow: 0 8px 24px rgba(33,244,208,0.18);
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .feed-audio-toggle:hover {
+      transform: translateY(-1px) scale(1.04);
+      box-shadow: 0 10px 28px rgba(33,244,208,0.28);
+    }
+
+    .feed-audio-track {
+      min-width: 0;
+    }
+
+    .feed-audio-wave {
+      position: relative;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    .feed-audio-wave span {
+      flex: 1 1 0;
+      min-width: 2px;
+      height: calc(var(--wave-height, 50) * 1%);
+      max-height: 26px;
+      min-height: 4px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.22);
+      transition: background 120ms ease, transform 120ms ease;
+    }
+
+    .feed-audio-wave span.is-played {
+      background: linear-gradient(180deg, #21f4d0, #8b5cf6);
+      box-shadow: 0 0 8px rgba(33,244,208,0.18);
+    }
+
+    .feed-audio-card.is-playing .feed-audio-wave span {
+      animation: feed-wave-pulse 720ms ease-in-out infinite alternate;
+      animation-delay: calc(var(--bar-index, 0) * -34ms);
+    }
+
+    @keyframes feed-wave-pulse {
+      to { transform: scaleY(0.72); }
+    }
+
+    .feed-audio-time {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.18rem;
+      color: rgba(255,255,255,0.45);
+      font-size: 0.58rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+    }
+
+    .feed-audio-native {
+      display: none;
+    }
+
+    @media (max-width: 560px) {
+      .feed-audio-card {
+        grid-template-columns: 78px minmax(0, 1fr);
+        gap: 0.72rem;
+        padding: 0.78rem;
+        border-radius: 18px;
+      }
+
+      .feed-audio-art {
+        width: 78px;
+        height: 78px;
+        border-radius: 16px;
+      }
+
+      .feed-audio-controls {
+        grid-template-columns: 36px minmax(0, 1fr);
+        gap: 0.55rem;
+      }
+
+      .feed-audio-toggle {
+        width: 36px;
+        height: 36px;
+      }
     }
 
     .feed-actions {
@@ -1853,25 +2024,61 @@
       return /\.(mp3|wav|m4a|aac|flac|oga|ogg)(\?.*)?$/i.test(String(value || ''));
     }
 
-    function renderFeedMedia(url) {
+    function audioPostTitle(row, url) {
+      var body = String(row && row.body_text || '');
+      var quoted = body.match(/["“]([^"”]{1,120})["”]/);
+      if (quoted && quoted[1]) return quoted[1];
+      var name = decodeURIComponent(String(url).split('/').pop() || 'Music file').replace(/\?.*$/, '');
+      return name
+        .replace(/^(admin|member)-[a-z0-9_-]+-\d+-/i, '')
+        .replace(/\.[a-z0-9]{2,5}$/i, '')
+        .replace(/[-_]+/g, ' ')
+        .replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
+    }
+
+    function audioPostStation(row) {
+      var body = String(row && row.body_text || '');
+      var match = body.match(/Station\s+([145])(?:\s*[·-]\s*([^."”]+))?/i);
+      if (!match) return 'Faceless Radio · Community Signal';
+      return 'Station ' + match[1] + (match[2] ? ' · ' + match[2].trim() : '') + ' · Community Signal';
+    }
+
+    function renderFeedMedia(url, row) {
       if (!url) return '';
       if (isImageUrl(url)) {
         return '<a class="feed-media" href="' + esc(url) + '"><img src="' + esc(url) + '" alt="" loading="lazy"></a>';
+      }
+      if (isAudioUrl(url)) {
+        var name = audioPostTitle(row, url);
+        var station = audioPostStation(row);
+        var heights = [32,58,78,42,88,65,38,74,96,54,82,46,68,91,36,62,84,50,76,40,94,57,72,34,86,48,66,80];
+        var wave = heights.map(function (height, index) {
+          return '<span style="--wave-height:' + height + ';--bar-index:' + index + '"></span>';
+        }).join('');
+        return '<div class="feed-audio-card" data-feed-audio-card>'
+          + '<div class="feed-audio-art" aria-hidden="true">'
+          + '<img src="assets/boombox.png" alt="">'
+          + '<span class="feed-audio-live">ON AIR</span>'
+          + '</div>'
+          + '<div class="feed-audio-main">'
+          + '<div class="feed-audio-brand">Faceless Animal Radio</div>'
+          + '<p class="feed-audio-title">' + esc(name) + '</p>'
+          + '<p class="feed-audio-station">' + esc(station) + '</p>'
+          + '<div class="feed-audio-controls">'
+          + '<button class="feed-audio-toggle" type="button" aria-label="Play ' + esc(name) + '" data-feed-audio-toggle>▶</button>'
+          + '<div class="feed-audio-track">'
+          + '<div class="feed-audio-wave" role="slider" tabindex="0" aria-label="Seek through ' + esc(name) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-feed-audio-wave>' + wave + '</div>'
+          + '<div class="feed-audio-time"><span data-feed-audio-current>0:00</span><span data-feed-audio-duration>--:--</span></div>'
+          + '</div>'
+          + '</div>'
+          + '<audio class="feed-audio-native" preload="metadata" src="' + esc(url) + '"></audio>'
+          + '</div>'
+          + '</div>';
       }
       if (isVideoUrl(url)) {
         return '<div class="feed-video-wrap">'
           + '<video class="feed-video" playsinline preload="metadata" src="' + esc(url) + '#t=0.1"></video>'
           + '<span class="feed-video-play">Play</span>'
-          + '</div>';
-      }
-      if (isAudioUrl(url)) {
-        var name = decodeURIComponent(String(url).split('/').pop() || 'Music file').replace(/\?.*$/, '').replace(/[-_]+/g, ' ');
-        return '<div class="feed-audio-card">'
-          + '<div class="feed-audio-art" aria-hidden="true"><img src="assets/boombox.png" alt=""></div>'
-          + '<div>'
-          + '<p class="feed-audio-title">' + esc(name) + '</p>'
-          + '<audio controls preload="metadata" src="' + esc(url) + '"></audio>'
-          + '</div>'
           + '</div>';
       }
       return '<a class="feed-media" href="' + esc(url) + '">' + esc(url) + '</a>';
@@ -2101,6 +2308,83 @@
             playWithSound();
           }
         });
+      });
+    }
+
+    function formatAudioTime(value) {
+      var seconds = Number(value || 0);
+      if (!isFinite(seconds) || seconds < 0) seconds = 0;
+      var minutes = Math.floor(seconds / 60);
+      var remainder = Math.floor(seconds % 60);
+      return minutes + ':' + String(remainder).padStart(2, '0');
+    }
+
+    function bindFeedAudio(root) {
+      (root || document).querySelectorAll('[data-feed-audio-card]').forEach(function (card) {
+        if (card.dataset.bound === '1') return;
+        card.dataset.bound = '1';
+        var audio = card.querySelector('.feed-audio-native');
+        var toggle = card.querySelector('[data-feed-audio-toggle]');
+        var wave = card.querySelector('[data-feed-audio-wave]');
+        var bars = wave ? Array.prototype.slice.call(wave.querySelectorAll('span')) : [];
+        var current = card.querySelector('[data-feed-audio-current]');
+        var duration = card.querySelector('[data-feed-audio-duration]');
+        if (!audio || !toggle || !wave) return;
+
+        function sync() {
+          var progress = audio.duration ? Math.max(0, Math.min(1, audio.currentTime / audio.duration)) : 0;
+          var played = Math.round(progress * bars.length);
+          bars.forEach(function (bar, index) { bar.classList.toggle('is-played', index < played); });
+          wave.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+          if (current) current.textContent = formatAudioTime(audio.currentTime);
+          if (duration) duration.textContent = audio.duration ? formatAudioTime(audio.duration) : '--:--';
+        }
+
+        function pauseOtherMedia() {
+          (root || document).querySelectorAll('.feed-audio-native').forEach(function (other) {
+            if (other !== audio) other.pause();
+          });
+          (root || document).querySelectorAll('.feed-video').forEach(function (video) { video.pause(); });
+        }
+
+        function seek(clientX) {
+          if (!audio.duration) return;
+          var box = wave.getBoundingClientRect();
+          var ratio = Math.max(0, Math.min(1, (clientX - box.left) / Math.max(1, box.width)));
+          audio.currentTime = ratio * audio.duration;
+          sync();
+        }
+
+        toggle.addEventListener('click', function () {
+          if (audio.paused) {
+            pauseOtherMedia();
+            audio.play().catch(function () {});
+          } else {
+            audio.pause();
+          }
+        });
+        wave.addEventListener('click', function (event) { seek(event.clientX); });
+        wave.addEventListener('keydown', function (event) {
+          if (!audio.duration || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return;
+          event.preventDefault();
+          audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + (event.key === 'ArrowRight' ? 5 : -5)));
+          sync();
+        });
+        audio.addEventListener('loadedmetadata', sync);
+        audio.addEventListener('durationchange', sync);
+        audio.addEventListener('timeupdate', sync);
+        audio.addEventListener('play', function () {
+          card.classList.add('is-playing');
+          toggle.textContent = 'Ⅱ';
+          toggle.setAttribute('aria-label', 'Pause ' + (card.querySelector('.feed-audio-title') || {}).textContent);
+        });
+        audio.addEventListener('pause', function () {
+          card.classList.remove('is-playing');
+          toggle.textContent = '▶';
+          toggle.setAttribute('aria-label', 'Play ' + (card.querySelector('.feed-audio-title') || {}).textContent);
+        });
+        audio.addEventListener('ended', sync);
+        sync();
       });
     }
 
@@ -2683,7 +2967,7 @@
           var comments = feedComments(key);
           var body = esc((row.body_text || '').slice(0, 420));
           var type = row.post_type || row.category || 'update';
-          var media = renderFeedMedia(row.media_url);
+          var media = renderFeedMedia(row.media_url, row);
 
           return '<article class="feed-item" id="post-' + esc(key) + '" data-feed-key="' + esc(key) + '" data-feed-user="' + esc(username) + '" data-feed-text="' + esc(row.body_text || '') + '">'
             + '<div class="feed-item-top">'
@@ -2708,6 +2992,7 @@
             + '</article>';
         }).join('');
         bindFeedVideos(list);
+        bindFeedAudio(list);
         bindFeedActions(list);
         loadPersistedFeedComments(feedKeys, list);
         window.setTimeout(revealSharedPost, 80);
