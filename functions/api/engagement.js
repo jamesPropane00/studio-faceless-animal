@@ -120,6 +120,9 @@ export async function onRequestPost(context) {
     if (action === 'react') {
       const reaction = body.reaction === 'dislike' ? 'dislike' : body.reaction === 'clear' ? 'clear' : 'like';
       const identity = clean(user?.account_id || user?.id || body.device_id || username, 100);
+      const contentTitle = clean(body.content_title, 200);
+      const contentUrl = clean(body.content_url, 500) || null;
+      const reactionLabel = reaction === 'like' ? 'Liked' : reaction === 'dislike' ? 'Disliked' : 'Removed reaction from';
       const result = await supabaseFetch(context.env, '/rest/v1/signal_posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
@@ -130,8 +133,9 @@ export async function onRequestPost(context) {
           post_type: 'status',
           signal_type: 'thought',
           category: `engagement:${contentKey}`,
-          body_text: `${reaction} reaction`,
-          content: `${reaction} reaction`,
+          body_text: `${reactionLabel}: ${contentTitle || 'content'}`,
+          content: `${reactionLabel}: ${contentTitle || 'content'}`,
+          media_url: contentUrl,
           visibility: 'public',
           moderation_state: 'approved',
           source_context: `reaction:${reaction}:${identity}`,
@@ -142,6 +146,9 @@ export async function onRequestPost(context) {
       const text = clean(body.text, 800);
       if (!text) return json({ error: 'Write a comment first.' }, 400);
       const parentId = action === 'reply' ? clean(body.parent_id, 80) : '';
+      const contentTitle = clean(body.content_title, 200);
+      const contentUrl = clean(body.content_url, 500) || null;
+      const activityLabel = action === 'reply' ? 'Replied on' : 'Commented on';
       const result = await supabaseFetch(context.env, '/rest/v1/signal_posts?select=id,author_username,body_text,source_context,created_at', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
@@ -153,7 +160,8 @@ export async function onRequestPost(context) {
           signal_type: 'thought',
           category: `engagement:${contentKey}`,
           body_text: text,
-          content: text,
+          content: contentTitle ? `${activityLabel} ${contentTitle}: ${text}` : text,
+          media_url: contentUrl,
           visibility: 'public',
           moderation_state: 'approved',
           source_context: parentId ? `reply:${parentId}` : 'comment',

@@ -212,7 +212,7 @@ function renderSignalMedia(url) {
     return `<div style="margin-top:0.9rem;"><audio controls preload="none" style="width:100%;"><source src="${safeUrl}" /></audio></div>`
   }
 
-  return `<p style="margin-top:0.8rem;"><a href="${safeUrl}" target="_blank" rel="noopener" class="board-card-link">Open attached file →</a></p>`
+  return `<p style="margin-top:0.8rem;"><a href="${safeUrl}" class="board-card-link board-card-link--view">View Content &rarr;</a></p>`
 }
 
 function renderSignalCard(signal, session) {

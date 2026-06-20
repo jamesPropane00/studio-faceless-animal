@@ -358,6 +358,52 @@
       aspect-ratio: 9 / 16;
     }
 
+    .tv-player-transport {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.45rem;
+      margin: 0 1rem 1rem;
+      padding: 0.55rem;
+      border: 1px solid rgba(33,244,208,0.16);
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(33,244,208,0.07), rgba(139,92,246,0.08)), rgba(0,0,0,0.4);
+    }
+
+    .tv-transport-btn {
+      min-height: 42px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 9px;
+      background: rgba(255,255,255,0.04);
+      color: #eefcff;
+      font: inherit;
+      font-size: 0.7rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+    }
+
+    .tv-transport-btn:hover,
+    .tv-transport-btn:focus-visible {
+      border-color: rgba(33,244,208,0.55);
+      color: var(--tv-cyan);
+      outline: none;
+      background: rgba(33,244,208,0.08);
+    }
+
+    .tv-transport-btn.is-primary {
+      color: #05070a;
+      border-color: rgba(33,244,208,0.75);
+      background: linear-gradient(135deg, var(--tv-cyan), #8fffe9);
+    }
+
+    .tv-feature-wire {
+      margin-top: 1rem;
+    }
+
+    .tv-feature-wire .street-wire {
+      margin-top: 0;
+    }
+
     .tv-nav-btn {
       position: absolute;
       top: 50%;
@@ -1619,6 +1665,12 @@
       min-height: 0;
     }
 
+    @media (max-width: 620px) {
+      .tv-player-transport {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
     .tv-watch-layout .tv-control-foot {
       display: none;
     }
@@ -2118,7 +2170,7 @@
   </style>
   <link rel="stylesheet" href="assets/css/widget.css?v=20260618-widget" />
   <link rel="stylesheet" href="assets/css/widget-hub.css" />
-  <link rel="stylesheet" href="assets/css/street-wire.css?v=20260620" />
+  <link rel="stylesheet" href="assets/css/street-wire.css?v=20260620-reaction-loop" />
 </head>
 <body>
     <nav class="navbar waffle-nav tv-waffle-nav" role="navigation" aria-label="Main navigation">
@@ -2205,12 +2257,14 @@
                   <span>The first public channel video loads here when the archive responds.</span>
                 </div>
               </div>
-              <button class="tv-nav-btn tv-nav-prev" id="tv-nav-prev" type="button" aria-label="Previous video">
-                <span>⏮</span>
-              </button>
-              <button class="tv-nav-btn tv-nav-next" id="tv-nav-next" type="button" aria-label="Next video">
-                <span>⏭</span>
-              </button>
+            </div>
+            <div class="tv-player-transport" aria-label="Video playback controls">
+              <button class="tv-transport-btn" id="tv-nav-prev" type="button" aria-label="Previous video">Previous</button>
+              <button class="tv-transport-btn" id="tv-seek-back" type="button" aria-label="Back 10 seconds">-10 sec</button>
+              <button class="tv-transport-btn is-primary" id="tv-play-toggle" type="button" aria-label="Play video">Play</button>
+              <button class="tv-transport-btn" id="tv-seek-forward" type="button" aria-label="Forward 10 seconds">+10 sec</button>
+              <button class="tv-transport-btn" id="tv-nav-next" type="button" aria-label="Next video">Next</button>
+              <button class="tv-transport-btn" id="tv-fullscreen" type="button" aria-label="Open fullscreen">Full Screen</button>
             </div>
             <div class="tv-control-body">
               <h2 class="tv-control-title" id="tv-feature-title">The Network Is Being Built</h2>
@@ -2218,29 +2272,7 @@
                 Public uploads, creator channels, and featured broadcasts play inside the Faceless TV watch page.
               </p>
               <div class="tv-channel-credit" id="tv-channel-credit" hidden></div>
-              <section class="tv-reactions" aria-label="Video reactions">
-                <div class="tv-reaction-buttons">
-                  <button class="tv-reaction" id="tv-like-button" type="button" disabled>Like <span id="tv-like-count">0</span></button>
-                  <button class="tv-reaction" id="tv-dislike-button" type="button" disabled>Dislike <span id="tv-dislike-count">0</span></button>
-                  <button class="tv-reaction" id="tv-share-button" type="button" disabled>Share</button>
-                </div>
-                <p class="tv-reaction-note" id="tv-reaction-note"></p>
-                <p class="tv-reaction-note" id="tv-share-note"></p>
-              </section>
-              <section class="tv-comments" id="tv-comments" aria-label="Video comments">
-                <div class="tv-comments-head">
-                  <p class="tv-comments-title">Comments</p>
-                  <span class="tv-chip" id="tv-comment-count">0</span>
-                </div>
-                <div class="tv-comments-list" id="tv-comments-list" aria-live="polite">
-                  <div class="tv-empty">Select a video to load comments.</div>
-                </div>
-                <form class="tv-comment-form" id="tv-comment-form">
-                  <input class="tv-comment-input" id="tv-comment-input" name="comment" maxlength="500" placeholder="Add a comment" autocomplete="off" />
-                  <button class="tv-btn primary" type="submit">Post</button>
-                </form>
-                <p class="tv-comment-note" id="tv-comment-note"></p>
-              </section>
+              <div class="tv-feature-wire" id="tv-feature-street-wire" aria-label="Video reactions and Street Talk"></div>
             </div>
             <footer class="tv-control-foot">
               <div class="tv-status-row" aria-label="TV system status">
@@ -2526,12 +2558,12 @@
     window.FAS_DISABLE_PHONE_LAUNCHER = true;
   </script>
   <script src="assets/script.js?v=20260322"></script>
-  <script src="assets/js/street-wire.js?v=20260620"></script>
+  <script src="assets/js/street-wire.js?v=20260620-reaction-loop"></script>
   
   <script>
     window.FAS_TV_ORIGIN = window.FAS_TV_ORIGIN || window.location.origin;
   </script>
-  <script type="module" src="assets/js/tv-network.js?v=20260620-street-wire"></script>
+  <script type="module" src="assets/js/tv-network.js?v=20260620-player-loop"></script>
 
   <!-- compression now handled inline in the panel JS below -->
 
