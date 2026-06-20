@@ -1,4 +1,5 @@
 const MAX_BYTES = 50 * 1024 * 1024;
+const RADIO_ADMINS = new Set(['jamespropane00', 'arianamnm']);
 const ALLOWED_TYPES = new Set([
   'audio/aac',
   'audio/aiff',
@@ -11,8 +12,6 @@ const ALLOWED_TYPES = new Set([
   'audio/x-aiff',
   'audio/x-m4a',
 ]);
-const BLOCKED_STATUSES = new Set(['suspended', 'banned', 'limited']);
-const PAID_PLANS = new Set(['access', 'starter', 'pro', 'premium', 'paid']);
 
 function json(body, status = 200) {
   return Response.json(body, {
@@ -47,78 +46,48 @@ function extensionFor(fileName, fileType) {
 function base64ToBytes(value) {
   const binary = atob(String(value || ''));
   const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
-  }
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
   return bytes;
 }
 
 async function supabaseFetch(env, path, options = {}) {
   const supabaseUrl = String(env.SUPABASE_URL || '').replace(/\/+$/, '');
-  const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY;
+  const key = env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !key) {
-    return { ok: false, status: 500, data: { error: 'Missing Supabase server environment variables.' } };
+    return { ok: false, status: 500, data: { message: 'Missing Supabase service credentials.' }, supabaseUrl };
   }
 
   const headers = new Headers(options.headers || {});
   headers.set('apikey', key);
   headers.set('Authorization', `Bearer ${key}`);
-
-  const res = await fetch(`${supabaseUrl}${path}`, { ...options, headers });
-  const text = await res.text();
+  const response = await fetch(`${supabaseUrl}${path}`, { ...options, headers });
+  const text = await response.text();
   let data = null;
   try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-  return { ok: res.ok, status: res.status, data, text, supabaseUrl };
+  return { ok: response.ok, status: response.status, data, text, supabaseUrl };
 }
 
-async function getMember(env, username, ph) {
+async function verifyAdmin(env, username, ph) {
+  if (!RADIO_ADMINS.has(username)) return { error: 'Admin access only.', status: 403 };
   const query = [
-    'select=id,username,display_name,plan_type,member_status,password_hash',
+    'select=id,username,display_name',
     `username=eq.${encodeURIComponent(username)}`,
     `password_hash=eq.${encodeURIComponent(ph)}`,
     'limit=1',
   ].join('&');
-  const res = await supabaseFetch(env, `/rest/v1/member_accounts?${query}`);
-  if (!res.ok) return { error: 'Could not verify your member account.' };
-  const row = Array.isArray(res.data) ? res.data[0] : null;
-  if (!row) return { error: 'Your session has expired. Please sign in again.' };
-  if (BLOCKED_STATUSES.has(String(row.member_status || '').toLowerCase())) {
-    return { error: 'This account is not currently allowed to upload tracks.' };
-  }
-  return { member: row };
-}
-
-function isFreePlan(member) {
-  const plan = String(member?.plan_type || 'free').toLowerCase();
-  return !PAID_PLANS.has(plan);
-}
-
-async function countMonthlyUploads(env, username) {
-  const since = new Date();
-  since.setUTCDate(1);
-  since.setUTCHours(0, 0, 0, 0);
-  const query = [
-    'select=id',
-    `uploaded_by=eq.${encodeURIComponent(username)}`,
-    `created_at=gte.${encodeURIComponent(since.toISOString())}`,
-  ].join('&');
-  const res = await supabaseFetch(env, `/rest/v1/radio_tracks?${query}`, {
-    headers: { Prefer: 'count=exact' },
-  });
-  if (!res.ok) return null;
-  return Array.isArray(res.data) ? res.data.length : null;
+  const result = await supabaseFetch(env, `/rest/v1/member_accounts?${query}`);
+  if (!result.ok) return { error: 'Could not verify the admin account.', status: 500 };
+  const member = Array.isArray(result.data) ? result.data[0] : null;
+  return member ? { member } : { error: 'Authentication failed. Please sign in again.', status: 401 };
 }
 
 async function insertTrack(env, row) {
-  const rich = await supabaseFetch(env, '/rest/v1/radio_tracks', {
+  const result = await supabaseFetch(env, '/rest/v1/radio_tracks', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-    },
+    headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
     body: JSON.stringify([row]),
   });
-  if (rich.ok) return rich;
+  if (result.ok) return result;
 
   const minimal = {
     title: row.title,
@@ -126,28 +95,23 @@ async function insertTrack(env, row) {
     src: row.src,
     storage_path: row.storage_path,
     channel: row.channel,
-    is_active: row.is_active,
+    is_active: true,
     play_count: 0,
     upvotes: 0,
   };
   return supabaseFetch(env, '/rest/v1/radio_tracks', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-    },
+    headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
     body: JSON.stringify([minimal]),
   });
 }
 
-async function createDirectoryPost(env, username, title, publicSrc) {
-  const bodyText = `🎵 "${title}" — @${username} uploaded to Station 1 on Faceless Radio.`;
+async function createDirectoryPost(env, username, title, channel, publicSrc) {
+  const channelLabel = channel === 4 ? 'Station 4 · Lounge' : channel === 5 ? 'Station 5 · The Vault' : 'Station 1 · Original';
+  const bodyText = `New radio upload: "${title}" is now live on ${channelLabel}.`;
   const signal = await supabaseFetch(env, '/rest/v1/signal_posts?select=id,author_username,body_text,category,media_url,created_at', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-    },
+    headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
     body: JSON.stringify([{
       author_username: username,
       post_type: 'music',
@@ -162,10 +126,7 @@ async function createDirectoryPost(env, username, title, publicSrc) {
 
   const board = await supabaseFetch(env, '/rest/v1/board_posts?select=id,username,post_text,category,image_url,created_at', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-    },
+    headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
     body: JSON.stringify([{
       username,
       post_text: bodyText,
@@ -200,80 +161,67 @@ export async function onRequestPost(context) {
     const username = cleanUsername(body.username);
     const ph = String(body.ph || '').trim();
     const title = cleanTitle(body.title);
+    const channel = [1, 4, 5].includes(Number(body.channel)) ? Number(body.channel) : 1;
     const fileType = String(body.file_type || 'audio/mpeg').toLowerCase();
     const fileName = String(body.file_name || 'track.mp3');
 
     if (!username || !ph) return json({ ok: false, error: 'Please sign in before uploading.' }, 401);
-    if (!title) return json({ ok: false, error: 'Enter a track title.' }, 400);
-    if (!body.file_b64) return json({ ok: false, error: 'Select an audio file to upload.' }, 400);
+    if (!title) return json({ ok: false, error: 'Track title is required.' }, 400);
+    if (!body.file_b64) return json({ ok: false, error: 'Choose an audio file to upload.' }, 400);
     if (!ALLOWED_TYPES.has(fileType) && !fileType.startsWith('audio/')) {
       return json({ ok: false, error: 'Only audio files are supported.' }, 400);
     }
 
-    const memberResult = await getMember(context.env, username, ph);
-    if (memberResult.error) return json({ ok: false, error: memberResult.error }, 403);
-
-    const monthlyCount = isFreePlan(memberResult.member)
-      ? await countMonthlyUploads(context.env, username)
-      : null;
-    if (isFreePlan(memberResult.member) && monthlyCount !== null && monthlyCount >= 2) {
-      return json({ ok: false, error: 'You have already used your 2 uploads for this month.', remaining: 0 }, 429);
-    }
+    const admin = await verifyAdmin(context.env, username, ph);
+    if (admin.error) return json({ ok: false, error: admin.error }, admin.status);
 
     const bytes = base64ToBytes(body.file_b64);
+    if (!bytes.byteLength) return json({ ok: false, error: 'The selected audio file is empty.' }, 400);
     if (bytes.byteLength > MAX_BYTES) return json({ ok: false, error: 'File too large. Max upload size is 50MB.' }, 413);
 
     const ext = extensionFor(fileName, fileType);
-    const safeName = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50) || 'track';
-    const storagePath = `ch1/member-${username}-${Date.now()}-${safeName}.${ext}`;
-
+    const safeTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50) || 'track';
+    const storagePath = `ch${channel}/admin-${username}-${Date.now()}-${safeTitle}.${ext}`;
     const upload = await supabaseFetch(context.env, `/storage/v1/object/radio/${storagePath}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': fileType,
-        'x-upsert': 'false',
-      },
+      headers: { 'Content-Type': fileType, 'x-upsert': 'false' },
       body: bytes,
     });
     if (!upload.ok) {
       return json({ ok: false, error: upload.data?.message || upload.text || 'Storage upload failed.' }, 500);
     }
 
-    const supabaseUrl = String(context.env.SUPABASE_URL || upload.supabaseUrl || '').replace(/\/+$/, '');
-    const publicSrc = `${supabaseUrl}/storage/v1/object/public/radio/${storagePath}`;
+    const publicSrc = `${upload.supabaseUrl}/storage/v1/object/public/radio/${storagePath}`;
     const trackRow = {
       title,
       artist: username,
       src: publicSrc,
       storage_path: storagePath,
-      channel: 1,
+      channel,
       is_active: true,
       play_count: 0,
       upvotes: 0,
       uploaded_by: username,
       uploaded_at: new Date().toISOString(),
     };
-
     const insert = await insertTrack(context.env, trackRow);
     if (!insert.ok) {
       await supabaseFetch(context.env, `/storage/v1/object/radio/${storagePath}`, { method: 'DELETE' });
-      return json({ ok: false, error: insert.data?.message || insert.text || 'Track saved to storage, but database insert failed.' }, 500);
+      return json({ ok: false, error: insert.data?.message || insert.text || 'Track database insert failed.' }, 500);
     }
 
-    const directoryPost = await createDirectoryPost(context.env, username, title, publicSrc);
-    const used = monthlyCount === null ? null : monthlyCount + 1;
-    const remaining = used === null ? null : Math.max(0, 2 - used);
+    const directoryPost = await createDirectoryPost(context.env, username, title, channel, publicSrc);
+    const track = Array.isArray(insert.data) ? insert.data[0] : insert.data;
     return json({
       ok: true,
-      track: Array.isArray(insert.data) ? insert.data[0] : insert.data,
+      track,
+      channel,
       storage_path: storagePath,
-      remaining,
-      remaining_this_month: remaining,
       directory_post_created: directoryPost.ok,
       directory_post: directoryPost.post || null,
       warning: directoryPost.ok ? null : directoryPost.error,
     });
-  } catch (err) {
-    return json({ ok: false, error: err?.message || 'Upload failed.' }, 500);
+  } catch (error) {
+    return json({ ok: false, error: error?.message || 'Upload failed.' }, 500);
   }
 }

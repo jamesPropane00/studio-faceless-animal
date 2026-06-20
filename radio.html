@@ -2195,7 +2195,12 @@
           }
         }
 
-        if (successDetail) successDetail.textContent = '"' + title + '" is now live on Station 1. Refresh the player to hear it.';
+        if (successDetail) {
+          successDetail.textContent = '"' + title + '" is now live on Station 1. '
+            + (data.directory_post_created === false
+              ? 'The directory post will retry from this page.'
+              : 'A directory post was published too.');
+        }
         if (remainingMsg) {
           remainingMsg.textContent = remaining === 0
             ? "That was your last upload for this month."
@@ -2209,7 +2214,9 @@
           if (uw) uw.close();
         }, 2000);
 
-        postToDirectory(sess, title, 'music', '🎵 "{title}" — {display} uploaded to Station 1 on Faceless Radio');
+        if (data.directory_post_created !== true) {
+          postToDirectory(sess, title, 'music', '🎵 "{title}" — {display} uploaded to Station 1 on Faceless Radio');
+        }
       }
 
       if (subBtn) subBtn.addEventListener('click', rpUploadTrack);

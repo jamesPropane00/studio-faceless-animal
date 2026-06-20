@@ -1082,7 +1082,7 @@ function send(res, status, type, body) {
 
 const AUDIO_DIR   = path.join(ROOT, 'assets', 'audio')
 const RADIO_ADMINS = new Set(['jamespropane00', 'arianamnm'])   // usernames with radio upload/delete access
-const RADIO_MAX_BYTES = 60 * 1024 * 1024  // 60MB body limit (50MB file + base64 overhead)
+const RADIO_MAX_BYTES = 70 * 1024 * 1024  // 70MB body limit (50MB file + base64 overhead)
 const RADIO_MAX_FILE  = 50 * 1024 * 1024  // 50MB per track
 const RADIO_ALLOWED   = new Set([
   'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/flac', 'audio/mp4',
@@ -1195,8 +1195,59 @@ async function handleRadioUpload(req, res) {
     return sendJSON(res, 500, { error: 'File saved but track list could not be updated.' })
   }
 
+  let directoryPostCreated = false
+  let directoryPostWarning = null
+  const channelLabel = ch === '4' ? 'Station 4 · Lounge' : ch === '5' ? 'Station 5 · The Vault' : 'Station 1 · Original'
+  const postText = `New radio upload: "${entry.title}" is now live on ${channelLabel}.`
+  try {
+    const signalResult = await sbRequest(
+      creds.host,
+      creds.key,
+      'POST',
+      '/rest/v1/signal_posts?select=id',
+      JSON.stringify([{
+        author_username: u,
+        post_type: 'music',
+        category: 'music',
+        body_text: postText,
+        media_url: publicUrl,
+        moderation_state: 'approved',
+        visibility: 'public',
+      }])
+    )
+    directoryPostCreated = signalResult.status >= 200 && signalResult.status < 300
+    if (!directoryPostCreated) throw new Error('signal_posts insert failed')
+  } catch (signalError) {
+    try {
+      const boardResult = await sbRequest(
+        creds.host,
+        creds.key,
+        'POST',
+        '/rest/v1/board_posts?select=id',
+        JSON.stringify([{
+          username: u,
+          post_text: postText,
+          category: 'music',
+          image_url: publicUrl,
+          is_approved: true,
+          visibility_status: 'visible',
+        }])
+      )
+      directoryPostCreated = boardResult.status >= 200 && boardResult.status < 300
+      if (!directoryPostCreated) directoryPostWarning = 'Directory post insert failed.'
+    } catch (boardError) {
+      directoryPostWarning = boardError.message || signalError.message || 'Directory post insert failed.'
+    }
+  }
+
   console.log('[FAS:radio:upload] Channel', ch, 'uploaded to Supabase:', fileName, '(' + fileBuffer.length + ' bytes)')
-  sendJSON(res, 200, { ok: true, track: entry, channel: ch })
+  sendJSON(res, 200, {
+    ok: true,
+    track: entry,
+    channel: ch,
+    directory_post_created: directoryPostCreated,
+    warning: directoryPostWarning,
+  })
 }
 
 /** POST /api/radio/delete ΓÇö admin only, removes track from channel + disk */
@@ -1249,8 +1300,9 @@ async function handleRadioDelete(req, res) {
 //  Files are saved to assets/audio/community/ and appended to tracks.json.
 
 const COMMUNITY_AUDIO_DIR      = path.join(AUDIO_DIR, 'community')
-const COMMUNITY_MAX_FILE_MB    = 30
+const COMMUNITY_MAX_FILE_MB    = 50
 const COMMUNITY_MAX_FILE_B     = COMMUNITY_MAX_FILE_MB * 1024 * 1024
+const COMMUNITY_MAX_BODY_B     = 70 * 1024 * 1024
 const COMMUNITY_MAX_PER_MONTH  = 2
 const COMMUNITY_PAID_PLANS     = new Set(['access', 'starter', 'pro', 'premium'])
 
@@ -1258,7 +1310,7 @@ const COMMUNITY_PAID_PLANS     = new Set(['access', 'starter', 'pro', 'premium']
 async function handleCommunityUpload(req, res) {
   let rawBody
   try {
-    rawBody = await readBody(req, COMMUNITY_MAX_FILE_B + 16384)
+    rawBody = await readBody(req, COMMUNITY_MAX_BODY_B)
   } catch {
     return sendJSON(res, 413, { error: `File too large. Max ${COMMUNITY_MAX_FILE_MB}MB.` })
   }
@@ -1307,6 +1359,7 @@ async function handleCommunityUpload(req, res) {
     return sendJSON(res, 500, { error: 'Could not check upload quota. Please try again.' })
   }
 
+  let monthCount = 0
   if (totalUploads < 20) {
     // Allow upload (free quota)
   } else {
@@ -1328,7 +1381,6 @@ async function handleCommunityUpload(req, res) {
     const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0)).toISOString()
     const nextMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0)).toISOString()
 
-    let monthCount = 0
     try {
       const quotaRes = await sbRequest(
         creds.host,
@@ -1431,11 +1483,57 @@ async function handleCommunityUpload(req, res) {
   const nextCount = monthCount + 1
   const remaining = Math.max(0, COMMUNITY_MAX_PER_MONTH - nextCount)
 
+  let directoryPostCreated = false
+  let directoryPostWarning = null
+  const postText = `🎵 "${title.trim().slice(0, 100)}" — @${u} uploaded to Station 1 on Faceless Radio.`
+  try {
+    const signalResult = await sbRequest(
+      creds.host,
+      creds.key,
+      'POST',
+      '/rest/v1/signal_posts?select=id',
+      JSON.stringify([{
+        author_username: u,
+        post_type: 'music',
+        category: 'music',
+        body_text: postText,
+        media_url: publicSrc,
+        moderation_state: 'approved',
+        visibility: 'public',
+      }])
+    )
+    directoryPostCreated = signalResult.status >= 200 && signalResult.status < 300
+    if (!directoryPostCreated) throw new Error('signal_posts insert failed')
+  } catch (signalError) {
+    try {
+      const boardResult = await sbRequest(
+        creds.host,
+        creds.key,
+        'POST',
+        '/rest/v1/board_posts?select=id',
+        JSON.stringify([{
+          username: u,
+          post_text: postText,
+          category: 'music',
+          image_url: publicSrc,
+          is_approved: true,
+          visibility_status: 'visible',
+        }])
+      )
+      directoryPostCreated = boardResult.status >= 200 && boardResult.status < 300
+      if (!directoryPostCreated) directoryPostWarning = 'Directory post insert failed.'
+    } catch (boardError) {
+      directoryPostWarning = boardError.message || signalError.message || 'Directory post insert failed.'
+    }
+  }
+
   sendJSON(res, 200, {
     ok:        true,
     track:     trackEntry,
     monthCount: nextCount,
     remaining:  remaining,
+    directory_post_created: directoryPostCreated,
+    warning: directoryPostWarning,
   })
 }
 

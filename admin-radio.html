@@ -415,7 +415,10 @@
           return;
         }
 
-        okEl.textContent = '\u2713 "' + title + '" is now live on ' + (CHANNEL_LABELS[activeChannel] || 'Channel ' + activeChannel) + '.';
+        var postNote = res.data.directory_post_created === false
+          ? ' The track is live, but the directory post could not be created' + (res.data.warning ? ': ' + res.data.warning : '.')
+          : ' A directory post was published too.';
+        okEl.textContent = '\u2713 "' + title + '" is now live on ' + (CHANNEL_LABELS[activeChannel] || 'Channel ' + activeChannel) + '.' + postNote;
         okEl.style.display = '';
         document.getElementById('ar-form').reset();
         fileChosen.style.display = 'none';
