@@ -622,12 +622,7 @@
         inlineNavigate(card, 1);
       });
       var inlinePlay = video.play();
-      if (inlinePlay && typeof inlinePlay.then === 'function') {
-        inlinePlay.then(function () {
-          video.muted = false;
-          video.defaultMuted = false;
-        }).catch(function () {});
-      }
+      if (inlinePlay && typeof inlinePlay.catch === 'function') inlinePlay.catch(function () {});
       return;
     }
 
