@@ -1,4 +1,4 @@
-const MAX_BYTES = 45 * 1024 * 1024;
+const MAX_BYTES = 50 * 1024 * 1024;
 
 function json(body, status = 200) {
   return Response.json(body, {
@@ -103,6 +103,48 @@ async function getUploads(env, username) {
   };
 }
 
+async function createDirectoryPost(env, username, title, publicSrc) {
+  const bodyText = `🎬 "${title}" — @${username} uploaded to Faceless TV.`;
+  const signal = await supabaseFetch(env, '/rest/v1/signal_posts?select=id,author_username,body_text,category,media_url,created_at', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify([{
+      author_username: username,
+      post_type: 'video',
+      category: 'video',
+      body_text: bodyText,
+      media_url: publicSrc,
+      moderation_state: 'approved',
+      visibility: 'public',
+    }]),
+  });
+  if (signal.ok) return { ok: true, post: Array.isArray(signal.data) ? signal.data[0] : signal.data };
+
+  const board = await supabaseFetch(env, '/rest/v1/board_posts?select=id,username,post_text,category,image_url,created_at', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify([{
+      username,
+      post_text: bodyText,
+      category: 'video',
+      image_url: publicSrc,
+      is_approved: true,
+      visibility_status: 'visible',
+    }]),
+  });
+  return {
+    ok: board.ok,
+    post: board.ok ? (Array.isArray(board.data) ? board.data[0] : board.data) : null,
+    error: board.ok ? null : (board.data?.message || signal.data?.message || 'Directory post failed.'),
+  };
+}
+
 function ownerChannel() {
   return {
     id: 'owner-faceless-tv',
@@ -198,7 +240,7 @@ export async function onRequestPost(context) {
     if (body.file_b64) {
       const bytes = base64ToBytes(body.file_b64);
       if (bytes.byteLength > MAX_BYTES) {
-        return json({ ok: false, error: 'File too large. Max upload size is 45MB.' }, 400);
+        return json({ ok: false, error: 'File too large. Max upload size is 50MB.' }, 413);
       }
 
       const ext = extensionFor(fileName, fileType);
@@ -253,10 +295,22 @@ export async function onRequestPost(context) {
     });
 
     if (!insert.ok) {
+      if (storagePath) {
+        await supabaseFetch(context.env, `/storage/v1/object/tv-media/${storagePath}`, { method: 'DELETE' });
+      }
       return json({ ok: false, error: insert.data?.message || insert.text || 'Could not save upload.' }, 500);
     }
 
-    return json({ ok: true, upload: Array.isArray(insert.data) ? insert.data[0] : insert.data });
+    const directoryPost = visibility === 'public'
+      ? await createDirectoryPost(context.env, username, title, publicSrc)
+      : { ok: false, post: null, error: null };
+    return json({
+      ok: true,
+      upload: Array.isArray(insert.data) ? insert.data[0] : insert.data,
+      directory_post_created: directoryPost.ok,
+      directory_post: directoryPost.post || null,
+      warning: directoryPost.ok || visibility !== 'public' ? null : directoryPost.error,
+    });
   } catch (err) {
     return json({ ok: false, error: err?.message || 'Upload failed.' }, 500);
   }

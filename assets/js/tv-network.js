@@ -438,6 +438,12 @@
             '<h3>' + escapeHtml(title) + '</h3>',
             '<p>' + escapeHtml(channel + ' / ' + description) + '</p>',
           '</div>',
+          '<div class="tv-card-actions" aria-label="Video actions">',
+            '<button type="button" data-card-like>Like <span>' + likes + '</span></button>',
+            '<button type="button" data-card-dislike>Dislike <span>' + dislikes + '</span></button>',
+            '<button type="button" data-card-share>Share</button>',
+            '<small class="tv-card-share-note" data-card-note></small>',
+          '</div>',
         '</article>',
       ].join('');
     }).join('');
@@ -445,15 +451,17 @@
     activateVideos(el.grid);
 
     qsa('.tv-card', el.grid).forEach(function (card) {
-      card.addEventListener('click', function () {
-        featureCard(card);
+      card.addEventListener('click', function (event) {
+        if (event.target.closest('.tv-card-actions') || event.target.closest('.tv-inline-controls') || event.target.closest('video')) return;
+        playCardInline(card);
       });
       card.addEventListener('keydown', function (event) {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          featureCard(card);
+          playCardInline(card);
         }
       });
+      bindCardActions(card);
     });
 
     startShuffledPlaylist(sourceItems);
@@ -503,6 +511,165 @@
         currentIframe.removeAttribute('src');
       } catch (err) {}
     }
+  }
+
+  function pauseMainTV() {
+    if (!el.screen) return;
+    var video = el.screen.querySelector('video.tv-main-video');
+    if (video) video.pause();
+    var frame = el.screen.querySelector('iframe');
+    if (frame && frame.src) {
+      frame.dataset.pausedSrc = frame.src;
+      frame.removeAttribute('src');
+    }
+  }
+
+  function pauseOtherPageVideos(activeVideo) {
+    qsa('video').forEach(function (video) {
+      if (video !== activeVideo && !video.paused) video.pause();
+    });
+  }
+
+  function restoreCardPreview(card) {
+    if (!card) return;
+    var source = card.getAttribute('data-source') || '';
+    var embed = card.getAttribute('data-embed') || '';
+    var title = card.getAttribute('data-title') || 'Video';
+    var thumb = card.querySelector('.tv-thumb');
+    if (!thumb) return;
+    if (source) {
+      thumb.innerHTML = '<video class="tv-thumb-video" muted playsinline preload="metadata" src="' + escapeHtml(source) + '"></video><span class="tv-play" aria-hidden="true">&gt;</span>';
+    } else if (embed) {
+      thumb.innerHTML = '<iframe src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe><span class="tv-play" aria-hidden="true">&gt;</span>';
+    }
+    card.classList.remove('is-inline-playing', 'is-inline-portrait');
+    activateVideos(thumb);
+  }
+
+  function closeOtherInlineCards(activeCard) {
+    qsa('.tv-card.is-inline-playing', el.grid).forEach(function (card) {
+      if (card !== activeCard) restoreCardPreview(card);
+    });
+  }
+
+  function inlineNavigate(card, offset) {
+    var cards = qsa('.tv-card', el.grid);
+    var index = cards.indexOf(card);
+    if (index < 0 || !cards.length) return;
+    var next = cards[(index + offset + cards.length) % cards.length];
+    if (next) playCardInline(next);
+  }
+
+  function playCardInline(card) {
+    if (!card) return;
+    var source = card.getAttribute('data-source') || '';
+    var embed = card.getAttribute('data-embed') || '';
+    var title = card.getAttribute('data-title') || 'Selected Broadcast';
+    var key = card.getAttribute('data-key') || '';
+    var thumb = card.querySelector('.tv-thumb');
+    if (!thumb) return;
+
+    closeOtherInlineCards(card);
+    pauseMainTV();
+    state.currentKey = key;
+    state.autoplaying = false;
+    syncPlaylistToKey(key);
+    setActiveCard(key);
+    renderReactions(reactionTargetFromCard(card));
+    renderShare(reactionTargetFromCard(card));
+
+    if (source) {
+      thumb.innerHTML = [
+        '<video class="tv-inline-video" controls autoplay playsinline preload="auto" src="' + escapeHtml(source) + '"></video>',
+        '<div class="tv-inline-controls" aria-label="Inline video navigation">',
+          '<button type="button" data-inline-back aria-label="Back 10 seconds">-10</button>',
+          '<button type="button" data-inline-prev aria-label="Previous video">Prev</button>',
+          '<button type="button" data-inline-next aria-label="Next video">Next</button>',
+          '<button type="button" data-inline-forward aria-label="Forward 10 seconds">+10</button>',
+        '</div>',
+      ].join('');
+      card.classList.add('is-inline-playing');
+      var video = thumb.querySelector('video');
+      var syncRatio = function () {
+        card.classList.toggle('is-inline-portrait', video.videoHeight > video.videoWidth);
+      };
+      video.addEventListener('loadedmetadata', syncRatio);
+      video.addEventListener('play', function () { pauseOtherPageVideos(video); });
+      video.addEventListener('ended', function () { inlineNavigate(card, 1); });
+      thumb.querySelector('[data-inline-back]').addEventListener('click', function (event) {
+        event.stopPropagation();
+        video.currentTime = Math.max(0, video.currentTime - 10);
+      });
+      thumb.querySelector('[data-inline-forward]').addEventListener('click', function (event) {
+        event.stopPropagation();
+        video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 10);
+      });
+      thumb.querySelector('[data-inline-prev]').addEventListener('click', function (event) {
+        event.stopPropagation();
+        inlineNavigate(card, -1);
+      });
+      thumb.querySelector('[data-inline-next]').addEventListener('click', function (event) {
+        event.stopPropagation();
+        inlineNavigate(card, 1);
+      });
+      video.play().catch(function () {});
+      return;
+    }
+
+    if (embed) {
+      thumb.innerHTML = '<iframe class="tv-inline-frame" src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="eager" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+      card.classList.add('is-inline-playing');
+    }
+  }
+
+  function updateCardReactionUi(card, target) {
+    var counts = seedReactionCounts(target);
+    var choice = readReactionChoice(target);
+    var like = card.querySelector('[data-card-like]');
+    var dislike = card.querySelector('[data-card-dislike]');
+    if (like) {
+      like.classList.toggle('active', choice === 'like');
+      var likeCount = like.querySelector('span');
+      if (likeCount) likeCount.textContent = String(counts.likes || 0);
+    }
+    if (dislike) {
+      dislike.classList.toggle('active', choice === 'dislike');
+      var dislikeCount = dislike.querySelector('span');
+      if (dislikeCount) dislikeCount.textContent = String(counts.dislikes || 0);
+    }
+  }
+
+  function bindCardActions(card) {
+    var target = reactionTargetFromCard(card);
+    var like = card.querySelector('[data-card-like]');
+    var dislike = card.querySelector('[data-card-dislike]');
+    var share = card.querySelector('[data-card-share]');
+    var note = card.querySelector('[data-card-note]');
+    updateCardReactionUi(card, target);
+
+    if (like) like.addEventListener('click', function (event) {
+      event.stopPropagation();
+      saveVideoReaction(target, 'like', function () { updateCardReactionUi(card, target); });
+    });
+    if (dislike) dislike.addEventListener('click', function (event) {
+      event.stopPropagation();
+      saveVideoReaction(target, 'dislike', function () { updateCardReactionUi(card, target); });
+    });
+    if (share) share.addEventListener('click', async function (event) {
+      event.stopPropagation();
+      var url = shareUrlForTarget(target);
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: titleForTarget(target), text: titleForTarget(target), url: url });
+          if (note) note.textContent = 'Shared.';
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url);
+          if (note) note.textContent = 'Link copied.';
+        } else if (note) {
+          note.textContent = url;
+        }
+      } catch (err) {}
+    });
   }
 
   function featureCard(card) {
@@ -632,6 +799,9 @@
           
           video.addEventListener('play', function () {
             state.consecutiveErrors = 0;
+            qsa('.tv-card.is-inline-playing video').forEach(function (inlineVideo) {
+              if (!inlineVideo.paused) inlineVideo.pause();
+            });
           });
 
           var startPreview = function () {
@@ -753,6 +923,13 @@
     activateVideos(el.recentUploads);
     syncFilterButtons();
     setShellMode();
+    window.FAS_TV = {
+      state: state,
+      loadNetwork: loadNetwork,
+      playNext: playNextUpload,
+      playPrevious: playPrevUpload,
+    };
+    document.dispatchEvent(new CustomEvent('fas:tv-ready'));
   }
 
   function bindFilterRail() {

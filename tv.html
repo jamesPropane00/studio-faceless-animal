@@ -1711,6 +1711,76 @@
       display: none;
     }
 
+    .tv-card-actions {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.4rem;
+      padding-top: 0.1rem;
+    }
+
+    .tv-card-actions button {
+      appearance: none;
+      min-height: 32px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.035);
+      color: rgba(255,255,255,0.78);
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.7rem;
+      font-weight: 900;
+    }
+
+    .tv-card-actions button:hover,
+    .tv-card-actions button:focus-visible,
+    .tv-card-actions button.active {
+      border-color: rgba(33,244,208,0.46);
+      color: var(--tv-cyan);
+      outline: none;
+    }
+
+    .tv-inline-controls {
+      position: absolute;
+      left: 0.55rem;
+      right: 0.55rem;
+      bottom: 0.55rem;
+      z-index: 3;
+      display: flex;
+      justify-content: center;
+      gap: 0.36rem;
+      pointer-events: none;
+    }
+
+    .tv-inline-controls button {
+      pointer-events: auto;
+      min-width: 36px;
+      height: 32px;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      background: rgba(0,0,0,0.68);
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.68rem;
+      font-weight: 900;
+      backdrop-filter: blur(8px);
+    }
+
+    .tv-inline-controls button:hover,
+    .tv-inline-controls button:focus-visible {
+      border-color: var(--tv-cyan);
+      color: var(--tv-cyan);
+      outline: none;
+    }
+
+    .tv-card-share-note {
+      grid-column: 1 / -1;
+      min-height: 0.9em;
+      color: var(--tv-cyan);
+      font-size: 0.65rem;
+      text-align: center;
+    }
+
     .tv-archive-panel .tv-card:hover,
     .tv-archive-panel .tv-card.is-active {
       background: rgba(255,255,255,0.07);
@@ -2178,7 +2248,7 @@
             <header class="tv-archive-head">
               <div>
                 <h2>Video Archive</h2>
-                <p>Tap a video to play it in the TV.</p>
+                <p>Tap a video to play it right here. The main TV pauses automatically.</p>
               </div>
               <span class="tv-chip" id="tv-archive-count">0</span>
             </header>
@@ -2400,7 +2470,7 @@
           <span class="uw-dropzone-icon">⬆</span>
           <p>Drag video or click to browse</p>
           <small>MP4, WebM, MOV • Max 50MB</small>
-          <input type="file" id="tv-upload-file" accept="video/*" hidden />
+          <input type="file" id="tv-quick-upload-file" accept="video/*" hidden />
         </div>
         <div class="uw-file-preview" id="tv-upload-file-preview" hidden>
           <span class="uw-file-icon">🎬</span>
@@ -2427,18 +2497,18 @@
             <small class="uw-note" id="tv-upload-compress-status" style="font-size:0.7rem"></small>
           </div>
         </div>
-        <form class="uw-form" id="tv-upload-form">
-          <input id="tv-upload-title" type="text" maxlength="120" placeholder="Video title" required />
-          <select id="tv-upload-channel" required>
+        <form class="uw-form" id="tv-quick-upload-form">
+          <input id="tv-quick-upload-title" type="text" maxlength="120" placeholder="Video title" required />
+          <select id="tv-quick-upload-channel" required>
             <option value="">Select channel...</option>
           </select>
-          <select id="tv-upload-visibility">
+          <select id="tv-quick-upload-visibility">
             <option value="public">Public</option>
             <option value="private">Private</option>
           </select>
-          <textarea id="tv-upload-description" maxlength="500" placeholder="Short description (optional)" rows="2"></textarea>
-          <div class="uw-status" id="tv-upload-status" aria-live="polite"></div>
-          <button class="uw-btn primary" type="submit" id="tv-upload-submit">Upload Video</button>
+          <textarea id="tv-quick-upload-description" maxlength="500" placeholder="Short description (optional)" rows="2"></textarea>
+          <div class="uw-status" id="tv-quick-upload-status" aria-live="polite"></div>
+          <button class="uw-btn primary" type="submit" id="tv-quick-upload-submit">Upload Video</button>
         </form>
       </div>
     </section>
@@ -2451,7 +2521,7 @@
   <script src="assets/script.js?v=20260322"></script>
   
   <script>
-    window.FAS_TV_ORIGIN = window.FAS_TV_ORIGIN || "https://tv.facelessanimalstudios.com";
+    window.FAS_TV_ORIGIN = window.FAS_TV_ORIGIN || window.location.origin;
   </script>
   <script type="module" src="assets/js/tv-network.js?v=20260618-reaction-system"></script>
 
@@ -2463,14 +2533,15 @@
 
     var panel = document.getElementById('tv-upload-panel');
     var dropzone = document.getElementById('tv-upload-dropzone');
-    var fileInput = document.getElementById('tv-upload-file');
+    var fileInput = document.getElementById('tv-quick-upload-file');
     var filePreview = document.getElementById('tv-upload-file-preview');
     var fileName = document.getElementById('tv-upload-file-name');
     var fileSize = document.getElementById('tv-upload-file-size');
     var fileRemove = document.getElementById('tv-upload-file-remove');
-    var form = document.getElementById('tv-upload-form');
-    var statusEl = document.getElementById('tv-upload-status');
-    var channelSelect = document.getElementById('tv-upload-channel');
+    var form = document.getElementById('tv-quick-upload-form');
+    var statusEl = document.getElementById('tv-quick-upload-status');
+    var channelSelect = document.getElementById('tv-quick-upload-channel');
+    var toggle = document.getElementById('tv-upload-toggle');
     var compressSection = document.getElementById('tv-upload-compress-section');
     var compressBtn = document.getElementById('tv-upload-compress-btn');
     var compressMeterRow = document.getElementById('tv-upload-compress-meter-row');
@@ -2544,18 +2615,14 @@
       if (progressEl) progressEl.hidden = true;
       if (progressFill) progressFill.style.width = '0%';
       if (statusEl) statusEl.textContent = '';
-      var subBtn = document.getElementById('tv-upload-submit');
+      var subBtn = document.getElementById('tv-quick-upload-submit');
       if (subBtn) subBtn.disabled = false;
     }
 
-    // Auto-populate channels on open
-    if (widget) {
-      var origOpen = widget.open;
-      widget.open = function() {
-        populateChannelSelect();
-        origOpen();
-      };
-    }
+    // Populate before the shared widget opens. The old implementation replaced
+    // widget.open(), but the toggle keeps an internal reference to the original.
+    if (toggle) toggle.addEventListener('click', populateChannelSelect);
+    document.addEventListener('fas:tv-ready', populateChannelSelect);
 
     // dropzone click
     if (dropzone) dropzone.addEventListener('click', function() { if (fileInput) fileInput.click(); });
@@ -2717,11 +2784,11 @@
       if (!session) { setStatus('Sign in first.', 'error'); return; }
 
       var ch = channelSelect ? channelSelect.value : '';
-      var titleEl = document.getElementById('tv-upload-title');
+      var titleEl = document.getElementById('tv-quick-upload-title');
       var title = titleEl ? titleEl.value.trim() : '';
-      var descEl = document.getElementById('tv-upload-description');
+      var descEl = document.getElementById('tv-quick-upload-description');
       var desc = descEl ? descEl.value.trim() : '';
-      var visEl = document.getElementById('tv-upload-visibility');
+      var visEl = document.getElementById('tv-quick-upload-visibility');
       var vis = visEl ? visEl.value : 'public';
       var file = pendingFile;
 
@@ -2731,7 +2798,7 @@
       if (file.size > 50 * 1024 * 1024) { setStatus('50MB max.', 'error'); return; }
 
       isUploading = true;
-      var subBtn = document.getElementById('tv-upload-submit');
+      var subBtn = document.getElementById('tv-quick-upload-submit');
       if (subBtn) subBtn.disabled = true;
       setStatus('Preparing...', '');
       setProgress(0, 'Reading file...');
@@ -2791,7 +2858,9 @@
         });
 
         setProgress(100, 'Published!');
-        postToDirectory(session, title, 'video', '\uD83C\uDFAC "{title}" \u2014 {display} uploaded to Faceless TV');
+        if (result.directory_post_created !== true && vis === 'public') {
+          postToDirectory(session, title, 'video', '\uD83C\uDFAC "{title}" \u2014 {display} uploaded to Faceless TV');
+        }
 
         setTimeout(function() {
           if (widget) widget.close();
