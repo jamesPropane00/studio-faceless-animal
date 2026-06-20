@@ -583,7 +583,7 @@
 
     if (source) {
       thumb.innerHTML = [
-        '<video class="tv-inline-video" controls autoplay playsinline preload="auto" src="' + escapeHtml(source) + '"></video>',
+        '<video class="tv-inline-video" controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>',
         '<div class="tv-inline-controls" aria-label="Inline video navigation">',
           '<button type="button" data-inline-back aria-label="Back 10 seconds">-10</button>',
           '<button type="button" data-inline-prev aria-label="Previous video">Prev</button>',
@@ -621,7 +621,13 @@
         event.stopPropagation();
         inlineNavigate(card, 1);
       });
-      video.play().catch(function () {});
+      var inlinePlay = video.play();
+      if (inlinePlay && typeof inlinePlay.then === 'function') {
+        inlinePlay.then(function () {
+          video.muted = false;
+          video.defaultMuted = false;
+        }).catch(function () {});
+      }
       return;
     }
 
