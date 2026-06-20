@@ -22,6 +22,7 @@
     activeReactionTarget: null,
     activeShareTarget: null,
     inlinePlaying: false,
+    soundEnabled: false,
   };
 
   var el = {};
@@ -409,9 +410,7 @@
         featureUpload(item);
         var video = mainVideo();
         if (video) {
-          video.muted = false;
-          video.defaultMuted = false;
-          video.volume = 1;
+          enableSound(video);
           var playPromise = video.play();
           if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(function () {});
         }
@@ -550,6 +549,27 @@
     return el.screen ? el.screen.querySelector('video.tv-main-video') : null;
   }
 
+  function rememberSound(enabled) {
+    state.soundEnabled = Boolean(enabled);
+    try { localStorage.setItem('fas_tv_sound_enabled', state.soundEnabled ? '1' : '0'); } catch (err) {}
+    syncSoundButton();
+  }
+
+  function syncSoundButton() {
+    if (!el.soundToggle) return;
+    el.soundToggle.textContent = state.soundEnabled ? 'Sound On' : 'Turn Sound On';
+    el.soundToggle.classList.toggle('is-primary', !state.soundEnabled);
+    el.soundToggle.setAttribute('aria-pressed', state.soundEnabled ? 'true' : 'false');
+  }
+
+  function enableSound(video) {
+    rememberSound(true);
+    if (!video) return;
+    video.muted = false;
+    video.defaultMuted = false;
+    video.volume = 1;
+  }
+
   function setTransportEnabled(enabled) {
     [el.seekBack, el.playToggle, el.seekForward, el.fullscreen].forEach(function (button) {
       if (button) button.disabled = !enabled;
@@ -580,6 +600,9 @@
       return;
     }
     setTransportEnabled(true);
+    video.muted = !state.soundEnabled;
+    video.defaultMuted = !state.soundEnabled;
+    video.volume = 1;
     syncPlayButton(video);
     video.addEventListener('loadedmetadata', function () { syncMainRatio(video); });
     video.addEventListener('play', function () { syncPlayButton(video); });
@@ -688,9 +711,7 @@
       thumb.innerHTML = '<video class="tv-inline-video" controls autoplay playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
       card.classList.add('is-inline-playing');
       var video = thumb.querySelector('video');
-      video.muted = false;
-      video.defaultMuted = false;
-      video.volume = 1;
+      enableSound(video);
       var syncRatio = function () {
         var portrait = video.videoHeight > video.videoWidth;
         card.classList.toggle('is-inline-portrait', portrait);
@@ -709,7 +730,29 @@
       bindSwipeSurface(video, function () { inlineNavigate(card, -1); }, function () { inlineNavigate(card, 1); });
       if (video.readyState >= 1) syncRatio();
       var playPromise = video.play();
-      if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(function () {});
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(function () {
+          card.classList.add('needs-user-play');
+          if (!thumb.querySelector('.tv-inline-resume')) {
+            var resume = document.createElement('button');
+            resume.type = 'button';
+            resume.className = 'tv-inline-resume';
+            resume.textContent = 'Play With Sound';
+            resume.addEventListener('click', function (event) {
+              event.stopPropagation();
+              enableSound(video);
+              var retry = video.play();
+              if (retry && typeof retry.catch === 'function') retry.catch(function () {});
+            });
+            thumb.appendChild(resume);
+          }
+        });
+      }
+      video.addEventListener('playing', function () {
+        card.classList.remove('needs-user-play');
+        var resume = thumb.querySelector('.tv-inline-resume');
+        if (resume) resume.remove();
+      });
       return;
     }
 
@@ -792,9 +835,9 @@
     cleanupCurrentVideo();
 
     if (source) {
-      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
-      activateVideos(el.screen);
+      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
       prepareMainPlayer(mainVideo());
+      activateVideos(el.screen);
       return;
     }
 
@@ -829,9 +872,9 @@
     cleanupCurrentVideo();
 
     if (source) {
-      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay muted playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
-      activateVideos(el.screen);
+      el.screen.innerHTML = '<video class="tv-main-video" controls autoplay playsinline preload="auto" src="' + escapeHtml(source) + '"></video>';
       prepareMainPlayer(mainVideo());
+      activateVideos(el.screen);
       return;
     }
 
@@ -921,7 +964,15 @@
               if (video.ended && Number.isFinite(video.duration)) video.currentTime = 0;
               var playPromise = video.play();
               if (playPromise && typeof playPromise.catch === 'function') {
-                playPromise.catch(function () {});
+                playPromise.catch(function () {
+                  if (!video.muted) {
+                    rememberSound(false);
+                    video.muted = true;
+                    video.defaultMuted = true;
+                    var mutedPlay = video.play();
+                    if (mutedPlay && typeof mutedPlay.catch === 'function') mutedPlay.catch(function () {});
+                  }
+                });
               }
             } catch (err) {}
           };
@@ -1506,6 +1557,16 @@
         if (open) open.call(target);
       });
     }
+    if (el.soundToggle) {
+      el.soundToggle.addEventListener('click', function () {
+        var video = mainVideo();
+        enableSound(video);
+        if (video) {
+          var promise = video.play();
+          if (promise && typeof promise.catch === 'function') promise.catch(function () {});
+        }
+      });
+    }
   }
 
   function initDom() {
@@ -1545,7 +1606,10 @@
     el.seekForward = qs('#tv-seek-forward');
     el.playToggle = qs('#tv-play-toggle');
     el.fullscreen = qs('#tv-fullscreen');
+    el.soundToggle = qs('#tv-sound-toggle');
     el.featureWire = qs('#tv-feature-street-wire');
+    try { state.soundEnabled = localStorage.getItem('fas_tv_sound_enabled') === '1'; } catch (err) {}
+    syncSoundButton();
     state.activeChannelSlug = currentChannelSlug();
   }
 
