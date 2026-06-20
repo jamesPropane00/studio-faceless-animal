@@ -21,6 +21,7 @@
     localMode: true,
     activeReactionTarget: null,
     activeShareTarget: null,
+    inlinePlaying: false,
   };
 
   var el = {};
@@ -543,6 +544,7 @@
       thumb.innerHTML = '<iframe src="' + escapeHtml(embed) + '" title="' + escapeHtml(title) + '" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe><span class="tv-play" aria-hidden="true">&gt;</span>';
     }
     card.classList.remove('is-inline-playing', 'is-inline-portrait');
+    if (!qsa('.tv-card.is-inline-playing', el.grid).length) state.inlinePlaying = false;
     activateVideos(thumb);
   }
 
@@ -571,6 +573,7 @@
 
     closeOtherInlineCards(card);
     pauseMainTV();
+    state.inlinePlaying = true;
     state.currentKey = key;
     state.autoplaying = false;
     syncPlaylistToKey(key);
@@ -594,7 +597,13 @@
         card.classList.toggle('is-inline-portrait', video.videoHeight > video.videoWidth);
       };
       video.addEventListener('loadedmetadata', syncRatio);
-      video.addEventListener('play', function () { pauseOtherPageVideos(video); });
+      video.addEventListener('play', function () {
+        state.inlinePlaying = true;
+        pauseOtherPageVideos(video);
+      });
+      video.addEventListener('pause', function () {
+        if (!video.ended) state.inlinePlaying = false;
+      });
       video.addEventListener('ended', function () { inlineNavigate(card, 1); });
       thumb.querySelector('[data-inline-back]').addEventListener('click', function (event) {
         event.stopPropagation();
@@ -682,6 +691,7 @@
 
     state.currentKey = key;
     state.autoplaying = false;
+    state.inlinePlaying = false;
     syncPlaylistToKey(key);
     el.featureTitle.textContent = title;
     el.featureCopy.textContent = copy;
@@ -715,6 +725,7 @@
     var key = uploadKey(item);
 
     state.currentKey = key;
+    state.inlinePlaying = false;
     el.featureTitle.textContent = title;
     el.featureCopy.textContent = copy;
     setActiveCard(key);
@@ -798,6 +809,10 @@
           }, { once: true });
           
           video.addEventListener('play', function () {
+            if (state.inlinePlaying) {
+              video.pause();
+              return;
+            }
             state.consecutiveErrors = 0;
             qsa('.tv-card.is-inline-playing video').forEach(function (inlineVideo) {
               if (!inlineVideo.paused) inlineVideo.pause();
@@ -806,6 +821,7 @@
 
           var startPreview = function () {
             try {
+              if (state.inlinePlaying) return;
               if (video.ended && Number.isFinite(video.duration)) video.currentTime = 0;
               var playPromise = video.play();
               if (playPromise && typeof playPromise.catch === 'function') {
