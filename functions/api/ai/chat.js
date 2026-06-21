@@ -182,10 +182,7 @@ export async function onRequest(context) {
         fileContext += '[Uploaded file: ' + f.name + ']\n';
       }
     }
-    // If it's a text/chat model, inject file context into the message
-    if (selectedModel.type === 'text' || selectedModel.type === 'book' || selectedModel.type === 'ollama') {
-      // message will have fileContext prepended below
-    }
+    // Text-compatible models receive this context through enrichedMessage below.
   }
 
   // ── Check user — only admin users get pro models ──
@@ -611,6 +608,7 @@ export async function onRequest(context) {
       const ocRes = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + opencodeGoKey },
+        signal: AbortSignal.timeout(55000),
         body: JSON.stringify({
           model: modelId,
           messages: [
@@ -636,6 +634,7 @@ export async function onRequest(context) {
       const aiRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(55000),
         body: JSON.stringify({ messages, max_tokens: maxTokens }),
       });
       if (!aiRes.ok) {

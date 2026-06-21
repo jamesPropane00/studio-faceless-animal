@@ -842,11 +842,15 @@
         const apiKey = localStorage.getItem('fas_oc_api_key');
         if (apiKey) body.oc_api_key = apiKey;
 
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 75000);
         const res = await fetch('/api/ai/chat/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
         if (!res.ok) {
           removeStreamingMessage();
           const errText = await res.text().catch(() => '');
@@ -885,7 +889,9 @@
         finalizeStreamMessage();
       } catch (e) {
         removeStreamingMessage();
-        addMessage('system', 'Error: ' + e.message);
+        addMessage('system', e.name === 'AbortError'
+          ? 'The AI took too long to answer. Try again or choose the Standard model.'
+          : 'Error: ' + e.message);
       } finally {
         document.getElementById('sendBtn').disabled = false;
       }
@@ -1035,10 +1041,14 @@
         }
         const apiKey = localStorage.getItem('fas_oc_api_key');
         if (apiKey) body.oc_api_key = apiKey;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 75000);
         const res = await fetch('/api/ai/chat', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
         removeTyping();
         if (!res.ok) {
           let errMsg = 'Request failed (' + res.status + ')';
@@ -1070,7 +1080,12 @@
         }
         if (currentConvId === null && data.conversation_id) currentConvId = data.conversation_id;
         if (currentUser) loadConversations();
-      } catch (e) { removeTyping(); addMessage('system', 'Error: ' + e.message); }
+      } catch (e) {
+        removeTyping();
+        addMessage('system', e.name === 'AbortError'
+          ? 'The AI took too long to answer. Try again with a shorter request.'
+          : 'Error: ' + e.message);
+      }
       finally { document.getElementById('sendBtn').disabled = false; }
     }
 
