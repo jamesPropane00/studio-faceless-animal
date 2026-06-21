@@ -498,19 +498,43 @@ export async function onRequest(context) {
       let prompt = message;
       const group = selectedModel.group || '';
       const lowercase = message.toLowerCase();
-      // Auto-enhance based on both model group AND prompt intent
-      const wantsAnime = /anime|manga|cartoon|chibi|anime style|anime girl|anime boy|japanese animation|cel shade/i.test(lowercase);
-      const wantsPhoto = /photo|photorealistic|realistic|portrait|real person|real human|photography/i.test(lowercase) || (group.includes('Photo') && !wantsAnime);
-      const wantsArtistic = /oil painting|watercolor|concept art|fantasy art|digital painting|painting|artistic/i.test(lowercase);
-      const wantsHuman = /person|woman|man|girl|boy|portrait|face|human|people|model|actor|actress|selfie/i.test(lowercase);
+      // Give each requested genre its own visual language instead of applying one generic enhancer.
+      const wantsAnime = /anime|manga|chibi|japanese animation|cel[- ]?shad/i.test(lowercase);
+      const wantsCartoon = /cartoon|animated movie|animation style|toon|children'?s illustration/i.test(lowercase);
+      const wantsComic = /comic|comic book|graphic novel|superhero art|inked panel|splash page/i.test(lowercase);
+      const wantsThreeD = /\b3d\b|cgi|pixar|claymation|octane render|unreal engine/i.test(lowercase);
+      const wantsPixel = /pixel art|8-bit|16-bit|sprite/i.test(lowercase);
+      const wantsPhoto = /photo|photorealistic|realistic|real person|real human|photography|selfie|editorial|fashion shoot/i.test(lowercase)
+        || (group.includes('Photo') && !wantsAnime && !wantsCartoon && !wantsComic && !wantsThreeD && !wantsPixel);
+      const wantsArtistic = /oil painting|watercolor|concept art|fantasy art|digital painting|painting|artistic|surreal/i.test(lowercase);
+      const wantsHuman = /person|woman|women|lady|man|men|girl|boy|portrait|face|human|people|model|actor|actress|selfie/i.test(lowercase);
+      const wantsSensual = /sexy|sensual|seductive|sultry|glamour|lingerie|boudoir|curvy|thick|thighs?/i.test(lowercase);
+      const adultQualifier = wantsSensual && wantsHuman
+        ? ', clearly adult subject age 25 or older, tasteful sensual styling, non-explicit'
+        : '';
       if (wantsAnime) {
-        prompt = message + ', anime style, high quality anime illustration, detailed, vibrant colors, cel shaded, crisp lineart, masterpiece';
+        prompt = message + adultQualifier + ', polished anime key visual, expressive eyes, precise anatomy, crisp inked line art, controlled cel shading, cinematic composition, rich color harmony, detailed background, professional studio quality';
+      } else if (wantsComic) {
+        prompt = message + adultQualifier + ', premium comic-book splash art, confident anatomy, bold clean inks, expressive faces, dynamic perspective, dramatic rim lighting, layered halftone texture, rich print colors, detailed graphic-novel finish';
+      } else if (wantsCartoon) {
+        prompt = message + adultQualifier + ', polished original cartoon illustration, appealing character design, expressive pose, clean silhouettes, smooth linework, colorful shape language, professional animation concept art, detailed environment';
+      } else if (wantsPixel) {
+        prompt = message + ', polished pixel art, deliberate pixel clusters, crisp silhouette, limited harmonious palette, detailed sprite work, dramatic pixel lighting, no blur, no anti-aliasing';
+      } else if (wantsThreeD) {
+        prompt = message + adultQualifier + ', premium cinematic 3D character render, physically based materials, detailed modeling, global illumination, volumetric lighting, sharp focus, professional animation-film quality';
       } else if (wantsPhoto && wantsHuman) {
-        prompt = message + ', photorealistic, detailed skin texture, professional studio lighting, sharp focus, 8k, canon eos r5, natural skin,毛孔 visible, subsurface scattering';
+        const adultSensual = wantsSensual
+          ? ', clearly adult subject age 25 or older, tasteful sensual fashion editorial, confident pose, elegant styling, non-explicit, fully composed wardrobe'
+          : '';
+        prompt = message + adultSensual + ', authentic photorealistic portrait, natural facial proportions, detailed eyes and hair, realistic skin texture and pores, subtle skin imperfections, anatomically correct hands, professional camera depth of field, cinematic studio lighting, sharp subject focus, high-end editorial photography';
       } else if (wantsPhoto) {
-        prompt = message + ', photorealistic, sharp focus, natural lighting, 8k, highly detailed, professional photography';
+        prompt = message + ', authentic photorealistic scene, physically accurate materials, natural light and shadows, realistic lens depth, balanced cinematic composition, fine environmental detail, professional photography';
       } else if (wantsArtistic) {
-        prompt = message + ', high quality digital art, masterpiece, detailed, intricate, professional concept art';
+        prompt = message + ', gallery-quality original artwork, intentional brushwork, sophisticated color palette, strong focal point, atmospheric depth, intricate details, professional concept-art composition';
+      } else if (wantsSensual && wantsHuman) {
+        prompt = message + ', clearly adult subject age 25 or older, tasteful sensual glamour portrait, confident elegant pose, non-explicit, polished styling, cinematic lighting, anatomically correct, professional editorial quality';
+      } else {
+        prompt = message + ', strong intentional composition, clear focal subject, coherent anatomy and perspective, cinematic lighting, refined color palette, crisp professional detail';
       }
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);

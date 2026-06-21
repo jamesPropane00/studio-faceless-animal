@@ -704,8 +704,12 @@
       const imgKw = ['image of','picture of','photo of','art of','a realistic','a cartoon',
         'a painting','a photo','a portrait','a landscape','a futuristic',
         'a fantasy','a sci-fi','a digital art','anime style','a sketch',
-        'a drawing','a concept art','a low poly','a pixel art','a cyberpunk'];
+        'a drawing','a concept art','a low poly','a pixel art','a cyberpunk',
+        'comic book','graphic novel','photorealistic','realistic portrait',
+        'anime girl','anime boy','cartoon character','sexy woman','sexy man',
+        'sensual portrait','glamour portrait','fashion model'];
       const imageRequest = /\b(draw|generate|create|make|paint|render|imagine)\b[\s\S]*\b(image|picture|photo|portrait|art|illustration|drawing|painting|poster|cover|logo|wallpaper)\b/i;
+      const styledImageRequest = /\b(photorealistic|realistic|anime|manga|cartoon|comic|graphic novel|pixel art|3d render|sexy|sensual|glamour)\b[\s\S]*\b(woman|women|lady|man|men|girl|boy|person|character|portrait|scene|city|landscape|art|image)\b/i;
       const audioKw = ['speak','say this','say out loud','read this aloud','voice','tts',
         'text to speech','talk','tell me out loud'];
       const videoKw = ['generate a video','make a video','create a video','animate',
@@ -719,7 +723,7 @@
       if (musicKw.some(k => lower.includes(k))) return 'music';
       if (videoKw.some(k => lower.includes(k))) return 'video';
       if (visionKw.some(k => lower.includes(k))) return 'vision';
-      if (imageRequest.test(lower) || imgKw.some(k => lower.includes(k))) return 'image';
+      if (imageRequest.test(lower) || styledImageRequest.test(lower) || imgKw.some(k => lower.includes(k))) return 'image';
       if (audioKw.some(k => lower.includes(k))) return 'audio';
       return null;
     }
