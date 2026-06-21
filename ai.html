@@ -1066,7 +1066,10 @@
         removeTyping();
         if (!res.ok) {
           let errMsg = 'Request failed (' + res.status + ')';
-          try { const err = await res.json(); errMsg = err.error || errMsg; } catch { try { errMsg = (await res.text()).slice(0, 200); } catch {} }
+          try {
+            const err = await res.json();
+            errMsg = [err.error, typeof err.detail === 'string' ? err.detail : ''].filter(Boolean).join(': ') || errMsg;
+          } catch { try { errMsg = (await res.text()).slice(0, 200); } catch {} }
           addMessage('system', 'Error: ' + errMsg);
           return;
         }

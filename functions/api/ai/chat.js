@@ -512,27 +512,33 @@ export async function onRequest(context) {
       const adultQualifier = wantsSensual && wantsHuman
         ? ', clearly adult subject age 25 or older, tasteful sensual styling, non-explicit'
         : '';
+      const safeMessage = wantsSensual && wantsHuman
+        ? message
+          .replace(/\b(sexy|seductive|sultry)\b/gi, 'tasteful glamorous')
+          .replace(/\b(lingerie|boudoir)\b/gi, 'elegant fashion editorial')
+          .replace(/\b(thick|thighs?)\b/gi, 'curvy fashion silhouette')
+        : message;
       if (wantsAnime) {
-        prompt = message + adultQualifier + ', polished anime key visual, expressive eyes, precise anatomy, crisp inked line art, controlled cel shading, cinematic composition, rich color harmony, detailed background, professional studio quality';
+        prompt = safeMessage + adultQualifier + ', polished anime key visual, expressive eyes, precise anatomy, crisp inked line art, controlled cel shading, cinematic composition, rich color harmony, detailed background, professional studio quality';
       } else if (wantsComic) {
-        prompt = message + adultQualifier + ', premium comic-book splash art, confident anatomy, bold clean inks, expressive faces, dynamic perspective, dramatic rim lighting, layered halftone texture, rich print colors, detailed graphic-novel finish';
+        prompt = safeMessage + adultQualifier + ', premium comic-book splash art, confident anatomy, bold clean inks, expressive faces, dynamic perspective, dramatic rim lighting, layered halftone texture, rich print colors, detailed graphic-novel finish';
       } else if (wantsCartoon) {
-        prompt = message + adultQualifier + ', polished original cartoon illustration, appealing character design, expressive pose, clean silhouettes, smooth linework, colorful shape language, professional animation concept art, detailed environment';
+        prompt = safeMessage + adultQualifier + ', polished original cartoon illustration, appealing character design, expressive pose, clean silhouettes, smooth linework, colorful shape language, professional animation concept art, detailed environment';
       } else if (wantsPixel) {
         prompt = message + ', polished pixel art, deliberate pixel clusters, crisp silhouette, limited harmonious palette, detailed sprite work, dramatic pixel lighting, no blur, no anti-aliasing';
       } else if (wantsThreeD) {
-        prompt = message + adultQualifier + ', premium cinematic 3D character render, physically based materials, detailed modeling, global illumination, volumetric lighting, sharp focus, professional animation-film quality';
+        prompt = safeMessage + adultQualifier + ', premium cinematic 3D character render, physically based materials, detailed modeling, global illumination, volumetric lighting, sharp focus, professional animation-film quality';
       } else if (wantsPhoto && wantsHuman) {
         const adultSensual = wantsSensual
           ? ', clearly adult subject age 25 or older, tasteful sensual fashion editorial, confident pose, elegant styling, non-explicit, fully composed wardrobe'
           : '';
-        prompt = message + adultSensual + ', authentic photorealistic portrait, natural facial proportions, detailed eyes and hair, realistic skin texture and pores, subtle skin imperfections, anatomically correct hands, professional camera depth of field, cinematic studio lighting, sharp subject focus, high-end editorial photography';
+        prompt = safeMessage + adultSensual + ', authentic photorealistic portrait, natural facial proportions, detailed eyes and hair, realistic skin texture and pores, subtle skin imperfections, anatomically correct hands, professional camera depth of field, cinematic studio lighting, sharp subject focus, high-end editorial photography';
       } else if (wantsPhoto) {
         prompt = message + ', authentic photorealistic scene, physically accurate materials, natural light and shadows, realistic lens depth, balanced cinematic composition, fine environmental detail, professional photography';
       } else if (wantsArtistic) {
         prompt = message + ', gallery-quality original artwork, intentional brushwork, sophisticated color palette, strong focal point, atmospheric depth, intricate details, professional concept-art composition';
       } else if (wantsSensual && wantsHuman) {
-        prompt = message + ', clearly adult subject age 25 or older, tasteful sensual glamour portrait, confident elegant pose, non-explicit, polished styling, cinematic lighting, anatomically correct, professional editorial quality';
+        prompt = safeMessage + ', clearly adult subject age 25 or older, tasteful sensual glamour portrait, confident elegant pose, non-explicit, polished styling, cinematic lighting, anatomically correct, professional editorial quality';
       } else {
         prompt = message + ', strong intentional composition, clear focal subject, coherent anatomy and perspective, cinematic lighting, refined color palette, crisp professional detail';
       }
