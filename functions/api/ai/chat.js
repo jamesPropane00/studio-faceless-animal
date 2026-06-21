@@ -39,6 +39,17 @@ async function imageResponseToDataUrl(response) {
   return 'data:' + mime + ';base64,' + arrayBufferToBase64(await response.arrayBuffer());
 }
 
+function closestSafeImagePrompt(prompt) {
+  const redirected = String(prompt || '')
+    .replace(/\b(nude|naked|explicit|pornographic|porn|sexual intercourse|sex scene|genitals?)\b/gi, 'tasteful fully clothed adult editorial')
+    .replace(/\b(underage|minor|child|teen(?:ager)?)\b/gi, 'adult age 25 or older')
+    .replace(/\b(gore|gory|dismember(?:ed|ment)?|decapitat(?:e|ed|ion)|severed limbs?|open wounds?|bloodbath)\b/gi, 'dramatic symbolic conflict')
+    .replace(/\b(kill(?:ing|ed)?|murder(?:ing|ed)?|tortur(?:e|ed|ing))\b/gi, 'intense fictional confrontation')
+    .replace(/\b(cocaine|heroin|methamphetamine|fentanyl|drug use|overdose)\b/gi, 'surreal psychedelic symbolism')
+    .replace(/\b(real celebrity|exact likeness|deepfake)\b/gi, 'original fictional character');
+  return 'Create the closest safe fictional visual interpretation of this concept. Preserve its genre, atmosphere, palette, wardrobe, setting, and composition. Use clearly adult fictional subjects, non-explicit styling, and symbolic non-graphic storytelling. ' + redirected;
+}
+
 const SUPABASE_URL = 'https://ghufaozjwondqcrcucjs.supabase.co';
 
 async function sbFetch(path, options, key) {
@@ -559,20 +570,37 @@ export async function onRequest(context) {
       } else {
         prompt = message + ', strong intentional composition, clear focal subject, coherent anatomy and perspective, cinematic lighting, refined color palette, crisp professional detail';
       }
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
-      const imageRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Accept': 'image/png, application/json' },
-        body: JSON.stringify({ prompt }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
+      const runImage = async candidatePrompt => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+        try {
+          return await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Accept': 'image/png, application/json' },
+            body: JSON.stringify({ prompt: candidatePrompt }),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      };
+      let imageRes = await runImage(prompt);
+      let adapted = false;
       if (!imageRes.ok) {
-        const err = await imageRes.text();
-        return new Response(JSON.stringify({ error: 'Image generation failed', status: imageRes.status, detail: cleanApiError(err) }), {
-          status: 502, headers: { 'content-type': 'application/json' },
-        });
+        const firstStatus = imageRes.status;
+        const firstError = await imageRes.text();
+        const moderationLike = firstStatus === 400 || firstStatus === 403 || firstStatus === 422
+          || /safety|moderation|policy|unsafe|inappropriate|content/i.test(firstError);
+        if (moderationLike) {
+          imageRes = await runImage(closestSafeImagePrompt(prompt));
+          adapted = imageRes.ok;
+        }
+        if (!imageRes.ok) {
+          const err = await imageRes.text();
+          return new Response(JSON.stringify({ error: 'Image generation failed', status: imageRes.status, detail: cleanApiError(err) || cleanApiError(firstError) }), {
+            status: 502, headers: { 'content-type': 'application/json' },
+          });
+        }
       }
       const dataUrl = await imageResponseToDataUrl(imageRes);
 
@@ -591,6 +619,8 @@ export async function onRequest(context) {
       return new Response(JSON.stringify({
         image: dataUrl,
         model: selectedModel.name,
+        adapted,
+        adaptation_message: adapted ? 'Created the closest safe visual interpretation while preserving the requested style and mood.' : null,
         conversation_id: conversationId || 'default',
         username,
       }), { headers: { 'content-type': 'application/json' } });
