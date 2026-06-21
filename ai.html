@@ -387,6 +387,16 @@
     @keyframes blink { 50% { opacity: 0; } }
   </style>
   <link rel="stylesheet" href="assets/css/widget-hub.css" />
+  <style>
+    .fas-widget-hub {
+      bottom: max(5.6rem, env(safe-area-inset-bottom));
+    }
+    @media (max-width: 520px) {
+      .fas-widget-hub {
+        bottom: max(5.25rem, env(safe-area-inset-bottom));
+      }
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar waffle-nav tv-waffle-nav" role="navigation" aria-label="Main navigation">
