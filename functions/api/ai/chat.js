@@ -50,6 +50,44 @@ function closestSafeImagePrompt(prompt) {
   return 'Create the closest safe fictional visual interpretation of this concept. Preserve its genre, atmosphere, palette, wardrobe, setting, and composition. Use clearly adult fictional subjects, non-explicit styling, and symbolic non-graphic storytelling. ' + redirected;
 }
 
+function facelessAnimalBrandPrompt(message, lowercase) {
+  const wantsEmblem = /emblem|logo|icon|symbol|mark|badge|sticker|patch/i.test(lowercase);
+  const wantsPoster = /poster|flyer|event|show|concert|festival|club night/i.test(lowercase);
+  const wantsBanner = /banner|header|wide|landscape|channel art/i.test(lowercase);
+  const wantsAvatar = /avatar|profile|portrait|pfp|headshot/i.test(lowercase);
+  const wantsMerch = /shirt|t-shirt|hoodie|merch|apparel|print/i.test(lowercase);
+  const wantsCover = /album|single|ep|mixtape|cover|artwork/i.test(lowercase);
+  const wantsNoir = /black and white|black & white|monochrome|noir/i.test(lowercase);
+  const wantsAcid = /hippie|hippy|psychedelic|acid|rainbow|trippy/i.test(lowercase);
+  const wantsCyberpunk = /cyberpunk|cyber punk|futuristic|neon city|tech noir/i.test(lowercase);
+
+  const core = ', authentic DJ Faceless Animal visual universe: mysterious faceless underground DJ, sculpted white angular animal mask with pointed ears, matte-black lower faceplate, narrow violet glowing eyes, oversized black hood and layered streetwear, restrained silver chain and tactical strap details, anonymous presence, Providence backstreet and warehouse-club energy, analog signal interference, scanlines, smoke, rain, speaker pressure and waveform motifs';
+  const palette = wantsNoir
+    ? ', strict black white and silver palette, deep crushed blacks, bright mask highlights, violet represented only as pale luminous grayscale, coarse film grain'
+    : wantsAcid
+      ? ', black foundation interrupted by fluorescent violet, cyan, warning red, acid lime and liquid rainbow refractions, psychedelic signal trails'
+      : ', obsidian black and bone white foundation, electric violet eye glow, signal cyan highlights, warning-red accents, tiny antique-gold hardware details';
+  const finish = ', premium underground music-art direction, bold silhouette, controlled negative space, tactile ink and brushed-metal textures, cinematic contrast, original design, no copied brand marks, no random lettering, no watermark';
+
+  let format = ', square album-art composition, iconic centered subject, enough breathing room for optional typography to be added later';
+  if (wantsEmblem) format = ', simplified symmetrical mask emblem, sharp readable silhouette, minimal geometric vector-like construction, isolated centered mark, screen-print friendly, no mockup, no text';
+  else if (wantsPoster) format = ', vertical event-poster composition, masked figure framed by speaker stacks and signal towers, strong top and bottom negative space for later event typography, no generated words';
+  else if (wantsBanner) format = ', wide cinematic banner composition, subject placed off-center with expansive atmospheric negative space, layered club skyline and signal trails';
+  else if (wantsAvatar) format = ', tight iconic head-and-shoulders portrait, mask and violet eyes dominant, clean circular-crop safety, readable at thumbnail size';
+  else if (wantsMerch) format = ', bold limited-color apparel graphic, centered screen-print composition, distressed ink texture, strong silhouette, transparent-background appearance, no shirt mockup';
+  else if (wantsCover) format = ', premium square record-cover composition, one unforgettable focal image, physical-media texture, room for title treatment to be added later, no generated typography';
+
+  const crossover = wantsCyberpunk
+    ? ', cyberpunk treatment with rain-slick asphalt, holographic signal haze, cable-dense alleys and futuristic club infrastructure'
+    : wantsAcid
+      ? ', psychedelic treatment with liquid waveform ribbons, kaleidoscopic mask echoes and hand-drawn counterculture poster detail'
+      : wantsNoir
+        ? ', noir treatment with hard side light, fog, wet pavement and documentary street-photography tension'
+        : '';
+
+  return message + core + palette + format + crossover + finish;
+}
+
 const SUPABASE_URL = 'https://ghufaozjwondqcrcucjs.supabase.co';
 
 async function sbFetch(path, options, key) {
@@ -519,7 +557,7 @@ export async function onRequest(context) {
       const wantsMob = /\bmob\b|mobster|mafia|gangster|organized crime|crime family|godfather style/i.test(lowercase);
       const wantsMonochrome = /black and white|black & white|monochrome|grayscale|noir photography|film noir/i.test(lowercase);
       const wantsAcid = /hippie|hippy|psychedelic|acid art|acid trip|rainbow art|trippy|kaleidoscopic/i.test(lowercase);
-      const wantsFacelessAnimal = /dj faceless animal|faceless animal|faceless dj|faceless emblem|studio faceless/i.test(lowercase);
+      const wantsFacelessAnimal = /dj faceless animal|faceless animal|faceless dj|faceless emblem|studio faceless|faceless style|faceless signal|signal live|blends pressure presence/i.test(lowercase);
       const wantsPhoto = /photo|photorealistic|realistic|real person|real human|photography|selfie|editorial|fashion shoot/i.test(lowercase)
         || (group.includes('Photo') && !wantsAnime && !wantsCartoon && !wantsComic && !wantsThreeD && !wantsPixel && !wantsAcid && !wantsFacelessAnimal);
       const wantsArtistic = /oil painting|watercolor|concept art|fantasy art|digital painting|painting|artistic|surreal/i.test(lowercase);
@@ -535,7 +573,7 @@ export async function onRequest(context) {
           .replace(/\b(thick|thighs?)\b/gi, 'curvy fashion silhouette')
         : message;
       if (wantsFacelessAnimal) {
-        prompt = safeMessage + adultQualifier + ', signature DJ Faceless Animal visual identity, mysterious faceless masked DJ figure, original animal-inspired emblem language, underground music culture, deep black shadows, electric purple and dark crimson glow, brushed metal and smoke textures, cinematic club lighting, rebellious premium album-cover composition, bold central silhouette, no readable text, no existing logos';
+        prompt = facelessAnimalBrandPrompt(safeMessage + adultQualifier, lowercase);
       } else if (wantsCyberpunk && wantsMob) {
         prompt = safeMessage + adultQualifier + ', cyberpunk crime-family noir, sharply dressed futuristic mob figures, neon-soaked rain, black luxury vehicles, holographic city signs, chrome weapons kept holstered, tense cinematic authority, electric purple and crimson palette, dramatic low-angle composition, premium graphic-novel realism';
       } else if (wantsMob) {
