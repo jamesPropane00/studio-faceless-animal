@@ -504,8 +504,13 @@ export async function onRequest(context) {
       const wantsComic = /comic|comic book|graphic novel|superhero art|inked panel|splash page/i.test(lowercase);
       const wantsThreeD = /\b3d\b|cgi|pixar|claymation|octane render|unreal engine/i.test(lowercase);
       const wantsPixel = /pixel art|8-bit|16-bit|sprite/i.test(lowercase);
+      const wantsCyberpunk = /cyberpunk|cyber punk|neon dystopia|tech noir|futuristic street/i.test(lowercase);
+      const wantsMob = /\bmob\b|mobster|mafia|gangster|organized crime|crime family|godfather style/i.test(lowercase);
+      const wantsMonochrome = /black and white|black & white|monochrome|grayscale|noir photography|film noir/i.test(lowercase);
+      const wantsAcid = /hippie|hippy|psychedelic|acid art|acid trip|rainbow art|trippy|kaleidoscopic/i.test(lowercase);
+      const wantsFacelessAnimal = /dj faceless animal|faceless animal|faceless dj|faceless emblem|studio faceless/i.test(lowercase);
       const wantsPhoto = /photo|photorealistic|realistic|real person|real human|photography|selfie|editorial|fashion shoot/i.test(lowercase)
-        || (group.includes('Photo') && !wantsAnime && !wantsCartoon && !wantsComic && !wantsThreeD && !wantsPixel);
+        || (group.includes('Photo') && !wantsAnime && !wantsCartoon && !wantsComic && !wantsThreeD && !wantsPixel && !wantsAcid && !wantsFacelessAnimal);
       const wantsArtistic = /oil painting|watercolor|concept art|fantasy art|digital painting|painting|artistic|surreal/i.test(lowercase);
       const wantsHuman = /person|woman|women|lady|man|men|girl|boy|portrait|face|human|people|model|actor|actress|selfie/i.test(lowercase);
       const wantsSensual = /sexy|sensual|seductive|sultry|glamour|lingerie|boudoir|curvy|thick|thighs?/i.test(lowercase);
@@ -518,7 +523,19 @@ export async function onRequest(context) {
           .replace(/\b(lingerie|boudoir)\b/gi, 'elegant fashion editorial')
           .replace(/\b(thick|thighs?)\b/gi, 'curvy fashion silhouette')
         : message;
-      if (wantsAnime) {
+      if (wantsFacelessAnimal) {
+        prompt = safeMessage + adultQualifier + ', signature DJ Faceless Animal visual identity, mysterious faceless masked DJ figure, original animal-inspired emblem language, underground music culture, deep black shadows, electric purple and dark crimson glow, brushed metal and smoke textures, cinematic club lighting, rebellious premium album-cover composition, bold central silhouette, no readable text, no existing logos';
+      } else if (wantsCyberpunk && wantsMob) {
+        prompt = safeMessage + adultQualifier + ', cyberpunk crime-family noir, sharply dressed futuristic mob figures, neon-soaked rain, black luxury vehicles, holographic city signs, chrome weapons kept holstered, tense cinematic authority, electric purple and crimson palette, dramatic low-angle composition, premium graphic-novel realism';
+      } else if (wantsMob) {
+        prompt = safeMessage + adultQualifier + ', classic crime-family cinema aesthetic, tailored suits and overcoats, smoky back room, powerful restrained poses, chiaroscuro lighting, deep burgundy and black palette, vintage film grain, elegant dangerous atmosphere, cinematic 1970s mob-drama composition';
+      } else if (wantsAcid) {
+        prompt = safeMessage + adultQualifier + ', psychedelic acid-art poster, flowing rainbow spectrum, liquid marbling, kaleidoscopic geometry, warped flowers and cosmic patterns, 1960s counterculture energy fused with modern visionary art, fluorescent ink texture, hypnotic layered depth, intricate hand-drawn detail';
+      } else if (wantsMonochrome) {
+        prompt = safeMessage + adultQualifier + ', pure black-and-white monochrome artwork, rich crushed blacks, luminous white highlights, dramatic chiaroscuro, expressive grain, bold negative space, timeless fine-art photography composition, no color tint';
+      } else if (wantsCyberpunk) {
+        prompt = safeMessage + adultQualifier + ', premium cyberpunk concept art, neon megacity at night, rain-slick streets, holographic light, augmented fashion, dense futuristic architecture, electric purple cyan and crimson glow, atmospheric fog, cinematic scale, sharp technological detail';
+      } else if (wantsAnime) {
         prompt = safeMessage + adultQualifier + ', polished anime key visual, expressive eyes, precise anatomy, crisp inked line art, controlled cel shading, cinematic composition, rich color harmony, detailed background, professional studio quality';
       } else if (wantsComic) {
         prompt = safeMessage + adultQualifier + ', premium comic-book splash art, confident anatomy, bold clean inks, expressive faces, dynamic perspective, dramatic rim lighting, layered halftone texture, rich print colors, detailed graphic-novel finish';

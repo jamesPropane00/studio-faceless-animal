@@ -707,9 +707,12 @@
         'a drawing','a concept art','a low poly','a pixel art','a cyberpunk',
         'comic book','graphic novel','photorealistic','realistic portrait',
         'anime girl','anime boy','cartoon character','sexy woman','sexy man',
-        'sensual portrait','glamour portrait','fashion model'];
+        'sensual portrait','glamour portrait','fashion model','cyberpunk',
+        'cyber punk','mob style','mobster','mafia','gangster','black and white',
+        'monochrome','hippie art','hippy art','rainbow acid art','psychedelic',
+        'trippy art','dj faceless animal','faceless animal art','faceless dj'];
       const imageRequest = /\b(draw|generate|create|make|paint|render|imagine)\b[\s\S]*\b(image|picture|photo|portrait|art|illustration|drawing|painting|poster|cover|logo|wallpaper)\b/i;
-      const styledImageRequest = /\b(photorealistic|realistic|anime|manga|cartoon|comic|graphic novel|pixel art|3d render|sexy|sensual|glamour)\b[\s\S]*\b(woman|women|lady|man|men|girl|boy|person|character|portrait|scene|city|landscape|art|image)\b/i;
+      const styledImageRequest = /\b(photorealistic|realistic|anime|manga|cartoon|comic|graphic novel|pixel art|3d render|sexy|sensual|glamour|cyberpunk|cyber punk|mob|mobster|mafia|gangster|monochrome|black and white|hippie|hippy|psychedelic|acid art|trippy|faceless animal|faceless dj)\b[\s\S]*\b(woman|women|lady|man|men|girl|boy|person|character|portrait|scene|city|landscape|art|image|poster|cover|dj|club|family)\b/i;
       const audioKw = ['speak','say this','say out loud','read this aloud','voice','tts',
         'text to speech','talk','tell me out loud'];
       const videoKw = ['generate a video','make a video','create a video','animate',
