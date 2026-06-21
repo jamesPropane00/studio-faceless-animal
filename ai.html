@@ -714,6 +714,8 @@
         'faceless style','faceless signal','signal live','blends pressure presence'];
       const imageRequest = /\b(draw|generate|create|make|paint|render|imagine)\b[\s\S]*\b(image|picture|photo|portrait|art|illustration|drawing|painting|poster|cover|logo|wallpaper)\b/i;
       const styledImageRequest = /\b(photorealistic|realistic|anime|manga|cartoon|comic|graphic novel|pixel art|3d render|sexy|sensual|glamour|cyberpunk|cyber punk|mob|mobster|mafia|gangster|monochrome|black and white|hippie|hippy|psychedelic|acid art|trippy|faceless animal|faceless dj|faceless style|faceless signal|signal live)\b[\s\S]*\b(woman|women|lady|man|men|girl|boy|person|character|portrait|scene|city|landscape|art|image|poster|cover|dj|club|family|emblem|logo|avatar|banner|merch)\b/i;
+      const purposeImageRequest = /\b(make|create|give|design|need|want)\b[\s\S]*\b(something|art|look|visual|picture|graphic)\b[\s\S]*\b(song|track|single|album|ep|mixtape|release|profile|avatar|page|event|party|show|club|channel|merch|shirt|hoodie|thumbnail|wallpaper)\b/i;
+      const directArtifactRequest = /\b(album cover|single cover|cover art|event flyer|club flyer|profile picture|profile pic|avatar|pfp|channel banner|header art|logo|emblem|merch design|shirt design|thumbnail|wallpaper)\b/i;
       const audioKw = ['speak','say this','say out loud','read this aloud','voice','tts',
         'text to speech','talk','tell me out loud'];
       const videoKw = ['generate a video','make a video','create a video','animate',
@@ -727,7 +729,7 @@
       if (musicKw.some(k => lower.includes(k))) return 'music';
       if (videoKw.some(k => lower.includes(k))) return 'video';
       if (visionKw.some(k => lower.includes(k))) return 'vision';
-      if (imageRequest.test(lower) || styledImageRequest.test(lower) || imgKw.some(k => lower.includes(k))) return 'image';
+      if (imageRequest.test(lower) || styledImageRequest.test(lower) || purposeImageRequest.test(lower) || directArtifactRequest.test(lower) || imgKw.some(k => lower.includes(k))) return 'image';
       if (audioKw.some(k => lower.includes(k))) return 'audio';
       return null;
     }

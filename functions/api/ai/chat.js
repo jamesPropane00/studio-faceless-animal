@@ -88,6 +88,42 @@ function facelessAnimalBrandPrompt(message, lowercase) {
   return message + core + palette + format + crossover + finish;
 }
 
+function inferPlainLanguageImageDirection(message) {
+  const lower = String(message || '').toLowerCase();
+  const directions = [];
+  if (/song|track|single|album|ep\b|mixtape|release|record\b/.test(lower)) {
+    directions.push('Treat this as polished square music cover artwork with one strong focal image and clean space for title typography to be added later.');
+  } else if (/flyer|event|party|show\b|concert|festival|club night|tonight/.test(lower)) {
+    directions.push('Treat this as a striking vertical event poster with clear visual hierarchy and open areas for event details to be added later.');
+  } else if (/profile|avatar|pfp|social picture|page picture/.test(lower)) {
+    directions.push('Treat this as an iconic close-up profile image that remains readable in a small circular crop.');
+  } else if (/banner|header|channel|youtube|facebook cover/.test(lower)) {
+    directions.push('Treat this as wide cinematic channel artwork with the subject off-center and useful negative space.');
+  } else if (/logo|emblem|symbol|badge|sticker|patch/.test(lower)) {
+    directions.push('Treat this as a simple memorable emblem with a bold silhouette, balanced margins, minimal small detail, and no generated text.');
+  } else if (/shirt|hoodie|merch|clothing|apparel/.test(lower)) {
+    directions.push('Treat this as limited-color screen-print merchandise art with a strong centered silhouette and no product mockup.');
+  } else if (/thumbnail|video cover|youtube video/.test(lower)) {
+    directions.push('Treat this as a high-contrast video thumbnail with one obvious subject and instant readability.');
+  } else if (/wallpaper|phone background|desktop background/.test(lower)) {
+    directions.push('Treat this as immersive wallpaper art with edge-to-edge detail and a clear central atmosphere.');
+  }
+
+  if (/dark|evil|menacing|sinister|scary/.test(lower)) directions.push('Use deep shadows, restrained highlights, tension, smoke, and ominous cinematic lighting.');
+  if (/clean|minimal|simple|classy|elegant/.test(lower)) directions.push('Use a refined minimal composition, disciplined spacing, and a limited premium palette.');
+  if (/expensive|luxury|rich|premium/.test(lower)) directions.push('Use luxury editorial art direction, polished materials, dramatic controlled lighting, and high-end finish.');
+  if (/wild|crazy|chaotic|intense|aggressive|hard/.test(lower)) directions.push('Use dynamic perspective, energetic motion, hard contrast, and powerful visual impact without losing subject clarity.');
+  if (/underground|gritty|raw|street/.test(lower)) directions.push('Use tactile street texture, warehouse atmosphere, film grain, concrete, smoke, and independent music-culture energy.');
+  if (/trippy|acid|psychedelic|hippie|hippy|rainbow/.test(lower)) directions.push('Use psychedelic color flow, kaleidoscopic geometry, liquid waveform trails, and intricate visionary-art detail.');
+  if (/romantic|love|soft|dreamy/.test(lower)) directions.push('Use intimate cinematic lighting, soft atmospheric depth, graceful color harmony, and an emotional focal point.');
+  if (/future|futuristic|cyber|neon/.test(lower)) directions.push('Use futuristic urban design, rain-lit surfaces, signal haze, luminous technology, and cinematic scale.');
+
+  if (!directions.length) {
+    directions.push('Infer the clearest subject and visual purpose from the request, choose a strong professional composition, and make the result immediately understandable without requiring more instructions.');
+  }
+  return directions.join(' ');
+}
+
 const SUPABASE_URL = 'https://ghufaozjwondqcrcucjs.supabase.co';
 
 async function sbFetch(path, options, key) {
@@ -547,6 +583,7 @@ export async function onRequest(context) {
       let prompt = message;
       const group = selectedModel.group || '';
       const lowercase = message.toLowerCase();
+      const inferredDirection = inferPlainLanguageImageDirection(message);
       // Give each requested genre its own visual language instead of applying one generic enhancer.
       const wantsAnime = /anime|manga|chibi|japanese animation|cel[- ]?shad/i.test(lowercase);
       const wantsCartoon = /cartoon|animated movie|animation style|toon|children'?s illustration/i.test(lowercase);
@@ -608,6 +645,7 @@ export async function onRequest(context) {
       } else {
         prompt = message + ', strong intentional composition, clear focal subject, coherent anatomy and perspective, cinematic lighting, refined color palette, crisp professional detail';
       }
+      prompt += '. ' + inferredDirection;
       const runImage = async candidatePrompt => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 60000);
