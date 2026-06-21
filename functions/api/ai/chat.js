@@ -268,6 +268,7 @@ export async function onRequest(context) {
   const sbKey = context.env.SUPABASE_SERVICE_ROLE_KEY || '';
   const ollamaTunnel = context.env.OLLAMA_TUNNEL_URL || '';
   const comfyuiTunnel = context.env.COMFYUI_TUNNEL_URL || '';
+  const wanVideoEnabled = String(context.env.WAN_VIDEO_ENABLED || '').toLowerCase() === 'true';
   const opencodeGoKey = context.env.OPENCODE_GO_API_KEY || '';
   if (!token || !accountId) {
     return new Response(JSON.stringify({ error: 'AI not configured' }), {
@@ -326,7 +327,7 @@ export async function onRequest(context) {
     allModels.push({ id: 'ollama', name: 'Ollama (local)', type: 'ollama', group: '🖥️ Local GPU', system: 'You are a helpful AI assistant. Answer naturally.' });
   }
   if (isAuthorized && comfyuiTunnel) {
-    allModels.push(...COMFYUI_MODELS);
+    allModels.push(...COMFYUI_MODELS.filter(model => model.type !== 'video' || wanVideoEnabled));
   }
   if (isAdmin && opencodeGoKey) {
     allModels.push(...PRO_AI_MODELS);
