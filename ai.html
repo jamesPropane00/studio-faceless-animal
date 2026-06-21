@@ -1052,6 +1052,28 @@
       streamMsgEl.scrollIntoView({ behavior: 'smooth' });
     }
 
+    async function waitForVideoJob(requestId) {
+      addMessage('system', 'WAN 2.1 accepted the video. Rendering in the background — this can take several minutes.');
+      const started = Date.now();
+      while (Date.now() - started < 12 * 60 * 1000) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+        const res = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'video_status', request_id: requestId, session_id: SESSION_ID }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        let data;
+        try { data = await res.json(); } catch { throw new Error('Invalid video status response.'); }
+        if (!res.ok) throw new Error([data.error, data.detail].filter(Boolean).join(': ') || 'Video status check failed.');
+        if (!data.pending && data.video) return data;
+      }
+      throw new Error('The video is still rendering after 12 minutes. Try checking again shortly.');
+    }
+
     // Fallback for non-text (image/audio/video) models
     async function sendFallback(text, modelIdx, convId, model, filesData) {
       showTyping();
@@ -1085,6 +1107,9 @@
         }
         let data;
         try { data = await res.json(); } catch { addMessage('system', 'Error: Invalid response from server.'); return; }
+        if (model.type === 'video' && data.pending && data.request_id) {
+          data = await waitForVideoJob(data.request_id);
+        }
 
         if (model.type === 'image' && data.image) {
           const ts = Date.now();

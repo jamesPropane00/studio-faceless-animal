@@ -29,9 +29,10 @@ function normalizeVideoOutput(data) {
     || (Array.isArray(data.output) && data.output[0])
     || (typeof data.output === 'string' && data.output)
   );
-  if (!candidate || typeof candidate !== 'string') return null;
-  if (candidate.startsWith('data:') || candidate.startsWith('http://') || candidate.startsWith('https://') || candidate.startsWith('/')) return candidate;
-  return 'data:video/mp4;base64,' + candidate;
+  const value = candidate && typeof candidate === 'object' ? candidate.url : candidate;
+  if (!value || typeof value !== 'string') return null;
+  if (value.startsWith('data:') || value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/')) return value;
+  return 'data:video/mp4;base64,' + value;
 }
 
 async function imageResponseToDataUrl(response) {
@@ -237,6 +238,10 @@ const COMFYUI_MODELS = [
   { id: 'comfyui-video', name: 'Local Video (Wan2.1)', type: 'video', group: '🖥️ Local GPU' },
 ];
 
+const HOSTED_VIDEO_MODELS = [
+  { id: 'fal-ai/wan-t2v', name: 'WAN 2.1 Video', type: 'video', group: '🎬 Video' },
+];
+
 export async function onRequest(context) {
   if (context.request.method === 'OPTIONS') {
     return new Response(null, {
@@ -269,6 +274,7 @@ export async function onRequest(context) {
   const ollamaTunnel = context.env.OLLAMA_TUNNEL_URL || '';
   const comfyuiTunnel = context.env.COMFYUI_TUNNEL_URL || '';
   const wanVideoEnabled = String(context.env.WAN_VIDEO_ENABLED || '').toLowerCase() === 'true';
+  const falKey = context.env.FAL_KEY || '';
   const opencodeGoKey = context.env.OPENCODE_GO_API_KEY || '';
   if (!token || !accountId) {
     return new Response(JSON.stringify({ error: 'AI not configured' }), {
@@ -329,10 +335,62 @@ export async function onRequest(context) {
   if (isAuthorized && comfyuiTunnel) {
     allModels.push(...COMFYUI_MODELS.filter(model => model.type !== 'video' || wanVideoEnabled));
   }
+  if (falKey) {
+    allModels.push(...HOSTED_VIDEO_MODELS);
+  }
   if (isAdmin && opencodeGoKey) {
     allModels.push(...PRO_AI_MODELS);
   }
   const selectedModel = allModels.find(model => model.id === requestedModelId) || allModels[modelIdx] || allModels[0];
+
+  if (body.action === 'video_status') {
+    if (!falKey) {
+      return new Response(JSON.stringify({ error: 'Hosted video generation is not configured.' }), {
+        status: 503, headers: { 'content-type': 'application/json' },
+      });
+    }
+    const requestId = String(body.request_id || '').trim();
+    if (!/^[A-Za-z0-9_-]{8,100}$/.test(requestId)) {
+      return new Response(JSON.stringify({ error: 'Invalid video request ID.' }), {
+        status: 400, headers: { 'content-type': 'application/json' },
+      });
+    }
+    const base = 'https://queue.fal.run/fal-ai/wan-t2v/requests/' + encodeURIComponent(requestId);
+    const headers = { 'Authorization': 'Key ' + falKey };
+    const statusRes = await fetch(base + '/status?logs=1', { headers });
+    const statusText = await statusRes.text();
+    if (!statusRes.ok) {
+      return new Response(JSON.stringify({ error: 'Could not check video status.', detail: cleanApiError(statusText) }), {
+        status: 502, headers: { 'content-type': 'application/json' },
+      });
+    }
+    const statusData = JSON.parse(statusText);
+    if (statusData.status !== 'COMPLETED') {
+      return new Response(JSON.stringify({
+        pending: true,
+        status: statusData.status || 'IN_QUEUE',
+        queue_position: statusData.queue_position,
+        logs: Array.isArray(statusData.logs) ? statusData.logs.slice(-3) : [],
+      }), { headers: { 'content-type': 'application/json' } });
+    }
+    const resultRes = await fetch(base + '/response', { headers });
+    const resultText = await resultRes.text();
+    if (!resultRes.ok) {
+      return new Response(JSON.stringify({ error: 'WAN video generation failed.', detail: cleanApiError(resultText) }), {
+        status: 502, headers: { 'content-type': 'application/json' },
+      });
+    }
+    const resultData = JSON.parse(resultText);
+    const video = normalizeVideoOutput(resultData);
+    if (!video) {
+      return new Response(JSON.stringify({ error: 'WAN completed without returning a playable video.' }), {
+        status: 502, headers: { 'content-type': 'application/json' },
+      });
+    }
+    return new Response(JSON.stringify({ video, status: 'COMPLETED', model: 'WAN 2.1 Video' }), {
+      headers: { 'content-type': 'application/json' },
+    });
+  }
 
   // ── LIST CONVERSATIONS ────────────────────────────────────
   if (listConversations && sbKey) {
@@ -431,6 +489,58 @@ export async function onRequest(context) {
       }), { headers: { 'content-type': 'application/json' } });
     } catch (e) {
       return new Response(JSON.stringify({ error: 'Ollama unreachable', detail: e.message }), {
+        status: 502, headers: { 'content-type': 'application/json' },
+      });
+    }
+  }
+
+  // ── HOSTED WAN 2.1 VIDEO GENERATION ───────────────────────
+  if (selectedModel.id === 'fal-ai/wan-t2v') {
+    try {
+      const lower = message.toLowerCase();
+      const aspectRatio = /9\s*[:x]\s*16|vertical|portrait|reel|tiktok|shorts/i.test(lower)
+        ? '9:16'
+        : '16:9';
+      const resolution = /720p|high quality|high resolution|\bhd\b/i.test(lower) ? '720p' : '480p';
+      const submitRes = await fetch('https://queue.fal.run/fal-ai/wan-t2v', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Key ' + falKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: message,
+          aspect_ratio: aspectRatio,
+          resolution,
+          num_frames: 81,
+          frames_per_second: 16,
+          enable_safety_checker: true,
+          enable_prompt_expansion: true,
+          turbo_mode: true,
+        }),
+      });
+      const submitText = await submitRes.text();
+      if (!submitRes.ok) {
+        return new Response(JSON.stringify({ error: 'WAN video request failed.', detail: cleanApiError(submitText) }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const submitData = JSON.parse(submitText);
+      if (!submitData.request_id) {
+        return new Response(JSON.stringify({ error: 'WAN did not return a video job ID.' }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({
+        pending: true,
+        request_id: submitData.request_id,
+        status: 'IN_QUEUE',
+        model: selectedModel.name,
+        aspect_ratio: aspectRatio,
+        resolution,
+      }), { headers: { 'content-type': 'application/json' } });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'WAN video service is unreachable.', detail: e.message }), {
         status: 502, headers: { 'content-type': 'application/json' },
       });
     }
