@@ -440,7 +440,9 @@ export async function onRequest(context) {
     try {
       const endpoint = selectedModel.type === 'video' ? '/generate_video' : '/generate';
       const localController = new AbortController();
-      const localTimeout = setTimeout(() => localController.abort(), selectedModel.type === 'video' ? 285000 : 90000);
+      // Pages Functions cannot hold a synchronous WAN render open for minutes.
+      // The local bridge must accept/queue video work promptly.
+      const localTimeout = setTimeout(() => localController.abort(), selectedModel.type === 'video' ? 10000 : 90000);
       let comfyRes;
       try {
         comfyRes = await fetch(comfyuiTunnel + endpoint, {
@@ -495,7 +497,7 @@ export async function onRequest(context) {
       }), { headers: { 'content-type': 'application/json' } });
     } catch (e) {
       const offline = e && e.name === 'AbortError'
-        ? 'The local generator did not finish before the five-minute limit.'
+        ? 'The local WAN bridge did not accept the job within 10 seconds. Start the bridge and tunnel; the bridge must queue long renders in the background.'
         : 'The WAN/ComfyUI tunnel is offline. Start the local bridge and Cloudflare tunnel, then retry.';
       return new Response(JSON.stringify({
         error: selectedModel.type === 'video' ? 'WAN 2.1 is offline' : 'ComfyUI unreachable',
