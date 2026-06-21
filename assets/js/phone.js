@@ -9,13 +9,6 @@ function getSession() {
   try { return JSON.parse(localStorage.getItem('fas_user') || 'null') } catch { return null }
 }
 
-const DYNAMIC_IMPORTS = [
-  { module: () => import('./call-manager.js'), key: 'CallManager' },
-  { module: () => import('./matrix-backend.js'), key: 'MatrixBackend' },
-  { module: () => import('./server-dm-backend.js'), key: 'ServerDMBackend' },
-  { module: () => import('./notification-manager.js'), key: 'notifs' }
-]
-
 let CallManager, MatrixBackend, ServerDMBackend, notifs
 
 /* ── State ── */
@@ -72,6 +65,12 @@ const normalizeUser = raw => String(raw || '').trim().replace(/^@+/, '').toLower
 
 function loadJSON(key, def) { try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v != null ? v : def } catch { return def } }
 function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)) }
+function withTimeout(promise, ms, fallback = false) {
+  return Promise.race([
+    Promise.resolve(promise).catch(() => fallback),
+    new Promise(resolve => setTimeout(() => resolve(fallback), ms)),
+  ])
+}
 
 function showError(msg) {
   $('phone-loading').style.display = 'none'
@@ -82,6 +81,21 @@ function showError(msg) {
 }
 
 /* ── Offline Backend Stub ── */
+function createNotificationFallback() {
+  return {
+    requestPermission: () => {},
+    showToast: ({ title, message }) => console.info('[Signal Phone]', title || '', message || ''),
+    startRinging: () => {},
+    stopRinging: () => {},
+    startRingtone: () => {},
+    stopRingtone: () => {},
+    vibrate: () => {},
+    playNotificationSound: () => {},
+    showBrowserNotification: () => {},
+    notify: () => {},
+  }
+}
+
 function createOfflineBackend() {
   return {
     init: async () => true,
@@ -100,25 +114,31 @@ function createOfflineBackend() {
 
 /* ── Initialization ── */
 async function init() {
-  try {
-    const moduleResults = await Promise.all(DYNAMIC_IMPORTS.map(d => d.module()))
-    CallManager = moduleResults[0].CallManager
-    MatrixBackend = moduleResults[1].MatrixBackend
-    ServerDMBackend = moduleResults[2].ServerDMBackend
-    notifs = moduleResults[3].notifs
-  } catch (err) {
-    console.error('[FAS] Dynamic module load failed:', err)
-    showError('Failed to load phone modules. Check your network connection.')
+  session = getSession()
+  if (!session || !session.username) {
+    $('phone-loading').style.display = 'none'
+    $('phone-gate').style.display = ''
+    window.__phoneReady = true
     return
   }
 
   try {
-    session = getSession()
-    if (!session || !session.username) {
-      $('phone-loading').style.display = 'none'
-      $('phone-gate').style.display = ''
-      return
-    }
+    const moduleResults = await withTimeout(Promise.all([
+      import('./call-manager.js'),
+      import('./matrix-backend.js'),
+      import('./notification-manager.js'),
+    ]), 8000, null)
+    if (!moduleResults) throw new Error('Phone module loading timed out.')
+    CallManager = moduleResults[0].CallManager
+    MatrixBackend = moduleResults[1].MatrixBackend
+    notifs = moduleResults[2].notifs || createNotificationFallback()
+  } catch (err) {
+    console.error('[FAS] Core phone module load failed:', err)
+    showError('The core phone controls could not load. Refresh the page and try again.')
+    return
+  }
+
+  try {
     myUsername = String(session.username).toLowerCase()
 
     const settings = loadJSON(SETTINGS_KEY, {})
@@ -134,17 +154,35 @@ async function init() {
     })
 
     if (incognitoMode) {
-      backend = new ServerDMBackend()
+      try {
+        const serverModule = await withTimeout(import('./server-dm-backend.js'), 6000, null)
+        if (!serverModule) throw new Error('Private phone backend timed out.')
+        ServerDMBackend = serverModule.ServerDMBackend
+        backend = new ServerDMBackend()
+      } catch (err) {
+        console.warn('[FAS] Private phone backend unavailable:', err)
+        backend = createOfflineBackend()
+        isOfflineFallback = true
+      }
     } else {
       backend = new MatrixBackend()
     }
 
-    const ok = await backend.init()
+    const ok = await withTimeout(backend.init(), 6000, false)
     if (!ok && !incognitoMode) {
-      const guestOk = await backend.guestLogin()
+      const guestOk = await withTimeout(backend.guestLogin(), 6000, false)
       if (!guestOk) {
-        backend = new ServerDMBackend()
-        await backend.init()
+        try {
+          const serverModule = await withTimeout(import('./server-dm-backend.js'), 6000, null)
+          if (!serverModule) throw new Error('Server phone backend timed out.')
+          ServerDMBackend = serverModule.ServerDMBackend
+          backend = new ServerDMBackend()
+          await withTimeout(backend.init(), 6000, false)
+        } catch (err) {
+          console.warn('[FAS] Server phone backend unavailable:', err)
+          backend = createOfflineBackend()
+          isOfflineFallback = true
+        }
       }
     }
 
@@ -152,11 +190,11 @@ async function init() {
     const backendReady = await (async () => {
       try {
         if (incognitoMode) return true
-        const test = await backend.getContacts()
+        const test = await withTimeout(backend.getContacts(), 6000, null)
         return Array.isArray(test)
       } catch { return false }
     })()
-    if (!backendReady) {
+    if (!backendReady && !isOfflineFallback) {
       console.warn('[FAS] No backend available — falling back to offline mode')
       backend = createOfflineBackend()
       isOfflineFallback = true
