@@ -44,7 +44,7 @@ export class MatrixBackend {
 
   async guestLogin() {
     try {
-      const r = await fetch(`${MATRIX_BASE}/_matrix/client/v3/register`, {
+      const r = await fetch(`${MATRIX_BASE}/_matrix/client/v3/register?kind=guest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ initial_device_display_name: 'Signal Phone' })

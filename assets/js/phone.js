@@ -171,6 +171,13 @@ async function init() {
     const ok = await withTimeout(backend.init(), 6000, false)
     if (!ok && !incognitoMode) {
       const guestOk = await withTimeout(backend.guestLogin(), 6000, false)
+      if (guestOk && backend.userId && session.ph) {
+        fetch('/api/dm/link-matrix', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: myUsername, ph: session.ph, matrix_user_id: backend.userId }),
+        }).catch(() => {})
+      }
       if (!guestOk) {
         try {
           const serverModule = await withTimeout(import('./server-dm-backend.js'), 6000, null)
