@@ -33,6 +33,7 @@ export class MatrixBackend {
       if (!raw) return false
       const sess = JSON.parse(raw)
       if (!sess.access_token || !sess.user_id) return false
+      this._session = sess
       this._accessToken = sess.access_token
       this._userId = sess.user_id
       this._deviceId = sess.device_id || null
@@ -55,6 +56,7 @@ export class MatrixBackend {
       this._userId = d.user_id
       this._deviceId = d.device_id
       const sess = { access_token: d.access_token, user_id: d.user_id, device_id: d.device_id, ts: Date.now() }
+      this._session = sess
       localStorage.setItem(MATRIX_SESSION_KEY, JSON.stringify(sess))
       this._initialized = true
       return true
