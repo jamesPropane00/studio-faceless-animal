@@ -825,6 +825,10 @@
           model = availableModels[modelIdx];
           document.getElementById('modelSelect').value = modelIdx;
           addMessage('system', 'Auto-switched to ' + model.name + ' for ' + intent + '.');
+        } else if (intent === 'video') {
+          addMessage('system', 'Video generation is unavailable because the local WAN 2.1 service is offline or not connected.');
+          document.getElementById('sendBtn').disabled = false;
+          return;
         }
       }
 
@@ -863,7 +867,7 @@
         if (apiKey) body.oc_api_key = apiKey;
 
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 75000);
+        const timeout = setTimeout(() => controller.abort(), model.type === 'video' ? 300000 : 75000);
         const res = await fetch('/api/ai/chat/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1091,7 +1095,13 @@
           if (data.adapted && data.adaptation_message) addMessage('system', data.adaptation_message);
         } else if (model.type === 'video' && data.video) {
           const ts = Date.now();
-          addMessage('assistant', '<strong>' + model.name + ':</strong><br><video src="' + data.video + '" controls style="max-width:100%;border-radius:10px;margin-bottom:8px"></video><br><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="' + data.video + '" download="faceless-ai-' + ts + '.mp4" class="download-btn">Download Video</a><button class="save-media-btn" data-b64="' + data.video.split(',')[1] + '" data-name="faceless-ai-' + ts + '.mp4" data-type="video/mp4" onclick="saveGeneratedMedia(this)">Save to My Media</button></div>');
+          const isVideoData = data.video.startsWith('data:');
+          const saveVideoButton = isVideoData
+            ? '<button class="save-media-btn" data-b64="' + data.video.split(',')[1] + '" data-name="faceless-ai-' + ts + '.mp4" data-type="video/mp4" onclick="saveGeneratedMedia(this)">Save to My Media</button>'
+            : '';
+          addMessage('assistant', '<strong>' + model.name + ':</strong><br><video src="' + data.video + '" controls playsinline preload="metadata" style="max-width:100%;border-radius:10px;margin-bottom:8px"></video><br><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="' + data.video + '" download="faceless-ai-' + ts + '.mp4" class="download-btn">Download Video</a>' + saveVideoButton + '</div>');
+        } else if (model.type === 'video') {
+          addMessage('system', 'WAN 2.1 completed without returning a playable video.');
         } else if ((model.type === 'music' || model.type === 'audio') && data.audio) {
           const ext = data.audio.startsWith('data:audio/wav') ? '.wav' : data.audio.startsWith('data:audio/mpeg') ? '.mp3' : '.mp3';
           const ts = Date.now();

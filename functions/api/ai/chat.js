@@ -19,6 +19,21 @@ function arrayBufferToBase64(buffer) {
   return btoa(binary);
 }
 
+function normalizeVideoOutput(data) {
+  const candidate = data && (
+    data.video
+    || data.video_url
+    || data.url
+    || (data.result && (data.result.video || data.result.video_url || data.result.url))
+    || (Array.isArray(data.outputs) && data.outputs[0])
+    || (Array.isArray(data.output) && data.output[0])
+    || (typeof data.output === 'string' && data.output)
+  );
+  if (!candidate || typeof candidate !== 'string') return null;
+  if (candidate.startsWith('data:') || candidate.startsWith('http://') || candidate.startsWith('https://') || candidate.startsWith('/')) return candidate;
+  return 'data:video/mp4;base64,' + candidate;
+}
+
 async function imageResponseToDataUrl(response) {
   const contentType = (response.headers.get('content-type') || '').toLowerCase();
   if (contentType.includes('json')) {
@@ -424,20 +439,39 @@ export async function onRequest(context) {
   if (selectedModel.id && selectedModel.id.startsWith('comfyui-')) {
     try {
       const endpoint = selectedModel.type === 'video' ? '/generate_video' : '/generate';
-      const comfyRes = await fetch(comfyuiTunnel + endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: message, model: selectedModel.id.replace('comfyui-', '') }),
-      });
+      const localController = new AbortController();
+      const localTimeout = setTimeout(() => localController.abort(), selectedModel.type === 'video' ? 285000 : 90000);
+      let comfyRes;
+      try {
+        comfyRes = await fetch(comfyuiTunnel + endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: message, model: selectedModel.id.replace('comfyui-', '') }),
+          signal: localController.signal,
+        });
+      } finally {
+        clearTimeout(localTimeout);
+      }
       if (!comfyRes.ok) {
         const err = await comfyRes.text();
-        return new Response(JSON.stringify({ error: 'Local ComfyUI error', detail: cleanApiError(err) }), {
+        return new Response(JSON.stringify({
+          error: selectedModel.type === 'video' ? 'WAN 2.1 video service failed' : 'Local ComfyUI error',
+          detail: cleanApiError(err, selectedModel.type === 'video'
+            ? 'The local WAN bridge is offline or its /generate_video route is unavailable.'
+            : 'The local ComfyUI service is unavailable.'),
+        }), {
           status: 502, headers: { 'content-type': 'application/json' },
         });
       }
       const data = await comfyRes.json();
       const imageData = data.images && data.images[0] && data.images[0].data;
-      const videoData = data.video || null;
+      const videoData = normalizeVideoOutput(data);
+      if (selectedModel.type === 'video' && !videoData) {
+        return new Response(JSON.stringify({
+          error: 'WAN 2.1 returned no playable video',
+          detail: 'The local bridge answered, but it did not return video, video_url, url, output, or outputs[0].',
+        }), { status: 502, headers: { 'content-type': 'application/json' } });
+      }
       const mediaContent = selectedModel.type === 'video' ? '[video]' : '[image]';
 
       if (sbKey) {
@@ -460,7 +494,13 @@ export async function onRequest(context) {
         username,
       }), { headers: { 'content-type': 'application/json' } });
     } catch (e) {
-      return new Response(JSON.stringify({ error: 'ComfyUI unreachable', detail: e.message }), {
+      const offline = e && e.name === 'AbortError'
+        ? 'The local generator did not finish before the five-minute limit.'
+        : 'The WAN/ComfyUI tunnel is offline. Start the local bridge and Cloudflare tunnel, then retry.';
+      return new Response(JSON.stringify({
+        error: selectedModel.type === 'video' ? 'WAN 2.1 is offline' : 'ComfyUI unreachable',
+        detail: offline,
+      }), {
         status: 502, headers: { 'content-type': 'application/json' },
       });
     }
