@@ -1683,11 +1683,15 @@
             '<h3>' + escapeHtml(title) + '</h3>',
             '<p>' + escapeHtml(channel + ' / ' + description) + '</p>',
           '</div>',
+          window.FASStreetWire
+            ? window.FASStreetWire.markup('tv-' + key, title, shareUrlForTarget({ uploadKey: key }), source || image)
+            : '',
         '</article>',
       ].join('');
     }).join('');
 
     activateVideos(el.grid);
+    if (window.FASStreetWire) window.FASStreetWire.bindAll(el.grid);
 
     qsa('.tv-card', el.grid).forEach(function (card) {
       var playButton = card.querySelector('.tv-play');

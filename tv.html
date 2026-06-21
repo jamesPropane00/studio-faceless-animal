@@ -1925,11 +1925,22 @@
     }
 
     .tv-archive-panel .tv-play {
-      width: 28px;
-      height: 28px;
-      left: 0.45rem;
-      bottom: 0.45rem;
-      font-size: 0.78rem;
+      width: 52px;
+      height: 52px;
+      left: 50%;
+      top: 50%;
+      bottom: auto;
+      z-index: 4;
+      font-size: 1.08rem;
+      transform: translate(-50%, -50%);
+      background: rgba(255,47,79,0.94);
+      color: #fff;
+      box-shadow: 0 10px 32px rgba(0,0,0,0.56), 0 0 24px rgba(255,47,79,0.42);
+    }
+
+    .tv-archive-panel .tv-play:hover,
+    .tv-archive-panel .tv-play:focus-visible {
+      transform: translate(-50%, -50%) scale(1.08);
     }
 
     .tv-channel-section {
@@ -2614,7 +2625,7 @@
   <script>
     window.FAS_TV_ORIGIN = window.FAS_TV_ORIGIN || window.location.origin;
   </script>
-  <script type="module" src="assets/js/tv-network.js?v=20260620-june14-recovery"></script>
+  <script type="module" src="assets/js/tv-network.js?v=20260620-archive-wire-play"></script>
 
   <!-- compression now handled inline in the panel JS below -->
 
