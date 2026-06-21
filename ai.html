@@ -701,11 +701,11 @@
       const lower = text.toLowerCase().trim();
       const visionKw = ['what is this','describe this','what does this say','read this','analyze this image',
         'what do you see','extract text','ocr','document'];
-      const imgKw = ['draw','generate','create','make','paint','render','imagine',
-        'image of','picture of','photo of','art of','a realistic','a cartoon',
+      const imgKw = ['image of','picture of','photo of','art of','a realistic','a cartoon',
         'a painting','a photo','a portrait','a landscape','a futuristic',
         'a fantasy','a sci-fi','a digital art','anime style','a sketch',
         'a drawing','a concept art','a low poly','a pixel art','a cyberpunk'];
+      const imageRequest = /\b(draw|generate|create|make|paint|render|imagine)\b[\s\S]*\b(image|picture|photo|portrait|art|illustration|drawing|painting|poster|cover|logo|wallpaper)\b/i;
       const audioKw = ['speak','say this','say out loud','read this aloud','voice','tts',
         'text to speech','talk','tell me out loud'];
       const videoKw = ['generate a video','make a video','create a video','animate',
@@ -719,7 +719,7 @@
       if (musicKw.some(k => lower.includes(k))) return 'music';
       if (videoKw.some(k => lower.includes(k))) return 'video';
       if (visionKw.some(k => lower.includes(k))) return 'vision';
-      if (imgKw.some(k => lower.includes(k))) return 'image';
+      if (imageRequest.test(lower) || imgKw.some(k => lower.includes(k))) return 'image';
       if (audioKw.some(k => lower.includes(k))) return 'audio';
       return null;
     }
@@ -803,8 +803,8 @@
       if (hasImageFile && !intent && (model.type === 'text' || model.type === 'book')) intent = 'vision';
       if (intent && model.type !== intent) {
         if (intent === 'image') {
-          const fastIdx = availableModels.findIndex(m => m.id && m.id.includes('lightning'));
-          modelIdx = fastIdx !== -1 ? fastIdx : availableModels.findIndex(m => m.type === 'image');
+          const fluxIdx = availableModels.findIndex(m => m.id === '@cf/black-forest-labs/flux-1-schnell');
+          modelIdx = fluxIdx !== -1 ? fluxIdx : availableModels.findIndex(m => m.type === 'image');
         } else if (intent === 'vision') {
           modelIdx = availableModels.findIndex(m => m.type === 'vision');
           if (modelIdx === -1) modelIdx = availableModels.findIndex(m => m.type === 'text');
@@ -840,7 +840,7 @@
       const agentMode = localStorage.getItem('fas_agent_mode') === 'true';
 
       try {
-        const body = { message: text, session_id: SESSION_ID, model: modelIdx, conversation_id: convId, mode: agentMode ? 'agent' : 'chat' };
+        const body = { message: text, session_id: SESSION_ID, model: modelIdx, model_id: model.id, conversation_id: convId, mode: agentMode ? 'agent' : 'chat' };
         body.max_tokens = parseInt(document.getElementById('maxTokens').value) || 1024;
         body.history = getConversationHistory();
         body.username = (currentUser && currentUser.username) || undefined;
@@ -1042,7 +1042,7 @@
     async function sendFallback(text, modelIdx, convId, model, filesData) {
       showTyping();
       try {
-        const body = { message: text, session_id: SESSION_ID, model: modelIdx, conversation_id: convId };
+        const body = { message: text, session_id: SESSION_ID, model: modelIdx, model_id: model.id, conversation_id: convId };
         body.max_tokens = parseInt(document.getElementById('maxTokens').value) || 1024;
         if (filesData.length > 0) body.files = filesData;
         if (currentUser && currentUser.username) body.username = currentUser.username;
@@ -1080,6 +1080,8 @@
           const ts = Date.now();
           const fn = 'faceless-ai-' + ts + ext;
           addMessage('assistant', '<strong>' + model.name + ':</strong><br><audio src="' + data.audio + '" controls style="width:100%;margin-bottom:8px"></audio><br><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="' + data.audio + '" download="' + fn + '" class="download-btn">Download Audio</a><button class="save-media-btn" data-b64="' + data.audio.split(',')[1] + '" data-name="' + fn + '" data-type="' + (ext === '.wav' ? 'audio/wav' : 'audio/mpeg') + '" onclick="saveGeneratedMedia(this)">Save to My Media</button></div>');
+        } else if (model.type === 'image') {
+          addMessage('system', 'Image generation failed: the model returned no usable image.');
         } else {
           addMessage('assistant', data.reply || 'No response.', false, data.tool_log);
         }

@@ -9,6 +9,32 @@ function cleanApiError(body, fallback) {
   catch { return t.slice(0, 200) }
 }
 
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+async function imageResponseToDataUrl(response) {
+  const contentType = (response.headers.get('content-type') || '').toLowerCase();
+  if (contentType.includes('json')) {
+    const payload = await response.json();
+    const result = payload && payload.result;
+    const encoded = (result && typeof result === 'object' && result.image)
+      || (typeof result === 'string' ? result : '')
+      || payload.image
+      || '';
+    if (!encoded) throw new Error('The image model returned no image data.');
+    return encoded.startsWith('data:') ? encoded : 'data:image/png;base64,' + encoded;
+  }
+  const mime = contentType.split(';')[0] || 'image/png';
+  return 'data:' + mime + ';base64,' + arrayBufferToBase64(await response.arrayBuffer());
+}
+
 const SUPABASE_URL = 'https://ghufaozjwondqcrcucjs.supabase.co';
 
 async function sbFetch(path, options, key) {
@@ -150,6 +176,7 @@ export async function onRequest(context) {
   const username = String(body.username || '').trim().toLowerCase() || null;
   const conversationId = String(body.conversation_id || '').trim() || null;
   const modelIdx = body.model !== undefined ? parseInt(body.model) : 0;
+  const requestedModelId = String(body.model_id || '').trim();
   const listConversations = body.list_conversations === true;
   const loadConversationId = String(body.load_conversation || '').trim() || null;
   const maxTokens = parseInt(body.max_tokens) || 1024;
@@ -200,7 +227,7 @@ export async function onRequest(context) {
   if (isAdmin && opencodeGoKey) {
     allModels.push(...PRO_AI_MODELS);
   }
-  const selectedModel = allModels[modelIdx] || allModels[0];
+  const selectedModel = allModels.find(model => model.id === requestedModelId) || allModels[modelIdx] || allModels[0];
 
   // ── LIST CONVERSATIONS ────────────────────────────────────
   if (listConversations && sbKey) {
@@ -447,9 +474,7 @@ export async function onRequest(context) {
           status: 502, headers: { 'content-type': 'application/json' },
         });
       }
-      const buffer = await imgRes.arrayBuffer();
-      const binary = new TextDecoder('latin1').decode(buffer);
-      const dataUrl = 'data:image/png;base64,' + btoa(binary);
+      const dataUrl = await imageResponseToDataUrl(imgRes);
       return new Response(JSON.stringify({
         image: dataUrl,
         model: selectedModel.name,
@@ -484,10 +509,10 @@ export async function onRequest(context) {
         prompt = message + ', high quality digital art, masterpiece, detailed, intricate, professional concept art';
       }
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000);
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
       const imageRes = await fetch('https://api.cloudflare.com/client/v4/accounts/' + accountId + '/ai/run/' + selectedModel.id, {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Accept': 'image/png, application/json' },
         body: JSON.stringify({ prompt }),
         signal: controller.signal,
       });
@@ -498,9 +523,7 @@ export async function onRequest(context) {
           status: 502, headers: { 'content-type': 'application/json' },
         });
       }
-      const buffer = await imageRes.arrayBuffer();
-      const binary = new TextDecoder('latin1').decode(buffer);
-      const dataUrl = 'data:image/png;base64,' + btoa(binary);
+      const dataUrl = await imageResponseToDataUrl(imageRes);
 
       if (sbKey) {
         const convId = conversationId || 'default';
