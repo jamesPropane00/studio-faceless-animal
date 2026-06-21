@@ -2423,6 +2423,20 @@
       return url.toString();
     }
 
+    function engagementTitle(row, username) {
+      if (row && row.media_url && isAudioUrl(row.media_url)) {
+        return 'Faceless Radio: ' + audioPostTitle(row, row.media_url);
+      }
+      return '@' + username + ' on the Directory';
+    }
+
+    function engagementUrl(row, key) {
+      if (row && row.media_url && isAudioUrl(row.media_url)) {
+        return new URL('radio.html', window.location.href).toString();
+      }
+      return sharedPostUrl(key);
+    }
+
     function postShareText(item) {
       var user = item.getAttribute('data-feed-user') || 'member';
       var body = (item.getAttribute('data-feed-text') || '').trim().replace(/\s+/g, ' ');
@@ -2981,7 +2995,7 @@
             + '</div>'
             + '<p class="feed-item-text">' + body + '</p>'
             + media
-            + window.FASStreetWire.markup('directory-' + key, '@' + username + ' on the Directory', sharedPostUrl(key), row.media_url || '')
+            + window.FASStreetWire.markup('directory-' + key, engagementTitle(row, username), engagementUrl(row, key), row.media_url || '')
             + '</article>';
         }).join('');
         bindFeedVideos(list);

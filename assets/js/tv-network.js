@@ -1114,7 +1114,7 @@
       source
         ? '<video class="tv-thumb-video" muted playsinline preload="metadata" src="' + escapeHtml(source) + '#t=0.1"></video>'
         : '<div class="tv-screen-preview"><img src="' + escapeHtml(image) + '" alt="" loading="lazy" /></div>',
-      '<button class="tv-play" type="button" aria-label="Play ' + escapeHtml(card.getAttribute('data-title') || 'video') + '">&#9654;</button>',
+      '<button class="tv-play" type="button" aria-label="Play ' + escapeHtml(card.getAttribute('data-title') || 'video') + '"><span class="tv-play-mark" aria-hidden="true"><i></i><i></i></span></button>',
       '<span class="tv-meta">' + escapeHtml(duration) + '</span>',
     ].join('');
     activateVideos(thumb);
@@ -1676,7 +1676,7 @@
             source
               ? '<video class="tv-thumb-video" muted playsinline preload="metadata" src="' + escapeHtml(source) + '#t=0.1"></video>'
               : '<div class="tv-screen-preview"><img src="' + escapeHtml(image) + '" alt="" loading="lazy" /></div>',
-            '<button class="tv-play" type="button" aria-label="Play ' + escapeHtml(title) + '">&#9654;</button>',
+            '<button class="tv-play" type="button" aria-label="Play ' + escapeHtml(title) + '"><span class="tv-play-mark" aria-hidden="true"><i></i><i></i></span></button>',
             '<span class="tv-meta">' + escapeHtml(duration) + '</span>',
           '</div>',
           '<div class="tv-card-body">',

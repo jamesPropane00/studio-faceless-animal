@@ -1933,14 +1933,61 @@
       z-index: 4;
       font-size: 1.08rem;
       transform: translate(-50%, -50%);
-      background: rgba(255,47,79,0.94);
+      border: 1px solid rgba(235,92,255,0.72);
+      background:
+        radial-gradient(circle at 35% 24%, rgba(255,255,255,0.28), transparent 24%),
+        linear-gradient(135deg, #9b2cff 0%, #dc275f 58%, #ff4354 100%);
       color: #fff;
-      box-shadow: 0 10px 32px rgba(0,0,0,0.56), 0 0 24px rgba(255,47,79,0.42);
+      box-shadow: 0 10px 32px rgba(0,0,0,0.56), 0 0 26px rgba(155,44,255,0.42), 0 0 18px rgba(255,47,79,0.34);
     }
 
     .tv-archive-panel .tv-play:hover,
     .tv-archive-panel .tv-play:focus-visible {
       transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .tv-play-mark {
+      position: relative;
+      width: 25px;
+      height: 21px;
+      display: block;
+      border: 2px solid rgba(255,255,255,0.92);
+      border-radius: 46% 46% 58% 58%;
+      transform: rotate(-2deg);
+      box-shadow: inset 0 -5px 0 rgba(10,4,20,0.16);
+    }
+
+    .tv-play-mark::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -6px;
+      width: 7px;
+      height: 7px;
+      border-right: 2px solid rgba(255,255,255,0.92);
+      border-bottom: 2px solid rgba(255,255,255,0.92);
+      transform: translateX(-50%) rotate(45deg);
+      background: #d52a67;
+    }
+
+    .tv-play-mark i {
+      position: absolute;
+      top: 6px;
+      width: 6px;
+      height: 4px;
+      border-radius: 60% 20% 60% 20%;
+      background: #fff;
+      box-shadow: 0 0 8px rgba(255,255,255,0.9);
+    }
+
+    .tv-play-mark i:first-child {
+      left: 4px;
+      transform: rotate(18deg);
+    }
+
+    .tv-play-mark i:last-child {
+      right: 4px;
+      transform: rotate(-18deg) scaleX(-1);
     }
 
     .tv-channel-section {
@@ -2625,7 +2672,7 @@
   <script>
     window.FAS_TV_ORIGIN = window.FAS_TV_ORIGIN || window.location.origin;
   </script>
-  <script type="module" src="assets/js/tv-network.js?v=20260620-archive-wire-play"></script>
+  <script type="module" src="assets/js/tv-network.js?v=20260620-faceless-play-mark"></script>
 
   <!-- compression now handled inline in the panel JS below -->
 
