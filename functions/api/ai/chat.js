@@ -70,7 +70,7 @@ function facelessAnimalBrandPrompt(message, lowercase) {
   const finish = ', premium underground music-art direction, bold silhouette, controlled negative space, tactile ink and brushed-metal textures, cinematic contrast, original design, no copied brand marks, no random lettering, no watermark';
 
   let format = ', square album-art composition, iconic centered subject, enough breathing room for optional typography to be added later';
-  if (wantsEmblem) format = ', simplified symmetrical mask emblem, sharp readable silhouette, minimal geometric vector-like construction, isolated centered mark, screen-print friendly, no mockup, no text';
+  if (wantsEmblem) format = ', simplified symmetrical full-mask emblem, sharp readable silhouette, minimal geometric vector-like construction, centered both horizontally and vertically, emblem occupies roughly 60 percent of the canvas, balanced empty margins on every side, solid edge-to-edge black background, screen-print friendly, no cropped ears or chin, no split background, no mockup, no text';
   else if (wantsPoster) format = ', vertical event-poster composition, masked figure framed by speaker stacks and signal towers, strong top and bottom negative space for later event typography, no generated words';
   else if (wantsBanner) format = ', wide cinematic banner composition, subject placed off-center with expansive atmospheric negative space, layered club skyline and signal trails';
   else if (wantsAvatar) format = ', tight iconic head-and-shoulders portrait, mask and violet eyes dominant, clean circular-crop safety, readable at thumbnail size';
