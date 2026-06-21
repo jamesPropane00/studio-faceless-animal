@@ -29,7 +29,11 @@ async function imageResponseToDataUrl(response) {
       || payload.image
       || '';
     if (!encoded) throw new Error('The image model returned no image data.');
-    return encoded.startsWith('data:') ? encoded : 'data:image/png;base64,' + encoded;
+    if (encoded.startsWith('data:')) return encoded;
+    const mime = encoded.startsWith('/9j/') ? 'image/jpeg'
+      : encoded.startsWith('UklGR') ? 'image/webp'
+      : 'image/png';
+    return 'data:' + mime + ';base64,' + encoded;
   }
   const mime = contentType.split(';')[0] || 'image/png';
   return 'data:' + mime + ';base64,' + arrayBufferToBase64(await response.arrayBuffer());

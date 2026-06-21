@@ -1071,7 +1071,10 @@
 
         if (model.type === 'image' && data.image) {
           const ts = Date.now();
-          addMessage('assistant', '<strong>' + model.name + ':</strong><br><img src="' + data.image + '" alt="Generated image" class="gen-image" onclick="openLightbox(this.src)" style="max-width:100%;border-radius:10px;margin-bottom:8px;cursor:pointer" /><br><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="' + data.image + '" download="faceless-ai-' + ts + '.png" class="download-btn">Download Image</a><button class="save-media-btn" data-b64="' + data.image.split(',')[1] + '" data-name="faceless-ai-' + ts + '.png" data-type="image/png" onclick="saveGeneratedMedia(this)">Save to My Media</button></div>');
+          const imageMime = (data.image.match(/^data:([^;]+);/) || [])[1] || 'image/png';
+          const imageExt = imageMime === 'image/jpeg' ? '.jpg' : imageMime === 'image/webp' ? '.webp' : '.png';
+          const imageName = 'faceless-ai-' + ts + imageExt;
+          addMessage('assistant', '<strong>' + model.name + ':</strong><br><img src="' + data.image + '" alt="Generated image" class="gen-image" onclick="openLightbox(this.src)" style="max-width:100%;border-radius:10px;margin-bottom:8px;cursor:pointer" /><br><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="' + data.image + '" download="' + imageName + '" class="download-btn">Download Image</a><button class="save-media-btn" data-b64="' + data.image.split(',')[1] + '" data-name="' + imageName + '" data-type="' + imageMime + '" onclick="saveGeneratedMedia(this)">Save to My Media</button></div>');
         } else if (model.type === 'video' && data.video) {
           const ts = Date.now();
           addMessage('assistant', '<strong>' + model.name + ':</strong><br><video src="' + data.video + '" controls style="max-width:100%;border-radius:10px;margin-bottom:8px"></video><br><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="' + data.video + '" download="faceless-ai-' + ts + '.mp4" class="download-btn">Download Video</a><button class="save-media-btn" data-b64="' + data.video.split(',')[1] + '" data-name="faceless-ai-' + ts + '.mp4" data-type="video/mp4" onclick="saveGeneratedMedia(this)">Save to My Media</button></div>');
