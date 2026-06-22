@@ -35,6 +35,17 @@ function safeFileName(name) {
     .replace(/-+/g, '-');
 }
 
+function articleSlug(title) {
+  const base = clean(title, 100)
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 72) || 'signal-wire';
+  return `${base}-${Date.now().toString(36)}`;
+}
+
 async function sbFetch(env, path, options = {}) {
   const base = String(env.SUPABASE_URL || SUPABASE_FALLBACK_URL).replace(/\/+$/, '');
   const key = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -125,6 +136,7 @@ export async function onRequestPost(context) {
     const mediaUrl = uploadedUrl || clean(form.get('media_url'), 1000) || null;
     const publishedAt = new Date().toISOString();
     const articlePayload = {
+      slug: articleSlug(title),
       title,
       dek: clean(form.get('dek'), 300) || null,
       body: body || null,
