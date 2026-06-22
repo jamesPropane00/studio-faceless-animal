@@ -103,34 +103,16 @@
       var imagePreview = document.getElementById('image-preview');
       var imagePreviewImg = document.getElementById('image-preview-img');
 
-      var uploadedMediaUrl = null;
-
       imageInput.addEventListener('change', function() {
         var file = imageInput.files && imageInput.files[0];
-        if (!file) { imagePreview.style.display = 'none'; uploadedMediaUrl = null; return; }
+        if (!file) { imagePreview.style.display = 'none'; return; }
         var reader = new FileReader();
         reader.onload = function(e) {
           imagePreviewImg.src = e.target.result;
           imagePreview.style.display = '';
         };
         reader.readAsDataURL(file);
-        uploadedMediaUrl = null;
       });
-
-      async function uploadToSupabase(file) {
-        var fileName = Date.now().toString(36) + '-' + file.name.replace(/[^a-zA-Z0-9._-]/g, '');
-        var resp = await fetch(supabaseUrl + '/storage/v1/object/' + STORAGE_BUCKET + '/' + fileName, {
-          method: 'POST',
-          headers: {
-            apikey: supabaseKey,
-            Authorization: 'Bearer ' + supabaseKey,
-            'Content-Type': file.type,
-          },
-          body: file
-        });
-        if (!resp.ok) throw new Error('Upload failed: ' + resp.status);
-        return supabaseUrl + '/storage/v1/object/public/' + STORAGE_BUCKET + '/' + fileName;
-      }
 
       function loadArticles() {
         fetch(supabaseUrl + '/rest/v1/signal_wire_posts?select=id,title,category,published_at&order=published_at.desc&limit=20', {
@@ -146,49 +128,48 @@
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
         var title = titleInput.value.trim();
-        var body = bodyInput.value.trim();
         if (!title) { statusEl.textContent = 'Title is required.'; return; }
-        statusEl.textContent = 'Publishing...';
-
-        var mediaUrl = mediaInput.value.trim() || null;
-        var file = imageInput.files && imageInput.files[0];
-
-        if (file && !mediaUrl) {
-          statusEl.textContent = 'Uploading image...';
-          try {
-            mediaUrl = await uploadToSupabase(file);
-          } catch (err) {
-            statusEl.textContent = 'Image upload failed: ' + (err.message || '');
-            return;
-          }
+        var session = null;
+        try { session = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch (_) {}
+        if (!session) {
+          statusEl.textContent = 'Sign in as the studio admin before publishing.';
+          return;
         }
 
-        var payload = {
-          title: title,
-          dek: dekInput.value.trim() || null,
-          body: body || null,
-          category: categoryInput.value,
-          accent_color: accentInput.value || null,
-          media_url: mediaUrl,
-          link_url: linkInput.value.trim() || null,
-          status: 'published',
-          published_at: new Date().toISOString(),
-          content_html: body ? '<p>' + esc(body).replace(/\n/g, '<br>') + '</p>' : null
-        };
+        var submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Publishing...';
+        statusEl.textContent = 'Uploading and publishing article...';
+        var data = new FormData();
+        data.append('title', title);
+        data.append('dek', dekInput.value.trim());
+        data.append('body', bodyInput.value.trim());
+        data.append('category', categoryInput.value);
+        data.append('accent_color', accentInput.value);
+        data.append('media_url', mediaInput.value.trim());
+        data.append('link_url', linkInput.value.trim());
+        var file = imageInput.files && imageInput.files[0];
+        if (file) data.append('image', file, file.name);
 
-        fetch(supabaseUrl + '/rest/v1/signal_wire_posts', {
+        fetch('/api/news/publish', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', apikey: supabaseKey, Authorization: 'Bearer ' + supabaseKey, Prefer: 'return=minimal' },
-          body: JSON.stringify(payload)
+          headers: { 'x-fas-user': JSON.stringify(session) },
+          body: data
         }).then(function (r) {
-          if (!r.ok) throw new Error('Failed: ' + r.status);
-          statusEl.textContent = 'Article published!';
+          return r.json().then(function (payload) { return { ok: r.ok, payload: payload }; });
+        }).then(function (result) {
+          if (!result.ok) throw new Error(result.payload.error || 'Publish failed.');
+          statusEl.textContent = result.payload.board_posted
+            ? 'Article published and posted to the community!'
+            : 'Article published. Community post warning: ' + (result.payload.board_error || 'not posted');
           form.reset();
           imagePreview.style.display = 'none';
-          uploadedMediaUrl = null;
           loadArticles();
         }).catch(function (err) {
           statusEl.textContent = err.message || 'Publish failed.';
+        }).finally(function () {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Publish Article';
         });
       });
 
