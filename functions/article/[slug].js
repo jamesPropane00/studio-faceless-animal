@@ -104,6 +104,18 @@ function render(post) {
     .button{border:1px solid var(--border);border-radius:999px;padding:.65rem .9rem;text-decoration:none;font-weight:900;font-size:.78rem;background:rgba(255,255,255,.05)}
     .button.primary{border-color:color-mix(in srgb,var(--accent) 50%,transparent);color:var(--accent)}
     @media(max-width:600px){.topbar-inner,.article{width:min(100% - 1.2rem,920px)}.article{padding-top:2rem}h1{letter-spacing:-.035em}}
+    @media print{
+      @page{size:auto;margin:.55in}
+      body{background:#fff!important;color:#111!important;font-size:11pt}
+      .topbar,.actions{display:none!important}
+      .article{width:100%;padding:0;margin:0}
+      .category{border-color:#777!important;color:#333!important}
+      h1{font-size:30pt;line-height:1.05;color:#000}
+      .dek,.meta,.body p{color:#222!important}
+      .hero{max-height:5.75in;border:0;border-radius:0;box-shadow:none;object-fit:contain;break-inside:avoid}
+      .body{max-width:none;font-size:11pt;line-height:1.55}
+      .body p{orphans:3;widows:3}
+    }
   </style>
 </head>
 <body>
@@ -122,8 +134,16 @@ function render(post) {
       <a class="button primary" href="/news">More Signal Wire</a>
       ${post.link_url ? `<a class="button" href="${esc(absoluteUrl(post.link_url))}" rel="noopener">Related Link</a>` : ''}
       <button class="button" type="button" onclick="navigator.share?navigator.share({title:document.title,url:location.href}):navigator.clipboard.writeText(location.href)">Share</button>
+      <button class="button" type="button" onclick="window.print()">Download PDF</button>
     </div>
   </main>
+  <script>
+    if (new URLSearchParams(location.search).get('print') === '1') {
+      window.addEventListener('load', function () {
+        setTimeout(function () { window.print(); }, 350);
+      });
+    }
+  </script>
 </body>
 </html>`;
 }

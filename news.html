@@ -1513,7 +1513,7 @@
             + link
             + '<button class="wire-button" type="button" data-share-post="' + esc(key) + '">Share</button>'
             + '<button class="wire-button" type="button" data-board-post="' + esc(key) + '">Post Article To Board</button>'
-            + '<button class="wire-button wire-button--pdf" type="button" data-print-issue>PDF</button>'
+            + '<button class="wire-button wire-button--pdf" type="button" data-article-pdf="' + esc(articleLink) + '">Download PDF</button>'
             + '</div>'
             + window.FASStreetWire.markup(engagementKey, post.title || 'Signal Wire article', articleLink, post.media_url || '')
           + '</div>'
@@ -1645,9 +1645,13 @@
             button.textContent = card.classList.contains('is-open') ? 'Close Article' : 'Open Article';
           });
         });
-        grid.querySelectorAll('[data-print-issue]').forEach(function (button) {
+        grid.querySelectorAll('[data-article-pdf]').forEach(function (button) {
           button.addEventListener('click', function () {
-            window.print();
+            var articleLink = button.getAttribute('data-article-pdf') || '';
+            if (!articleLink) return;
+            var printUrl = new URL(articleLink, window.location.origin);
+            printUrl.searchParams.set('print', '1');
+            window.open(printUrl.toString(), '_blank', 'noopener');
           });
         });
         window.FASStreetWire.bindAll(grid);
