@@ -99,15 +99,7 @@ function initials(name) {
 
 function profileHrefFor(username) {
   const key = String(username || '').toLowerCase()
-  const creator = creatorMap[key]
-  if (!creator) return `directory.html`
-
-  const cat = String(creator.category || 'creator').toLowerCase()
-  const slug = creator.slug || creator.username || key
-
-  if (cat === 'dj' || cat === 'producer' || cat === 'artist') return `/artist/${slug}`
-  if (cat === 'business' || cat === 'collective') return `/business/${slug}`
-  return `/creator/${slug}`
+  return key ? `/profile/${encodeURIComponent(key)}` : 'directory.html'
 }
 
 function roleBadgeHtml(username, session) {

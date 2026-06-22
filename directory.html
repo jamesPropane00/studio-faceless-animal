@@ -2596,18 +2596,14 @@
       var isFounder = m.is_founder === true || m.username === 'jamespropane00';
       var founderLabel = m.founder_label || (isFounder ? 'Founder' : '');
       var activeNow = isRecentlyActive(m.last_active_at);
-      var routePrefix = categoryToRoutePrefix(cat);
       var publicSlug = p.slug || m.page_slug || m.username;
-      var pageHref = isFounder ? 'artists/djfacelessanimal.html' : (hasPage ? routePrefix + publicSlug : 'start.html');
-      var pageLabel = isFounder || hasPage ? 'Open' : 'Start';
-      var publicUrl = isFounder
-        ? 'facelessanimalstudios.com/artists/djfacelessanimal'
-        : (hasPage ? 'facelessanimalstudios.com' + routePrefix + publicSlug : 'No public URL yet');
-      var link = isFounder
-        ? '<a href="artists/djfacelessanimal.html" class="dir-card-link">Open</a>'
-        : hasPage
-          ? '<a href="' + esc(routePrefix + publicSlug) + '" class="dir-card-link">Open</a>'
-          : '<a href="start.html" class="dir-card-link" style="color:var(--text-dim);">Start</a>';
+      var hubUsername = slugify(m.username || p.username || publicSlug);
+      var pageHref = hubUsername ? '/profile/' + encodeURIComponent(hubUsername) : 'start.html';
+      var pageLabel = hubUsername ? 'Open Hub' : 'Start';
+      var publicUrl = hubUsername ? 'facelessanimalstudios.com/profile/' + hubUsername : 'No public URL yet';
+      var link = hubUsername
+        ? '<a href="' + esc(pageHref) + '" class="dir-card-link">Open Hub</a>'
+        : '<a href="start.html" class="dir-card-link" style="color:var(--text-dim);">Start</a>';
 
       var liveStatus = activeNow
         ? '<span class="status-tag status-tag--live"><span class="status-tag-dot" aria-hidden="true"></span>Active</span>'
@@ -2683,7 +2679,7 @@
 
     function profileLinkForUsername(username) {
       var u = slugify(username);
-      return u ? '/creator/' + encodeURIComponent(u) : '';
+      return u ? '/profile/' + encodeURIComponent(u) : '';
     }
 
     function buildChannelCard(channel) {
