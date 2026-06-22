@@ -14,7 +14,8 @@ export async function onRequestGet({ request, env }) {
       + '),and(sender.eq.' + encodeURIComponent(other) + ',recipient.eq.' + encodeURIComponent(me) + '))';
     const response = await sb(env, '/rest/v1/dm_messages?' + filter + '&order=created_at.asc&limit=100');
     if (!response.ok) return json({ error: 'Could not load messages.' }, 500);
-    return json({ messages: await rows(response) });
+    const data = await rows(response);
+    return json({ messages: (Array.isArray(data) ? data : []).filter(row => row.file_name !== '__fas_call_signal__') });
   } catch (error) {
     return json({ error: 'DM service unavailable.', detail: error.message }, 503);
   }

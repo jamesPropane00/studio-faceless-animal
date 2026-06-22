@@ -23,6 +23,9 @@ export class ServerDMBackend {
     this._outgoingCallChannels = new Map()
     this._callRecipient = ''
     this._callId = ''
+    this._callPollRunning = false
+    this._callPollSince = new Date(Date.now() - 10000).toISOString()
+    this._handledSignalIds = new Set()
   }
 
   get isConnected() { return this._initialized }
@@ -77,6 +80,14 @@ export class ServerDMBackend {
 
   _handleCallSignal(payload) {
     if (!this._onCallEvent) return
+    const signalId = String(payload.signalId || payload.signal_id || '')
+    if (signalId && this._handledSignalIds.has(signalId)) return
+    if (signalId) {
+      this._handledSignalIds.add(signalId)
+      if (this._handledSignalIds.size > 500) {
+        this._handledSignalIds.delete(this._handledSignalIds.values().next().value)
+      }
+    }
     const data = payload.data || {}
     const common = {
       callId: payload.callId || data.callId,
@@ -166,7 +177,29 @@ export class ServerDMBackend {
     this._onCallEvent = onCallEvent
     await this._subscribeToIncomingCalls()
     this._syncRunning = true
+    this._callPollRunning = true
     this._pollLoop()
+    this._pollCallSignals()
+  }
+
+  async _pollCallSignals() {
+    while (this._callPollRunning) {
+      try {
+        const url = `/api/dm/call-signal?username=${encodeURIComponent(this._myUsername)}&since=${encodeURIComponent(this._callPollSince)}`
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${this._ph}`, 'X-FAS-Username': this._myUsername },
+          cache: 'no-store'
+        })
+        if (response.ok) {
+          const body = await response.json()
+          for (const signal of body.signals || []) {
+            this._handleCallSignal({ ...signal, recipient: this._myUsername })
+            if (signal.created_at && signal.created_at > this._callPollSince) this._callPollSince = signal.created_at
+          }
+        }
+      } catch {}
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
   }
 
   async _pollLoop() {
@@ -200,6 +233,7 @@ export class ServerDMBackend {
 
   stopSync() {
     this._syncRunning = false
+    this._callPollRunning = false
     if (this._incomingCallChannel && supabase) {
       supabase.removeChannel(this._incomingCallChannel)
       this._incomingCallChannel = null
@@ -212,7 +246,37 @@ export class ServerDMBackend {
 
   async sendCallSignal(type, data) {
     const recipient = String(this._callRecipient || '').toLowerCase()
-    if (!recipient || !SUPABASE_READY || !supabase) return false
+    if (!recipient) return false
+    const session = this._session || {}
+    const signalId = `${this._myUsername}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+    const payload = {
+      type,
+      data,
+      callId: data.callId || this._callId,
+      signalId,
+      sender: this._myUsername,
+      senderDisplay: session.display || session.display_name || this._myUsername,
+      senderSignalCode: session.platform_id || '',
+      recipient,
+      sentAt: new Date().toISOString()
+    }
+    const durableSend = fetch('/api/dm/call-signal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: this._myUsername,
+        ph: this._ph,
+        recipient,
+        type,
+        data,
+        call_id: payload.callId,
+        signal_id: signalId,
+        sender_display: payload.senderDisplay,
+        sender_signal_code: payload.senderSignalCode
+      })
+    }).then(response => response.ok).catch(() => false)
+
+    if (!SUPABASE_READY || !supabase) return durableSend
     let channel = this._outgoingCallChannels.get(recipient)
     if (!channel) {
       channel = supabase.channel(`signal-phone-${recipient}`, {
@@ -238,26 +302,17 @@ export class ServerDMBackend {
       })
       if (!ready) {
         supabase.removeChannel(channel)
-        return false
+        return durableSend
       }
       this._outgoingCallChannels.set(recipient, channel)
     }
-    const session = this._session || {}
-    const result = await channel.send({
+    const realtimeSend = channel.send({
       type: 'broadcast',
       event: 'call-signal',
-      payload: {
-        type,
-        data,
-        callId: data.callId || this._callId,
-        sender: this._myUsername,
-        senderDisplay: session.display || session.display_name || this._myUsername,
-        senderSignalCode: session.platform_id || '',
-        recipient,
-        sentAt: new Date().toISOString()
-      }
-    })
-    return result === 'ok'
+      payload
+    }).then(result => result === 'ok').catch(() => false)
+    const [realtimeOk, durableOk] = await Promise.all([realtimeSend, durableSend])
+    return realtimeOk || durableOk
   }
 
   setCallContext(roomId, callId) {

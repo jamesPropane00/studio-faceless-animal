@@ -15,6 +15,7 @@ export async function onRequestGet({ request, env }) {
     const data = await rows(response);
     const seen = {};
     for (const row of Array.isArray(data) ? data : []) {
+      if (row.file_name === '__fas_call_signal__') continue;
       const partner = row.sender === username ? row.recipient : row.sender;
       if (!partner) continue;
       if (!seen[partner]) {
