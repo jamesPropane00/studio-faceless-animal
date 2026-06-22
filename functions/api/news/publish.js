@@ -138,11 +138,13 @@ export async function onRequestPost(context) {
     const articlePayload = {
       slug: articleSlug(title),
       title,
+      author_username: username,
       dek: clean(form.get('dek'), 300) || null,
       body: body || null,
       category: clean(form.get('category'), 80) || 'General',
       accent_color: clean(form.get('accent_color'), 20) || '#c9a96e',
       media_url: mediaUrl,
+      media_type: mediaUrl ? 'image' : null,
       link_url: clean(form.get('link_url'), 1000) || null,
       status: 'published',
       published_at: publishedAt,
