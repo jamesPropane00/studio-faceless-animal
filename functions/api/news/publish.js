@@ -109,6 +109,13 @@ export async function onRequestPost(context) {
     if (!ADMIN_USERS.has(username)) return json({ error: 'Admin sign-in is required to publish News articles.' }, 403);
 
     const form = await context.request.formData();
+    if (form.get('action') === 'prepare_storage') {
+      const bucket = await ensureArticleBucket(context.env);
+      if (!bucket.ok && bucket.status !== 409) {
+        return json({ error: bucket.data?.message || 'Could not prepare article image storage.' }, 500);
+      }
+      return json({ ok: true, storage_ready: true });
+    }
     const title = clean(form.get('title'), 200);
     const body = clean(form.get('body'), 30000);
     if (!title) return json({ error: 'Title is required.' }, 400);
