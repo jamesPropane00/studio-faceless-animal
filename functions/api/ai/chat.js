@@ -583,14 +583,16 @@ export async function onRequest(context) {
       let jobPath = '';
       try { jobPath = new URL(submitData.response_url).pathname; } catch {}
       const validPrefix = '/fal-ai/wan/v2.1/1.3b/text-to-video/requests/';
-      if (!submitData.request_id || !jobPath.startsWith(validPrefix)) {
+      const requestId = String(submitData.request_id || '').trim();
+      if (!/^[A-Za-z0-9_-]{8,100}$/.test(requestId)) {
         return new Response(JSON.stringify({ error: 'Hugging Face did not return a valid WAN video job.' }), {
           status: 424, headers: { 'content-type': 'application/json' },
         });
       }
+      if (!jobPath.startsWith(validPrefix)) jobPath = validPrefix + requestId;
       return new Response(JSON.stringify({
         pending: true,
-        request_id: submitData.request_id,
+        request_id: requestId,
         video_provider: 'huggingface',
         job_path: jobPath,
         status: submitData.status || 'IN_QUEUE',
