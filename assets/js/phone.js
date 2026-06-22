@@ -918,7 +918,7 @@ function onRemoteStream(stream) {
   const videoEl = $('phone-remote-video')
 
   if (isVideo && videoContainer && videoEl) {
-    videoContainer.style.display = ''
+    videoContainer.style.display = 'flex'
     videoEl.srcObject = stream
     videoEl.play().catch(() => {})
     /* also keep audio for the audio track */
