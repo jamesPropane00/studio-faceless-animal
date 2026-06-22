@@ -389,7 +389,10 @@ export async function onRequest(context) {
           logs: Array.isArray(statusData.logs) ? statusData.logs.slice(-3) : [],
         }), { headers: { 'content-type': 'application/json' } });
       }
-      const resultRes = await fetch(routerBase + jobPath + '?_subdomain=queue', { headers });
+      let resultRes = await fetch(routerBase + jobPath + '?_subdomain=queue', { headers });
+      if (resultRes.status === 404) {
+        resultRes = await fetch(routerBase + jobPath + '/response?_subdomain=queue', { headers });
+      }
       const resultText = await resultRes.text();
       if (!resultRes.ok) {
         return new Response(JSON.stringify({
