@@ -13,14 +13,17 @@ import {
 import { uploadProfileImage } from './services/submissions.js'
 
 const SIGNAL_TYPES = {
-  drop: 'Drop',
-  live: 'Live',
-  audio: 'Audio',
-  thought: 'Thought',
-  file: 'File',
-  ping: 'Ping',
-  build: 'Build',
-  page: 'Page',
+  drop: 'Posted an update',
+  status: 'Posted an update',
+  link: 'Shared a link',
+  news: 'Shared an article',
+  live: 'Went live',
+  audio: 'Shared audio',
+  thought: 'Shared a thought',
+  file: 'Shared a file',
+  ping: 'Sent a signal',
+  build: 'Shared a project',
+  page: 'Shared a page',
 }
 
 const SIGNAL_DRAFT_KEY = 'signal_draft'
@@ -49,20 +52,21 @@ function getViewerSession() {
 }
 
 function formatTime(isoString) {
-  if (!isoString) return 'now'
+  if (!isoString) return 'Posted recently'
   const ts = new Date(isoString)
-  if (isNaN(ts.getTime())) return 'now'
+  if (isNaN(ts.getTime())) return 'Posted recently'
 
   const diffMs = Date.now() - ts.getTime()
   const mins = Math.floor(diffMs / 60000)
   const hours = Math.floor(diffMs / 3600000)
   const days = Math.floor(diffMs / 86400000)
 
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days < 7) return `${days}d ago`
-  return ts.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  if (mins < 1) return 'Just now'
+  if (mins < 60) return `${mins} minute${mins === 1 ? '' : 's'} ago`
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
+  if (days === 1) return `Yesterday at ${ts.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+  if (days < 7) return `${days} days ago`
+  return ts.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: ts.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' })
 }
 
 function ageMinutes(isoString) {
@@ -231,7 +235,7 @@ function renderSignalCard(signal, session) {
   const oldClass = isOld ? ' signal-card--old' : ''
 
   const tagClass = signalTagClass(signalType)
-  const label = SIGNAL_TYPES[signalType] || 'Drop'
+  const label = SIGNAL_TYPES[signalType] || 'Posted an update'
   const dmHref = `messages.html?to=${encodeURIComponent(username)}`
   const profileHref = profileHrefFor(username)
   const privateAccessLine = '<p style="font-size:0.67rem;color:var(--text-3);margin:0.14rem 0 0;">Direct contact locked · Code required for contact</p>'

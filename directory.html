@@ -2945,6 +2945,46 @@
         + '&order=created_at.desc'
         + '&limit=24';
 
+      function readablePostType(value) {
+        var type = String(value || 'update').toLowerCase();
+        var labels = {
+          status: 'Posted an update',
+          update: 'Posted an update',
+          drop: 'Posted an update',
+          link: 'Shared a link',
+          news: 'Shared an article',
+          audio: 'Shared audio',
+          file: 'Shared a file',
+          image: 'Shared an image',
+          video: 'Shared a video',
+          thought: 'Shared a thought',
+          comment: 'Left a comment',
+          reply: 'Replied to a comment',
+          reaction: 'Reacted to a post',
+          live: 'Went live'
+        };
+        return labels[type] || 'Shared a post';
+      }
+
+      function readablePostTime(value) {
+        if (!value) return 'just now';
+        var date = new Date(value);
+        if (isNaN(date.getTime())) return 'recently';
+        var minutes = Math.floor((Date.now() - date.getTime()) / 60000);
+        if (minutes < 1) return 'just now';
+        if (minutes < 60) return minutes + ' minute' + (minutes === 1 ? '' : 's') + ' ago';
+        var hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + ' hour' + (hours === 1 ? '' : 's') + ' ago';
+        var days = Math.floor(hours / 24);
+        if (days === 1) return 'yesterday at ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        if (days < 7) return days + ' days ago';
+        return date.toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: date.getFullYear() === new Date().getFullYear() ? undefined : 'numeric'
+        });
+      }
+
       function showRows(rows) {
         if (loading) loading.style.display = 'none';
 
@@ -2972,9 +3012,7 @@
         list.style.display = '';
         var feedKeys = [];
         list.innerHTML = visibleRows.map(function (row) {
-          var when = row.created_at
-            ? new Date(row.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-            : 'now';
+          var when = readablePostTime(row.created_at);
 
           var username = row.author_username || 'member';
           var key = feedPostKey(row);
@@ -2982,7 +3020,7 @@
           var likes = feedLikeCount(key);
           var comments = feedComments(key);
           var body = esc((row.body_text || '').slice(0, 420));
-          var type = row.post_type || row.category || 'update';
+          var type = readablePostType(row.post_type || row.category || 'update');
           var media = renderFeedMedia(row.media_url, row);
 
           return '<article class="feed-item" id="post-' + esc(key) + '" data-feed-key="' + esc(key) + '" data-feed-user="' + esc(username) + '" data-feed-text="' + esc(row.body_text || '') + '">'
@@ -2990,7 +3028,7 @@
             + '<div class="feed-avatar" aria-hidden="true">' + esc(initials(username)) + '</div>'
             + '<div>'
             + '<p class="feed-author">@' + esc(username) + '</p>'
-            + '<p class="feed-meta">' + esc(type) + ' ? ' + esc(when) + '</p>'
+            + '<p class="feed-meta">' + esc(type) + ' · ' + esc(when) + '</p>'
             + '</div>'
             + '</div>'
             + '<p class="feed-item-text">' + body + '</p>'
