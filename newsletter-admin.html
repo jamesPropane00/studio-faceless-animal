@@ -132,7 +132,14 @@
         var session = null;
         try { session = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch (_) {}
         if (!session) {
-          statusEl.textContent = 'Sign in as the studio admin before publishing.';
+          try {
+            var accounts = JSON.parse(localStorage.getItem('fas_accounts') || '{}');
+            var savedAdmin = ['jdot00', 'jamespropane00'].find(function (name) { return accounts[name]; });
+            if (savedAdmin) session = accounts[savedAdmin];
+          } catch (_) {}
+        }
+        if (!session) {
+          statusEl.textContent = 'Sign in as jdot00 or jamespropane00 before publishing.';
           return;
         }
 

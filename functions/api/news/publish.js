@@ -1,6 +1,6 @@
 const SUPABASE_FALLBACK_URL = 'https://ghufaozjwondqcrcucjs.supabase.co';
 const ARTICLE_BUCKET = 'article-media';
-const ADMIN_USERS = new Set(['jamespropane00']);
+const ADMIN_USERS = new Set(['jdot00', 'jamespropane00']);
 
 function json(body, status = 200) {
   return Response.json(body, {
