@@ -15,7 +15,7 @@ export async function onRequestPost(context) {
       route_hint
     } = body || {};
 
-    if (!username || !html || !css) {
+    if (!username || !html) {
       return Response.json(
         { ok: false, error: 'Missing required fields' },
         { status: 400 }
@@ -47,7 +47,7 @@ export async function onRequestPost(context) {
         title: title || 'Faceless Page',
         slug: slug || username,
         html,
-        css,
+        css: css || '',
         full_document: full_document || null,
         route_hint: route_hint || `/${username}`,
         is_published: true,
@@ -66,7 +66,7 @@ export async function onRequestPost(context) {
 
     return Response.json({
       ok: true,
-      live_url: `/${username}`
+      live_url: `/profile/${encodeURIComponent(username)}`
     });
   } catch (err) {
     return Response.json(

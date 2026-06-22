@@ -222,19 +222,19 @@ const exportModal = document.getElementById('exportModal');
 const closeExport = document.getElementById('closeExport');
 const codeOutput = document.getElementById('codeOutput');
 
-exportBtn.addEventListener('click', () => {
+if (exportBtn && exportModal && codeOutput) exportBtn.addEventListener('click', () => {
   const html = editor.getHtml();
   const css = editor.getCss();
   codeOutput.value = `<style>\n${css}\n</style>\n\n${html}`;
   exportModal.classList.add('active');
 });
 
-closeExport.addEventListener('click', () => exportModal.classList.remove('active'));
-exportModal.addEventListener('click', e => {
+if (closeExport && exportModal) closeExport.addEventListener('click', () => exportModal.classList.remove('active'));
+if (exportModal) exportModal.addEventListener('click', e => {
   if (e.target === exportModal) exportModal.classList.remove('active');
 });
 
-clearBtn.addEventListener('click', () => {
+if (clearBtn) clearBtn.addEventListener('click', () => {
   if (!confirm('Clear the current page?')) return;
   editor.setComponents('');
   editor.setStyle('');
@@ -245,12 +245,36 @@ const saveWebBtn = document.getElementById('saveWebBtn');
 const undoBtn = document.getElementById('undoBtn');
 const redoBtn = document.getElementById('redoBtn');
 const saveDraftBtn = document.getElementById('saveDraftBtn');
+const loadDraftBtn = document.getElementById('loadDraftBtn');
+const pageTitleInput = document.getElementById('pageTitle');
+const saveStatus = document.getElementById('saveStatus');
+const PUBLISH_ENDPOINT = '/api/member/page-builder/save';
 const resetBtn = document.getElementById('resetBtn');
 const editPublishedBtn = document.getElementById('editPublishedBtn');
 
 // Undo/Redo
 if (undoBtn) undoBtn.addEventListener('click', () => editor.UndoManager.undo());
 if (redoBtn) redoBtn.addEventListener('click', () => editor.UndoManager.redo());
+
+function currentTitle() {
+  return String(pageTitleInput && pageTitleInput.value || 'Faceless Page').trim() || 'Faceless Page';
+}
+
+function setBuilderStatus(message) {
+  if (saveStatus) saveStatus.textContent = message;
+}
+
+if (loadDraftBtn) loadDraftBtn.addEventListener('click', () => {
+  const html = localStorage.getItem('fas_draft_html');
+  const css = localStorage.getItem('fas_draft_css');
+  if (!html && !css) {
+    alert('No local draft found.');
+    return;
+  }
+  editor.setComponents(html || '');
+  editor.setStyle(css || '');
+  setBuilderStatus('Draft loaded');
+});
 
 
 // Save Draft (to backend, is_published: false)
@@ -260,7 +284,7 @@ if (saveDraftBtn) saveDraftBtn.addEventListener('click', async () => {
     alert('You need to be signed in first.');
     return;
   }
-  const title = 'Faceless Page';
+  const title = currentTitle();
   const html = editor.getHtml();
   const css = editor.getCss();
   const slug = slugify(title);
@@ -274,6 +298,7 @@ if (saveDraftBtn) saveDraftBtn.addEventListener('click', async () => {
     is_published: false
   };
   try {
+    setBuilderStatus('Saving draft…');
     const res = await fetch(`${window.__FAS_API_BASE}/save`, {
       method: 'POST',
       headers: {
@@ -282,11 +307,15 @@ if (saveDraftBtn) saveDraftBtn.addEventListener('click', async () => {
       },
       body: JSON.stringify(payload)
     });
-    if (!res.ok) throw new Error(`Draft save failed: ${res.status}`);
+    if (!res.ok) throw new Error((await res.text()) || `Draft save failed: ${res.status}`);
+    localStorage.setItem('fas_draft_html', html);
+    localStorage.setItem('fas_draft_css', css);
+    setBuilderStatus('Draft saved');
     alert('Draft saved to your account.');
   } catch (err) {
     console.error(err);
-    alert('Draft save failed.');
+    setBuilderStatus('Draft failed');
+    alert(`Draft save failed: ${err.message}`);
   }
 });
 
@@ -340,21 +369,25 @@ if (saveWebBtn) {
       alert('You need to be signed in first.');
       return;
     }
-    const title = 'Faceless Page';
+    const title = currentTitle();
     const html = editor.getHtml();
     const css = editor.getCss();
     const slug = slugify(title);
     const full_document = buildFullDocument(title, html, css);
     const payload = {
-      page_title: title,
-      page_slug: slug,
+      account_id: session.account_id || null,
+      signal_id: session.signal_id || null,
+      username: session.username,
+      title,
+      slug,
       html,
       css,
       full_document,
-      is_published: true
+      route_hint: `/profile/${session.username}`
     };
     try {
-      const res = await fetch(`${window.__FAS_API_BASE}/save`, {
+      setBuilderStatus('Publishing…');
+      const res = await fetch(PUBLISH_ENDPOINT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -362,13 +395,19 @@ if (saveWebBtn) {
         },
         body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error(`Save failed: ${res.status}`);
-      // Optionally set as homepage if first publish
-      // (future: add UI for homepage selection)
-      alert('Published to your site!');
+      const resultText = await res.text();
+      if (!res.ok) throw new Error(resultText || `Save failed: ${res.status}`);
+      let result = null;
+      try { result = JSON.parse(resultText); } catch (_) {}
+      const liveUrl = result && result.live_url
+        ? result.live_url
+        : `/profile/${encodeURIComponent(session.username)}`;
+      setBuilderStatus('Published');
+      alert(`Published to your site: ${liveUrl}`);
     } catch (err) {
       console.error(err);
-      alert('Publish failed.');
+      setBuilderStatus('Publish failed');
+      alert(`Publish failed: ${err.message}`);
     }
   });
 }
@@ -376,7 +415,7 @@ if (saveWebBtn) {
 const downloadHtmlBtn = document.getElementById('downloadHtmlBtn');
 if (downloadHtmlBtn) {
   downloadHtmlBtn.addEventListener('click', () => {
-    const title = 'Faceless Page';
+    const title = currentTitle();
     const html = editor.getHtml();
     const css = editor.getCss();
     const fullDoc = buildFullDocument(title, html, css);

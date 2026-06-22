@@ -368,8 +368,15 @@
   <div id="exportModal">
     <div id="exportPanel">
       <div id="exportHeader">
+        <strong>Exported Page Code</strong>
+        <button type="button" id="closeExport" aria-label="Close export window">&times;</button>
+      </div>
+      <textarea id="codeOutput" spellcheck="false" aria-label="Exported HTML code"></textarea>
+    </div>
+  </div>
+  <div id="builder-runtime">
         <script src="https://unpkg.com/grapesjs"></script>
-        <script src="faceless_builder_app.js"></script>
+        <script src="faceless_builder_app.js?v=20260622-published-fix"></script>
         <script type="module" src="faceless_builder_media.js"></script>
                   <input type="file" id="fileLoaderInput" style="display:none" accept=".html,.htm,.css,.js,.json,.txt" />
                   <script>
@@ -445,6 +452,8 @@
                 }
               });
             </script>
+  </div>
+  <template id="legacy-builder-code">
       // ...existing code...
       // Undo/Redo/Download HTML button logic
       document.addEventListener('DOMContentLoaded', function() {
@@ -886,5 +895,6 @@
       setStatus('Page cleared', 'neutral');
     });
   </script>
+  </template>
 </body>
 </html>
