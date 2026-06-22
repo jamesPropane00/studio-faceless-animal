@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Signal Wire is the official news feed, build log, and development journal of Faceless Animal Studios." />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <link rel="canonical" href="https://facelessanimalstudios.com/news" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Faceless Animal Studios" />
+  <meta property="og:title" content="Signal Wire — Faceless Animal Studios News" />
+  <meta property="og:description" content="Independent music, culture, technology, releases, and studio dispatches from Faceless Animal Studios." />
+  <meta property="og:url" content="https://facelessanimalstudios.com/news" />
   <title>News - Signal Wire</title>
   <link rel="stylesheet" href="assets/css/street-wire.css?v=20260620-reaction-loop" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1407,9 +1414,7 @@
       }
 
       function articleUrl(post) {
-        var url = new URL(window.location.href);
-        url.hash = 'post-' + (post.slug || post.id || '');
-        return url.toString();
+        return new URL('/article/' + encodeURIComponent(post.slug || post.id || ''), window.location.origin).toString();
       }
 
       function plainTextFromHtml(html) {
@@ -1494,7 +1499,7 @@
           + '<div class="signal-article-preview">'
             + '<div class="signal-article-copy">'
               + '<span class="signal-article-category" style="color:' + esc(accent) + ';border-color:' + esc(accent) + '55;">' + esc(post.category || 'Signal Wire') + '</span>'
-              + '<h3>' + esc(post.title || 'Untitled Signal') + '</h3>'
+              + '<h3><a href="' + esc(articleLink) + '" style="color:inherit;text-decoration:none;">' + esc(post.title || 'Untitled Signal') + '</a></h3>'
               + '<p>' + esc(articleExcerpt(post)) + '</p>'
               + '<span class="signal-article-meta">' + (isVideo ? 'Video Article' : 'Signal Article') + '</span>'
               + '<button class="signal-article-open" type="button" data-open-post="' + esc(key) + '">Open Article</button>'

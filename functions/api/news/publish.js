@@ -164,7 +164,7 @@ export async function onRequestPost(context) {
 
     const article = Array.isArray(articleResult.data) ? articleResult.data[0] : articleResult.data;
     const articleKey = article?.slug || article?.id || '';
-    const articleUrl = `https://facelessanimalstudios.com/news#post-${articleKey}`;
+    const articleUrl = `https://facelessanimalstudios.com/article/${encodeURIComponent(articleKey)}`;
     const postText = `${title} — Read the full Signal Wire article: ${articleUrl}`;
     const boardResult = await sbFetch(context.env, '/rest/v1/signal_posts?select=id,created_at', {
       method: 'POST',
