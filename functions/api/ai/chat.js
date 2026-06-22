@@ -374,7 +374,7 @@ export async function onRequest(context) {
       const statusText = await statusRes.text();
       if (!statusRes.ok) {
         return new Response(JSON.stringify({ error: 'Could not check Hugging Face video status.', detail: cleanApiError(statusText) }), {
-          status: 424, headers: { 'content-type': 'application/json' },
+          status: 424, headers: { 'content-type': 'application/json', 'x-provider-status': String(statusRes.status) },
         });
       }
       const statusData = JSON.parse(statusText);
@@ -581,7 +581,11 @@ export async function onRequest(context) {
       }
       const submitData = JSON.parse(submitText);
       let jobPath = '';
-      try { jobPath = new URL(submitData.response_url).pathname; } catch {}
+      const responseUrl = String(submitData.response_url || '').trim();
+      const statusUrl = String(submitData.status_url || '').trim();
+      try { jobPath = new URL(responseUrl).pathname; } catch {
+        if (responseUrl.startsWith('/')) jobPath = responseUrl.split('?')[0];
+      }
       const validPrefix = '/fal-ai/wan/v2.1/1.3b/text-to-video/requests/';
       const requestId = String(submitData.request_id || '').trim();
       if (!/^[A-Za-z0-9_-]{8,100}$/.test(requestId)) {
@@ -595,6 +599,8 @@ export async function onRequest(context) {
         request_id: requestId,
         video_provider: 'huggingface',
         job_path: jobPath,
+        provider_response_url: responseUrl,
+        provider_status_url: statusUrl,
         status: submitData.status || 'IN_QUEUE',
         model: selectedModel.name,
         aspect_ratio: aspectRatio,
