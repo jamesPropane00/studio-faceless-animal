@@ -25,6 +25,9 @@ let incognitoMode = false
 let missedCalls = 0
 let callHistory = []
 let isOfflineFallback = false
+let currentCallInfo = null
+let currentCallHistoryId = null
+let currentCallDirection = null
 
 /* ── Dialer State ── */
 let dialMode = '123'
@@ -154,6 +157,11 @@ async function init() {
     const settings = loadJSON(SETTINGS_KEY, {})
     incognitoMode = settings.incognito || false
     callHistory = loadJSON(CALL_HISTORY_KEY, [])
+    callHistory = callHistory.map((record, index) => ({
+      ...record,
+      id: record.id || `legacy_${index}_${new Date(record.ts || 0).getTime()}`
+    }))
+    saveJSON(CALL_HISTORY_KEY, callHistory)
 
     notifs.requestPermission()
 
@@ -193,6 +201,11 @@ async function init() {
       }
     } else {
       backend = new MatrixBackend()
+      backend.setIdentity?.({
+        username: myUsername,
+        displayName: session.display || session.display_name || myUsername,
+        signalCode: session.platform_id || ''
+      })
       isOfflineFallback = false
     }
 
@@ -337,13 +350,18 @@ function renderHome(screen) {
       <div class="phone-section-title">${missed > 0 ? `Missed Calls (${missed})` : 'Recent Calls'}</div>
       ${recentCalls.length === 0 ? '<div class="phone-empty">No recent calls</div>' :
         recentCalls.map(c => `
-          <div class="phone-item" data-action="call" data-contact="${esc(c.contact)}">
+          <div class="phone-item">
             <div class="phone-item-avatar ${c.type === 'missed' ? 'phone-item-avatar--call' : ''}">${esc((c.displayName || c.contact || '?')[0].toUpperCase())}</div>
             <div class="phone-item-body">
               <strong>${esc(c.displayName || c.contact)}</strong>
+              <small>@${esc(c.username || c.contact)}${c.signalCode ? ` · ${esc(c.signalCode)}` : ''}</small>
               <small>${c.type === 'missed' ? 'Missed call' : c.type === 'incoming' ? 'Incoming call' : 'Outgoing call'} · ${c.duration ? (callManager ? callManager.formatTime(c.duration) : Math.floor(c.duration/60)+'m') : 'No answer'}</small>
             </div>
             <span class="phone-item-time">${fmtTime(c.ts)}</span>
+            <div class="phone-recent-actions">
+              <button data-action="redial" data-call-id="${esc(c.id || '')}" aria-label="Call again">📞</button>
+              <button data-action="add-contact" data-call-id="${esc(c.id || '')}" aria-label="Add to contacts">＋</button>
+            </div>
           </div>
         `).join('')
       }
@@ -369,7 +387,16 @@ function renderHome(screen) {
     el.addEventListener('click', () => {
       const action = el.dataset.action
       const contact = el.dataset.contact
-      if (action === 'call') showScreen('dialer')
+      if (action === 'redial') {
+        const record = callHistory.find(c => c.id === el.dataset.callId)
+        const target = record?.signalCode || record?.contact
+        if (target) startCall(target, false)
+      }
+      else if (action === 'add-contact') {
+        const record = callHistory.find(c => c.id === el.dataset.callId)
+        if (record) savePhoneContact(record)
+      }
+      else if (action === 'call') showScreen('dialer')
       else if (action === 'open-chat' && contact) {
         showScreen('messages')
         openConversation(contact)
@@ -399,7 +426,7 @@ function renderContactsScreen(screen) {
             <div class="phone-item-avatar">${esc(initial)}</div>
             <div class="phone-item-body">
               <strong>${esc(c.displayName || c.username)}</strong>
-              <small>${c.signalCode ? esc(c.signalCode) : '@' + esc(c.username || '')} ${c.matrixId ? '· Matrix' : ''}</small>
+              <small>@${esc(c.username || '')}${c.signalCode ? ` · ${esc(c.signalCode)}` : ''}</small>
             </div>
           </div>
         `
@@ -433,7 +460,7 @@ function showContactActions(c) {
       <div style="text-align:center;margin-bottom:20px;">
         <div class="phone-item-avatar" style="margin:0 auto 12px;width:60px;height:60px;font-size:1.6rem;">${esc((c.displayName || c.username || '?')[0].toUpperCase())}</div>
         <h3 style="margin:0;color:var(--phone-text);font-size:1.1rem;">${esc(c.displayName || c.username)}</h3>
-        <p style="margin:4px 0 0;font-size:0.75rem;color:var(--phone-text-dim);">${c.signalCode ? esc(c.signalCode) : ''}</p>
+        <p style="margin:4px 0 0;font-size:0.78rem;color:var(--phone-text-dim);">@${esc(c.username || '')}${c.signalCode ? ` · ${esc(c.signalCode)}` : ''}</p>
       </div>
       <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
         <button class="phone-call-btn phone-call-btn--answer" data-action="call" data-contact="${esc(c.username || c.signalCode)}" style="width:70px;height:70px;font-size:1.2rem;">
@@ -771,6 +798,7 @@ async function showDialSuggestions(query) {
         <span style="display:flex;gap:8px;">
           <button class="phone-call-btn phone-call-btn--answer" data-action="quick-call" data-contact="${esc(code)}" style="width:40px;height:40px;font-size:0.9rem;">📞</button>
           <button class="phone-call-btn" data-action="quick-message" data-contact="${esc(resolved.username)}" style="width:40px;height:40px;font-size:0.9rem;background:var(--phone-purple);color:white;">💬</button>
+          <button class="phone-call-btn" data-action="quick-add" style="width:40px;height:40px;font-size:1rem;" aria-label="Add to contacts">＋</button>
         </span>
       </div>
     `
@@ -778,6 +806,14 @@ async function showDialSuggestions(query) {
     el.querySelector('[data-action="quick-message"]')?.addEventListener('click', () => {
       showScreen('messages')
       openConversation(resolved.username)
+    })
+    el.querySelector('[data-action="quick-add"]')?.addEventListener('click', () => {
+      savePhoneContact({
+        username: resolved.username,
+        displayName: resolved.displayName || resolved.username,
+        signalCode: resolved.signalCode || code,
+        matrixId: resolved.matrixId || ''
+      })
     })
   } else {
     el.innerHTML = '<div class="phone-empty" style="text-align:left;padding:4px 0;">No member found for this Signal Code</div>'
@@ -798,13 +834,18 @@ function renderRecentsScreen(screen) {
         const typeIcon = c.type === 'missed' ? '✕' : c.type === 'incoming' ? '←' : '→'
         const typeColor = c.type === 'missed' ? 'var(--phone-red)' : 'var(--phone-text-dim)'
         return `
-          <div class="phone-item" data-action="call" data-contact="${esc(c.contact)}">
+          <div class="phone-item">
             <div class="phone-item-avatar ${c.type === 'missed' ? 'phone-item-avatar--call' : ''}">${esc(initial)}</div>
             <div class="phone-item-body">
               <strong>${esc(c.displayName || c.contact)}</strong>
+              <small>@${esc(c.username || c.contact)}${c.signalCode ? ` · ${esc(c.signalCode)}` : ''}</small>
               <small><span style="color:${typeColor}">${typeIcon}</span> ${c.type} ${c.duration ? '· ' + (callManager ? callManager.formatTime(c.duration) : Math.floor(c.duration/60)+'m') : ''}</small>
             </div>
             <span class="phone-item-time">${fmtTime(c.ts)}</span>
+            <div class="phone-recent-actions">
+              <button data-action="redial" data-call-id="${esc(c.id || '')}" aria-label="Call again">📞</button>
+              <button data-action="add-contact" data-call-id="${esc(c.id || '')}" aria-label="Add to contacts">＋</button>
+            </div>
           </div>
         `
       }).join('')
@@ -820,8 +861,18 @@ function renderRecentsScreen(screen) {
     }
   })
 
-  screen.querySelectorAll('[data-action="call"]')?.forEach(el => {
-    el.addEventListener('click', () => showScreen('dialer'))
+  screen.querySelectorAll('[data-action="redial"]')?.forEach(el => {
+    el.addEventListener('click', () => {
+      const record = callHistory.find(c => c.id === el.dataset.callId)
+      const target = record?.signalCode || record?.contact
+      if (target) startCall(target, false)
+    })
+  })
+  screen.querySelectorAll('[data-action="add-contact"]')?.forEach(el => {
+    el.addEventListener('click', () => {
+      const record = callHistory.find(c => c.id === el.dataset.callId)
+      if (record) savePhoneContact(record)
+    })
   })
 }
 
@@ -856,6 +907,14 @@ async function startCall(contact, isVideo) {
     return
   }
   backend.setCallContext(roomId, '')
+  currentCallInfo = {
+    username: info?.username || normalizeUser(displayName),
+    displayName,
+    signalCode: info?.signalCode || (sigCodeRegex.test(contact) ? normalizeCode(contact) : ''),
+    matrixId: info?.matrixId || ''
+  }
+  currentCallDirection = 'outgoing'
+  currentCallHistoryId = addToCallHistory(currentCallInfo, 'outgoing', 0)
 
   try {
     await callManager.startCall(displayName, isVideo)
@@ -870,6 +929,7 @@ async function startCall(contact, isVideo) {
 
 async function answerCall(isVideo) {
   if (!callManager) return
+  if (currentCallHistoryId) updateCallHistory(currentCallHistoryId, { type: 'incoming' })
   await callManager.acceptCall(isVideo)
   notifs.stopRingtone()
   notifs.vibrate()
@@ -880,7 +940,11 @@ function declineCall() {
   callManager.declineCall()
   notifs.stopRingtone()
   hideCallOverlay()
-  addToCallHistory(callManager.remoteName || 'Unknown', 'missed', 0)
+  if (currentCallHistoryId) updateCallHistory(currentCallHistoryId, { type: 'missed', duration: 0 })
+  else addToCallHistory(currentCallInfo || callManager.remoteName || 'Unknown', 'missed', 0)
+  currentCallInfo = null
+  currentCallHistoryId = null
+  currentCallDirection = null
 }
 
 function endCall() {
@@ -890,19 +954,71 @@ function endCall() {
   callManager.end()
   notifs.stopRingtone()
   hideCallOverlay()
-  addToCallHistory(name, dur > 0 ? 'outgoing' : 'missed', dur)
+  if (currentCallHistoryId) {
+    updateCallHistory(currentCallHistoryId, {
+      type: dur > 0 ? (currentCallDirection === 'incoming' ? 'incoming' : 'outgoing') : (currentCallDirection === 'incoming' ? 'missed' : 'outgoing'),
+      duration: dur
+    })
+  } else {
+    addToCallHistory(currentCallInfo || name, dur > 0 ? 'outgoing' : 'missed', dur)
+  }
+  currentCallInfo = null
+  currentCallHistoryId = null
+  currentCallDirection = null
 }
 
 function addToCallHistory(contact, type, duration) {
-  const info = contactsCache.find(c => normalizeUser(c.username || '') === normalizeUser(contact) || normalizeUser(c.displayName || '') === normalizeUser(contact))
-  callHistory.push({
-    contact: normalizeUser(contact),
-    displayName: info?.displayName || contact,
+  const supplied = contact && typeof contact === 'object' ? contact : null
+  const label = supplied?.username || supplied?.displayName || contact
+  const info = supplied || contactsCache.find(c => normalizeUser(c.username || '') === normalizeUser(label) || normalizeUser(c.displayName || '') === normalizeUser(label))
+  const record = {
+    id: `recent_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    contact: info?.signalCode || info?.username || normalizeUser(label),
+    username: info?.username || normalizeUser(label),
+    displayName: info?.displayName || label,
+    signalCode: info?.signalCode || '',
+    matrixId: info?.matrixId || '',
     type,
     duration,
     ts: new Date().toISOString()
-  })
+  }
+  callHistory.push(record)
   saveJSON(CALL_HISTORY_KEY, callHistory)
+  return record.id
+}
+
+function updateCallHistory(id, changes) {
+  const record = callHistory.find(c => c.id === id)
+  if (!record) return
+  Object.assign(record, changes)
+  saveJSON(CALL_HISTORY_KEY, callHistory)
+}
+
+function savePhoneContact(source) {
+  const contact = {
+    username: source.username || normalizeUser(source.displayName || source.contact),
+    displayName: source.displayName || source.username || source.contact,
+    signalCode: source.signalCode || (sigCodeRegex.test(source.contact || '') ? normalizeCode(source.contact) : ''),
+    matrixId: source.matrixId || ''
+  }
+  if (!contact.username && !contact.signalCode) return
+  const local = loadJSON(CONTACTS_KEY, [])
+  const match = candidate =>
+    (contact.username && normalizeUser(candidate.username) === normalizeUser(contact.username)) ||
+    (contact.signalCode && candidate.signalCode === contact.signalCode)
+  const existing = local.find(match)
+  if (existing) Object.assign(existing, contact)
+  else local.push(contact)
+  saveJSON(CONTACTS_KEY, local)
+  const cached = contactsCache.find(match)
+  if (cached) Object.assign(cached, contact)
+  else contactsCache.push(contact)
+  notifs.showToast({
+    title: existing ? 'Contact updated' : 'Contact added',
+    message: `${contact.displayName} is now in People`,
+    type: 'info',
+    duration: 3000
+  })
 }
 
 function onCallStateChange(state, data) {
@@ -963,6 +1079,7 @@ function onRemoteStream(stream) {
     }
     audio.srcObject = stream
   }
+  applySpeakerMode(!!callManager?.isSpeaker)
 }
 
 /* ── Call Overlay UI ── */
@@ -1033,6 +1150,7 @@ function bindCallUI() {
   $('phone-call-speaker')?.addEventListener('click', () => {
     if (callManager) {
       callManager.toggleSpeaker()
+      queueMicrotask(() => applySpeakerMode(callManager.isSpeaker))
       $('phone-call-speaker').textContent = callManager.isSpeaker ? '♪' : '♩'
     }
   })
@@ -1048,6 +1166,9 @@ function bindCallUI() {
       openConversation(callManager.remoteName)
     }
   })
+  $('phone-call-add-contact')?.addEventListener('click', () => {
+    if (currentCallInfo) savePhoneContact(currentCallInfo)
+  })
 
   $('phone-minibar-expand')?.addEventListener('click', () => {
     if (callManager) showCallOverlay(callManager.state, callManager.remoteName, callManager.elapsed)
@@ -1061,6 +1182,20 @@ function bindCallUI() {
       }
     }
   }, 1000)
+}
+
+function applySpeakerMode(enabled) {
+  const button = $('phone-call-speaker')
+  if (button) {
+    button.classList.toggle('phone-call-btn--active', enabled)
+    button.setAttribute('aria-pressed', String(enabled))
+    button.innerHTML = `${enabled ? '🔊' : '🔉'}<small>Speaker ${enabled ? 'On' : 'Off'}</small>`
+  }
+  const audio = document.getElementById('phone-call-remote-audio')
+  if (audio) {
+    audio.volume = enabled ? 1 : 0.45
+    if (enabled && typeof audio.setSinkId === 'function') audio.setSinkId('default').catch(() => {})
+  }
 }
 
 /* ── Action Bar ── */
@@ -1133,10 +1268,18 @@ function onBackendMessage(msg) {
 /* ── Backend Call Event Handler ── */
 function onBackendCallEvent(event) {
   if (event.type === 'call_invite') {
-    const senderName = event.sender?.replace('@', '').split(':')[0] || 'Unknown'
+    const senderName = event.displayName || event.username || event.sender?.replace('@', '').split(':')[0] || 'Unknown'
     if (callManager && callManager.state === 'idle') {
       backend.setCallContext(event.roomId, event.callId)
       callManager.setSignalCallback((type, data) => backend.sendCallSignal(type, data))
+      currentCallInfo = {
+        username: event.username || normalizeUser(senderName),
+        displayName: senderName,
+        signalCode: event.signalCode || '',
+        matrixId: event.sender || ''
+      }
+      currentCallDirection = 'incoming'
+      currentCallHistoryId = addToCallHistory(currentCallInfo, 'missed', 0)
       callManager.handleIncoming(event.offer, event.callId, senderName)
     }
   } else if (event.type === 'call_answer') {
@@ -1145,8 +1288,18 @@ function onBackendCallEvent(event) {
     if (callManager) callManager.handleIceCandidate(event)
   } else if (event.type === 'call_hangup') {
     if (callManager && callManager.state !== 'idle') {
+      const duration = callManager.elapsed
+      if (currentCallHistoryId) {
+        updateCallHistory(currentCallHistoryId, {
+          type: duration > 0 ? (currentCallDirection === 'incoming' ? 'incoming' : 'outgoing') : (currentCallDirection === 'incoming' ? 'missed' : 'outgoing'),
+          duration
+        })
+      }
       callManager.handleHangup()
       notifs.showToast({ title: 'Call Ended', message: `${callManager.remoteName} ended the call`, type: 'info', duration: 3000 })
+      currentCallInfo = null
+      currentCallHistoryId = null
+      currentCallDirection = null
     }
   }
 }

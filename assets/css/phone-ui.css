@@ -456,6 +456,30 @@
   transition: all 0.15s;
 }
 .phone-recents-header button:hover { background: rgba(255,50,50,0.1); }
+.phone-recent-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.phone-recent-actions button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--phone-border);
+  border-radius: 50%;
+  background: var(--phone-surface);
+  color: var(--phone-text);
+  cursor: pointer;
+}
+.phone-recent-actions button:hover {
+  border-color: var(--phone-neon);
+  color: var(--phone-neon);
+}
+.phone-call-btn--active {
+  border-color: var(--phone-neon) !important;
+  background: rgba(0,255,65,0.16) !important;
+  color: var(--phone-neon) !important;
+  box-shadow: 0 0 18px rgba(0,255,65,0.18);
+}
 
 /* ── Keypad View (inside dialer) ── */
 .phone-keypad-view {
@@ -563,8 +587,11 @@
 
 .phone-call-actions {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   margin-top: 12px;
+  max-width: 300px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .phone-call-btn {
   width: 60px;

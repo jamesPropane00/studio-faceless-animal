@@ -21,11 +21,16 @@ export class MatrixBackend {
     this._syncRunning = false
     this._syncAbort = null
     this._initialized = false
+    this._identity = {}
   }
 
   get isConnected() { return !!this._accessToken }
   get userId() { return this._userId }
   get backendName() { return 'matrix' }
+
+  setIdentity(identity) {
+    this._identity = identity || {}
+  }
 
   async init() {
     try {
@@ -224,6 +229,9 @@ export class MatrixBackend {
               sender: ev.sender,
               roomId,
               offer: ev.content?.offer,
+              username: ev.content?.org_faceless_username || '',
+              displayName: ev.content?.org_faceless_display_name || '',
+              signalCode: ev.content?.org_faceless_signal_code || '',
               ts: new Date(ev.origin_server_ts).toISOString()
             })
           }
@@ -275,7 +283,10 @@ export class MatrixBackend {
               call_id: data.callId || this._currentCallId,
               offer: data.offer,
               version: '1',
-              lifetime: 30000
+              lifetime: 30000,
+              org_faceless_username: this._identity.username || '',
+              org_faceless_display_name: this._identity.displayName || this._identity.username || '',
+              org_faceless_signal_code: this._identity.signalCode || ''
             })
           })
           break
