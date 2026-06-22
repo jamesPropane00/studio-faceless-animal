@@ -153,12 +153,29 @@ async function init() {
       onRemoteStream: onRemoteStream
     })
 
+    // Open the phone immediately. Network backends connect below without
+    // holding the entire UI behind a loading screen.
+    backend = createOfflineBackend()
+    isOfflineFallback = true
+    $('phone-loading').style.display = 'none'
+    $('phone-error').style.display = 'none'
+    $('phone-shell').style.display = ''
+    window.__phoneReady = true
+    updateStatusBar()
+    updateModeBadge()
+    bindDock()
+    bindCallUI()
+    bindActionBar()
+    showScreen('home')
+    startStatusBarClock()
+
     if (incognitoMode) {
       try {
         const serverModule = await withTimeout(import('./server-dm-backend.js'), 6000, null)
         if (!serverModule) throw new Error('Private phone backend timed out.')
         ServerDMBackend = serverModule.ServerDMBackend
         backend = new ServerDMBackend()
+        isOfflineFallback = false
       } catch (err) {
         console.warn('[FAS] Private phone backend unavailable:', err)
         backend = createOfflineBackend()
@@ -166,9 +183,14 @@ async function init() {
       }
     } else {
       backend = new MatrixBackend()
+      isOfflineFallback = false
     }
 
     const ok = await withTimeout(backend.init(), 6000, false)
+    if (!ok && incognitoMode) {
+      backend = createOfflineBackend()
+      isOfflineFallback = true
+    }
     if (!ok && !incognitoMode) {
       const guestOk = await withTimeout(backend.guestLogin(), 6000, false)
       if (guestOk && backend.userId && session.ph) {
@@ -184,7 +206,8 @@ async function init() {
           if (!serverModule) throw new Error('Server phone backend timed out.')
           ServerDMBackend = serverModule.ServerDMBackend
           backend = new ServerDMBackend()
-          await withTimeout(backend.init(), 6000, false)
+          const serverReady = await withTimeout(backend.init(), 6000, false)
+          isOfflineFallback = !serverReady
         } catch (err) {
           console.warn('[FAS] Server phone backend unavailable:', err)
           backend = createOfflineBackend()
@@ -196,7 +219,7 @@ async function init() {
     /* If backend still not ready, fall back to offline mode */
     const backendReady = await (async () => {
       try {
-        if (incognitoMode) return true
+        if (incognitoMode) return !isOfflineFallback
         const test = await withTimeout(backend.getContacts(), 6000, null)
         return Array.isArray(test)
       } catch { return false }
@@ -207,19 +230,9 @@ async function init() {
       isOfflineFallback = true
     }
 
-    $('phone-loading').style.display = 'none'
-    $('phone-shell').style.display = ''
-
     if (isOfflineFallback) {
       notifs.showToast({ title: 'Offline Mode', message: 'Phone is offline. Contacts and history from local storage.', type: 'info', duration: 4000 })
     }
-
-    window.__phoneReady = true
-    updateStatusBar()
-    updateModeBadge()
-    bindDock()
-    bindCallUI()
-    bindActionBar()
 
     await refreshContacts()
     await refreshThreads()
@@ -228,8 +241,6 @@ async function init() {
     if (!isOfflineFallback) {
       backend.startSync(onBackendMessage, onBackendCallEvent)
     }
-    startStatusBarClock()
-
     const params = new URLSearchParams(window.location.search)
     const openChat = params.get('chat')
     if (openChat) {
@@ -238,7 +249,14 @@ async function init() {
     }
   } catch (err) {
     console.error('[FAS] Phone init error:', err)
-    showError(err.message || 'Unknown error during initialization.')
+    if (window.__phoneReady) {
+      backend = createOfflineBackend()
+      isOfflineFallback = true
+      notifs = notifs || createNotificationFallback()
+      notifs.showToast({ title: 'Offline Mode', message: 'Phone opened without network services.', type: 'info', duration: 4000 })
+    } else {
+      showError(err.message || 'Unknown error during initialization.')
+    }
   }
 }
 
