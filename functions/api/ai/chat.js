@@ -355,6 +355,53 @@ export async function onRequest(context) {
 
   if (body.action === 'video_status') {
     const videoProvider = String(body.video_provider || 'huggingface').trim().toLowerCase();
+    if (videoProvider === 'huggingface-wavespeed') {
+      if (!hfToken) {
+        return new Response(JSON.stringify({ error: 'Hugging Face video generation is not configured.' }), {
+          status: 503, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const jobPath = String(body.job_path || '').trim();
+      if (!jobPath.startsWith('/api/v3/') || !/^\/[A-Za-z0-9_./-]{20,500}$/.test(jobPath)) {
+        return new Response(JSON.stringify({ error: 'Invalid Hugging Face video job.' }), {
+          status: 400, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const resultRes = await fetch('https://router.huggingface.co/wavespeed' + jobPath, {
+        headers: { 'Authorization': 'Bearer ' + hfToken },
+      });
+      const resultText = await resultRes.text();
+      if (!resultRes.ok) {
+        return new Response(JSON.stringify({
+          error: 'Could not check Hugging Face video status.',
+          detail: cleanApiError(resultText, 'Provider returned HTTP ' + resultRes.status),
+        }), { status: 424, headers: { 'content-type': 'application/json' } });
+      }
+      const resultData = JSON.parse(resultText);
+      const task = resultData && resultData.data ? resultData.data : resultData;
+      if (task.status === 'failed') {
+        return new Response(JSON.stringify({
+          error: 'Hugging Face WAN generation failed.',
+          detail: task.error || resultData.message || 'The provider could not render this prompt.',
+        }), { status: 424, headers: { 'content-type': 'application/json' } });
+      }
+      if (task.status !== 'completed') {
+        return new Response(JSON.stringify({
+          pending: true,
+          status: task.status || 'processing',
+        }), { headers: { 'content-type': 'application/json' } });
+      }
+      const video = Array.isArray(task.outputs) ? task.outputs[0] : normalizeVideoOutput(task);
+      if (!video) {
+        return new Response(JSON.stringify({ error: 'Hugging Face completed without returning a playable video.' }), {
+          status: 424, headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ video, status: 'COMPLETED', model: 'WAN 2.1 via Hugging Face' }), {
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+
     if (videoProvider === 'huggingface') {
       if (!hfToken) {
         return new Response(JSON.stringify({ error: 'Hugging Face video generation is not configured.' }), {
@@ -389,10 +436,7 @@ export async function onRequest(context) {
           logs: Array.isArray(statusData.logs) ? statusData.logs.slice(-3) : [],
         }), { headers: { 'content-type': 'application/json' } });
       }
-      let resultRes = await fetch(routerBase + jobPath + '?_subdomain=queue', { headers });
-      if (resultRes.status === 404) {
-        resultRes = await fetch(routerBase + jobPath + '/response?_subdomain=queue', { headers });
-      }
+      const resultRes = await fetch(routerBase + jobPath + '?_subdomain=queue', { headers });
       const resultText = await resultRes.text();
       if (!resultRes.ok) {
         return new Response(JSON.stringify({
@@ -570,7 +614,7 @@ export async function onRequest(context) {
       const aspectRatio = /9\s*[:x]\s*16|vertical|portrait|reel|tiktok|shorts/i.test(lower)
         ? '9:16'
         : '16:9';
-      const submitUrl = 'https://router.huggingface.co/fal-ai/fal-ai/wan/v2.1/1.3b/text-to-video?_subdomain=queue';
+      const submitUrl = 'https://router.huggingface.co/wavespeed/api/v3/wavespeed-ai/wan-2.1/t2v-480p-ultra-fast';
       const submitRes = await fetch(submitUrl, {
         method: 'POST',
         headers: {
@@ -589,30 +633,29 @@ export async function onRequest(context) {
         });
       }
       const submitData = JSON.parse(submitText);
+      const task = submitData && submitData.data ? submitData.data : submitData;
+      const requestId = String(task.id || '').trim();
+      const resultUrl = String(task.urls && task.urls.get || '').trim();
       let jobPath = '';
-      const responseUrl = String(submitData.response_url || '').trim();
-      try { jobPath = new URL(responseUrl).pathname; } catch {
-        if (responseUrl.startsWith('/')) jobPath = responseUrl.split('?')[0];
+      try { jobPath = new URL(resultUrl).pathname; } catch {
+        if (resultUrl.startsWith('/')) jobPath = resultUrl.split('?')[0];
       }
-      const validPrefixes = [
-        '/fal-ai/wan/requests/',
-        '/fal-ai/wan/v2.1/1.3b/text-to-video/requests/',
-      ];
-      const requestId = String(submitData.request_id || '').trim();
       if (!/^[A-Za-z0-9_-]{8,100}$/.test(requestId)) {
         return new Response(JSON.stringify({ error: 'Hugging Face did not return a valid WAN video job.' }), {
           status: 424, headers: { 'content-type': 'application/json' },
         });
       }
-      if (!validPrefixes.some(prefix => jobPath.startsWith(prefix))) {
-        jobPath = validPrefixes[0] + requestId;
+      if (!jobPath.startsWith('/api/v3/')) {
+        return new Response(JSON.stringify({ error: 'Hugging Face returned an unsupported WAN status route.' }), {
+          status: 424, headers: { 'content-type': 'application/json' },
+        });
       }
       return new Response(JSON.stringify({
         pending: true,
         request_id: requestId,
-        video_provider: 'huggingface',
+        video_provider: 'huggingface-wavespeed',
         job_path: jobPath,
-        status: submitData.status || 'IN_QUEUE',
+        status: task.status || 'created',
         model: selectedModel.name,
         aspect_ratio: aspectRatio,
       }), { headers: { 'content-type': 'application/json' } });
