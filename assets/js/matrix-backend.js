@@ -178,9 +178,23 @@ export class MatrixBackend {
       if (!r.ok) return
       const d = await r.json()
       this._syncToken = d.next_batch
+      await this._joinInvitedRooms(d.rooms?.invite)
       this._processSync(d)
     } catch {} finally {
       this._syncAbort = null
+    }
+  }
+
+  async _joinInvitedRooms(invitedRooms) {
+    if (!invitedRooms || typeof invitedRooms !== 'object') return
+    for (const roomId of Object.keys(invitedRooms)) {
+      try {
+        await fetch(`${MATRIX_BASE}/_matrix/client/v3/join/${encodeURIComponent(roomId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${this._accessToken}` },
+          body: '{}'
+        })
+      } catch {}
     }
   }
 

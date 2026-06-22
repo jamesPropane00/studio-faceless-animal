@@ -20,6 +20,7 @@ export class CallManager {
     this.onStateChange = onStateChange || (() => {})
     this.onRemoteStream = onRemoteStream || (() => {})
     this._signalCallback = null
+    this._pendingCandidates = []
   }
 
   setSignalCallback(fn) {
@@ -44,6 +45,7 @@ export class CallManager {
   async handleIncoming(offer, callId, remoteName) {
     this.remoteName = remoteName
     this.callId = callId
+    this._pendingOffer = offer
     this.state = 'ringing'
     this.onStateChange('ringing', { callId, remoteName })
   }
@@ -56,6 +58,7 @@ export class CallManager {
     this.pc = this._createPeerConnection()
     this.localStream.getTracks().forEach(t => this.pc.addTrack(t, this.localStream))
     await this.pc.setRemoteDescription(new RTCSessionDescription(this._pendingOffer))
+    await this._flushPendingCandidates()
     const answer = await this.pc.createAnswer()
     await this.pc.setLocalDescription(answer)
     await this._sendSignal('webrtc_answer', { answer, callId: this.callId })
@@ -81,17 +84,32 @@ export class CallManager {
   async handleAnswer(data) {
     if (!this.pc) return
     await this.pc.setRemoteDescription(new RTCSessionDescription(data.answer))
+    await this._flushPendingCandidates()
     this._startTimer()
     this.state = 'connected'
     this.onStateChange('connected', { callId: this.callId, remoteName: this.remoteName })
   }
 
   async handleIceCandidate(data) {
-    if (!this.pc || !data.candidate) return
+    if (!data.candidate) return
+    if (!this.pc || !this.pc.remoteDescription) {
+      this._pendingCandidates.push(data.candidate)
+      return
+    }
     try {
       await this.pc.addIceCandidate(new RTCIceCandidate(data.candidate))
     } catch (e) {
       // ignore
+    }
+  }
+
+  async _flushPendingCandidates() {
+    if (!this.pc || !this.pc.remoteDescription) return
+    const candidates = this._pendingCandidates.splice(0)
+    for (const candidate of candidates) {
+      try {
+        await this.pc.addIceCandidate(new RTCIceCandidate(candidate))
+      } catch {}
     }
   }
 
@@ -208,6 +226,7 @@ export class CallManager {
     this.timerInterval = null
     this.elapsed = 0
     this._pendingOffer = null
+    this._pendingCandidates = []
     if (this.pc) {
       this.pc.close()
       this.pc = null

@@ -837,12 +837,35 @@ async function startCall(contact, isVideo) {
 
   callManager.setSignalCallback((type, data) => backend.sendCallSignal(type, data))
 
-  const roomId = await backend.getRoomIdForUser(info?.username || contact)
-  if (roomId) backend.setCallContext(roomId, `call_${Date.now()}`)
+  const recipientId = backend.backendName === 'matrix'
+    ? info?.matrixId
+    : (info?.username || contact)
+  if (!recipientId) {
+    notifs.showToast({
+      title: 'Phone unavailable',
+      message: `${displayName} needs to open Signal Phone once before receiving calls.`,
+      type: 'error',
+      duration: 5000
+    })
+    return
+  }
 
-  await callManager.startCall(displayName, isVideo)
-  showCallOverlay('dialing', displayName)
-  notifs.vibrate([100])
+  const roomId = await backend.getRoomIdForUser(recipientId)
+  if (!roomId) {
+    notifs.showToast({ title: 'Call failed', message: 'Could not open a call connection to this person.', type: 'error', duration: 5000 })
+    return
+  }
+  backend.setCallContext(roomId, '')
+
+  try {
+    await callManager.startCall(displayName, isVideo)
+    showCallOverlay('dialing', displayName)
+    notifs.vibrate([100])
+  } catch (error) {
+    console.error('[FAS] Could not start call:', error)
+    callManager.handleHangup()
+    notifs.showToast({ title: 'Call failed', message: 'Microphone access or the call network was unavailable.', type: 'error', duration: 5000 })
+  }
 }
 
 async function answerCall(isVideo) {
@@ -1112,6 +1135,8 @@ function onBackendCallEvent(event) {
   if (event.type === 'call_invite') {
     const senderName = event.sender?.replace('@', '').split(':')[0] || 'Unknown'
     if (callManager && callManager.state === 'idle') {
+      backend.setCallContext(event.roomId, event.callId)
+      callManager.setSignalCallback((type, data) => backend.sendCallSignal(type, data))
       callManager.handleIncoming(event.offer, event.callId, senderName)
     }
   } else if (event.type === 'call_answer') {
