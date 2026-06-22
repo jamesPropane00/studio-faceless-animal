@@ -7,8 +7,6 @@
 import { supabase, SUPABASE_READY } from './supabase-client.js'
 import { getSession } from './member-db.js'
 
-const CALL_SIGNAL_ENDPOINT = '/api/dm/call-signal'
-
 export class ServerDMBackend {
   constructor() {
     this._session = null
@@ -21,11 +19,15 @@ export class ServerDMBackend {
     this._syncRunning = false
     this._threadsCache = []
     this._roomsCache = {}
+    this._incomingCallChannel = null
+    this._outgoingCallChannels = new Map()
+    this._callRecipient = ''
+    this._callId = ''
   }
 
   get isConnected() { return this._initialized }
   get userId() { return `@${this._myUsername}` }
-  get backendName() { return 'incognito' }
+  get backendName() { return 'signal' }
 
   async init() {
     const sess = getSession()
@@ -34,7 +36,65 @@ export class ServerDMBackend {
     this._myUsername = String(sess.username).toLowerCase()
     this._ph = sess.ph
     this._initialized = true
-    return true
+    const listening = await this._subscribeToIncomingCalls()
+    this._initialized = listening
+    return listening
+  }
+
+  async _subscribeToIncomingCalls() {
+    if (!SUPABASE_READY || !supabase || !this._myUsername) return false
+    if (this._incomingCallChannel) return true
+    const channel = supabase.channel(`signal-phone-${this._myUsername}`, {
+      config: { broadcast: { self: false, ack: true } }
+    })
+    channel.on('broadcast', { event: 'call-signal' }, message => {
+      const payload = message?.payload || message || {}
+      if (!payload || payload.recipient !== this._myUsername || payload.sender === this._myUsername) return
+      this._handleCallSignal(payload)
+    })
+    const ready = await new Promise(resolve => {
+      let settled = false
+      const timer = setTimeout(() => {
+        if (!settled) { settled = true; resolve(false) }
+      }, 5000)
+      channel.subscribe(status => {
+        if (settled) return
+        if (status === 'SUBSCRIBED') {
+          settled = true
+          clearTimeout(timer)
+          resolve(true)
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          settled = true
+          clearTimeout(timer)
+          resolve(false)
+        }
+      })
+    })
+    if (ready) this._incomingCallChannel = channel
+    else supabase.removeChannel(channel)
+    return ready
+  }
+
+  _handleCallSignal(payload) {
+    if (!this._onCallEvent) return
+    const data = payload.data || {}
+    const common = {
+      callId: payload.callId || data.callId,
+      sender: payload.sender,
+      username: payload.sender,
+      displayName: payload.senderDisplay || payload.sender,
+      signalCode: payload.senderSignalCode || '',
+      roomId: payload.sender
+    }
+    if (payload.type === 'webrtc_offer') {
+      this._onCallEvent({ ...common, type: 'call_invite', offer: data.offer })
+    } else if (payload.type === 'webrtc_answer') {
+      this._onCallEvent({ ...common, type: 'call_answer', answer: data.answer })
+    } else if (payload.type === 'ice_candidate') {
+      this._onCallEvent({ ...common, type: 'ice_candidate', candidate: data.candidate })
+    } else if (payload.type === 'webrtc_hangup') {
+      this._onCallEvent({ ...common, type: 'call_hangup' })
+    }
   }
 
   async resolveSignalCode(code) {
@@ -104,6 +164,7 @@ export class ServerDMBackend {
   async startSync(onMessage, onCallEvent) {
     this._onMessage = onMessage
     this._onCallEvent = onCallEvent
+    await this._subscribeToIncomingCalls()
     this._syncRunning = true
     this._pollLoop()
   }
@@ -139,25 +200,69 @@ export class ServerDMBackend {
 
   stopSync() {
     this._syncRunning = false
+    if (this._incomingCallChannel && supabase) {
+      supabase.removeChannel(this._incomingCallChannel)
+      this._incomingCallChannel = null
+    }
+    for (const channel of this._outgoingCallChannels.values()) {
+      supabase?.removeChannel(channel)
+    }
+    this._outgoingCallChannels.clear()
   }
 
   async sendCallSignal(type, data) {
-    try {
-      await fetch(CALL_SIGNAL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type,
-          data,
-          username: this._myUsername,
-          ph: this._ph
+    const recipient = String(this._callRecipient || '').toLowerCase()
+    if (!recipient || !SUPABASE_READY || !supabase) return false
+    let channel = this._outgoingCallChannels.get(recipient)
+    if (!channel) {
+      channel = supabase.channel(`signal-phone-${recipient}`, {
+        config: { broadcast: { self: false, ack: true } }
+      })
+      const ready = await new Promise(resolve => {
+        let settled = false
+        const timer = setTimeout(() => {
+          if (!settled) { settled = true; resolve(false) }
+        }, 5000)
+        channel.subscribe(status => {
+          if (settled) return
+          if (status === 'SUBSCRIBED') {
+            settled = true
+            clearTimeout(timer)
+            resolve(true)
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            settled = true
+            clearTimeout(timer)
+            resolve(false)
+          }
         })
       })
-    } catch {}
+      if (!ready) {
+        supabase.removeChannel(channel)
+        return false
+      }
+      this._outgoingCallChannels.set(recipient, channel)
+    }
+    const session = this._session || {}
+    const result = await channel.send({
+      type: 'broadcast',
+      event: 'call-signal',
+      payload: {
+        type,
+        data,
+        callId: data.callId || this._callId,
+        sender: this._myUsername,
+        senderDisplay: session.display || session.display_name || this._myUsername,
+        senderSignalCode: session.platform_id || '',
+        recipient,
+        sentAt: new Date().toISOString()
+      }
+    })
+    return result === 'ok'
   }
 
   setCallContext(roomId, callId) {
-    // not needed for server-dm
+    this._callRecipient = String(roomId || '').toLowerCase()
+    if (callId) this._callId = callId
   }
 
   async listenForCallSignals(callId) {

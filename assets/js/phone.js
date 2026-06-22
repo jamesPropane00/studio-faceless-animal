@@ -9,7 +9,7 @@ function getSession() {
   try { return JSON.parse(localStorage.getItem('fas_user') || 'null') } catch { return null }
 }
 
-let CallManager, MatrixBackend, ServerDMBackend, notifs
+let CallManager, ServerDMBackend, notifs
 
 /* ── State ── */
 let session = null
@@ -138,13 +138,11 @@ async function init() {
   try {
     const moduleResults = await withTimeout(Promise.all([
       import('./call-manager.js'),
-      import('./matrix-backend.js'),
       import('./notification-manager.js'),
     ]), 8000, null)
     if (!moduleResults) throw new Error('Phone module loading timed out.')
     CallManager = moduleResults[0].CallManager
-    MatrixBackend = moduleResults[1].MatrixBackend
-    notifs = moduleResults[2].notifs || createNotificationFallback()
+    notifs = moduleResults[1].notifs || createNotificationFallback()
   } catch (err) {
     console.error('[FAS] Core phone module load failed:', err)
     showError('The core phone controls could not load. Refresh the page and try again.')
@@ -187,62 +185,24 @@ async function init() {
     showScreen('home')
     startStatusBarClock()
 
-    if (incognitoMode) {
-      try {
-        const serverModule = await withTimeout(import('./server-dm-backend.js'), 6000, null)
-        if (!serverModule) throw new Error('Private phone backend timed out.')
-        ServerDMBackend = serverModule.ServerDMBackend
-        backend = new ServerDMBackend()
-        isOfflineFallback = false
-      } catch (err) {
-        console.warn('[FAS] Private phone backend unavailable:', err)
-        backend = createOfflineBackend()
-        isOfflineFallback = true
-      }
-    } else {
-      backend = new MatrixBackend()
-      backend.setIdentity?.({
-        username: myUsername,
-        displayName: session.display || session.display_name || myUsername,
-        signalCode: session.platform_id || ''
-      })
+    try {
+      const serverModule = await withTimeout(import('./server-dm-backend.js'), 6000, null)
+      if (!serverModule) throw new Error('Signal Phone network timed out.')
+      ServerDMBackend = serverModule.ServerDMBackend
+      backend = new ServerDMBackend()
+      const signalReady = await withTimeout(backend.init(), 7000, false)
+      if (!signalReady) throw new Error('Signal Phone network could not connect.')
       isOfflineFallback = false
-    }
-
-    const ok = await withTimeout(backend.init(), 6000, false)
-    if (!ok && incognitoMode) {
+    } catch (err) {
+      console.warn('[FAS] Direct Signal Phone backend unavailable:', err)
       backend = createOfflineBackend()
       isOfflineFallback = true
-    }
-    if (!ok && !incognitoMode) {
-      const guestOk = await withTimeout(backend.guestLogin(), 6000, false)
-      if (guestOk && backend.userId && session.ph) {
-        fetch('/api/dm/link-matrix', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: myUsername, ph: session.ph, matrix_user_id: backend.userId }),
-        }).catch(() => {})
-      }
-      if (!guestOk) {
-        try {
-          const serverModule = await withTimeout(import('./server-dm-backend.js'), 6000, null)
-          if (!serverModule) throw new Error('Server phone backend timed out.')
-          ServerDMBackend = serverModule.ServerDMBackend
-          backend = new ServerDMBackend()
-          const serverReady = await withTimeout(backend.init(), 6000, false)
-          isOfflineFallback = !serverReady
-        } catch (err) {
-          console.warn('[FAS] Server phone backend unavailable:', err)
-          backend = createOfflineBackend()
-          isOfflineFallback = true
-        }
-      }
     }
 
     /* If backend still not ready, fall back to offline mode */
     const backendReady = await (async () => {
       try {
-        if (incognitoMode) return !isOfflineFallback
+        if (backend.backendName === 'signal') return !isOfflineFallback
         const test = await withTimeout(backend.getContacts(), 6000, null)
         return Array.isArray(test)
       } catch { return false }
@@ -299,7 +259,7 @@ function updateClock() {
 }
 
 function updateStatusBar() {
-  $('phone-statusbar-mode').textContent = incognitoMode ? 'Private' : 'Matrix'
+  $('phone-statusbar-mode').textContent = 'Signal'
   $('phone-incognito-badge').style.display = incognitoMode ? '' : 'none'
 }
 
