@@ -2,7 +2,9 @@
   "version": 1,
   "include": [
     "/api/**",
-    "/profile/**"
+    "/profile/**",
+    "/article/**",
+    "/sitemap.xml"
   ],
   "exclude": [
     "/**/*.html",
