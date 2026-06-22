@@ -60,7 +60,17 @@ const SETTINGS_KEY = 'fas_phone_settings_v1'
 const $ = id => document.getElementById(id)
 const esc = str => String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const sigCodeRegex = /^SIG-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/i
-const normalizeCode = raw => String(raw || '').trim().replace(/\s+/g, '').toUpperCase()
+const signalCodeBody = raw => {
+  let compact = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+  if (compact.startsWith('SIG')) compact = compact.slice(3)
+  return compact.replace(/[^A-HJ-NP-Z2-9]/g, '').slice(0, 8)
+}
+const formatSignalCode = raw => {
+  const compact = signalCodeBody(raw)
+  if (!compact) return ''
+  return `SIG-${compact.slice(0, 4)}${compact.length > 4 ? `-${compact.slice(4)}` : ''}`
+}
+const normalizeCode = raw => formatSignalCode(raw)
 const normalizeUser = raw => String(raw || '').trim().replace(/^@+/, '').toLowerCase()
 
 function loadJSON(key, def) { try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v != null ? v : def } catch { return def } }
@@ -621,44 +631,33 @@ function toggleDialMode() {
 
 function insertDialChar(input, key, screen) {
   const letters = KEY_LETTERS[key] || key
+  let body = signalCodeBody(input.value)
+  if (body.length >= 8 && !(dialMode === 'ABC' && dialTapKey === key && dialTapTimer)) return
+
   if (dialMode === 'ABC' && letters.length > 1) {
     if (dialTapKey === key && dialTapTimer) {
       dialTapIndex = (dialTapIndex + 1) % letters.length
+      clearTimeout(dialTapTimer)
+      dialTapTimer = setTimeout(resetDialTap, 600)
+      body = body.slice(0, -1) + letters[dialTapIndex]
+    } else {
+      dialTapKey = key
+      dialTapIndex = 0
+      dialLastPos = body.length
       if (dialTapTimer) clearTimeout(dialTapTimer)
       dialTapTimer = setTimeout(resetDialTap, 600)
-      if (dialLastPos >= 0 && dialLastPos <= input.value.length) {
-        const before = input.value.slice(0, dialLastPos)
-        const after = input.value.slice(dialLastPos + 1)
-        input.value = before + letters[dialTapIndex] + after
-        input.setSelectionRange(dialLastPos + 1, dialLastPos + 1)
-        screen.dataset.dialValue = input.value
-        showDialSuggestions(input.value)
-        return
-      }
+      body += letters[0]
     }
-    const pos = input.selectionStart || input.value.length
-    dialTapKey = key
-    dialTapIndex = 0
-    dialLastPos = pos
-    if (dialTapTimer) clearTimeout(dialTapTimer)
-    dialTapTimer = setTimeout(resetDialTap, 600)
-    const before = input.value.slice(0, pos)
-    const after = input.value.slice(pos)
-    input.value = before + letters[0] + after
-    input.setSelectionRange(pos + 1, pos + 1)
-    screen.dataset.dialValue = input.value
-    showDialSuggestions(input.value)
   } else {
     resetDialTap()
-    const pos = input.selectionStart || input.value.length
-    if (input.value.length >= 19) return
-    const before = input.value.slice(0, pos)
-    const after = input.value.slice(pos)
-    input.value = before + key + after
-    input.setSelectionRange(pos + 1, pos + 1)
-    screen.dataset.dialValue = input.value
-    showDialSuggestions(input.value)
+    body += key
   }
+
+  input.value = formatSignalCode(body)
+  screen.dataset.dialValue = input.value
+  showDialSuggestions(input.value)
+  input.focus()
+  input.setSelectionRange(input.value.length, input.value.length)
 }
 
 /* ── Dialer Screen ── */
@@ -666,7 +665,7 @@ function renderDialerScreen(screen) {
   const dialValue = screen.dataset.dialValue || ''
   screen.innerHTML = `
     <div class="phone-dialer">
-      <input class="phone-dialer-input" id="phone-dial-input" type="text" placeholder="SIG-XXXX-XXXX" value="${esc(dialValue)}" maxlength="19" spellcheck="false" autocomplete="off" />
+      <input class="phone-dialer-input" id="phone-dial-input" type="text" inputmode="text" placeholder="Type 8 letters/numbers" value="${esc(formatSignalCode(dialValue))}" maxlength="13" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="characters" aria-label="Signal ID; dashes are added automatically" />
       <div class="phone-dialer-mode-switch">
         <button class="phone-dialer-mode-btn${dialMode === '123' ? ' phone-dialer-mode-btn--active' : ''}" id="phone-dial-mode-123">123</button>
         <button class="phone-dialer-mode-btn${dialMode === 'ABC' ? ' phone-dialer-mode-btn--active' : ''}" id="phone-dial-mode-abc">ABC</button>
@@ -690,9 +689,7 @@ function renderDialerScreen(screen) {
   const input = $('phone-dial-input')
   if (input) {
     const onInput = () => {
-      const raw = input.value
-      const upper = raw.toUpperCase()
-      if (upper !== raw) input.value = upper
+      input.value = formatSignalCode(input.value)
       screen.dataset.dialValue = input.value
       showDialSuggestions(input.value)
     }
@@ -720,15 +717,14 @@ function renderDialerScreen(screen) {
   $('phone-dial-delete')?.addEventListener('click', () => {
     if (!input) return
     resetDialTap()
-    const val = input.value
-    const pos = input.selectionStart || val.length
-    if (pos === 0) return
-    const newVal = val.slice(0, pos - 1) + val.slice(pos)
+    const body = signalCodeBody(input.value)
+    if (!body) return
+    const newVal = formatSignalCode(body.slice(0, -1))
     input.value = newVal
     screen.dataset.dialValue = newVal
     showDialSuggestions(newVal)
     input.focus()
-    input.setSelectionRange(pos - 1, pos - 1)
+    input.setSelectionRange(newVal.length, newVal.length)
   })
 
   $('phone-dial-call')?.addEventListener('click', () => {
@@ -762,7 +758,7 @@ async function showDialSuggestions(query) {
     el.innerHTML = '<div class="phone-empty" style="text-align:left;padding:4px 0;">Offline — dialing unavailable</div>'
     return
   }
-  if (!sigCodeRegex.test(code) || code.length < 14) {
+  if (!sigCodeRegex.test(code) || code.length < 13) {
     el.innerHTML = query.length >= 3 ? '<div class="phone-empty" style="text-align:left;padding:4px 0;">Enter a full Signal Code to call</div>' : ''
     return
   }
