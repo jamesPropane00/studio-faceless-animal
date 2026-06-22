@@ -374,7 +374,7 @@ export async function onRequest(context) {
       const statusText = await statusRes.text();
       if (!statusRes.ok) {
         return new Response(JSON.stringify({ error: 'Could not check Hugging Face video status.', detail: cleanApiError(statusText) }), {
-          status: 502, headers: { 'content-type': 'application/json' },
+          status: 424, headers: { 'content-type': 'application/json' },
         });
       }
       const statusData = JSON.parse(statusText);
@@ -390,13 +390,13 @@ export async function onRequest(context) {
       const resultText = await resultRes.text();
       if (!resultRes.ok) {
         return new Response(JSON.stringify({ error: 'Hugging Face WAN generation failed.', detail: cleanApiError(resultText) }), {
-          status: 502, headers: { 'content-type': 'application/json' },
+          status: 424, headers: { 'content-type': 'application/json' },
         });
       }
       const video = normalizeVideoOutput(JSON.parse(resultText));
       if (!video) {
         return new Response(JSON.stringify({ error: 'Hugging Face completed without returning a playable video.' }), {
-          status: 502, headers: { 'content-type': 'application/json' },
+          status: 424, headers: { 'content-type': 'application/json' },
         });
       }
       return new Response(JSON.stringify({ video, status: 'COMPLETED', model: 'WAN 2.1 via Hugging Face' }), {
@@ -576,7 +576,7 @@ export async function onRequest(context) {
       const submitText = await submitRes.text();
       if (!submitRes.ok) {
         return new Response(JSON.stringify({ error: 'Hugging Face WAN request failed.', detail: cleanApiError(submitText) }), {
-          status: 502, headers: { 'content-type': 'application/json' },
+          status: 424, headers: { 'content-type': 'application/json' },
         });
       }
       const submitData = JSON.parse(submitText);
@@ -585,7 +585,7 @@ export async function onRequest(context) {
       const validPrefix = '/fal-ai/wan/v2.1/1.3b/text-to-video/requests/';
       if (!submitData.request_id || !jobPath.startsWith(validPrefix)) {
         return new Response(JSON.stringify({ error: 'Hugging Face did not return a valid WAN video job.' }), {
-          status: 502, headers: { 'content-type': 'application/json' },
+          status: 424, headers: { 'content-type': 'application/json' },
         });
       }
       return new Response(JSON.stringify({
@@ -599,7 +599,7 @@ export async function onRequest(context) {
       }), { headers: { 'content-type': 'application/json' } });
     } catch (e) {
       return new Response(JSON.stringify({ error: 'Hugging Face video service is unreachable.', detail: e.message }), {
-        status: 502, headers: { 'content-type': 'application/json' },
+        status: 424, headers: { 'content-type': 'application/json' },
       });
     }
   }
