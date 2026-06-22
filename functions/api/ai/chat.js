@@ -392,7 +392,10 @@ export async function onRequest(context) {
       const resultRes = await fetch(routerBase + jobPath + '?_subdomain=queue', { headers });
       const resultText = await resultRes.text();
       if (!resultRes.ok) {
-        return new Response(JSON.stringify({ error: 'Hugging Face WAN generation failed.', detail: cleanApiError(resultText) }), {
+        return new Response(JSON.stringify({
+          error: 'Hugging Face WAN generation failed.',
+          detail: cleanApiError(resultText, 'Provider returned HTTP ' + resultRes.status),
+        }), {
           status: 424, headers: { 'content-type': 'application/json' },
         });
       }
