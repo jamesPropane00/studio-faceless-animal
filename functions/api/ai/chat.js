@@ -242,6 +242,10 @@ const HOSTED_VIDEO_MODELS = [
   { id: 'fal-ai/wan-t2v', name: 'WAN 2.1 Video', type: 'video', group: '🎬 Video' },
 ];
 
+const HUGGING_FACE_VIDEO_MODELS = [
+  { id: 'hf:Wan-AI/Wan2.1-T2V-1.3B', name: 'WAN 2.1 via Hugging Face', type: 'video', group: '🎬 Video' },
+];
+
 export async function onRequest(context) {
   if (context.request.method === 'OPTIONS') {
     return new Response(null, {
@@ -274,6 +278,7 @@ export async function onRequest(context) {
   const ollamaTunnel = context.env.OLLAMA_TUNNEL_URL || '';
   const comfyuiTunnel = context.env.COMFYUI_TUNNEL_URL || '';
   const wanVideoEnabled = String(context.env.WAN_VIDEO_ENABLED || '').toLowerCase() === 'true';
+  const hfToken = context.env.HF_TOKEN || context.env.HUGGINGFACE_TOKEN || '';
   const falKey = context.env.FAL_KEY || '';
   const opencodeGoKey = context.env.OPENCODE_GO_API_KEY || '';
   if (!token || !accountId) {
@@ -335,6 +340,11 @@ export async function onRequest(context) {
   if (isAuthorized && comfyuiTunnel) {
     allModels.push(...COMFYUI_MODELS.filter(model => model.type !== 'video' || wanVideoEnabled));
   }
+  // Hugging Face is the preferred hosted video route. It uses one HF token
+  // and routes WAN rendering through its Inference Providers gateway.
+  if (hfToken) {
+    allModels.push(...HUGGING_FACE_VIDEO_MODELS);
+  }
   if (falKey) {
     allModels.push(...HOSTED_VIDEO_MODELS);
   }
@@ -344,6 +354,56 @@ export async function onRequest(context) {
   const selectedModel = allModels.find(model => model.id === requestedModelId) || allModels[modelIdx] || allModels[0];
 
   if (body.action === 'video_status') {
+    const videoProvider = String(body.video_provider || 'huggingface').trim().toLowerCase();
+    if (videoProvider === 'huggingface') {
+      if (!hfToken) {
+        return new Response(JSON.stringify({ error: 'Hugging Face video generation is not configured.' }), {
+          status: 503, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const jobPath = String(body.job_path || '').trim();
+      const validPrefix = '/fal-ai/wan/v2.1/1.3b/text-to-video/requests/';
+      if (!jobPath.startsWith(validPrefix) || !/^\/[A-Za-z0-9_./-]{20,300}$/.test(jobPath)) {
+        return new Response(JSON.stringify({ error: 'Invalid Hugging Face video job.' }), {
+          status: 400, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const headers = { 'Authorization': 'Bearer ' + hfToken };
+      const routerBase = 'https://router.huggingface.co/fal-ai';
+      const statusRes = await fetch(routerBase + jobPath + '/status?_subdomain=queue', { headers });
+      const statusText = await statusRes.text();
+      if (!statusRes.ok) {
+        return new Response(JSON.stringify({ error: 'Could not check Hugging Face video status.', detail: cleanApiError(statusText) }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const statusData = JSON.parse(statusText);
+      if (statusData.status !== 'COMPLETED') {
+        return new Response(JSON.stringify({
+          pending: true,
+          status: statusData.status || 'IN_QUEUE',
+          queue_position: statusData.queue_position,
+          logs: Array.isArray(statusData.logs) ? statusData.logs.slice(-3) : [],
+        }), { headers: { 'content-type': 'application/json' } });
+      }
+      const resultRes = await fetch(routerBase + jobPath + '?_subdomain=queue', { headers });
+      const resultText = await resultRes.text();
+      if (!resultRes.ok) {
+        return new Response(JSON.stringify({ error: 'Hugging Face WAN generation failed.', detail: cleanApiError(resultText) }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const video = normalizeVideoOutput(JSON.parse(resultText));
+      if (!video) {
+        return new Response(JSON.stringify({ error: 'Hugging Face completed without returning a playable video.' }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ video, status: 'COMPLETED', model: 'WAN 2.1 via Hugging Face' }), {
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+
     if (!falKey) {
       return new Response(JSON.stringify({ error: 'Hosted video generation is not configured.' }), {
         status: 503, headers: { 'content-type': 'application/json' },
@@ -494,7 +554,57 @@ export async function onRequest(context) {
     }
   }
 
-  // ── HOSTED WAN 2.1 VIDEO GENERATION ───────────────────────
+  // ── HUGGING FACE WAN 2.1 VIDEO GENERATION ─────────────────
+  if (selectedModel.id === 'hf:Wan-AI/Wan2.1-T2V-1.3B') {
+    try {
+      const lower = message.toLowerCase();
+      const aspectRatio = /9\s*[:x]\s*16|vertical|portrait|reel|tiktok|shorts/i.test(lower)
+        ? '9:16'
+        : '16:9';
+      const submitUrl = 'https://router.huggingface.co/fal-ai/fal-ai/wan/v2.1/1.3b/text-to-video?_subdomain=queue';
+      const submitRes = await fetch(submitUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + hfToken,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: message,
+          aspect_ratio: aspectRatio,
+        }),
+      });
+      const submitText = await submitRes.text();
+      if (!submitRes.ok) {
+        return new Response(JSON.stringify({ error: 'Hugging Face WAN request failed.', detail: cleanApiError(submitText) }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      const submitData = JSON.parse(submitText);
+      let jobPath = '';
+      try { jobPath = new URL(submitData.response_url).pathname; } catch {}
+      const validPrefix = '/fal-ai/wan/v2.1/1.3b/text-to-video/requests/';
+      if (!submitData.request_id || !jobPath.startsWith(validPrefix)) {
+        return new Response(JSON.stringify({ error: 'Hugging Face did not return a valid WAN video job.' }), {
+          status: 502, headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({
+        pending: true,
+        request_id: submitData.request_id,
+        video_provider: 'huggingface',
+        job_path: jobPath,
+        status: submitData.status || 'IN_QUEUE',
+        model: selectedModel.name,
+        aspect_ratio: aspectRatio,
+      }), { headers: { 'content-type': 'application/json' } });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Hugging Face video service is unreachable.', detail: e.message }), {
+        status: 502, headers: { 'content-type': 'application/json' },
+      });
+    }
+  }
+
+  // ── DIRECT FAL WAN 2.1 VIDEO GENERATION (OPTIONAL) ─────────
   if (selectedModel.id === 'fal-ai/wan-t2v') {
     try {
       const lower = message.toLowerCase();
@@ -534,6 +644,7 @@ export async function onRequest(context) {
       return new Response(JSON.stringify({
         pending: true,
         request_id: submitData.request_id,
+        video_provider: 'fal',
         status: 'IN_QUEUE',
         model: selectedModel.name,
         aspect_ratio: aspectRatio,

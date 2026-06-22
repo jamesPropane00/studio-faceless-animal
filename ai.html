@@ -1052,8 +1052,9 @@
       streamMsgEl.scrollIntoView({ behavior: 'smooth' });
     }
 
-    async function waitForVideoJob(requestId) {
-      addMessage('system', 'WAN 2.1 accepted the video. Rendering in the background — this can take several minutes.');
+    async function waitForVideoJob(requestId, videoProvider, jobPath) {
+      const serviceName = videoProvider === 'huggingface' ? 'Hugging Face WAN 2.1' : 'WAN 2.1';
+      addMessage('system', serviceName + ' accepted the video. Rendering in the cloud — this can take several minutes.');
       const started = Date.now();
       while (Date.now() - started < 12 * 60 * 1000) {
         await new Promise(resolve => setTimeout(resolve, 5000));
@@ -1062,7 +1063,13 @@
         const res = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'video_status', request_id: requestId, session_id: SESSION_ID }),
+          body: JSON.stringify({
+            action: 'video_status',
+            request_id: requestId,
+            video_provider: videoProvider || 'huggingface',
+            job_path: jobPath || '',
+            session_id: SESSION_ID
+          }),
           signal: controller.signal,
         });
         clearTimeout(timeout);
@@ -1108,7 +1115,7 @@
         let data;
         try { data = await res.json(); } catch { addMessage('system', 'Error: Invalid response from server.'); return; }
         if (model.type === 'video' && data.pending && data.request_id) {
-          data = await waitForVideoJob(data.request_id);
+          data = await waitForVideoJob(data.request_id, data.video_provider, data.job_path);
         }
 
         if (model.type === 'image' && data.image) {
