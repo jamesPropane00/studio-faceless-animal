@@ -161,7 +161,7 @@
     }
 
     .toolbar{
-      position:fixed;top:calc(60px + var(--safe-top));left:8px;
+      position:fixed;top:calc(60px + var(--safe-top));right:8px;
       display:flex;flex-direction:column;gap:6px;z-index:15;
     }
     .tool-btn{
@@ -239,7 +239,7 @@
     @media(pointer:coarse){
       .joystick-zone{display:block}
       .action-buttons{display:flex}
-      .toolbar{top:auto;bottom:calc(170px + var(--safe-bottom));left:8px;flex-direction:row}
+      .toolbar{top:auto;bottom:calc(170px + var(--safe-bottom));right:8px;left:auto;flex-direction:row}
       .zoom-controls{display:none}
     }
     @media(pointer:fine){
@@ -1430,8 +1430,8 @@ function update(dt) {
 
   const targetIsoX = (state.player.x - state.player.y) * (TILE_W / 2)
   const targetIsoY = (state.player.x + state.player.y) * (TILE_H / 2)
-  state.camera.x += (targetIsoX - state.camera.x) * 0.08
-  state.camera.y += (targetIsoY - state.camera.y) * 0.08
+  state.camera.x += (targetIsoX - state.camera.x) * 0.15
+  state.camera.y += (targetIsoY - state.camera.y) * 0.15
   state.camera.zoom += (state.camera.targetZoom - state.camera.zoom) * 0.1
 
   updateNPCs(dt)

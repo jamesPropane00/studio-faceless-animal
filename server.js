@@ -4653,6 +4653,23 @@ function initWorldNPCs() {
   }
 }
 
+function initWorldBuildings() {
+  const rng = seededRandom(999)
+  const buildingTypes = ['house', 'shop', 'warehouse', 'club']
+  
+  for (let i = 0; i < 15; i++) {
+    const angle = rng() * Math.PI * 2
+    const dist = 8 + rng() * 20
+    const bx = WORLD_SIZE / 2 + Math.cos(angle) * dist
+    const by = WORLD_SIZE / 2 + Math.sin(angle) * dist
+    const type = buildingTypes[Math.floor(rng() * buildingTypes.length)]
+    
+    placeBuilding(bx, by, type, null)
+  }
+  
+  console.log('[WORLD] Generated', worldState.buildings.length, 'initial buildings')
+}
+
 function loadWorldState() {
   try {
     if (fs.existsSync(WORLD_STATE_FILE)) {
@@ -4938,17 +4955,17 @@ function updateDistricts() {
 }
 
 function updateNPCSettlement(dt) {
-  const settlementChance = 0.001
+  const settlementChance = 0.05
   
   for (const npc of worldState.npcs) {
     if (!npc.settleTimer) {
-      npc.settleTimer = 30 + Math.random() * 60
+      npc.settleTimer = 10 + Math.random() * 20
     }
     
     npc.settleTimer -= dt
     
     if (npc.settleTimer <= 0 && npc.state !== 'sleeping') {
-      npc.settleTimer = 60 + Math.random() * 120
+      npc.settleTimer = 20 + Math.random() * 40
       
       if (Math.random() < settlementChance) {
         const buildingType = npc.type === 'merchant' ? 'shop' :
@@ -5248,7 +5265,8 @@ function startWorldSimulation() {
   const loaded = loadWorldState()
   if (!loaded) {
     initWorldNPCs()
-    console.log('[WORLD] Initialized fresh world with', worldState.npcs.length, 'NPCs')
+    initWorldBuildings()
+    console.log('[WORLD] Initialized fresh world with', worldState.npcs.length, 'NPCs and', worldState.buildings.length, 'buildings')
   } else {
     console.log('[WORLD] Resumed world at tick', worldState.tick)
   }
