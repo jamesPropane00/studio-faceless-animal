@@ -4473,7 +4473,455 @@ function handleServerError(err, portToUse) {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════
+// THE WORLD — SERVER-SIDE GAME LOOP
+// Runs 24/7, authoritative simulation saved to Supabase
+// ════════════════════════════════════════════════════════════════════
+
+const WORLD_SIZE = 208
+const CHUNK_SIZE = 16
+const TICK_RATE = 100
+const SAVE_INTERVAL = 30000
+const BROADCAST_INTERVAL = 500
+
+const WORLD_STATE_FILE = path.join(ROOT, '.world-state.json')
+
+const worldState = {
+  time: 0.5,
+  timeSpeed: 0.0003,
+  npcs: [],
+  weather: {
+    type: 'clear',
+    intensity: 0,
+    targetIntensity: 0,
+    timer: 0,
+    nextChange: 30,
+    wind: { x: 0.5, y: 0.2 },
+    lightning: 0,
+    fogDensity: 0
+  },
+  events: [],
+  eventTimer: 0,
+  nextEvent: 60,
+  lastSave: 0,
+  tick: 0
+}
+
+const NPC_ROUTINES = {
+  sleeper: { sleepStart: 0.85, sleepEnd: 0.25, workStart: 0.3, workEnd: 0.7 },
+  early_bird: { sleepStart: 0.9, sleepEnd: 0.2, workStart: 0.22, workEnd: 0.65 },
+  night_owl: { sleepStart: 0.95, sleepEnd: 0.35, workStart: 0.4, workEnd: 0.85 },
+  wanderer: { sleepStart: 0.9, sleepEnd: 0.3, workStart: 0, workEnd: 1 }
+}
+
+const WORLD_EVENTS = [
+  { type: 'meteor', name: 'Meteor Strike', icon: '\u2604\uFE0F', desc: 'A meteor crashed nearby!', radius: 3, duration: 5 },
+  { type: 'treasure', name: 'Treasure Found', icon: '\u{1F4B0}', desc: 'Treasure appeared!', radius: 2, duration: 10 },
+  { type: 'portal', name: 'Portal Opened', icon: '\u{1F300}', desc: 'A mysterious portal opened...', radius: 2, duration: 15 },
+  { type: 'blessing', name: 'Divine Blessing', icon: '\u2728', desc: 'The gods smile upon this land', radius: 5, duration: 20 },
+  { type: 'earthquake', name: 'Earthquake', icon: '\u{1F30B}', desc: 'The ground shakes!', radius: 8, duration: 3 },
+]
+
+const WEATHER_TYPES = ['clear', 'cloudy', 'rain', 'storm', 'fog']
+
+function seededRandom(seed) {
+  let s = seed
+  return function() {
+    s = (s * 16807 + 0) % 2147483647
+    return (s - 1) / 2147483646
+  }
+}
+
+function noise2D(x, y, seed) {
+  const rng = seededRandom(Math.abs(x * 374761393 + y * 668265263 + seed * 1013904223) % 2147483647 || 1)
+  return rng()
+}
+
+function smoothNoise(x, y, seed, scale) {
+  const sx = x / scale, sy = y / scale
+  const ix = Math.floor(sx), iy = Math.floor(sy)
+  const fx = sx - ix, fy = sy - iy
+  const a = noise2D(ix, iy, seed)
+  const b = noise2D(ix + 1, iy, seed)
+  const c = noise2D(ix, iy + 1, seed)
+  const d = noise2D(ix + 1, iy + 1, seed)
+  const ux = fx * fx * (3 - 2 * fx)
+  const uy = fy * fy * (3 - 2 * fy)
+  return a * (1 - ux) * (1 - uy) + b * ux * (1 - uy) + c * (1 - ux) * uy + d * ux * uy
+}
+
+function getTerrainAt(wx, wy) {
+  const seed = 42
+  const e = smoothNoise(wx, wy, seed, 40) * 0.5
+          + smoothNoise(wx, wy, seed + 100, 20) * 0.3
+          + smoothNoise(wx, wy, seed + 200, 10) * 0.2
+  const m = smoothNoise(wx, wy, seed + 500, 30)
+  const cx = WORLD_SIZE / 2, cy = WORLD_SIZE / 2
+  const dist = Math.sqrt((wx - cx) ** 2 + (wy - cy) ** 2) / (WORLD_SIZE * 0.4)
+  if (dist > 0.85 + e * 0.2) return 0
+  if (dist > 0.75 + e * 0.15) return 1
+  if (e < 0.28) return 2
+  if (e < 0.45) return m > 0.5 ? 4 : 3
+  if (e < 0.6) return m > 0.6 ? 5 : 4
+  if (e < 0.72) return 6
+  return 7
+}
+
+function initWorldNPCs() {
+  const rng = seededRandom(777)
+  const routineKeys = Object.keys(NPC_ROUTINES)
+  const npcTypes = ['walker', 'vendor', 'guard', 'merchant', 'wanderer', 'worker']
+  const npcColors = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#ec4899','#8b5cf6','#14b8a6']
+  
+  for (let i = 0; i < 50; i++) {
+    const angle = rng() * Math.PI * 2
+    const dist = 5 + rng() * 35
+    const nx = WORLD_SIZE / 2 + Math.cos(angle) * dist
+    const ny = WORLD_SIZE / 2 + Math.sin(angle) * dist
+    const t = getTerrainAt(Math.floor(nx), Math.floor(ny))
+    if (t >= 2 && t <= 7) {
+      const routine = routineKeys[Math.floor(rng() * routineKeys.length)]
+      const type = npcTypes[Math.floor(rng() * npcTypes.length)]
+      worldState.npcs.push({
+        id: i,
+        x: nx, y: ny, tx: nx, ty: ny,
+        homeX: nx, homeY: ny,
+        speed: 0.3 + rng() * 0.6,
+        color: npcColors[Math.floor(rng() * npcColors.length)],
+        name: ['Citizen','Walker','Drifter','Runner','Lurker','Stranger','Trader','Guard','Worker','Villager'][Math.floor(rng() * 10)] + ' ' + (i + 1),
+        moveTimer: rng() * 5,
+        type: type,
+        routine: routine,
+        state: 'idle',
+        stateTimer: 0,
+        energy: 0.8 + rng() * 0.2,
+        carrying: rng() > 0.7 ? ['\u{1F4E6}','\u{1F33D}','\u{1F4B0}','\u2694\uFE0F'][Math.floor(rng() * 4)] : null,
+        direction: 0
+      })
+    }
+  }
+}
+
+function loadWorldState() {
+  try {
+    if (fs.existsSync(WORLD_STATE_FILE)) {
+      const saved = JSON.parse(fs.readFileSync(WORLD_STATE_FILE, 'utf8'))
+      Object.assign(worldState, saved)
+      console.log('[WORLD] Loaded saved state from', WORLD_STATE_FILE)
+      return true
+    }
+  } catch (e) {
+    console.warn('[WORLD] Failed to load saved state:', e.message)
+  }
+  return false
+}
+
+function saveWorldState() {
+  try {
+    const toSave = {
+      time: worldState.time,
+      weather: worldState.weather,
+      npcs: worldState.npcs.map(n => ({
+        id: n.id, x: n.x, y: n.y, tx: n.tx, ty: n.ty,
+        homeX: n.homeX, homeY: n.homeY, speed: n.speed,
+        color: n.color, name: n.name, moveTimer: n.moveTimer,
+        type: n.type, routine: n.routine, state: n.state,
+        energy: n.energy, carrying: n.carrying, direction: n.direction
+      })),
+      eventTimer: worldState.eventTimer,
+      nextEvent: worldState.nextEvent,
+      lastSave: Date.now(),
+      tick: worldState.tick
+    }
+    fs.writeFileSync(WORLD_STATE_FILE, JSON.stringify(toSave), 'utf8')
+    worldState.lastSave = Date.now()
+  } catch (e) {
+    console.warn('[WORLD] Failed to save state:', e.message)
+  }
+}
+
+function updateNPCRoutine(npc, dt) {
+  const t = worldState.time
+  const r = NPC_ROUTINES[npc.routine]
+  if (!r) return
+  
+  let shouldBe = 'idle'
+  if (t >= r.sleepStart || t < r.sleepEnd) {
+    shouldBe = 'sleeping'
+  } else if (t >= r.workStart && t < r.workEnd) {
+    shouldBe = 'working'
+  } else {
+    shouldBe = 'leisure'
+  }
+  
+  if (shouldBe !== npc.state) {
+    npc.state = shouldBe
+    npc.stateTimer = 0
+    
+    if (shouldBe === 'sleeping') {
+      npc.tx = npc.homeX
+      npc.ty = npc.homeY
+      npc.speed = 0.4
+    } else if (shouldBe === 'working') {
+      if (npc.type === 'vendor' || npc.type === 'merchant') {
+        npc.tx = npc.homeX + (Math.random() - 0.5) * 3
+        npc.ty = npc.homeY + (Math.random() - 0.5) * 3
+      } else {
+        const angle = Math.random() * Math.PI * 2
+        const dist = 5 + Math.random() * 10
+        npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeX + Math.cos(angle) * dist))
+        npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeY + Math.sin(angle) * dist))
+      }
+      npc.speed = 0.5 + Math.random() * 0.4
+    } else if (shouldBe === 'leisure') {
+      const angle = Math.random() * Math.PI * 2
+      const dist = 2 + Math.random() * 8
+      npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeX + Math.cos(angle) * dist))
+      npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeY + Math.sin(angle) * dist))
+      npc.speed = 0.2 + Math.random() * 0.3
+    }
+  }
+  
+  if (npc.state === 'sleeping') {
+    npc.energy = Math.min(1, npc.energy + dt * 0.1)
+  } else {
+    npc.energy = Math.max(0.1, npc.energy - dt * 0.01)
+  }
+}
+
+function updateNPCs(dt) {
+  for (const npc of worldState.npcs) {
+    updateNPCRoutine(npc, dt)
+    npc.stateTimer += dt
+    
+    if (npc.state === 'sleeping') {
+      const ddx = npc.tx - npc.x, ddy = npc.ty - npc.y
+      const dd = Math.sqrt(ddx * ddx + ddy * ddy)
+      if (dd < 0.5) {
+        npc.moveTimer = 999
+        continue
+      }
+    }
+    
+    npc.moveTimer -= dt
+    if (npc.moveTimer <= 0 && npc.state !== 'sleeping') {
+      npc.moveTimer = 2 + Math.random() * 5
+      
+      if (npc.state === 'working') {
+        if (npc.type === 'vendor' || npc.type === 'merchant') {
+          npc.tx = npc.homeX + (Math.random() - 0.5) * 4
+          npc.ty = npc.homeY + (Math.random() - 0.5) * 4
+        } else {
+          const angle = Math.random() * Math.PI * 2
+          const dist = 3 + Math.random() * 8
+          npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.x + Math.cos(angle) * dist))
+          npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.y + Math.sin(angle) * dist))
+        }
+      } else if (npc.state === 'leisure') {
+        const angle = Math.random() * Math.PI * 2
+        const dist = 2 + Math.random() * 6
+        npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.x + Math.cos(angle) * dist))
+        npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.y + Math.sin(angle) * dist))
+      }
+      
+      const t = getTerrainAt(Math.floor(npc.tx), Math.floor(npc.ty))
+      if (t === 0 || t === 1) {
+        npc.tx = npc.x
+        npc.ty = npc.y
+      }
+    }
+    
+    const ddx = npc.tx - npc.x, ddy = npc.ty - npc.y
+    const dd = Math.sqrt(ddx * ddx + ddy * ddy)
+    if (dd > 0.2) {
+      const speedMult = npc.state === 'sleeping' ? 0.5 : (npc.state === 'leisure' ? 0.7 : 1)
+      const weatherMult = worldState.weather.type === 'storm' ? 0.6 : (worldState.weather.type === 'rain' ? 0.8 : 1)
+      const actualSpeed = npc.speed * speedMult * weatherMult * dt
+      npc.x += (ddx / dd) * actualSpeed
+      npc.y += (ddy / dd) * actualSpeed
+      npc.direction = Math.atan2(ddy, ddx)
+    }
+  }
+}
+
+function updateWeather(dt) {
+  const w = worldState.weather
+  w.timer += dt
+  
+  if (w.timer >= w.nextChange) {
+    w.timer = 0
+    w.nextChange = 20 + Math.random() * 40
+    
+    const roll = Math.random()
+    if (roll < 0.4) w.type = 'clear'
+    else if (roll < 0.65) w.type = 'cloudy'
+    else if (roll < 0.85) w.type = 'rain'
+    else if (roll < 0.95) w.type = 'storm'
+    else w.type = 'fog'
+    
+    w.targetIntensity = w.type === 'clear' ? 0 : (w.type === 'cloudy' ? 0.3 : (w.type === 'fog' ? 0.5 : 0.7 + Math.random() * 0.3))
+    
+    if (w.type === 'storm' || w.type === 'rain') {
+      w.wind.x = (Math.random() - 0.5) * 2
+      w.wind.y = 0.5 + Math.random() * 0.5
+    }
+    
+    if (w.type === 'fog') {
+      w.fogDensity = 0.3 + Math.random() * 0.4
+    } else {
+      w.fogDensity = 0
+    }
+  }
+  
+  w.intensity += (w.targetIntensity - w.intensity) * dt * 0.5
+  
+  if (w.type === 'storm' && Math.random() < 0.005) {
+    w.lightning = 1
+  }
+  if (w.lightning > 0) {
+    w.lightning = Math.max(0, w.lightning - dt * 3)
+  }
+}
+
+function updateEvents(dt) {
+  worldState.eventTimer += dt
+  
+  if (worldState.eventTimer >= worldState.nextEvent) {
+    worldState.eventTimer = 0
+    worldState.nextEvent = 45 + Math.random() * 75
+    
+    const template = WORLD_EVENTS[Math.floor(Math.random() * WORLD_EVENTS.length)]
+    const ex = WORLD_SIZE / 2 + (Math.random() - 0.5) * 60
+    const ey = WORLD_SIZE / 2 + (Math.random() - 0.5) * 60
+    
+    const evt = {
+      ...template,
+      id: Date.now(),
+      x: Math.max(2, Math.min(WORLD_SIZE - 3, ex)),
+      y: Math.max(2, Math.min(WORLD_SIZE - 3, ey)),
+      timer: template.duration,
+      startTime: Date.now()
+    }
+    
+    worldState.events.push(evt)
+    console.log('[WORLD] Event:', evt.name, 'at', Math.floor(evt.x), Math.floor(evt.y))
+    
+    if (supabase) {
+      supabase.from('world_events').insert({
+        event_type: evt.type,
+        tile_x: Math.floor(evt.x),
+        tile_y: Math.floor(evt.y),
+        radius: evt.radius,
+        metadata: { name: evt.name, icon: evt.icon, desc: evt.desc }
+      }).then(() => {}).catch(e => console.warn('[WORLD] Event save failed:', e.message))
+    }
+  }
+  
+  for (let i = worldState.events.length - 1; i >= 0; i--) {
+    worldState.events[i].timer -= dt
+    if (worldState.events[i].timer <= 0) {
+      worldState.events.splice(i, 1)
+    }
+  }
+}
+
+function broadcastWorldState() {
+  if (!supabase) return
+  
+  const payload = {
+    time: worldState.time,
+    weather: {
+      type: worldState.weather.type,
+      intensity: worldState.weather.intensity,
+      lightning: worldState.weather.lightning,
+      fogDensity: worldState.weather.fogDensity
+    },
+    npcs: worldState.npcs.map(n => ({
+      id: n.id, x: n.x, y: n.y, state: n.state, direction: n.direction
+    })),
+    events: worldState.events.map(e => ({
+      id: e.id, type: e.type, x: e.x, y: e.y, timer: e.timer
+    }))
+  }
+  
+  supabase.channel('world-server-state').send({
+    type: 'broadcast',
+    event: 'world_tick',
+    payload: payload
+  }).then(() => {}).catch(e => console.warn('[WORLD] Broadcast failed:', e.message))
+}
+
+let worldTickInterval = null
+let worldSaveInterval = null
+let worldBroadcastInterval = null
+
+function startWorldSimulation() {
+  console.log('[WORLD] Starting server-side simulation...')
+  
+  const loaded = loadWorldState()
+  if (!loaded) {
+    initWorldNPCs()
+    console.log('[WORLD] Initialized fresh world with', worldState.npcs.length, 'NPCs')
+  } else {
+    console.log('[WORLD] Resumed world at tick', worldState.tick)
+  }
+  
+  let lastTick = Date.now()
+  
+  worldTickInterval = setInterval(() => {
+    const now = Date.now()
+    const dt = Math.min((now - lastTick) / 1000, 0.1)
+    lastTick = now
+    
+    worldState.time = (worldState.time + worldState.timeSpeed * dt) % 1
+    worldState.tick++
+    
+    updateNPCs(dt)
+    updateWeather(dt)
+    updateEvents(dt)
+    
+    if (worldState.tick % 100 === 0) {
+      const hours = Math.floor(worldState.time * 24)
+      const mins = Math.floor((worldState.time * 24 - hours) * 60)
+      const timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
+      console.log(`[WORLD] Tick ${worldState.tick} | Time: ${timeStr} | Weather: ${worldState.weather.type} | NPCs: ${worldState.npcs.length} | Events: ${worldState.events.length}`)
+    }
+  }, TICK_RATE)
+  
+  worldSaveInterval = setInterval(() => {
+    saveWorldState()
+  }, SAVE_INTERVAL)
+  
+  worldBroadcastInterval = setInterval(() => {
+    broadcastWorldState()
+  }, BROADCAST_INTERVAL)
+  
+  console.log('[WORLD] Simulation running at', 1000 / TICK_RATE, 'ticks/sec')
+  console.log('[WORLD] State saves every', SAVE_INTERVAL / 1000, 'seconds')
+  console.log('[WORLD] Broadcasting every', BROADCAST_INTERVAL / 1000, 'seconds')
+}
+
+function stopWorldSimulation() {
+  if (worldTickInterval) clearInterval(worldTickInterval)
+  if (worldSaveInterval) clearInterval(worldSaveInterval)
+  if (worldBroadcastInterval) clearInterval(worldBroadcastInterval)
+  saveWorldState()
+  console.log('[WORLD] Simulation stopped, state saved')
+}
+
+process.on('SIGINT', () => {
+  console.log('\n[WORLD] Shutting down...')
+  stopWorldSimulation()
+  process.exit(0)
+})
+
+process.on('SIGTERM', () => {
+  stopWorldSimulation()
+  process.exit(0)
+})
+
 startServer(PORT);
+startWorldSimulation();
 
 /**
  * Find and kill the process holding a TCP port using /proc/net/tcp.

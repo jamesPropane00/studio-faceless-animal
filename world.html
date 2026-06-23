@@ -405,6 +405,7 @@ const state = {
   loaded: false,
   userId: null,
   username: 'anon',
+  serverTime: undefined,
 }
 
 const WEATHER_TYPES = ['clear', 'cloudy', 'rain', 'storm', 'fog']
@@ -1154,7 +1155,11 @@ function render() {
 }
 
 function update(dt) {
-  state.time = (state.time + state.timeSpeed * dt) % 1
+  if (state.serverTime !== undefined) {
+    state.time += (state.serverTime - state.time) * 0.05
+  } else {
+    state.time = (state.time + state.timeSpeed * dt) % 1
+  }
 
   let dx = 0, dy = 0
   if (state.joystick.active) {
@@ -1191,6 +1196,15 @@ function update(dt) {
   updateWeather(dt)
   updateParticles(dt)
   updateEvents(dt)
+
+  for (const npc of state.npcs) {
+    if (npc._serverX !== undefined) {
+      npc.x += (npc._serverX - npc.x) * 0.1
+      npc.y += (npc._serverY - npc.y) * 0.1
+      if (npc._serverState) npc.state = npc._serverState
+      if (npc._serverDir !== undefined) npc.direction = npc._serverDir
+    }
+  }
 
   for (const [, p] of state.otherPlayers) {
     if (p._interp) {
@@ -1528,6 +1542,48 @@ async function setupMultiplayer() {
     }
   })
   await chatChannel.subscribe()
+
+  const serverChannel = supabase.channel('world-server-state')
+  serverChannel.on('broadcast', { event: 'world_tick' }, ({ payload }) => {
+    if (payload.time !== undefined) state.serverTime = payload.time
+    if (payload.weather) {
+      state.weather.type = payload.weather.type
+      state.weather.intensity = payload.weather.intensity
+      state.weather.lightning = payload.weather.lightning
+      state.weather.fogDensity = payload.weather.fogDensity
+    }
+    if (payload.npcs) {
+      for (const sn of payload.npcs) {
+        const local = state.npcs.find(n => n.id === sn.id)
+        if (local) {
+          local._serverX = sn.x
+          local._serverY = sn.y
+          local._serverState = sn.state
+          local._serverDir = sn.direction
+        }
+      }
+    }
+    if (payload.events) {
+      const existingIds = new Set(state.events.map(e => e.id))
+      for (const se of payload.events) {
+        if (!existingIds.has(se.id)) {
+          const template = WORLD_EVENTS.find(t => t.type === se.type)
+          if (template) {
+            state.events.push({
+              ...template,
+              id: se.id,
+              x: se.x, y: se.y,
+              timer: se.timer,
+              startTime: performance.now()
+            })
+            showToast(template.icon + ' ' + template.name, template.desc)
+            addChatMessage('', `${template.icon} ${template.name} — ${template.desc}`, true)
+          }
+        }
+      }
+    }
+  })
+  await serverChannel.subscribe()
 
   setInterval(() => {
     presenceChannel.track({
