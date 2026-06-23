@@ -39,9 +39,8 @@ export class ServerDMBackend {
     this._myUsername = String(sess.username).toLowerCase()
     this._ph = sess.ph
     this._initialized = true
-    const listening = await this._subscribeToIncomingCalls()
-    this._initialized = listening
-    return listening
+    this._subscribeToIncomingCalls().catch(() => {})
+    return true
   }
 
   async _subscribeToIncomingCalls() {
@@ -175,7 +174,7 @@ export class ServerDMBackend {
   async startSync(onMessage, onCallEvent) {
     this._onMessage = onMessage
     this._onCallEvent = onCallEvent
-    await this._subscribeToIncomingCalls()
+    this._subscribeToIncomingCalls().catch(() => {})
     this._syncRunning = true
     this._callPollRunning = true
     this._pollLoop()
