@@ -1,0 +1,236 @@
+-- ============================================================
+-- FACELESS ANIMAL STUDIOS — THE WORLD
+-- sql/world_schema.sql
+--
+-- Run this in the Supabase SQL Editor to create all tables
+-- needed for the multiplayer world simulation.
+--
+-- TABLES:
+--   world_players     — Player profiles, coins, reputation
+--   world_properties  — Owned land/buildings
+--   world_businesses  — Player-owned businesses
+--   world_gangs       — Gang/clan data
+--   world_gang_members— Gang membership
+--   world_events      — God-power events log
+--   world_chat_log    — Chat message history
+-- ============================================================
+
+-- ── PLAYER PROFILES ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS world_players (
+  id            UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username      TEXT NOT NULL,
+  display_name  TEXT,
+  coins         INTEGER NOT NULL DEFAULT 100,
+  reputation    INTEGER NOT NULL DEFAULT 0,
+  gang_id       UUID,
+  last_x        REAL NOT NULL DEFAULT 104.0,
+  last_y        REAL NOT NULL DEFAULT 104.0,
+  total_playtime INTEGER NOT NULL DEFAULT 0,
+  god_level     INTEGER NOT NULL DEFAULT 0,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ── PROPERTY / LAND OWNERSHIP ────────────────────────────────
+CREATE TABLE IF NOT EXISTS world_properties (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id      UUID NOT NULL REFERENCES world_players(id) ON DELETE CASCADE,
+  tile_x        INTEGER NOT NULL,
+  tile_y        INTEGER NOT NULL,
+  width         INTEGER NOT NULL DEFAULT 1,
+  height        INTEGER NOT NULL DEFAULT 1,
+  property_type TEXT NOT NULL DEFAULT 'land',
+  name          TEXT,
+  price_paid    INTEGER NOT NULL DEFAULT 0,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(tile_x, tile_y)
+);
+
+-- ── BUSINESSES ───────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS world_businesses (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id      UUID NOT NULL REFERENCES world_players(id) ON DELETE CASCADE,
+  property_id   UUID REFERENCES world_properties(id) ON DELETE SET NULL,
+  biz_type      TEXT NOT NULL DEFAULT 'shop',
+  name          TEXT NOT NULL,
+  description   TEXT,
+  level         INTEGER NOT NULL DEFAULT 1,
+  income_rate   INTEGER NOT NULL DEFAULT 1,
+  is_legal      BOOLEAN NOT NULL DEFAULT true,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ── GANGS ────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS world_gangs (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name          TEXT NOT NULL UNIQUE,
+  leader_id     UUID NOT NULL REFERENCES world_players(id),
+  tag           TEXT NOT NULL DEFAULT '',
+  color         TEXT NOT NULL DEFAULT '#a78bfa',
+  territory_x   INTEGER,
+  territory_y   INTEGER,
+  territory_r   INTEGER DEFAULT 0,
+  coins         INTEGER NOT NULL DEFAULT 0,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE world_players ADD CONSTRAINT fk_gang
+  FOREIGN KEY (gang_id) REFERENCES world_gangs(id) ON DELETE SET NULL;
+
+CREATE TABLE IF NOT EXISTS world_gang_members (
+  gang_id   UUID NOT NULL REFERENCES world_gangs(id) ON DELETE CASCADE,
+  player_id UUID NOT NULL REFERENCES world_players(id) ON DELETE CASCADE,
+  role      TEXT NOT NULL DEFAULT 'member',
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (gang_id, player_id)
+);
+
+-- ── GOD POWER EVENTS LOG ─────────────────────────────────────
+CREATE TABLE IF NOT EXISTS world_events (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  player_id   UUID REFERENCES world_players(id) ON DELETE SET NULL,
+  event_type  TEXT NOT NULL,
+  tile_x      INTEGER,
+  tile_y      INTEGER,
+  radius      INTEGER DEFAULT 0,
+  cost        INTEGER NOT NULL DEFAULT 0,
+  metadata    JSONB DEFAULT '{}',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ── CHAT LOG ─────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS world_chat_log (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  player_id  UUID REFERENCES world_players(id) ON DELETE SET NULL,
+  username   TEXT NOT NULL,
+  message    TEXT NOT NULL,
+  channel    TEXT NOT NULL DEFAULT 'world',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ── INDEXES ──────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_world_players_username ON world_players(username);
+CREATE INDEX IF NOT EXISTS idx_world_properties_owner ON world_properties(owner_id);
+CREATE INDEX IF NOT EXISTS idx_world_properties_pos ON world_properties(tile_x, tile_y);
+CREATE INDEX IF NOT EXISTS idx_world_businesses_owner ON world_businesses(owner_id);
+CREATE INDEX IF NOT EXISTS idx_world_events_time ON world_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_world_chat_time ON world_chat_log(created_at DESC);
+
+-- ── ROW LEVEL SECURITY ───────────────────────────────────────
+ALTER TABLE world_players ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_properties ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_businesses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gangs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_gang_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_chat_log ENABLE ROW LEVEL SECURITY;
+
+-- Players: anyone authenticated can read, only own row writable
+DROP POLICY IF EXISTS "players_select" ON world_players;
+CREATE POLICY "players_select" ON world_players FOR SELECT
+  TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "players_insert" ON world_players;
+CREATE POLICY "players_insert" ON world_players FOR INSERT
+  TO authenticated WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "players_update" ON world_players;
+CREATE POLICY "players_update" ON world_players FOR UPDATE
+  TO authenticated USING (auth.uid() = id);
+
+-- Properties: anyone can read, only owner can modify
+DROP POLICY IF EXISTS "props_select" ON world_properties;
+CREATE POLICY "props_select" ON world_properties FOR SELECT
+  TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "props_insert" ON world_properties;
+CREATE POLICY "props_insert" ON world_properties FOR INSERT
+  TO authenticated WITH CHECK (auth.uid() = owner_id);
+
+DROP POLICY IF EXISTS "props_delete" ON world_properties;
+CREATE POLICY "props_delete" ON world_properties FOR DELETE
+  TO authenticated USING (auth.uid() = owner_id);
+
+-- Businesses: anyone can read, only owner can modify
+DROP POLICY IF EXISTS "biz_select" ON world_businesses;
+CREATE POLICY "biz_select" ON world_businesses FOR SELECT
+  TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "biz_insert" ON world_businesses;
+CREATE POLICY "biz_insert" ON world_businesses FOR INSERT
+  TO authenticated WITH CHECK (auth.uid() = owner_id);
+
+DROP POLICY IF EXISTS "biz_update" ON world_businesses;
+CREATE POLICY "biz_update" ON world_businesses FOR UPDATE
+  TO authenticated USING (auth.uid() = owner_id);
+
+-- Gangs: anyone can read, leader can modify
+DROP POLICY IF EXISTS "gangs_select" ON world_gangs;
+CREATE POLICY "gangs_select" ON world_gangs FOR SELECT
+  TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "gangs_insert" ON world_gangs;
+CREATE POLICY "gangs_insert" ON world_gangs FOR INSERT
+  TO authenticated WITH CHECK (auth.uid() = leader_id);
+
+DROP POLICY IF EXISTS "gangs_update" ON world_gangs;
+CREATE POLICY "gangs_update" ON world_gangs FOR UPDATE
+  TO authenticated USING (auth.uid() = leader_id);
+
+-- Gang members: anyone can read, gang leader can modify
+DROP POLICY IF EXISTS "gm_select" ON world_gang_members;
+CREATE POLICY "gm_select" ON world_gang_members FOR SELECT
+  TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "gm_insert" ON world_gang_members;
+CREATE POLICY "gm_insert" ON world_gang_members FOR INSERT
+  TO authenticated WITH CHECK (
+    auth.uid() = player_id
+    OR auth.uid() = (SELECT leader_id FROM world_gangs WHERE id = gang_id)
+  );
+
+DROP POLICY IF EXISTS "gm_delete" ON world_gang_members;
+CREATE POLICY "gm_delete" ON world_gang_members FOR DELETE
+  TO authenticated USING (
+    auth.uid() = player_id
+    OR auth.uid() = (SELECT leader_id FROM world_gangs WHERE id = gang_id)
+  );
+
+-- Events: anyone can read, authenticated can insert (spend coins)
+DROP POLICY IF EXISTS "events_select" ON world_events;
+CREATE POLICY "events_select" ON world_events FOR SELECT
+  TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "events_insert" ON world_events;
+CREATE POLICY "events_insert" ON world_events FOR INSERT
+  TO authenticated WITH CHECK (auth.uid() = player_id);
+
+-- Chat: anyone can read and insert
+DROP POLICY IF EXISTS "chat_select" ON world_chat_log;
+CREATE POLICY "chat_select" ON world_chat_log FOR SELECT
+  TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "chat_insert" ON world_chat_log;
+CREATE POLICY "chat_insert" ON world_chat_log FOR INSERT
+  TO authenticated WITH CHECK (true);
+
+-- ── AUTO-CREATE PLAYER PROFILE ON SIGNUP ─────────────────────
+CREATE OR REPLACE FUNCTION handle_new_world_player()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO world_players (id, username, display_name)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1)),
+    COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.email)
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created_world ON auth.users;
+CREATE TRIGGER on_auth_user_created_world
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_new_world_player();
