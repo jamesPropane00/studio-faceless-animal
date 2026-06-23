@@ -73,6 +73,12 @@
     .stat-value.green{color:var(--green)}
     .stat-value.cyan{color:var(--cyan)}
 
+    .rep-bar-wrap{display:flex;flex-direction:column;gap:0.15rem;padding:0.2rem 0}
+    .rep-bar-level{font-size:0.6rem;font-weight:800;color:var(--bright);text-transform:uppercase;letter-spacing:0.05em}
+    .rep-bar-outer{width:100%;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
+    .rep-bar-inner{height:100%;background:linear-gradient(90deg,var(--bright),var(--purple));border-radius:3px;transition:width 0.3s ease}
+    .rep-bar-progress{font-size:0.55rem;color:var(--dim);font-weight:600}
+
     .minimap-wrap{
       background:rgba(18,20,30,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
       border:1px solid var(--border);border-radius:var(--radius);
@@ -252,7 +258,7 @@
       .brand-badge .tag{display:none}
     }
 
-    .build-panel, .god-panel {
+    .build-panel, .god-panel, .income-panel, .job-panel {
       position: fixed;
       top: 50%;
       left: 50%;
@@ -267,7 +273,7 @@
       min-width: 320px;
       max-width: 90vw;
     }
-    .build-panel.open, .god-panel.open { display: block; }
+    .build-panel.open, .god-panel.open, .income-panel.open, .job-panel.open { display: block; }
     .panel-header {
       display: flex;
       justify-content: space-between;
@@ -348,6 +354,79 @@
       display: none;
     }
     .mode-indicator.open { display: block; }
+    .income-info, .job-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .income-building-name, .job-building-name {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+      text-align: center;
+    }
+    .income-amount, .job-pay, .job-duration {
+      font-size: 0.85rem;
+      color: var(--dim);
+      text-align: center;
+    }
+    .income-amount span, .job-pay span {
+      color: var(--gold);
+      font-weight: 700;
+    }
+    .income-rate {
+      font-size: 0.75rem;
+      color: var(--dim);
+      text-align: center;
+    }
+    .income-rate span {
+      color: var(--bright);
+      font-weight: 600;
+    }
+    .income-collect-btn, .job-start-btn {
+      background: linear-gradient(135deg, var(--purple), var(--bright));
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .income-collect-btn:hover, .job-start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+    .income-collect-btn:disabled, .job-start-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .job-progress-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .job-progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .job-progress-inner {
+      height: 100%;
+      background: linear-gradient(90deg, var(--purple), var(--bright));
+      border-radius: 4px;
+      transition: width 0.1s linear;
+    }
+    .job-progress-text {
+      font-size: 0.75rem;
+      color: var(--dim);
+      text-align: center;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -369,6 +448,13 @@
   <div class="panel stats-panel" id="statsPanel">
     <div class="stat-row"><span class="stat-icon">&#x1F4B0;</span><span class="stat-label">Coins</span><span class="stat-value gold" id="statCoins">0</span></div>
     <div class="stat-row"><span class="stat-icon">&#x2B50;</span><span class="stat-label">Rep</span><span class="stat-value cyan" id="statRep">0</span></div>
+    <div class="rep-bar-wrap">
+      <div class="rep-bar-level" id="repLevelName">Nobody</div>
+      <div class="rep-bar-outer">
+        <div class="rep-bar-inner" id="repBarInner" style="width:0%"></div>
+      </div>
+      <div class="rep-bar-progress" id="repProgress">0/50</div>
+    </div>
     <div class="stat-row"><span class="stat-icon">&#x1F30D;</span><span class="stat-label">Online</span><span class="stat-value green" id="statOnline">1</span></div>
   </div>
 </div>
@@ -449,6 +535,38 @@
   <div class="god-grid" id="godGrid"></div>
 </div>
 
+<div class="income-panel" id="incomePanel">
+  <div class="panel-header">
+    <div class="panel-title">Collect Income</div>
+    <div class="panel-close" id="incomePanelClose">&times;</div>
+  </div>
+  <div class="income-info">
+    <div class="income-building-name" id="incomeBuildingName">Shop</div>
+    <div class="income-amount">Accumulated: <span id="incomeAmount">0</span> coins</div>
+    <div class="income-rate">Rate: <span id="incomeRate">1</span> coin/min</div>
+    <button class="income-collect-btn" id="incomeCollectBtn">Collect</button>
+  </div>
+</div>
+
+<div class="job-panel" id="jobPanel">
+  <div class="panel-header">
+    <div class="panel-title">Work</div>
+    <div class="panel-close" id="jobPanelClose">&times;</div>
+  </div>
+  <div class="job-info">
+    <div class="job-building-name" id="jobBuildingName">Shop</div>
+    <div class="job-pay">Pay: <span id="jobPay">2</span> coins</div>
+    <div class="job-duration">Duration: 30 seconds</div>
+    <div class="job-progress-wrap" id="jobProgressWrap" style="display:none">
+      <div class="job-progress-bar">
+        <div class="job-progress-inner" id="jobProgressInner" style="width:0%"></div>
+      </div>
+      <div class="job-progress-text" id="jobProgressText">0s / 30s</div>
+    </div>
+    <button class="job-start-btn" id="jobStartBtn">Start Work</button>
+  </div>
+</div>
+
 <div class="toast" id="toast">
   <div class="toast-content">
     <div class="toast-title" id="toastTitle"></div>
@@ -515,6 +633,13 @@ const state = {
   nextEvent: 60,
   coins: 0,
   rep: 0,
+  currentJob: null,
+  jobStartTime: null,
+  repLevel: 'Nobody',
+  repLevelIndex: 0,
+  repMin: 0,
+  repMax: 50,
+  repProgress: 0,
   chatOpen: false,
   playerListOpen: false,
   minimapOpen: false,
@@ -1543,6 +1668,23 @@ function setupMouse() {
       placeBuildingAt(world.x, world.y)
     } else if (state.godMode && state.godPower) {
       triggerGodPower(world.x, world.y)
+    } else {
+      const clickedBuilding = state.buildings.find(b => {
+        const dx = Math.abs(b.tile_x - world.x)
+        const dy = Math.abs(b.tile_y - world.y)
+        return dx < 1 && dy < 1
+      })
+      
+      if (clickedBuilding) {
+        if (clickedBuilding.owner_id === state.userId) {
+          openIncomePanel(clickedBuilding.id)
+        } else {
+          const payRates = { shop: 2, club: 3, warehouse: 1, hide: 5 }
+          if (payRates[clickedBuilding.building_type]) {
+            openJobPanel(clickedBuilding.id)
+          }
+        }
+      }
     }
   })
 }
@@ -1676,6 +1818,10 @@ function setupUI() {
     document.getElementById('btnGod').classList.remove('active')
     document.getElementById('modeIndicator').classList.remove('open')
   })
+  document.getElementById('incomePanelClose').addEventListener('click', closeIncomePanel)
+  document.getElementById('incomeCollectBtn').addEventListener('click', collectIncome)
+  document.getElementById('jobPanelClose').addEventListener('click', closeJobPanel)
+  document.getElementById('jobStartBtn').addEventListener('click', startJob)
   document.getElementById('btnZoomIn').addEventListener('click', () => {
     state.camera.targetZoom = Math.min(3, state.camera.targetZoom * 1.3)
   })
@@ -1737,6 +1883,189 @@ function populateGodGrid() {
       showToast('God Mode', `Click on the map to trigger ${info.name}`)
     })
     grid.appendChild(item)
+  }
+}
+
+let currentIncomeBuilding = null
+let currentJobBuilding = null
+let jobTimer = null
+
+function openIncomePanel(buildingId) {
+  const building = state.buildings.find(b => b.id === buildingId)
+  if (!building) return
+  
+  currentIncomeBuilding = building
+  const type = BUILDING_TYPES[building.building_type]
+  
+  document.getElementById('incomeBuildingName').textContent = type.name
+  document.getElementById('incomeRate').textContent = building.income_rate
+  
+  const accumulated = calculateAccumulatedIncome(building)
+  document.getElementById('incomeAmount').textContent = accumulated
+  
+  document.getElementById('incomePanel').classList.add('open')
+}
+
+function closeIncomePanel() {
+  document.getElementById('incomePanel').classList.remove('open')
+  currentIncomeBuilding = null
+}
+
+function calculateAccumulatedIncome(building) {
+  if (!building.last_collected) return 0
+  const now = Date.now()
+  const elapsed = now - building.last_collected
+  const maxMs = 24 * 60 * 60 * 1000
+  const cappedElapsed = Math.min(elapsed, maxMs)
+  const minutes = cappedElapsed / 60000
+  let income = building.income_rate * minutes
+  if (building.in_district) {
+    income *= 1.2
+  }
+  return Math.floor(income)
+}
+
+async function collectIncome() {
+  if (!currentIncomeBuilding) return
+  
+  try {
+    const res = await fetch('/api/world/income/collect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: state.userId,
+        buildingId: currentIncomeBuilding.id
+      })
+    })
+    const data = await res.json()
+    if (data.ok) {
+      if (data.coinsCollected > 0) {
+        state.coins = data.newBalance
+        state.rep = data.reputation
+        document.getElementById('statCoins').textContent = state.coins
+        document.getElementById('statRep').textContent = state.rep
+        currentIncomeBuilding.last_collected = Date.now()
+        showToast('Income Collected', `+${data.coinsCollected} coins`)
+        closeIncomePanel()
+      } else {
+        showToast('No Income', 'Nothing to collect yet')
+      }
+    } else {
+      showToast('Error', data.error || 'Failed to collect income')
+    }
+  } catch (e) {
+    console.warn('[WORLD] Failed to collect income:', e.message)
+    showToast('Error', 'Failed to collect income')
+  }
+}
+
+function openJobPanel(buildingId) {
+  const building = state.buildings.find(b => b.id === buildingId)
+  if (!building) return
+  
+  currentJobBuilding = building
+  const type = BUILDING_TYPES[building.building_type]
+  const payRates = { shop: 2, club: 3, warehouse: 1, hide: 5 }
+  const pay = payRates[building.building_type] || 1
+  
+  document.getElementById('jobBuildingName').textContent = type.name
+  document.getElementById('jobPay').textContent = pay
+  
+  document.getElementById('jobProgressWrap').style.display = 'none'
+  document.getElementById('jobStartBtn').style.display = 'block'
+  document.getElementById('jobStartBtn').disabled = false
+  document.getElementById('jobStartBtn').textContent = 'Start Work'
+  
+  document.getElementById('jobPanel').classList.add('open')
+}
+
+function closeJobPanel() {
+  document.getElementById('jobPanel').classList.remove('open')
+  currentJobBuilding = null
+  if (jobTimer) {
+    clearInterval(jobTimer)
+    jobTimer = null
+  }
+}
+
+async function startJob() {
+  if (!currentJobBuilding) return
+  
+  try {
+    const res = await fetch('/api/world/job/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: state.userId,
+        buildingId: currentJobBuilding.id
+      })
+    })
+    const data = await res.json()
+    if (data.ok) {
+      state.currentJob = data.buildingId
+      state.jobStartTime = data.startTime
+      
+      document.getElementById('jobProgressWrap').style.display = 'flex'
+      document.getElementById('jobStartBtn').style.display = 'none'
+      
+      startJobProgress()
+    } else {
+      showToast('Error', data.error || 'Failed to start job')
+    }
+  } catch (e) {
+    console.warn('[WORLD] Failed to start job:', e.message)
+    showToast('Error', 'Failed to start job')
+  }
+}
+
+function startJobProgress() {
+  const duration = 30000
+  const startTime = state.jobStartTime
+  const endTime = startTime + duration
+  
+  jobTimer = setInterval(() => {
+    const now = Date.now()
+    const elapsed = now - startTime
+    const remaining = Math.max(0, duration - elapsed)
+    const progress = Math.min(100, (elapsed / duration) * 100)
+    
+    document.getElementById('jobProgressInner').style.width = progress + '%'
+    document.getElementById('jobProgressText').textContent = `${Math.floor(elapsed / 1000)}s / 30s`
+    
+    if (remaining <= 0) {
+      clearInterval(jobTimer)
+      jobTimer = null
+      completeJob()
+    }
+  }, 100)
+}
+
+async function completeJob() {
+  try {
+    const res = await fetch('/api/world/job/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: state.userId
+      })
+    })
+    const data = await res.json()
+    if (data.ok) {
+      state.coins = data.newBalance
+      state.rep = data.newReputation
+      state.currentJob = null
+      state.jobStartTime = null
+      document.getElementById('statCoins').textContent = state.coins
+      document.getElementById('statRep').textContent = state.rep
+      showToast('Job Complete', `+${data.coinsEarned} coins, +${data.reputationEarned} rep`)
+      closeJobPanel()
+      await fetchPlayerState()
+    } else {
+      showToast('Error', data.error || 'Failed to complete job')
+    }
+  } catch (e) {
+    console.warn('[WORLD] Failed to complete job:', e.message)
+    showToast('Error', 'Failed to complete job')
   }
 }
 
@@ -2015,6 +2344,38 @@ async function setupMultiplayer() {
   showToast('Connected', 'Welcome to The World')
 }
 
+async function fetchPlayerState() {
+  if (!state.userId) return
+  try {
+    const res = await fetch(`/api/world/player/state?userId=${encodeURIComponent(state.userId)}`)
+    const data = await res.json()
+    if (data.ok) {
+      state.coins = data.coins
+      state.rep = data.reputation
+      state.repLevel = data.repLevel
+      state.repLevelIndex = data.repLevelIndex
+      state.repMin = data.repMin
+      state.repMax = data.repMax
+      state.repProgress = data.repProgress
+      document.getElementById('statCoins').textContent = state.coins
+      document.getElementById('statRep').textContent = state.rep
+      updateRepBarUI()
+    }
+  } catch (e) {
+    console.warn('[WORLD] Failed to fetch player state:', e.message)
+  }
+}
+
+function updateRepBarUI() {
+  document.getElementById('repLevelName').textContent = state.repLevel
+  document.getElementById('repBarInner').style.width = state.repProgress + '%'
+  if (state.repMax === null) {
+    document.getElementById('repProgress').textContent = state.rep + '+'
+  } else {
+    document.getElementById('repProgress').textContent = state.rep + '/' + state.repMax
+  }
+}
+
 async function init() {
   const bar = document.getElementById('loadingBar')
   const text = document.getElementById('loadingText')
@@ -2063,6 +2424,7 @@ async function init() {
   setupUI()
 
   await setupMultiplayer()
+  await fetchPlayerState()
 
   bar.style.width = '100%'
   text.textContent = 'Welcome to The World'

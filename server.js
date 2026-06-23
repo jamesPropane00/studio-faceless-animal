@@ -636,6 +636,35 @@ async function handleMediaDownload(req, res) {
       handleWorldGetState(req, res)
       return
     }
+
+    if (urlPath === '/api/world/player/state' && req.method === 'GET') {
+      handleWorldPlayerState(req, res)
+      return
+    }
+
+    if (urlPath === '/api/world/income/collect' && req.method === 'POST') {
+      handleWorldCollectIncome(req, res).catch(err => {
+        console.error('[WORLD:API] Collect income error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/world/job/start' && req.method === 'POST') {
+      handleWorldStartJob(req, res).catch(err => {
+        console.error('[WORLD:API] Start job error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/world/job/complete' && req.method === 'POST') {
+      handleWorldCompleteJob(req, res).catch(err => {
+        console.error('[WORLD:API] Complete job error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+      })
+      return
+    }
   }
 
   // Default to index.html
@@ -4575,6 +4604,27 @@ const WORLD_EVENTS = [
 
 const WEATHER_TYPES = ['clear', 'cloudy', 'rain', 'storm', 'fog']
 
+const REP_LEVELS = [
+  { name: 'Nobody', min: 0, max: 50 },
+  { name: 'Worker', min: 50, max: 150 },
+  { name: 'Hustler', min: 150, max: 300 },
+  { name: 'Operator', min: 300, max: 600 },
+  { name: 'Boss', min: 600, max: Infinity }
+]
+
+const JOB_PAY_RATES = {
+  shop: 2,
+  club: 3,
+  warehouse: 1,
+  hide: 5
+}
+
+const JOB_DURATION = 30000
+const INCOME_CAP_HOURS = 24
+const DISTRICT_INCOME_BONUS = 0.2
+
+const worldPlayers = {}
+
 function seededRandom(seed) {
   let s = seed
   return function() {
@@ -4616,6 +4666,51 @@ function getTerrainAt(wx, wy) {
   if (e < 0.6) return m > 0.6 ? 5 : 4
   if (e < 0.72) return 6
   return 7
+}
+
+function getPlayerState(userId) {
+  if (!worldPlayers[userId]) {
+    worldPlayers[userId] = {
+      coins: 100,
+      reputation: 0,
+      currentJob: null,
+      jobStartTime: null
+    }
+  }
+  return worldPlayers[userId]
+}
+
+function getRepLevel(reputation) {
+  for (let i = REP_LEVELS.length - 1; i >= 0; i--) {
+    if (reputation >= REP_LEVELS[i].min) {
+      return { ...REP_LEVELS[i], index: i }
+    }
+  }
+  return { ...REP_LEVELS[0], index: 0 }
+}
+
+function isBuildingInDistrict(building) {
+  for (const district of worldState.districts) {
+    const dx = building.tile_x - district.center_x
+    const dy = building.tile_y - district.center_y
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    if (dist <= district.radius) return true
+  }
+  return false
+}
+
+function calculateAccumulatedIncome(building) {
+  if (!building.last_collected) return 0
+  const now = Date.now()
+  const elapsed = now - building.last_collected
+  const maxMs = INCOME_CAP_HOURS * 60 * 60 * 1000
+  const cappedElapsed = Math.min(elapsed, maxMs)
+  const minutes = cappedElapsed / 60000
+  let income = building.income_rate * minutes
+  if (isBuildingInDistrict(building)) {
+    income *= (1 + DISTRICT_INCOME_BONUS)
+  }
+  return Math.floor(income)
 }
 
 function initWorldNPCs() {
@@ -5090,7 +5185,10 @@ function broadcastWorldState() {
       tile_x: b.tile_x,
       tile_y: b.tile_y,
       condition: b.condition,
-      owner_id: b.owner_id
+      owner_id: b.owner_id,
+      income_rate: b.income_rate,
+      last_collected: b.last_collected,
+      in_district: isBuildingInDistrict(b)
     })),
     districts: worldState.districts.map(d => ({
       id: d.id,
@@ -5126,7 +5224,10 @@ function handleWorldGetState(req, res) {
       tile_x: b.tile_x,
       tile_y: b.tile_y,
       condition: b.condition,
-      owner_id: b.owner_id
+      owner_id: b.owner_id,
+      income_rate: b.income_rate,
+      last_collected: b.last_collected,
+      in_district: isBuildingInDistrict(b)
     })),
     districts: worldState.districts.map(d => ({
       id: d.id,
@@ -5141,6 +5242,174 @@ function handleWorldGetState(req, res) {
     districtCount: worldState.districts.length
   }
   sendJSON(res, 200, { ok: true, state })
+}
+
+function handleWorldPlayerState(req, res) {
+  const url = new URL(req.url, `http://${req.headers.host}`)
+  const userId = url.searchParams.get('userId')
+  if (!userId) {
+    return sendJSON(res, 400, { ok: false, error: 'Missing userId.' })
+  }
+  const player = getPlayerState(userId)
+  const repLevel = getRepLevel(player.reputation)
+  sendJSON(res, 200, {
+    ok: true,
+    coins: player.coins,
+    reputation: player.reputation,
+    repLevel: repLevel.name,
+    repLevelIndex: repLevel.index,
+    repMin: repLevel.min,
+    repMax: repLevel.max === Infinity ? null : repLevel.max,
+    repProgress: repLevel.max === Infinity ? 100 : ((player.reputation - repLevel.min) / (repLevel.max - repLevel.min)) * 100
+  })
+}
+
+async function handleWorldCollectIncome(req, res) {
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const { userId, buildingId } = body
+  if (!userId || !buildingId) {
+    return sendJSON(res, 400, { ok: false, error: 'Missing userId or buildingId.' })
+  }
+
+  const building = worldState.buildings.find(b => b.id === buildingId)
+  if (!building) {
+    return sendJSON(res, 404, { ok: false, error: 'Building not found.' })
+  }
+
+  if (building.owner_id !== userId) {
+    return sendJSON(res, 403, { ok: false, error: 'You do not own this building.' })
+  }
+
+  const income = calculateAccumulatedIncome(building)
+  if (income <= 0) {
+    return sendJSON(res, 200, { ok: true, coinsCollected: 0, message: 'No income to collect.' })
+  }
+
+  const player = getPlayerState(userId)
+  player.coins += income
+  player.reputation += 1
+  building.last_collected = Date.now()
+
+  console.log(`[WORLD] Player ${userId} collected ${income} coins from building ${buildingId}`)
+
+  sendJSON(res, 200, {
+    ok: true,
+    coinsCollected: income,
+    newBalance: player.coins,
+    reputation: player.reputation
+  })
+}
+
+async function handleWorldStartJob(req, res) {
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const { userId, buildingId } = body
+  if (!userId || !buildingId) {
+    return sendJSON(res, 400, { ok: false, error: 'Missing userId or buildingId.' })
+  }
+
+  const building = worldState.buildings.find(b => b.id === buildingId)
+  if (!building) {
+    return sendJSON(res, 404, { ok: false, error: 'Building not found.' })
+  }
+
+  const buildingType = building.building_type
+  if (!JOB_PAY_RATES[buildingType]) {
+    return sendJSON(res, 400, { ok: false, error: 'This building type does not offer jobs.' })
+  }
+
+  const player = getPlayerState(userId)
+  if (player.currentJob) {
+    return sendJSON(res, 400, { ok: false, error: 'You already have an active job.' })
+  }
+
+  player.currentJob = buildingId
+  player.jobStartTime = Date.now()
+
+  console.log(`[WORLD] Player ${userId} started job at building ${buildingId}`)
+
+  sendJSON(res, 200, {
+    ok: true,
+    jobStarted: true,
+    buildingId: buildingId,
+    buildingType: buildingType,
+    payRate: JOB_PAY_RATES[buildingType],
+    duration: JOB_DURATION,
+    startTime: player.jobStartTime
+  })
+}
+
+async function handleWorldCompleteJob(req, res) {
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const { userId } = body
+  if (!userId) {
+    return sendJSON(res, 400, { ok: false, error: 'Missing userId.' })
+  }
+
+  const player = getPlayerState(userId)
+  if (!player.currentJob) {
+    return sendJSON(res, 400, { ok: false, error: 'You do not have an active job.' })
+  }
+
+  const building = worldState.buildings.find(b => b.id === player.currentJob)
+  if (!building) {
+    player.currentJob = null
+    player.jobStartTime = null
+    return sendJSON(res, 404, { ok: false, error: 'Job building no longer exists.' })
+  }
+
+  const elapsed = Date.now() - player.jobStartTime
+  if (elapsed < JOB_DURATION) {
+    return sendJSON(res, 400, { ok: false, error: 'Job not complete yet.', remaining: JOB_DURATION - elapsed })
+  }
+
+  const payRate = JOB_PAY_RATES[building.building_type]
+  player.coins += payRate
+  player.reputation += 2
+
+  const completedJob = {
+    buildingId: player.currentJob,
+    buildingType: building.building_type,
+    pay: payRate
+  }
+
+  player.currentJob = null
+  player.jobStartTime = null
+
+  console.log(`[WORLD] Player ${userId} completed job at building ${completedJob.buildingId}, earned ${payRate} coins`)
+
+  sendJSON(res, 200, {
+    ok: true,
+    jobCompleted: true,
+    coinsEarned: payRate,
+    reputationEarned: 2,
+    newBalance: player.coins,
+    newReputation: player.reputation,
+    job: completedJob
+  })
 }
 
 async function handleWorldPlaceBuilding(req, res) {
@@ -5177,6 +5446,12 @@ async function handleWorldPlaceBuilding(req, res) {
       condition: 100,
       income_rate: BUILDING_TYPES[type].income
     }).then(() => {}).catch(e => console.warn('[WORLD] Building save failed:', e.message))
+  }
+
+  if (userId) {
+    const player = getPlayerState(userId)
+    player.reputation += 5
+    console.log(`[WORLD] Player ${userId} gained 5 rep for building, now at ${player.reputation}`)
   }
 
   sendJSON(res, 200, { ok: true, building })
