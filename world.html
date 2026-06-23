@@ -251,6 +251,103 @@
       .player-list{right:4px;max-width:160px}
       .brand-badge .tag{display:none}
     }
+
+    .build-panel, .god-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(18, 20, 30, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      z-index: 100;
+      display: none;
+      min-width: 320px;
+      max-width: 90vw;
+    }
+    .build-panel.open, .god-panel.open { display: block; }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .panel-close {
+      font-size: 1.5rem;
+      color: var(--dim);
+      cursor: pointer;
+      line-height: 1;
+    }
+    .panel-close:hover { color: var(--text); }
+    .build-grid, .god-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+    .build-item, .god-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .build-item:hover, .god-item:hover {
+      background: rgba(167, 139, 250, 0.1);
+      border-color: var(--bright);
+    }
+    .build-item.selected, .god-item.selected {
+      background: rgba(167, 139, 250, 0.2);
+      border-color: var(--bright);
+    }
+    .build-icon, .god-icon {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    .build-name, .god-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      text-align: center;
+      margin-bottom: 0.25rem;
+    }
+    .build-cost, .god-cost {
+      font-size: 0.75rem;
+      color: var(--gold);
+      text-align: center;
+      font-weight: 600;
+    }
+    .build-desc, .god-desc {
+      font-size: 0.7rem;
+      color: var(--dim);
+      text-align: center;
+      margin-top: 0.25rem;
+    }
+    .mode-indicator {
+      position: fixed;
+      top: calc(8px + var(--safe-top));
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(167, 139, 250, 0.9);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 700;
+      z-index: 50;
+      display: none;
+    }
+    .mode-indicator.open { display: block; }
   </style>
 </head>
 <body>
@@ -288,7 +385,11 @@
   <button class="tool-btn" id="btnChat" title="Chat">&#x1F4AC;</button>
   <button class="tool-btn" id="btnPlayers" title="Players">&#x1F465;</button>
   <button class="tool-btn" id="btnMinimap" title="Map">&#x1F5FA;&#xFE0F;</button>
+  <button class="tool-btn" id="btnBuild" title="Build">&#x1F3D7;&#xFE0F;</button>
+  <button class="tool-btn" id="btnGod" title="God Powers">&#x26A1;</button>
 </div>
+
+<div class="mode-indicator" id="modeIndicator">Build Mode: Click to place</div>
 
 <div class="zoom-controls">
   <button class="zoom-btn" id="btnZoomIn">+</button>
@@ -330,6 +431,22 @@
     <span id="playerCount">0</span>
   </div>
   <div id="playerListBody"></div>
+</div>
+
+<div class="build-panel" id="buildPanel">
+  <div class="panel-header">
+    <div class="panel-title">Build Mode</div>
+    <div class="panel-close" id="buildPanelClose">&times;</div>
+  </div>
+  <div class="build-grid" id="buildGrid"></div>
+</div>
+
+<div class="god-panel" id="godPanel">
+  <div class="panel-header">
+    <div class="panel-title">God Powers</div>
+    <div class="panel-close" id="godPanelClose">&times;</div>
+  </div>
+  <div class="god-grid" id="godGrid"></div>
 </div>
 
 <div class="toast" id="toast">
@@ -378,6 +495,8 @@ const state = {
   otherPlayers: new Map(),
   chunks: new Map(),
   npcs: [],
+  buildings: [],
+  districts: [],
   particles: [],
   time: 0.5,
   timeSpeed: 0.0003,
@@ -399,6 +518,10 @@ const state = {
   chatOpen: false,
   playerListOpen: false,
   minimapOpen: false,
+  buildMode: false,
+  buildType: null,
+  godMode: false,
+  godPower: null,
   joystick: { active: false, dx: 0, dy: 0 },
   keys: new Set(),
   mouse: { down: false, lastX: 0, lastY: 0, dragging: false },
@@ -406,6 +529,22 @@ const state = {
   userId: null,
   username: 'anon',
   serverTime: undefined,
+}
+
+const BUILDING_TYPES = {
+  house: { name: 'House', color: '#8B7355', height: 12, cost: 50, income: 0 },
+  shop: { name: 'Shop', color: '#4A90E2', height: 10, cost: 100, income: 1 },
+  club: { name: 'Club', color: '#E91E63', height: 14, cost: 150, income: 2 },
+  warehouse: { name: 'Warehouse', color: '#607D8B', height: 8, cost: 75, income: 1 },
+  hide: { name: 'Hide', color: '#2C2C2C', height: 6, cost: 200, income: 3 },
+  camp: { name: 'Camp', color: '#795548', height: 4, cost: 25, income: 0 }
+}
+
+const GOD_POWERS = {
+  meteor: { name: 'Meteor Strike', icon: '\u2604\uFE0F', cost: 200, radius: 3, desc: 'Destroy buildings in area' },
+  blessing: { name: 'Divine Blessing', icon: '\u2728', cost: 100, radius: 5, desc: 'Restore buildings in area' },
+  earthquake: { name: 'Earthquake', icon: '\u{1F30B}', cost: 150, radius: 8, desc: 'Damage buildings in area' },
+  spawn_npc: { name: 'Spawn NPC', icon: '\u{1F464}', cost: 25, radius: 0, desc: 'Create a new citizen' }
 }
 
 const WEATHER_TYPES = ['clear', 'cloudy', 'rain', 'storm', 'fog']
@@ -976,6 +1115,101 @@ function drawTile(x, y, terrain) {
   ctx.stroke()
 }
 
+function drawBuilding(building) {
+  const type = BUILDING_TYPES[building.building_type]
+  if (!type) return
+  
+  const s = worldToScreen(building.tile_x, building.tile_y)
+  const hw = (TILE_W / 2) * state.camera.zoom
+  const hh = (TILE_H / 2) * state.camera.zoom
+  const elev = type.height * state.camera.zoom
+  
+  if (s.x < -hw * 2 || s.x > canvas.width + hw * 2 || s.y < -hh * 4 - elev || s.y > canvas.height + hh * 4) return
+  
+  const condition = building.condition || 100
+  const conditionMult = condition / 100
+  const baseColor = type.color
+  
+  const rc = parseInt(baseColor.slice(1), 16)
+  const r = Math.floor(((rc >> 16) & 0xff) * conditionMult)
+  const g = Math.floor(((rc >> 8) & 0xff) * conditionMult)
+  const b = Math.floor((rc & 0xff) * conditionMult)
+  
+  const topColor = `rgb(${r},${g},${b})`
+  const sideColor = `rgb(${Math.floor(r * 0.7)},${Math.floor(g * 0.7)},${Math.floor(b * 0.7)})`
+  const lightColor = `rgb(${Math.min(255, Math.floor(r * 1.2))},${Math.min(255, Math.floor(g * 1.2))},${Math.min(255, Math.floor(b * 1.2))})`
+  
+  ctx.beginPath()
+  ctx.moveTo(s.x - hw, s.y)
+  ctx.lineTo(s.x, s.y + hh)
+  ctx.lineTo(s.x, s.y + hh - elev)
+  ctx.lineTo(s.x - hw, s.y - elev)
+  ctx.closePath()
+  ctx.fillStyle = sideColor
+  ctx.fill()
+  
+  ctx.beginPath()
+  ctx.moveTo(s.x + hw, s.y)
+  ctx.lineTo(s.x, s.y + hh)
+  ctx.lineTo(s.x, s.y + hh - elev)
+  ctx.lineTo(s.x + hw, s.y - elev)
+  ctx.closePath()
+  ctx.fillStyle = lightColor
+  ctx.fill()
+  
+  ctx.beginPath()
+  ctx.moveTo(s.x, s.y - hh - elev)
+  ctx.lineTo(s.x + hw, s.y - elev)
+  ctx.lineTo(s.x, s.y + hh - elev)
+  ctx.lineTo(s.x - hw, s.y - elev)
+  ctx.closePath()
+  ctx.fillStyle = topColor
+  ctx.fill()
+  
+  if (building.owner_id && state.camera.zoom > 0.6) {
+    ctx.strokeStyle = 'rgba(167,139,250,0.6)'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(s.x, s.y - hh - elev)
+    ctx.lineTo(s.x + hw, s.y - elev)
+    ctx.lineTo(s.x, s.y + hh - elev)
+    ctx.lineTo(s.x - hw, s.y - elev)
+    ctx.closePath()
+    ctx.stroke()
+  }
+  
+  if (condition < 50 && state.camera.zoom > 0.5) {
+    ctx.font = `${8 * state.camera.zoom}px Inter`
+    ctx.textAlign = 'center'
+    ctx.fillStyle = condition < 25 ? '#ef4444' : '#f59e0b'
+    ctx.fillText(condition < 25 ? '\u26A0' : '\u{1F6A7}', s.x, s.y - elev - 5 * state.camera.zoom)
+  }
+}
+
+function drawDistrict(district) {
+  const s = worldToScreen(district.center_x, district.center_y)
+  const radius = district.radius * TILE_W * state.camera.zoom * 0.3
+  
+  if (s.x < -radius || s.x > canvas.width + radius || s.y < -radius || s.y > canvas.height + radius) return
+  
+  ctx.beginPath()
+  ctx.arc(s.x, s.y, radius, 0, Math.PI * 2)
+  ctx.strokeStyle = 'rgba(167,139,250,0.3)'
+  ctx.lineWidth = 2
+  ctx.setLineDash([5, 5])
+  ctx.stroke()
+  ctx.setLineDash([])
+  
+  if (state.camera.zoom > 0.4) {
+    ctx.font = `bold ${12 * state.camera.zoom}px Inter`
+    ctx.textAlign = 'center'
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'
+    ctx.fillText(district.name, s.x + 1, s.y - radius - 9)
+    ctx.fillStyle = 'rgba(167,139,250,0.9)'
+    ctx.fillText(district.name, s.x, s.y - radius - 10)
+  }
+}
+
 function drawEntity(wx, wy, color, name, isPlayer) {
   const s = worldToScreen(wx, wy)
   const sz = (isPlayer ? 10 : 7) * state.camera.zoom
@@ -1094,11 +1328,19 @@ function render() {
   for (const npc of state.npcs) {
     drawOrder.push({ type: 'npc', x: npc.x, y: npc.y, sort: npc.x + npc.y, data: npc })
   }
+  for (const building of state.buildings) {
+    drawOrder.push({ type: 'building', x: building.tile_x, y: building.tile_y, sort: building.tile_x + building.tile_y, data: building })
+  }
 
   drawOrder.sort((a, b) => a.sort - b.sort)
 
+  for (const district of state.districts) {
+    drawDistrict(district)
+  }
+
   for (const item of drawOrder) {
     if (item.type === 'tile') drawTile(item.x, item.y, item.terrain)
+    else if (item.type === 'building') drawBuilding(item.data)
     else if (item.type === 'player') drawEntity(item.x, item.y, state.player.color, state.player.name, true)
     else if (item.type === 'other') drawEntity(item.x, item.y, '#8b5cf6', item.data.name, false)
     else if (item.type === 'npc') {
@@ -1291,6 +1533,18 @@ function setupMouse() {
     state.player.tx = Math.max(0, Math.min(WORLD_SIZE - 1, world.x))
     state.player.ty = Math.max(0, Math.min(WORLD_SIZE - 1, world.y))
   })
+
+  canvas.addEventListener('click', e => {
+    if (state.mouse.dragging) return
+    
+    const world = screenToWorld(e.clientX, e.clientY)
+    
+    if (state.buildMode && state.buildType) {
+      placeBuildingAt(world.x, world.y)
+    } else if (state.godMode && state.godPower) {
+      triggerGodPower(world.x, world.y)
+    }
+  })
 }
 
 function setupTouch() {
@@ -1383,6 +1637,45 @@ function setupUI() {
     document.getElementById('minimapWrap').style.display = state.minimapOpen ? 'block' : 'none'
     document.getElementById('btnMinimap').classList.toggle('active', state.minimapOpen)
   })
+  document.getElementById('btnBuild').addEventListener('click', () => {
+    state.buildMode = !state.buildMode
+    document.getElementById('buildPanel').classList.toggle('open', state.buildMode)
+    document.getElementById('btnBuild').classList.toggle('active', state.buildMode)
+    document.getElementById('modeIndicator').classList.toggle('open', state.buildMode)
+    if (state.buildMode) {
+      state.godMode = false
+      document.getElementById('godPanel').classList.remove('open')
+      document.getElementById('btnGod').classList.remove('active')
+      populateBuildGrid()
+    }
+  })
+  document.getElementById('btnGod').addEventListener('click', () => {
+    state.godMode = !state.godMode
+    document.getElementById('godPanel').classList.toggle('open', state.godMode)
+    document.getElementById('btnGod').classList.toggle('active', state.godMode)
+    document.getElementById('modeIndicator').classList.toggle('open', state.godMode)
+    if (state.godMode) {
+      document.getElementById('modeIndicator').textContent = 'God Mode: Click to trigger power'
+      state.buildMode = false
+      document.getElementById('buildPanel').classList.remove('open')
+      document.getElementById('btnBuild').classList.remove('active')
+      populateGodGrid()
+    } else {
+      document.getElementById('modeIndicator').textContent = 'Build Mode: Click to place'
+    }
+  })
+  document.getElementById('buildPanelClose').addEventListener('click', () => {
+    state.buildMode = false
+    document.getElementById('buildPanel').classList.remove('open')
+    document.getElementById('btnBuild').classList.remove('active')
+    document.getElementById('modeIndicator').classList.remove('open')
+  })
+  document.getElementById('godPanelClose').addEventListener('click', () => {
+    state.godMode = false
+    document.getElementById('godPanel').classList.remove('open')
+    document.getElementById('btnGod').classList.remove('active')
+    document.getElementById('modeIndicator').classList.remove('open')
+  })
   document.getElementById('btnZoomIn').addEventListener('click', () => {
     state.camera.targetZoom = Math.min(3, state.camera.targetZoom * 1.3)
   })
@@ -1401,6 +1694,124 @@ function setupUI() {
     e.preventDefault()
     showToast('God Power', 'Coming soon... spend coins to trigger events!')
   })
+}
+
+function populateBuildGrid() {
+  const grid = document.getElementById('buildGrid')
+  grid.innerHTML = ''
+  for (const [type, info] of Object.entries(BUILDING_TYPES)) {
+    const item = document.createElement('div')
+    item.className = 'build-item'
+    item.innerHTML = `
+      <div class="build-icon" style="color:${info.color}">&#x1F3E0;</div>
+      <div class="build-name">${info.name}</div>
+      <div class="build-cost">${info.cost} coins</div>
+      <div class="build-desc">${info.income > 0 ? '+' + info.income + ' income/min' : 'Shelter'}</div>
+    `
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.build-item').forEach(i => i.classList.remove('selected'))
+      item.classList.add('selected')
+      state.buildType = type
+      showToast('Build Mode', `Click on the map to place ${info.name}`)
+    })
+    grid.appendChild(item)
+  }
+}
+
+function populateGodGrid() {
+  const grid = document.getElementById('godGrid')
+  grid.innerHTML = ''
+  for (const [type, info] of Object.entries(GOD_POWERS)) {
+    const item = document.createElement('div')
+    item.className = 'god-item'
+    item.innerHTML = `
+      <div class="god-icon">${info.icon}</div>
+      <div class="god-name">${info.name}</div>
+      <div class="god-cost">${info.cost} coins</div>
+      <div class="god-desc">${info.desc}</div>
+    `
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.god-item').forEach(i => i.classList.remove('selected'))
+      item.classList.add('selected')
+      state.godPower = type
+      showToast('God Mode', `Click on the map to trigger ${info.name}`)
+    })
+    grid.appendChild(item)
+  }
+}
+
+async function placeBuildingAt(x, y) {
+  if (!state.buildType) {
+    showToast('Error', 'Select a building type first')
+    return
+  }
+  
+  const type = BUILDING_TYPES[state.buildType]
+  if (state.coins < type.cost) {
+    showToast('Error', 'Not enough coins')
+    return
+  }
+  
+  try {
+    const res = await fetch('/api/world/building/place', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        x: Math.floor(x),
+        y: Math.floor(y),
+        type: state.buildType,
+        userId: state.userId
+      })
+    })
+    const data = await res.json()
+    if (data.ok) {
+      state.coins -= type.cost
+      document.getElementById('statCoins').textContent = state.coins
+      showToast('Building Placed', `${type.name} built successfully!`)
+      addChatMessage('', `${state.username} built a ${type.name}`, true)
+    } else {
+      showToast('Error', data.error || 'Failed to place building')
+    }
+  } catch (e) {
+    showToast('Error', 'Failed to place building')
+  }
+}
+
+async function triggerGodPower(x, y) {
+  if (!state.godPower) {
+    showToast('Error', 'Select a god power first')
+    return
+  }
+  
+  const power = GOD_POWERS[state.godPower]
+  if (state.coins < power.cost) {
+    showToast('Error', 'Not enough coins')
+    return
+  }
+  
+  try {
+    const res = await fetch('/api/world/godpower/trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: state.godPower,
+        x: Math.floor(x),
+        y: Math.floor(y),
+        userId: state.userId
+      })
+    })
+    const data = await res.json()
+    if (data.ok) {
+      state.coins -= power.cost
+      document.getElementById('statCoins').textContent = state.coins
+      showToast('God Power Triggered', `${power.name} unleashed!`)
+      addChatMessage('', `${state.username} triggered ${power.name}!`, true)
+    } else {
+      showToast('Error', data.error || 'Failed to trigger power')
+    }
+  } catch (e) {
+    showToast('Error', 'Failed to trigger power')
+  }
 }
 
 function sendChat() {
@@ -1562,6 +1973,12 @@ async function setupMultiplayer() {
           local._serverDir = sn.direction
         }
       }
+    }
+    if (payload.buildings) {
+      state.buildings = payload.buildings
+    }
+    if (payload.districts) {
+      state.districts = payload.districts
     }
     if (payload.events) {
       const existingIds = new Set(state.events.map(e => e.id))

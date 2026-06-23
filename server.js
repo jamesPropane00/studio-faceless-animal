@@ -609,6 +609,35 @@ async function handleMediaDownload(req, res) {
     return
   }
 
+  // ── WORLD API ─────────────────────────────────────────────────────
+  if (urlPath.startsWith('/api/world/')) {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    if (req.method === 'OPTIONS') { send(res, 204, 'text/plain', ''); return }
+
+    if (urlPath === '/api/world/building/place' && req.method === 'POST') {
+      handleWorldPlaceBuilding(req, res).catch(err => {
+        console.error('[WORLD:API] Place building error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/world/godpower/trigger' && req.method === 'POST') {
+      handleWorldGodPower(req, res).catch(err => {
+        console.error('[WORLD:API] God power error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+      })
+      return
+    }
+
+    if (urlPath === '/api/world/state' && req.method === 'GET') {
+      handleWorldGetState(req, res)
+      return
+    }
+  }
+
   // Default to index.html
   if (urlPath === '/' || urlPath === '') {
     urlPath = '/index.html'
@@ -4490,6 +4519,8 @@ const worldState = {
   time: 0.5,
   timeSpeed: 0.0003,
   npcs: [],
+  buildings: [],
+  districts: [],
   weather: {
     type: 'clear',
     intensity: 0,
@@ -4504,7 +4535,27 @@ const worldState = {
   eventTimer: 0,
   nextEvent: 60,
   lastSave: 0,
-  tick: 0
+  tick: 0,
+  nextBuildingId: 1,
+  nextDistrictId: 1
+}
+
+const BUILDING_TYPES = {
+  house: { name: 'House', color: '#8B7355', height: 12, income: 0, npcType: 'worker' },
+  shop: { name: 'Shop', color: '#4A90E2', height: 10, income: 1, npcType: 'merchant' },
+  club: { name: 'Club', color: '#E91E63', height: 14, income: 2, npcType: 'wanderer' },
+  warehouse: { name: 'Warehouse', color: '#607D8B', height: 8, income: 1, npcType: 'worker' },
+  hide: { name: 'Hide', color: '#2C2C2C', height: 6, income: 3, npcType: 'criminal', illegal: true },
+  camp: { name: 'Camp', color: '#795548', height: 4, income: 0, npcType: 'wanderer', temporary: true }
+}
+
+const DISTRICT_NAMES = {
+  shop: ['Market District', 'The Block', 'Commerce Row', 'Trade Center'],
+  club: ['Neon Row', 'The Strip', 'Party District', 'Night Life'],
+  house: ['The Hood', 'Suburbia', 'Residential', 'Home Base'],
+  warehouse: ['Industrial', 'Warehouse District', 'The Docks', 'Work Zone'],
+  hide: ['The Trap', 'Shadow Lane', 'Underground', 'The Block'],
+  camp: ['Shantytown', 'Camp District', 'Settlement', 'Outskirts']
 }
 
 const NPC_ROUTINES = {
@@ -4607,7 +4658,12 @@ function loadWorldState() {
     if (fs.existsSync(WORLD_STATE_FILE)) {
       const saved = JSON.parse(fs.readFileSync(WORLD_STATE_FILE, 'utf8'))
       Object.assign(worldState, saved)
+      if (!worldState.buildings) worldState.buildings = []
+      if (!worldState.districts) worldState.districts = []
+      if (!worldState.nextBuildingId) worldState.nextBuildingId = 1
+      if (!worldState.nextDistrictId) worldState.nextDistrictId = 1
       console.log('[WORLD] Loaded saved state from', WORLD_STATE_FILE)
+      console.log('[WORLD] Buildings:', worldState.buildings.length, '| Districts:', worldState.districts.length)
       return true
     }
   } catch (e) {
@@ -4626,12 +4682,17 @@ function saveWorldState() {
         homeX: n.homeX, homeY: n.homeY, speed: n.speed,
         color: n.color, name: n.name, moveTimer: n.moveTimer,
         type: n.type, routine: n.routine, state: n.state,
-        energy: n.energy, carrying: n.carrying, direction: n.direction
+        energy: n.energy, carrying: n.carrying, direction: n.direction,
+        settleTimer: n.settleTimer
       })),
+      buildings: worldState.buildings,
+      districts: worldState.districts,
       eventTimer: worldState.eventTimer,
       nextEvent: worldState.nextEvent,
       lastSave: Date.now(),
-      tick: worldState.tick
+      tick: worldState.tick,
+      nextBuildingId: worldState.nextBuildingId,
+      nextDistrictId: worldState.nextDistrictId
     }
     fs.writeFileSync(WORLD_STATE_FILE, JSON.stringify(toSave), 'utf8')
     worldState.lastSave = Date.now()
@@ -4744,6 +4805,173 @@ function updateNPCs(dt) {
   }
 }
 
+function canPlaceBuilding(x, y, radius) {
+  const bx = Math.floor(x)
+  const by = Math.floor(y)
+  
+  for (let dx = -radius; dx <= radius; dx++) {
+    for (let dy = -radius; dy <= radius; dy++) {
+      const tx = bx + dx
+      const ty = by + dy
+      
+      if (tx < 0 || ty < 0 || tx >= WORLD_SIZE || ty >= WORLD_SIZE) return false
+      
+      const terrain = getTerrainAt(tx, ty)
+      if (terrain === 0 || terrain === 1) return false
+      
+      for (const b of worldState.buildings) {
+        if (Math.abs(b.tile_x - tx) <= 1 && Math.abs(b.tile_y - ty) <= 1) {
+          return false
+        }
+      }
+    }
+  }
+  return true
+}
+
+function placeBuilding(x, y, type, ownerId) {
+  const bx = Math.floor(x)
+  const by = Math.floor(y)
+  
+  if (!canPlaceBuilding(bx, by, 0)) return null
+  
+  const building = {
+    id: worldState.nextBuildingId++,
+    owner_id: ownerId || null,
+    building_type: type,
+    tile_x: bx,
+    tile_y: by,
+    condition: 100,
+    income_rate: BUILDING_TYPES[type].income,
+    created_at: Date.now(),
+    last_collected: Date.now()
+  }
+  
+  worldState.buildings.push(building)
+  console.log('[WORLD] Building placed:', BUILDING_TYPES[type].name, 'at', bx, by)
+  return building
+}
+
+function updateBuildingDecay(dt) {
+  const decayRate = 0.01
+  
+  for (let i = worldState.buildings.length - 1; i >= 0; i--) {
+    const b = worldState.buildings[i]
+    b.condition -= decayRate * dt
+    
+    if (b.condition <= 0) {
+      if (BUILDING_TYPES[b.building_type].temporary) {
+        worldState.buildings.splice(i, 1)
+        console.log('[WORLD] Temporary building removed at', b.tile_x, b.tile_y)
+      } else {
+        b.condition = 0
+      }
+    }
+  }
+}
+
+function updateDistricts() {
+  const clusterRadius = 15
+  const minBuildings = 5
+  
+  const used = new Set()
+  const newDistricts = []
+  
+  for (const b1 of worldState.buildings) {
+    if (used.has(b1.id)) continue
+    
+    const cluster = [b1]
+    used.add(b1.id)
+    
+    for (const b2 of worldState.buildings) {
+      if (used.has(b2.id)) continue
+      
+      const dx = b1.tile_x - b2.tile_x
+      const dy = b1.tile_y - b2.tile_y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      
+      if (dist <= clusterRadius) {
+        cluster.push(b2)
+        used.add(b2.id)
+      }
+    }
+    
+    if (cluster.length >= minBuildings) {
+      const typeCounts = {}
+      let cx = 0, cy = 0
+      
+      for (const b of cluster) {
+        typeCounts[b.building_type] = (typeCounts[b.building_type] || 0) + 1
+        cx += b.tile_x
+        cy += b.tile_y
+      }
+      
+      cx = Math.floor(cx / cluster.length)
+      cy = Math.floor(cy / cluster.length)
+      
+      let dominantType = 'house'
+      let maxCount = 0
+      for (const [type, count] of Object.entries(typeCounts)) {
+        if (count > maxCount) {
+          maxCount = count
+          dominantType = type
+        }
+      }
+      
+      const names = DISTRICT_NAMES[dominantType]
+      const name = names[Math.floor(Math.random() * names.length)]
+      
+      newDistricts.push({
+        id: worldState.nextDistrictId++,
+        name: name,
+        district_type: dominantType,
+        center_x: cx,
+        center_y: cy,
+        radius: clusterRadius,
+        building_count: cluster.length,
+        updated_at: Date.now()
+      })
+    }
+  }
+  
+  worldState.districts = newDistricts
+}
+
+function updateNPCSettlement(dt) {
+  const settlementChance = 0.001
+  
+  for (const npc of worldState.npcs) {
+    if (!npc.settleTimer) {
+      npc.settleTimer = 30 + Math.random() * 60
+    }
+    
+    npc.settleTimer -= dt
+    
+    if (npc.settleTimer <= 0 && npc.state !== 'sleeping') {
+      npc.settleTimer = 60 + Math.random() * 120
+      
+      if (Math.random() < settlementChance) {
+        const buildingType = npc.type === 'merchant' ? 'shop' :
+                           npc.type === 'wanderer' ? 'camp' :
+                           npc.type === 'criminal' ? 'hide' :
+                           npc.type === 'guard' ? 'warehouse' : 'house'
+        
+        const angle = Math.random() * Math.PI * 2
+        const dist = 3 + Math.random() * 8
+        const bx = npc.x + Math.cos(angle) * dist
+        const by = npc.y + Math.sin(angle) * dist
+        
+        const building = placeBuilding(bx, by, buildingType, null)
+        if (building) {
+          npc.homeX = bx
+          npc.homeY = by
+          console.log('[WORLD] NPC', npc.name, 'built', BUILDING_TYPES[buildingType].name)
+        }
+      }
+    }
+  }
+}
+
 function updateWeather(dt) {
   const w = worldState.weather
   w.timer += dt
@@ -4839,6 +5067,22 @@ function broadcastWorldState() {
     npcs: worldState.npcs.map(n => ({
       id: n.id, x: n.x, y: n.y, state: n.state, direction: n.direction
     })),
+    buildings: worldState.buildings.map(b => ({
+      id: b.id,
+      building_type: b.building_type,
+      tile_x: b.tile_x,
+      tile_y: b.tile_y,
+      condition: b.condition,
+      owner_id: b.owner_id
+    })),
+    districts: worldState.districts.map(d => ({
+      id: d.id,
+      name: d.name,
+      district_type: d.district_type,
+      center_x: d.center_x,
+      center_y: d.center_y,
+      radius: d.radius
+    })),
     events: worldState.events.map(e => ({
       id: e.id, type: e.type, x: e.x, y: e.y, timer: e.timer
     }))
@@ -4854,6 +5098,149 @@ function broadcastWorldState() {
 let worldTickInterval = null
 let worldSaveInterval = null
 let worldBroadcastInterval = null
+
+function handleWorldGetState(req, res) {
+  const state = {
+    time: worldState.time,
+    weather: worldState.weather,
+    buildings: worldState.buildings.map(b => ({
+      id: b.id,
+      building_type: b.building_type,
+      tile_x: b.tile_x,
+      tile_y: b.tile_y,
+      condition: b.condition,
+      owner_id: b.owner_id
+    })),
+    districts: worldState.districts.map(d => ({
+      id: d.id,
+      name: d.name,
+      district_type: d.district_type,
+      center_x: d.center_x,
+      center_y: d.center_y,
+      radius: d.radius
+    })),
+    npcCount: worldState.npcs.length,
+    buildingCount: worldState.buildings.length,
+    districtCount: worldState.districts.length
+  }
+  sendJSON(res, 200, { ok: true, state })
+}
+
+async function handleWorldPlaceBuilding(req, res) {
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const { x, y, type, userId } = body
+  if (x === undefined || y === undefined || !type) {
+    return sendJSON(res, 400, { ok: false, error: 'Missing x, y, or type.' })
+  }
+
+  if (!BUILDING_TYPES[type]) {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid building type.' })
+  }
+
+  const building = placeBuilding(x, y, type, userId || null)
+  if (!building) {
+    return sendJSON(res, 400, { ok: false, error: 'Cannot place building here.' })
+  }
+
+  if (supabase && userId) {
+    supabase.from('world_buildings').insert({
+      id: building.id,
+      owner_id: userId,
+      building_type: type,
+      tile_x: building.tile_x,
+      tile_y: building.tile_y,
+      condition: 100,
+      income_rate: BUILDING_TYPES[type].income
+    }).then(() => {}).catch(e => console.warn('[WORLD] Building save failed:', e.message))
+  }
+
+  sendJSON(res, 200, { ok: true, building })
+}
+
+async function handleWorldGodPower(req, res) {
+  let rawBody
+  try { rawBody = await readBody(req, 8192) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid request body.' })
+  }
+  let body
+  try { body = JSON.parse(rawBody.toString('utf8')) } catch {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid JSON body.' })
+  }
+
+  const { type, x, y, userId } = body
+  if (!type || x === undefined || y === undefined) {
+    return sendJSON(res, 400, { ok: false, error: 'Missing type, x, or y.' })
+  }
+
+  const template = WORLD_EVENTS.find(e => e.type === type)
+  if (!template) {
+    return sendJSON(res, 400, { ok: false, error: 'Invalid event type.' })
+  }
+
+  const evt = {
+    ...template,
+    id: Date.now(),
+    x: Math.max(2, Math.min(WORLD_SIZE - 3, x)),
+    y: Math.max(2, Math.min(WORLD_SIZE - 3, y)),
+    timer: template.duration,
+    startTime: Date.now(),
+    triggered_by: userId || null
+  }
+
+  worldState.events.push(evt)
+  console.log('[WORLD] God power triggered:', template.name, 'at', Math.floor(evt.x), Math.floor(evt.y))
+
+  if (type === 'meteor' || type === 'earthquake') {
+    const radius = template.radius || 3
+    for (let i = worldState.buildings.length - 1; i >= 0; i--) {
+      const b = worldState.buildings[i]
+      const dx = b.tile_x - evt.x
+      const dy = b.tile_y - evt.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist <= radius) {
+        b.condition -= 50
+        if (b.condition <= 0) {
+          worldState.buildings.splice(i, 1)
+          console.log('[WORLD] Building destroyed at', b.tile_x, b.tile_y)
+        }
+      }
+    }
+  }
+
+  if (type === 'blessing') {
+    const radius = template.radius || 5
+    for (const b of worldState.buildings) {
+      const dx = b.tile_x - evt.x
+      const dy = b.tile_y - evt.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist <= radius) {
+        b.condition = Math.min(100, b.condition + 30)
+      }
+    }
+  }
+
+  if (supabase && userId) {
+    supabase.from('world_events').insert({
+      event_type: type,
+      player_id: userId,
+      tile_x: Math.floor(evt.x),
+      tile_y: Math.floor(evt.y),
+      radius: template.radius || 0,
+      cost: 0,
+      metadata: { name: template.name, icon: template.icon, desc: template.desc }
+    }).then(() => {}).catch(e => console.warn('[WORLD] Event save failed:', e.message))
+  }
+
+  sendJSON(res, 200, { ok: true, event: evt })
+}
 
 function startWorldSimulation() {
   console.log('[WORLD] Starting server-side simulation...')
@@ -4879,12 +5266,18 @@ function startWorldSimulation() {
     updateNPCs(dt)
     updateWeather(dt)
     updateEvents(dt)
+    updateBuildingDecay(dt)
+    updateNPCSettlement(dt)
+    
+    if (worldState.tick % 50 === 0) {
+      updateDistricts()
+    }
     
     if (worldState.tick % 100 === 0) {
       const hours = Math.floor(worldState.time * 24)
       const mins = Math.floor((worldState.time * 24 - hours) * 60)
       const timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
-      console.log(`[WORLD] Tick ${worldState.tick} | Time: ${timeStr} | Weather: ${worldState.weather.type} | NPCs: ${worldState.npcs.length} | Events: ${worldState.events.length}`)
+      console.log(`[WORLD] Tick ${worldState.tick} | Time: ${timeStr} | Weather: ${worldState.weather.type} | NPCs: ${worldState.npcs.length} | Buildings: ${worldState.buildings.length} | Districts: ${worldState.districts.length} | Events: ${worldState.events.length}`)
     }
   }, TICK_RATE)
   

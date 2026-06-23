@@ -109,6 +109,32 @@ CREATE TABLE IF NOT EXISTS world_chat_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- ── BUILDINGS ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS world_buildings (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id      UUID REFERENCES world_players(id) ON DELETE SET NULL,
+  building_type TEXT NOT NULL,
+  tile_x        INTEGER NOT NULL,
+  tile_y        INTEGER NOT NULL,
+  condition     INTEGER NOT NULL DEFAULT 100,
+  income_rate   INTEGER NOT NULL DEFAULT 0,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_collected TIMESTAMPTZ,
+  UNIQUE(tile_x, tile_y)
+);
+
+-- ── DISTRICTS ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS world_districts (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name          TEXT NOT NULL,
+  district_type TEXT NOT NULL,
+  center_x      INTEGER NOT NULL,
+  center_y      INTEGER NOT NULL,
+  radius        INTEGER NOT NULL DEFAULT 10,
+  building_count INTEGER NOT NULL DEFAULT 0,
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- ── INDEXES ──────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_world_players_username ON world_players(username);
 CREATE INDEX IF NOT EXISTS idx_world_properties_owner ON world_properties(owner_id);
@@ -116,6 +142,9 @@ CREATE INDEX IF NOT EXISTS idx_world_properties_pos ON world_properties(tile_x, 
 CREATE INDEX IF NOT EXISTS idx_world_businesses_owner ON world_businesses(owner_id);
 CREATE INDEX IF NOT EXISTS idx_world_events_time ON world_events(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_world_chat_time ON world_chat_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_world_buildings_pos ON world_buildings(tile_x, tile_y);
+CREATE INDEX IF NOT EXISTS idx_world_buildings_owner ON world_buildings(owner_id);
+CREATE INDEX IF NOT EXISTS idx_world_districts_pos ON world_districts(center_x, center_y);
 
 -- ── ROW LEVEL SECURITY ───────────────────────────────────────
 ALTER TABLE world_players ENABLE ROW LEVEL SECURITY;
@@ -214,6 +243,44 @@ CREATE POLICY "chat_select" ON world_chat_log FOR SELECT
 DROP POLICY IF EXISTS "chat_insert" ON world_chat_log;
 CREATE POLICY "chat_insert" ON world_chat_log FOR INSERT
   TO authenticated WITH CHECK (true);
+
+-- Buildings: anyone can read, authenticated can insert, owner can update/delete
+ALTER TABLE world_buildings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "buildings_select" ON world_buildings;
+CREATE POLICY "buildings_select" ON world_buildings FOR SELECT
+  TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "buildings_insert" ON world_buildings;
+CREATE POLICY "buildings_insert" ON world_buildings FOR INSERT
+  TO authenticated WITH CHECK (auth.uid() = owner_id OR owner_id IS NULL);
+
+DROP POLICY IF EXISTS "buildings_update" ON world_buildings;
+CREATE POLICY "buildings_update" ON world_buildings FOR UPDATE
+  TO authenticated USING (auth.uid() = owner_id OR owner_id IS NULL);
+
+DROP POLICY IF EXISTS "buildings_delete" ON world_buildings;
+CREATE POLICY "buildings_delete" ON world_buildings FOR DELETE
+  TO authenticated USING (auth.uid() = owner_id OR owner_id IS NULL);
+
+-- Districts: anyone can read, server-only write (service role)
+ALTER TABLE world_districts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "districts_select" ON world_districts;
+CREATE POLICY "districts_select" ON world_districts FOR SELECT
+  TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "districts_insert" ON world_districts;
+CREATE POLICY "districts_insert" ON world_districts FOR INSERT
+  TO service_role WITH CHECK (true);
+
+DROP POLICY IF EXISTS "districts_update" ON world_districts;
+CREATE POLICY "districts_update" ON world_districts FOR UPDATE
+  TO service_role USING (true);
+
+DROP POLICY IF EXISTS "districts_delete" ON world_districts;
+CREATE POLICY "districts_delete" ON world_districts FOR DELETE
+  TO service_role USING (true);
 
 -- ── AUTO-CREATE PLAYER PROFILE ON SIGNUP ─────────────────────
 CREATE OR REPLACE FUNCTION handle_new_world_player()
