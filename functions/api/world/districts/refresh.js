@@ -138,8 +138,11 @@ async function refreshDistricts(context) {
     );
 
     if (!buildingsResult.ok || !Array.isArray(buildingsResult.data)) {
-      return json({ ok: false, error: 'Failed to fetch buildings' }, 500);
+      console.error('[WORLD] district-refresh: building fetch failed:', buildingsResult.status, buildingsResult.data);
+      return json({ ok: false, error: 'Failed to fetch buildings: ' + (buildingsResult.data?.message || 'unknown') }, 500);
     }
+
+    console.log('[WORLD] district-refresh: found', buildingsResult.data.length, 'buildings');
 
     // Calculate new districts
     const newDistricts = findDistricts(buildingsResult.data);
@@ -166,15 +169,15 @@ async function refreshDistricts(context) {
     }
 
     // Delete old districts and insert new ones (simpler than diffing)
+    // Use a filter that's always true to delete all rows
     if (newDistricts.length > 0) {
-      // Delete all existing districts
+      // Delete all existing districts using neq filter (always true)
       const deleteResult = await supabaseFetch(
         context.env,
-        '/rest/v1/world_districts',
+        '/rest/v1/world_districts?id=neq.00000000-0000-0000-0000-000000000000',
         {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({})  // empty filter = delete all
+          headers: { 'Content-Type': 'application/json' }
         }
       );
       // ignore delete errors (might be empty)
@@ -221,14 +224,13 @@ async function refreshDistricts(context) {
         );
       }
     } else {
-      // No districts, clear all
+      // No districts, clear all using neq filter
       await supabaseFetch(
         context.env,
-        '/rest/v1/world_districts',
+        '/rest/v1/world_districts?id=neq.00000000-0000-0000-0000-000000000000',
         {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({})
+          headers: { 'Content-Type': 'application/json' }
         }
       );
       // Clear in_district on all buildings
@@ -252,7 +254,7 @@ async function refreshDistricts(context) {
       count: newDistricts.length
     });
   } catch (error) {
-    console.error('[WORLD] district refresh error:', error);
+    console.error('[WORLD] district refresh error:', error?.message, error?.stack);
     return json({ ok: false, error: error?.message || 'Failed to refresh districts' }, 500);
   }
 }
