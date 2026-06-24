@@ -207,7 +207,11 @@ async function refreshDistricts(context) {
 
       if (!insertResult.ok) {
         console.error('[WORLD] district insert failed:', insertResult.status, insertResult.data);
-        return json({ ok: false, error: 'Failed to save districts' }, 500);
+        return json({
+          ok: false,
+          error: 'Failed to save districts: ' + (insertResult.data?.message || JSON.stringify(insertResult.data) || 'unknown'),
+          supabaseError: insertResult.data
+        }, 500);
       }
 
       // Update in_district flag on buildings
