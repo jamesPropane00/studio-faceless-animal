@@ -194,9 +194,9 @@ async function refreshDistricts(context) {
         }
       }
 
-      // Generate unique integer IDs for each district (table id is INTEGER)
-      // Use timestamp + index to ensure uniqueness
-      const baseId = Date.now() * 1000;
+      // Generate unique integer IDs for each district (table id is INTEGER max 2147483647)
+      // Use random base + index
+      const baseId = Math.floor(Math.random() * 1000000000) + 1;
       const districtsWithIds = newDistricts.map((d, i) => ({ id: baseId + i, ...d }));
 
       // Insert new districts
