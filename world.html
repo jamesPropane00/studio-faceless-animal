@@ -2757,9 +2757,14 @@ function closeIncomePanel() {
 }
 
 function calculateAccumulatedIncome(building) {
-  if (!building.last_collected) return 0
+  // Accept either last_collected (ms timestamp) or last_collected_at (ISO string from server)
+  let lastCollected = building.last_collected
+  if (!lastCollected && building.last_collected_at) {
+    lastCollected = new Date(building.last_collected_at).getTime()
+  }
+  if (!lastCollected) return 0
   const now = Date.now()
-  const elapsed = now - building.last_collected
+  const elapsed = now - lastCollected
   const maxMs = 24 * 60 * 60 * 1000
   const cappedElapsed = Math.min(elapsed, maxMs)
   const minutes = cappedElapsed / 60000
@@ -2798,6 +2803,7 @@ async function collectIncome() {
         document.getElementById('statCoins').textContent = state.coins
         document.getElementById('statRep').textContent = state.rep
         currentIncomeBuilding.last_collected = Date.now()
+        currentIncomeBuilding.last_collected_at = new Date().toISOString()
         showToast('Income Collected', `+${data.coinsCollected} coins`)
         closeIncomePanel()
       } else {
@@ -3209,7 +3215,13 @@ async function setupMultiplayer() {
       }
     }
     if (payload.buildings) {
-      state.buildings = payload.buildings
+      // Normalize last_collected_at -> last_collected for client calculations
+      state.buildings = payload.buildings.map(b => {
+        if (b.last_collected_at && !b.last_collected) {
+          b.last_collected = new Date(b.last_collected_at).getTime()
+        }
+        return b
+      })
     }
     if (payload.districts) {
       state.districts = payload.districts
@@ -3312,7 +3324,13 @@ async function fetchWorldState() {
 
     const data = await res.json()
     if (data.ok) {
-      state.buildings = data.buildings || []
+      // Normalize last_collected_at -> last_collected for client calculations
+      state.buildings = (data.buildings || []).map(b => {
+        if (b.last_collected_at && !b.last_collected) {
+          b.last_collected = new Date(b.last_collected_at).getTime()
+        }
+        return b
+      })
       state.districts = data.districts || []
       console.log('[WORLD] Loaded', state.buildings.length, 'buildings,', state.districts.length, 'districts')
     } else {
