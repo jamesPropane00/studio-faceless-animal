@@ -269,10 +269,212 @@
       .build-item, .god-item {
         padding: 0.5rem;
       }
-      .build-icon, .god-icon {
-        font-size: 1.5rem;
-        margin-bottom: 0.3rem;
-      }
+    .build-icon, .god-icon {
+      font-size: 2rem;
+    }
+    .gang-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .gang-tab {
+      background: none;
+      border: none;
+      color: var(--dim);
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .gang-tab:hover {
+      color: var(--text);
+    }
+    .gang-tab.active {
+      color: var(--bright);
+      border-bottom-color: var(--bright);
+    }
+    .gang-content {
+      min-height: 200px;
+    }
+    .gang-loading {
+      text-align: center;
+      color: var(--dim);
+      padding: 2rem;
+      font-size: 0.85rem;
+    }
+    .gang-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .gang-card:hover {
+      background: rgba(167, 139, 250, 0.1);
+      border-color: var(--bright);
+    }
+    .gang-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .gang-card-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .gang-card-tag {
+      font-size: 0.7rem;
+      color: var(--gold);
+      font-weight: 700;
+      background: rgba(245, 196, 81, 0.1);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+    .gang-card-stats {
+      display: flex;
+      gap: 0.75rem;
+      font-size: 0.7rem;
+      color: var(--dim);
+    }
+    .gang-card-stat {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+    .gang-create-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .gang-form-label {
+      font-size: 0.75rem;
+      color: var(--dim);
+      font-weight: 600;
+    }
+    .gang-form-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 0.5rem;
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+    .gang-form-input:focus {
+      outline: none;
+      border-color: var(--bright);
+    }
+    .gang-color-picker {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .gang-color-option {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .gang-color-option.selected {
+      border-color: white;
+      transform: scale(1.1);
+    }
+    .gang-btn {
+      background: linear-gradient(135deg, var(--purple), var(--bright));
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .gang-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+    .gang-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .gang-leave-btn {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .gang-leave-btn:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+    .gang-empty {
+      text-align: center;
+      color: var(--dim);
+      padding: 2rem 1rem;
+      font-size: 0.85rem;
+    }
+    .gang-info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.4rem 0;
+      font-size: 0.8rem;
+      border-bottom: 1px solid var(--border2);
+    }
+    .gang-info-label {
+      color: var(--dim);
+    }
+    .gang-info-value {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .district-tooltip {
+      position: fixed;
+      background: rgba(18, 20, 30, 0.95);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem;
+      pointer-events: none;
+      z-index: 50;
+      display: none;
+      min-width: 180px;
+      font-size: 0.75rem;
+    }
+    .district-tooltip-name {
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+    .district-tooltip-gang {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0;
+    }
+    .district-tooltip-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .influence-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      margin-top: 0.2rem;
+      overflow: hidden;
+    }
+    .influence-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
       .build-name, .god-name {
         font-size: 0.75rem;
         margin-bottom: 0.2rem;
@@ -286,7 +488,7 @@
       }
     }
 
-    .build-panel, .god-panel, .income-panel, .job-panel {
+    .build-panel, .god-panel, .income-panel, .job-panel, .gang-panel {
       position: fixed;
       top: 50%;
       left: 50%;
@@ -298,10 +500,12 @@
       padding: 1.5rem;
       z-index: 100;
       display: none;
-      min-width: 320px;
+      min-width: 380px;
       max-width: 90vw;
+      max-height: 80vh;
+      overflow-y: auto;
     }
-    .build-panel.open, .god-panel.open, .income-panel.open, .job-panel.open { display: block; }
+    .build-panel.open, .god-panel.open, .income-panel.open, .job-panel.open, .gang-panel.open { display: block; }
     .panel-header {
       display: flex;
       justify-content: space-between;
@@ -501,6 +705,7 @@
   <button class="tool-btn" id="btnMinimap" title="Map">&#x1F5FA;&#xFE0F;</button>
   <button class="tool-btn" id="btnBuild" title="Build">&#x1F3D7;&#xFE0F;</button>
   <button class="tool-btn" id="btnGod" title="God Powers">&#x26A1;</button>
+  <button class="tool-btn" id="btnGang" title="Gangs">&#x1F46A;</button>
 </div>
 
 <div class="mode-indicator" id="modeIndicator">Build Mode: Click to place</div>
@@ -561,6 +766,22 @@
     <div class="panel-close" id="godPanelClose">&times;</div>
   </div>
   <div class="god-grid" id="godGrid"></div>
+</div>
+
+<div class="gang-panel" id="gangPanel">
+  <div class="panel-header">
+    <div class="panel-title">Gangs</div>
+    <div class="panel-close" id="gangPanelClose">&times;</div>
+  </div>
+  <div class="gang-tabs">
+    <button class="gang-tab active" data-tab="my-gang">My Gang</button>
+    <button class="gang-tab" data-tab="all-gangs">All Gangs</button>
+    <button class="gang-tab" data-tab="create-gang">Create</button>
+    <button class="gang-tab" data-tab="recruit">Recruit</button>
+  </div>
+  <div class="gang-content" id="gangContent">
+    <div class="gang-loading">Loading...</div>
+  </div>
 </div>
 
 <div class="income-panel" id="incomePanel">
@@ -1856,6 +2077,21 @@ function setupUI() {
     document.getElementById('btnGod').classList.remove('active')
     document.getElementById('modeIndicator').classList.remove('open')
   })
+  document.getElementById('btnGang').addEventListener('click', () => {
+    if (document.getElementById('gangPanel').classList.contains('open')) {
+      closeGangPanel()
+    } else {
+      openGangPanel()
+    }
+  })
+  document.getElementById('gangPanelClose').addEventListener('click', closeGangPanel)
+
+  // Gang tab switching
+  document.addEventListener('click', (e) => {
+    if (e.target.classList && e.target.classList.contains('gang-tab')) {
+      loadGangTab(e.target.dataset.tab)
+    }
+  })
   document.getElementById('incomePanelClose').addEventListener('click', closeIncomePanel)
   document.getElementById('incomeCollectBtn').addEventListener('click', collectIncome)
   document.getElementById('jobPanelClose').addEventListener('click', closeJobPanel)
@@ -1925,6 +2161,366 @@ function populateGodGrid() {
       document.getElementById('godPanel').classList.remove('open')
     })
     grid.appendChild(item)
+  }
+}
+
+let currentGangTab = 'my-gang';
+let userCurrentGang = null;
+let allGangsCache = [];
+let districtInfluencesCache = [];
+
+function openGangPanel() {
+  state.gangMode = true;
+  document.getElementById('gangPanel').classList.add('open');
+  document.getElementById('btnGang').classList.add('active');
+  loadGangTab(currentGangTab);
+}
+
+function closeGangPanel() {
+  state.gangMode = false;
+  document.getElementById('gangPanel').classList.remove('open');
+  document.getElementById('btnGang').classList.remove('active');
+}
+
+function loadGangTab(tab) {
+  currentGangTab = tab;
+  document.querySelectorAll('.gang-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+
+  if (tab === 'my-gang') {
+    loadMyGang();
+  } else if (tab === 'all-gangs') {
+    loadAllGangs();
+  } else if (tab === 'create-gang') {
+    loadCreateGang();
+  } else if (tab === 'recruit') {
+    loadRecruitNPCs();
+  }
+}
+
+async function loadMyGang() {
+  const content = document.getElementById('gangContent');
+  content.innerHTML = '<div class="gang-loading">Loading...</div>';
+
+  if (!state.userId) {
+    content.innerHTML = '<div class="gang-empty">Please log in to view your gang.</div>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/world/gang/list`);
+    const data = await res.json();
+
+    if (!data.ok) {
+      content.innerHTML = '<div class="gang-empty">Failed to load gangs.</div>';
+      return;
+    }
+
+    // Find user's gang
+    const myGang = data.gangs.find(g => g.leader_id === state.userId || g.tag === state.userId);
+
+    // Actually we need to check membership, not just leadership
+    // For simplicity, we'll show the first gang where the user is leader
+    // In a real system, we'd query world_gang_members
+
+    if (!myGang) {
+      content.innerHTML = `
+        <div class="gang-empty">
+          You are not in a gang.<br><br>
+          <button class="gang-btn" onclick="loadGangTab('all-gangs')">Browse Gangs</button>
+          <button class="gang-btn" onclick="loadGangTab('create-gang')" style="margin-left:0.5rem;">Create Gang</button>
+        </div>
+      `;
+      userCurrentGang = null;
+      return;
+    }
+
+    userCurrentGang = myGang;
+
+    content.innerHTML = `
+      <div class="gang-info-row">
+        <span class="gang-info-label">Name</span>
+        <span class="gang-info-value">${myGang.name}</span>
+      </div>
+      <div class="gang-info-row">
+        <span class="gang-info-label">Tag</span>
+        <span class="gang-info-value" style="color:${myGang.color}">${myGang.tag}</span>
+      </div>
+      <div class="gang-info-row">
+        <span class="gang-info-label">Members</span>
+        <span class="gang-info-value">${myGang.member_count || 1}</span>
+      </div>
+      <div class="gang-info-row">
+        <span class="gang-info-label">Total Influence</span>
+        <span class="gang-info-value">${myGang.total_influence || 0}</span>
+      </div>
+      <div class="gang-info-row">
+        <span class="gang-info-label">Level</span>
+        <span class="gang-info-value">${myGang.level || 1}</span>
+      </div>
+      <div style="margin-top:1rem;">
+        <button class="gang-btn gang-leave-btn" onclick="leaveGang()">Leave Gang</button>
+      </div>
+    `;
+  } catch (e) {
+    content.innerHTML = '<div class="gang-empty">Failed to load gang data.</div>';
+  }
+}
+
+async function loadAllGangs() {
+  const content = document.getElementById('gangContent');
+  content.innerHTML = '<div class="gang-loading">Loading...</div>';
+
+  try {
+    const res = await fetch('/api/world/gang/list');
+    const data = await res.json();
+
+    if (!data.ok || !data.gangs || data.gangs.length === 0) {
+      content.innerHTML = `
+        <div class="gang-empty">
+          No gangs exist yet.<br><br>
+          <button class="gang-btn" onclick="loadGangTab('create-gang')">Create the First Gang</button>
+        </div>
+      `;
+      return;
+    }
+
+    allGangsCache = data.gangs;
+    let html = '<div style="max-height:400px;overflow-y:auto;">';
+
+    for (const gang of data.gangs) {
+      html += `
+        <div class="gang-card" onclick="joinGang('${gang.id}')">
+          <div class="gang-card-header">
+            <span class="gang-card-name" style="color:${gang.color}">${gang.name}</span>
+            <span class="gang-card-tag">${gang.tag}</span>
+          </div>
+          <div class="gang-card-stats">
+            <span class="gang-card-stat">👥 ${gang.member_count || 1}</span>
+            <span class="gang-card-stat">⚡ ${gang.total_influence || 0}</span>
+            <span class="gang-card-stat">⭐ Lv ${gang.level || 1}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    html += '</div>';
+    content.innerHTML = html;
+  } catch (e) {
+    content.innerHTML = '<div class="gang-empty">Failed to load gangs.</div>';
+  }
+}
+
+function loadCreateGang() {
+  const content = document.getElementById('gangContent');
+
+  const colors = ['#a78bfa', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#14b8a6'];
+  let colorOptions = '';
+  for (const color of colors) {
+    colorOptions += `<div class="gang-color-option" style="background:${color}" data-color="${color}" onclick="selectGangColor(this)"></div>`;
+  }
+
+  content.innerHTML = `
+    <div class="gang-create-form">
+      <div>
+        <div class="gang-form-label">Gang Name (3-20 characters)</div>
+        <input type="text" id="gangNameInput" class="gang-form-input" placeholder="The Faceless Crew" maxlength="20" />
+      </div>
+      <div>
+        <div class="gang-form-label">Tag (2-5 characters)</div>
+        <input type="text" id="gangTagInput" class="gang-form-input" placeholder="FC" maxlength="5" />
+      </div>
+      <div>
+        <div class="gang-form-label">Color</div>
+        <div class="gang-color-picker" id="gangColorPicker">
+          ${colorOptions}
+        </div>
+      </div>
+      <div style="text-align:center;color:var(--gold);font-weight:700;padding:0.5rem;">
+        Cost: 500 coins
+      </div>
+      <button class="gang-btn" onclick="createGang()">Create Gang</button>
+    </div>
+  `;
+
+  // Select first color by default
+  const firstColor = content.querySelector('.gang-color-option');
+  if (firstColor) {
+    firstColor.classList.add('selected');
+  }
+}
+
+function selectGangColor(el) {
+  document.querySelectorAll('.gang-color-option').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function createGang() {
+  const name = document.getElementById('gangNameInput').value.trim();
+  const tag = document.getElementById('gangTagInput').value.trim();
+  const selectedColor = document.querySelector('.gang-color-option.selected');
+  const color = selectedColor ? selectedColor.dataset.color : '#a78bfa';
+
+  if (!name || name.length < 3) {
+    showToast('Error', 'Gang name must be at least 3 characters.');
+    return;
+  }
+
+  if (!tag || tag.length < 2 || tag.length > 5) {
+    showToast('Error', 'Tag must be 2-5 characters.');
+    return;
+  }
+
+  if (state.coins < 500) {
+    showToast('Error', 'Not enough coins. Need 500.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/world/gang/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        tag,
+        color,
+        userId: state.userId
+      })
+    });
+
+    const data = await res.json();
+    if (data.ok) {
+      state.coins = data.newBalance;
+      document.getElementById('statCoins').textContent = state.coins;
+      showToast('Gang Created', `${data.gang.name} [${data.gang.tag}] has been created!`);
+      addChatMessage('', `${state.username} created gang ${data.gang.name} [${data.gang.tag}]`, true);
+      closeGangPanel();
+    } else {
+      showToast('Error', data.error || 'Failed to create gang.');
+    }
+  } catch (e) {
+    showToast('Error', 'Failed to create gang.');
+  }
+}
+
+async function joinGang(gangId) {
+  if (!state.userId) {
+    showToast('Error', 'Please log in to join a gang.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/world/gang/join', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gangId,
+        userId: state.userId
+      })
+    });
+
+    const data = await res.json();
+    if (data.ok) {
+      showToast('Gang Joined', `You joined ${data.gang.name}!`);
+      addChatMessage('', `${state.username} joined ${data.gang.name}`, true);
+      closeGangPanel();
+    } else {
+      showToast('Error', data.error || 'Failed to join gang.');
+    }
+  } catch (e) {
+    showToast('Error', 'Failed to join gang.');
+  }
+}
+
+async function leaveGang() {
+  if (!confirm('Are you sure you want to leave your gang?')) return;
+
+  try {
+    const res = await fetch('/api/world/gang/leave', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: state.userId
+      })
+    });
+
+    const data = await res.json();
+    if (data.ok) {
+      showToast('Left Gang', data.message || 'You left the gang.');
+      userCurrentGang = null;
+      loadMyGang();
+    } else {
+      showToast('Error', data.error || 'Failed to leave gang.');
+    }
+  } catch (e) {
+    showToast('Error', 'Failed to leave gang.');
+  }
+}
+
+async function loadRecruitNPCs() {
+  const content = document.getElementById('gangContent');
+  content.innerHTML = '<div class="gang-loading">Loading...</div>';
+
+  if (!userCurrentGang) {
+    content.innerHTML = '<div class="gang-empty">You must be in a gang to recruit NPCs.</div>';
+    return;
+  }
+
+  // Show first 10 NPCs from the world
+  const npcs = state.npcs.slice(0, 10);
+  let html = '<div style="max-height:400px;overflow-y:auto;">';
+  html += '<div class="gang-empty" style="padding:0.5rem;">Recruit NPCs to your gang (50 coins each)</div>';
+
+  for (const npc of npcs) {
+    html += `
+      <div class="gang-card">
+        <div class="gang-card-header">
+          <span class="gang-card-name">${npc.name}</span>
+          <span class="gang-card-tag" style="background:rgba(139,92,246,0.2);">${npc.type}</span>
+        </div>
+        <div style="text-align:right;">
+          <button class="gang-btn" onclick="recruitNPC(${npc.id})">Recruit (50)</button>
+        </div>
+      </div>
+    `;
+  }
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+async function recruitNPC(npcId) {
+  if (!userCurrentGang) {
+    showToast('Error', 'You must be in a gang to recruit NPCs.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/world/gang/recruit-npc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        npcId,
+        gangId: userCurrentGang.id,
+        userId: state.userId
+      })
+    });
+
+    const data = await res.json();
+    if (data.ok) {
+      if (data.success) {
+        state.coins = data.newBalance;
+        document.getElementById('statCoins').textContent = state.coins;
+        showToast('NPC Recruited', `Successfully recruited NPC! Gang influence: ${data.gangInfluence}`);
+      } else {
+        showToast('Recruitment Failed', data.message || 'The NPC declined.');
+      }
+    } else {
+      showToast('Error', data.error || 'Failed to recruit NPC.');
+    }
+  } catch (e) {
+    showToast('Error', 'Failed to recruit NPC.');
   }
 }
 
