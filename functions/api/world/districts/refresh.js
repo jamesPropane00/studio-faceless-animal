@@ -194,6 +194,16 @@ async function refreshDistricts(context) {
         }
       }
 
+      // Generate UUIDs for each district (gen_random_uuid may not be enabled)
+      function uuidv4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0;
+          const v = c == 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      }
+      const districtsWithIds = newDistricts.map(d => ({ id: uuidv4(), ...d }));
+
       // Insert new districts
       const insertResult = await supabaseFetch(
         context.env,
@@ -201,7 +211,7 @@ async function refreshDistricts(context) {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
-          body: JSON.stringify(newDistricts)
+          body: JSON.stringify(districtsWithIds)
         }
       );
 
