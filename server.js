@@ -4984,7 +4984,7 @@ function updateBuildingDecay(dt) {
 
 function updateDistricts() {
   const clusterRadius = 15
-  const minBuildings = 5
+  const minBuildings = 3
   
   const used = new Set()
   const newDistricts = []

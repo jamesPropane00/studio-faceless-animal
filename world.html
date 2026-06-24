@@ -2689,16 +2689,45 @@ let jobTimer = null
 function openIncomePanel(buildingId) {
   const building = state.buildings.find(b => b.id === buildingId)
   if (!building) return
-  
+
+  // Debug logging for income diagnosis
+  const now = Date.now()
+  const elapsed = building.last_collected_at ? (now - building.last_collected_at) : null
+  const minutes = elapsed ? (elapsed / 60000) : null
+  const rawCalc = building.income_rate && minutes ? (building.income_rate * minutes) : 0
+  const inDistrict = building.in_district
+  const adjustedCalc = inDistrict ? rawCalc * 1.2 : rawCalc
+
+  console.log('[INCOME DEBUG]', {
+    buildingId: building.id,
+    building_type: building.building_type,
+    income_rate: building.income_rate,
+    owner_id: building.owner_id,
+    current_user_id: state.userId,
+    is_collectable: building.owner_id === state.userId,
+    last_collected_at: building.last_collected_at,
+    last_collected_date: building.last_collected_at ? new Date(building.last_collected_at).toISOString() : null,
+    now: now,
+    now_date: new Date(now).toISOString(),
+    elapsed_ms: elapsed,
+    elapsed_minutes: minutes,
+    raw_calculated_income: Math.floor(rawCalc),
+    in_district: inDistrict,
+    adjusted_calculated_income: Math.floor(adjustedCalc),
+    calculated_income: calculateAccumulatedIncome(building),
+    condition: building.condition,
+    condition_note: 'income may be reduced if condition is low'
+  })
+
   currentIncomeBuilding = building
   const type = BUILDING_TYPES[building.building_type]
-  
+
   document.getElementById('incomeBuildingName').textContent = type.name
   document.getElementById('incomeRate').textContent = building.income_rate
-  
+
   const accumulated = calculateAccumulatedIncome(building)
   document.getElementById('incomeAmount').textContent = accumulated
-  
+
   document.getElementById('incomePanel').classList.add('open')
 }
 
@@ -3325,13 +3354,23 @@ function drawDistrictOverlay(district) {
   if (state.districtOverlayOpacity <= 0) return
 
   const influence = state.districtInfluences.find(d => d.district_id === district.id)
-  if (!influence || !influence.influences || influence.influences.length === 0) return
-
   const cached = state.districtScreenCache.get(district.id)
   if (!cached) return
 
   const { sx, sy, radius } = cached
   if (radius < 5) return
+
+  if (!influence || !influence.influences || influence.influences.length === 0) {
+    // Unclaimed district: very subtle gray tint
+    const gradient = ctx.createRadialGradient(sx, sy, 0, sx, sy, radius)
+    gradient.addColorStop(0, `rgba(100, 100, 110, ${0.05 * state.districtOverlayOpacity})`)
+    gradient.addColorStop(1, `rgba(100, 100, 110, 0)`)
+    ctx.fillStyle = gradient
+    ctx.beginPath()
+    ctx.arc(sx, sy, radius, 0, Math.PI * 2)
+    ctx.fill()
+    return
+  }
 
   const top = influence.influences[0]
   const topPercent = top.percent
@@ -3364,7 +3403,6 @@ function drawTerritoryBorder(district) {
   if (state.districtOverlayOpacity <= 0) return
 
   const influence = state.districtInfluences.find(d => d.district_id === district.id)
-  if (!influence || !influence.influences || influence.influences.length === 0) return
 
   const cached = state.districtScreenCache.get(district.id)
   if (!cached) return
@@ -3372,8 +3410,21 @@ function drawTerritoryBorder(district) {
   const { sx, sy, radius } = cached
   if (radius < 10) return
 
-  const top = influence.influences[0]
   const finalAlpha = state.districtOverlayOpacity
+
+  if (!influence || !influence.influences || influence.influences.length === 0) {
+    // Unclaimed district: subtle gray/white dashed outline
+    ctx.beginPath()
+    ctx.arc(sx, sy, radius, 0, Math.PI * 2)
+    ctx.strokeStyle = `rgba(200, 200, 210, ${0.5 * finalAlpha})`
+    ctx.lineWidth = 1
+    ctx.setLineDash([4, 6])
+    ctx.stroke()
+    ctx.setLineDash([])
+    return
+  }
+
+  const top = influence.influences[0]
 
   // Glow
   ctx.beginPath()
@@ -3394,17 +3445,16 @@ function drawTerritoryBorder(district) {
 
 function showDistrictTooltip(mouseX, mouseY, district) {
   const influence = state.districtInfluences.find(d => d.district_id === district.id)
-  if (!influence) {
-    hideDistrictTooltip()
-    return
-  }
-
-  const status = getDistrictStatus(influence.influences)
 
   let html = `<div class="district-tooltip-name">${district.name || 'Unknown District'}</div>`
-  html += `<div class="district-tooltip-status" style="color:${status.color}">${status.status}</div>`
 
-  if (influence.influences && influence.influences.length > 0) {
+  if (!influence || !influence.influences || influence.influences.length === 0) {
+    html += `<div class="district-tooltip-status" style="color:#999">Unclaimed</div>`
+    html += `<div class="district-tooltip-label">No gangs control this district yet.</div>`
+  } else {
+    const status = getDistrictStatus(influence.influences)
+    html += `<div class="district-tooltip-status" style="color:${status.color}">${status.status}</div>`
+
     html += '<div class="district-tooltip-label">Top Gangs:</div>'
     for (const inf of influence.influences) {
       html += `
