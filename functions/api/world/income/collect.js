@@ -106,16 +106,22 @@ export async function onRequestPost(context) {
     const newRep = currentRep + 1;
 
     // Update player state
-    const updatePlayer = await supabaseFetch(context.env, `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify([{
-        user_id: userId,
-        coins: newCoins,
-        reputation: newRep,
-        updated_at: new Date().toISOString()
-      }])
-    });
+    if (userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+      const updatePlayer = await supabaseFetch(context.env, `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify([{
+          user_id: userId,
+          coins: newCoins,
+          reputation: newRep,
+          updated_at: new Date().toISOString()
+        }])
+      });
+
+      if (!updatePlayer.ok) {
+        console.error('[WORLD] income/collect player-state upsert failed:', updatePlayer.status, updatePlayer.data);
+      }
+    }
 
     // Update building last_collected_at
     const updateBuilding = await supabaseFetch(context.env, `/rest/v1/world_building_states?id=eq.${buildingId}`, {

@@ -109,7 +109,7 @@ export async function onRequestPost(context) {
     }
 
     // Update player reputation (+5 for building)
-    if (userId) {
+    if (userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
       const playerQuery = `select=reputation&user_id=eq.${encodeURIComponent(userId)}`;
       const playerResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?${playerQuery}`);
       
@@ -118,7 +118,7 @@ export async function onRequestPost(context) {
         currentRep = playerResult.data[0].reputation || 0;
       }
 
-      await supabaseFetch(context.env, `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`, {
+      const upsertResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify([{
@@ -128,6 +128,10 @@ export async function onRequestPost(context) {
           updated_at: new Date().toISOString()
         }])
       });
+
+      if (!upsertResult.ok) {
+        console.error('[WORLD] building/place player-state upsert failed:', upsertResult.status, upsertResult.data);
+      }
     }
 
     return json({

@@ -114,17 +114,23 @@ export async function onRequestPost(context) {
     const newReputation = (player.reputation || 0) + 2;
 
     // Update player state
-    await supabaseFetch(context.env, `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        coins: newCoins,
-        reputation: newReputation,
-        current_job_id: null,
-        job_started_at: null,
-        updated_at: new Date().toISOString()
-      })
-    });
+    if (userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+      const completeResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          coins: newCoins,
+          reputation: newReputation,
+          current_job_id: null,
+          job_started_at: null,
+          updated_at: new Date().toISOString()
+        })
+      });
+
+      if (!completeResult.ok) {
+        console.error('[WORLD] job/complete player-state update failed:', completeResult.status, completeResult.data);
+      }
+    }
 
     return json({
       ok: true,

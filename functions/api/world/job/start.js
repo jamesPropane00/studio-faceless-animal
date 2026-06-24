@@ -89,16 +89,22 @@ export async function onRequestPost(context) {
     const startTime = Date.now();
 
     // Update player state with job
-    const updatePlayer = await supabaseFetch(context.env, `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify([{
-        user_id: userId,
-        current_job_id: buildingId,
-        job_started_at: new Date(startTime).toISOString(),
-        updated_at: new Date().toISOString()
-      }])
-    });
+    if (userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+      const updatePlayer = await supabaseFetch(context.env, `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify([{
+          user_id: userId,
+          current_job_id: buildingId,
+          job_started_at: new Date(startTime).toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+      });
+
+      if (!updatePlayer.ok) {
+        console.error('[WORLD] job/start player-state upsert failed:', updatePlayer.status, updatePlayer.data);
+      }
+    }
 
     return json({
       ok: true,
