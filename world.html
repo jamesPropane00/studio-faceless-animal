@@ -256,6 +256,33 @@
       .chat-panel{width:calc(100vw - 16px)}
       .player-list{right:4px;max-width:160px}
       .brand-badge .tag{display:none}
+      .build-panel, .god-panel {
+        padding: 1rem;
+        min-width: 280px;
+        max-width: 95vw;
+      }
+      .build-grid, .god-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.5rem;
+      }
+      .build-item, .god-item {
+        padding: 0.5rem;
+      }
+      .build-icon, .god-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.3rem;
+      }
+      .build-name, .god-name {
+        font-size: 0.75rem;
+        margin-bottom: 0.2rem;
+      }
+      .build-cost, .god-cost {
+        font-size: 0.65rem;
+      }
+      .build-desc, .god-desc {
+        font-size: 0.6rem;
+        margin-top: 0.15rem;
+      }
     }
 
     .build-panel, .god-panel, .income-panel, .job-panel {
@@ -1118,17 +1145,23 @@ function drawWorldEvents() {
 }
 
 function worldToScreen(wx, wy) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const logicalWidth = canvas.width / dpr
+  const logicalHeight = canvas.height / dpr
   const iso_x = (wx - wy) * (TILE_W / 2)
   const iso_y = (wx + wy) * (TILE_H / 2)
   return {
-    x: (iso_x - state.camera.x) * state.camera.zoom + canvas.width / 2,
-    y: (iso_y - state.camera.y) * state.camera.zoom + canvas.height / 2
+    x: (iso_x - state.camera.x) * state.camera.zoom + logicalWidth / 2,
+    y: (iso_y - state.camera.y) * state.camera.zoom + logicalHeight / 2
   }
 }
 
 function screenToWorld(sx, sy) {
-  const rx = (sx - canvas.width / 2) / state.camera.zoom + state.camera.x
-  const ry = (sy - canvas.height / 2) / state.camera.zoom + state.camera.y
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const logicalWidth = canvas.width / dpr
+  const logicalHeight = canvas.height / dpr
+  const rx = (sx - logicalWidth / 2) / state.camera.zoom + state.camera.x
+  const ry = (sy - logicalHeight / 2) / state.camera.zoom + state.camera.y
   const wx = (rx / (TILE_W / 2) + ry / (TILE_H / 2)) / 2
   const wy = (ry / (TILE_H / 2) - rx / (TILE_W / 2)) / 2
   return { x: wx, y: wy }
@@ -1859,6 +1892,8 @@ function populateBuildGrid() {
       item.classList.add('selected')
       state.buildType = type
       showToast('Build Mode', `Click on the map to place ${info.name}`)
+      // Close the panel after selection
+      document.getElementById('buildPanel').classList.remove('open')
     })
     grid.appendChild(item)
   }
@@ -1881,6 +1916,8 @@ function populateGodGrid() {
       item.classList.add('selected')
       state.godPower = type
       showToast('God Mode', `Click on the map to trigger ${info.name}`)
+      // Close the panel after selection
+      document.getElementById('godPanel').classList.remove('open')
     })
     grid.appendChild(item)
   }
