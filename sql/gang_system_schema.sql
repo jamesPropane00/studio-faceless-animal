@@ -11,8 +11,9 @@ ALTER TABLE world_gangs ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1;
 ALTER TABLE world_gangs ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();
 
 -- ── WORLD_GANG_MEMBERS TABLE ────────────────────────────────
+-- Note: Using BIGSERIAL for auto-incrementing bigint IDs instead of gen_random_uuid()
 CREATE TABLE IF NOT EXISTS world_gang_members (
-  id BIGINT PRIMARY KEY DEFAULT gen_random_uuid(),
+  id BIGSERIAL PRIMARY KEY,
   gang_id UUID NOT NULL REFERENCES world_gangs(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('leader', 'officer', 'member')),
@@ -23,7 +24,7 @@ CREATE TABLE IF NOT EXISTS world_gang_members (
 
 -- ── DISTRICT INFLUENCE TABLE ────────────────────────────────
 CREATE TABLE IF NOT EXISTS world_district_influence (
-  id BIGINT PRIMARY KEY DEFAULT gen_random_uuid(),
+  id BIGSERIAL PRIMARY KEY,
   district_id INTEGER NOT NULL,
   gang_id UUID NOT NULL REFERENCES world_gangs(id) ON DELETE CASCADE,
   influence_percent INTEGER NOT NULL DEFAULT 0 CHECK (influence_percent >= 0 AND influence_percent <= 100),
@@ -33,7 +34,7 @@ CREATE TABLE IF NOT EXISTS world_district_influence (
 
 -- ── NPC AFFILIATIONS TABLE ───────────────────────────────────
 CREATE TABLE IF NOT EXISTS world_npc_affiliations (
-  id BIGINT PRIMARY KEY DEFAULT gen_random_uuid(),
+  id BIGSERIAL PRIMARY KEY,
   npc_id INTEGER NOT NULL,
   gang_id UUID NOT NULL REFERENCES world_gangs(id) ON DELETE CASCADE,
   affiliation_strength INTEGER NOT NULL DEFAULT 50 CHECK (affiliation_strength >= 0 AND affiliation_strength <= 100),
@@ -44,7 +45,7 @@ CREATE TABLE IF NOT EXISTS world_npc_affiliations (
 
 -- ── GANG CHAT TABLE ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS world_gang_chat (
-  id BIGINT PRIMARY KEY DEFAULT gen_random_uuid(),
+  id BIGSERIAL PRIMARY KEY,
   gang_id UUID NOT NULL REFERENCES world_gangs(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL,
   username TEXT NOT NULL,
@@ -54,7 +55,7 @@ CREATE TABLE IF NOT EXISTS world_gang_chat (
 
 -- ── GANG EVENTS TABLE ────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS world_gang_events (
-  id BIGINT PRIMARY KEY DEFAULT gen_random_uuid(),
+  id BIGSERIAL PRIMARY KEY,
   gang_id UUID NOT NULL REFERENCES world_gangs(id) ON DELETE CASCADE,
   event_type TEXT NOT NULL CHECK (event_type IN ('party', 'charity', 'festival', 'construction')),
   district_id INTEGER,
@@ -85,9 +86,9 @@ DO $$
 DECLARE
   pol RECORD;
 BEGIN
-  FOR pol IN 
-    SELECT schemaname, tablename, policyname 
-    FROM pg_policies 
+  FOR pol IN
+    SELECT schemaname, tablename, policyname
+    FROM pg_policies
     WHERE tablename IN ('world_gang_members', 'world_district_influence', 'world_npc_affiliations', 'world_gang_chat', 'world_gang_events')
   LOOP
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I.%I', pol.policyname, pol.schemaname, pol.tablename);
