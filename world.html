@@ -452,11 +452,30 @@
       color: var(--text);
       margin-bottom: 0.3rem;
     }
+    .district-tooltip-status {
+      font-size: 0.7rem;
+      margin-bottom: 0.3rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .district-tooltip-label {
+      font-size: 0.7rem;
+      color: var(--dim);
+      margin-bottom: 0.2rem;
+    }
     .district-tooltip-gang {
       display: flex;
       align-items: center;
       gap: 0.3rem;
       padding: 0.2rem 0;
+    }
+    .district-tooltip-tag {
+      flex: 1;
+      font-weight: 600;
+    }
+    .district-tooltip-percent {
+      font-weight: 700;
     }
     .district-tooltip-color {
       width: 10px;
@@ -706,6 +725,7 @@
   <button class="tool-btn" id="btnBuild" title="Build">&#x1F3D7;&#xFE0F;</button>
   <button class="tool-btn" id="btnGod" title="God Powers">&#x26A1;</button>
   <button class="tool-btn" id="btnGang" title="Gangs">&#x1F46A;</button>
+  <button class="tool-btn" id="btnInfluenceView" title="Toggle Influence View"><span id="influenceViewIcon">&#x1F5FA;</span></button>
 </div>
 
 <div class="mode-indicator" id="modeIndicator">Build Mode: Click to place</div>
@@ -823,6 +843,8 @@
   </div>
 </div>
 
+<div class="district-tooltip" id="districtTooltip" style="display:none;"></div>
+
 <script type="module">
 import { supabase, SUPABASE_READY } from '/assets/js/supabase-client.js'
 import { getStoredSession } from '/assets/js/auth.js'
@@ -866,6 +888,12 @@ const state = {
   npcs: [],
   buildings: [],
   districts: [],
+  districtInfluences: [],
+  npcGangMap: new Map(),
+  userGang: null,
+  influenceViewEnabled: true,
+  districtOverlayOpacity: 1.0,
+  districtScreenCache: new Map(),
   particles: [],
   time: 0.5,
   timeSpeed: 0.0003,
@@ -1549,7 +1577,24 @@ function drawBuilding(building) {
   ctx.fill()
   
   if (building.owner_id && state.camera.zoom > 0.6) {
-    ctx.strokeStyle = 'rgba(167,139,250,0.6)'
+    // Use gang color if user has a gang, otherwise use default purple
+    const ringColor = state.userGang ? state.userGang.color : '#a78bfa'
+    const ringAlpha = state.userGang ? '0.6' : '0.6'
+
+    // Glow
+    ctx.strokeStyle = hexToRgba(ringColor, 0.3)
+    ctx.lineWidth = 6
+    ctx.beginPath()
+    ctx.moveTo(s.x, s.y - hh - elev)
+    ctx.lineTo(s.x + hw, s.y - elev)
+    ctx.lineTo(s.x, s.y + hh - elev)
+    ctx.lineTo(s.x - hw, s.y - elev)
+    ctx.closePath()
+    ctx.stroke()
+
+    // Solid ring
+    ctx.strokeStyle = ringColor
+    ctx.globalAlpha = parseFloat(ringAlpha)
     ctx.lineWidth = 2
     ctx.beginPath()
     ctx.moveTo(s.x, s.y - hh - elev)
@@ -1558,6 +1603,7 @@ function drawBuilding(building) {
     ctx.lineTo(s.x - hw, s.y - elev)
     ctx.closePath()
     ctx.stroke()
+    ctx.globalAlpha = 1.0
   }
   
   if (condition < 50 && state.camera.zoom > 0.5) {
@@ -1644,6 +1690,40 @@ function drawMinimap() {
     }
   }
 
+  // Draw district gang color overlays
+  if (state.influenceViewEnabled && state.districtOverlayOpacity > 0 && state.districtInfluences && state.districtInfluences.length > 0) {
+    for (const di of state.districtInfluences) {
+      if (!di.influences || di.influences.length === 0) continue
+      const district = state.districts.find(d => d.id === di.district_id)
+      if (!district) continue
+
+      const centerX = district.center_x * scale
+      const centerY = district.center_y * scale
+      const radius = district.radius * scale * 0.5
+      const top = di.influences[0]
+      const topPercent = top.percent
+      const intensity = Math.max(0.08, Math.min(0.25, (topPercent - 50) / 40 * 0.17 + 0.08))
+      const finalAlpha = intensity * state.districtOverlayOpacity
+
+      if (topPercent < 60 && di.influences.length > 1) {
+        // Contested: striped
+        const stripeHeight = 2
+        for (let y = -radius; y < radius; y += stripeHeight * 2) {
+          miniCtx.fillStyle = Math.floor(y / stripeHeight) % 2 === 0
+            ? hexToRgba(top.color, finalAlpha)
+            : hexToRgba(di.influences[1].color, finalAlpha * 0.7)
+          miniCtx.fillRect(centerX - radius, centerY + y, radius * 2, stripeHeight)
+        }
+      } else {
+        // Stable/Dominated: solid tint
+        miniCtx.fillStyle = hexToRgba(top.color, finalAlpha)
+        miniCtx.beginPath()
+        miniCtx.arc(centerX, centerY, radius, 0, Math.PI * 2)
+        miniCtx.fill()
+      }
+    }
+  }
+
   for (const [, p] of state.otherPlayers) {
     miniCtx.fillStyle = '#a78bfa'
     miniCtx.fillRect(p.x * scale - 2, p.y * scale - 2, 4, 4)
@@ -1716,8 +1796,23 @@ function render() {
 
   drawOrder.sort((a, b) => a.sort - b.sort)
 
+  // Update district screen cache and draw influence overlays
+  if (state.influenceViewEnabled) {
+    updateDistrictScreenCache()
+    for (const district of state.districts) {
+      drawDistrictOverlay(district)
+    }
+  }
+
   for (const district of state.districts) {
     drawDistrict(district)
+  }
+
+  // Draw territory borders on top
+  if (state.influenceViewEnabled) {
+    for (const district of state.districts) {
+      drawTerritoryBorder(district)
+    }
   }
 
   for (const item of drawOrder) {
@@ -1728,16 +1823,41 @@ function render() {
     else if (item.type === 'npc') {
       const npc = item.data
       drawEntity(item.x, item.y, npc.color, npc.name, false)
-      
+
       if (state.camera.zoom > 0.6) {
         const s = worldToScreen(item.x, item.y)
-        
+
+        // Gang tag above NPC name
+        const npcGang = state.npcGangMap.get(npc.id)
+        if (npcGang) {
+          const tagFontSize = 8 * state.camera.zoom
+          const tagWidth = 28 * state.camera.zoom
+          const tagHeight = 12 * state.camera.zoom
+          const tagY = s.y - 35 * state.camera.zoom
+
+          // Tag background
+          ctx.fillStyle = npcGang.color
+          ctx.beginPath()
+          if (ctx.roundRect) {
+            ctx.roundRect(s.x - tagWidth / 2, tagY - tagHeight, tagWidth, tagHeight, 2)
+          } else {
+            ctx.rect(s.x - tagWidth / 2, tagY - tagHeight, tagWidth, tagHeight)
+          }
+          ctx.fill()
+
+          // Tag text
+          ctx.font = `bold ${tagFontSize}px Inter`
+          ctx.textAlign = 'center'
+          ctx.fillStyle = 'white'
+          ctx.fillText(npcGang.tag, s.x, tagY - 3 * state.camera.zoom)
+        }
+
         if (npc.type === 'vendor' || npc.type === 'merchant') {
           ctx.font = `${10 * state.camera.zoom}px Inter`
           ctx.textAlign = 'center'
           ctx.fillText('\u{1F3EA}', s.x, s.y - 22 * state.camera.zoom)
         }
-        
+
         if (npc.state === 'sleeping') {
           ctx.font = `${8 * state.camera.zoom}px Inter`
           ctx.textAlign = 'center'
@@ -1749,7 +1869,7 @@ function render() {
           ctx.textAlign = 'center'
           ctx.fillText(npc.carrying, s.x + 10 * state.camera.zoom, s.y - 12 * state.camera.zoom)
         }
-        
+
         if (npc.type === 'guard') {
           ctx.font = `${8 * state.camera.zoom}px Inter`
           ctx.textAlign = 'center'
@@ -1779,6 +1899,13 @@ function render() {
 }
 
 function update(dt) {
+  // Smooth fade for influence view
+  if (state.influenceViewEnabled && state.districtOverlayOpacity < 1.0) {
+    state.districtOverlayOpacity = Math.min(1.0, state.districtOverlayOpacity + dt * 3)
+  } else if (!state.influenceViewEnabled && state.districtOverlayOpacity > 0.0) {
+    state.districtOverlayOpacity = Math.max(0.0, state.districtOverlayOpacity - dt * 3)
+  }
+
   if (state.serverTime !== undefined) {
     state.time += (state.serverTime - state.time) * 0.05
   } else {
@@ -1898,6 +2025,24 @@ function setupMouse() {
       state.camera.y -= dy
       state.mouse.lastX = e.clientX
       state.mouse.lastY = e.clientY
+    }
+
+    // District hover tooltip
+    if (state.influenceViewEnabled && state.districts && state.districts.length > 0) {
+      const world = screenToWorld(e.clientX, e.clientY)
+      const district = state.districts.find(d => {
+        const dx = world.x - d.center_x
+        const dy = world.y - d.center_y
+        return Math.sqrt(dx * dx + dy * dy) < d.radius
+      })
+
+      if (district) {
+        showDistrictTooltip(e.clientX, e.clientY, district)
+      } else {
+        hideDistrictTooltip()
+      }
+    } else {
+      hideDistrictTooltip()
     }
   })
   canvas.addEventListener('mouseup', () => {
@@ -2084,6 +2229,7 @@ function setupUI() {
       openGangPanel()
     }
   })
+  document.getElementById('btnInfluenceView').addEventListener('click', toggleInfluenceView)
   document.getElementById('gangPanelClose').addEventListener('click', closeGangPanel)
 
   // Gang tab switching
@@ -3091,13 +3237,13 @@ async function fetchPlayerState() {
 async function fetchWorldState() {
   try {
     const res = await fetch('/api/world/state')
-    
+
     const contentType = res.headers.get('content-type')
     if (!contentType || !contentType.includes('application/json')) {
       console.warn('[WORLD] World state API returned non-JSON')
       return
     }
-    
+
     const data = await res.json()
     if (data.ok) {
       state.buildings = data.buildings || []
@@ -3109,6 +3255,192 @@ async function fetchWorldState() {
   } catch (e) {
     console.warn('[WORLD] Failed to fetch world state:', e.message)
   }
+}
+
+function hexToRgba(hex, alpha) {
+  if (!hex || hex.length < 7) return `rgba(128,128,128,${alpha || 1})`
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
+
+function getDistrictStatus(influences) {
+  if (!influences || influences.length === 0) return { status: 'Unclaimed', color: '#666' }
+  const top = influences[0].percent
+  if (top >= 80) return { status: 'Dominated', color: influences[0].color }
+  if (top >= 60) return { status: 'Stable', color: influences[0].color }
+  return { status: 'Contested', color: influences[0].color }
+}
+
+function isOnScreen(s, margin = 50) {
+  return s.x >= -margin && s.x <= canvas.width + margin &&
+    s.y >= -margin && s.y <= canvas.height + margin
+}
+
+async function fetchVisualData() {
+  try {
+    const res = await fetch('/api/world/visual-data')
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('[WORLD] Visual data API returned non-JSON')
+      return
+    }
+    const data = await res.json()
+    if (data.ok) {
+      state.districtInfluences = data.districtInfluences || []
+      state.npcGangMap = new Map()
+      for (const aff of (data.npcAffiliations || [])) {
+        state.npcGangMap.set(aff.npc_id, {
+          gang_id: aff.gang_id,
+          tag: aff.gang_tag,
+          color: aff.gang_color
+        })
+      }
+      console.log('[WORLD] Loaded', state.districtInfluences.length, 'district influences,', state.npcGangMap.size, 'NPC gang affiliations')
+    }
+  } catch (e) {
+    console.warn('[WORLD] Failed to fetch visual data:', e.message)
+  }
+}
+
+function updateDistrictScreenCache() {
+  state.districtScreenCache.clear()
+  for (const di of state.districtInfluences) {
+    const district = state.districts.find(d => d.id === di.district_id)
+    if (!district) continue
+    const s = worldToScreen(district.center_x, district.center_y)
+    if (isOnScreen(s, district.radius * 50)) {
+      state.districtScreenCache.set(district.id, {
+        sx: s.x,
+        sy: s.y,
+        radius: district.radius * TILE_W * state.camera.zoom * 0.5,
+        district
+      })
+    }
+  }
+}
+
+function drawDistrictOverlay(district) {
+  if (state.districtOverlayOpacity <= 0) return
+
+  const influence = state.districtInfluences.find(d => d.district_id === district.id)
+  if (!influence || !influence.influences || influence.influences.length === 0) return
+
+  const cached = state.districtScreenCache.get(district.id)
+  if (!cached) return
+
+  const { sx, sy, radius } = cached
+  if (radius < 5) return
+
+  const top = influence.influences[0]
+  const topPercent = top.percent
+  const intensity = Math.max(0.05, Math.min(0.20, (topPercent - 50) / 40 * 0.15 + 0.05))
+  const finalAlpha = intensity * state.districtOverlayOpacity
+
+  if (topPercent < 60 && influence.influences.length > 1) {
+    const stripeHeight = 4
+    const secondColor = influence.influences[1].color
+    for (let y = -radius; y < radius; y += stripeHeight * 2) {
+      ctx.fillStyle = Math.floor(y / stripeHeight) % 2 === 0
+        ? hexToRgba(top.color, finalAlpha)
+        : hexToRgba(secondColor, finalAlpha * 0.7)
+      ctx.fillRect(sx - radius, sy + y, radius * 2, stripeHeight)
+    }
+  } else {
+    const gradient = ctx.createRadialGradient(sx, sy, 0, sx, sy, radius)
+    gradient.addColorStop(0, hexToRgba(top.color, finalAlpha))
+    gradient.addColorStop(0.7, hexToRgba(top.color, finalAlpha * 0.5))
+    gradient.addColorStop(1, hexToRgba(top.color, 0))
+
+    ctx.fillStyle = gradient
+    ctx.beginPath()
+    ctx.arc(sx, sy, radius, 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
+
+function drawTerritoryBorder(district) {
+  if (state.districtOverlayOpacity <= 0) return
+
+  const influence = state.districtInfluences.find(d => d.district_id === district.id)
+  if (!influence || !influence.influences || influence.influences.length === 0) return
+
+  const cached = state.districtScreenCache.get(district.id)
+  if (!cached) return
+
+  const { sx, sy, radius } = cached
+  if (radius < 10) return
+
+  const top = influence.influences[0]
+  const finalAlpha = state.districtOverlayOpacity
+
+  // Glow
+  ctx.beginPath()
+  ctx.arc(sx, sy, radius, 0, Math.PI * 2)
+  ctx.strokeStyle = hexToRgba(top.color, 0.3 * finalAlpha)
+  ctx.lineWidth = 6
+  ctx.stroke()
+
+  // Dashed border
+  ctx.beginPath()
+  ctx.arc(sx, sy, radius, 0, Math.PI * 2)
+  ctx.strokeStyle = hexToRgba(top.color, finalAlpha)
+  ctx.lineWidth = 2
+  ctx.setLineDash([8, 4])
+  ctx.stroke()
+  ctx.setLineDash([])
+}
+
+function showDistrictTooltip(mouseX, mouseY, district) {
+  const influence = state.districtInfluences.find(d => d.district_id === district.id)
+  if (!influence) {
+    hideDistrictTooltip()
+    return
+  }
+
+  const status = getDistrictStatus(influence.influences)
+
+  let html = `<div class="district-tooltip-name">${district.name || 'Unknown District'}</div>`
+  html += `<div class="district-tooltip-status" style="color:${status.color}">${status.status}</div>`
+
+  if (influence.influences && influence.influences.length > 0) {
+    html += '<div class="district-tooltip-label">Top Gangs:</div>'
+    for (const inf of influence.influences) {
+      html += `
+        <div class="district-tooltip-gang">
+          <div class="district-tooltip-color" style="background:${inf.color}"></div>
+          <span class="district-tooltip-tag">${inf.tag}</span>
+          <span class="district-tooltip-percent">${inf.percent}%</span>
+        </div>
+        <div class="influence-bar">
+          <div class="influence-bar-fill" style="width:${inf.percent}%;background:${inf.color}"></div>
+        </div>
+      `
+    }
+  }
+
+  const tooltip = document.getElementById('districtTooltip')
+  if (tooltip) {
+    tooltip.innerHTML = html
+    tooltip.style.left = (mouseX + 15) + 'px'
+    tooltip.style.top = (mouseY + 15) + 'px'
+    tooltip.style.display = 'block'
+  }
+}
+
+function hideDistrictTooltip() {
+  const tooltip = document.getElementById('districtTooltip')
+  if (tooltip) tooltip.style.display = 'none'
+}
+
+function toggleInfluenceView() {
+  state.influenceViewEnabled = !state.influenceViewEnabled
+  const icon = document.getElementById('influenceViewIcon')
+  if (icon) {
+    icon.style.opacity = state.influenceViewEnabled ? '1' : '0.4'
+  }
+  showToast('Influence View', state.influenceViewEnabled ? 'Enabled' : 'Disabled')
 }
 
 async function init() {
@@ -3161,6 +3493,7 @@ async function init() {
   await setupMultiplayer()
   await fetchPlayerState()
   await fetchWorldState()
+  await fetchVisualData()
 
   bar.style.width = '100%'
   text.textContent = 'Welcome to The World'
