@@ -1974,6 +1974,14 @@ async function collectIncome() {
         buildingId: currentIncomeBuilding.id
       })
     })
+    
+    // Check if response is JSON
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
+      return
+    }
+    
     const data = await res.json()
     if (data.ok) {
       if (data.coinsCollected > 0) {
@@ -2037,6 +2045,14 @@ async function startJob() {
         buildingId: currentJobBuilding.id
       })
     })
+    
+    // Check if response is JSON
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
+      return
+    }
+    
     const data = await res.json()
     if (data.ok) {
       state.currentJob = data.buildingId
@@ -2086,6 +2102,14 @@ async function completeJob() {
         userId: state.userId
       })
     })
+    
+    // Check if response is JSON
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
+      return
+    }
+    
     const data = await res.json()
     if (data.ok) {
       state.coins = data.newBalance
@@ -2129,6 +2153,14 @@ async function placeBuildingAt(x, y) {
         userId: state.userId
       })
     })
+    
+    // Check if response is JSON
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
+      return
+    }
+    
     const data = await res.json()
     if (data.ok) {
       state.coins -= type.cost
@@ -2166,6 +2198,14 @@ async function triggerGodPower(x, y) {
         userId: state.userId
       })
     })
+    
+    // Check if response is JSON
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
+      return
+    }
+    
     const data = await res.json()
     if (data.ok) {
       state.coins -= power.cost
@@ -2385,6 +2425,15 @@ async function fetchPlayerState() {
   if (!state.userId) return
   try {
     const res = await fetch(`/api/world/player/state?userId=${encodeURIComponent(state.userId)}`)
+    
+    // Check if response is JSON
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('[WORLD] API returned non-JSON response, using offline mode')
+      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
+      return
+    }
+    
     const data = await res.json()
     if (data.ok) {
       state.coins = data.coins
@@ -2397,6 +2446,8 @@ async function fetchPlayerState() {
       document.getElementById('statCoins').textContent = state.coins
       document.getElementById('statRep').textContent = state.rep
       updateRepBarUI()
+    } else {
+      console.warn('[WORLD] Player state fetch failed:', data.error)
     }
   } catch (e) {
     console.warn('[WORLD] Failed to fetch player state:', e.message)
