@@ -658,7 +658,7 @@ const state = {
   events: [],
   eventTimer: 0,
   nextEvent: 60,
-  coins: 0,
+  coins: 100,
   rep: 0,
   currentJob: null,
   jobStartTime: null,
@@ -2400,6 +2400,7 @@ async function fetchPlayerState() {
     }
   } catch (e) {
     console.warn('[WORLD] Failed to fetch player state:', e.message)
+    showToast('Connection Error', 'Failed to load player data. Using offline mode.')
   }
 }
 
