@@ -54,11 +54,15 @@ export async function onRequestGet(context) {
     // Fetch all gangs sorted by total influence DESC
     const result = await supabaseFetch(
       context.env,
-      `/rest/v1/world_gangs?select=id,name,tag,color,leader_id,total_influence,member_count,level,created_at&order=total_influence.desc&limit=50`
+      `/rest/v1/world_gangs?select=id,name,tag,color,leader_id,total_influence,member_count,level&order=total_influence.desc&limit=50`
     );
 
     if (!result.ok) {
       console.error('[WORLD] gang list failed:', result.status, result.data);
+      // Return empty array instead of error if table doesn't exist yet
+      if (result.status === 404 || result.data?.code === '42P01') {
+        return json({ ok: true, gangs: [] });
+      }
       return json({ 
         ok: false, 
         error: `Failed to fetch gangs: ${result.data?.message || 'Unknown error'}` 

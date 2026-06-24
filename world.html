@@ -2209,22 +2209,17 @@ async function loadMyGang() {
   }
 
   try {
-    const res = await fetch(`/api/world/gang/list`);
-    const data = await res.json();
-
-    if (!data.ok) {
-      content.innerHTML = '<div class="gang-empty">Failed to load gangs.</div>';
+    // First, check if user is in any gang via the members table
+    const memberRes = await fetch(`/rest/v1/world_gang_members?user_id=eq.${encodeURIComponent(state.userId)}&select=gang_id,role`);
+    
+    if (!memberRes.ok) {
+      content.innerHTML = '<div class="gang-empty">Failed to load gang membership.</div>';
       return;
     }
-
-    // Find user's gang
-    const myGang = data.gangs.find(g => g.leader_id === state.userId || g.tag === state.userId);
-
-    // Actually we need to check membership, not just leadership
-    // For simplicity, we'll show the first gang where the user is leader
-    // In a real system, we'd query world_gang_members
-
-    if (!myGang) {
+    
+    const memberData = await memberRes.json();
+    
+    if (!Array.isArray(memberData) || memberData.length === 0) {
       content.innerHTML = `
         <div class="gang-empty">
           You are not in a gang.<br><br>
@@ -2236,6 +2231,19 @@ async function loadMyGang() {
       return;
     }
 
+    // User is in a gang, get the gang details
+    const gangId = memberData[0].gang_id;
+    const userRole = memberData[0].role;
+    
+    const gangRes = await fetch(`/rest/v1/world_gangs?id=eq.${gangId}&select=*`);
+    const gangData = await gangRes.json();
+    
+    if (!Array.isArray(gangData) || gangData.length === 0) {
+      content.innerHTML = '<div class="gang-empty">Gang not found.</div>';
+      return;
+    }
+    
+    const myGang = gangData[0];
     userCurrentGang = myGang;
 
     content.innerHTML = `
@@ -2246,6 +2254,10 @@ async function loadMyGang() {
       <div class="gang-info-row">
         <span class="gang-info-label">Tag</span>
         <span class="gang-info-value" style="color:${myGang.color}">${myGang.tag}</span>
+      </div>
+      <div class="gang-info-row">
+        <span class="gang-info-label">Your Role</span>
+        <span class="gang-info-value">${userRole}</span>
       </div>
       <div class="gang-info-row">
         <span class="gang-info-label">Members</span>
