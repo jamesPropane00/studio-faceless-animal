@@ -1568,7 +1568,7 @@ function update(dt) {
   if (state.joystick.active) {
     dx = state.joystick.dx
     dy = state.joystick.dy
-  } else {
+  } else if (state.keys) {
     if (state.keys.has('w') || state.keys.has('arrowup')) dy -= 1
     if (state.keys.has('s') || state.keys.has('arrowdown')) dy += 1
     if (state.keys.has('a') || state.keys.has('arrowleft')) dx -= 1
@@ -1653,7 +1653,7 @@ function setupKeyboard() {
     if (e.key === '-') state.camera.targetZoom = Math.max(0.3, state.camera.targetZoom / 1.2)
   })
   window.addEventListener('keyup', e => {
-    state.keys.delete(e.key.toLowerCase())
+    if (state.keys) state.keys.delete(e.key.toLowerCase())
   })
 }
 

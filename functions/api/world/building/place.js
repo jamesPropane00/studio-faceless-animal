@@ -85,10 +85,12 @@ export async function onRequestPost(context) {
       nextId = (maxIdResult.data[0].id || 0) + 1;
     }
 
-    // Insert building
+    // Insert building. owner_id must be either NULL or a valid user UUID;
+    // other shapes (local_xxx, SIG-XXXX, usernames) trip the FK constraint.
+    const isUuid = userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
     const building = {
       id: nextId,
-      owner_id: userId || null,
+      owner_id: isUuid ? userId : null,
       building_type: type,
       tile_x: tileX,
       tile_y: tileY,
