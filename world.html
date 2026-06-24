@@ -2713,11 +2713,15 @@ function openIncomePanel(buildingId) {
   // Debug logging for income diagnosis
   const now = Date.now()
   // Convert ISO string to ms if needed (server returns last_collected_at as ISO)
-  const lastCollectedMs = building.last_collected
-    || (building.last_collected_at ? new Date(building.last_collected_at).getTime() : null)
-  const elapsed = lastCollectedMs ? (now - lastCollectedMs) : null
-  const minutes = elapsed ? (elapsed / 60000) : null
-  const rawCalc = building.income_rate && minutes ? (building.income_rate * minutes) : 0
+  let lastCollectedMs = null
+  if (typeof building.last_collected === 'number' && !isNaN(building.last_collected)) {
+    lastCollectedMs = building.last_collected
+  } else if (building.last_collected_at) {
+    lastCollectedMs = new Date(building.last_collected_at).getTime()
+  }
+  const elapsed = (lastCollectedMs && !isNaN(lastCollectedMs)) ? (now - lastCollectedMs) : null
+  const minutes = (elapsed && !isNaN(elapsed)) ? (elapsed / 60000) : null
+  const rawCalc = (building.income_rate && minutes && !isNaN(minutes)) ? (building.income_rate * minutes) : 0
   const inDistrict = building.in_district
   const adjustedCalc = inDistrict ? rawCalc * 1.2 : rawCalc
 
@@ -2730,6 +2734,8 @@ function openIncomePanel(buildingId) {
     is_collectable: building.owner_id === state.userId,
     last_collected_at: building.last_collected_at,
     last_collected_date: building.last_collected_at ? new Date(building.last_collected_at).toISOString() : null,
+    last_collected: building.last_collected,
+    lastCollectedMs_typed: lastCollectedMs,
     now: now,
     now_date: new Date(now).toISOString(),
     elapsed_ms: elapsed,
@@ -2761,13 +2767,16 @@ function closeIncomePanel() {
 
 function calculateAccumulatedIncome(building) {
   // Accept either last_collected (ms timestamp) or last_collected_at (ISO string from server)
-  let lastCollected = building.last_collected
-  if (!lastCollected && building.last_collected_at) {
+  let lastCollected = null
+  if (typeof building.last_collected === 'number' && !isNaN(building.last_collected)) {
+    lastCollected = building.last_collected
+  } else if (building.last_collected_at) {
     lastCollected = new Date(building.last_collected_at).getTime()
   }
-  if (!lastCollected) return 0
+  if (!lastCollected || isNaN(lastCollected)) return 0
   const now = Date.now()
   const elapsed = now - lastCollected
+  if (isNaN(elapsed) || elapsed < 0) return 0
   const maxMs = 24 * 60 * 60 * 1000
   const cappedElapsed = Math.min(elapsed, maxMs)
   const minutes = cappedElapsed / 60000
