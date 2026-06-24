@@ -494,6 +494,62 @@
       height: 100%;
       border-radius: 2px;
     }
+    .district-tooltip-type {
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.3rem;
+    }
+    .district-tooltip-stat {
+      font-size: 0.72rem;
+      color: var(--text);
+      margin: 0.2rem 0;
+    }
+    .district-tooltip-stat span {
+      color: var(--gold);
+      font-weight: 700;
+    }
+    .district-tooltip-bonus {
+      font-size: 0.7rem;
+      color: #4ade80;
+      font-weight: 700;
+      margin: 0.3rem 0;
+      padding: 0.2rem 0.4rem;
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.25);
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .district-tooltip-sub {
+      font-size: 0.65rem;
+      color: var(--dim);
+      font-style: italic;
+      margin-top: 0.3rem;
+    }
+    .district-prog-stats {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.4rem;
+      padding-top: 0.3rem;
+      border-top: 1px solid var(--border2);
+    }
+    .district-prog-stat {
+      flex: 1;
+      text-align: center;
+    }
+    .district-prog-label {
+      font-size: 0.55rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .district-prog-value {
+      font-size: 0.7rem;
+      color: var(--text);
+      font-weight: 700;
+      margin-top: 0.1rem;
+    }
       .build-name, .god-name {
         font-size: 0.75rem;
         margin-bottom: 0.2rem;
@@ -648,6 +704,25 @@
     .income-rate span {
       color: var(--bright);
       font-weight: 600;
+    }
+    .income-district-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #4ade80;
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      border-radius: 6px;
+      padding: 0.35rem 0.6rem;
+      text-align: center;
+      margin-top: 0.2rem;
+    }
+    .income-district-badge .badge-name {
+      color: inherit;
+    }
+    .income-district-badge.not-in {
+      color: var(--dim);
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--border2);
     }
     .income-collect-btn, .job-start-btn {
       background: linear-gradient(135deg, var(--purple), var(--bright));
@@ -828,6 +903,9 @@
     <div class="income-building-name" id="incomeBuildingName">Shop</div>
     <div class="income-amount">Accumulated: <span id="incomeAmount">0</span> coins</div>
     <div class="income-rate">Rate: <span id="incomeRate">1</span> coin/min</div>
+    <div class="income-district-badge" id="incomeDistrictBadge" style="display:none">
+      In District: <span id="incomeDistrictText" class="badge-name">No</span>
+    </div>
     <button class="income-collect-btn" id="incomeCollectBtn">Collect</button>
   </div>
 </div>
@@ -957,6 +1035,33 @@ const BUILDING_TYPES = {
   warehouse: { name: 'Warehouse', color: '#607D8B', height: 8, cost: 75, income: 1 },
   hide: { name: 'Hide', color: '#2C2C2C', height: 6, cost: 200, income: 3 },
   camp: { name: 'Camp', color: '#795548', height: 4, cost: 25, income: 0 }
+}
+
+const DISTRICT_TYPE_COLORS = {
+  house:     '#8B7355',
+  shop:      '#4A90E2',
+  club:      '#E91E63',
+  warehouse: '#607D8B',
+  hide:      '#6B7280',
+  camp:      '#795548'
+}
+
+const DISTRICT_TYPE_ICONS = {
+  house:     '🏠',
+  shop:      '🏪',
+  club:      '🎵',
+  warehouse: '📦',
+  hide:      '🕶',
+  camp:      '⛺'
+}
+
+const DISTRICT_TYPE_LABELS = {
+  house:     'Residential',
+  shop:      'Commercial',
+  club:      'Entertainment',
+  warehouse: 'Industrial',
+  hide:      'Hidden',
+  camp:      'Outskirts'
 }
 
 const GOD_POWERS = {
@@ -1635,24 +1740,55 @@ function drawBuilding(building) {
 function drawDistrict(district) {
   const s = worldToScreen(district.center_x, district.center_y)
   const radius = district.radius * TILE_W * state.camera.zoom * 0.3
-  
+
   if (s.x < -radius || s.x > canvas.width + radius || s.y < -radius || s.y > canvas.height + radius) return
-  
+
+  const typeColor = DISTRICT_TYPE_COLORS[district.district_type] || '#a78bfa'
+  const fillAlpha = 0.20
+  const borderAlpha = 0.45
+
+  // Filled translucent area
   ctx.beginPath()
   ctx.arc(s.x, s.y, radius, 0, Math.PI * 2)
-  ctx.strokeStyle = 'rgba(167,139,250,0.3)'
-  ctx.lineWidth = 2
-  ctx.setLineDash([5, 5])
+  ctx.fillStyle = hexToRgba(typeColor, fillAlpha)
+  ctx.fill()
+
+  // Dashed border
+  ctx.beginPath()
+  ctx.arc(s.x, s.y, radius, 0, Math.PI * 2)
+  ctx.strokeStyle = hexToRgba(typeColor, borderAlpha)
+  ctx.lineWidth = 1.5
+  ctx.setLineDash([6, 4])
   ctx.stroke()
   ctx.setLineDash([])
-  
+
+  // Name label (only when zoomed in)
   if (state.camera.zoom > 0.4) {
-    ctx.font = `bold ${12 * state.camera.zoom}px Inter`
+    const icon = DISTRICT_TYPE_ICONS[district.district_type] || ''
+    const labelText = (icon ? icon + ' ' : '') + (district.name || 'District')
+    const fontSize = 11 * state.camera.zoom
+    ctx.font = `bold ${fontSize}px Inter, sans-serif`
     ctx.textAlign = 'center'
-    ctx.fillStyle = 'rgba(0,0,0,0.5)'
-    ctx.fillText(district.name, s.x + 1, s.y - radius - 9)
-    ctx.fillStyle = 'rgba(167,139,250,0.9)'
-    ctx.fillText(district.name, s.x, s.y - radius - 10)
+    const textW = ctx.measureText(labelText).width
+    const padX = 6 * state.camera.zoom
+    const padY = 3 * state.camera.zoom
+    const labelH = 14 * state.camera.zoom
+    const labelY = s.y - radius - labelH - 2 * state.camera.zoom
+    const labelX = s.x - textW / 2 - padX
+
+    // Background pill
+    ctx.fillStyle = 'rgba(0,0,0,0.7)'
+    if (ctx.roundRect) {
+      ctx.beginPath()
+      ctx.roundRect(labelX, labelY, textW + padX * 2, labelH, 4)
+      ctx.fill()
+    } else {
+      ctx.fillRect(labelX, labelY, textW + padX * 2, labelH)
+    }
+
+    // Text
+    ctx.fillStyle = typeColor
+    ctx.fillText(labelText, s.x, labelY + labelH * 0.72)
   }
 }
 
@@ -2754,15 +2890,66 @@ function openIncomePanel(buildingId) {
   document.getElementById('incomeBuildingName').textContent = type.name
   document.getElementById('incomeRate').textContent = building.income_rate
 
+  // District badge
+  const badge = document.getElementById('incomeDistrictBadge')
+  const badgeText = document.getElementById('incomeDistrictText')
+  if (building.in_district) {
+    const district = state.districts.find(d => {
+      const dx = building.tile_x - d.center_x
+      const dy = building.tile_y - d.center_y
+      return Math.sqrt(dx * dx + dy * dy) < d.radius
+    })
+    if (district) {
+      const icon = DISTRICT_TYPE_ICONS[district.district_type] || ''
+      badgeText.textContent = `Yes — ${icon} ${district.name} (+20%)`
+      badge.classList.remove('not-in')
+      badge.style.display = 'block'
+    } else {
+      badgeText.textContent = 'Yes (+20%)'
+      badge.classList.remove('not-in')
+      badge.style.display = 'block'
+    }
+  } else {
+    badgeText.textContent = 'No'
+    badge.classList.add('not-in')
+    badge.style.display = 'block'
+  }
+
   const accumulated = calculateAccumulatedIncome(building)
   document.getElementById('incomeAmount').textContent = accumulated
 
   document.getElementById('incomePanel').classList.add('open')
+
+  // Start real-time counter
+  startIncomeCounter()
 }
 
 function closeIncomePanel() {
+  stopIncomeCounter()
   document.getElementById('incomePanel').classList.remove('open')
   currentIncomeBuilding = null
+}
+
+let incomeCounterInterval = null
+
+function startIncomeCounter() {
+  if (incomeCounterInterval) return
+  incomeCounterInterval = setInterval(() => {
+    if (!currentIncomeBuilding) {
+      stopIncomeCounter()
+      return
+    }
+    const accumulated = calculateAccumulatedIncome(currentIncomeBuilding)
+    const el = document.getElementById('incomeAmount')
+    if (el) el.textContent = accumulated
+  }, 1000)
+}
+
+function stopIncomeCounter() {
+  if (incomeCounterInterval) {
+    clearInterval(incomeCounterInterval)
+    incomeCounterInterval = null
+  }
 }
 
 function calculateAccumulatedIncome(building) {
@@ -3563,16 +3750,22 @@ function drawTerritoryBorder(district) {
 
 function showDistrictTooltip(mouseX, mouseY, district) {
   const influence = state.districtInfluences.find(d => d.district_id === district.id)
+  const typeColor = DISTRICT_TYPE_COLORS[district.district_type] || '#a78bfa'
+  const icon = DISTRICT_TYPE_ICONS[district.district_type] || '📍'
+  const typeLabel = DISTRICT_TYPE_LABELS[district.district_type] || 'District'
+  const buildingCount = district.building_count || 0
 
   let html = `<div class="district-tooltip-name">${district.name || 'Unknown District'}</div>`
+  html += `<div class="district-tooltip-type" style="color:${typeColor}">${icon} ${typeLabel} District</div>`
+  html += `<div class="district-tooltip-stat"><span>${buildingCount}</span> building${buildingCount === 1 ? '' : 's'}</div>`
+  html += `<div class="district-tooltip-bonus">+20% income inside</div>`
 
   if (!influence || !influence.influences || influence.influences.length === 0) {
     html += `<div class="district-tooltip-status" style="color:#999">Unclaimed</div>`
-    html += `<div class="district-tooltip-label">No gangs control this district yet.</div>`
+    html += `<div class="district-tooltip-sub">No gangs control this district yet.</div>`
   } else {
     const status = getDistrictStatus(influence.influences)
     html += `<div class="district-tooltip-status" style="color:${status.color}">${status.status}</div>`
-
     html += '<div class="district-tooltip-label">Top Gangs:</div>'
     for (const inf of influence.influences) {
       html += `
@@ -3587,6 +3780,12 @@ function showDistrictTooltip(mouseX, mouseY, district) {
       `
     }
   }
+
+  html += `<div class="district-prog-stats">`
+  html += `<div class="district-prog-stat"><div class="district-prog-label">Level</div><div class="district-prog-value">${district.level || 1}</div></div>`
+  html += `<div class="district-prog-stat"><div class="district-prog-label">Pop</div><div class="district-prog-value">${district.population || buildingCount * 4}</div></div>`
+  html += `<div class="district-prog-stat"><div class="district-prog-label">Wealth</div><div class="district-prog-value">${district.wealth || '—'}</div></div>`
+  html += `</div>`
 
   const tooltip = document.getElementById('districtTooltip')
   if (tooltip) {
