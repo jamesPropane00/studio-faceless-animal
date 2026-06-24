@@ -2286,6 +2286,16 @@ function showToast(title, desc) {
   setTimeout(() => toast.classList.remove('show'), 3000)
 }
 
+function updateRepBarUI() {
+  document.getElementById('repLevelName').textContent = state.repLevel
+  document.getElementById('repBarInner').style.width = state.repProgress + '%'
+  if (state.repMax === null) {
+    document.getElementById('repProgress').textContent = state.rep + '+'
+  } else {
+    document.getElementById('repProgress').textContent = state.rep + '/' + state.repMax
+  }
+}
+
 
 async function setupMultiplayer() {
   if (!SUPABASE_READY) {
