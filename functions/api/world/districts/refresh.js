@@ -194,15 +194,10 @@ async function refreshDistricts(context) {
         }
       }
 
-      // Generate UUIDs for each district (gen_random_uuid may not be enabled)
-      function uuidv4() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-          const r = Math.random() * 16 | 0;
-          const v = c == 'x' ? r : (r & 0x3 | 0x8);
-          return v.toString(16);
-        });
-      }
-      const districtsWithIds = newDistricts.map(d => ({ id: uuidv4(), ...d }));
+      // Generate unique integer IDs for each district (table id is INTEGER)
+      // Use timestamp + index to ensure uniqueness
+      const baseId = Date.now() * 1000;
+      const districtsWithIds = newDistricts.map((d, i) => ({ id: baseId + i, ...d }));
 
       // Insert new districts
       const insertResult = await supabaseFetch(
