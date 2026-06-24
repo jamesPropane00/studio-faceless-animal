@@ -1,15 +1,8 @@
 -- ============================================================
 -- FIX: Make world_gangs.leader_id work with TEXT user_ids
--- Similar to other fixes
 -- ============================================================
 
--- Drop the foreign key constraint
-ALTER TABLE world_gangs DROP CONSTRAINT IF EXISTS world_gangs_leader_id_fkey;
-
--- Change leader_id from UUID to TEXT
-ALTER TABLE world_gangs ALTER COLUMN leader_id TYPE TEXT USING leader_id::TEXT;
-
--- Drop ALL existing policies to avoid conflicts
+-- Step 1: Drop ALL policies on world_gangs (do this FIRST)
 DO $$
 DECLARE
   pol RECORD;
@@ -23,7 +16,13 @@ BEGIN
   END LOOP;
 END $$;
 
--- Recreate policies
+-- Step 2: Drop the foreign key constraint
+ALTER TABLE world_gangs DROP CONSTRAINT IF EXISTS world_gangs_leader_id_fkey;
+
+-- Step 3: Change leader_id from UUID to TEXT
+ALTER TABLE world_gangs ALTER COLUMN leader_id TYPE TEXT USING leader_id::TEXT;
+
+-- Step 4: Recreate policies
 CREATE POLICY "gangs_select" ON world_gangs FOR SELECT
   TO authenticated USING (true);
 
