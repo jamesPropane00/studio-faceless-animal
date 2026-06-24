@@ -256,6 +256,41 @@
       .chat-panel{width:calc(100vw - 16px)}
       .player-list{right:4px;max-width:160px}
       .brand-badge .tag{display:none}
+
+    /* Account button (next to brand) */
+    .account-btn {
+      display:inline-flex;align-items:center;gap:0.4rem;
+      background:rgba(18,20,30,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border:1px solid var(--border);border-radius:var(--radius);
+      padding:0.4rem 0.7rem;color:var(--text);font:inherit;font-size:0.72rem;font-weight:600;
+      cursor:pointer;max-width:160px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+    }
+    .account-btn:hover{border-color:rgba(167,139,250,0.45)}
+    .account-btn.signed-in{border-color:rgba(74,222,128,0.4)}
+    .account-icon{font-size:0.85rem}
+
+    /* Account modal */
+    .acct-modal{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+    .acct-modal[hidden]{display:none}
+    .acct-card{width:min(380px,100%);background:rgba(18,20,30,0.96);border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem;display:flex;flex-direction:column;gap:0.75rem;max-height:90vh;overflow:auto}
+    .acct-head{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;border-bottom:1px solid var(--border);padding-bottom:0.6rem}
+    .acct-tabs{display:flex;gap:0.25rem}
+    .acct-tab{background:transparent;border:1px solid var(--border);color:var(--dim);font:inherit;font-size:0.72rem;font-weight:600;padding:0.35rem 0.6rem;border-radius:8px;cursor:pointer}
+    .acct-tab.active{color:var(--text);background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.4)}
+    .acct-close{background:transparent;border:0;color:var(--dim);font-size:1.05rem;cursor:pointer;padding:0.2rem 0.4rem}
+    .acct-close:hover{color:var(--text)}
+    .acct-form{display:flex;flex-direction:column;gap:0.4rem}
+    .acct-form[hidden]{display:none}
+    .acct-label{font-size:0.65rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.25rem}
+    .acct-input{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:0.55rem 0.65rem;color:var(--text);font:inherit;font-size:0.85rem;outline:none}
+    .acct-input:focus{border-color:rgba(167,139,250,0.6)}
+    .acct-error{font-size:0.7rem;color:#fb7185;min-height:1em;font-weight:600}
+    .acct-btn{padding:0.6rem 0.9rem;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);font:inherit;font-size:0.8rem;font-weight:700;cursor:pointer}
+    .acct-btn:disabled{opacity:0.5;cursor:not-allowed}
+    .acct-btn.primary{background:linear-gradient(135deg,#7c3aed,#a78bfa);border-color:transparent;color:#fff}
+    .acct-btn.ghost{background:transparent;color:var(--dim);font-size:0.7rem}
+    .acct-foot{display:flex;justify-content:center;border-top:1px solid var(--border);padding-top:0.6rem}
+    .acct-foot:empty,.acct-foot .acct-btn[hidden]{display:none}
       .build-panel, .god-panel {
         padding: 1rem;
         min-width: 280px;
@@ -472,6 +507,10 @@
     <div class="logo">FA<span>.</span></div>
     <div class="tag">THE WORLD</div>
   </div>
+  <button class="account-btn" id="btnAccount" type="button" title="Account">
+    <span class="account-icon">&#x1F464;</span>
+    <span class="account-name" id="accountName">Guest</span>
+  </button>
   <div class="panel stats-panel" id="statsPanel">
     <div class="stat-row"><span class="stat-icon">&#x1F4B0;</span><span class="stat-label">Coins</span><span class="stat-value gold" id="statCoins">0</span></div>
     <div class="stat-row"><span class="stat-icon">&#x2B50;</span><span class="stat-label">Rep</span><span class="stat-value cyan" id="statRep">0</span></div>
@@ -603,6 +642,7 @@
 
 <script type="module">
 import { supabase, SUPABASE_READY } from '/assets/js/supabase-client.js'
+import { signIn, createAccount, getStoredSession, clearStoredSession } from '/assets/js/auth.js'
 
 const canvas = document.getElementById('gameCanvas')
 const ctx = canvas.getContext('2d')
@@ -2283,6 +2323,106 @@ function showToast(title, desc) {
   setTimeout(() => toast.classList.remove('show'), 3000)
 }
 
+// Account modal helpers
+function openAcctModal(tab = 'signin') {
+  const m = document.getElementById('acctModal')
+  if (!m) return
+  m.hidden = false
+  setAcctTab(tab)
+  const first = m.querySelector('.acct-form:not([hidden]) input')
+  if (first) setTimeout(() => first.focus(), 50)
+}
+function closeAcctModal() {
+  const m = document.getElementById('acctModal')
+  if (m) m.hidden = true
+  document.getElementById('acct-signin-error').textContent = ''
+  document.getElementById('acct-create-error').textContent = ''
+}
+function setAcctTab(tab) {
+  document.querySelectorAll('.acct-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab))
+  document.querySelectorAll('.acct-form').forEach(f => f.hidden = (f.dataset.tab !== tab))
+  document.getElementById('acct-signin-error').textContent = ''
+  document.getElementById('acct-create-error').textContent = ''
+}
+function updateAccountBadge() {
+  const nameEl = document.getElementById('accountName')
+  const btn = document.getElementById('btnAccount')
+  if (!nameEl || !btn) return
+  const stored = (function(){ try { return JSON.parse(localStorage.getItem('fas_user')||'null') } catch(e){ return null } })()
+  if (stored && stored.username) {
+    nameEl.textContent = stored.display || stored.username
+    btn.classList.add('signed-in')
+    btn.title = Signed in as  — click to manage
+  } else {
+    nameEl.textContent = 'Guest'
+    btn.classList.remove('signed-in')
+    btn.title = 'Sign in or create an account'
+  }
+}
+async function handleSignIn(e) {
+  e.preventDefault()
+  const idEl = document.getElementById('acct-signin-id')
+  const pwEl = document.getElementById('acct-signin-pw')
+  const btn = document.getElementById('acct-signin-btn')
+  const errEl = document.getElementById('acct-signin-error')
+  errEl.textContent = ''
+  btn.disabled = true
+  try {
+    const { success, error, session } = await signIn(idEl.value.trim(), pwEl.value)
+    if (!success) { errEl.textContent = error || 'Sign-in failed.' ; return }
+    state.userId = session.account_id || session.username
+    state.username = session.display || session.username
+    state.player.name = state.username
+    if (typeof fetchPlayerState === 'function') await fetchPlayerState()
+    updateAccountBadge()
+    closeAcctModal()
+    showToast('Signed In', Welcome back, )
+  } catch (err) {
+    console.error('[WORLD] signIn exception:', err)
+    errEl.textContent = err?.message || 'Sign-in failed.'
+  } finally {
+    btn.disabled = false
+  }
+}
+async function handleCreate(e) {
+  e.preventDefault()
+  const uEl = document.getElementById('acct-create-username')
+  const dEl = document.getElementById('acct-create-display')
+  const pEl = document.getElementById('acct-create-pw')
+  const btn = document.getElementById('acct-create-btn')
+  const errEl = document.getElementById('acct-create-error')
+  errEl.textContent = ''
+  btn.disabled = true
+  try {
+    const username = uEl.value.trim().toLowerCase()
+    const display = dEl.value.trim() || username
+    const { success, error, session } = await createAccount(username, pEl.value, display)
+    if (!success) { errEl.textContent = error || 'Account creation failed.' ; return }
+    state.userId = session.account_id || session.username
+    state.username = session.display || session.username
+    state.player.name = state.username
+    if (typeof fetchPlayerState === 'function') await fetchPlayerState()
+    updateAccountBadge()
+    closeAcctModal()
+    showToast('Account Created', Welcome, )
+  } catch (err) {
+    console.error('[WORLD] createAccount exception:', err)
+    errEl.textContent = err?.message || 'Account creation failed.'
+  } finally {
+    btn.disabled = false
+  }
+}
+function handleSignOut() {
+  clearStoredSession()
+  state.userId = 'local_' + Math.random().toString(36).slice(2, 8)
+  state.username = 'guest_' + state.userId.slice(6)
+  state.player.name = state.username
+  if (typeof fetchPlayerState === 'function') fetchPlayerState()
+  updateAccountBadge()
+  closeAcctModal()
+  showToast('Signed Out', 'You are now playing as a guest.')
+}
+
 async function setupMultiplayer() {
   if (!SUPABASE_READY) {
     console.warn('[WORLD] Supabase not ready, running in offline mode')
@@ -2290,10 +2430,10 @@ async function setupMultiplayer() {
   }
 
   try {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session?.user) {
-      state.userId = session.user.id
-      state.username = session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'anon'
+    const stored = getStoredSession()
+    if (stored && stored.username) {
+      state.userId = stored.account_id || stored.username
+      state.username = stored.display || stored.username
       state.player.name = state.username
     }
   } catch (e) {
@@ -2533,7 +2673,59 @@ async function init() {
   requestAnimationFrame(gameLoop)
 }
 
+// Wire account modal
+function wireAccountUI() {
+  document.getElementById('btnAccount')?.addEventListener('click', () => openAcctModal('signin'))
+  document.getElementById('acctClose')?.addEventListener('click', closeAcctModal)
+  document.querySelectorAll('.acct-tab').forEach(b => b.addEventListener('click', () => setAcctTab(b.dataset.tab)))
+  document.getElementById('acct-signin-form')?.addEventListener('submit', handleSignIn)
+  document.getElementById('acct-create-form')?.addEventListener('submit', handleCreate)
+  document.getElementById('acctSignOut')?.addEventListener('click', handleSignOut)
+  document.getElementById('acctModal')?.addEventListener('click', (e) => { if (e.target.id === 'acctModal') closeAcctModal() })
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAcctModal() })
+  window.addEventListener('storage', (e) => { if (e.key === 'fas_user') updateAccountBadge() })
+  updateAccountBadge()
+}
+
 init()
+wireAccountUI()
 </script>
+
+<!-- ===== ACCOUNT MODAL ===== -->
+<div class="acct-modal" id="acctModal" hidden>
+  <div class="acct-card">
+    <div class="acct-head">
+      <div class="acct-tabs">
+        <button type="button" class="acct-tab active" data-tab="signin">Sign In</button>
+        <button type="button" class="acct-tab" data-tab="create">Create Account</button>
+      </div>
+      <button type="button" class="acct-close" id="acctClose" aria-label="Close">&#x2715;</button>
+    </div>
+
+    <form id="acct-signin-form" class="acct-form" data-tab="signin" novalidate>
+      <label class="acct-label">Username or Signal ID</label>
+      <input type="text" class="acct-input" id="acct-signin-id" autocomplete="username" spellcheck="false" autocapitalize="none" required />
+      <label class="acct-label">Password</label>
+      <input type="password" class="acct-input" id="acct-signin-pw" autocomplete="current-password" required />
+      <div class="acct-error" id="acct-signin-error" role="alert"></div>
+      <button type="submit" class="acct-btn primary" id="acct-signin-btn">Sign In</button>
+    </form>
+
+    <form id="acct-create-form" class="acct-form" data-tab="create" hidden novalidate>
+      <label class="acct-label">Username (3-40 chars, a-z 0-9 _ -)</label>
+      <input type="text" class="acct-input" id="acct-create-username" autocomplete="username" spellcheck="false" autocapitalize="none" required />
+      <label class="acct-label">Display name (optional)</label>
+      <input type="text" class="acct-input" id="acct-create-display" autocomplete="nickname" maxlength="60" />
+      <label class="acct-label">Password (min 8 chars)</label>
+      <input type="password" class="acct-input" id="acct-create-pw" autocomplete="new-password" required />
+      <div class="acct-error" id="acct-create-error" role="alert"></div>
+      <button type="submit" class="acct-btn primary" id="acct-create-btn">Create Account</button>
+    </form>
+
+    <div class="acct-foot">
+      <button type="button" class="acct-btn ghost" id="acctSignOut">Sign Out</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
