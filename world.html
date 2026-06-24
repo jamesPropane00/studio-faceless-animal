@@ -2712,7 +2712,10 @@ function openIncomePanel(buildingId) {
 
   // Debug logging for income diagnosis
   const now = Date.now()
-  const elapsed = building.last_collected_at ? (now - building.last_collected_at) : null
+  // Convert ISO string to ms if needed (server returns last_collected_at as ISO)
+  const lastCollectedMs = building.last_collected
+    || (building.last_collected_at ? new Date(building.last_collected_at).getTime() : null)
+  const elapsed = lastCollectedMs ? (now - lastCollectedMs) : null
   const minutes = elapsed ? (elapsed / 60000) : null
   const rawCalc = building.income_rate && minutes ? (building.income_rate * minutes) : 0
   const inDistrict = building.in_district
@@ -2806,6 +2809,8 @@ async function collectIncome() {
         currentIncomeBuilding.last_collected_at = new Date().toISOString()
         showToast('Income Collected', `+${data.coinsCollected} coins`)
         closeIncomePanel()
+        // Refetch world state to sync last_collected_at with server
+        await fetchWorldState()
       } else {
         showToast('No Income', 'Nothing to collect yet')
       }
