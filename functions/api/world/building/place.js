@@ -54,6 +54,15 @@ export async function onRequestOptions() {
 
 export async function onRequestPost(context) {
   try {
+    // Check if environment variables are set
+    if (!context.env.SUPABASE_URL || !context.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('[WORLD] building/place: Missing Supabase credentials');
+      return json({ 
+        ok: false, 
+        error: 'Server configuration error: Missing Supabase credentials' 
+      }, 500);
+    }
+
     const body = await context.request.json();
     const { x, y, type, userId } = body;
     
@@ -68,11 +77,31 @@ export async function onRequestPost(context) {
     const tileX = Math.floor(x);
     const tileY = Math.floor(y);
 
+    // First, verify the table exists
+    const tableCheck = await supabaseFetch(context.env, `/rest/v1/world_building_states?select=id&limit=1`);
+    if (!tableCheck.ok) {
+      console.error('[WORLD] building/place: Table check failed:', tableCheck.status, JSON.stringify(tableCheck.data));
+      return json({ 
+        ok: false, 
+        error: `Table not found or inaccessible. Make sure you ran the SQL schema. Error: ${tableCheck.data?.message || 'Unknown'}`,
+        status: tableCheck.status
+      }, 500);
+    }
+
     // Check if tile is already occupied
     const checkQuery = `select=id&tile_x=eq.${tileX}&tile_y=eq.${tileY}`;
     const checkResult = await supabaseFetch(context.env, `/rest/v1/world_building_states?${checkQuery}`);
     
-    if (checkResult.ok && Array.isArray(checkResult.data) && checkResult.data.length > 0) {
+    if (!checkResult.ok) {
+      console.error('[WORLD] building/place: Check query failed:', checkResult.status, JSON.stringify(checkResult.data));
+      return json({ 
+        ok: false, 
+        error: `Tile check failed: ${checkResult.data?.message || 'Unknown error'}`,
+        status: checkResult.status
+      }, 500);
+    }
+    
+    if (Array.isArray(checkResult.data) && checkResult.data.length > 0) {
       return json({ ok: false, error: 'Tile is already occupied.' }, 400);
     }
 
@@ -107,7 +136,12 @@ export async function onRequestPost(context) {
     });
 
     if (!insertResult.ok) {
-      return json({ ok: false, error: 'Failed to place building.' }, 500);
+      console.error('[WORLD] building/place insert failed:', insertResult.status, JSON.stringify(insertResult.data));
+      return json({ 
+        ok: false, 
+        error: `Database insert failed: ${insertResult.data?.message || insertResult.data?.hint || 'Unknown error'}. Make sure you ran the SQL schema.`,
+        status: insertResult.status
+      }, 500);
     }
 
     // Update player reputation (+5 for building)
