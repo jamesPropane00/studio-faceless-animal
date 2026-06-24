@@ -2175,6 +2175,8 @@ async function placeBuildingAt(x, y) {
       document.getElementById('statCoins').textContent = state.coins
       showToast('Building Placed', `${type.name} built successfully!`)
       addChatMessage('', `${state.username} built a ${type.name}`, true)
+      // Refetch world state to show the new building
+      await fetchWorldState()
     } else {
       console.error('[WORLD] placeBuildingAt failed:', res.status, data)
       showToast('Error', data.error || 'Failed to place building')
@@ -2478,6 +2480,29 @@ async function fetchPlayerState() {
   }
 }
 
+async function fetchWorldState() {
+  try {
+    const res = await fetch('/api/world/state')
+    
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('[WORLD] World state API returned non-JSON')
+      return
+    }
+    
+    const data = await res.json()
+    if (data.ok) {
+      state.buildings = data.buildings || []
+      state.districts = data.districts || []
+      console.log('[WORLD] Loaded', state.buildings.length, 'buildings,', state.districts.length, 'districts')
+    } else {
+      console.warn('[WORLD] World state fetch failed:', data.error)
+    }
+  } catch (e) {
+    console.warn('[WORLD] Failed to fetch world state:', e.message)
+  }
+}
+
 async function init() {
   const bar = document.getElementById('loadingBar')
   const text = document.getElementById('loadingText')
@@ -2527,6 +2552,7 @@ async function init() {
 
   await setupMultiplayer()
   await fetchPlayerState()
+  await fetchWorldState()
 
   bar.style.width = '100%'
   text.textContent = 'Welcome to The World'
