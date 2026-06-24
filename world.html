@@ -3000,6 +3000,8 @@ async function placeBuildingAt(x, y) {
       addChatMessage('', `${state.username} built a ${type.name}`, true)
       // Refetch world state to show the new building
       await fetchWorldState()
+      // Trigger district re-evaluation (serverless district formation)
+      await refreshDistricts()
     } else {
       console.error('[WORLD] placeBuildingAt failed:', res.status, data)
       showToast('Error', data.error || 'Failed to place building')
@@ -3289,6 +3291,13 @@ async function setupMultiplayer() {
     })
   }, 1000)
 
+  // Periodic district refresh (serverless district formation)
+  setInterval(async () => {
+    if (state.loaded) {
+      await refreshDistricts()
+    }
+  }, 30000)
+
   showToast('Connected', 'Welcome to The World')
 }
 
@@ -3347,11 +3356,51 @@ async function fetchWorldState() {
       })
       state.districts = data.districts || []
       console.log('[WORLD] Loaded', state.buildings.length, 'buildings,', state.districts.length, 'districts')
+
+      // Check for newly formed districts (toast notification)
+      const existingIds = new Set(state.events.filter(e => e.type === 'district_formed').map(e => e.districtKey || ''))
+      for (const d of state.districts) {
+        const key = `${d.center_x},${d.center_y},${d.district_type}`
+        if (!existingIds.has(key)) {
+          showToast('🏘️ New District!', `${d.name} formed (${d.building_count} ${d.district_type}s)`)
+          addChatMessage('', `🏘️ New district formed: ${d.name}`, true)
+          // Track so we don't spam
+          if (!state._notifiedDistricts) state._notifiedDistricts = new Set()
+          state._notifiedDistricts.add(key)
+        }
+      }
     } else {
       console.warn('[WORLD] World state fetch failed:', data.error)
     }
   } catch (e) {
     console.warn('[WORLD] Failed to fetch world state:', e.message)
+  }
+}
+
+async function refreshDistricts() {
+  try {
+    const res = await fetch('/api/world/districts/refresh', { method: 'POST' })
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      return
+    }
+    const data = await res.json()
+    if (data.ok) {
+      console.log('[WORLD] Districts refreshed:', data.count, 'formed,', data.newlyFormed?.length || 0, 'new')
+      // Show toast for newly formed districts
+      if (data.newlyFormed && data.newlyFormed.length > 0) {
+        for (const d of data.newlyFormed) {
+          showToast('🏘️ New District!', `${d.name} formed (${d.building_count} ${d.district_type}s)`)
+          addChatMessage('', `🏘️ New district formed: ${d.name}`, true)
+        }
+      }
+      // Refetch world state to get updated districts list
+      await fetchWorldState()
+    } else {
+      console.warn('[WORLD] district refresh failed:', data.error)
+    }
+  } catch (e) {
+    console.warn('[WORLD] district refresh exception:', e.message)
   }
 }
 
@@ -3612,6 +3661,7 @@ async function init() {
   await setupMultiplayer()
   await fetchPlayerState()
   await fetchWorldState()
+  await refreshDistricts()
   await fetchVisualData()
 
   bar.style.width = '100%'
