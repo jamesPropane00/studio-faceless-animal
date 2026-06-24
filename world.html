@@ -2352,7 +2352,7 @@ function updateAccountBadge() {
   if (stored && stored.username) {
     nameEl.textContent = stored.display || stored.username
     btn.classList.add('signed-in')
-    btn.title = Signed in as  — click to manage
+    btn.title = `Signed in as ${stored.username} -- click to manage`
   } else {
     nameEl.textContent = 'Guest'
     btn.classList.remove('signed-in')
