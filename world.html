@@ -2376,7 +2376,7 @@ async function handleSignIn(e) {
     if (typeof fetchPlayerState === 'function') await fetchPlayerState()
     updateAccountBadge()
     closeAcctModal()
-    showToast('Signed In', Welcome back, )
+    showToast('Signed In', `Welcome back, ${state.username}`)
   } catch (err) {
     console.error('[WORLD] signIn exception:', err)
     errEl.textContent = err?.message || 'Sign-in failed.'
@@ -2404,7 +2404,7 @@ async function handleCreate(e) {
     if (typeof fetchPlayerState === 'function') await fetchPlayerState()
     updateAccountBadge()
     closeAcctModal()
-    showToast('Account Created', Welcome, )
+    showToast('Account Created', `Welcome, ${state.username}`)
   } catch (err) {
     console.error('[WORLD] createAccount exception:', err)
     errEl.textContent = err?.message || 'Account creation failed.'
