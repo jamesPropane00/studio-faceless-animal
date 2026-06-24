@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="description" content="The World — Faceless Animal Studios. A living breathing multiplayer simulation." />
-  <title>The World — Faceless Animal</title>
+  <meta name="description" content="The World â€” Faceless Animal Studios. A living breathing multiplayer simulation." />
+  <title>The World â€” Faceless Animal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
@@ -257,8 +257,6 @@
       .player-list{right:4px;max-width:160px}
       .brand-badge .tag{display:none}
 
-    
-    .acct-foot:empty,.acct-foot .acct-btn[hidden]{display:none}
       .build-panel, .god-panel {
         padding: 1rem;
         min-width: 280px;
@@ -475,7 +473,6 @@
     <div class="logo">FA<span>.</span></div>
     <div class="tag">THE WORLD</div>
   </div>
-
   <div class="panel stats-panel" id="statsPanel">
     <div class="stat-row"><span class="stat-icon">&#x1F4B0;</span><span class="stat-label">Coins</span><span class="stat-value gold" id="statCoins">0</span></div>
     <div class="stat-row"><span class="stat-icon">&#x2B50;</span><span class="stat-label">Rep</span><span class="stat-value cyan" id="statRep">0</span></div>
@@ -608,6 +605,1688 @@
 <script type="module">
 import { supabase, SUPABASE_READY } from '/assets/js/supabase-client.js'
 import { mountWorldAccount } from '/assets/js/world-account.js'
+import { signIn, createAccount, getStoredSession, clearStoredSession } from '/assets/js/auth.js'
+
+const canvas = document.getElementById('gameCanvas')
+const ctx = canvas.getContext('2d')
+const miniCanvas = document.getElementById('minimapCanvas')
+const miniCtx = miniCanvas.getContext('2d')
+
+const CHUNK_SIZE = 16
+const TILE_W = 64
+const TILE_H = 32
+const WORLD_CHUNKS = 13
+const WORLD_SIZE = CHUNK_SIZE * WORLD_CHUNKS
+
+const TERRAIN = {
+  DEEP_WATER: 0, WATER: 1, SAND: 2, GRASS: 3,
+  DARK_GRASS: 4, FOREST: 5, STONE: 6, DIRT: 7,
+  ROAD: 8, BUILDING: 9
+}
+
+const TERRAIN_COLORS = {
+  [TERRAIN.DEEP_WATER]: ['#0c2d48','#0a2640'],
+  [TERRAIN.WATER]:      ['#1a5276','#16466a'],
+  [TERRAIN.SAND]:       ['#c9a84c','#b8973f'],
+  [TERRAIN.GRASS]:      ['#2d6a4f','#267045'],
+  [TERRAIN.DARK_GRASS]: ['#1b4332','#163d2b'],
+  [TERRAIN.FOREST]:     ['#145a32','#0f4d2a'],
+  [TERRAIN.STONE]:      ['#5d6d7e','#515e6e'],
+  [TERRAIN.DIRT]:       ['#6d4c41','#5d3f36'],
+  [TERRAIN.ROAD]:       ['#4a4a4a','#3e3e3e'],
+  [TERRAIN.BUILDING]:   ['#2c2c3a','#24242f'],
+}
+
+const state = {
+  camera: { x: 0, y: 0, zoom: 1, targetZoom: 1 },
+  player: { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, tx: WORLD_SIZE / 2, ty: WORLD_SIZE / 2, speed: 3.5, color: '#a78bfa', name: '' },
+  otherPlayers: new Map(),
+  chunks: new Map(),
+  npcs: [],
+  buildings: [],
+  districts: [],
+  particles: [],
+  time: 0.5,
+  timeSpeed: 0.0003,
+  weather: {
+    type: 'clear',
+    intensity: 0,
+    targetIntensity: 0,
+    timer: 0,
+    nextChange: 30,
+    wind: { x: 0.5, y: 0.2 },
+    lightning: 0,
+    fogDensity: 0
+  },
+  events: [],
+  eventTimer: 0,
+  nextEvent: 60,
+  coins: 100,
+  rep: 0,
+  currentJob: null,
+  jobStartTime: null,
+  repLevel: 'Nobody',
+  repLevelIndex: 0,
+  repMin: 0,
+  repMax: 50,
+  repProgress: 0,
+  chatOpen: false,
+  playerListOpen: false,
+  minimapOpen: false,
+  buildMode: false,
+  buildType: null,
+  godMode: false,
+  godPower: null,
+  joystick: { active: false, dx: 0, dy: 0 },
+  keys: new Set(),
+  mouse: { down: false, lastX: 0, lastY: 0, dragging: false },
+  loaded: false,
+  userId: null,
+  username: 'anon',
+  serverTime: undefined,
+}
+
+const BUILDING_TYPES = {
+  house: { name: 'House', color: '#8B7355', height: 12, cost: 50, income: 0 },
+  shop: { name: 'Shop', color: '#4A90E2', height: 10, cost: 100, income: 1 },
+  club: { name: 'Club', color: '#E91E63', height: 14, cost: 150, income: 2 },
+  warehouse: { name: 'Warehouse', color: '#607D8B', height: 8, cost: 75, income: 1 },
+  hide: { name: 'Hide', color: '#2C2C2C', height: 6, cost: 200, income: 3 },
+  camp: { name: 'Camp', color: '#795548', height: 4, cost: 25, income: 0 }
+}
+
+const GOD_POWERS = {
+  meteor: { name: 'Meteor Strike', icon: '\u2604\uFE0F', cost: 200, radius: 3, desc: 'Destroy buildings in area' },
+  blessing: { name: 'Divine Blessing', icon: '\u2728', cost: 100, radius: 5, desc: 'Restore buildings in area' },
+  earthquake: { name: 'Earthquake', icon: '\u{1F30B}', cost: 150, radius: 8, desc: 'Damage buildings in area' },
+  spawn_npc: { name: 'Spawn NPC', icon: '\u{1F464}', cost: 25, radius: 0, desc: 'Create a new citizen' }
+}
+
+const WEATHER_TYPES = ['clear', 'cloudy', 'rain', 'storm', 'fog']
+const WEATHER_COLORS = {
+  clear: { sky: 'rgba(135,206,235,0.05)', ground: null },
+  cloudy: { sky: 'rgba(100,100,120,0.15)', ground: null },
+  rain: { sky: 'rgba(70,80,100,0.25)', ground: 'rgba(50,60,80,0.1)' },
+  storm: { sky: 'rgba(40,40,60,0.4)', ground: 'rgba(30,30,50,0.15)' },
+  fog: { sky: 'rgba(180,180,200,0.3)', ground: 'rgba(200,200,220,0.2)' }
+}
+
+const NPC_ROUTINES = {
+  sleeper: { sleepStart: 0.85, sleepEnd: 0.25, workStart: 0.3, workEnd: 0.7 },
+  early_bird: { sleepStart: 0.9, sleepEnd: 0.2, workStart: 0.22, workEnd: 0.65 },
+  night_owl: { sleepStart: 0.95, sleepEnd: 0.35, workStart: 0.4, workEnd: 0.85 },
+  wanderer: { sleepStart: 0.9, sleepEnd: 0.3, workStart: 0, workEnd: 1 }
+}
+
+const WORLD_EVENTS = [
+  { type: 'meteor', name: 'Meteor Strike', icon: '\u2604\uFE0F', desc: 'A meteor crashed nearby!', radius: 3, duration: 5, effect: 'destruction' },
+  { type: 'treasure', name: 'Treasure Found', icon: '\u{1F4B0}', desc: 'Treasure appeared!', radius: 2, duration: 10, effect: 'reward' },
+  { type: 'portal', name: 'Portal Opened', icon: '\u{1F300}', desc: 'A mysterious portal opened...', radius: 2, duration: 15, effect: 'teleport' },
+  { type: 'blessing', name: 'Divine Blessing', icon: '\u2728', desc: 'The gods smile upon this land', radius: 5, duration: 20, effect: 'buff' },
+  { type: 'earthquake', name: 'Earthquake', icon: '\u{1F30B}', desc: 'The ground shakes!', radius: 8, duration: 3, effect: 'chaos' },
+]
+
+function seededRandom(seed) {
+  let s = seed
+  return function() {
+    s = (s * 16807 + 0) % 2147483647
+    return (s - 1) / 2147483646
+  }
+}
+
+function noise2D(x, y, seed) {
+  const rng = seededRandom(Math.abs(x * 374761393 + y * 668265263 + seed * 1013904223) % 2147483647 || 1)
+  return rng()
+}
+
+function smoothNoise(x, y, seed, scale) {
+  const sx = x / scale, sy = y / scale
+  const ix = Math.floor(sx), iy = Math.floor(sy)
+  const fx = sx - ix, fy = sy - iy
+  const a = noise2D(ix, iy, seed)
+  const b = noise2D(ix + 1, iy, seed)
+  const c = noise2D(ix, iy + 1, seed)
+  const d = noise2D(ix + 1, iy + 1, seed)
+  const ux = fx * fx * (3 - 2 * fx)
+  const uy = fy * fy * (3 - 2 * fy)
+  return a * (1 - ux) * (1 - uy) + b * ux * (1 - uy) + c * (1 - ux) * uy + d * ux * uy
+}
+
+function getTerrainAt(wx, wy) {
+  const seed = 42
+  const e = smoothNoise(wx, wy, seed, 40) * 0.5
+          + smoothNoise(wx, wy, seed + 100, 20) * 0.3
+          + smoothNoise(wx, wy, seed + 200, 10) * 0.2
+  const m = smoothNoise(wx, wy, seed + 500, 30)
+
+  const cx = WORLD_SIZE / 2, cy = WORLD_SIZE / 2
+  const dist = Math.sqrt((wx - cx) ** 2 + (wy - cy) ** 2) / (WORLD_SIZE * 0.4)
+
+  if (dist > 0.85 + e * 0.2) return TERRAIN.DEEP_WATER
+  if (dist > 0.75 + e * 0.15) return TERRAIN.WATER
+  if (e < 0.28) return TERRAIN.SAND
+  if (e < 0.45) return m > 0.5 ? TERRAIN.DARK_GRASS : TERRAIN.GRASS
+  if (e < 0.6) return m > 0.6 ? TERRAIN.FOREST : TERRAIN.DARK_GRASS
+  if (e < 0.72) return TERRAIN.STONE
+  return TERRAIN.DIRT
+}
+
+function generateChunk(cx, cy) {
+  const key = `${cx},${cy}`
+  if (state.chunks.has(key)) return state.chunks.get(key)
+  const tiles = []
+  for (let ly = 0; ly < CHUNK_SIZE; ly++) {
+    const row = []
+    for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+      const wx = cx * CHUNK_SIZE + lx
+      const wy = cy * CHUNK_SIZE + ly
+      row.push(getTerrainAt(wx, wy))
+    }
+    tiles.push(row)
+  }
+  const chunk = { cx, cy, tiles }
+  state.chunks.set(key, chunk)
+  return chunk
+}
+
+function generateRoads() {
+  const cx = Math.floor(WORLD_SIZE / 2)
+  const cy = Math.floor(WORLD_SIZE / 2)
+  for (let i = -20; i <= 20; i++) {
+    for (const off of [-2, -1, 0, 1, 2]) {
+      const h1 = getTerrainAt(cx + i, cy + off)
+      if (h1 !== TERRAIN.WATER && h1 !== TERRAIN.DEEP_WATER) {
+        const ck = chunkKey(cx + i, cy + off)
+        if (state.chunks.has(ck)) {
+          const c = state.chunks.get(ck)
+          c.tiles[(cy + off) % CHUNK_SIZE][(cx + i) % CHUNK_SIZE] = TERRAIN.ROAD
+        }
+      }
+      const v1 = getTerrainAt(cx + off, cy + i)
+      if (v1 !== TERRAIN.WATER && v1 !== TERRAIN.DEEP_WATER) {
+        const ck = chunkKey(cx + off, cy + i)
+        if (state.chunks.has(ck)) {
+          const c = state.chunks.get(ck)
+          c.tiles[(cy + i) % CHUNK_SIZE][(cx + off) % CHUNK_SIZE] = TERRAIN.ROAD
+        }
+      }
+    }
+  }
+}
+
+function chunkKey(wx, wy) {
+  return `${Math.floor(wx / CHUNK_SIZE)},${Math.floor(wy / CHUNK_SIZE)}`
+}
+
+function generateNPCs() {
+  const rng = seededRandom(777)
+  const routineKeys = Object.keys(NPC_ROUTINES)
+  const npcTypes = ['walker', 'vendor', 'guard', 'merchant', 'wanderer', 'worker']
+  const npcColors = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#ec4899','#8b5cf6','#14b8a6']
+  
+  for (let i = 0; i < 50; i++) {
+    const angle = rng() * Math.PI * 2
+    const dist = 5 + rng() * 35
+    const nx = WORLD_SIZE / 2 + Math.cos(angle) * dist
+    const ny = WORLD_SIZE / 2 + Math.sin(angle) * dist
+    const t = getTerrainAt(Math.floor(nx), Math.floor(ny))
+    if (t >= TERRAIN.SAND && t <= TERRAIN.DIRT) {
+      const routine = routineKeys[Math.floor(rng() * routineKeys.length)]
+      const type = npcTypes[Math.floor(rng() * npcTypes.length)]
+      const homeX = nx, homeY = ny
+      
+      state.npcs.push({
+        x: nx, y: ny, tx: nx, ty: ny,
+        homeX, homeY,
+        speed: 0.3 + rng() * 0.6,
+        color: npcColors[Math.floor(rng() * npcColors.length)],
+        name: ['Citizen','Walker','Drifter','Runner','Lurker','Stranger','Trader','Guard','Worker','Villager'][Math.floor(rng() * 10)] + ' ' + (i + 1),
+        moveTimer: rng() * 5,
+        type: type,
+        routine: routine,
+        routineData: NPC_ROUTINES[routine],
+        state: 'idle',
+        stateTimer: 0,
+        mood: 0.5 + rng() * 0.5,
+        energy: 0.8 + rng() * 0.2,
+        targetBuilding: null,
+        carrying: rng() > 0.7 ? ['\u{1F4E6}','\u{1F33D}','\u{1F4B0}','\u2694\uFE0F'][Math.floor(rng() * 4)] : null,
+        direction: 0,
+        animFrame: 0,
+        animTimer: 0
+      })
+    }
+  }
+}
+
+function updateNPCRoutine(npc, dt) {
+  const t = state.time
+  const r = npc.routineData
+  
+  let shouldBe = 'idle'
+  if (t >= r.sleepStart || t < r.sleepEnd) {
+    shouldBe = 'sleeping'
+  } else if (t >= r.workStart && t < r.workEnd) {
+    shouldBe = 'working'
+  } else {
+    shouldBe = 'leisure'
+  }
+  
+  if (shouldBe !== npc.state) {
+    npc.state = shouldBe
+    npc.stateTimer = 0
+    
+    if (shouldBe === 'sleeping') {
+      npc.tx = npc.homeX
+      npc.ty = npc.homeY
+      npc.speed = 0.4
+    } else if (shouldBe === 'working') {
+      if (npc.type === 'vendor' || npc.type === 'merchant') {
+        npc.tx = npc.homeX + (Math.random() - 0.5) * 3
+        npc.ty = npc.homeY + (Math.random() - 0.5) * 3
+      } else {
+        const angle = Math.random() * Math.PI * 2
+        const dist = 5 + Math.random() * 10
+        npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeX + Math.cos(angle) * dist))
+        npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeY + Math.sin(angle) * dist))
+      }
+      npc.speed = 0.5 + Math.random() * 0.4
+    } else if (shouldBe === 'leisure') {
+      const angle = Math.random() * Math.PI * 2
+      const dist = 2 + Math.random() * 8
+      npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeX + Math.cos(angle) * dist))
+      npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeY + Math.sin(angle) * dist))
+      npc.speed = 0.2 + Math.random() * 0.3
+    }
+  }
+  
+  if (npc.state === 'sleeping') {
+    npc.energy = Math.min(1, npc.energy + dt * 0.1)
+  } else {
+    npc.energy = Math.max(0.1, npc.energy - dt * 0.01)
+  }
+}
+
+function updateNPCs(dt) {
+  for (const npc of state.npcs) {
+    updateNPCRoutine(npc, dt)
+    
+    npc.stateTimer += dt
+    npc.animTimer += dt
+    if (npc.animTimer > 0.3) {
+      npc.animTimer = 0
+      npc.animFrame = (npc.animFrame + 1) % 4
+    }
+    
+    if (npc.state === 'sleeping') {
+      const ddx = npc.tx - npc.x, ddy = npc.ty - npc.y
+      const dd = Math.sqrt(ddx * ddx + ddy * ddy)
+      if (dd < 0.5) {
+        npc.moveTimer = 999
+        continue
+      }
+    }
+    
+    npc.moveTimer -= dt
+    if (npc.moveTimer <= 0 && npc.state !== 'sleeping') {
+      npc.moveTimer = 2 + Math.random() * 5
+      
+      if (npc.state === 'working') {
+        if (npc.type === 'vendor' || npc.type === 'merchant') {
+          npc.tx = npc.homeX + (Math.random() - 0.5) * 4
+          npc.ty = npc.homeY + (Math.random() - 0.5) * 4
+        } else {
+          const angle = Math.random() * Math.PI * 2
+          const dist = 3 + Math.random() * 8
+          npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.x + Math.cos(angle) * dist))
+          npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.y + Math.sin(angle) * dist))
+        }
+      } else if (npc.state === 'leisure') {
+        const angle = Math.random() * Math.PI * 2
+        const dist = 2 + Math.random() * 6
+        npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.x + Math.cos(angle) * dist))
+        npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.y + Math.sin(angle) * dist))
+      }
+      
+      const t = getTerrainAt(Math.floor(npc.tx), Math.floor(npc.ty))
+      if (t === TERRAIN.DEEP_WATER || t === TERRAIN.WATER) {
+        npc.tx = npc.x
+        npc.ty = npc.y
+      }
+    }
+    
+    const ddx = npc.tx - npc.x, ddy = npc.ty - npc.y
+    const dd = Math.sqrt(ddx * ddx + ddy * ddy)
+    if (dd > 0.2) {
+      const speedMult = npc.state === 'sleeping' ? 0.5 : (npc.state === 'leisure' ? 0.7 : 1)
+      const weatherMult = state.weather.type === 'storm' ? 0.6 : (state.weather.type === 'rain' ? 0.8 : 1)
+      const actualSpeed = npc.speed * speedMult * weatherMult * dt
+      npc.x += (ddx / dd) * actualSpeed
+      npc.y += (ddy / dd) * actualSpeed
+      npc.direction = Math.atan2(ddy, ddx)
+    }
+  }
+}
+
+function updateWeather(dt) {
+  const w = state.weather
+  w.timer += dt
+  
+  if (w.timer >= w.nextChange) {
+    w.timer = 0
+    w.nextChange = 20 + Math.random() * 40
+    
+    const roll = Math.random()
+    if (roll < 0.4) w.type = 'clear'
+    else if (roll < 0.65) w.type = 'cloudy'
+    else if (roll < 0.85) w.type = 'rain'
+    else if (roll < 0.95) w.type = 'storm'
+    else w.type = 'fog'
+    
+    w.targetIntensity = w.type === 'clear' ? 0 : (w.type === 'cloudy' ? 0.3 : (w.type === 'fog' ? 0.5 : 0.7 + Math.random() * 0.3))
+    
+    if (w.type === 'storm' || w.type === 'rain') {
+      w.wind.x = (Math.random() - 0.5) * 2
+      w.wind.y = 0.5 + Math.random() * 0.5
+    }
+    
+    if (w.type === 'fog') {
+      w.fogDensity = 0.3 + Math.random() * 0.4
+    } else {
+      w.fogDensity = 0
+    }
+  }
+  
+  w.intensity += (w.targetIntensity - w.intensity) * dt * 0.5
+  
+  if (w.type === 'storm' && Math.random() < 0.005) {
+    w.lightning = 1
+  }
+  if (w.lightning > 0) {
+    w.lightning = Math.max(0, w.lightning - dt * 3)
+  }
+}
+
+function updateParticles(dt) {
+  const w = state.weather
+  
+  if ((w.type === 'rain' || w.type === 'storm') && w.intensity > 0.1) {
+    const count = Math.floor(w.intensity * 10)
+    for (let i = 0; i < count; i++) {
+      state.particles.push({
+        x: state.player.x + (Math.random() - 0.5) * 40,
+        y: state.player.y + (Math.random() - 0.5) * 40,
+        vx: w.wind.x * 2,
+        vy: 3 + Math.random() * 2,
+        life: 1,
+        type: 'rain'
+      })
+    }
+  }
+  
+  for (let i = state.particles.length - 1; i >= 0; i--) {
+    const p = state.particles[i]
+    p.x += p.vx * dt
+    p.y += p.vy * dt
+    p.life -= dt * (p.type === 'rain' ? 2 : 1)
+    
+    if (p.life <= 0) {
+      state.particles.splice(i, 1)
+    }
+  }
+  
+  if (state.particles.length > 500) {
+    state.particles.splice(0, state.particles.length - 500)
+  }
+}
+
+function updateEvents(dt) {
+  state.eventTimer += dt
+  
+  if (state.eventTimer >= state.nextEvent) {
+    state.eventTimer = 0
+    state.nextEvent = 45 + Math.random() * 75
+    
+    const template = WORLD_EVENTS[Math.floor(Math.random() * WORLD_EVENTS.length)]
+    const ex = state.player.x + (Math.random() - 0.5) * 30
+    const ey = state.player.y + (Math.random() - 0.5) * 30
+    
+    const evt = {
+      ...template,
+      x: Math.max(2, Math.min(WORLD_SIZE - 3, ex)),
+      y: Math.max(2, Math.min(WORLD_SIZE - 3, ey)),
+      timer: template.duration,
+      startTime: performance.now()
+    }
+    
+    state.events.push(evt)
+    showToast(evt.icon + ' ' + evt.name, evt.desc)
+    addChatMessage('', `${evt.icon} ${evt.name} â€” ${evt.desc}`, true)
+  }
+  
+  for (let i = state.events.length - 1; i >= 0; i--) {
+    state.events[i].timer -= dt
+    if (state.events[i].timer <= 0) {
+      state.events.splice(i, 1)
+    }
+  }
+}
+
+function drawWeatherEffects(w, h) {
+  const weather = state.weather
+  
+  if (weather.type !== 'clear') {
+    const colors = WEATHER_COLORS[weather.type]
+    if (colors.sky) {
+      ctx.fillStyle = colors.sky
+      ctx.fillRect(0, 0, w, h)
+    }
+  }
+  
+  if (weather.fogDensity > 0) {
+    const gradient = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w * 0.7)
+    gradient.addColorStop(0, `rgba(200,200,220,0)`)
+    gradient.addColorStop(1, `rgba(200,200,220,${weather.fogDensity * 0.5})`)
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, w, h)
+  }
+  
+  for (const p of state.particles) {
+    if (p.type === 'rain') {
+      const s = worldToScreen(p.x, p.y)
+      if (s.x < 0 || s.x > w || s.y < 0 || s.y > h) continue
+      ctx.strokeStyle = `rgba(150,180,220,${p.life * 0.6})`
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(s.x, s.y)
+      ctx.lineTo(s.x + p.vx * 2, s.y + p.vy * 2)
+      ctx.stroke()
+    }
+  }
+  
+  if (weather.lightning > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${weather.lightning * 0.4})`
+    ctx.fillRect(0, 0, w, h)
+  }
+}
+
+function drawWorldEvents() {
+  for (const evt of state.events) {
+    const s = worldToScreen(evt.x, evt.y)
+    const pulse = Math.sin(performance.now() * 0.005) * 0.3 + 0.7
+    const radius = evt.radius * TILE_W * state.camera.zoom * 0.5
+    
+    ctx.beginPath()
+    ctx.arc(s.x, s.y, radius, 0, Math.PI * 2)
+    const gradient = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, radius)
+    
+    if (evt.type === 'meteor') {
+      gradient.addColorStop(0, `rgba(255,100,0,${0.4 * pulse})`)
+      gradient.addColorStop(1, 'rgba(255,50,0,0)')
+    } else if (evt.type === 'treasure') {
+      gradient.addColorStop(0, `rgba(255,215,0,${0.5 * pulse})`)
+      gradient.addColorStop(1, 'rgba(255,180,0,0)')
+    } else if (evt.type === 'portal') {
+      gradient.addColorStop(0, `rgba(138,43,226,${0.5 * pulse})`)
+      gradient.addColorStop(1, 'rgba(75,0,130,0)')
+    } else if (evt.type === 'blessing') {
+      gradient.addColorStop(0, `rgba(255,255,200,${0.4 * pulse})`)
+      gradient.addColorStop(1, 'rgba(255,255,150,0)')
+    } else {
+      gradient.addColorStop(0, `rgba(200,100,50,${0.3 * pulse})`)
+      gradient.addColorStop(1, 'rgba(150,50,0,0)')
+    }
+    
+    ctx.fillStyle = gradient
+    ctx.fill()
+    
+    ctx.font = `${Math.max(16, 24 * state.camera.zoom)}px Inter`
+    ctx.textAlign = 'center'
+    ctx.fillStyle = `rgba(255,255,255,${pulse})`
+    ctx.fillText(evt.icon, s.x, s.y - 10 * state.camera.zoom)
+  }
+}
+
+function worldToScreen(wx, wy) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const logicalWidth = canvas.width / dpr
+  const logicalHeight = canvas.height / dpr
+  const iso_x = (wx - wy) * (TILE_W / 2)
+  const iso_y = (wx + wy) * (TILE_H / 2)
+  return {
+    x: (iso_x - state.camera.x) * state.camera.zoom + logicalWidth / 2,
+    y: (iso_y - state.camera.y) * state.camera.zoom + logicalHeight / 2
+  }
+}
+
+function screenToWorld(sx, sy) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const logicalWidth = canvas.width / dpr
+  const logicalHeight = canvas.height / dpr
+  const rx = (sx - logicalWidth / 2) / state.camera.zoom + state.camera.x
+  const ry = (sy - logicalHeight / 2) / state.camera.zoom + state.camera.y
+  const wx = (rx / (TILE_W / 2) + ry / (TILE_H / 2)) / 2
+  const wy = (ry / (TILE_H / 2) - rx / (TILE_W / 2)) / 2
+  return { x: wx, y: wy }
+}
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  canvas.width = window.innerWidth * dpr
+  canvas.height = window.innerHeight * dpr
+  canvas.style.width = window.innerWidth + 'px'
+  canvas.style.height = window.innerHeight + 'px'
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+}
+
+function getDaylightColor() {
+  const t = state.time
+  if (t < 0.2 || t > 0.8) return { r: 10, g: 10, b: 40, a: 0.45 }
+  if (t < 0.3) {
+    const f = (t - 0.2) / 0.1
+    return { r: 10 + f * 240, g: 10 + f * 200, b: 40 + f * 100, a: 0.45 * (1 - f) }
+  }
+  if (t > 0.7) {
+    const f = (0.8 - t) / 0.1
+    return { r: 10 + f * 240, g: 10 + f * 200, b: 40 + f * 100, a: 0.45 * (1 - f) }
+  }
+  if (t < 0.35) {
+    const f = (t - 0.3) / 0.05
+    return { r: 250 - f * 240, g: 210 - f * 195, b: 140 - f * 100, a: 0.08 * (1 - f) }
+  }
+  return { r: 0, g: 0, b: 0, a: 0 }
+}
+
+function getTimeIcon() {
+  const t = state.time
+  if (t < 0.2 || t > 0.8) return '\u{1F319}'
+  if (t < 0.3 || t > 0.7) return '\u{1F305}'
+  return '\u2600\uFE0F'
+}
+
+function getTimeString() {
+  const hours = Math.floor(state.time * 24)
+  const mins = Math.floor((state.time * 24 - hours) * 60)
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
+}
+
+function drawTile(x, y, terrain) {
+  const s = worldToScreen(x, y)
+  const hw = (TILE_W / 2) * state.camera.zoom
+  const hh = (TILE_H / 2) * state.camera.zoom
+
+  if (s.x < -hw * 2 || s.x > canvas.width + hw * 2 || s.y < -hh * 4 || s.y > canvas.height + hh * 4) return
+
+  const colors = TERRAIN_COLORS[terrain] || TERRAIN_COLORS[TERRAIN.GRASS]
+  const topColor = colors[0]
+  const sideColor = colors[1]
+
+  ctx.beginPath()
+  ctx.moveTo(s.x, s.y - hh)
+  ctx.lineTo(s.x + hw, s.y)
+  ctx.lineTo(s.x, s.y + hh)
+  ctx.lineTo(s.x - hw, s.y)
+  ctx.closePath()
+  ctx.fillStyle = topColor
+  ctx.fill()
+
+  if (terrain === TERRAIN.BUILDING || terrain === TERRAIN.FOREST) {
+    const elev = terrain === TERRAIN.BUILDING ? 12 : 6
+    const eh = elev * state.camera.zoom
+    ctx.beginPath()
+    ctx.moveTo(s.x - hw, s.y)
+    ctx.lineTo(s.x, s.y + hh)
+    ctx.lineTo(s.x, s.y + hh - eh)
+    ctx.lineTo(s.x - hw, s.y - eh)
+    ctx.closePath()
+    ctx.fillStyle = sideColor
+    ctx.fill()
+
+    ctx.beginPath()
+    ctx.moveTo(s.x + hw, s.y)
+    ctx.lineTo(s.x, s.y + hh)
+    ctx.lineTo(s.x, s.y + hh - eh)
+    ctx.lineTo(s.x + hw, s.y - eh)
+    ctx.closePath()
+    const rc = parseInt(sideColor.slice(1), 16)
+    const r = Math.min(255, ((rc >> 16) & 0xff) + 20)
+    const g = Math.min(255, ((rc >> 8) & 0xff) + 20)
+    const b = Math.min(255, (rc & 0xff) + 20)
+    ctx.fillStyle = `rgb(${r},${g},${b})`
+    ctx.fill()
+
+    ctx.beginPath()
+    ctx.moveTo(s.x, s.y - hh - eh)
+    ctx.lineTo(s.x + hw, s.y - eh)
+    ctx.lineTo(s.x, s.y + hh - eh)
+    ctx.lineTo(s.x - hw, s.y - eh)
+    ctx.closePath()
+    ctx.fillStyle = topColor
+    ctx.fill()
+  }
+
+  ctx.beginPath()
+  ctx.moveTo(s.x, s.y - hh)
+  ctx.lineTo(s.x + hw, s.y)
+  ctx.lineTo(s.x, s.y + hh)
+  ctx.lineTo(s.x - hw, s.y)
+  ctx.closePath()
+  ctx.strokeStyle = 'rgba(0,0,0,0.08)'
+  ctx.lineWidth = 0.5
+  ctx.stroke()
+}
+
+function drawBuilding(building) {
+  const type = BUILDING_TYPES[building.building_type]
+  if (!type) return
+  
+  const s = worldToScreen(building.tile_x, building.tile_y)
+  const hw = (TILE_W / 2) * state.camera.zoom
+  const hh = (TILE_H / 2) * state.camera.zoom
+  const elev = type.height * state.camera.zoom
+  
+  if (s.x < -hw * 2 || s.x > canvas.width + hw * 2 || s.y < -hh * 4 - elev || s.y > canvas.height + hh * 4) return
+  
+  const condition = building.condition || 100
+  const conditionMult = condition / 100
+  const baseColor = type.color
+  
+  const rc = parseInt(baseColor.slice(1), 16)
+  const r = Math.floor(((rc >> 16) & 0xff) * conditionMult)
+  const g = Math.floor(((rc >> 8) & 0xff) * conditionMult)
+  const b = Math.floor((rc & 0xff) * conditionMult)
+  
+  const topColor = `rgb(${r},${g},${b})`
+  const sideColor = `rgb(${Math.floor(r * 0.7)},${Math.floor(g * 0.7)},${Math.floor(b * 0.7)})`
+  const lightColor = `rgb(${Math.min(255, Math.floor(r * 1.2))},${Math.min(255, Math.floor(g * 1.2))},${Math.min(255, Math.floor(b * 1.2))})`
+  
+  ctx.beginPath()
+  ctx.moveTo(s.x - hw, s.y)
+  ctx.lineTo(s.x, s.y + hh)
+  ctx.lineTo(s.x, s.y + hh - elev)
+  ctx.lineTo(s.x - hw, s.y - elev)
+  ctx.closePath()
+  ctx.fillStyle = sideColor
+  ctx.fill()
+  
+  ctx.beginPath()
+  ctx.moveTo(s.x + hw, s.y)
+  ctx.lineTo(s.x, s.y + hh)
+  ctx.lineTo(s.x, s.y + hh - elev)
+  ctx.lineTo(s.x + hw, s.y - elev)
+  ctx.closePath()
+  ctx.fillStyle = lightColor
+  ctx.fill()
+  
+  ctx.beginPath()
+  ctx.moveTo(s.x, s.y - hh - elev)
+  ctx.lineTo(s.x + hw, s.y - elev)
+  ctx.lineTo(s.x, s.y + hh - elev)
+  ctx.lineTo(s.x - hw, s.y - elev)
+  ctx.closePath()
+  ctx.fillStyle = topColor
+  ctx.fill()
+  
+  if (building.owner_id && state.camera.zoom > 0.6) {
+    ctx.strokeStyle = 'rgba(167,139,250,0.6)'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(s.x, s.y - hh - elev)
+    ctx.lineTo(s.x + hw, s.y - elev)
+    ctx.lineTo(s.x, s.y + hh - elev)
+    ctx.lineTo(s.x - hw, s.y - elev)
+    ctx.closePath()
+    ctx.stroke()
+  }
+  
+  if (condition < 50 && state.camera.zoom > 0.5) {
+    ctx.font = `${8 * state.camera.zoom}px Inter`
+    ctx.textAlign = 'center'
+    ctx.fillStyle = condition < 25 ? '#ef4444' : '#f59e0b'
+    ctx.fillText(condition < 25 ? '\u26A0' : '\u{1F6A7}', s.x, s.y - elev - 5 * state.camera.zoom)
+  }
+}
+
+function drawDistrict(district) {
+  const s = worldToScreen(district.center_x, district.center_y)
+  const radius = district.radius * TILE_W * state.camera.zoom * 0.3
+  
+  if (s.x < -radius || s.x > canvas.width + radius || s.y < -radius || s.y > canvas.height + radius) return
+  
+  ctx.beginPath()
+  ctx.arc(s.x, s.y, radius, 0, Math.PI * 2)
+  ctx.strokeStyle = 'rgba(167,139,250,0.3)'
+  ctx.lineWidth = 2
+  ctx.setLineDash([5, 5])
+  ctx.stroke()
+  ctx.setLineDash([])
+  
+  if (state.camera.zoom > 0.4) {
+    ctx.font = `bold ${12 * state.camera.zoom}px Inter`
+    ctx.textAlign = 'center'
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'
+    ctx.fillText(district.name, s.x + 1, s.y - radius - 9)
+    ctx.fillStyle = 'rgba(167,139,250,0.9)'
+    ctx.fillText(district.name, s.x, s.y - radius - 10)
+  }
+}
+
+function drawEntity(wx, wy, color, name, isPlayer) {
+  const s = worldToScreen(wx, wy)
+  const sz = (isPlayer ? 10 : 7) * state.camera.zoom
+
+  if (s.x < -30 || s.x > canvas.width + 30 || s.y < -50 || s.y > canvas.height + 30) return
+
+  ctx.beginPath()
+  ctx.ellipse(s.x, s.y + 2 * state.camera.zoom, sz * 0.6, sz * 0.3, 0, 0, Math.PI * 2)
+  ctx.fillStyle = 'rgba(0,0,0,0.25)'
+  ctx.fill()
+
+  ctx.beginPath()
+  ctx.arc(s.x, s.y - sz, sz, 0, Math.PI * 2)
+  ctx.fillStyle = color
+  ctx.fill()
+  ctx.strokeStyle = isPlayer ? '#fff' : 'rgba(255,255,255,0.3)'
+  ctx.lineWidth = isPlayer ? 2 : 1
+  ctx.stroke()
+
+  if (isPlayer) {
+    ctx.beginPath()
+    ctx.arc(s.x, s.y - sz, sz + 3, 0, Math.PI * 2)
+    ctx.strokeStyle = 'rgba(167,139,250,0.4)'
+    ctx.lineWidth = 1.5
+    ctx.stroke()
+  }
+
+  if (name && state.camera.zoom > 0.5) {
+    ctx.font = `${Math.max(9, 11 * state.camera.zoom)}px Inter, sans-serif`
+    ctx.textAlign = 'center'
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'
+    ctx.fillText(name, s.x + 1, s.y - sz * 2 + 1)
+    ctx.fillStyle = isPlayer ? '#fff' : 'rgba(255,255,255,0.7)'
+    ctx.fillText(name, s.x, s.y - sz * 2)
+  }
+}
+
+function drawMinimap() {
+  if (!state.minimapOpen) return
+  const mw = miniCanvas.width, mh = miniCanvas.height
+  miniCtx.fillStyle = '#0a0b10'
+  miniCtx.fillRect(0, 0, mw, mh)
+
+  const scale = mw / WORLD_SIZE
+  for (let y = 0; y < WORLD_SIZE; y += 2) {
+    for (let x = 0; x < WORLD_SIZE; x += 2) {
+      const t = getTerrainAt(x, y)
+      miniCtx.fillStyle = TERRAIN_COLORS[t][0]
+      miniCtx.fillRect(x * scale, y * scale, scale * 2 + 1, scale * 2 + 1)
+    }
+  }
+
+  for (const [, p] of state.otherPlayers) {
+    miniCtx.fillStyle = '#a78bfa'
+    miniCtx.fillRect(p.x * scale - 2, p.y * scale - 2, 4, 4)
+  }
+
+  miniCtx.fillStyle = '#fff'
+  miniCtx.fillRect(state.player.x * scale - 3, state.player.y * scale - 3, 6, 6)
+  miniCtx.strokeStyle = 'rgba(167,139,250,0.6)'
+  miniCtx.lineWidth = 1.5
+  miniCtx.strokeRect(state.player.x * scale - 3, state.player.y * scale - 3, 6, 6)
+
+  const vw = (canvas.width / state.camera.zoom / (TILE_W * WORLD_SIZE * 0.5)) * mw
+  const vh = (canvas.height / state.camera.zoom / (TILE_H * WORLD_SIZE * 0.5)) * mh
+  miniCtx.strokeStyle = 'rgba(255,255,255,0.25)'
+  miniCtx.lineWidth = 1
+  miniCtx.strokeRect(
+    state.player.x * scale - vw / 2,
+    state.player.y * scale - vh / 2,
+    vw, vh
+  )
+}
+
+function render() {
+  const w = canvas.width / (Math.min(window.devicePixelRatio || 1, 2))
+  const h = canvas.height / (Math.min(window.devicePixelRatio || 1, 2))
+
+  ctx.fillStyle = '#0a0b10'
+  ctx.fillRect(0, 0, w, h)
+
+  const px = Math.floor(state.player.x)
+  const py = Math.floor(state.player.y)
+  const viewRange = Math.ceil(Math.max(w, h) / (TILE_H * state.camera.zoom)) + 4
+
+  const minCX = Math.floor((px - viewRange) / CHUNK_SIZE)
+  const maxCX = Math.floor((px + viewRange) / CHUNK_SIZE)
+  const minCY = Math.floor((py - viewRange) / CHUNK_SIZE)
+  const maxCY = Math.floor((py + viewRange) / CHUNK_SIZE)
+
+  for (let cy = minCY; cy <= maxCY; cy++) {
+    for (let cx = minCX; cx <= maxCX; cx++) {
+      generateChunk(cx, cy)
+    }
+  }
+
+  const drawOrder = []
+  for (const [key, chunk] of state.chunks) {
+    for (let ly = 0; ly < CHUNK_SIZE; ly++) {
+      for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+        const wx = chunk.cx * CHUNK_SIZE + lx
+        const wy = chunk.cy * CHUNK_SIZE + ly
+        if (wx < 0 || wy < 0 || wx >= WORLD_SIZE || wy >= WORLD_SIZE) continue
+        const s = worldToScreen(wx, wy)
+        if (s.x < -TILE_W * state.camera.zoom || s.x > w + TILE_W * state.camera.zoom ||
+            s.y < -TILE_H * state.camera.zoom * 4 || s.y > h + TILE_H * state.camera.zoom * 4) continue
+        drawOrder.push({ type: 'tile', x: wx, y: wy, terrain: chunk.tiles[ly][lx], sort: wx + wy })
+      }
+    }
+  }
+
+  drawOrder.push({ type: 'player', x: state.player.x, y: state.player.y, sort: state.player.x + state.player.y })
+  for (const [, p] of state.otherPlayers) {
+    drawOrder.push({ type: 'other', x: p.x, y: p.y, sort: p.x + p.y, data: p })
+  }
+  for (const npc of state.npcs) {
+    drawOrder.push({ type: 'npc', x: npc.x, y: npc.y, sort: npc.x + npc.y, data: npc })
+  }
+  for (const building of state.buildings) {
+    drawOrder.push({ type: 'building', x: building.tile_x, y: building.tile_y, sort: building.tile_x + building.tile_y, data: building })
+  }
+
+  drawOrder.sort((a, b) => a.sort - b.sort)
+
+  for (const district of state.districts) {
+    drawDistrict(district)
+  }
+
+  for (const item of drawOrder) {
+    if (item.type === 'tile') drawTile(item.x, item.y, item.terrain)
+    else if (item.type === 'building') drawBuilding(item.data)
+    else if (item.type === 'player') drawEntity(item.x, item.y, state.player.color, state.player.name, true)
+    else if (item.type === 'other') drawEntity(item.x, item.y, '#8b5cf6', item.data.name, false)
+    else if (item.type === 'npc') {
+      const npc = item.data
+      drawEntity(item.x, item.y, npc.color, npc.name, false)
+      
+      if (state.camera.zoom > 0.6) {
+        const s = worldToScreen(item.x, item.y)
+        
+        if (npc.type === 'vendor' || npc.type === 'merchant') {
+          ctx.font = `${10 * state.camera.zoom}px Inter`
+          ctx.textAlign = 'center'
+          ctx.fillText('\u{1F3EA}', s.x, s.y - 22 * state.camera.zoom)
+        }
+        
+        if (npc.state === 'sleeping') {
+          ctx.font = `${8 * state.camera.zoom}px Inter`
+          ctx.textAlign = 'center'
+          ctx.fillStyle = 'rgba(150,150,255,0.7)'
+          const zzz = Math.sin(performance.now() * 0.003) > 0 ? 'Z' : 'z'
+          ctx.fillText(zzz + 'z' + 'z', s.x + 8 * state.camera.zoom, s.y - 18 * state.camera.zoom)
+        } else if (npc.state === 'working' && npc.carrying) {
+          ctx.font = `${8 * state.camera.zoom}px Inter`
+          ctx.textAlign = 'center'
+          ctx.fillText(npc.carrying, s.x + 10 * state.camera.zoom, s.y - 12 * state.camera.zoom)
+        }
+        
+        if (npc.type === 'guard') {
+          ctx.font = `${8 * state.camera.zoom}px Inter`
+          ctx.textAlign = 'center'
+          ctx.fillText('\u2694\uFE0F', s.x - 10 * state.camera.zoom, s.y - 12 * state.camera.zoom)
+        }
+      }
+    }
+  }
+
+  const dl = getDaylightColor()
+  if (dl.a > 0.01) {
+    ctx.fillStyle = `rgba(${dl.r},${dl.g},${dl.b},${dl.a})`
+    ctx.fillRect(0, 0, w, h)
+  }
+
+  drawWeatherEffects(w, h)
+  drawWorldEvents()
+
+  drawMinimap()
+
+  document.getElementById('coordBadge').textContent = `${Math.floor(state.player.x)}, ${Math.floor(state.player.y)}`
+  document.getElementById('timeIcon').innerHTML = getTimeIcon()
+  document.getElementById('timeText').textContent = getTimeString()
+  
+  const weatherIcons = { clear: '\u2600\uFE0F', cloudy: '\u2601\uFE0F', rain: '\u{1F327}\uFE0F', storm: '\u26C8\uFE0F', fog: '\u{1F32B}\uFE0F' }
+  document.getElementById('weatherIcon').textContent = weatherIcons[state.weather.type] || ''
+}
+
+function update(dt) {
+  if (state.serverTime !== undefined) {
+    state.time += (state.serverTime - state.time) * 0.05
+  } else {
+    state.time = (state.time + state.timeSpeed * dt) % 1
+  }
+
+  let dx = 0, dy = 0
+  if (state.joystick.active) {
+    dx = state.joystick.dx
+    dy = state.joystick.dy
+  } else {
+    if (state.keys.has('w') || state.keys.has('arrowup')) dy -= 1
+    if (state.keys.has('s') || state.keys.has('arrowdown')) dy += 1
+    if (state.keys.has('a') || state.keys.has('arrowleft')) dx -= 1
+    if (state.keys.has('d') || state.keys.has('arrowright')) dx += 1
+  }
+
+  if (dx !== 0 || dy !== 0) {
+    const len = Math.sqrt(dx * dx + dy * dy)
+    dx /= len; dy /= len
+    const isoDx = (dx - dy) * 0.707
+    const isoDy = (dx + dy) * 0.707
+    const nx = state.player.x + isoDx * state.player.speed * dt
+    const ny = state.player.y + isoDy * state.player.speed * dt
+    const t = getTerrainAt(Math.floor(nx), Math.floor(ny))
+    if (t !== TERRAIN.DEEP_WATER && t !== TERRAIN.WATER && nx >= 0 && ny >= 0 && nx < WORLD_SIZE && ny < WORLD_SIZE) {
+      state.player.x = nx
+      state.player.y = ny
+    }
+  }
+
+  const targetIsoX = (state.player.x - state.player.y) * (TILE_W / 2)
+  const targetIsoY = (state.player.x + state.player.y) * (TILE_H / 2)
+  state.camera.x += (targetIsoX - state.camera.x) * 0.15
+  state.camera.y += (targetIsoY - state.camera.y) * 0.15
+  state.camera.zoom += (state.camera.targetZoom - state.camera.zoom) * 0.1
+
+  updateNPCs(dt)
+  updateWeather(dt)
+  updateParticles(dt)
+  updateEvents(dt)
+
+  for (const npc of state.npcs) {
+    if (npc._serverX !== undefined) {
+      npc.x += (npc._serverX - npc.x) * 0.1
+      npc.y += (npc._serverY - npc.y) * 0.1
+      if (npc._serverState) npc.state = npc._serverState
+      if (npc._serverDir !== undefined) npc.direction = npc._serverDir
+    }
+  }
+
+  for (const [, p] of state.otherPlayers) {
+    if (p._interp) {
+      const elapsed = (performance.now() - p._interpStart) / (p._interpDuration || 200)
+      if (elapsed < 1) {
+        p.x = p._fromX + (p.tx - p._fromX) * elapsed
+        p.y = p._fromY + (p.ty - p._fromY) * elapsed
+      } else {
+        p.x = p.tx; p.y = p.ty
+        p._interp = false
+      }
+    }
+  }
+
+  const maxDist = (WORLD_SIZE / CHUNK_SIZE) * TILE_W
+  const pruneKeys = []
+  for (const [key] of state.chunks) {
+    const [cx, cy] = key.split(',').map(Number)
+    const chunkCenterX = (cx + 0.5) * CHUNK_SIZE
+    const chunkCenterY = (cy + 0.5) * CHUNK_SIZE
+    const dist = Math.sqrt((chunkCenterX - state.player.x) ** 2 + (chunkCenterY - state.player.y) ** 2)
+    if (dist > maxDist * 0.7) pruneKeys.push(key)
+  }
+  for (const key of pruneKeys) state.chunks.delete(key)
+}
+
+let lastTime = performance.now()
+function gameLoop(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.1)
+  lastTime = now
+  if (state.loaded) {
+    update(dt)
+    render()
+  }
+  requestAnimationFrame(gameLoop)
+}
+
+function setupKeyboard() {
+  window.addEventListener('keydown', e => {
+    if (document.activeElement === document.getElementById('chatInput')) return
+    state.keys.add(e.key.toLowerCase())
+    if (e.key === '+' || e.key === '=') state.camera.targetZoom = Math.min(3, state.camera.targetZoom * 1.2)
+    if (e.key === '-') state.camera.targetZoom = Math.max(0.3, state.camera.targetZoom / 1.2)
+  })
+  window.addEventListener('keyup', e => {
+    state.keys.delete(e.key.toLowerCase())
+  })
+}
+
+function setupMouse() {
+  canvas.addEventListener('mousedown', e => {
+    if (e.button === 2 || e.button === 1) {
+      state.mouse.down = true
+      state.mouse.lastX = e.clientX
+      state.mouse.lastY = e.clientY
+      state.mouse.dragging = true
+      e.preventDefault()
+    }
+  })
+  canvas.addEventListener('mousemove', e => {
+    if (state.mouse.dragging) {
+      const dx = e.clientX - state.mouse.lastX
+      const dy = e.clientY - state.mouse.lastY
+      state.camera.x -= dx
+      state.camera.y -= dy
+      state.mouse.lastX = e.clientX
+      state.mouse.lastY = e.clientY
+    }
+  })
+  canvas.addEventListener('mouseup', () => {
+    state.mouse.down = false
+    state.mouse.dragging = false
+  })
+  canvas.addEventListener('contextmenu', e => e.preventDefault())
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault()
+    const factor = e.deltaY > 0 ? 0.9 : 1.1
+    state.camera.targetZoom = Math.max(0.3, Math.min(3, state.camera.targetZoom * factor))
+  }, { passive: false })
+
+  canvas.addEventListener('dblclick', e => {
+    const world = screenToWorld(e.clientX, e.clientY)
+    state.player.tx = Math.max(0, Math.min(WORLD_SIZE - 1, world.x))
+    state.player.ty = Math.max(0, Math.min(WORLD_SIZE - 1, world.y))
+  })
+
+  canvas.addEventListener('click', e => {
+    if (state.mouse.dragging) return
+    
+    const world = screenToWorld(e.clientX, e.clientY)
+    
+    if (state.buildMode && state.buildType) {
+      placeBuildingAt(world.x, world.y)
+    } else if (state.godMode && state.godPower) {
+      triggerGodPower(world.x, world.y)
+    } else {
+      const clickedBuilding = state.buildings.find(b => {
+        const dx = Math.abs(b.tile_x - world.x)
+        const dy = Math.abs(b.tile_y - world.y)
+        return dx < 1 && dy < 1
+      })
+      
+      if (clickedBuilding) {
+        if (clickedBuilding.owner_id === state.userId) {
+          openIncomePanel(clickedBuilding.id)
+        } else {
+          const payRates = { shop: 2, club: 3, warehouse: 1, hide: 5 }
+          if (payRates[clickedBuilding.building_type]) {
+            openJobPanel(clickedBuilding.id)
+          }
+        }
+      }
+    }
+  })
+}
+
+function setupTouch() {
+  const zone = document.getElementById('joystickZone')
+  const knob = document.getElementById('joystickKnob')
+  const baseR = 65
+  const knobR = 26
+  let touchId = null
+  let centerX = 0, centerY = 0
+
+  zone.addEventListener('touchstart', e => {
+    e.preventDefault()
+    const touch = e.changedTouches[0]
+    touchId = touch.identifier
+    const rect = zone.getBoundingClientRect()
+    centerX = rect.left + rect.width / 2
+    centerY = rect.top + rect.height / 2
+    state.joystick.active = true
+  }, { passive: false })
+
+  window.addEventListener('touchmove', e => {
+    for (const touch of e.changedTouches) {
+      if (touch.identifier === touchId) {
+        let dx = touch.clientX - centerX
+        let dy = touch.clientY - centerY
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        const maxDist = baseR - knobR
+        if (dist > maxDist) {
+          dx = (dx / dist) * maxDist
+          dy = (dy / dist) * maxDist
+        }
+        state.joystick.dx = dx / maxDist
+        state.joystick.dy = dy / maxDist
+        knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`
+      }
+    }
+  }, { passive: false })
+
+  const endJoystick = e => {
+    for (const touch of e.changedTouches) {
+      if (touch.identifier === touchId) {
+        touchId = null
+        state.joystick.active = false
+        state.joystick.dx = 0
+        state.joystick.dy = 0
+        knob.style.transform = 'translate(-50%, -50%)'
+      }
+    }
+  }
+  window.addEventListener('touchend', endJoystick)
+  window.addEventListener('touchcancel', endJoystick)
+
+  let pinchDist = 0
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX
+      const dy = e.touches[0].clientY - e.touches[1].clientY
+      pinchDist = Math.sqrt(dx * dx + dy * dy)
+    }
+  }, { passive: true })
+  canvas.addEventListener('touchmove', e => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX
+      const dy = e.touches[0].clientY - e.touches[1].clientY
+      const newDist = Math.sqrt(dx * dx + dy * dy)
+      if (pinchDist > 0) {
+        const scale = newDist / pinchDist
+        state.camera.targetZoom = Math.max(0.3, Math.min(3, state.camera.targetZoom * scale))
+      }
+      pinchDist = newDist
+      e.preventDefault()
+    }
+  }, { passive: false })
+}
+
+function setupUI() {
+  document.getElementById('btnChat').addEventListener('click', () => {
+    state.chatOpen = !state.chatOpen
+    document.getElementById('chatPanel').classList.toggle('open', state.chatOpen)
+    document.getElementById('btnChat').classList.toggle('active', state.chatOpen)
+    if (state.chatOpen) document.getElementById('chatInput').focus()
+  })
+  document.getElementById('btnPlayers').addEventListener('click', () => {
+    state.playerListOpen = !state.playerListOpen
+    document.getElementById('playerList').classList.toggle('open', state.playerListOpen)
+    document.getElementById('btnPlayers').classList.toggle('active', state.playerListOpen)
+  })
+  document.getElementById('btnMinimap').addEventListener('click', () => {
+    state.minimapOpen = !state.minimapOpen
+    document.getElementById('minimapWrap').style.display = state.minimapOpen ? 'block' : 'none'
+    document.getElementById('btnMinimap').classList.toggle('active', state.minimapOpen)
+  })
+  document.getElementById('btnBuild').addEventListener('click', () => {
+    state.buildMode = !state.buildMode
+    document.getElementById('buildPanel').classList.toggle('open', state.buildMode)
+    document.getElementById('btnBuild').classList.toggle('active', state.buildMode)
+    document.getElementById('modeIndicator').classList.toggle('open', state.buildMode)
+    if (state.buildMode) {
+      state.godMode = false
+      document.getElementById('godPanel').classList.remove('open')
+      document.getElementById('btnGod').classList.remove('active')
+      populateBuildGrid()
+    }
+  })
+  document.getElementById('btnGod').addEventListener('click', () => {
+    state.godMode = !state.godMode
+    document.getElementById('godPanel').classList.toggle('open', state.godMode)
+    document.getElementById('btnGod').classList.toggle('active', state.godMode)
+    document.getElementById('modeIndicator').classList.toggle('open', state.godMode)
+    if (state.godMode) {
+      document.getElementById('modeIndicator').textContent = 'God Mode: Click to trigger power'
+      state.buildMode = false
+      document.getElementById('buildPanel').classList.remove('open')
+      document.getElementById('btnBuild').classList.remove('active')
+      populateGodGrid()
+    } else {
+      document.getElementById('modeIndicator').textContent = 'Build Mode: Click to place'
+    }
+  })
+  document.getElementById('buildPanelClose').addEventListener('click', () => {
+    state.buildMode = false
+    document.getElementById('buildPanel').classList.remove('open')
+    document.getElementById('btnBuild').classList.remove('active')
+    document.getElementById('modeIndicator').classList.remove('open')
+  })
+  document.getElementById('godPanelClose').addEventListener('click', () => {
+    state.godMode = false
+    document.getElementById('godPanel').classList.remove('open')
+    document.getElementById('btnGod').classList.remove('active')
+    document.getElementById('modeIndicator').classList.remove('open')
+  })
+  document.getElementById('incomePanelClose').addEventListener('click', closeIncomePanel)
+  document.getElementById('incomeCollectBtn').addEventListener('click', collectIncome)
+  document.getElementById('jobPanelClose').addEventListener('click', closeJobPanel)
+  document.getElementById('jobStartBtn').addEventListener('click', startJob)
+  document.getElementById('btnZoomIn').addEventListener('click', () => {
+    state.camera.targetZoom = Math.min(3, state.camera.targetZoom * 1.3)
+  })
+  document.getElementById('btnZoomOut').addEventListener('click', () => {
+    state.camera.targetZoom = Math.max(0.3, state.camera.targetZoom / 1.3)
+  })
+  document.getElementById('chatSend').addEventListener('click', sendChat)
+  document.getElementById('chatInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendChat()
+    e.stopPropagation()
+  })
+  document.getElementById('chatInput').addEventListener('keyup', e => e.stopPropagation())
+
+  document.getElementById('btnAction1').addEventListener('touchstart', e => { e.preventDefault() })
+  document.getElementById('btnAction2').addEventListener('touchstart', e => {
+    e.preventDefault()
+    showToast('God Power', 'Coming soon... spend coins to trigger events!')
+  })
+}
+
+function populateBuildGrid() {
+  const grid = document.getElementById('buildGrid')
+  grid.innerHTML = ''
+  for (const [type, info] of Object.entries(BUILDING_TYPES)) {
+    const item = document.createElement('div')
+    item.className = 'build-item'
+    item.innerHTML = `
+      <div class="build-icon" style="color:${info.color}">&#x1F3E0;</div>
+      <div class="build-name">${info.name}</div>
+      <div class="build-cost">${info.cost} coins</div>
+      <div class="build-desc">${info.income > 0 ? '+' + info.income + ' income/min' : 'Shelter'}</div>
+    `
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.build-item').forEach(i => i.classList.remove('selected'))
+      item.classList.add('selected')
+      state.buildType = type
+      showToast('Build Mode', `Click on the map to place ${info.name}`)
+      // Close the panel after selection
+      document.getElementById('buildPanel').classList.remove('open')
+    })
+    grid.appendChild(item)
+  }
+}
+
+function populateGodGrid() {
+  const grid = document.getElementById('godGrid')
+  grid.innerHTML = ''
+  for (const [type, info] of Object.entries(GOD_POWERS)) {
+    const item = document.createElement('div')
+    item.className = 'god-item'
+    item.innerHTML = `
+      <div class="god-icon">${info.icon}</div>
+      <div class="god-name">${info.name}</div>
+      <div class="god-cost">${info.cost} coins</div>
+      <div class="god-desc">${info.desc}</div>
+    `
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.god-item').forEach(i => i.classList.remove('selected'))
+      item.classList.add('selected')
+      state.godPower = type
+      showToast('God Mode', `Click on the map to trigger ${info.name}`)
+      // Close the panel after selection
+      document.getElementById('godPanel').classList.remove('open')
+    })
+    grid.appendChild(item)
+  }
+}
+
+let currentIncomeBuilding = null
+let currentJobBuilding = null
+let jobTimer = null
+
+function openIncomePanel(buildingId) {
+  const building = state.buildings.find(b => b.id === buildingId)
+  if (!building) return
+  
+  currentIncomeBuilding = building
+  const type = BUILDING_TYPES[building.building_type]
+  
+  document.getElementById('incomeBuildingName').textContent = type.name
+  document.getElementById('incomeRate').textContent = building.income_rate
+  
+  const accumulated = calculateAccumulatedIncome(building)
+  document.getElementById('incomeAmount').textContent = accumulated
+  
+  document.getElementById('incomePanel').classList.add('open')
+}
+
+function closeIncomePanel() {
+  document.getElementById('incomePanel').classList.remove('open')
+  currentIncomeBuilding = null
+}
+
+function calculateAccumulatedIncome(building) {
+  if (!building.last_collected) return 0
+  const now = Date.now()
+  const elapsed = now - building.last_collected
+  const maxMs = 24 * 60 * 60 * 1000
+  const cappedElapsed = Math.min(elapsed, maxMs)
+  const minutes = cappedElapsed / 60000
+  let income = building.income_rate * minutes
+  if (building.in_district) {
+    income *= 1.2
+  }
+  return Math.floor(income)
+}
+
+async function collectIncome() {
+  if (!currentIncomeBuilding) return
+  
+  try {
+    const res = await fetch('/api/world/income/collect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: state.userId,
+        buildingId: currentIncomeBuilding.id
+      })
+    })
+    
+    // Check if response is JSON
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
+      return
+    }
+    
+    const data = await res.json()
+    if (data.ok) {
+      if (data.coinsCollected > 0) {
+        state.coins = data.newBalance
+        state.rep = data.reputation
+        document.getElementById('statCoins').textContent = state.coins
+        document.getElementById('statRep').textContent = state.rep
+        currentIncomeBuilding.last_collected = Date.now()
+        showToast('Income Collected', `+${data.coinsCollected} coins`)
+        closeIncomePanel()
+      } else {
+        showToast('No Income', 'Nothing to collect yet')
+      }
+    } else {
+      console.error('[WORLD] collectIncome failed:', res.status, data)
+      showToast('Error', data.error || 'Failed to collect income')
+    }
+  } catch (e) {
+    console.error('[WORLD] collectIncome exception:', e)
+    showToast('Error', 'Failed to collect income')
+  }
+}
+
+function openJobPanel(buildingId) {
+  const building = state.buildings.find(b => b.id === buildingId)
+  if (!building) return
+  
+  currentJobBuilding = building
+  const type = BUILDING_TYPES[building.building_type]
+  const payRates = { shop: 2, club: 3, warehouse: 1, hide: 5 }
+  const pay = payRates[building.building_type] || 1
+  
+  document.getElementById('jobBuildingName').textContent = type.name
+  document.getElementById('jobPay').textContent = pay
+  
+  document.getElementById('jobProgressWrap').style.display = 'none'
+  document.getElementById('jobStartBtn').style.display = 'block'
+  document.getElementById('jobStartBtn').disabled = false
+  document.getElementById('jobStartBtn').textContent = 'Start Work'
+  
+  document.getElementById('jobPanel').classList.add('open')
+}
+
+function closeJobPanel() {
+  document.getElementById('jobPanel').classList.remove('open')
+  currentJobBuilding = null
+  if (jobTimer) {
+    clearInterval(jobTimer)
+    jobTimer = null
+  }
+}
+
+async function startJob() {
+  if (!currentJobBuilding) return
+  
+  try {
+    const res = await fetch('/api/world/job/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: state.userId,
+        buildingId: currentJobBuilding.id
+      })
+    })
+    
+    // Check if response is JSON
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
+      return
+    }
+    
+    const data = await res.json()
+    if (data.ok) {
+      state.currentJob = data.buildingId
+      state.jobStartTime = data.startTime
+      
+      document.getElementById('jobProgressWrap').style.display = 'flex'
+      document.getElementById('jobStartBtn').style.display = 'none'
+      
+      startJobProgress()
+    } else {
+      console.error('[WORLD] startJob failed:', res.status, data)
+      showToast('Error', data.error || 'Failed to start job')
+    }
+  } catch (e) {
+    console.error('[WORLD] startJob exception:', e)
+    showToast('Error', 'Failed to start job')
+  }
+}
+
+function startJobProgress() {
+  const duration = 30000
+  const startTime = state.jobStartTime
+  const endTime = startTime + duration
+  
+  jobTimer = setInterval(() => {
+    const now = Date.now()
+    const elapsed = now - startTime
+    const remaining = Math.max(0, duration - elapsed)
+    const progress = Math.min(100, (elapsed / duration) * 100)
+    
+    document.getElementById('jobProgressInner').style.width = progress + '%'
+    document.getElementById('jobProgressText').textContent = `${Math.floor(elapsed / 1000)}s / 30s`
+    
+    if (remaining <= 0) {
+      clearInterval(jobTimer)
+      jobTimer = null
+      completeJob()
+    }
+  }, 100)
+}
+
+async function completeJob() {
+  try {
+    const res = await fetch('/api/world/job/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: state.userId
+      })
+    })
+    
+    // Check if response is JSON
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
+      return
+    }
+    
+    const data = await res.json()
+    if (data.ok) {
+      state.coins = data.newBalance
+      state.rep = data.newReputation
+      state.currentJob = null
+      state.jobStartTime = null
+      document.getElementById('statCoins').textContent = state.coins
+      document.getElementById('statRep').textContent = state.rep
+      showToast('Job Complete', `+${data.coinsEarned} coins, +${data.reputationEarned} rep`)
+      closeJobPanel()
+      await fetchPlayerState()
+    } else {
+      console.error('[WORLD] completeJob failed:', res.status, data)
+      showToast('Error', data.error || 'Failed to complete job')
+    }
+  } catch (e) {
+    console.error('[WORLD] completeJob exception:', e)
+    showToast('Error', 'Failed to complete job')
+  }
+}
+
+async function placeBuildingAt(x, y) {
+  if (!state.buildType) {
+    showToast('Error', 'Select a building type first')
+    return
+  }
+  
+  const type = BUILDING_TYPES[state.buildType]
+  if (state.coins < type.cost) {
+    showToast('Error', 'Not enough coins')
+    return
+  }
+  
+  try {
+    const res = await fetch('/api/world/building/place', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        x: Math.floor(x),
+        y: Math.floor(y),
+        type: state.buildType,
+        userId: state.userId
+      })
+    })
+    
+    // Check if response is JSON
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
+      return
+    }
+    
+    const data = await res.json()
+    if (data.ok) {
+      state.coins -= type.cost
+      document.getElementById('statCoins').textContent = state.coins
+      showToast('Building Placed', `${type.name} built successfully!`)
+      addChatMessage('', `${state.username} built a ${type.name}`, true)
+    } else {
+      console.error('[WORLD] placeBuildingAt failed:', res.status, data)
+      showToast('Error', data.error || 'Failed to place building')
+    }
+  } catch (e) {
+    console.error('[WORLD] placeBuildingAt exception:', e)
+    showToast('Error', 'Failed to place building')
+  }
+}
+
+async function triggerGodPower(x, y) {
+  if (!state.godPower) {
+    showToast('Error', 'Select a god power first')
+    return
+  }
+  
+  const power = GOD_POWERS[state.godPower]
+  if (state.coins < power.cost) {
+    showToast('Error', 'Not enough coins')
+    return
+  }
+  
+  try {
+    const res = await fetch('/api/world/godpower/trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: state.godPower,
+        x: Math.floor(x),
+        y: Math.floor(y),
+        userId: state.userId
+      })
+    })
+    
+    // Check if response is JSON
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
+      return
+    }
+    
+    const data = await res.json()
+    if (data.ok) {
+      state.coins -= power.cost
+      document.getElementById('statCoins').textContent = state.coins
+      showToast('God Power Triggered', `${power.name} unleashed!`)
+      addChatMessage('', `${state.username} triggered ${power.name}!`, true)
+    } else {
+      console.error('[WORLD] triggerGodPower failed:', res.status, data)
+      showToast('Error', data.error || 'Failed to trigger power')
+    }
+  } catch (e) {
+    console.error('[WORLD] triggerGodPower exception:', e)
+    showToast('Error', 'Failed to trigger power')
+  }
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput')
+  const msg = input.value.trim()
+  if (!msg) return
+  input.value = ''
+  addChatMessage(state.username, msg, false)
+  if (SUPABASE_READY) {
+    supabase.channel('world-chat').send({
+      type: 'broadcast',
+      event: 'chat',
+      payload: { user: state.username, msg, ts: Date.now() }
+    })
+  }
+}
+
+function addChatMessage(author, text, isSystem) {
+  const el = document.getElementById('chatMessages')
+  const div = document.createElement('div')
+  div.className = 'chat-msg' + (isSystem ? ' system' : '')
+  div.innerHTML = isSystem
+    ? `<span class="text">${text}</span>`
+    : `<span class="author">${author}:</span> <span class="text">${text}</span>`
+  el.appendChild(div)
+  el.scrollTop = el.scrollHeight
+  while (el.children.length > 50) el.removeChild(el.firstChild)
+}
+
+function updatePlayerList() {
+  const body = document.getElementById('playerListBody')
+  const count = document.getElementById('playerCount')
+  const total = 1 + state.otherPlayers.size
+  count.textContent = total
+  document.getElementById('statOnline').textContent = total
+
+  body.innerHTML = ''
+  const me = document.createElement('div')
+  me.className = 'player-entry'
+  me.innerHTML = `<span class="player-dot" style="background:#a78bfa"></span><span class="player-name">${state.username} (you)</span>`
+  body.appendChild(me)
+
+  for (const [, p] of state.otherPlayers) {
+    const div = document.createElement('div')
+    div.className = 'player-entry'
+    div.innerHTML = `<span class="player-dot" style="background:#8b5cf6"></span><span class="player-name">${p.name}</span>`
+    body.appendChild(div)
+  }
+}
+
+function showToast(title, desc) {
+  const toast = document.getElementById('toast')
+  document.getElementById('toastTitle').textContent = title
+  document.getElementById('toastDesc').textContent = desc
+  toast.classList.add('show')
+  setTimeout(() => toast.classList.remove('show'), 3000)
+}
+
+
 mountWorldAccount({ state, showToast, fetchPlayerState })
 init()
 </script>
