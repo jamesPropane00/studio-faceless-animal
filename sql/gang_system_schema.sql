@@ -4,14 +4,13 @@
 
 -- ── UPDATE WORLD_GANGS TABLE ─────────────────────────────────
 -- Add new columns to existing world_gangs table
-ALTER TABLE world_gangs ADD COLUMN IF NOT EXISTS color TEXT DEFAULT '#a78bfa';
+-- Note: world_gangs already has: id (UUID), name, leader_id (UUID), tag, color, territory_x/y/r, coins, created_at
 ALTER TABLE world_gangs ADD COLUMN IF NOT EXISTS total_influence INTEGER DEFAULT 0;
 ALTER TABLE world_gangs ADD COLUMN IF NOT EXISTS member_count INTEGER DEFAULT 1;
 ALTER TABLE world_gangs ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1;
-ALTER TABLE world_gangs ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();
 
 -- ── WORLD_GANG_MEMBERS TABLE ────────────────────────────────
--- Note: Using BIGSERIAL for auto-incrementing bigint IDs instead of gen_random_uuid()
+-- Note: Using TEXT for user_id to support guest users (not just UUIDs)
 CREATE TABLE IF NOT EXISTS world_gang_members (
   id BIGSERIAL PRIMARY KEY,
   gang_id UUID NOT NULL REFERENCES world_gangs(id) ON DELETE CASCADE,
