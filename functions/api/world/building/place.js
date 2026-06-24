@@ -123,6 +123,7 @@ export async function onRequestPost(context) {
         headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify([{
           user_id: userId,
+          coins: 100,
           reputation: currentRep + 5,
           updated_at: new Date().toISOString()
         }])

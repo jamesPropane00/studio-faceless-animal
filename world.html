@@ -1996,10 +1996,11 @@ async function collectIncome() {
         showToast('No Income', 'Nothing to collect yet')
       }
     } else {
+      console.error('[WORLD] collectIncome failed:', res.status, data)
       showToast('Error', data.error || 'Failed to collect income')
     }
   } catch (e) {
-    console.warn('[WORLD] Failed to collect income:', e.message)
+    console.error('[WORLD] collectIncome exception:', e)
     showToast('Error', 'Failed to collect income')
   }
 }
@@ -2063,10 +2064,11 @@ async function startJob() {
       
       startJobProgress()
     } else {
+      console.error('[WORLD] startJob failed:', res.status, data)
       showToast('Error', data.error || 'Failed to start job')
     }
   } catch (e) {
-    console.warn('[WORLD] Failed to start job:', e.message)
+    console.error('[WORLD] startJob exception:', e)
     showToast('Error', 'Failed to start job')
   }
 }
@@ -2122,10 +2124,11 @@ async function completeJob() {
       closeJobPanel()
       await fetchPlayerState()
     } else {
+      console.error('[WORLD] completeJob failed:', res.status, data)
       showToast('Error', data.error || 'Failed to complete job')
     }
   } catch (e) {
-    console.warn('[WORLD] Failed to complete job:', e.message)
+    console.error('[WORLD] completeJob exception:', e)
     showToast('Error', 'Failed to complete job')
   }
 }
@@ -2168,9 +2171,11 @@ async function placeBuildingAt(x, y) {
       showToast('Building Placed', `${type.name} built successfully!`)
       addChatMessage('', `${state.username} built a ${type.name}`, true)
     } else {
+      console.error('[WORLD] placeBuildingAt failed:', res.status, data)
       showToast('Error', data.error || 'Failed to place building')
     }
   } catch (e) {
+    console.error('[WORLD] placeBuildingAt exception:', e)
     showToast('Error', 'Failed to place building')
   }
 }
@@ -2213,9 +2218,11 @@ async function triggerGodPower(x, y) {
       showToast('God Power Triggered', `${power.name} unleashed!`)
       addChatMessage('', `${state.username} triggered ${power.name}!`, true)
     } else {
+      console.error('[WORLD] triggerGodPower failed:', res.status, data)
       showToast('Error', data.error || 'Failed to trigger power')
     }
   } catch (e) {
+    console.error('[WORLD] triggerGodPower exception:', e)
     showToast('Error', 'Failed to trigger power')
   }
 }
