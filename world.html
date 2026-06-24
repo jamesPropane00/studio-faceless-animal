@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="description" content="The World â€” Faceless Animal Studios. A living breathing multiplayer simulation." />
-  <title>The World â€” Faceless Animal</title>
+  <meta name="description" content="The World Ã¢â‚¬â€ Faceless Animal Studios. A living breathing multiplayer simulation." />
+  <title>The World Ã¢â‚¬â€ Faceless Animal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
@@ -1061,7 +1061,7 @@ function updateEvents(dt) {
     
     state.events.push(evt)
     showToast(evt.icon + ' ' + evt.name, evt.desc)
-    addChatMessage('', `${evt.icon} ${evt.name} â€” ${evt.desc}`, true)
+    addChatMessage('', `${evt.icon} ${evt.name} Ã¢â‚¬â€ ${evt.desc}`, true)
   }
   
   for (let i = state.events.length - 1; i >= 0; i--) {
@@ -2286,6 +2286,35 @@ function showToast(title, desc) {
   setTimeout(() => toast.classList.remove('show'), 3000)
 }
 
+
+async function fetchPlayerState() {
+  if (!state.userId) return
+  try {
+    const res = await fetch(`/api/world/player/state?userId=${encodeURIComponent(state.userId)}`)
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('[WORLD] player/state returned non-JSON')
+      return
+    }
+    const data = await res.json()
+    if (data.ok) {
+      state.coins = data.coins
+      state.rep = data.reputation
+      state.repLevel = data.repLevel
+      state.repLevelIndex = data.repLevelIndex
+      state.repMin = data.repMin
+      state.repMax = data.repMax
+      state.repProgress = data.repProgress
+      document.getElementById('statCoins').textContent = state.coins
+      document.getElementById('statRep').textContent = state.rep
+      if (typeof updateRepBarUI === 'function') updateRepBarUI()
+    } else {
+      console.warn('[WORLD] player/state failed:', data.error)
+    }
+  } catch (e) {
+    console.warn('[WORLD] player/state exception:', e.message)
+  }
+}
 
 mountWorldAccount({ state, showToast, fetchPlayerState })
 init()
