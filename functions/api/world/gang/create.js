@@ -149,11 +149,11 @@ export async function onRequestPost(context) {
       }
     );
 
-    // Deduct 500 coins
+    // Deduct 500 coins (use UPSERT to handle new users)
     const newCoins = currentCoins - GANG_CREATION_COST;
     await supabaseFetch(
       context.env,
-      `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`,
+      `/rest/v1/world_player_states`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
