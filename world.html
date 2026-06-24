@@ -768,6 +768,164 @@
       text-align: center;
       font-weight: 600;
     }
+
+    /* ── WELCOME OVERLAY ── */
+    .welcome-overlay{
+      position:fixed;inset:0;z-index:900;
+      background:rgba(9,9,9,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;pointer-events:none;transition:opacity 0.5s;
+    }
+    .welcome-overlay.open{opacity:1;pointer-events:auto}
+    .welcome-modal{
+      width:min(440px,92vw);max-height:88vh;overflow-y:auto;
+      background:rgba(16,18,26,0.97);border:1px solid var(--border);
+      border-radius:var(--radius);padding:1.8rem 1.5rem;
+      box-shadow:0 0 60px rgba(124,58,237,0.15),inset 0 1px 0 rgba(167,139,250,0.08);
+    }
+    .welcome-title{
+      font-size:1.2rem;font-weight:900;color:#fff;letter-spacing:-0.02em;
+      margin-bottom:0.3rem;
+    }
+    .welcome-title span{color:var(--gold)}
+    .welcome-sub{
+      font-size:0.7rem;color:var(--dim);font-weight:600;margin-bottom:1.2rem;
+      text-transform:uppercase;letter-spacing:0.1em;
+    }
+    .welcome-step{
+      display:flex;align-items:flex-start;gap:0.7rem;
+      padding:0.55rem 0;border-bottom:1px solid var(--border2);
+    }
+    .welcome-step:last-child{border-bottom:none}
+    .welcome-step-icon{
+      width:28px;height:28px;border-radius:8px;flex-shrink:0;
+      background:rgba(167,139,250,0.12);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;font-size:0.9rem;
+    }
+    .welcome-step-text{font-size:0.75rem;color:var(--text);line-height:1.5}
+    .welcome-step-text strong{color:var(--bright)}
+    .welcome-step-hint{font-size:0.63rem;color:var(--dim);margin-top:0.15rem}
+    .welcome-start{
+      display:block;width:100%;margin-top:1.2rem;padding:0.75rem;
+      background:linear-gradient(135deg,var(--purple),var(--bright));
+      border:none;border-radius:var(--radius-sm);color:#fff;
+      font-size:0.85rem;font-weight:800;letter-spacing:0.03em;
+      cursor:pointer;transition:transform 0.15s,box-shadow 0.2s;
+      box-shadow:0 4px 20px rgba(124,58,237,0.25);
+    }
+    .welcome-start:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(124,58,237,0.35)}
+    .welcome-start:active{transform:scale(0.98)}
+
+    /* ── HELP PROMPT ── */
+    .help-prompt{
+      position:fixed;bottom:calc(70px + var(--safe-bottom));left:50%;transform:translateX(-50%);
+      z-index:50;opacity:0;pointer-events:none;transition:opacity 0.4s;
+    }
+    .help-prompt.open{opacity:1;pointer-events:auto}
+    .help-prompt-inner{
+      display:flex;align-items:center;gap:0.6rem;
+      background:rgba(16,18,26,0.95);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+      border:1px solid var(--border);border-radius:var(--radius);
+      padding:0.55rem 0.8rem;box-shadow:0 4px 24px rgba(0,0,0,0.3);
+    }
+    .help-prompt-text{font-size:0.7rem;color:var(--dim);font-weight:600}
+    .help-prompt-text strong{color:var(--bright)}
+    .help-btn{
+      padding:0.4rem 0.7rem;border-radius:6px;font-size:0.68rem;font-weight:700;
+      border:1px solid var(--border);background:rgba(167,139,250,0.1);color:var(--bright);
+      cursor:pointer;white-space:nowrap;transition:background 0.15s;
+    }
+    .help-btn:hover{background:rgba(167,139,250,0.2)}
+    .help-btn.primary{
+      background:linear-gradient(135deg,var(--purple),var(--bright));color:#fff;border-color:transparent;
+    }
+    .help-close{
+      width:24px;height:24px;border-radius:50%;border:1px solid var(--border2);
+      background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;
+      font-size:0.7rem;color:var(--dim);cursor:pointer;flex-shrink:0;
+    }
+
+    /* ── GOAL HUD ── */
+    .goal-hud{
+      position:fixed;top:calc(60px + var(--safe-top));left:50%;transform:translateX(-50%);
+      z-index:15;pointer-events:none;opacity:0;transition:opacity 0.4s;
+    }
+    .goal-hud.show{opacity:1}
+    .goal-hud-inner{
+      display:inline-flex;align-items:center;gap:0.45rem;
+      background:rgba(16,18,26,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      border:1px solid var(--border);border-radius:20px;
+      padding:0.35rem 0.8rem 0.35rem 0.6rem;
+      box-shadow:0 0 24px rgba(124,58,237,0.08);
+    }
+    .goal-icon{font-size:0.75rem;flex-shrink:0}
+    .goal-text{font-size:0.65rem;font-weight:700;color:var(--dim);white-space:nowrap}
+    .goal-text strong{color:var(--bright)}
+    .goal-complete{
+      position:fixed;top:calc(60px + var(--safe-top));left:50%;transform:translateX(-50%);
+      z-index:15;pointer-events:none;opacity:0;transition:opacity 0.3s;
+    }
+    .goal-complete.show{opacity:1}
+    .goal-complete-inner{
+      background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);
+      border-radius:20px;padding:0.35rem 0.8rem;
+      font-size:0.65rem;font-weight:700;color:var(--green);white-space:nowrap;
+    }
+
+    /* ── PANEL TRANSITIONS ── */
+    .build-panel,.god-panel,.income-panel,.job-panel{
+      transition:opacity 0.25s,transform 0.25s;
+      opacity:0;pointer-events:none;
+      transform:translate(-50%,-48%) scale(0.97);
+    }
+    .build-panel.open,.god-panel.open,.income-panel.open,.job-panel.open{
+      opacity:1;pointer-events:auto;
+      transform:translate(-50%,-50%) scale(1);
+    }
+    .chat-panel,.player-list{
+      transition:opacity 0.2s,transform 0.2s;
+      opacity:0;pointer-events:none;transform:translateY(6px);
+    }
+    .chat-panel.open,.player-list.open{
+      opacity:1;pointer-events:auto;transform:translateY(0);
+    }
+
+    /* ── TOOLTIP ── */
+    .tool-btn{
+      position:relative;
+    }
+    .tool-btn::after{
+      content:attr(data-tip);position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);
+      background:rgba(9,9,9,0.95);color:var(--dim);font-size:0.55rem;font-weight:700;
+      padding:0.2rem 0.45rem;border-radius:4px;white-space:nowrap;
+      border:1px solid var(--border2);pointer-events:none;
+      opacity:0;transition:opacity 0.15s;
+    }
+    .tool-btn:hover::after,.tool-btn:active::after{opacity:1}
+    @media(pointer:coarse){.tool-btn::after{display:none}}
+
+    /* ── NEON VIGNETTE (CSS overlay) ── */
+    .world-vignette{
+      position:fixed;inset:0;z-index:5;pointer-events:none;
+      background:radial-gradient(ellipse at center,transparent 55%,rgba(9,9,9,0.6) 100%);
+    }
+
+    /* ── MOBILE TWEAKS ── */
+    @media(max-width:480px){
+      .welcome-modal{padding:1.2rem 1rem}
+      .welcome-title{font-size:1rem}
+      .welcome-step{gap:0.5rem;padding:0.45rem 0}
+      .welcome-step-icon{width:24px;height:24px;font-size:0.75rem}
+      .welcome-step-text{font-size:0.7rem}
+      .welcome-start{padding:0.65rem;font-size:0.8rem}
+      .help-prompt{width:calc(100vw - 16px)}
+      .help-prompt-inner{flex-wrap:wrap;justify-content:center}
+      .build-panel,.god-panel,.income-panel,.job-panel{max-height:70vh;overflow-y:auto}
+      .action-btn{width:58px;height:58px;font-size:1.4rem}
+      .tool-btn{width:46px;height:46px;font-size:1.15rem}
+      .zoom-btn{width:42px;height:42px;font-size:1.2rem}
+      .joystick-zone{width:150px;height:150px}
+    }
   </style>
 </head>
 <body>
@@ -783,7 +941,7 @@
 
 <div class="hud hud-top">
   <div class="brand-badge">
-    <div class="logo">FA<span>.</span></div>
+    <div class="logo">FACELESS<span>.</span></div>
     <div class="tag">THE WORLD</div>
   </div>
   <div class="panel stats-panel" id="statsPanel">
@@ -809,13 +967,13 @@
 </div>
 
 <div class="toolbar" id="toolbar">
-  <button class="tool-btn" id="btnChat" title="Chat">&#x1F4AC;</button>
-  <button class="tool-btn" id="btnPlayers" title="Players">&#x1F465;</button>
-  <button class="tool-btn" id="btnMinimap" title="Map">&#x1F5FA;&#xFE0F;</button>
-  <button class="tool-btn" id="btnBuild" title="Build">&#x1F3D7;&#xFE0F;</button>
-  <button class="tool-btn" id="btnGod" title="God Powers">&#x26A1;</button>
-  <button class="tool-btn" id="btnGang" title="Gangs">&#x1F46A;</button>
-  <button class="tool-btn" id="btnInfluenceView" title="Toggle Influence View"><span id="influenceViewIcon">&#x1F5FA;</span></button>
+  <button class="tool-btn" id="btnChat" data-tip="Chat">&#x1F4AC;</button>
+  <button class="tool-btn" id="btnPlayers" data-tip="Players">&#x1F465;</button>
+  <button class="tool-btn" id="btnMinimap" data-tip="Map">&#x1F5FA;&#xFE0F;</button>
+  <button class="tool-btn" id="btnBuild" data-tip="Build">&#x1F3D7;&#xFE0F;</button>
+  <button class="tool-btn" id="btnGod" data-tip="God Powers">&#x26A1;</button>
+  <button class="tool-btn" id="btnGang" data-tip="Gangs">&#x1F46A;</button>
+  <button class="tool-btn" id="btnInfluenceView" data-tip="Influence View"><span id="influenceViewIcon">&#x1F5FA;</span></button>
 </div>
 
 <div class="mode-indicator" id="modeIndicator">Build Mode: Click to place</div>
@@ -938,6 +1096,55 @@
 
 <div class="district-tooltip" id="districtTooltip" style="display:none;"></div>
 
+<div class="welcome-overlay" id="welcomeOverlay">
+  <div class="welcome-modal">
+    <div class="welcome-title">FACELESS <span>WORLD</span></div>
+    <div class="welcome-sub">Your first steps</div>
+    <div class="welcome-step">
+      <div class="welcome-step-icon">&#x1F3E0;</div>
+      <div class="welcome-step-text"><strong>Place a house</strong> &mdash; Your first shelter costs 50 coins.<div class="welcome-step-hint">Open Build (&#x1F3D7;&#xFE0F;) and click the map.</div></div>
+    </div>
+    <div class="welcome-step">
+      <div class="welcome-step-icon">&#x1F3EA;</div>
+      <div class="welcome-step-text"><strong>Place a shop</strong> &mdash; Shops earn you income over time.<div class="welcome-step-hint">Costs 100 coins. Build near your house.</div></div>
+    </div>
+    <div class="welcome-step">
+      <div class="welcome-step-icon">&#x1F4B0;</div>
+      <div class="welcome-step-text"><strong>Collect income</strong> &mdash; Tap your shop to collect coins.<div class="welcome-step-hint">Buildings generate income every minute.</div></div>
+    </div>
+    <div class="welcome-step">
+      <div class="welcome-step-icon">&#x1F3D9;&#xFE0F;</div>
+      <div class="welcome-step-text"><strong>Form a district</strong> &mdash; Build 3+ buildings close together to create a district.<div class="welcome-step-hint">Districts boost income and unlock new powers.</div></div>
+    </div>
+    <div class="welcome-step">
+      <div class="welcome-step-icon">&#x26A1;</div>
+      <div class="welcome-step-text"><strong>Explore god powers</strong> &mdash; Trigger events, spawn NPCs, and shape the world.<div class="welcome-step-hint">Unlock more as you grow your reputation.</div></div>
+    </div>
+    <button class="welcome-start" id="welcomeStartBtn">Start Building</button>
+  </div>
+</div>
+
+<div class="help-prompt" id="helpPrompt">
+  <div class="help-prompt-inner">
+    <span class="help-prompt-text">&#x1F4AC; <strong>Start your world</strong> &mdash; place a house or shop.</span>
+    <button class="help-btn primary" id="helpBuildBtn">Open Build Menu</button>
+    <button class="help-close" id="helpCloseBtn">&times;</button>
+  </div>
+</div>
+
+<div class="goal-hud" id="goalHud">
+  <div class="goal-hud-inner">
+    <span class="goal-icon">&#x1F3AF;</span>
+    <span class="goal-text" id="goalText">Place your first house</span>
+  </div>
+</div>
+
+<div class="goal-complete" id="goalComplete">
+  <div class="goal-complete-inner" id="goalCompleteText">&#x2705; Goal complete!</div>
+</div>
+
+<div class="world-vignette"></div>
+
 <script type="module">
 import { supabase, SUPABASE_READY } from '/assets/js/supabase-client.js'
 import { getStoredSession } from '/assets/js/auth.js'
@@ -1026,15 +1233,24 @@ const state = {
   userId: null,
   username: 'anon',
   serverTime: undefined,
+  tutorialSeen: false,
+  goals: {
+    placeFirstHouse: false,
+    placeFirstShop: false,
+    collectFirstIncome: false,
+    formFirstDistrict: false,
+    exploreGodPower: false,
+  },
+  ownBuildingsCount: 0,
 }
 
 const BUILDING_TYPES = {
-  house: { name: 'House', color: '#8B7355', height: 12, cost: 50, income: 0.5 },
-  shop: { name: 'Shop', color: '#4A90E2', height: 10, cost: 100, income: 1 },
-  club: { name: 'Club', color: '#E91E63', height: 14, cost: 150, income: 2 },
-  warehouse: { name: 'Warehouse', color: '#607D8B', height: 8, cost: 75, income: 1 },
-  hide: { name: 'Hide', color: '#2C2C2C', height: 6, cost: 200, income: 3 },
-  camp: { name: 'Camp', color: '#795548', height: 4, cost: 25, income: 0 }
+  house: { name: 'House', color: '#6B5B8A', height: 12, cost: 50, income: 0.5 },
+  shop: { name: 'Shop', color: '#5B9CFF', height: 10, cost: 100, income: 1, glow: 'rgba(91,156,255,0.15)' },
+  club: { name: 'Club', color: '#FF3CAC', height: 14, cost: 150, income: 2, glow: 'rgba(255,60,172,0.2)' },
+  warehouse: { name: 'Warehouse', color: '#5A6A7A', height: 8, cost: 75, income: 1 },
+  hide: { name: 'Hide', color: '#3A2A4A', height: 6, cost: 200, income: 3 },
+  camp: { name: 'Camp', color: '#6A4A3A', height: 4, cost: 25, income: 0 }
 }
 
 const DISTRICT_TYPE_COLORS = {
@@ -1672,6 +1888,12 @@ function drawBuilding(building) {
   const sideColor = `rgb(${Math.floor(r * 0.7)},${Math.floor(g * 0.7)},${Math.floor(b * 0.7)})`
   const lightColor = `rgb(${Math.min(255, Math.floor(r * 1.2))},${Math.min(255, Math.floor(g * 1.2))},${Math.min(255, Math.floor(b * 1.2))})`
   
+  /* glow for club/shop */
+  if (type.glow && state.camera.zoom > 0.4) {
+    ctx.shadowColor = type.glow
+    ctx.shadowBlur = 20 * state.camera.zoom
+  }
+  
   ctx.beginPath()
   ctx.moveTo(s.x - hw, s.y)
   ctx.lineTo(s.x, s.y + hh)
@@ -1690,6 +1912,9 @@ function drawBuilding(building) {
   ctx.fillStyle = lightColor
   ctx.fill()
   
+  ctx.shadowColor = 'transparent'
+  ctx.shadowBlur = 0
+  
   ctx.beginPath()
   ctx.moveTo(s.x, s.y - hh - elev)
   ctx.lineTo(s.x + hw, s.y - elev)
@@ -1700,33 +1925,42 @@ function drawBuilding(building) {
   ctx.fill()
   
   if (building.owner_id && state.camera.zoom > 0.6) {
-    // Use gang color if user has a gang, otherwise use default purple
+    const isOwn = building.owner_id === state.userId
     const ringColor = state.userGang ? state.userGang.color : '#a78bfa'
-    const ringAlpha = state.userGang ? '0.6' : '0.6'
 
-    // Glow
-    ctx.strokeStyle = hexToRgba(ringColor, 0.3)
-    ctx.lineWidth = 6
-    ctx.beginPath()
-    ctx.moveTo(s.x, s.y - hh - elev)
-    ctx.lineTo(s.x + hw, s.y - elev)
-    ctx.lineTo(s.x, s.y + hh - elev)
-    ctx.lineTo(s.x - hw, s.y - elev)
-    ctx.closePath()
-    ctx.stroke()
+    if (isOwn) {
+      ctx.save()
+      ctx.font = `bold ${11 * state.camera.zoom}px Inter`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.shadowColor = 'rgba(167,139,250,0.6)'
+      ctx.shadowBlur = 12 * state.camera.zoom
+      ctx.fillStyle = 'rgba(167,139,250,0.9)'
+      ctx.fillText('\u2718', s.x, s.y - elev * 0.45)
+      ctx.restore()
+    } else {
+      ctx.strokeStyle = `${hexToRgba(ringColor, 0.3)}`
+      ctx.lineWidth = 6
+      ctx.beginPath()
+      ctx.moveTo(s.x, s.y - hh - elev)
+      ctx.lineTo(s.x + hw, s.y - elev)
+      ctx.lineTo(s.x, s.y + hh - elev)
+      ctx.lineTo(s.x - hw, s.y - elev)
+      ctx.closePath()
+      ctx.stroke()
 
-    // Solid ring
-    ctx.strokeStyle = ringColor
-    ctx.globalAlpha = parseFloat(ringAlpha)
-    ctx.lineWidth = 2
-    ctx.beginPath()
-    ctx.moveTo(s.x, s.y - hh - elev)
-    ctx.lineTo(s.x + hw, s.y - elev)
-    ctx.lineTo(s.x, s.y + hh - elev)
-    ctx.lineTo(s.x - hw, s.y - elev)
-    ctx.closePath()
-    ctx.stroke()
-    ctx.globalAlpha = 1.0
+      ctx.strokeStyle = ringColor
+      ctx.lineWidth = 1.5
+      ctx.setLineDash([3, 3])
+      ctx.beginPath()
+      ctx.moveTo(s.x, s.y - hh - elev)
+      ctx.lineTo(s.x + hw, s.y - elev)
+      ctx.lineTo(s.x, s.y + hh - elev)
+      ctx.lineTo(s.x - hw, s.y - elev)
+      ctx.closePath()
+      ctx.stroke()
+      ctx.setLineDash([])
+    }
   }
   
   if (condition < 50 && state.camera.zoom > 0.5) {
@@ -1747,13 +1981,9 @@ function drawDistrict(district) {
   const fillAlpha = 0.20
   const borderAlpha = 0.45
 
-  // Filled translucent area
-  ctx.beginPath()
-  ctx.arc(s.x, s.y, radius, 0, Math.PI * 2)
   ctx.fillStyle = hexToRgba(typeColor, fillAlpha)
   ctx.fill()
 
-  // Dashed border
   ctx.beginPath()
   ctx.arc(s.x, s.y, radius, 0, Math.PI * 2)
   ctx.strokeStyle = hexToRgba(typeColor, borderAlpha)
@@ -1762,33 +1992,41 @@ function drawDistrict(district) {
   ctx.stroke()
   ctx.setLineDash([])
 
-  // Name label (only when zoomed in)
+  ctx.beginPath()
+  ctx.arc(s.x, s.y, radius, 0, Math.PI * 2)
+  ctx.strokeStyle = 'rgba(167,139,250,0.06)'
+  ctx.lineWidth = 6
+  ctx.stroke()
+
   if (state.camera.zoom > 0.4) {
     const icon = DISTRICT_TYPE_ICONS[district.district_type] || ''
     const labelText = (icon ? icon + ' ' : '') + (district.name || 'District')
-    const fontSize = 11 * state.camera.zoom
-    ctx.font = `bold ${fontSize}px Inter, sans-serif`
+    const labelY = s.y - radius - 12
+    const fs = 11 * state.camera.zoom
+
+    ctx.font = `bold ${fs}px Inter, sans-serif`
     ctx.textAlign = 'center'
-    const textW = ctx.measureText(labelText).width
-    const padX = 6 * state.camera.zoom
-    const padY = 3 * state.camera.zoom
-    const labelH = 14 * state.camera.zoom
-    const labelY = s.y - radius - labelH - 2 * state.camera.zoom
-    const labelX = s.x - textW / 2 - padX
+    const metrics = ctx.measureText(labelText)
+    const pw = metrics.width + 14 * state.camera.zoom
+    const ph = fs + 6 * state.camera.zoom
+    const px = s.x - pw / 2
+    const py = labelY - ph / 2
 
-    // Background pill
-    ctx.fillStyle = 'rgba(0,0,0,0.7)'
-    if (ctx.roundRect) {
-      ctx.beginPath()
-      ctx.roundRect(labelX, labelY, textW + padX * 2, labelH, 4)
-      ctx.fill()
-    } else {
-      ctx.fillRect(labelX, labelY, textW + padX * 2, labelH)
-    }
+    ctx.fillStyle = 'rgba(16,18,26,0.9)'
+    ctx.beginPath()
+    ctx.roundRect(px, py, pw, ph, 4 * state.camera.zoom)
+    ctx.fill()
+    ctx.strokeStyle = hexToRgba(typeColor, 0.3)
+    ctx.lineWidth = 1
+    ctx.stroke()
 
-    // Text
+    ctx.save()
+    ctx.shadowColor = hexToRgba(typeColor, 0.5)
+    ctx.shadowBlur = 10 * state.camera.zoom
+    ctx.textBaseline = 'middle'
     ctx.fillStyle = typeColor
-    ctx.fillText(labelText, s.x, labelY + labelH * 0.72)
+    ctx.fillText(labelText, s.x, labelY)
+    ctx.restore()
   }
 }
 
@@ -2041,6 +2279,14 @@ function render() {
 
   drawWeatherEffects(w, h)
   drawWorldEvents()
+
+  /* vignette overlay */
+  const vg = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.25, w / 2, h / 2, Math.max(w, h) * 0.7)
+  vg.addColorStop(0, 'rgba(10,11,16,0)')
+  vg.addColorStop(0.6, 'rgba(10,11,16,0)')
+  vg.addColorStop(1, 'rgba(10,11,16,0.6)')
+  ctx.fillStyle = vg
+  ctx.fillRect(0, 0, w, h)
 
   drawMinimap()
 
@@ -2413,6 +2659,18 @@ function setupUI() {
   document.getElementById('btnAction2').addEventListener('touchstart', e => {
     e.preventDefault()
     showToast('God Power', 'Coming soon... spend coins to trigger events!')
+  })
+
+  document.getElementById('helpBuildBtn').addEventListener('click', () => {
+    document.getElementById('helpPrompt').classList.remove('open')
+    state.buildMode = true
+    document.getElementById('buildPanel').classList.add('open')
+    document.getElementById('btnBuild').classList.add('active')
+    document.getElementById('modeIndicator').classList.add('open')
+    populateBuildGrid()
+  })
+  document.getElementById('helpCloseBtn').addEventListener('click', () => {
+    document.getElementById('helpPrompt').classList.remove('open')
   })
 }
 
@@ -3005,7 +3263,7 @@ async function collectIncome() {
         currentIncomeBuilding.last_collected_at = new Date().toISOString()
         showToast('Income Collected', `+${data.coinsCollected} coins`)
         closeIncomePanel()
-        // Refetch world state to sync last_collected_at with server
+        completeGoalCollectIncome()
         await fetchWorldState()
       } else {
         showToast('No Income', 'Nothing to collect yet')
@@ -3182,12 +3440,15 @@ async function placeBuildingAt(x, y) {
     const data = await res.json()
     if (data.ok) {
       state.coins -= type.cost
+      state.ownBuildingsCount = state.buildings.filter(b => b.owner_id === state.userId).length + 1
       document.getElementById('statCoins').textContent = state.coins
       showToast('Building Placed', `${type.name} built successfully!`)
       addChatMessage('', `${state.username} built a ${type.name}`, true)
-      // Refetch world state to show the new building
+      if (state.buildType === 'house') completeGoal('placeFirstHouse')
+      if (state.buildType === 'shop') completeGoal('placeFirstShop')
+      checkHelpPrompt()
+      updateGoalHUD()
       await fetchWorldState()
-      // Trigger district re-evaluation (serverless district formation)
       await refreshDistricts()
     } else {
       console.error('[WORLD] placeBuildingAt failed:', res.status, data)
@@ -3236,6 +3497,7 @@ async function triggerGodPower(x, y) {
       document.getElementById('statCoins').textContent = state.coins
       showToast('God Power Triggered', `${power.name} unleashed!`)
       addChatMessage('', `${state.username} triggered ${power.name}!`, true)
+      completeGoalGodPower()
     } else {
       console.error('[WORLD] triggerGodPower failed:', res.status, data)
       showToast('Error', data.error || 'Failed to trigger power')
@@ -3428,6 +3690,7 @@ async function setupMultiplayer() {
     }
     if (payload.districts) {
       state.districts = payload.districts
+      if (payload.districts.length > 0) completeGoal('formFirstDistrict')
     }
     if (payload.events) {
       const existingIds = new Set(state.events.map(e => e.id))
@@ -3810,6 +4073,89 @@ function toggleInfluenceView() {
   showToast('Influence View', state.influenceViewEnabled ? 'Enabled' : 'Disabled')
 }
 
+/* ── ONBOARDING ── */
+function showWelcomeOverlay() {
+  document.getElementById('welcomeOverlay').classList.add('open')
+  document.getElementById('welcomeStartBtn').onclick = () => {
+    localStorage.setItem('fas_world_tutorial', '1')
+    state.tutorialSeen = true
+    document.getElementById('welcomeOverlay').classList.remove('open')
+    checkHelpPrompt()
+    updateGoalHUD()
+  }
+}
+
+function showGoalComplete(text) {
+  const el = document.getElementById('goalComplete')
+  document.getElementById('goalCompleteText').textContent = text
+  el.classList.add('show')
+  setTimeout(() => el.classList.remove('show'), 2500)
+}
+
+function checkHelpPrompt() {
+  const owned = state.buildings.filter(b => b.owner_id === state.userId).length
+  state.ownBuildingsCount = owned
+  if (state.tutorialSeen && owned === 0) {
+    document.getElementById('helpPrompt').classList.add('open')
+  } else {
+    document.getElementById('helpPrompt').classList.remove('open')
+  }
+}
+
+const GOAL_STEPS = [
+  { key: 'placeFirstHouse', label: 'Place your first house', check: s => s.ownBuildingsCount >= 1 },
+  { key: 'placeFirstShop', label: 'Place a shop', check: s => s.buildings.some(b => b.owner_id === s.userId && b.building_type === 'shop') },
+  { key: 'collectFirstIncome', label: 'Collect income from a building', check: s => s._collectedIncome },
+  { key: 'formFirstDistrict', label: 'Form your first district', check: s => s.districts.length > 0 },
+  { key: 'exploreGodPower', label: 'Explore god powers', check: s => s._triedGodPower },
+]
+
+function updateGoalHUD() {
+  if (!state.tutorialSeen || state.loadingGoal) return
+  const hud = document.getElementById('goalHud')
+  const text = document.getElementById('goalText')
+  for (const g of GOAL_STEPS) {
+    if (!state.goals[g.key] && !g.check(state)) {
+      text.innerHTML = '&#x1F3AF; ' + g.label.replace(/(house|shop|district|god)/, '<strong>$1</strong>')
+      hud.classList.add('show')
+      return
+    }
+  }
+  hud.classList.remove('show')
+}
+
+function completeGoal(key) {
+  if (state.goals[key]) return
+  state.goals[key] = true
+  const step = GOAL_STEPS.find(g => g.key === key)
+  if (step) showGoalComplete('&#x2705; ' + step.label)
+  updateGoalHUD()
+}
+
+function completeGoalCollectIncome() {
+  state._collectedIncome = true
+  completeGoal('collectFirstIncome')
+}
+
+function completeGoalGodPower() {
+  state._triedGodPower = true
+  completeGoal('exploreGodPower')
+}
+
+function saveGoalsToStorage() {
+  try { localStorage.setItem('fas_world_goals', JSON.stringify(state.goals)) } catch {}
+}
+
+function loadGoalsFromStorage() {
+  try {
+    const raw = localStorage.getItem('fas_world_goals')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      Object.assign(state.goals, parsed)
+    }
+  } catch {}
+}
+
 async function init() {
   const bar = document.getElementById('loadingBar')
   const text = document.getElementById('loadingText')
@@ -3870,6 +4216,16 @@ async function init() {
   state.loaded = true
   document.getElementById('loadingScreen').classList.add('hidden')
   setTimeout(() => document.getElementById('loadingScreen').remove(), 600)
+
+  state.tutorialSeen = !!localStorage.getItem('fas_world_tutorial')
+  loadGoalsFromStorage()
+
+  if (!state.tutorialSeen) {
+    showWelcomeOverlay()
+  } else {
+    checkHelpPrompt()
+    updateGoalHUD()
+  }
 
   requestAnimationFrame(gameLoop)
 }
