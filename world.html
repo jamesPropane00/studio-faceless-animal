@@ -590,6 +590,21 @@
       text-align: center;
       margin-top: 0.25rem;
     }
+    .build-income {
+      font-size: 0.7rem;
+      color: #4ade80;
+      text-align: center;
+      font-weight: 600;
+      margin-top: 0.15rem;
+    }
+    .build-income-none {
+      font-size: 0.7rem;
+      color: var(--dim);
+      text-align: center;
+      font-weight: 500;
+      margin-top: 0.15rem;
+      font-style: italic;
+    }
     .mode-indicator {
       position: fixed;
       top: calc(8px + var(--safe-top));
@@ -936,7 +951,7 @@ const state = {
 }
 
 const BUILDING_TYPES = {
-  house: { name: 'House', color: '#8B7355', height: 12, cost: 50, income: 0 },
+  house: { name: 'House', color: '#8B7355', height: 12, cost: 50, income: 0.5 },
   shop: { name: 'Shop', color: '#4A90E2', height: 10, cost: 100, income: 1 },
   club: { name: 'Club', color: '#E91E63', height: 14, cost: 150, income: 2 },
   warehouse: { name: 'Warehouse', color: '#607D8B', height: 8, cost: 75, income: 1 },
@@ -1381,6 +1396,9 @@ function drawWorldEvents() {
     } else if (evt.type === 'blessing') {
       gradient.addColorStop(0, `rgba(255,255,200,${0.4 * pulse})`)
       gradient.addColorStop(1, 'rgba(255,255,150,0)')
+    } else if (evt.type === 'district_formed') {
+      gradient.addColorStop(0, `rgba(74,222,128,${0.5 * pulse})`)
+      gradient.addColorStop(1, 'rgba(34,197,94,0)')
     } else {
       gradient.addColorStop(0, `rgba(200,100,50,${0.3 * pulse})`)
       gradient.addColorStop(1, 'rgba(150,50,0,0)')
@@ -2268,11 +2286,13 @@ function populateBuildGrid() {
   for (const [type, info] of Object.entries(BUILDING_TYPES)) {
     const item = document.createElement('div')
     item.className = 'build-item'
+    const incomeText = info.income > 0 ? `Income: ${info.income}/min` : 'No Income'
+    const incomeClass = info.income > 0 ? 'build-income' : 'build-income-none'
     item.innerHTML = `
       <div class="build-icon" style="color:${info.color}">&#x1F3E0;</div>
       <div class="build-name">${info.name}</div>
       <div class="build-cost">${info.cost} coins</div>
-      <div class="build-desc">${info.income > 0 ? '+' + info.income + ' income/min' : 'Shelter'}</div>
+      <div class="${incomeClass}">${incomeText}</div>
     `
     item.addEventListener('click', () => {
       document.querySelectorAll('.build-item').forEach(i => i.classList.remove('selected'))
@@ -3198,6 +3218,23 @@ async function setupMultiplayer() {
       const existingIds = new Set(state.events.map(e => e.id))
       for (const se of payload.events) {
         if (!existingIds.has(se.id)) {
+          // Handle district_formed events specially
+          if (se.type === 'district_formed') {
+            showToast(se.icon + ' New District!', se.name)
+            addChatMessage('', `${se.icon} ${se.name} — ${se.desc}`, true)
+            state.events.push({
+              id: se.id,
+              type: 'district_formed',
+              name: se.name,
+              icon: se.icon,
+              desc: se.desc,
+              x: se.x, y: se.y,
+              radius: se.radius,
+              timer: 10,
+              startTime: performance.now()
+            })
+            continue
+          }
           const template = WORLD_EVENTS.find(t => t.type === se.type)
           if (template) {
             state.events.push({

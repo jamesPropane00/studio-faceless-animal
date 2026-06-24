@@ -17,7 +17,7 @@ function json(body, status = 200) {
 }
 
 const BUILDING_TYPES = {
-  house: { name: 'House', cost: 50, income: 0 },
+  house: { name: 'House', cost: 50, income: 0.5 },
   shop: { name: 'Shop', cost: 100, income: 1 },
   club: { name: 'Club', cost: 150, income: 2 },
   warehouse: { name: 'Warehouse', cost: 75, income: 1 },

@@ -4570,7 +4570,7 @@ const worldState = {
 }
 
 const BUILDING_TYPES = {
-  house: { name: 'House', color: '#8B7355', height: 12, income: 0, npcType: 'worker' },
+  house: { name: 'House', color: '#8B7355', height: 12, income: 0.5, npcType: 'worker' },
   shop: { name: 'Shop', color: '#4A90E2', height: 10, income: 1, npcType: 'merchant' },
   club: { name: 'Club', color: '#E91E63', height: 14, income: 2, npcType: 'wanderer' },
   warehouse: { name: 'Warehouse', color: '#607D8B', height: 8, income: 1, npcType: 'worker' },
@@ -5042,6 +5042,32 @@ function updateDistricts() {
         radius: clusterRadius,
         building_count: cluster.length,
         updated_at: Date.now()
+      })
+    }
+  }
+  
+  // Detect new districts that didn't exist before
+  const oldDistrictIds = new Set(worldState.districts.map(d => `${d.center_x},${d.center_y},${d.district_type}`))
+  for (const newDistrict of newDistricts) {
+    const key = `${newDistrict.center_x},${newDistrict.center_y},${newDistrict.district_type}`
+    if (!oldDistrictIds.has(key)) {
+      // This is a new district - log it
+      console.log('[WORLD] New district formed:', newDistrict.name, `(${newDistrict.district_type}, ${newDistrict.building_count} buildings)`)
+      // Add to events for client notification
+      if (!worldState.events) worldState.events = []
+      worldState.events.push({
+        id: 'district_' + Date.now() + '_' + newDistrict.id,
+        type: 'district_formed',
+        name: 'New district formed: ' + newDistrict.name,
+        icon: '🏘️',
+        desc: `${newDistrict.building_count} ${newDistrict.district_type} buildings clustered`,
+        x: newDistrict.center_x,
+        y: newDistrict.center_y,
+        radius: newDistrict.radius,
+        timer: 10,
+        startTime: Date.now(),
+        districtName: newDistrict.name,
+        districtType: newDistrict.district_type
       })
     }
   }
