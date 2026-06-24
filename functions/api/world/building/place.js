@@ -114,12 +114,11 @@ export async function onRequestPost(context) {
       nextId = (maxIdResult.data[0].id || 0) + 1;
     }
 
-    // Insert building. owner_id must be either NULL or a valid user UUID;
-    // other shapes (local_xxx, SIG-XXXX, usernames) trip the FK constraint.
-    const isUuid = userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+    // Insert building. owner_id is now TEXT (no FK constraint), so we can store
+    // any value: real user UUIDs, local guest IDs, or null for anonymous buildings.
     const building = {
       id: nextId,
-      owner_id: isUuid ? userId : null,
+      owner_id: userId || null,
       building_type: type,
       tile_x: tileX,
       tile_y: tileY,
@@ -144,8 +143,9 @@ export async function onRequestPost(context) {
       }, 500);
     }
 
-    // Update player reputation (+5 for building)
-    if (userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+    // Update player reputation (+5 for building) - only for real UUID users
+    const isUuid = userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+    if (isUuid) {
       const playerQuery = `select=reputation&user_id=eq.${encodeURIComponent(userId)}`;
       const playerResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?${playerQuery}`);
       
