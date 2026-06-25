@@ -654,81 +654,158 @@
 
     /* ── WORLD MAP ── */
     .world-map-panel {
-      max-width: 400px;
+      max-width: 420px;
       right: 60px;
     }
     .world-map-content {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      margin: 0.5rem 0;
+    }
+    .world-map-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .world-map-lines {
+      stroke: var(--border2);
+      stroke-width: 1.5;
+      fill: none;
+      opacity: 0.5;
+    }
+    .world-map-lines.active {
+      stroke: var(--bright);
+      opacity: 0.7;
+      stroke-width: 2;
+    }
+
+    /* ── World Map Nodes ── */
+    #worldMapNodes {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+    .wm-node {
+      position: absolute;
+      transform: translate(-50%, -50%);
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      padding: 0.5rem 0;
+      align-items: center;
+      cursor: pointer;
+      transition: filter 0.3s;
     }
-    .world-map-region {
+    .wm-node-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      padding: 0.5rem 0.6rem;
-      border-radius: var(--radius-sm);
-      background: rgba(255,255,255,0.02);
-      border: 1px solid var(--border);
-      transition: all 0.15s;
+      justify-content: center;
+      font-size: 1.3rem;
+      border: 2px solid var(--border);
+      background: rgba(18,20,30,0.9);
+      backdrop-filter: blur(4px);
+      transition: all 0.25s;
+      position: relative;
     }
-    .world-map-region.current {
+    .wm-node:hover .wm-node-circle {
       border-color: var(--bright);
-      background: rgba(167,139,250,0.1);
+      transform: scale(1.08);
     }
-    .world-map-region .region-icon {
-      font-size: 1.4rem;
-      width: 32px;
-      text-align: center;
-      flex-shrink: 0;
+    .wm-node.current .wm-node-circle {
+      border-color: var(--bright);
+      box-shadow: 0 0 14px rgba(167,139,250,0.45), inset 0 0 8px rgba(167,139,250,0.15);
+      background: rgba(167,139,250,0.15);
     }
-    .world-map-region .region-info {
-      flex: 1;
-      min-width: 0;
-    }
-    .world-map-region .region-name {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .world-map-region .region-desc {
-      font-size: 0.62rem;
-      color: var(--dim);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .world-map-region .region-status {
-      font-size: 0.55rem;
+    .wm-node.current .wm-node-label {
       color: var(--bright);
+      font-weight: 800;
+    }
+    .wm-node-label {
+      font-size: 0.55rem;
       font-weight: 700;
+      color: var(--dim);
+      margin-top: 4px;
+      text-align: center;
+      line-height: 1.2;
+      max-width: 60px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    }
+    .wm-node-badge {
+      font-size: 0.45rem;
+      font-weight: 700;
+      color: var(--bright);
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      flex-shrink: 0;
+      margin-top: 1px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
     }
-    .region-travel-btn {
-      padding: 0.3rem 0.7rem;
+    .wm-node .region-travel-btn {
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.2rem 0.5rem;
       border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
-      background: rgba(167,139,250,0.15);
+      border: 1px solid var(--bright);
+      background: rgba(167,139,250,0.2);
       color: var(--bright);
-      font-size: 0.7rem;
+      font-size: 0.55rem;
       font-weight: 700;
       cursor: pointer;
-      flex-shrink: 0;
+      white-space: nowrap;
       transition: all 0.15s;
+      z-index: 3;
+      opacity: 0;
+      pointer-events: none;
     }
-    .region-travel-btn:hover {
-      background: rgba(167,139,250,0.3);
-      border-color: var(--bright);
+    .wm-node.reachable .region-travel-btn {
+      opacity: 1;
+      pointer-events: auto;
     }
-    .region-travel-btn:disabled {
-      opacity: 0.4;
+    .wm-node .region-travel-btn:hover {
+      background: rgba(167,139,250,0.4);
+    }
+    .wm-node .region-travel-btn:disabled {
+      opacity: 0.3;
       cursor: not-allowed;
     }
 
-    /* ── TRAVEL OVERLAY ── */
+    /* ── Vehicle Marker ── */
+    .wm-vehicle {
+      display: none;
+      position: absolute;
+      z-index: 3;
+      width: 16px;
+      height: 16px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      transition: none;
+    }
+    .wm-vehicle.active {
+      display: block;
+    }
+    .wm-vehicle-dot {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--bright);
+      border: 2px solid #fff;
+      box-shadow: 0 0 10px rgba(167,139,250,0.6);
+    }
+    .wm-vehicle.travel .wm-vehicle-dot {
+      animation: vehiclePulse 1.2s ease-in-out infinite;
+    }
+    @keyframes vehiclePulse {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* ── Travel Overlay ── */
     .travel-overlay {
       position: fixed;
       inset: 0;
@@ -755,7 +832,60 @@
       font-size: 0.85rem;
       color: var(--bright);
       font-weight: 600;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
+    .travel-route-vis {
+      position: relative;
+      width: 100%;
+      height: 40px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+    }
+    .travel-route-vis .trv-from,
+    .travel-route-vis .trv-to {
+      font-size: 1.5rem;
+      z-index: 1;
+      background: rgba(18,20,30,0.8);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--border);
+    }
+    .travel-route-vis .trv-to {
+      border-color: var(--bright);
+    }
+    .travel-route-track {
+      position: absolute;
+      left: 44px;
+      right: 44px;
+      height: 2px;
+      background: var(--border2);
+      border-radius: 1px;
+    }
+    .travel-route-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--purple), var(--bright));
+      border-radius: 1px;
+      transition: width 0.3s;
+    }
+    .travel-route-vehicle {
+      position: absolute;
+      top: 50%;
+      width: 12px;
+      height: 12px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: var(--bright);
+      border: 2px solid #fff;
+      box-shadow: 0 0 8px rgba(167,139,250,0.5);
+      transition: left 0.3s;
+      z-index: 2;
     }
     .travel-progress-track {
       width: 100%;
@@ -1556,65 +1686,16 @@
 
 <div class="world-map-panel game-panel" id="worldMapPanel">
   <div class="panel-header">
-    <div class="panel-title">World Map</div>
+    <div class="panel-title">&#x1F5FA;&#xFE0F; World Map</div>
     <div class="panel-close" id="worldMapClose">&times;</div>
   </div>
   <div class="world-map-content" id="worldMapContent">
-    <div class="world-map-region current" data-region="city">
-      <div class="region-icon">&#x1F3D9;&#xFE0F;</div>
-      <div class="region-info">
-        <div class="region-name">Faceless City</div>
-        <div class="region-desc">The beating heart of the world.</div>
-      </div>
-      <div class="region-status">YOU ARE HERE</div>
-    </div>
-    <div class="world-map-region" data-region="farmlands">
-      <div class="region-icon">&#x1F33E;</div>
-      <div class="region-info">
-        <div class="region-name">Farmlands</div>
-        <div class="region-desc">Golden fields and peaceful pastures.</div>
-      </div>
-      <button class="region-travel-btn" data-target="farmlands">Travel</button>
-    </div>
-    <div class="world-map-region" data-region="whisper-woods">
-      <div class="region-icon">&#x1F333;</div>
-      <div class="region-info">
-        <div class="region-name">Whisper Woods</div>
-        <div class="region-desc">Ancient trees and glowing creatures.</div>
-      </div>
-      <button class="region-travel-btn" data-target="whisper-woods">Travel</button>
-    </div>
-    <div class="world-map-region" data-region="mountains">
-      <div class="region-icon">&#x26F0;&#xFE0F;</div>
-      <div class="region-info">
-        <div class="region-name">Mountains</div>
-        <div class="region-desc">Snow-capped peaks and hidden caves.</div>
-      </div>
-      <button class="region-travel-btn" data-target="mountains">Travel</button>
-    </div>
-    <div class="world-map-region" data-region="iron-district">
-      <div class="region-icon">&#x1F3ED;</div>
-      <div class="region-info">
-        <div class="region-name">Iron District</div>
-        <div class="region-desc">Factories and steel.</div>
-      </div>
-      <button class="region-travel-btn" data-target="iron-district">Travel</button>
-    </div>
-    <div class="world-map-region" data-region="coast">
-      <div class="region-icon">&#x1F3DD;&#xFE0F;</div>
-      <div class="region-info">
-        <div class="region-name">Coast</div>
-        <div class="region-desc">Docks, beaches, and ocean trade.</div>
-      </div>
-      <button class="region-travel-btn" data-target="coast">Travel</button>
-    </div>
-    <div class="world-map-region" data-region="purple-pulse">
-      <div class="region-icon">&#x1F3A8;</div>
-      <div class="region-info">
-        <div class="region-name">Purple Pulse</div>
-        <div class="region-desc">Neon-drenched nightlife.</div>
-      </div>
-      <button class="region-travel-btn" data-target="purple-pulse">Travel</button>
+    <svg class="world-map-svg" id="worldMapSvg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+      <g id="worldMapLines"></g>
+    </svg>
+    <div id="worldMapNodes"></div>
+    <div class="wm-vehicle" id="wmVehicle">
+      <div class="wm-vehicle-dot"></div>
     </div>
   </div>
 </div>
@@ -1623,6 +1704,14 @@
   <div class="travel-modal">
     <div class="travel-title">Traveling...</div>
     <div class="travel-region-label" id="travelTargetLabel">to Farmlands</div>
+    <div class="travel-route-vis" id="travelRouteVis">
+      <div class="trv-from" id="trvFrom">&#x1F3D9;</div>
+      <div class="travel-route-track">
+        <div class="travel-route-fill" id="travelRouteFill"></div>
+      </div>
+      <div class="travel-route-vehicle" id="travelRouteVehicle"></div>
+      <div class="trv-to" id="trvTo">&#x1F33E;</div>
+    </div>
     <div class="travel-progress-track">
       <div class="travel-progress-fill" id="travelProgressFill"></div>
     </div>
@@ -4664,7 +4753,10 @@ function openPanel(panelId, extra) {
   const el = document.getElementById(panelId)
   if (!el) return
   if (!el.classList.contains('panel-hidden') && el.classList.contains('open')) {
-    closeAllPanels()
+  closeAllPanels()
+
+  // Add pulse animation during travel
+  document.getElementById('wmVehicle').classList.add('travel')
     return
   }
   closeAllPanels()
@@ -4756,7 +4848,7 @@ function setupUI() {
   document.getElementById('farmOverlayClose').addEventListener('click', closeFarmOverlay)
 
   // World map travel buttons
-  document.getElementById('worldMapContent').addEventListener('click', (e) => {
+  document.getElementById('worldMapNodes').addEventListener('click', (e) => {
     const btn = e.target.closest('.region-travel-btn')
     if (!btn || btn.disabled) return
     const target = btn.dataset.target
@@ -6723,22 +6815,56 @@ function loadGoalsFromStorage() {
 
 // ── WORLD MAP & TRAVEL ────────────────────────────────────
 
+function getNodePos(regionId) {
+  const pos = REGIONS[regionId].mapPos
+  // Map grid (0..4) to percentage (8%..92%)
+  return { x: 8 + pos.x * 21, y: 8 + pos.y * 21 }
+}
+
 function updateWorldMap() {
-  const regions = document.querySelectorAll('.world-map-region')
-  for (const el of regions) {
-    const rid = el.dataset.region
-    const isCurrent = rid === state.currentRegion
-    el.classList.toggle('current', isCurrent)
-    const btn = el.querySelector('.region-travel-btn')
-    const status = el.querySelector('.region-status')
-    if (btn) {
-      btn.style.display = isCurrent ? 'none' : ''
-      btn.disabled = state.travel.active
-    }
-    if (status) {
-      status.style.display = isCurrent ? '' : 'none'
+  const nodeContainer = document.getElementById('worldMapNodes')
+  const linesGroup = document.getElementById('worldMapLines')
+  const vehicle = document.getElementById('wmVehicle')
+
+  // Build SVG lines for connections
+  const drawn = new Set()
+  let lineHtml = ''
+  const regionIds = Object.keys(REGIONS)
+  for (const id of regionIds) {
+    const from = getNodePos(id)
+    for (const connId of REGIONS[id].connections) {
+      const key = [id, connId].sort().join('-')
+      if (drawn.has(key)) continue
+      drawn.add(key)
+      const to = getNodePos(connId)
+      const active = id === state.currentRegion || connId === state.currentRegion
+      lineHtml += `<line class="world-map-lines${active ? ' active' : ''}" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" data-from="${id}" data-to="${connId}"/>`
     }
   }
+  linesGroup.innerHTML = lineHtml
+
+  // Build nodes
+  let nodeHtml = ''
+  for (const [id, r] of Object.entries(REGIONS)) {
+    const pos = getNodePos(id)
+    const isCurrent = id === state.currentRegion
+    const isReachable = !state.travel.active && !isCurrent && REGIONS[state.currentRegion].connections.includes(id)
+    const travelDisabled = state.travel.active
+
+    nodeHtml += `<div class="wm-node${isCurrent ? ' current' : ''}${isReachable ? ' reachable' : ''}" data-region="${id}" style="left:${pos.x}%;top:${pos.y}%">
+      <div class="wm-node-circle" style="border-color:${isCurrent ? r.color : 'var(--border)'}">${r.label}</div>
+      <div class="wm-node-label">${r.name}</div>
+      ${isCurrent ? '<div class="wm-node-badge">YOU ARE HERE</div>' : ''}
+      ${!isCurrent && isReachable ? `<button class="region-travel-btn" data-target="${id}">Travel</button>` : ''}
+    </div>`
+  }
+  nodeContainer.innerHTML = nodeHtml
+
+  // Position vehicle marker on current node
+  const curPos = getNodePos(state.currentRegion)
+  vehicle.style.left = curPos.x + '%'
+  vehicle.style.top = curPos.y + '%'
+  vehicle.classList.add('active')
 }
 
 function startTravel(targetRegion) {
@@ -6750,34 +6876,57 @@ function startTravel(targetRegion) {
   // Save current position
   state.regionPlayerPos[from] = { x: state.player.x, y: state.player.y }
 
-  // Show travel overlay
+  // Setup travel state
   state.travel.active = true
   state.travel.target = targetRegion
   state.travel.fromRegion = from
   state.travel.progress = 0
-  state.travel.statusText = 'Departing...'
 
+  // Show travel overlay
   const overlay = document.getElementById('travelOverlay')
   overlay.style.display = 'flex'
+
+  const fromRegion = REGIONS[from]
+  document.getElementById('trvFrom').textContent = fromRegion.label
+  document.getElementById('trvTo').textContent = region.label
   document.getElementById('travelTargetLabel').textContent = `to ${region.name}`
+  document.getElementById('travelRouteFill').style.width = '0%'
+  document.getElementById('travelRouteVehicle').style.left = '0%'
   document.getElementById('travelProgressFill').style.width = '0%'
   document.getElementById('travelStatus').textContent = 'Departing...'
+  state.travel.statusText = 'Departing...'
 
   closeAllPanels()
 
-  // Animate travel over ~8 seconds
+  // Animate both the panel vehicle and overlay route over ~8 seconds
   const startTime = performance.now()
   const duration = 8000
-  const statuses = ['Departing...', 'Leaving the city...', 'En route...', 'Almost there...', 'Arriving...']
+  const statuses = ['Departing...', 'Leaving...', 'En route...', 'Almost there...', 'Arriving...']
+
+  const fromPos = getNodePos(from)
+  const toPos = getNodePos(targetRegion)
 
   function animateTravel(now) {
     const elapsed = now - startTime
     const pct = Math.min(1, elapsed / duration)
     state.travel.progress = pct
+
+    // Update travel overlay
     document.getElementById('travelProgressFill').style.width = (pct * 100) + '%'
+    document.getElementById('travelRouteFill').style.width = (pct * 100) + '%'
+    document.getElementById('travelRouteVehicle').style.left = (pct * 100) + '%'
     const idx = Math.min(statuses.length - 1, Math.floor(pct * statuses.length))
     document.getElementById('travelStatus').textContent = statuses[idx]
     state.travel.statusText = statuses[idx]
+
+    // Animate vehicle marker on the world map panel (if panel is open)
+    const vehicle = document.getElementById('wmVehicle')
+    if (vehicle.classList.contains('active')) {
+      const vx = fromPos.x + (toPos.x - fromPos.x) * pct
+      const vy = fromPos.y + (toPos.y - fromPos.y) * pct
+      vehicle.style.left = vx + '%'
+      vehicle.style.top = vy + '%'
+    }
 
     if (pct < 1) {
       requestAnimationFrame(animateTravel)
@@ -6794,6 +6943,14 @@ function completeTravel(targetRegion) {
   state.worldMapOpen = false
 
   document.getElementById('travelOverlay').style.display = 'none'
+
+  // Reposition vehicle to new current region
+  const curPos = getNodePos(targetRegion)
+  const vehicle = document.getElementById('wmVehicle')
+  vehicle.style.left = curPos.x + '%'
+  vehicle.style.top = curPos.y + '%'
+  vehicle.classList.remove('travel')
+
   closeAllPanels()
 
   // Save non-city chunks for when we return
