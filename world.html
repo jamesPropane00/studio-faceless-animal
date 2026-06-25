@@ -4014,6 +4014,8 @@ async function setupMultiplayer() {
           await fetchWorldState()
         }
       }
+      // NPC auto-building (separate from simulation tick, has own cooldown)
+      await evaluateNPCBuildDesire()
     }
   }, 30000)
 
@@ -4136,8 +4138,151 @@ async function runSimulationTick() {
       console.log('[SIM] Tick completed:', data.buildingsUpdated, 'buildings updated, +' + data.totalPendingIncome.toFixed(2) + ' pending income')
     }
   } catch (e) {
-    // Fail safe — never break the game
+    // Fail safe - never break the game
     console.warn('[SIM] tick error:', e.message)
+  }
+}
+
+// -- NPC AUTO-BUILDING --
+
+let lastNPCBuildTime = 0
+const NPC_BUILD_COOLDOWN = 90000
+
+const NPC_BUILDER_WEIGHTS = {
+  wanderer: 0.08, worker: 0.06, vendor: 0.05,
+  walker: 0.02, guard: 0.01, merchant: 0.01
+}
+
+function findNearestDistrict(wx, wy, districts) {
+  let best = null, bestDist = Infinity
+  for (const d of districts) {
+    const dx = wx - d.center_x
+    const dy = wy - d.center_y
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    if (dist < bestDist && dist < (d.radius || 15) * 3) {
+      bestDist = dist
+      best = d
+    }
+  }
+  return best
+}
+
+function determineNPCBuildType(npc, nearbyDistrict) {
+  if (!nearbyDistrict) {
+    return Math.random() > 0.5 ? 'camp' : 'house'
+  }
+
+  const breakdown = nearbyDistrict.building_breakdown || {}
+  const total = Object.values(breakdown).reduce((a, b) => a + b, 0) || 1
+  const ratios = {
+    house: (breakdown.house || 0) / total,
+    shop: (breakdown.shop || 0) / total,
+    club: (breakdown.club || 0) / total,
+    warehouse: (breakdown.warehouse || 0) / total,
+    hide: (breakdown.hide || 0) / total
+  }
+  const safety = 100 - (nearbyDistrict.crime_rate || 0)
+  const population = nearbyDistrict.population || 0
+  const wealth = nearbyDistrict.wealth || 0
+
+  if (npc.type === 'wanderer' && ratios.house < 0.4 && safety > 30) return 'house'
+  if (npc.type === 'worker' && ratios.warehouse < 0.12 && ratios.shop > 0.08) return 'warehouse'
+  if (npc.type === 'vendor' && ratios.shop < 0.18 && population > 15 && safety > 40) return 'shop'
+
+  if (ratios.house < 0.25 && safety > 40) return 'house'
+  if (ratios.shop < 0.12 && population > 20 && safety > 50) return 'shop'
+  if (ratios.warehouse < 0.08 && (ratios.shop || 0) > 0.08) return 'warehouse'
+  if (ratios.club < 0.06 && population > 30 && wealth > 200) return 'club'
+  if (safety < 40 && (ratios.hide || 0) < 0.1) return 'hide'
+  if (ratios.house < 0.5) return 'house'
+  return 'camp'
+}
+
+function findNPCBuildTile(baseX, baseY, buildingType, buildings) {
+  const isEdgeType = buildingType === 'camp' || buildingType === 'hide'
+  const searchRadius = isEdgeType ? [12, 20] : [3, 10]
+
+  for (let attempt = 0; attempt < 25; attempt++) {
+    const radius = searchRadius[0] + Math.random() * (searchRadius[1] - searchRadius[0])
+    const angle = Math.random() * Math.PI * 2
+    const ox = Math.cos(angle) * radius
+    const oy = Math.sin(angle) * radius
+
+    const tx = Math.max(2, Math.min(WORLD_SIZE - 3, Math.floor(baseX + ox)))
+    const ty = Math.max(2, Math.min(WORLD_SIZE - 3, Math.floor(baseY + oy)))
+
+    const terrain = getTerrainAt(tx, ty)
+    if (terrain === TERRAIN.DEEP_WATER || terrain === TERRAIN.WATER) continue
+    if (terrain === TERRAIN.FOREST && buildingType !== 'camp') continue
+
+    const occupied = buildings.some(b => b.tile_x === tx && b.tile_y === ty)
+    if (occupied) continue
+
+    return { tileX: tx, tileY: ty }
+  }
+  return null
+}
+
+async function evaluateNPCBuildDesire() {
+  const now = Date.now()
+  if (now - lastNPCBuildTime < NPC_BUILD_COOLDOWN) return
+  if (!state.npcs || state.npcs.length === 0) return
+  if (!state.buildings || !state.districts) return
+
+  const candidates = state.npcs.filter(npc => {
+    const weight = NPC_BUILDER_WEIGHTS[npc.type] || 0.01
+    return npc.state !== 'sleeping' && Math.random() < weight
+  })
+  if (candidates.length === 0) return
+
+  const npc = candidates[0]
+  const nearbyDistrict = findNearestDistrict(npc.x, npc.y, state.districts)
+  const buildingType = determineNPCBuildType(npc, nearbyDistrict)
+
+  if (!buildingType) return
+
+  const tile = findNPCBuildTile(npc.x, npc.y, buildingType, state.buildings)
+  if (!tile) {
+    console.log('[NPC-BUILD]', npc.name, 'wanted to build', buildingType, 'but found no valid tile')
+    return
+  }
+
+  console.log('[NPC-BUILD]', npc.name, '(' + npc.type + ') is building a', buildingType, 'at', tile.tileX, tile.tileY)
+
+  try {
+    const res = await fetch('/api/world/simulation/npc-build', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        buildingType: buildingType,
+        tileX: tile.tileX,
+        tileY: tile.tileY
+      })
+    })
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) return
+    const data = await res.json()
+    if (data.ok) {
+      lastNPCBuildTime = now
+      console.log('[NPC-BUILD] Success:', buildingType, 'placed at', tile.tileX, tile.tileY)
+      if (data.building) {
+        state.buildings.push({
+          ...data.building,
+          condition: 100,
+          income_rate: 0,
+          last_collected_at: new Date().toISOString(),
+          last_collected: Date.now(),
+          in_district: false,
+          business_health: 100,
+          status: 'active',
+          pending_income: 0
+        })
+      }
+    } else {
+      console.log('[NPC-BUILD] Failed:', data.error || 'unknown')
+    }
+  } catch (e) {
+    console.warn('[NPC-BUILD] Request failed:', e.message)
   }
 }
 
