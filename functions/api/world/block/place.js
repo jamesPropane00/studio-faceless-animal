@@ -4,14 +4,15 @@
  * Places a block (roads, sidewalks, lots) without replacing the old system.
  *
  * Body: { blockType, tileX, tileY, userId }
- * blockType: 'residential' | 'commercial' | 'industrial' | 'entertainment' | 'park'
+ * blockType: 'residential' | 'commercial' | 'industrial' | 'entertainment' | 'park' | 'farm'
  *
  * Block dimensions (width x height in tiles):
- *   residential:  8x8
- *   commercial:   6x6
- *   industrial:   10x8
+ *   residential:   8x8
+ *   commercial:    6x6
+ *   industrial:    10x8
  *   entertainment: 8x6
- *   park:         6x6
+ *   park:          6x6
+ *   farm:          10x10
  *
  * Creates:
  *   1. The block record
@@ -51,6 +52,7 @@ const BLOCK_DIMS = {
   industrial:  { w: 10, h: 8, lotSize: 3, cost: 250 },
   entertainment: { w: 8, h: 6, lotSize: 2, cost: 400 },
   park:        { w: 6, h: 6, lotSize: 0, cost: 150 },
+  farm:        { w: 10, h: 10, lotSize: 3, cost: 100 },
 }
 
 export async function onRequestOptions() {
@@ -160,14 +162,14 @@ export async function onRequestPost(context) {
       let lotIndex = 0
       for (let y = pad; y + lotSize <= bh - pad; y += lotSize) {
         for (let x = pad; x + lotSize <= bw - pad; x += lotSize) {
-          lots.push({
-            block_id: blockId,
-            lot_index: lotIndex,
-            tile_x: cx + x,
-            tile_y: cy + y,
-            lot_type: blockType === 'industrial' ? 'industrial' : (blockType === 'residential' ? 'residential' : 'commercial'),
-            occupied_building_id: null
-          })
+      lots.push({
+        block_id: blockId,
+        lot_index: lotIndex,
+        tile_x: cx + x,
+        tile_y: cy + y,
+        lot_type: blockType === 'industrial' ? 'industrial' : (blockType === 'residential' ? 'residential' : (blockType === 'farm' ? 'field' : 'commercial')),
+        occupied_building_id: null
+      })
           lotIndex++
         }
       }

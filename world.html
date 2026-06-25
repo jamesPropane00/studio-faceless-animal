@@ -792,6 +792,110 @@
       font-weight: 600;
     }
 
+    /* ── FARM SYSTEM ── */
+    .region-farmlands { display: none; }
+    body.in-farmlands .region-farmlands { display: block; }
+
+    .farm-inventory {
+      position: fixed;
+      top: calc(max(12px, env(safe-area-inset-top,0px)) + 100px);
+      right: max(12px, env(safe-area-inset-right,0px));
+      z-index: 55;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      background: rgba(18,20,30,0.82);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.6rem;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      min-width: 100px;
+    }
+    .farm-inventory.hidden { display: none; }
+    .farm-inv-row {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.65rem;
+      color: var(--text);
+    }
+    .farm-inv-row .icon { font-size: 0.85rem; width: 18px; text-align: center; }
+    .farm-inv-row .count { color: var(--bright); font-weight: 700; margin-left: auto; }
+    .farm-send-btn {
+      margin-top: 0.3rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--gold);
+      background: rgba(234,179,8,0.12);
+      color: var(--gold);
+      font-size: 0.6rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .farm-send-btn:hover { background: rgba(234,179,8,0.25); }
+    .farm-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── FARM PLANT OVERLAY ── */
+    .farm-plant-overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 200;
+      background: rgba(18,20,30,0.95);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      min-width: 240px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .farm-plant-overlay.hidden { display: none; }
+    .farm-plant-title { font-size: 0.85rem; font-weight: 800; color: var(--text); margin-bottom: 0.6rem; }
+    .farm-crop-list { display: flex; flex-direction: column; gap: 4px; }
+    .farm-crop-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.5rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .farm-crop-item:hover { background: rgba(132,204,22,0.1); border-color: #84cc16; }
+    .farm-crop-icon { font-size: 1.2rem; width: 28px; text-align: center; }
+    .farm-crop-info { flex: 1; }
+    .farm-crop-name { font-size: 0.78rem; font-weight: 700; color: var(--text); }
+    .farm-crop-detail { font-size: 0.6rem; color: var(--dim); }
+    .farm-crop-time { font-size: 0.6rem; color: #84cc16; font-weight: 600; }
+    .farm-harvest-btn {
+      padding: 0.4rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid #84cc16;
+      background: rgba(132,204,22,0.15);
+      color: #84cc16;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .farm-harvest-btn:hover { background: rgba(132,204,22,0.3); }
+    .farm-overlay-close {
+      position: absolute;
+      top: 0.4rem;
+      right: 0.6rem;
+      font-size: 1.2rem;
+      color: var(--dim);
+      cursor: pointer;
+      line-height: 1;
+    }
+    .farm-overlay-close:hover { color: var(--text); }
+
     .build-desc, .god-desc {
       font-size: 0.7rem;
       color: var(--dim);
@@ -1456,11 +1560,17 @@
       <div class="block-cost">400</div>
       <div class="block-desc">8x6 — clubs, neon, crowd zones</div>
     </div>
-    <div class="block-item" data-type="park">
+    <div class="block-item region-farmlands" data-type="park">
       <div class="block-icon">&#x1F333;</div>
       <div class="block-name">Park Block</div>
       <div class="block-cost">150</div>
       <div class="block-desc">6x6 — trees, paths, benches</div>
+    </div>
+    <div class="block-item region-farmlands" data-type="farm">
+      <div class="block-icon">&#x1F33E;</div>
+      <div class="block-name">Farm Block</div>
+      <div class="block-cost">100</div>
+      <div class="block-desc">10x10 — fields for planting crops</div>
     </div>
   </div>
 </div>
@@ -1598,6 +1708,23 @@
 </div>
 
 <div class="world-vignette"></div>
+
+<div class="farm-inventory hidden" id="farmInventory">
+  <div class="farm-inv-row"><span class="icon">&#x1F33D;</span> Corn <span class="count" id="farmCorn">0</span></div>
+  <div class="farm-inv-row"><span class="icon">&#x1F33E;</span> Wheat <span class="count" id="farmWheat">0</span></div>
+  <div class="farm-inv-row"><span class="icon">&#x1F955;</span> Veggies <span class="count" id="farmVeggies">0</span></div>
+  <button class="farm-send-btn" id="farmSendBtn">Send Crops to City</button>
+</div>
+
+<div class="farm-plant-overlay hidden" id="farmPlantOverlay">
+  <div class="farm-overlay-close" id="farmOverlayClose">&times;</div>
+  <div class="farm-plant-title" id="farmPlantTitle">Plant a Crop</div>
+  <div class="farm-crop-list" id="farmCropList"></div>
+  <div id="farmHarvestArea" style="display:none">
+    <div class="farm-plant-title" style="margin-top:0.6rem">Ready to Harvest!</div>
+    <button class="farm-harvest-btn" id="farmHarvestBtn">Harvest</button>
+  </div>
+</div>
 
 <script type="module">
 import { supabase, SUPABASE_READY } from '/assets/js/supabase-client.js'
@@ -1805,6 +1932,258 @@ const DISTRICT_TYPE_COLORS = {
   warehouse: '#607D8B',
   hide:      '#6B7280',
   camp:      '#795548'
+}
+
+// ── FARM CROP TYPES ───────────────────────────────────────
+const CROP_TYPES = {
+  corn: { name: 'Corn', icon: '\u{1F33D}', growthTime: 45000, stages: 3, yield: 2, color: '#fbbf24' },
+  wheat: { name: 'Wheat', icon: '\u{1F33E}', growthTime: 30000, stages: 3, yield: 1, color: '#eab308' },
+  veggies: { name: 'Vegetables', icon: '\u{1F955}', growthTime: 60000, stages: 4, yield: 3, color: '#4ade80' },
+}
+
+// ── FARM DATA (localStorage-managed) ─────────────────────
+function getFarmData() {
+  try {
+    const raw = localStorage.getItem('fas_farm_data')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return { crops: [], inventory: { corn: 0, wheat: 0, veggies: 0 } }
+}
+
+function saveFarmData(data) {
+  localStorage.setItem('fas_farm_data', JSON.stringify(data))
+}
+
+function getCropAtTile(tx, ty) {
+  const data = getFarmData()
+  return data.crops.find(c => c.tx === tx && c.ty === ty) || null
+}
+
+function getCropGrowth(elapsed, info) {
+  if (!info) return 0
+  const stageDuration = info.growthTime / info.stages
+  const stage = Math.min(info.stages, Math.floor(elapsed / stageDuration))
+  return stage
+}
+
+function getCropStageInfo(crop) {
+  const info = CROP_TYPES[crop.type]
+  if (!info) return null
+  const planted = crop.plantedAt || 0
+  const elapsed = Date.now() - planted
+  const stage = getCropGrowth(elapsed, info)
+  const done = stage >= info.stages
+  const progress = Math.min(1, elapsed / info.growthTime)
+  return { info, stage, done, progress, elapsed }
+}
+
+function updateFarmCrops() {
+  const data = getFarmData()
+  let changed = false
+  for (let i = data.crops.length - 1; i >= 0; i--) {
+    const crop = data.crops[i]
+    const state = getCropStageInfo(crop)
+    if (!state || state.done) continue
+    changed = true
+  }
+  if (changed) saveFarmData(data)
+}
+
+function updateFarmInventory() {
+  const data = getFarmData()
+  document.getElementById('farmCorn').textContent = data.inventory.corn || 0
+  document.getElementById('farmWheat').textContent = data.inventory.wheat || 0
+  document.getElementById('farmVeggies').textContent = data.inventory.veggies || 0
+  const total = (data.inventory.corn || 0) + (data.inventory.wheat || 0) + (data.inventory.veggies || 0)
+  document.getElementById('farmSendBtn').disabled = total < 1
+}
+
+function showFarmPlantOverlay(tx, ty) {
+  const existing = getCropAtTile(tx, ty)
+  const overlay = document.getElementById('farmPlantOverlay')
+  const title = document.getElementById('farmPlantTitle')
+  const list = document.getElementById('farmCropList')
+  const harvestArea = document.getElementById('farmHarvestArea')
+
+  // Clear
+  list.innerHTML = ''
+  harvestArea.style.display = 'none'
+
+  if (existing) {
+    // Show harvest info
+    const state = getCropStageInfo(existing)
+    if (state && state.done) {
+      title.textContent = `Harvest ${state.info.icon} ${state.info.name}`
+      harvestArea.style.display = 'block'
+      document.getElementById('farmHarvestBtn').onclick = () => harvestCrop(tx, ty)
+    } else {
+      const pct = state ? Math.floor(state.progress * 100) : 0
+      title.textContent = `Growing ${state.info.icon} ${state.info.name} (${pct}%)`
+      const item = document.createElement('div')
+      item.className = 'farm-crop-item'
+      item.innerHTML = `<div class="farm-crop-icon">${state.info.icon}</div>
+        <div class="farm-crop-info">
+          <div class="farm-crop-name">${state.info.name}</div>
+          <div class="farm-crop-detail">Stage ${state.stage}/${state.info.stages} &mdash; ${pct}%</div>
+        </div>
+        <div class="farm-crop-time">${Math.max(1, Math.ceil((state.info.growthTime - state.elapsed) / 1000))}s</div>`
+      list.appendChild(item)
+    }
+  } else {
+    // Show planting options
+    title.textContent = 'Plant a Crop'
+    for (const [key, info] of Object.entries(CROP_TYPES)) {
+      const item = document.createElement('div')
+      item.className = 'farm-crop-item'
+      item.innerHTML = `<div class="farm-crop-icon">${info.icon}</div>
+        <div class="farm-crop-info">
+          <div class="farm-crop-name">${info.name}</div>
+          <div class="farm-crop-detail">${info.yield}x food &mdash; ${info.stages} stages</div>
+        </div>
+        <div class="farm-crop-time">${info.growthTime / 1000}s</div>`
+      item.onclick = () => plantCrop(tx, ty, key)
+      list.appendChild(item)
+    }
+  }
+
+  overlay.classList.remove('hidden')
+}
+
+function closeFarmOverlay() {
+  document.getElementById('farmPlantOverlay').classList.add('hidden')
+}
+
+function plantCrop(tx, ty, cropType) {
+  const data = getFarmData()
+  if (data.crops.some(c => c.tx === tx && c.ty === ty)) return
+  data.crops.push({ tx, ty, type: cropType, plantedAt: Date.now() })
+  saveFarmData(data)
+  closeFarmOverlay()
+  showToast('Planted ' + CROP_TYPES[cropType].name, '')
+  invalidateTileCache()
+}
+
+function harvestCrop(tx, ty) {
+  const data = getFarmData()
+  const idx = data.crops.findIndex(c => c.tx === tx && c.ty === ty)
+  if (idx === -1) return
+  const crop = data.crops[idx]
+  const state = getCropStageInfo(crop)
+  if (!state || !state.done) return
+
+  data.crops.splice(idx, 1)
+  const info = CROP_TYPES[crop.type]
+  const yield_ = info.yield || 1
+  data.inventory[crop.type] = (data.inventory[crop.type] || 0) + yield_
+
+  saveFarmData(data)
+  closeFarmOverlay()
+  updateFarmInventory()
+  showToast(`Harvested ${yield_} ${info.name}!`, '')
+  invalidateTileCache()
+}
+
+async function sendFoodToCity() {
+  const data = getFarmData()
+  const total = (data.inventory.corn || 0) + (data.inventory.wheat || 0) + (data.inventory.veggies || 0)
+  if (total < 1) return
+
+  const btn = document.getElementById('farmSendBtn')
+  btn.disabled = true
+  btn.textContent = 'Sending...'
+
+  try {
+    const res = await fetch('/api/world/farm/send-food', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ foodAmount: total, userId: state.userId })
+    })
+    const result = await res.json()
+    if (result.ok) {
+      data.inventory.corn = 0
+      data.inventory.wheat = 0
+      data.inventory.veggies = 0
+      saveFarmData(data)
+      updateFarmInventory()
+      state.coins = result.coins || state.coins
+      state.rep = result.rep || state.rep
+      document.getElementById('statCoins').textContent = state.coins
+      document.getElementById('statRep').textContent = state.rep
+      showToast(`Sent ${total} crops to the city! Earned ${result.reward || 0} coins.`, '')
+    } else {
+      showToast('Failed to send: ' + (result.error || 'unknown'), '')
+    }
+  } catch (e) {
+    showToast('Error sending food', '')
+  }
+  btn.disabled = false
+  btn.textContent = 'Send Crops to City'
+}
+
+// Draw crops on field lots
+function drawFarmCrop(lot) {
+  const crop = getCropAtTile(lot.tile_x, lot.tile_y)
+  if (!crop) return
+
+  const s = worldToScreen(lot.tile_x, lot.tile_y)
+  const z = state.camera.zoom
+  const tilePx = TILE_W * z
+  const half = tilePx * 0.5
+
+  const state_ = getCropStageInfo(crop)
+  if (!state_) return
+
+  const { info, stage, done, progress } = state_
+  const cx = s.x
+  const cy = s.y
+
+  // Draw crop as colored circles/shapes on the tile
+  const alpha = done ? 1 : 0.3 + (stage / info.stages) * 0.7
+  const size = done ? tilePx * 0.35 : tilePx * (0.1 + (stage / info.stages) * 0.25)
+  const count = done ? 4 : Math.min(stage + 1, 4)
+
+  // Draw ground/field color
+  ctx.fillStyle = done ? '#5a7a3a' : '#4a6a2a'
+  ctx.fillRect(cx - half * 0.7, cy - half * 0.7, half * 1.4, half * 1.4)
+
+  // Draw crop plants
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + 0.3
+    const dist = size * 0.5
+    const px = cx + Math.cos(angle) * dist
+    const py = cy + Math.sin(angle) * dist
+    const r = size * 0.3
+
+    ctx.globalAlpha = alpha
+    ctx.fillStyle = done ? info.color : `${info.color}88`
+    ctx.beginPath()
+    // Draw circle for corn, different shapes for others
+    if (crop.type === 'wheat' && stage > 0) {
+      // Tall thin shape for wheat
+      ctx.fillRect(px - r * 0.3, py - r, r * 0.6, r * 2)
+    } else if (crop.type === 'veggies') {
+      // Round veggie shape
+      ctx.arc(px, py, r * 0.8, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = '#2d6a1e'
+      ctx.fillRect(px - r * 0.05, py - r * 0.5, r * 0.1, -r * 0.4)
+    } else {
+      ctx.arc(px, py, r, 0, Math.PI * 2)
+    }
+    ctx.fill()
+    ctx.globalAlpha = 1
+  }
+
+  // Show progress bar for growing crops
+  if (!done) {
+    const barW = half * 1.2
+    const barH = 2 * z
+    const barY = cy + half * 0.5
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'
+    ctx.fillRect(cx - barW / 2, barY, barW, barH)
+    ctx.fillStyle = '#84cc16'
+    ctx.fillRect(cx - barW / 2, barY, barW * progress, barH)
+  }
 }
 
 const DISTRICT_TYPE_ICONS = {
@@ -3463,6 +3842,7 @@ function drawBlocks() {
     industrial: { fill: 'rgba(148, 163, 184, 0.08)', border: 'rgba(148, 163, 184, 0.3)', road: '#555', sidewalk: 'rgba(200,200,200,0.12)' },
     entertainment: { fill: 'rgba(167, 139, 250, 0.08)', border: 'rgba(167, 139, 250, 0.3)', road: '#444', sidewalk: 'rgba(200,200,200,0.15)' },
     park: { fill: 'rgba(34, 197, 94, 0.08)', border: 'rgba(34, 197, 94, 0.3)', road: '#444', sidewalk: 'rgba(200,200,200,0.15)' },
+    farm: { fill: 'rgba(132, 204, 22, 0.08)', border: 'rgba(132, 204, 22, 0.3)', road: '#555', sidewalk: 'rgba(160,120,80,0.15)' },
   }
 
   for (const block of state.blocks) {
@@ -3524,6 +3904,11 @@ function drawBlocks() {
       ctx.textAlign = 'center'
       ctx.fillStyle = 'rgba(255,255,255,0.15)'
       ctx.fillText(`${lot.lot_index + 1}`, s.x, s.y + 2 * z)
+    }
+
+    // Draw farm crops on field lots
+    if (lot.lot_type === 'field' && state.currentRegion === 'farmlands') {
+      drawFarmCrop(lot)
     }
   }
 }
@@ -4161,6 +4546,16 @@ function setupMouse() {
             openJobPanel(clickedBuilding.id)
           }
         }
+      } else if (state.currentRegion === 'farmlands') {
+        // Check farm lot click
+        const tx = Math.round(world.x)
+        const ty = Math.round(world.y)
+        const clickedLot = state.lots.find(l =>
+          l.tile_x === tx && l.tile_y === ty && l.lot_type === 'field'
+        )
+        if (clickedLot) {
+          showFarmPlantOverlay(tx, ty)
+        }
       }
     }
   })
@@ -4372,6 +4767,10 @@ function setupUI() {
   document.getElementById('incomePanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('jobPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('worldMapClose').addEventListener('click', closeAllPanels)
+
+  // Farm button handlers
+  document.getElementById('farmSendBtn').addEventListener('click', sendFoodToCity)
+  document.getElementById('farmOverlayClose').addEventListener('click', closeFarmOverlay)
 
   // World map travel buttons
   document.getElementById('worldMapContent').addEventListener('click', (e) => {
@@ -6479,6 +6878,11 @@ function completeTravel(targetRegion) {
 
   showToast(`Arrived at ${REGIONS[targetRegion].name}`, '')
   invalidateTileCache()
+
+  // Toggle farm UI visibility
+  document.body.classList.toggle('in-farmlands', targetRegion === 'farmlands')
+  document.getElementById('farmInventory').classList.toggle('hidden', targetRegion !== 'farmlands')
+  if (targetRegion === 'farmlands') updateFarmInventory()
 }
 
 async function init() {
@@ -6551,6 +6955,11 @@ async function init() {
     checkHelpPrompt()
     updateGoalHUD()
   }
+
+  // Initialize farm UI
+  document.body.classList.remove('in-farmlands')
+  document.getElementById('farmInventory').classList.add('hidden')
+  closeFarmOverlay()
 
   requestAnimationFrame(gameLoop)
 }
