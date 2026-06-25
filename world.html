@@ -3720,11 +3720,12 @@ function drawRoads() {
         ctx.rotate(Math.PI / 2)
       }
 
-      ctx.drawImage(roadTileImg, -half, -half, tilePx, tilePx)
+      const roadSize = tilePx * 0.25
+      ctx.drawImage(roadTileImg, -roadSize/2, -roadSize/2, roadSize, roadSize)
       ctx.restore()
     } else {
       // ── Procedural fallback ──
-      const roadWidth = tilePx * 0.8
+      const roadWidth = tilePx * 0.25
 
       // Asphalt base
       ctx.fillStyle = '#34363e'
