@@ -1,7 +1,7 @@
 /**
  * POST /api/world/godpower/trigger
  * Body: { type, x, y, userId }
- * Triggers a god power event
+ * Triggers a god power event after validating and deducting coins.
  */
 
 function json(body, status = 200) {
@@ -16,13 +16,12 @@ function json(body, status = 200) {
   });
 }
 
-const WORLD_EVENTS = [
-  { type: 'meteor', name: 'Meteor Strike', icon: '\u2604\uFE0F', desc: 'A meteor crashed nearby!', radius: 3, duration: 5 },
-  { type: 'treasure', name: 'Treasure Found', icon: '\u{1F4B0}', desc: 'Treasure appeared!', radius: 2, duration: 10 },
-  { type: 'portal', name: 'Portal Opened', icon: '\u{1F300}', desc: 'A mysterious portal opened...', radius: 2, duration: 15 },
-  { type: 'blessing', name: 'Divine Blessing', icon: '\u2728', desc: 'The gods smile upon this land', radius: 5, duration: 20 },
-  { type: 'earthquake', name: 'Earthquake', icon: '\u{1F30B}', desc: 'The ground shakes!', radius: 8, duration: 3 },
-];
+const GOD_POWERS = {
+  meteor:     { name: 'Meteor Strike',     icon: '☄️',  cost: 200, radius: 3, desc: 'Destroy buildings in area' },
+  blessing:   { name: 'Divine Blessing',   icon: '✨',  cost: 100, radius: 5, desc: 'Restore buildings in area' },
+  earthquake: { name: 'Earthquake',        icon: '🌋',  cost: 150, radius: 8, desc: 'Damage buildings in area' },
+  spawn_npc:  { name: 'Spawn NPC',         icon: '👤',  cost: 25,  radius: 0, desc: 'Create a new citizen' },
+};
 
 async function supabaseFetch(env, path, options = {}) {
   const url = String(env.SUPABASE_URL || '').replace(/\/+$/, '');
@@ -60,13 +59,46 @@ export async function onRequestPost(context) {
       return json({ ok: false, error: 'Missing type, x, or y.' }, 400);
     }
 
-    const template = WORLD_EVENTS.find(e => e.type === type);
-    if (!template) {
-      return json({ ok: false, error: 'Invalid event type.' }, 400);
+    const power = GOD_POWERS[type];
+    if (!power) {
+      return json({ ok: false, error: 'Invalid god power type.' }, 400);
     }
 
     const evtX = Math.max(2, Math.min(206, x));
     const evtY = Math.max(2, Math.min(206, y));
+
+    // ── Coin validation (only for real UUID users) ──
+    const isUuid = userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+    if (isUuid) {
+      const playerQuery = `select=coins&user_id=eq.${encodeURIComponent(userId)}`;
+      const playerResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?${playerQuery}`);
+
+      if (!playerResult.ok) {
+        console.error('[WORLD] godpower/trigger: Failed to fetch player state:', playerResult.status, JSON.stringify(playerResult.data));
+        return json({ ok: false, error: 'Failed to verify player state.' }, 500);
+      }
+
+      if (!Array.isArray(playerResult.data) || playerResult.data.length === 0) {
+        return json({ ok: false, error: 'Player not found.' }, 404);
+      }
+
+      const currentCoins = playerResult.data[0].coins || 0;
+      if (currentCoins < power.cost) {
+        return json({ ok: false, error: 'Not enough coins.', currentCoins, cost: power.cost }, 400);
+      }
+
+      // Deduct coins
+      const deductResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coins: currentCoins - power.cost, updated_at: new Date().toISOString() }),
+      });
+
+      if (!deductResult.ok) {
+        console.error('[WORLD] godpower/trigger: Failed to deduct coins:', deductResult.status, JSON.stringify(deductResult.data));
+        return json({ ok: false, error: 'Failed to deduct coins.' }, 500);
+      }
+    }
 
     // Create event
     const eventId = Date.now();
@@ -76,9 +108,9 @@ export async function onRequestPost(context) {
       player_id: userId || null,
       tile_x: Math.floor(evtX),
       tile_y: Math.floor(evtY),
-      radius: template.radius || 0,
-      cost: 0,
-      metadata: { name: template.name, icon: template.icon, desc: template.desc },
+      radius: power.radius || 0,
+      cost: power.cost,
+      metadata: { name: power.name, icon: power.icon, desc: power.desc },
       created_at: new Date().toISOString()
     };
 
@@ -89,11 +121,10 @@ export async function onRequestPost(context) {
       body: JSON.stringify([event])
     });
 
-    // Apply event effects to buildings
+    // Apply event effects to buildings in world_building_states
     if (type === 'meteor' || type === 'earthquake') {
-      const radius = template.radius || 3;
+      const radius = power.radius || 3;
       
-      // Fetch buildings in radius
       const buildingsQuery = `select=id,tile_x,tile_y,condition&tile_x=gte.${Math.floor(evtX - radius)}&tile_x=lte.${Math.floor(evtX + radius)}&tile_y=gte.${Math.floor(evtY - radius)}&tile_y=lte.${Math.floor(evtY + radius)}`;
       const buildingsResult = await supabaseFetch(context.env, `/rest/v1/world_building_states?${buildingsQuery}`);
       
@@ -107,12 +138,10 @@ export async function onRequestPost(context) {
             const newCondition = Math.max(0, (building.condition || 100) - 50);
             
             if (newCondition <= 0) {
-              // Remove building
               await supabaseFetch(context.env, `/rest/v1/world_building_states?id=eq.${building.id}`, {
                 method: 'DELETE'
               });
             } else {
-              // Damage building
               await supabaseFetch(context.env, `/rest/v1/world_building_states?id=eq.${building.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -125,9 +154,8 @@ export async function onRequestPost(context) {
     }
 
     if (type === 'blessing') {
-      const radius = template.radius || 5;
+      const radius = power.radius || 5;
       
-      // Fetch buildings in radius
       const buildingsQuery = `select=id,tile_x,tile_y,condition&tile_x=gte.${Math.floor(evtX - radius)}&tile_x=lte.${Math.floor(evtX + radius)}&tile_y=gte.${Math.floor(evtY - radius)}&tile_y=lte.${Math.floor(evtY + radius)}`;
       const buildingsResult = await supabaseFetch(context.env, `/rest/v1/world_building_states?${buildingsQuery}`);
       
@@ -149,6 +177,15 @@ export async function onRequestPost(context) {
       }
     }
 
+    // Fetch updated balance to return to client
+    let newBalance = null;
+    if (isUuid) {
+      const balanceResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?select=coins&user_id=eq.${encodeURIComponent(userId)}`);
+      if (balanceResult.ok && Array.isArray(balanceResult.data) && balanceResult.data.length > 0) {
+        newBalance = balanceResult.data[0].coins;
+      }
+    }
+
     return json({
       ok: true,
       event: {
@@ -156,8 +193,9 @@ export async function onRequestPost(context) {
         type: type,
         x: evtX,
         y: evtY,
-        timer: template.duration
-      }
+        timer: power.duration || 5
+      },
+      newBalance
     });
   } catch (error) {
     console.error('God power error:', error);

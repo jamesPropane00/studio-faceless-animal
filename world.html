@@ -1244,6 +1244,16 @@ const state = {
   ownBuildingsCount: 0,
 }
 
+// ── RENDER CACHE (offscreen canvases) ──────────────────────
+const tileCache = { canvas: null, ctx: null, cameraX: NaN, cameraY: NaN, zoom: NaN, time: NaN }
+const minimapCache = { canvas: null, ctx: null, playerX: NaN, playerY: NaN }
+let renderFrame = 0
+
+function invalidateTileCache() {
+  tileCache.cameraX = NaN
+  minimapCache.playerX = NaN
+}
+
 const BUILDING_TYPES = {
   house: { name: 'House', color: '#6B5B8A', height: 12, cost: 50, income: 0.5 },
   shop: { name: 'Shop', color: '#5B9CFF', height: 10, cost: 100, income: 1, glow: 'rgba(91,156,255,0.15)' },
@@ -1800,6 +1810,11 @@ function getTimeString() {
 
 function drawTile(x, y, terrain) {
   const s = worldToScreen(x, y)
+  drawTileCtx(ctx, x, y, terrain, s)
+}
+
+function drawTileCtx(c, x, y, terrain, s) {
+  if (!s) s = worldToScreen(x, y)
   const hw = (TILE_W / 2) * state.camera.zoom
   const hh = (TILE_H / 2) * state.camera.zoom
 
@@ -1809,66 +1824,69 @@ function drawTile(x, y, terrain) {
   const topColor = colors[0]
   const sideColor = colors[1]
 
-  ctx.beginPath()
-  ctx.moveTo(s.x, s.y - hh)
-  ctx.lineTo(s.x + hw, s.y)
-  ctx.lineTo(s.x, s.y + hh)
-  ctx.lineTo(s.x - hw, s.y)
-  ctx.closePath()
-  ctx.fillStyle = topColor
-  ctx.fill()
+  c.beginPath()
+  c.moveTo(s.x, s.y - hh)
+  c.lineTo(s.x + hw, s.y)
+  c.lineTo(s.x, s.y + hh)
+  c.lineTo(s.x - hw, s.y)
+  c.closePath()
+  c.fillStyle = topColor
+  c.fill()
 
   if (terrain === TERRAIN.BUILDING || terrain === TERRAIN.FOREST) {
     const elev = terrain === TERRAIN.BUILDING ? 12 : 6
     const eh = elev * state.camera.zoom
-    ctx.beginPath()
-    ctx.moveTo(s.x - hw, s.y)
-    ctx.lineTo(s.x, s.y + hh)
-    ctx.lineTo(s.x, s.y + hh - eh)
-    ctx.lineTo(s.x - hw, s.y - eh)
-    ctx.closePath()
-    ctx.fillStyle = sideColor
-    ctx.fill()
+    c.beginPath()
+    c.moveTo(s.x - hw, s.y)
+    c.lineTo(s.x, s.y + hh)
+    c.lineTo(s.x, s.y + hh - eh)
+    c.lineTo(s.x - hw, s.y - eh)
+    c.closePath()
+    c.fillStyle = sideColor
+    c.fill()
 
-    ctx.beginPath()
-    ctx.moveTo(s.x + hw, s.y)
-    ctx.lineTo(s.x, s.y + hh)
-    ctx.lineTo(s.x, s.y + hh - eh)
-    ctx.lineTo(s.x + hw, s.y - eh)
-    ctx.closePath()
+    c.beginPath()
+    c.moveTo(s.x + hw, s.y)
+    c.lineTo(s.x, s.y + hh)
+    c.lineTo(s.x, s.y + hh - eh)
+    c.lineTo(s.x + hw, s.y - eh)
+    c.closePath()
     const rc = parseInt(sideColor.slice(1), 16)
     const r = Math.min(255, ((rc >> 16) & 0xff) + 20)
     const g = Math.min(255, ((rc >> 8) & 0xff) + 20)
     const b = Math.min(255, (rc & 0xff) + 20)
-    ctx.fillStyle = `rgb(${r},${g},${b})`
-    ctx.fill()
+    c.fillStyle = `rgb(${r},${g},${b})`
+    c.fill()
 
-    ctx.beginPath()
-    ctx.moveTo(s.x, s.y - hh - eh)
-    ctx.lineTo(s.x + hw, s.y - eh)
-    ctx.lineTo(s.x, s.y + hh - eh)
-    ctx.lineTo(s.x - hw, s.y - eh)
-    ctx.closePath()
-    ctx.fillStyle = topColor
-    ctx.fill()
+    c.beginPath()
+    c.moveTo(s.x, s.y - hh - eh)
+    c.lineTo(s.x + hw, s.y - eh)
+    c.lineTo(s.x, s.y + hh - eh)
+    c.lineTo(s.x - hw, s.y - eh)
+    c.closePath()
+    c.fillStyle = topColor
+    c.fill()
   }
 
-  ctx.beginPath()
-  ctx.moveTo(s.x, s.y - hh)
-  ctx.lineTo(s.x + hw, s.y)
-  ctx.lineTo(s.x, s.y + hh)
-  ctx.lineTo(s.x - hw, s.y)
-  ctx.closePath()
-  ctx.strokeStyle = 'rgba(0,0,0,0.08)'
-  ctx.lineWidth = 0.5
-  ctx.stroke()
+  c.beginPath()
+  c.moveTo(s.x, s.y - hh)
+  c.lineTo(s.x + hw, s.y)
+  c.lineTo(s.x, s.y + hh)
+  c.lineTo(s.x - hw, s.y)
+  c.closePath()
+  c.strokeStyle = 'rgba(0,0,0,0.08)'
+  c.lineWidth = 0.5
+  c.stroke()
 }
 
 function drawBuilding(building) {
+  drawBuildingAt(building, worldToScreen(building.tile_x, building.tile_y))
+}
+
+function drawBuildingAt(building, s) {
   const type = BUILDING_TYPES[building.building_type]
   if (!type) return
   
-  const s = worldToScreen(building.tile_x, building.tile_y)
   const hw = (TILE_W / 2) * state.camera.zoom
   const hh = (TILE_H / 2) * state.camera.zoom
   const elev = type.height * state.camera.zoom
@@ -2031,7 +2049,10 @@ function drawDistrict(district) {
 }
 
 function drawEntity(wx, wy, color, name, isPlayer) {
-  const s = worldToScreen(wx, wy)
+  drawEntityAt(wx, wy, color, name, isPlayer, worldToScreen(wx, wy))
+}
+
+function drawEntityAt(wx, wy, color, name, isPlayer, s) {
   const sz = (isPlayer ? 10 : 7) * state.camera.zoom
 
   if (s.x < -30 || s.x > canvas.width + 30 || s.y < -50 || s.y > canvas.height + 30) return
@@ -2074,13 +2095,37 @@ function drawMinimap() {
   miniCtx.fillRect(0, 0, mw, mh)
 
   const scale = mw / WORLD_SIZE
-  for (let y = 0; y < WORLD_SIZE; y += 2) {
-    for (let x = 0; x < WORLD_SIZE; x += 2) {
-      const t = getTerrainAt(x, y)
-      miniCtx.fillStyle = TERRAIN_COLORS[t][0]
-      miniCtx.fillRect(x * scale, y * scale, scale * 2 + 1, scale * 2 + 1)
+
+  // ── MINIMAP TERRAIN CACHE ─────────────────────────────────
+  // Render the full terrain once to an offscreen canvas.
+  // Only re-render when player moves 10+ tiles (static terrain).
+  const playerMoved = Math.abs(state.player.x - minimapCache.playerX) > 10 ||
+                      Math.abs(state.player.y - minimapCache.playerY) > 10 ||
+                      isNaN(minimapCache.playerX)
+
+  if (playerMoved || !minimapCache.canvas) {
+    if (!minimapCache.canvas) {
+      minimapCache.canvas = document.createElement('canvas')
+      minimapCache.canvas.width = mw
+      minimapCache.canvas.height = mh
+      minimapCache.ctx = minimapCache.canvas.getContext('2d')
     }
+    const mctx = minimapCache.ctx
+    mctx.fillStyle = '#0a0b10'
+    mctx.fillRect(0, 0, mw, mh)
+    for (let y = 0; y < WORLD_SIZE; y += 2) {
+      for (let x = 0; x < WORLD_SIZE; x += 2) {
+        const t = getTerrainAt(x, y)
+        mctx.fillStyle = TERRAIN_COLORS[t][0]
+        mctx.fillRect(x * scale, y * scale, scale * 2 + 1, scale * 2 + 1)
+      }
+    }
+    minimapCache.playerX = state.player.x
+    minimapCache.playerY = state.player.y
   }
+
+  // Blit cached terrain
+  miniCtx.drawImage(minimapCache.canvas, 0, 0)
 
   // Draw district gang color overlays
   if (state.influenceViewEnabled && state.districtOverlayOpacity > 0 && state.districtInfluences && state.districtInfluences.length > 0) {
@@ -2160,30 +2205,71 @@ function render() {
     }
   }
 
-  const drawOrder = []
-  for (const [key, chunk] of state.chunks) {
-    for (let ly = 0; ly < CHUNK_SIZE; ly++) {
-      for (let lx = 0; lx < CHUNK_SIZE; lx++) {
-        const wx = chunk.cx * CHUNK_SIZE + lx
-        const wy = chunk.cy * CHUNK_SIZE + ly
-        if (wx < 0 || wy < 0 || wx >= WORLD_SIZE || wy >= WORLD_SIZE) continue
-        const s = worldToScreen(wx, wy)
-        if (s.x < -TILE_W * state.camera.zoom || s.x > w + TILE_W * state.camera.zoom ||
-            s.y < -TILE_H * state.camera.zoom * 4 || s.y > h + TILE_H * state.camera.zoom * 4) continue
-        drawOrder.push({ type: 'tile', x: wx, y: wy, terrain: chunk.tiles[ly][lx], sort: wx + wy })
+  // ── TILE LAYER CACHE ──────────────────────────────────────
+  // Only re-render tiles to offscreen canvas when camera moves or zoom changes.
+  const tileCacheThreshold = 0.3
+  const zoomCacheThreshold = 0.005
+  const tileCacheDirty =
+    isNaN(tileCache.cameraX) ||
+    Math.abs(state.camera.x - tileCache.cameraX) > tileCacheThreshold ||
+    Math.abs(state.camera.y - tileCache.cameraY) > tileCacheThreshold ||
+    Math.abs(state.camera.zoom - tileCache.zoom) > zoomCacheThreshold
+
+  if (tileCacheDirty) {
+    if (!tileCache.canvas) {
+      tileCache.canvas = document.createElement('canvas')
+      tileCache.ctx = tileCache.canvas.getContext('2d')
+    }
+    const tc = tileCache
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    tc.canvas.width = canvas.width
+    tc.canvas.height = canvas.height
+    const tctx = tc.ctx
+    tctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+    for (const [key, chunk] of state.chunks) {
+      for (let ly = 0; ly < CHUNK_SIZE; ly++) {
+        for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+          const wx = chunk.cx * CHUNK_SIZE + lx
+          const wy = chunk.cy * CHUNK_SIZE + ly
+          if (wx < 0 || wy < 0 || wx >= WORLD_SIZE || wy >= WORLD_SIZE) continue
+          const s = worldToScreen(wx, wy)
+          if (s.x < -TILE_W * state.camera.zoom || s.x > w + TILE_W * state.camera.zoom ||
+              s.y < -TILE_H * state.camera.zoom * 4 || s.y > h + TILE_H * state.camera.zoom * 4) continue
+          drawTileCtx(tctx, wx, wy, chunk.tiles[ly][lx], s)
+        }
       }
     }
+
+    tc.cameraX = state.camera.x
+    tc.cameraY = state.camera.y
+    tc.zoom = state.camera.zoom
+    tc.time = state.time
   }
 
-  drawOrder.push({ type: 'player', x: state.player.x, y: state.player.y, sort: state.player.x + state.player.y })
+  // Blit cached tile layer (1:1 pixel copy)
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.drawImage(tileCache.canvas, 0, 0)
+  ctx.restore()
+
+  // ── BUILD DRAW ORDER (entities only — tiles done via cache) ──
+  const drawOrder = []
+  drawOrder.push({ type: 'player', x: state.player.x, y: state.player.y, sort: state.player.x + state.player.y, sx: worldToScreen(state.player.x, state.player.y) })
   for (const [, p] of state.otherPlayers) {
-    drawOrder.push({ type: 'other', x: p.x, y: p.y, sort: p.x + p.y, data: p })
+    const s = worldToScreen(p.x, p.y)
+    if (s.x < -50 || s.x > w + 50 || s.y < -80 || s.y > h + 50) continue
+    drawOrder.push({ type: 'other', x: p.x, y: p.y, sort: p.x + p.y, data: p, sx: s })
   }
   for (const npc of state.npcs) {
-    drawOrder.push({ type: 'npc', x: npc.x, y: npc.y, sort: npc.x + npc.y, data: npc })
+    const s = worldToScreen(npc.x, npc.y)
+    if (s.x < -50 || s.x > w + 50 || s.y < -80 || s.y > h + 50) continue
+    drawOrder.push({ type: 'npc', x: npc.x, y: npc.y, sort: npc.x + npc.y, data: npc, sx: s })
   }
   for (const building of state.buildings) {
-    drawOrder.push({ type: 'building', x: building.tile_x, y: building.tile_y, sort: building.tile_x + building.tile_y, data: building })
+    const s = worldToScreen(building.tile_x, building.tile_y)
+    if (s.x < -100 || s.x > w + 100 || s.y < -150 || s.y > h + 100) continue
+    drawOrder.push({ type: 'building', x: building.tile_x, y: building.tile_y, sort: building.tile_x + building.tile_y, data: building, sx: s })
   }
 
   drawOrder.sort((a, b) => a.sort - b.sort)
@@ -2200,7 +2286,6 @@ function render() {
     drawDistrict(district)
   }
 
-  // Draw territory borders on top
   if (state.influenceViewEnabled) {
     for (const district of state.districts) {
       drawTerritoryBorder(district)
@@ -2208,18 +2293,16 @@ function render() {
   }
 
   for (const item of drawOrder) {
-    if (item.type === 'tile') drawTile(item.x, item.y, item.terrain)
-    else if (item.type === 'building') drawBuilding(item.data)
-    else if (item.type === 'player') drawEntity(item.x, item.y, state.player.color, state.player.name, true)
-    else if (item.type === 'other') drawEntity(item.x, item.y, '#8b5cf6', item.data.name, false)
+    if (item.type === 'building') drawBuildingAt(item.data, item.sx)
+    else if (item.type === 'player') drawEntityAt(item.x, item.y, state.player.color, state.player.name, true, item.sx)
+    else if (item.type === 'other') drawEntityAt(item.x, item.y, '#8b5cf6', item.data.name, false, item.sx)
     else if (item.type === 'npc') {
       const npc = item.data
-      drawEntity(item.x, item.y, npc.color, npc.name, false)
+      drawEntityAt(item.x, item.y, npc.color, npc.name, false, item.sx)
 
       if (state.camera.zoom > 0.6) {
-        const s = worldToScreen(item.x, item.y)
+        const s = item.sx
 
-        // Gang tag above NPC name
         const npcGang = state.npcGangMap.get(npc.id)
         if (npcGang) {
           const tagFontSize = 8 * state.camera.zoom
@@ -2227,7 +2310,6 @@ function render() {
           const tagHeight = 12 * state.camera.zoom
           const tagY = s.y - 35 * state.camera.zoom
 
-          // Tag background
           ctx.fillStyle = npcGang.color
           ctx.beginPath()
           if (ctx.roundRect) {
@@ -2237,7 +2319,6 @@ function render() {
           }
           ctx.fill()
 
-          // Tag text
           ctx.font = `bold ${tagFontSize}px Inter`
           ctx.textAlign = 'center'
           ctx.fillStyle = 'white'
@@ -2280,7 +2361,6 @@ function render() {
   drawWeatherEffects(w, h)
   drawWorldEvents()
 
-  /* vignette overlay */
   const vg = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.25, w / 2, h / 2, Math.max(w, h) * 0.7)
   vg.addColorStop(0, 'rgba(10,11,16,0)')
   vg.addColorStop(0.6, 'rgba(10,11,16,0)')
@@ -2290,12 +2370,15 @@ function render() {
 
   drawMinimap()
 
-  document.getElementById('coordBadge').textContent = `${Math.floor(state.player.x)}, ${Math.floor(state.player.y)}`
-  document.getElementById('timeIcon').innerHTML = getTimeIcon()
-  document.getElementById('timeText').textContent = getTimeString()
-  
-  const weatherIcons = { clear: '\u2600\uFE0F', cloudy: '\u2601\uFE0F', rain: '\u{1F327}\uFE0F', storm: '\u26C8\uFE0F', fog: '\u{1F32B}\uFE0F' }
-  document.getElementById('weatherIcon').textContent = weatherIcons[state.weather.type] || ''
+  // ── THROTTLE DOM UPDATES ──────────────────────────────────
+  renderFrame++
+  if (renderFrame % 10 === 0) {
+    document.getElementById('coordBadge').textContent = `${Math.floor(state.player.x)}, ${Math.floor(state.player.y)}`
+    document.getElementById('timeIcon').innerHTML = getTimeIcon()
+    document.getElementById('timeText').textContent = getTimeString()
+    const weatherIcons = { clear: '\u2600\uFE0F', cloudy: '\u2601\uFE0F', rain: '\u{1F327}\uFE0F', storm: '\u26C8\uFE0F', fog: '\u{1F32B}\uFE0F' }
+    document.getElementById('weatherIcon').textContent = weatherIcons[state.weather.type] || ''
+  }
 }
 
 function update(dt) {
@@ -3241,7 +3324,8 @@ async function collectIncome() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         userId: state.userId,
-        buildingId: currentIncomeBuilding.id
+        buildingId: currentIncomeBuilding.id,
+        currentCoins: state.coins
       })
     })
     
@@ -3493,7 +3577,11 @@ async function triggerGodPower(x, y) {
     
     const data = await res.json()
     if (data.ok) {
-      state.coins -= power.cost
+      if (data.newBalance != null) {
+        state.coins = data.newBalance
+      } else {
+        state.coins -= power.cost
+      }
       document.getElementById('statCoins').textContent = state.coins
       showToast('God Power Triggered', `${power.name} unleashed!`)
       addChatMessage('', `${state.username} triggered ${power.name}!`, true)

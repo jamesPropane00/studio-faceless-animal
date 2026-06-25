@@ -64,7 +64,7 @@ export async function onRequestOptions() {
 export async function onRequestPost(context) {
   try {
     const body = await context.request.json();
-    const { userId, buildingId } = body;
+    const { userId, buildingId, currentCoins: clientCoins } = body;
     
     if (!userId || !buildingId) {
       return json({ ok: false, error: 'Missing userId or buildingId.' }, 400);
@@ -94,7 +94,7 @@ export async function onRequestPost(context) {
     const playerQuery = `select=coins,reputation&user_id=eq.${encodeURIComponent(userId)}`;
     const playerResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?${playerQuery}`);
     
-    let currentCoins = 100;
+    let currentCoins = clientCoins || 100;
     let currentRep = 0;
     
     if (playerResult.ok && Array.isArray(playerResult.data) && playerResult.data.length > 0) {

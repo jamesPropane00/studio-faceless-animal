@@ -4602,6 +4602,13 @@ const WORLD_EVENTS = [
   { type: 'earthquake', name: 'Earthquake', icon: '\u{1F30B}', desc: 'The ground shakes!', radius: 8, duration: 3 },
 ]
 
+const GOD_POWER_COSTS = {
+  meteor: 200,
+  blessing: 100,
+  earthquake: 150,
+  spawn_npc: 25,
+}
+
 const WEATHER_TYPES = ['clear', 'cloudy', 'rain', 'storm', 'fog']
 
 const REP_LEVELS = [
@@ -5503,14 +5510,40 @@ async function handleWorldGodPower(req, res) {
     return sendJSON(res, 400, { ok: false, error: 'Invalid event type.' })
   }
 
+  const cost = GOD_POWER_COSTS[type] || 0
+  const evtX = Math.max(2, Math.min(WORLD_SIZE - 3, x))
+  const evtY = Math.max(2, Math.min(WORLD_SIZE - 3, y))
+
+  // ── Coin validation (check both in-memory and Supabase) ──
+  if (userId) {
+    const player = getPlayerState(userId)
+    if (player.coins < cost) {
+      return sendJSON(res, 400, { ok: false, error: 'Not enough coins.', currentCoins: player.coins, cost })
+    }
+    player.coins -= cost
+    console.log(`[WORLD] Player ${userId} spent ${cost} coins on ${template.name}, now at ${player.coins} coins`)
+
+    // Sync to Supabase world_player_states
+    if (supabase) {
+      supabase.from('world_player_states').select('coins').eq('user_id', userId).single()
+        .then(({ data }) => {
+          const currentCoins = data?.coins || 0
+          return supabase.from('world_player_states').update({ coins: currentCoins - cost, updated_at: new Date().toISOString() }).eq('user_id', userId)
+        })
+        .then(() => {})
+        .catch(e => console.warn('[WORLD] Coin sync to Supabase failed:', e.message))
+    }
+  }
+
   const evt = {
     ...template,
     id: Date.now(),
-    x: Math.max(2, Math.min(WORLD_SIZE - 3, x)),
-    y: Math.max(2, Math.min(WORLD_SIZE - 3, y)),
+    x: evtX,
+    y: evtY,
     timer: template.duration,
     startTime: Date.now(),
-    triggered_by: userId || null
+    triggered_by: userId || null,
+    cost
   }
 
   worldState.events.push(evt)
@@ -5552,12 +5585,13 @@ async function handleWorldGodPower(req, res) {
       tile_x: Math.floor(evt.x),
       tile_y: Math.floor(evt.y),
       radius: template.radius || 0,
-      cost: 0,
+      cost,
       metadata: { name: template.name, icon: template.icon, desc: template.desc }
     }).then(() => {}).catch(e => console.warn('[WORLD] Event save failed:', e.message))
   }
 
-  sendJSON(res, 200, { ok: true, event: evt })
+  const playerState = userId ? getPlayerState(userId) : null
+  sendJSON(res, 200, { ok: true, event: evt, newBalance: playerState ? playerState.coins : null })
 }
 
 function startWorldSimulation() {
