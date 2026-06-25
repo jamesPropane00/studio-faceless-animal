@@ -3711,18 +3711,20 @@ function drawRoads() {
     const half = tilePx * 0.5
 
     if (useSprite) {
-      // ── Sprite mode ──
-      ctx.save()
-      ctx.translate(cx, cy)
-
-      // Rotate for vertical roads
-      if (vertical && !horizontal) {
-        ctx.rotate(Math.PI / 2)
-      }
-
+      // ── Sprite mode: 2x2 tile grid ──
       const roadSize = tilePx * 0.25
-      ctx.drawImage(roadTileImg, -roadSize/2, -roadSize/2, roadSize, roadSize)
-      ctx.restore()
+      const halfTile = roadSize / 2
+      for (let row = -1; row <= 1; row += 2) {
+        for (let col = -1; col <= 1; col += 2) {
+          ctx.save()
+          ctx.translate(cx + col * halfTile, cy + row * halfTile)
+          if (vertical && !horizontal) {
+            ctx.rotate(Math.PI / 2)
+          }
+          ctx.drawImage(roadTileImg, -roadSize / 2, -roadSize / 2, roadSize, roadSize)
+          ctx.restore()
+        }
+      }
     } else {
       // ── Procedural fallback ──
       const roadWidth = tilePx * 0.25
