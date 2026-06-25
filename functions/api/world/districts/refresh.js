@@ -389,27 +389,31 @@ async function refreshDistricts(context) {
       }
 
       // Phase 5B: Auto-road generation via MST
-      // Delete old auto-roads
-      await supabaseFetch(
-        context.env,
-        '/rest/v1/world_infrastructure?infra_type=eq.road&owner_id=is.null',
-        { method: 'DELETE', headers: { 'Content-Type': 'application/json' } }
-      );
-      // Generate new roads
-      const roadItems = generateAutoRoads(newDistricts, buildingsResult.data);
-      if (roadItems.length > 0) {
-        for (let i = 0; i < roadItems.length; i += 50) {
-          const batch = roadItems.slice(i, i + 50);
-          await supabaseFetch(
-            context.env,
-            '/rest/v1/world_infrastructure',
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-              body: JSON.stringify(batch)
-            }
-          );
+      try {
+        // Delete old auto-roads
+        await supabaseFetch(
+          context.env,
+          '/rest/v1/world_infrastructure?infra_type=eq.road&owner_id=is.null',
+          { method: 'DELETE', headers: { 'Content-Type': 'application/json' } }
+        );
+        // Generate new roads
+        const roadItems = generateAutoRoads(newDistricts, buildingsResult.data);
+        if (roadItems.length > 0) {
+          for (let i = 0; i < roadItems.length; i += 50) {
+            const batch = roadItems.slice(i, i + 50);
+            await supabaseFetch(
+              context.env,
+              '/rest/v1/world_infrastructure',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+                body: JSON.stringify(batch)
+              }
+            );
+          }
         }
+      } catch (e) {
+        console.warn('[WORLD] auto-road generation skipped: table may not exist', e?.message);
       }
     } else {
       // No districts, clear all using neq filter
@@ -438,11 +442,15 @@ async function refreshDistricts(context) {
         );
       }
       // Also clear auto-roads when no districts exist
-      await supabaseFetch(
-        context.env,
-        '/rest/v1/world_infrastructure?infra_type=eq.road&owner_id=is.null',
-        { method: 'DELETE', headers: { 'Content-Type': 'application/json' } }
-      );
+      try {
+        await supabaseFetch(
+          context.env,
+          '/rest/v1/world_infrastructure?infra_type=eq.road&owner_id=is.null',
+          { method: 'DELETE', headers: { 'Content-Type': 'application/json' } }
+        );
+      } catch (e) {
+        // table may not exist yet
+      }
     }
 
     return json({

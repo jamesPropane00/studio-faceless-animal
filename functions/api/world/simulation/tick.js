@@ -245,11 +245,18 @@ export async function onRequestPost(context) {
     const districts = (districtsResult.ok && Array.isArray(districtsResult.data)) ? districtsResult.data : []
 
     // 2b. Fetch all infrastructure (Phase 5B Pass 2)
-    const infraResult = await supabaseFetch(
-      context.env,
-      '/rest/v1/world_infrastructure?select=infra_type,tile_x,tile_y'
-    )
-    const infrastructure = (infraResult.ok && Array.isArray(infraResult.data)) ? infraResult.data : []
+    let infrastructure = []
+    try {
+      const infraResult = await supabaseFetch(
+        context.env,
+        '/rest/v1/world_infrastructure?select=infra_type,tile_x,tile_y'
+      )
+      if (infraResult.ok && Array.isArray(infraResult.data)) {
+        infrastructure = infraResult.data
+      }
+    } catch (e) {
+      // table may not exist yet
+    }
 
     // 3. Group buildings AND infrastructure by district
     const districtMap = new Map() // `${center_x},${center_y},${type}` → { district, buildings, infrastructure }

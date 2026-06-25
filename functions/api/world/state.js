@@ -74,10 +74,18 @@ export async function onRequestGet(context) {
     );
 
     // Fetch all infrastructure (Phase 5B)
-    const infraResult = await supabaseFetch(
-      context.env,
-      `/rest/v1/world_infrastructure?select=*&order=id.asc`
-    );
+    let infraData = [];
+    try {
+      const infraResult = await supabaseFetch(
+        context.env,
+        `/rest/v1/world_infrastructure?select=*&order=id.asc`
+      );
+      if (infraResult.ok && Array.isArray(infraResult.data)) {
+        infraData = infraResult.data;
+      }
+    } catch (e) {
+      // table may not exist yet
+    }
 
     // Fetch recent events (last 20)
     const eventsResult = await supabaseFetch(
@@ -89,7 +97,7 @@ export async function onRequestGet(context) {
       ok: true,
       buildings: Array.isArray(buildingsResult.data) ? buildingsResult.data : [],
       districts: districtsResult.ok && Array.isArray(districtsResult.data) ? districtsResult.data : [],
-      infrastructure: infraResult.ok && Array.isArray(infraResult.data) ? infraResult.data : [],
+      infrastructure: infraData,
       events: eventsResult.ok && Array.isArray(eventsResult.data) ? eventsResult.data : []
     });
   } catch (error) {
