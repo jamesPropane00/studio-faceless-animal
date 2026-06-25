@@ -342,14 +342,13 @@ async function refreshDistricts(context) {
         }, 500);
       }
 
-      // Update in_district flag + business_health on each building
+      // Update in_district flag + business_health on each building (batched for speed)
+      const buildingUpdates = [];
       for (const b of buildingsResult.data) {
         const inDistrict = buildingIdsInDistricts.has(b.id);
         const district = buildingDistrictMap.get(b.id);
 
         // Calculate business_health (the cascade!)
-        // Houses/camps: always healthy (residential, not businesses)
-        // Shops/clubs/warehouses/hides: health depends on district population + wealth + crime
         let health = 100;
         let crimeRate = 0;
         if (inDistrict && district) {
@@ -359,32 +358,35 @@ async function refreshDistricts(context) {
           const pop = district.population || 0;
           const wealth = district.wealth || 0;
           const condition = b.condition || 100;
-          // Base 30 + population factor + wealth factor + condition factor
           health = Math.min(100, Math.max(10, Math.floor(
             30 + pop * 0.8 + wealth * 0.05 + condition * 0.2
           )));
-          // Phase C: Crime penalty — high crime reduces business health
-          // At crime=0: full health. At crime=100: health halved
           const crimePenalty = Math.floor(health * (crimeRate / 200));
           health = health - crimePenalty;
           health = Math.max(10, health);
         } else if (!inDistrict && b.building_type !== 'house' && b.building_type !== 'camp') {
-          // Isolated businesses: lower health (no customers nearby)
           const condition = b.condition || 100;
           health = Math.min(100, Math.max(10, Math.floor(20 + condition * 0.3)));
         }
 
-        await supabaseFetch(
-          context.env,
-          `/rest/v1/world_building_states?id=eq.${b.id}`,
-          {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              in_district: inDistrict,
-              business_health: health
-            })
-          }
+        buildingUpdates.push({
+          id: b.id,
+          body: JSON.stringify({ in_district: inDistrict, business_health: health })
+        });
+      }
+
+      // Batch PATCH in parallel (25 at a time)
+      const batchSize = 25;
+      for (let i = 0; i < buildingUpdates.length; i += batchSize) {
+        const batch = buildingUpdates.slice(i, i + batchSize);
+        await Promise.allSettled(
+          batch.map(u =>
+            supabaseFetch(
+              context.env,
+              `/rest/v1/world_building_states?id=eq.${u.id}`,
+              { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: u.body }
+            )
+          )
         );
       }
 
@@ -426,19 +428,28 @@ async function refreshDistricts(context) {
         }
       );
       // Clear in_district + set low health on all buildings (no districts = no customers)
+      const buildingUpdates = [];
       for (const b of buildingsResult.data) {
         const condition = b.condition || 100;
         const health = (b.building_type === 'house' || b.building_type === 'camp')
           ? 100
           : Math.min(100, Math.max(10, Math.floor(20 + condition * 0.3)));
-        await supabaseFetch(
-          context.env,
-          `/rest/v1/world_building_states?id=eq.${b.id}`,
-          {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ in_district: false, business_health: health })
-          }
+        buildingUpdates.push({
+          id: b.id,
+          body: JSON.stringify({ in_district: false, business_health: health })
+        });
+      }
+      const batchSize = 25;
+      for (let i = 0; i < buildingUpdates.length; i += batchSize) {
+        const batch = buildingUpdates.slice(i, i + batchSize);
+        await Promise.allSettled(
+          batch.map(u =>
+            supabaseFetch(
+              context.env,
+              `/rest/v1/world_building_states?id=eq.${u.id}`,
+              { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: u.body }
+            )
+          )
         );
       }
       // Also clear auto-roads when no districts exist
