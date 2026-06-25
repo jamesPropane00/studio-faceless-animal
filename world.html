@@ -2927,6 +2927,98 @@ function drawEntityAt(wx, wy, color, name, isPlayer, s) {
   }
 }
 
+// Phase 6D: Tiny NPCs — replace circles with tiny characters
+function drawTinyNPC(npc, s) {
+  const z = state.camera.zoom
+  if (s.x < -30 || s.x > canvas.width + 30 || s.y < -50 || s.y > canvas.height + 30) return
+
+  // Type-based color palette
+  const palette = {
+    walker:   { jacket: '#6b7280', skin: '#f5d0a9', pants: '#374151' },
+    wanderer: { jacket: '#14b8a6', skin: '#edd4b0', pants: '#4a3f35' },
+    vendor:   { jacket: '#f59e0b', skin: '#f5d0a9', pants: '#4a3f35' },
+    merchant: { jacket: '#d4a574', skin: '#f0c9a0', pants: '#4a3f35' },
+    worker:   { jacket: '#3b82f6', skin: '#f0c9a0', pants: '#2c3e50' },
+    guard:    { jacket: '#ef4444', skin: '#f5d0a9', pants: '#1a1a2e' },
+  }
+  const style = palette[npc.type] || { jacket: '#8b5cf6', skin: '#f5d0a9', pants: '#374151' }
+
+  // Shadow
+  ctx.beginPath()
+  ctx.ellipse(s.x, s.y + 2 * z, 4 * z, 1.5 * z, 0, 0, Math.PI * 2)
+  ctx.fillStyle = 'rgba(0,0,0,0.2)'
+  ctx.fill()
+
+  // Legs
+  ctx.strokeStyle = style.pants
+  ctx.lineWidth = 1.5 * z
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(s.x - 1.8 * z, s.y - 4 * z)
+  ctx.lineTo(s.x - 2.5 * z, s.y - 0.5 * z)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(s.x + 1.8 * z, s.y - 4 * z)
+  ctx.lineTo(s.x + 2.5 * z, s.y - 0.5 * z)
+  ctx.stroke()
+
+  // Body (jacket) — trapezoid: wider at shoulders, narrower at waist
+  const bodyTop = s.y - 13 * z
+  const bodyBot = s.y - 4 * z
+  const shoulderW = 5 * z
+  const waistW = 3.5 * z
+
+  ctx.fillStyle = style.jacket
+  ctx.beginPath()
+  ctx.moveTo(s.x - shoulderW / 2, bodyTop)
+  ctx.lineTo(s.x + shoulderW / 2, bodyTop)
+  ctx.lineTo(s.x + waistW / 2, bodyBot)
+  ctx.lineTo(s.x - waistW / 2, bodyBot)
+  ctx.closePath()
+  ctx.fill()
+
+  // Collar highlight
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)'
+  ctx.lineWidth = 0.8 * z
+  ctx.beginPath()
+  ctx.moveTo(s.x - 1 * z, bodyTop + 1)
+  ctx.lineTo(s.x + 1 * z, bodyTop + 1)
+  ctx.stroke()
+
+  // Arms (simple lines from shoulders)
+  ctx.strokeStyle = style.jacket
+  ctx.lineWidth = 1.5 * z
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(s.x - shoulderW / 2, bodyTop + 1.5 * z)
+  ctx.lineTo(s.x - shoulderW / 2 - 2 * z, bodyTop + 4 * z)
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(s.x + shoulderW / 2, bodyTop + 1.5 * z)
+  ctx.lineTo(s.x + shoulderW / 2 + 2 * z, bodyTop + 4 * z)
+  ctx.stroke()
+
+  // Head
+  const headR = 3 * z
+  ctx.beginPath()
+  ctx.arc(s.x, s.y - 16.5 * z, headR, 0, Math.PI * 2)
+  ctx.fillStyle = style.skin
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(0,0,0,0.08)'
+  ctx.lineWidth = 0.5 * z
+  ctx.stroke()
+
+  // Name label (same as before, kept for reference)
+  if (npc.name && state.camera.zoom > 0.5) {
+    ctx.font = `${Math.max(9, 11 * z)}px Inter, sans-serif`
+    ctx.textAlign = 'center'
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'
+    ctx.fillText(npc.name, s.x + 1, s.y - 24 * z + 1)
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
+    ctx.fillText(npc.name, s.x, s.y - 24 * z)
+  }
+}
+
 function drawMinimap() {
   if (!state.minimapOpen) return
   const mw = miniCanvas.width, mh = miniCanvas.height
@@ -3143,7 +3235,7 @@ function render() {
     else if (item.type === 'other') drawEntityAt(item.x, item.y, '#8b5cf6', item.data.name, false, item.sx)
     else if (item.type === 'npc') {
       const npc = item.data
-      drawEntityAt(item.x, item.y, npc.color, npc.name, false, item.sx)
+      drawTinyNPC(npc, item.sx)
 
       if (state.camera.zoom > 0.6) {
         const s = item.sx
