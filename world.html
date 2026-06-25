@@ -2519,14 +2519,9 @@ function drawInfrastructure() {
     const z = state.camera.zoom
     const type = item.infra_type
 
-    if (type === 'road') {
-      // Road: subtle gray tile
-      const sz = 4 * z
-      ctx.fillStyle = 'rgba(80, 85, 100, 0.5)'
-      ctx.fillRect(s.x - sz, s.y - sz * 0.6, sz * 2, sz * 1.2)
-      // Center line
-      ctx.fillStyle = 'rgba(255, 255, 200, 0.15)'
-      ctx.fillRect(s.x - 0.5, s.y - sz * 0.4, 1, sz * 0.8)
+    if (type === 'road' || type.endsWith('_road')) {
+      // Drawn separately in drawRoads() for neighbor-aware rendering
+      continue
     } else if (type === 'tree') {
       // Tree: green circle
       const r = 5 * z
@@ -2612,9 +2607,210 @@ function drawInfrastructure() {
       }
     }
   }
+  drawRoads()
 }
 
-// Phase 6: Draw development blocks (roads, sidewalks, lots)
+// Phase 6C: Road Visual Upgrade — neighbor-aware road rendering
+function drawRoads() {
+  if (!state.infrastructure || state.infrastructure.length === 0) return
+  const w = canvas.width / (Math.min(window.devicePixelRatio || 1, 2))
+  const h = canvas.height / (Math.min(window.devicePixelRatio || 1, 2))
+  const z = state.camera.zoom
+  if (z < 0.15) return
+
+  // Build a Set of road tile keys for fast neighbor lookup
+  const roadSet = new Set()
+  const roadItems = []
+  for (const item of state.infrastructure) {
+    const type = item.infra_type
+    if (type === 'road' || type.endsWith('_road')) {
+      const key = `${item.tile_x},${item.tile_y}`
+      roadSet.add(key)
+      roadItems.push(item)
+    }
+  }
+  if (roadItems.length === 0) return
+
+  // For each road tile, determine connections and draw a proper road segment
+  for (const item of roadItems) {
+    const s = worldToScreen(item.tile_x, item.tile_y)
+    if (s.x < -TILE_W * z || s.x > w + TILE_W * z || s.y < -TILE_W * z || s.y > h + TILE_W * z) continue
+
+    const x = item.tile_x
+    const y = item.tile_y
+    const hasN = roadSet.has(`${x},${y - 1}`)
+    const hasS = roadSet.has(`${x},${y + 1}`)
+    const hasW = roadSet.has(`${x - 1},${y}`)
+    const hasE = roadSet.has(`${x + 1},${y}`)
+    const horizontal = hasW || hasE
+    const vertical = hasN || hasS
+
+    const tilePx = TILE_W * z
+    const cx = s.x
+    const cy = s.y
+    const half = tilePx * 0.5
+
+    // Determine road width based on type
+    const isBlockRoad = item.infra_type.endsWith('_road')
+    const roadWidth = isBlockRoad ? tilePx * 0.8 : tilePx * 0.6
+
+    // --- 1. Asphalt base ---
+    // Slightly darker for block roads, standard for MST roads
+    const baseColor = isBlockRoad ? '#3a3d45' : '#4a4d55'
+    const borderColor = isBlockRoad ? '#5a5d65' : '#5a5d65'
+
+    // Draw asphalt as a filled rectangle covering the road extent
+    ctx.fillStyle = baseColor
+    if (vertical && !horizontal) {
+      // Vertical road: wider horizontally for the street look
+      ctx.fillRect(cx - roadWidth / 2, cy - half, roadWidth, tilePx)
+    } else if (horizontal && !vertical) {
+      // Horizontal road
+      ctx.fillRect(cx - half, cy - roadWidth / 2, tilePx, roadWidth)
+    } else {
+      // Intersection or isolated — draw full tile
+      ctx.fillRect(cx - half, cy - half, tilePx, tilePx)
+    }
+
+    // Asphalt noise overlay (subtle texture)
+    const seed = (x * 7 + y * 13) % 12
+    for (let i = 0; i < 3; i++) {
+      const nx = cx + ((seed * 17 + i * 29) % 8 - 4) * z
+      const ny = cy + ((seed * 31 + i * 47) % 8 - 4) * z
+      ctx.fillStyle = `rgba(0,0,0,${0.03 + (seed % 3) * 0.02})`
+      ctx.fillRect(nx, ny, 2 * z, 1.5 * z)
+    }
+
+    // Curbs — bright edge lines
+    ctx.lineWidth = 1.5 * z
+    if (vertical) {
+      ctx.strokeStyle = '#6c6c7a'
+      ctx.beginPath(); ctx.moveTo(cx - roadWidth / 2, cy - half + 1); ctx.lineTo(cx - roadWidth / 2, cy + half - 1); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(cx + roadWidth / 2, cy - half + 1); ctx.lineTo(cx + roadWidth / 2, cy + half - 1); ctx.stroke()
+    }
+    if (horizontal) {
+      ctx.strokeStyle = '#6c6c7a'
+      ctx.beginPath(); ctx.moveTo(cx - half + 1, cy - roadWidth / 2); ctx.lineTo(cx + half - 1, cy - roadWidth / 2); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(cx - half + 1, cy + roadWidth / 2); ctx.lineTo(cx + half - 1, cy + roadWidth / 2); ctx.stroke()
+    }
+
+    // --- 2. Yellow center lines ---
+    ctx.lineWidth = 2 * z
+    ctx.strokeStyle = '#e8b830'
+    ctx.setLineDash([5 * z, 5 * z])
+    if (horizontal && !vertical) {
+      ctx.beginPath()
+      ctx.moveTo(cx - half + 2, cy)
+      ctx.lineTo(cx + half - 2, cy)
+      ctx.stroke()
+    } else if (vertical && !horizontal) {
+      ctx.beginPath()
+      ctx.moveTo(cx, cy - half + 2)
+      ctx.lineTo(cx, cy + half - 2)
+      ctx.stroke()
+    } else if (horizontal && vertical) {
+      // Intersection: draw cross with gaps at center
+      ctx.beginPath()
+      ctx.moveTo(cx - half + 2, cy)
+      ctx.lineTo(cx - 4 * z, cy)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(cx + 4 * z, cy)
+      ctx.lineTo(cx + half - 2, cy)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(cx, cy - half + 2)
+      ctx.lineTo(cx, cy - 4 * z)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(cx, cy + 4 * z)
+      ctx.lineTo(cx, cy + half - 2)
+      ctx.stroke()
+      // Crosswalk at intersection (white dashes)
+      ctx.strokeStyle = '#ffffff'
+      ctx.lineWidth = 1.5 * z
+      // Horizontal crosswalk across vertical road
+      for (let dw = -1; dw <= 1; dw += 2) {
+        for (let d = -2; d <= 2; d++) {
+          const offset = d * 2 * z
+          ctx.setLineDash([])
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.35)'
+          ctx.fillRect(cx - roadWidth / 2 + dw * 1.5 * z, cy + offset, 1.5 * z, 1.2 * z)
+        }
+      }
+      // Vertical crosswalk across horizontal road
+      for (let dw = -1; dw <= 1; dw += 2) {
+        for (let d = -2; d <= 2; d++) {
+          const offset = d * 2 * z
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.35)'
+          ctx.fillRect(cx + offset, cy - roadWidth / 2 + dw * 1.5 * z, 1.2 * z, 1.5 * z)
+        }
+      }
+    }
+    ctx.setLineDash([])
+
+    // --- 3. White edge / parking lines ---
+    ctx.lineWidth = 1 * z
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
+    ctx.setLineDash([3 * z, 4 * z])
+    if (horizontal && !vertical) {
+      ctx.beginPath()
+      ctx.moveTo(cx - half + 2, cy - roadWidth * 0.32)
+      ctx.lineTo(cx + half - 2, cy - roadWidth * 0.32)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(cx - half + 2, cy + roadWidth * 0.32)
+      ctx.lineTo(cx + half - 2, cy + roadWidth * 0.32)
+      ctx.stroke()
+    }
+    if (vertical && !horizontal) {
+      ctx.beginPath()
+      ctx.moveTo(cx - roadWidth * 0.32, cy - half + 2)
+      ctx.lineTo(cx - roadWidth * 0.32, cy + half - 2)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(cx + roadWidth * 0.32, cy - half + 2)
+      ctx.lineTo(cx + roadWidth * 0.32, cy + half - 2)
+      ctx.stroke()
+    }
+    ctx.setLineDash([])
+
+    // --- 4. Details (cracks, manholes, oil stains) ---
+    const detailSeed = (x * 31 + y * 17) % 7
+    if (detailSeed === 0) {
+      // Manhole: dark circle with two slits
+      ctx.strokeStyle = 'rgba(30, 30, 35, 0.5)'
+      ctx.lineWidth = 1 * z
+      ctx.beginPath()
+      ctx.arc(cx + (x % 3 - 1) * 2 * z, cy + (y % 5 - 2) * 2 * z, 1.5 * z, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(cx + (x % 3 - 1) * 2 * z - 1.2 * z, cy + (y % 5 - 2) * 2 * z)
+      ctx.lineTo(cx + (x % 3 - 1) * 2 * z + 1.2 * z, cy + (y % 5 - 2) * 2 * z)
+      ctx.stroke()
+    } else if (detailSeed === 1) {
+      // Crack: dark wavy line
+      ctx.strokeStyle = 'rgba(30, 30, 35, 0.25)'
+      ctx.lineWidth = 0.8 * z
+      ctx.beginPath()
+      const cx0 = cx + (x % 5 - 2) * 3 * z
+      const cy0 = cy + (y % 3 - 1) * 3 * z
+      ctx.moveTo(cx0, cy0)
+      ctx.lineTo(cx0 + (x % 3) * 2 * z, cy0 - 2 * z)
+      ctx.lineTo(cx0 - (y % 4) * 2 * z, cy0 - 4 * z)
+      ctx.stroke()
+    } else if (detailSeed === 2) {
+      // Oil stain
+      ctx.fillStyle = 'rgba(30, 30, 40, 0.12)'
+      ctx.beginPath()
+      ctx.ellipse(cx + (x * 7) % 8 * z - 3 * z, cy + (y * 11) % 8 * z - 3 * z, 2.5 * z, 1.5 * z, 0, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+}
+
+// Phase 6: Draw development blocks (sidewalks, interior fill, lot outlines)
 function drawBlocks() {
   if (!state.blocks || state.blocks.length === 0) return
   const w = canvas.width / (Math.min(window.devicePixelRatio || 1, 2))
@@ -2641,36 +2837,6 @@ function drawBlocks() {
     if (br.x < -100 || tl.x > w + 100 || br.y < -100 || tl.y > h + 100) continue
 
     const colors = BLOCK_COLORS[block.block_type] || BLOCK_COLORS.residential
-
-    // Road border (outside)
-    ctx.fillStyle = colors.road
-    ctx.fillRect(tl.x - 16 * z, tl.y - 16 * z, (br.x - tl.x) + 32 * z, (br.y - tl.y) + 32 * z)
-
-    // Road markings (yellow dashed center line)
-    ctx.strokeStyle = 'rgba(255, 200, 50, 0.25)'
-    ctx.lineWidth = 1 * z
-    ctx.setLineDash([3 * z, 4 * z])
-    // Top road center
-    ctx.beginPath()
-    ctx.moveTo(tl.x - 8 * z, tl.y - 8 * z)
-    ctx.lineTo(br.x + 8 * z, tl.y - 8 * z)
-    ctx.stroke()
-    // Bottom road center
-    ctx.beginPath()
-    ctx.moveTo(tl.x - 8 * z, br.y + 8 * z)
-    ctx.lineTo(br.x + 8 * z, br.y + 8 * z)
-    ctx.stroke()
-    // Left road center
-    ctx.beginPath()
-    ctx.moveTo(tl.x - 8 * z, tl.y - 8 * z)
-    ctx.lineTo(tl.x - 8 * z, br.y + 8 * z)
-    ctx.stroke()
-    // Right road center
-    ctx.beginPath()
-    ctx.moveTo(br.x + 8 * z, tl.y - 8 * z)
-    ctx.lineTo(br.x + 8 * z, br.y + 8 * z)
-    ctx.stroke()
-    ctx.setLineDash([])
 
     // Sidewalk ring
     ctx.fillStyle = colors.sidewalk
