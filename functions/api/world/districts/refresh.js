@@ -103,14 +103,18 @@ function generateAutoRoads(districts, buildings) {
       const tx = to.tile_x, ty = to.tile_y;
 
       // L-shaped path: horizontal then vertical
-      const stepX = tx >= fx ? 1 : -1;
-      for (let x = fx + stepX; x !== tx; x += stepX) {
-        roads.add(`${x},${fy}`);
+      if (fx !== tx) {
+        const stepX = tx > fx ? 1 : -1;
+        for (let x = fx + stepX; x !== tx; x += stepX) {
+          roads.add(`${x},${fy}`);
+        }
       }
-      const stepY = ty >= fy ? 1 : -1;
-      for (let y = fy; y !== ty; y += stepY) {
-        const key = `${tx},${y}`;
-        if (!occupiedTiles.has(key)) roads.add(key);
+      {
+        const stepY = ty >= fy ? 1 : -1;
+        for (let y = fy; y !== ty; y += stepY) {
+          const key = `${tx},${y}`;
+          if (!occupiedTiles.has(key)) roads.add(key);
+        }
       }
 
       roads.add(`${tx},${ty}`);
