@@ -71,13 +71,46 @@ export async function onRequestPost(context) {
     const cx = Math.max(0, Math.min(200, Math.floor(tileX)))
     const cy = Math.max(0, Math.min(200, Math.floor(tileY)))
 
-    // Check if tile is occupied
-    const checkResult = await supabaseFetch(
-      context.env,
-      `/rest/v1/world_building_states?select=id&tile_x=eq.${cx}&tile_y=eq.${cy}`
-    )
-    if (checkResult.ok && Array.isArray(checkResult.data) && checkResult.data.length > 0) {
-      return json({ ok: false, error: 'Tile occupied', occupied: true })
+    // Phase 6: Check for empty lots first
+    const LOT_TYPE_MAP = { house: 'residential', shop: 'commercial', club: 'commercial', warehouse: 'industrial', hide: 'commercial', camp: 'residential' }
+    const expectedLotType = LOT_TYPE_MAP[buildingType]
+    let targetX = cx, targetY = cy
+    let occupiedLotId = null
+
+    if (expectedLotType) {
+      const lotResult = await supabaseFetch(
+        context.env,
+        `/rest/v1/world_block_lots?select=id,tile_x,tile_y,block_id&lot_type=eq.${expectedLotType}&occupied_building_id=is.null&limit=1`
+      )
+      if (lotResult.ok && Array.isArray(lotResult.data) && lotResult.data.length > 0) {
+        const lot = lotResult.data[0]
+        targetX = lot.tile_x
+        targetY = lot.tile_y
+        occupiedLotId = lot.id
+
+        // Check if that specific tile is free
+        const occCheck = await supabaseFetch(
+          context.env,
+          `/rest/v1/world_building_states?select=id&tile_x=eq.${targetX}&tile_y=eq.${targetY}`
+        )
+        if (occCheck.ok && Array.isArray(occCheck.data) && occCheck.data.length > 0) {
+          // Lot tile somehow occupied, fall back to random placement
+          occupiedLotId = null
+          targetX = cx
+          targetY = cy
+        }
+      }
+    }
+
+    // Check if tile is occupied (only if not using a lot)
+    if (!occupiedLotId) {
+      const checkResult = await supabaseFetch(
+        context.env,
+        `/rest/v1/world_building_states?select=id&tile_x=eq.${targetX}&tile_y=eq.${targetY}`
+      )
+      if (checkResult.ok && Array.isArray(checkResult.data) && checkResult.data.length > 0) {
+        return json({ ok: false, error: 'Tile occupied', occupied: true })
+      }
     }
 
     // Get next ID
@@ -95,8 +128,8 @@ export async function onRequestPost(context) {
       id: nextId,
       owner_id: null,
       building_type: buildingType,
-      tile_x: cx,
-      tile_y: cy,
+      tile_x: targetX,
+      tile_y: targetY,
       condition: 100,
       income_rate: NPC_BUILDING_TYPES[buildingType].income,
       last_collected_at: new Date().toISOString(),
@@ -119,13 +152,27 @@ export async function onRequestPost(context) {
       return json({ ok: false, error: 'Failed to place building', details: insertResult.data }, 500)
     }
 
+    // Phase 6: Update lot as occupied
+    if (occupiedLotId) {
+      await supabaseFetch(
+        context.env,
+        `/rest/v1/world_block_lots?id=eq.${occupiedLotId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ occupied_building_id: nextId })
+        }
+      )
+    }
+
     return json({
       ok: true,
+      usedLot: !!occupiedLotId,
       building: {
         id: nextId,
         building_type: buildingType,
-        tile_x: cx,
-        tile_y: cy,
+        tile_x: targetX,
+        tile_y: targetY,
         owner_id: null,
         status: 'active'
       }

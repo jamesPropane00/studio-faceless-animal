@@ -2244,7 +2244,95 @@ function drawBuildingAt(building, s) {
   ctx.closePath()
   ctx.fillStyle = topColor
   ctx.fill()
-  
+
+  // Phase 6: Building silhouettes — recognizable shapes per type
+  if (state.camera.zoom > 0.5) {
+    const bt = building.building_type
+    const z = state.camera.zoom
+
+    if (bt === 'house') {
+      // Roof ridge on top face
+      ctx.strokeStyle = sideColor
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(s.x, s.y - hh - elev)
+      ctx.lineTo(s.x, s.y + hh - elev)
+      ctx.stroke()
+      // Small cross-window on front face
+      ctx.strokeStyle = 'rgba(200, 230, 255, 0.5)'
+      ctx.lineWidth = 1
+      const wy = s.y - elev * 0.4
+      const wh = elev * 0.3
+      ctx.strokeRect(s.x - hw * 0.25, wy, hw * 0.5, wh)
+      ctx.beginPath()
+      ctx.moveTo(s.x, wy); ctx.lineTo(s.x, wy + wh)
+      ctx.moveTo(s.x - hw * 0.25, wy + wh * 0.5); ctx.lineTo(s.x + hw * 0.25, wy + wh * 0.5)
+      ctx.stroke()
+    } else if (bt === 'shop') {
+      // Awning on front
+      ctx.fillStyle = 'rgba(200, 60, 60, 0.5)'
+      ctx.beginPath()
+      ctx.moveTo(s.x - hw * 0.8, s.y - elev * 0.65)
+      ctx.lineTo(s.x + hw * 0.8, s.y - elev * 0.65)
+      ctx.lineTo(s.x + hw * 0.5, s.y - elev * 0.35)
+      ctx.lineTo(s.x - hw * 0.5, s.y - elev * 0.35)
+      ctx.closePath()
+      ctx.fill()
+      // Glass entry
+      ctx.fillStyle = 'rgba(150, 200, 255, 0.25)'
+      ctx.fillRect(s.x - hw * 0.2, s.y - elev * 0.5, hw * 0.4, elev * 0.35)
+    } else if (bt === 'club') {
+      // Pulsing neon sign
+      const pulse = 0.4 + 0.6 * Math.sin(performance.now() * 0.003)
+      ctx.fillStyle = `rgba(167, 139, 250, ${pulse * 0.4})`
+      ctx.fillRect(s.x - hw * 0.5, s.y - hh - elev - 3, hw, 3)
+      // Glow around building
+      ctx.fillStyle = `rgba(167, 139, 250, ${pulse * 0.08})`
+      ctx.fillRect(s.x - hw, s.y - hh - elev, hw * 2, hh * 2 + elev)
+    } else if (bt === 'warehouse') {
+      // Roll-up door
+      ctx.fillStyle = 'rgba(100, 100, 115, 0.5)'
+      ctx.fillRect(s.x - hw * 0.4, s.y - elev * 0.7, hw * 0.8, elev * 0.6)
+      ctx.strokeStyle = 'rgba(80, 80, 95, 0.4)'
+      ctx.lineWidth = 0.5
+      for (let i = 0; i < 3; i++) {
+        const ly = s.y - elev * 0.2 - i * (elev * 0.18)
+        ctx.beginPath()
+        ctx.moveTo(s.x - hw * 0.4, ly)
+        ctx.lineTo(s.x + hw * 0.4, ly)
+        ctx.stroke()
+      }
+    } else if (bt === 'hide') {
+      // Boarded windows (X marks)
+      ctx.strokeStyle = 'rgba(120, 60, 30, 0.7)'
+      ctx.lineWidth = 2
+      ;[[-hw*0.35, -hw*0.1], [hw*0.1, hw*0.35]].forEach(([x1, x2]) => {
+        const wy = s.y - elev * 0.65
+        const wh2 = elev * 0.4
+        ctx.beginPath()
+        ctx.moveTo(s.x + x1, wy); ctx.lineTo(s.x + x2, wy + wh2)
+        ctx.moveTo(s.x + x2, wy); ctx.lineTo(s.x + x1, wy + wh2)
+        ctx.stroke()
+      })
+      // Trash mark
+      ctx.font = `${7 * z}px Inter`
+      ctx.fillStyle = 'rgba(255, 100, 100, 0.3)'
+      ctx.fillText('\u{1F4A9}', s.x, s.y + hh * 0.3)
+    } else if (bt === 'camp') {
+      // Tent peak
+      ctx.fillStyle = 'rgba(100, 180, 100, 0.25)'
+      ctx.beginPath()
+      ctx.moveTo(s.x - hw * 0.6, s.y - elev * 0.4)
+      ctx.lineTo(s.x, s.y - hh - elev * 0.3)
+      ctx.lineTo(s.x + hw * 0.6, s.y - elev * 0.4)
+      ctx.closePath()
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(100, 180, 100, 0.3)'
+      ctx.lineWidth = 1
+      ctx.stroke()
+    }
+  }
+
   if (building.owner_id && state.camera.zoom > 0.6) {
     const isOwn = building.owner_id === state.userId
     const ringColor = state.userGang ? state.userGang.color : '#a78bfa'
