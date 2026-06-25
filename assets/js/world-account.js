@@ -1,5 +1,5 @@
 // ============================================================
-//  Faceless Animal Studios — World account module
+//  Faceless Animal Studios ï¿½ World account module
 //  assets/js/world-account.js
 //
 //  Owns the in-world account UI:
@@ -60,17 +60,15 @@ function injectStyles () {
   document.head.appendChild(tag)
 }
 
-function injectButton (hudTop) {
+function injectButton () {
   const btn = document.createElement('button')
   btn.className = 'account-btn'
   btn.id = 'btnAccount'
   btn.type = 'button'
   btn.title = 'Sign in or create an account'
   btn.innerHTML = '<span class="account-icon">\u{1F464}</span><span class="account-name" id="accountName">Guest</span>'
-  // Insert right after the brand badge (which is the first child of .hud-top)
-  const brand = hudTop.querySelector('.brand-badge')
-  if (brand && brand.nextSibling) hudTop.insertBefore(btn, brand.nextSibling)
-  else hudTop.appendChild(btn)
+  // Append directly to body with fixed positioning (CSS handles layout)
+  document.body.appendChild(btn)
   return btn
 }
 
@@ -127,12 +125,11 @@ export function mountWorldAccount ({ state, showToast, fetchPlayerState }) {
 
   injectStyles()
 
-  const hudTop = document.querySelector('.hud.hud-top')
-  if (!hudTop) {
+  if (!document.querySelector('.hud.hud-top')) {
     console.warn('[WORLD] mountWorldAccount: .hud.hud-top not found')
     return
   }
-  injectButton(hudTop)
+  injectButton()
   injectModal()
 
   const modal = document.getElementById('acctModal')

@@ -1001,6 +1001,21 @@
     /* ── PANEL MANAGER ── */
     .panel-hidden { display: none !important; }
 
+    /* ── ACCOUNT BUTTON (injected by world-account.js) ── */
+    .account-btn,
+    #btnAccount {
+      position: fixed !important;
+      top: max(16px, env(safe-area-inset-top, 0px)) !important;
+      left: max(16px, env(safe-area-inset-left, 0px)) !important;
+      right: auto !important;
+      z-index: 80 !important;
+    }
+
+    /* ── TIME PILL (must stay top-center, never contain account button) ── */
+    .time-indicator {
+      z-index: 70;
+    }
+
     .game-panel {
       background: rgba(18,20,30,0.95);
       backdrop-filter: blur(16px);
