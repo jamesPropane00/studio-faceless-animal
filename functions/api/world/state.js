@@ -87,6 +87,29 @@ export async function onRequestGet(context) {
       // table may not exist yet
     }
 
+    // Fetch all development blocks (Phase 6)
+    let blocksData = [];
+    let lotsData = [];
+    try {
+      const blocksResult = await supabaseFetch(
+        context.env,
+        `/rest/v1/world_blocks?select=*&order=id.asc`
+      );
+      if (blocksResult.ok && Array.isArray(blocksResult.data)) {
+        blocksData = blocksResult.data;
+        // Fetch lots for all blocks
+        const lotsResult = await supabaseFetch(
+          context.env,
+          `/rest/v1/world_block_lots?select=*&order=id.asc`
+        );
+        if (lotsResult.ok && Array.isArray(lotsResult.data)) {
+          lotsData = lotsResult.data;
+        }
+      }
+    } catch (e) {
+      // tables may not exist yet
+    }
+
     // Fetch recent events (last 20)
     const eventsResult = await supabaseFetch(
       context.env,
@@ -98,6 +121,8 @@ export async function onRequestGet(context) {
       buildings: Array.isArray(buildingsResult.data) ? buildingsResult.data : [],
       districts: districtsResult.ok && Array.isArray(districtsResult.data) ? districtsResult.data : [],
       infrastructure: infraData,
+      blocks: blocksData,
+      lots: lotsData,
       events: eventsResult.ok && Array.isArray(eventsResult.data) ? eventsResult.data : []
     });
   } catch (error) {

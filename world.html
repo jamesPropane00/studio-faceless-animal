@@ -576,7 +576,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
       }
     }
 
-    .build-panel, .god-panel, .income-panel, .job-panel, .gang-panel, .pw-panel {
+    .build-panel, .god-panel, .income-panel, .job-panel, .gang-panel, .pw-panel, .block-panel {
       position: fixed;
       top: 50%;
       left: 50%;
@@ -593,7 +593,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
       max-height: 80vh;
       overflow-y: auto;
     }
-    .build-panel.open, .god-panel.open, .income-panel.open, .job-panel.open, .gang-panel.open, .pw-panel.open { display: block; }
+    .build-panel.open, .god-panel.open, .income-panel.open, .job-panel.open, .gang-panel.open, .pw-panel.open, .block-panel.open { display: block; }
     .panel-header {
       display: flex;
       justify-content: space-between;
@@ -614,12 +614,12 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
       line-height: 1;
     }
     .panel-close:hover { color: var(--text); }
-    .build-grid, .god-grid, .pw-grid {
+    .build-grid, .god-grid, .pw-grid, .block-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 0.75rem;
     }
-    .build-item, .god-item, .pw-item {
+    .build-item, .god-item, .pw-item, .block-item {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
@@ -627,20 +627,20 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
       cursor: pointer;
       transition: all 0.15s;
     }
-    .build-item:hover, .god-item:hover, .pw-item:hover {
+    .build-item:hover, .god-item:hover, .pw-item:hover, .block-item:hover {
       background: rgba(167, 139, 250, 0.1);
       border-color: var(--bright);
     }
-    .build-item.selected, .god-item.selected, .pw-item.selected {
+    .build-item.selected, .god-item.selected, .pw-item.selected, .block-item.selected {
       background: rgba(167, 139, 250, 0.2);
       border-color: var(--bright);
     }
-    .build-icon, .god-icon, .pw-item-icon {
+    .build-icon, .god-icon, .pw-item-icon, .block-icon {
       font-size: 2rem;
       text-align: center;
       margin-bottom: 0.5rem;
     }
-    .build-name, .god-name, .pw-item-name {
+    .build-name, .god-name, .pw-item-name, .block-name {
       font-size: 0.85rem;
       font-weight: 700;
       color: var(--text);
@@ -655,8 +655,17 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
       font-size: 0.75rem;
       color: #4ade80;
     }
+    .block-cost {
+      font-size: 0.75rem;
+      color: var(--gold);
       text-align: center;
       font-weight: 600;
+    }
+    .block-desc {
+      font-size: 0.65rem;
+      color: var(--dim);
+      text-align: center;
+      margin-top: 0.15rem;
     }
     .build-desc, .god-desc {
       font-size: 0.7rem;
@@ -929,12 +938,12 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
     }
 
     /* ── PANEL TRANSITIONS ── */
-    .build-panel,.god-panel,.income-panel,.job-panel,.pw-panel{
+    .build-panel,.god-panel,.income-panel,.job-panel,.pw-panel,.block-panel{
       transition:opacity 0.25s,transform 0.25s;
       opacity:0;pointer-events:none;
       transform:translate(-50%,-48%) scale(0.97);
     }
-    .build-panel.open,.god-panel.open,.income-panel.open,.job-panel.open,.gang-panel.open,.pw-panel.open{
+    .build-panel.open,.god-panel.open,.income-panel.open,.job-panel.open,.gang-panel.open,.pw-panel.open,.block-panel.open{
       opacity:1;pointer-events:auto;
       transform:translate(-50%,-50%) scale(1);
     }
@@ -976,7 +985,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
       .welcome-start{padding:0.65rem;font-size:0.8rem}
       .help-prompt{width:calc(100vw - 16px)}
       .help-prompt-inner{flex-wrap:wrap;justify-content:center}
-      .build-panel,.god-panel,.income-panel,.job-panel,.pw-panel{max-height:70vh;overflow-y:auto}
+      .build-panel,.god-panel,.income-panel,.job-panel,.pw-panel,.block-panel{max-height:70vh;overflow-y:auto}
       .action-btn{width:58px;height:58px;font-size:1.4rem}
       .tool-btn{width:46px;height:46px;font-size:1.15rem}
       .zoom-btn{width:42px;height:42px;font-size:1.2rem}
@@ -1029,6 +1038,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
   <button class="tool-btn" id="btnBuild" data-tip="Build">&#x1F3D7;&#xFE0F;</button>
   <button class="tool-btn" id="btnGod" data-tip="God Powers">&#x26A1;</button>
   <button class="tool-btn" id="btnPW" data-tip="Public Works">&#x1F3F0;</button>
+  <button class="tool-btn" id="btnBlock" data-tip="Urban DNA">&#x1F3D8;&#xFE0F;</button>
   <button class="tool-btn" id="btnGang" data-tip="Gangs">&#x1F46A;</button>
   <button class="tool-btn" id="btnInfluenceView" data-tip="Influence View"><span id="influenceViewIcon">&#x1F5FA;</span></button>
 </div>
@@ -1196,6 +1206,45 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
   </div>
 </div>
 
+<div class="block-panel" id="blockPanel">
+  <div class="panel-header">
+    <div class="panel-title">Urban DNA — Development Blocks</div>
+    <div class="panel-close" id="blockPanelClose">&times;</div>
+  </div>
+  <div class="block-grid" id="blockGrid">
+    <div class="block-item" data-type="residential">
+      <div class="block-icon">&#x1F3E0;</div>
+      <div class="block-name">Residential Block</div>
+      <div class="block-cost">200</div>
+      <div class="block-desc">8x8 — houses, yards, trees</div>
+    </div>
+    <div class="block-item" data-type="commercial">
+      <div class="block-icon">&#x1F3EA;</div>
+      <div class="block-name">Commercial Block</div>
+      <div class="block-cost">300</div>
+      <div class="block-desc">6x6 — shops, parking, sidewalks</div>
+    </div>
+    <div class="block-item" data-type="industrial">
+      <div class="block-icon">&#x1F3ED;</div>
+      <div class="block-name">Industrial Block</div>
+      <div class="block-cost">250</div>
+      <div class="block-desc">10x8 — warehouses, docks, fences</div>
+    </div>
+    <div class="block-item" data-type="entertainment">
+      <div class="block-icon">&#x1F3B5;</div>
+      <div class="block-name">Entertainment Block</div>
+      <div class="block-cost">400</div>
+      <div class="block-desc">8x6 — clubs, neon, crowd zones</div>
+    </div>
+    <div class="block-item" data-type="park">
+      <div class="block-icon">&#x1F333;</div>
+      <div class="block-name">Park Block</div>
+      <div class="block-cost">150</div>
+      <div class="block-desc">6x6 — trees, paths, benches</div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">
   <div class="toast-content">
     <div class="toast-title" id="toastTitle"></div>
@@ -1338,6 +1387,10 @@ const state = {
   pwType: null,
   godPower: null,
   infrastructure: [],
+  blocks: [],
+  lots: [],
+  blockMode: false,
+  blockType: null,
   joystick: { active: false, dx: 0, dy: 0 },
   keys: new Set(),
   mouse: { down: false, lastX: 0, lastY: 0, dragging: false },
@@ -2473,6 +2526,113 @@ function drawInfrastructure() {
   }
 }
 
+// Phase 6: Draw development blocks (roads, sidewalks, lots)
+function drawBlocks() {
+  if (!state.blocks || state.blocks.length === 0) return
+  const w = canvas.width / (Math.min(window.devicePixelRatio || 1, 2))
+  const h = canvas.height / (Math.min(window.devicePixelRatio || 1, 2))
+
+  const BLOCK_COLORS = {
+    residential: { fill: 'rgba(74, 222, 128, 0.08)', border: 'rgba(74, 222, 128, 0.3)', road: '#444', sidewalk: 'rgba(200,200,200,0.15)' },
+    commercial: { fill: 'rgba(96, 165, 250, 0.08)', border: 'rgba(96, 165, 250, 0.3)', road: '#444', sidewalk: 'rgba(200,200,200,0.15)' },
+    industrial: { fill: 'rgba(148, 163, 184, 0.08)', border: 'rgba(148, 163, 184, 0.3)', road: '#555', sidewalk: 'rgba(200,200,200,0.12)' },
+    entertainment: { fill: 'rgba(167, 139, 250, 0.08)', border: 'rgba(167, 139, 250, 0.3)', road: '#444', sidewalk: 'rgba(200,200,200,0.15)' },
+    park: { fill: 'rgba(34, 197, 94, 0.08)', border: 'rgba(34, 197, 94, 0.3)', road: '#444', sidewalk: 'rgba(200,200,200,0.15)' },
+  }
+
+  for (const block of state.blocks) {
+    const cx = block.tile_x
+    const cy = block.tile_y
+    const bw = block.width
+    const bh = block.height
+    const tl = worldToScreen(cx, cy)
+    const br = worldToScreen(cx + bw, cy + bh)
+    const z = state.camera.zoom
+
+    // Off-screen check
+    if (br.x < -100 || tl.x > w + 100 || br.y < -100 || tl.y > h + 100) continue
+
+    const colors = BLOCK_COLORS[block.block_type] || BLOCK_COLORS.residential
+
+    // Road border (outside)
+    ctx.fillStyle = colors.road
+    ctx.fillRect(tl.x - 16 * z, tl.y - 16 * z, (br.x - tl.x) + 32 * z, (br.y - tl.y) + 32 * z)
+
+    // Road markings (yellow dashed center line)
+    ctx.strokeStyle = 'rgba(255, 200, 50, 0.25)'
+    ctx.lineWidth = 1 * z
+    ctx.setLineDash([3 * z, 4 * z])
+    // Top road center
+    ctx.beginPath()
+    ctx.moveTo(tl.x - 8 * z, tl.y - 8 * z)
+    ctx.lineTo(br.x + 8 * z, tl.y - 8 * z)
+    ctx.stroke()
+    // Bottom road center
+    ctx.beginPath()
+    ctx.moveTo(tl.x - 8 * z, br.y + 8 * z)
+    ctx.lineTo(br.x + 8 * z, br.y + 8 * z)
+    ctx.stroke()
+    // Left road center
+    ctx.beginPath()
+    ctx.moveTo(tl.x - 8 * z, tl.y - 8 * z)
+    ctx.lineTo(tl.x - 8 * z, br.y + 8 * z)
+    ctx.stroke()
+    // Right road center
+    ctx.beginPath()
+    ctx.moveTo(br.x + 8 * z, tl.y - 8 * z)
+    ctx.lineTo(br.x + 8 * z, br.y + 8 * z)
+    ctx.stroke()
+    ctx.setLineDash([])
+
+    // Sidewalk ring
+    ctx.fillStyle = colors.sidewalk
+    ctx.fillRect(tl.x - 4 * z, tl.y - 4 * z, (br.x - tl.x) + 8 * z, (br.y - tl.y) + 8 * z)
+
+    // Block interior fill
+    ctx.fillStyle = colors.fill
+    ctx.fillRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y)
+
+    // Block border
+    ctx.strokeStyle = colors.border
+    ctx.lineWidth = 1.5 * z
+    ctx.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y)
+
+    // Block type label
+    if (z > 0.4) {
+      const label = block.block_type.charAt(0).toUpperCase() + block.block_type.slice(1)
+      ctx.font = `bold ${9 * z}px Inter, sans-serif`
+      ctx.textAlign = 'center'
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'
+      ctx.fillText(label, (tl.x + br.x) / 2, tl.y - 14 * z)
+    }
+  }
+
+  // Draw lots
+  if (!state.lots) return
+  const blockMap = new Map(state.blocks.map(b => [b.id, b]))
+  for (const lot of state.lots) {
+    const s = worldToScreen(lot.tile_x, lot.tile_y)
+    if (s.x < -50 || s.x > w + 50 || s.y < -50 || s.y > h + 50) continue
+    const block = blockMap.get(lot.block_id)
+    if (!block) continue
+    const colors = BLOCK_COLORS[block.block_type] || BLOCK_COLORS.residential
+
+    const sz = 6 * z
+    ctx.fillStyle = lot.occupied_building_id ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.04)'
+    ctx.fillRect(s.x - sz, s.y - sz, sz * 2, sz * 2)
+    ctx.strokeStyle = lot.occupied_building_id ? 'rgba(255,255,255,0.2)' : colors.border
+    ctx.lineWidth = 0.5 * z
+    ctx.strokeRect(s.x - sz, s.y - sz, sz * 2, sz * 2)
+
+    if (!lot.occupied_building_id && z > 0.5) {
+      ctx.font = `${6 * z}px Inter, sans-serif`
+      ctx.textAlign = 'center'
+      ctx.fillStyle = 'rgba(255,255,255,0.15)'
+      ctx.fillText(`${lot.lot_index + 1}`, s.x, s.y + 2 * z)
+    }
+  }
+}
+
 function drawEntity(wx, wy, color, name, isPlayer) {
   drawEntityAt(wx, wy, color, name, isPlayer, worldToScreen(wx, wy))
 }
@@ -2713,6 +2873,9 @@ function render() {
 
   // Phase 5B: Draw infrastructure (roads, trees, lights, etc.)
   drawInfrastructure()
+
+  // Phase 6: Draw development blocks
+  drawBlocks()
 
   if (state.influenceViewEnabled) {
     for (const district of state.districts) {
@@ -2985,6 +3148,8 @@ function setupMouse() {
       triggerGodPower(world.x, world.y)
     } else if (state.pwMode && state.pwType) {
       placeInfrastructure(world.x, world.y, state.pwType)
+    } else if (state.blockMode && state.blockType) {
+      placeBlock(world.x, world.y, state.blockType)
     } else {
       const clickedBuilding = state.buildings.find(b => {
         const dx = Math.abs(b.tile_x - world.x)
@@ -3161,6 +3326,47 @@ function setupUI() {
     document.getElementById('btnPW').classList.remove('active')
     document.getElementById('modeIndicator').classList.remove('open')
     document.querySelectorAll('.pw-item').forEach(el => el.classList.remove('selected'))
+  })
+  document.getElementById('btnBlock').addEventListener('click', () => {
+    state.blockMode = !state.blockMode
+    document.getElementById('blockPanel').classList.toggle('open', state.blockMode)
+    document.getElementById('btnBlock').classList.toggle('active', state.blockMode)
+    document.getElementById('modeIndicator').classList.toggle('open', state.blockMode)
+    if (state.blockMode) {
+      state.buildMode = false
+      document.getElementById('buildPanel').classList.remove('open')
+      document.getElementById('btnBuild').classList.remove('active')
+      state.godMode = false
+      document.getElementById('godPanel').classList.remove('open')
+      document.getElementById('btnGod').classList.remove('active')
+      state.pwMode = false
+      document.getElementById('pwPanel').classList.remove('open')
+      document.getElementById('btnPW').classList.remove('active')
+      document.getElementById('modeIndicator').textContent = 'Urban DNA: Click a block type, then click the map'
+    } else {
+      state.blockType = null
+      document.querySelectorAll('.block-item').forEach(el => el.classList.remove('selected'))
+      document.getElementById('modeIndicator').textContent = 'Build Mode: Click to place'
+    }
+  })
+  document.getElementById('blockPanelClose').addEventListener('click', () => {
+    state.blockMode = false
+    state.blockType = null
+    document.getElementById('blockPanel').classList.remove('open')
+    document.getElementById('btnBlock').classList.remove('active')
+    document.getElementById('modeIndicator').classList.remove('open')
+    document.querySelectorAll('.block-item').forEach(el => el.classList.remove('selected'))
+  })
+  document.getElementById('blockGrid').addEventListener('click', (e) => {
+    const blockItem = e.target.closest('.block-item')
+    if (!blockItem) return
+    const type = blockItem.dataset.type
+    if (!type) return
+    document.querySelectorAll('.block-item').forEach(i => i.classList.remove('selected'))
+    blockItem.classList.add('selected')
+    state.blockType = type
+    showToast('Urban DNA', `Click on the map to place a ${type} block`)
+    document.getElementById('blockPanel').classList.remove('open')
   })
   document.getElementById('btnGang').addEventListener('click', () => {
     if (document.getElementById('gangPanel').classList.contains('open')) {
@@ -4168,6 +4374,66 @@ async function placeInfrastructure(x, y, type) {
   }
 }
 
+// Phase 6: Place a development block
+async function placeBlock(x, y, blockType) {
+  const cx = Math.max(0, Math.min(200, Math.floor(x)))
+  const cy = Math.max(0, Math.min(200, Math.floor(y)))
+
+  const dims = { residential: { w: 8, h: 8, c: 200 }, commercial: { w: 6, h: 6, c: 300 },
+    industrial: { w: 10, h: 8, c: 250 }, entertainment: { w: 8, h: 6, c: 400 }, park: { w: 6, h: 6, c: 150 } }
+  const d = dims[blockType]
+  if (!d) return
+
+  // Bounds check
+  if (cx + d.w > 200 || cy + d.h > 200) {
+    showToast('Error', 'Block extends beyond world edge')
+    return
+  }
+
+  // Overlap check with existing blocks
+  for (const block of state.blocks) {
+    const overlapX = cx < block.tile_x + block.width && cx + d.w > block.tile_x
+    const overlapY = cy < block.tile_y + block.height && cy + d.h > block.tile_y
+    if (overlapX && overlapY) {
+      showToast('Error', 'Blocks cannot overlap')
+      return
+    }
+  }
+
+  // Coins check
+  if (state.coins < d.c) {
+    showToast('Error', `Not enough coins (need ${d.c})`)
+    return
+  }
+
+  try {
+    const res = await fetch('/api/world/block/place', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ blockType, tileX: cx, tileY: cy, userId: state.userId })
+    })
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      showToast('Server Offline', 'World API unavailable.')
+      return
+    }
+    const data = await res.json()
+    if (data.ok) {
+      state.blocks.push({ id: data.block.id, block_type: blockType, tile_x: cx, tile_y: cy, width: d.w, height: d.h, owner_id: state.userId })
+      state.coins -= d.c
+      document.getElementById('statCoins').textContent = state.coins
+      showToast('Urban DNA', `${blockType.charAt(0).toUpperCase() + blockType.slice(1)} block placed!`)
+      state.blockType = null
+      document.querySelectorAll('.block-item').forEach(el => el.classList.remove('selected'))
+    } else {
+      showToast('Error', data.error || 'Failed to place block')
+    }
+  } catch (e) {
+    console.error('[WORLD] placeBlock error:', e)
+    showToast('Error', 'Failed to place block')
+  }
+}
+
 function sendChat() {
   const input = document.getElementById('chatInput')
   const msg = input.value.trim()
@@ -4480,6 +4746,8 @@ async function fetchWorldState() {
       })
       state.districts = data.districts || []
       state.infrastructure = data.infrastructure || []
+      state.blocks = data.blocks || []
+      state.lots = data.lots || []
       assignNPCBuildings()
       console.log('[WORLD] Loaded', state.buildings.length, 'buildings,', state.districts.length, 'districts,', state.infrastructure.length, 'infra')
 
