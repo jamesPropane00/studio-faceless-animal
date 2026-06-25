@@ -1387,6 +1387,8 @@ const state = {
   pwType: null,
   godPower: null,
   infrastructure: [],
+  walkableGraph: null,
+  walkableDirty: true,
   blocks: [],
   lots: [],
   blockMode: false,
@@ -1780,7 +1782,64 @@ function updateNPCRoutine(npc, dt) {
   }
 }
 
+// Phase 6E: Walkable tile graph for NPC pathfinding
+function buildWalkableGraph() {
+  const walkable = new Set()
+  if (!state.infrastructure) return walkable
+  for (const item of state.infrastructure) {
+    const type = item.infra_type
+    if (type === 'road' || type.endsWith('_road') || type.endsWith('_sidewalk') || type === 'tree' || type === 'garden' || type === 'fountain') {
+      walkable.add(`${item.tile_x},${item.tile_y}`)
+    }
+  }
+  return walkable
+}
+
+function findPath(walkable, sx, sy, ex, ey) {
+  const startKey = `${Math.floor(sx)},${Math.floor(sy)}`
+  const endKey = `${Math.floor(ex)},${Math.floor(ey)}`
+  if (startKey === endKey) return []
+  if (!walkable.has(startKey) || !walkable.has(endKey)) return null
+
+  const queue = [[Math.floor(sx), Math.floor(sy)]]
+  const visited = new Set([startKey])
+  const parent = new Map()
+  parent.set(startKey, null)
+  const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]]
+  let found = false
+
+  while (queue.length > 0) {
+    const [cx, cy] = queue.shift()
+    const cKey = `${cx},${cy}`
+    if (cKey === endKey) { found = true; break }
+    if (visited.size > 500) break
+    for (const [dx, dy] of dirs) {
+      const nx = cx + dx, ny = cy + dy, nKey = `${nx},${ny}`
+      if (visited.has(nKey) || !walkable.has(nKey)) continue
+      visited.add(nKey)
+      parent.set(nKey, cKey)
+      queue.push([nx, ny])
+    }
+  }
+  if (!found) return null
+
+  const path = []
+  let current = endKey
+  while (current !== null) {
+    const [px, py] = current.split(',').map(Number)
+    path.unshift({ x: px + 0.5, y: py + 0.5 })
+    current = parent.get(current)
+  }
+  return path
+}
+
 function updateNPCs(dt) {
+  // Phase 6E: Build walkable graph if infrastructure changed
+  if (state.walkableDirty) {
+    state.walkableGraph = buildWalkableGraph()
+    state.walkableDirty = false
+  }
+
   for (const npc of state.npcs) {
     updateNPCRoutine(npc, dt)
 
@@ -1795,7 +1854,9 @@ function updateNPCs(dt) {
     const dd = Math.sqrt(ddx * ddx + ddy * ddy)
 
     if (dd < 0.5) {
-      // Arrived at destination
+      // Arrived at destination — clear path cache
+      npc.path = null
+      npc.pathDestKey = null
       if (npc.state === 'sleeping') {
         npc.moveTimer = 999
         continue
@@ -1840,9 +1901,42 @@ function updateNPCs(dt) {
     const speedMult = npc.state === 'sleeping' ? 0.5 : (npc.state === 'leisure' ? 0.7 : 1)
     const weatherMult = state.weather.type === 'storm' ? 0.6 : (state.weather.type === 'rain' ? 0.8 : 1)
     const actualSpeed = npc.speed * speedMult * weatherMult * dt
-    npc.x += (ddx / dd) * actualSpeed
-    npc.y += (ddy / dd) * actualSpeed
-    npc.direction = Math.atan2(ddy, ddx)
+
+    // Phase 6E: Pathfinding on roads for longer distances
+    let moved = false
+    if (dd > 3 && state.walkableGraph && state.walkableGraph.size > 0) {
+      const destKey = `${Math.floor(npc.tx)},${Math.floor(npc.ty)}`
+      if (!npc.path || npc.pathDestKey !== destKey) {
+        npc.path = findPath(state.walkableGraph, npc.x, npc.y, npc.tx, npc.ty)
+        npc.pathDestKey = destKey
+        npc.pathIndex = 0
+      }
+      if (npc.path && npc.pathIndex < npc.path.length) {
+        const waypoint = npc.path[npc.pathIndex]
+        const wdx = waypoint.x - npc.x
+        const wdy = waypoint.y - npc.y
+        const wd = Math.sqrt(wdx * wdx + wdy * wdy)
+        if (wd < 0.3) npc.pathIndex++
+        if (npc.pathIndex < npc.path.length) {
+          const next = npc.path[npc.pathIndex]
+          const ndx = next.x - npc.x
+          const ndy = next.y - npc.y
+          const nd = Math.sqrt(ndx * ndx + ndy * ndy)
+          if (nd > 0.01) {
+            npc.x += (ndx / nd) * actualSpeed
+            npc.y += (ndy / nd) * actualSpeed
+            npc.direction = Math.atan2(ndy, ndx)
+            moved = true
+          }
+        }
+      }
+    }
+
+    if (!moved) {
+      npc.x += (ddx / dd) * actualSpeed
+      npc.y += (ddy / dd) * actualSpeed
+      npc.direction = Math.atan2(ddy, ddx)
+    }
   }
 }
 
@@ -2949,16 +3043,17 @@ function drawTinyNPC(npc, s) {
   ctx.fillStyle = 'rgba(0,0,0,0.2)'
   ctx.fill()
 
-  // Legs
+  // Legs with walking animation
+  const legSwing = Math.sin(npc.animTimer * 4) * 1.2 * z
   ctx.strokeStyle = style.pants
   ctx.lineWidth = 1.5 * z
   ctx.lineCap = 'round'
   ctx.beginPath()
-  ctx.moveTo(s.x - 1.8 * z, s.y - 4 * z)
+  ctx.moveTo(s.x - 1.8 * z + legSwing, s.y - 4 * z)
   ctx.lineTo(s.x - 2.5 * z, s.y - 0.5 * z)
   ctx.stroke()
   ctx.beginPath()
-  ctx.moveTo(s.x + 1.8 * z, s.y - 4 * z)
+  ctx.moveTo(s.x + 1.8 * z - legSwing, s.y - 4 * z)
   ctx.lineTo(s.x + 2.5 * z, s.y - 0.5 * z)
   ctx.stroke()
 
@@ -4700,6 +4795,7 @@ async function placeInfrastructure(x, y, type) {
         tile_y: cy,
         owner_id: state.userId
       })
+      state.walkableDirty = true
       // Deduct coins from local state
       const costs = { tree: 5, bench: 5, light: 10, garden: 15, graffiti: 10, fence: 10, fountain: 25 }
       const cost = costs[type] || 0
@@ -5092,6 +5188,7 @@ async function fetchWorldState() {
       })
       state.districts = data.districts || []
       state.infrastructure = data.infrastructure || []
+      state.walkableDirty = true
       state.blocks = data.blocks || []
       state.lots = data.lots || []
       assignNPCBuildings()
