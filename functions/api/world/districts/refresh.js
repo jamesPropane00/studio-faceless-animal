@@ -44,6 +44,26 @@ const DISTRICT_NAMES = {
   camp: ['Shantytown', 'Camp District', 'Settlement', 'Outskirts']
 };
 
+// Building cost values for wealth calculation
+const BUILDING_VALUE = {
+  house: 50,
+  shop: 100,
+  club: 150,
+  warehouse: 75,
+  hide: 200,
+  camp: 25
+};
+
+// Avg population per building type (NPCs that call this building "home" or work there)
+const BUILDING_POPULATION = {
+  house: 4,
+  shop: 2,
+  club: 3,
+  warehouse: 1,
+  hide: 2,
+  camp: 1
+};
+
 function findDistricts(buildings) {
   const used = new Set();
   const districts = [];
@@ -69,10 +89,16 @@ function findDistricts(buildings) {
 
     if (cluster.length >= MIN_BUILDINGS) {
       const typeCounts = {};
+      const breakdown = {};
       let cx = 0, cy = 0;
+      let wealth = 0;
+      let population = 0;
 
       for (const b of cluster) {
         typeCounts[b.building_type] = (typeCounts[b.building_type] || 0) + 1;
+        breakdown[b.building_type] = (breakdown[b.building_type] || 0) + 1;
+        wealth += BUILDING_VALUE[b.building_type] || 50;
+        population += BUILDING_POPULATION[b.building_type] || 1;
         cx += b.tile_x;
         cy += b.tile_y;
       }
@@ -92,13 +118,20 @@ function findDistricts(buildings) {
       const names = DISTRICT_NAMES[dominantType] || DISTRICT_NAMES.house;
       const name = names[Math.floor(Math.random() * names.length)];
 
+      // Level: every 3 buildings = 1 level
+      const level = Math.max(1, Math.floor(cluster.length / 3));
+
       districts.push({
         name: name,
         district_type: dominantType,
         center_x: cx,
         center_y: cy,
         radius: CLUSTER_RADIUS,
-        building_count: cluster.length
+        building_count: cluster.length,
+        wealth: wealth,
+        population: population,
+        level: level,
+        building_breakdown: breakdown
       });
     }
   }

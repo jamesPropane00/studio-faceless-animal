@@ -1996,8 +1996,13 @@ function drawDistrict(district) {
   if (s.x < -radius || s.x > canvas.width + radius || s.y < -radius || s.y > canvas.height + radius) return
 
   const typeColor = DISTRICT_TYPE_COLORS[district.district_type] || '#a78bfa'
-  const fillAlpha = 0.20
-  const borderAlpha = 0.45
+
+  // Phase A: Wealth-based visual feedback
+  // High wealth (thriving) = brighter fill, low wealth (struggling) = dimmer
+  const wealth = district.wealth || 0
+  const wealthIntensity = Math.min(1.0, wealth / 600)
+  const fillAlpha = 0.10 + (wealthIntensity * 0.20)
+  const borderAlpha = 0.30 + (wealthIntensity * 0.30)
 
   ctx.fillStyle = hexToRgba(typeColor, fillAlpha)
   ctx.fill()
