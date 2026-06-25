@@ -61,7 +61,70 @@ ALTER TABLE world_events ALTER COLUMN player_id DROP NOT NULL;
 -- 9. RECREATE PRIMARY KEY on world_player_states
 ALTER TABLE world_player_states ADD PRIMARY KEY (user_id);
 
--- 10. RECREATE ALL POLICIES
+-- 11. PHASE A: DISTRICT DEMOGRAPHICS
+ALTER TABLE world_districts
+ADD COLUMN IF NOT EXISTS wealth INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE world_districts
+ADD COLUMN IF NOT EXISTS building_breakdown JSONB DEFAULT '{}'::jsonb;
+
+ALTER TABLE world_districts
+ADD COLUMN IF NOT EXISTS population INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE world_districts
+ADD COLUMN IF NOT EXISTS level INTEGER NOT NULL DEFAULT 1;
+
+-- 12. GANG SYSTEM TABLES (create BEFORE policies)
+CREATE TABLE IF NOT EXISTS world_gangs (
+  id          BIGSERIAL PRIMARY KEY,
+  name        TEXT NOT NULL,
+  tag         TEXT NOT NULL,
+  color       TEXT NOT NULL,
+  leader_id   TEXT,
+  coin_balance INTEGER DEFAULT 0,
+  created_at  TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS world_gang_members (
+  id        BIGSERIAL PRIMARY KEY,
+  gang_id   BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
+  user_id   TEXT,
+  npc_id    TEXT,
+  joined_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS world_district_influence (
+  id          BIGSERIAL PRIMARY KEY,
+  district_id INTEGER,
+  gang_id     BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
+  percent     INTEGER DEFAULT 0,
+  updated_at  TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS world_npc_affiliations (
+  id        BIGSERIAL PRIMARY KEY,
+  npc_id    TEXT,
+  gang_id   BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
+  joined_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS world_gang_chat (
+  id        BIGSERIAL PRIMARY KEY,
+  gang_id   BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
+  user_id   TEXT,
+  message   TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS world_gang_events (
+  id        BIGSERIAL PRIMARY KEY,
+  gang_id   BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
+  event_type TEXT,
+  data      JSONB,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 13. NOW CREATE POLICIES (tables exist)
 -- world_building_states
 CREATE POLICY "building_states_select" ON world_building_states FOR SELECT TO authenticated USING (true);
 CREATE POLICY "building_states_insert" ON world_building_states FOR INSERT TO service_role WITH CHECK (true);
@@ -114,70 +177,7 @@ CREATE POLICY "ge_insert" ON world_gang_events FOR INSERT TO service_role WITH C
 CREATE POLICY "ge_update" ON world_gang_events FOR UPDATE TO service_role USING (true);
 CREATE POLICY "ge_delete" ON world_gang_events FOR DELETE TO service_role USING (true);
 
--- 11. PHASE A: DISTRICT DEMOGRAPHICS
-ALTER TABLE world_districts
-ADD COLUMN IF NOT EXISTS wealth INTEGER NOT NULL DEFAULT 0;
-
-ALTER TABLE world_districts
-ADD COLUMN IF NOT EXISTS building_breakdown JSONB DEFAULT '{}'::jsonb;
-
-ALTER TABLE world_districts
-ADD COLUMN IF NOT EXISTS population INTEGER NOT NULL DEFAULT 0;
-
-ALTER TABLE world_districts
-ADD COLUMN IF NOT EXISTS level INTEGER NOT NULL DEFAULT 1;
-
--- 12. GANG SYSTEM TABLES (if not already created)
-CREATE TABLE IF NOT EXISTS world_gangs (
-  id          BIGSERIAL PRIMARY KEY,
-  name        TEXT NOT NULL,
-  tag         TEXT NOT NULL,
-  color       TEXT NOT NULL,
-  leader_id   TEXT,
-  coin_balance INTEGER DEFAULT 0,
-  created_at  TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS world_gang_members (
-  id        BIGSERIAL PRIMARY KEY,
-  gang_id   BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
-  user_id   TEXT,
-  npc_id    TEXT,
-  joined_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS world_district_influence (
-  id          BIGSERIAL PRIMARY KEY,
-  district_id INTEGER,
-  gang_id     BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
-  percent     INTEGER DEFAULT 0,
-  updated_at  TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS world_npc_affiliations (
-  id        BIGSERIAL PRIMARY KEY,
-  npc_id    TEXT,
-  gang_id   BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
-  joined_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS world_gang_chat (
-  id        BIGSERIAL PRIMARY KEY,
-  gang_id   BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
-  user_id   TEXT,
-  message   TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS world_gang_events (
-  id        BIGSERIAL PRIMARY KEY,
-  gang_id   BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
-  event_type TEXT,
-  data      JSONB,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- 13. VERIFY
+-- 14. VERIFY
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'
