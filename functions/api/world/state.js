@@ -73,6 +73,12 @@ export async function onRequestGet(context) {
       `/rest/v1/world_districts?select=*&order=building_count.desc`
     );
 
+    // Fetch all infrastructure (Phase 5B)
+    const infraResult = await supabaseFetch(
+      context.env,
+      `/rest/v1/world_infrastructure?select=*&order=id.asc`
+    );
+
     // Fetch recent events (last 20)
     const eventsResult = await supabaseFetch(
       context.env,
@@ -83,6 +89,7 @@ export async function onRequestGet(context) {
       ok: true,
       buildings: Array.isArray(buildingsResult.data) ? buildingsResult.data : [],
       districts: districtsResult.ok && Array.isArray(districtsResult.data) ? districtsResult.data : [],
+      infrastructure: infraResult.ok && Array.isArray(infraResult.data) ? infraResult.data : [],
       events: eventsResult.ok && Array.isArray(eventsResult.data) ? eventsResult.data : []
     });
   } catch (error) {

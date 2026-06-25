@@ -64,6 +64,68 @@ const BUILDING_POPULATION = {
   camp: 1
 };
 
+// Phase 5B: Auto-road generation using Prim's MST (Manhattan distance)
+function generateAutoRoads(districts, buildings) {
+  const roads = new Set();
+  const occupiedTiles = new Set(buildings.map(b => `${b.tile_x},${b.tile_y}`));
+
+  for (const district of districts) {
+    const clusterBuildings = buildings.filter(b => {
+      const dx = b.tile_x - district.center_x;
+      const dy = b.tile_y - district.center_y;
+      return Math.sqrt(dx * dx + dy * dy) <= district.radius;
+    });
+
+    if (clusterBuildings.length < 2) continue;
+
+    // Prim's MST
+    const connected = [clusterBuildings.shift()];
+    const unconnected = clusterBuildings;
+
+    while (unconnected.length > 0) {
+      let bestEdge = null;
+      let bestDist = Infinity;
+
+      for (const a of connected) {
+        for (const b of unconnected) {
+          const dist = Math.abs(a.tile_x - b.tile_x) + Math.abs(a.tile_y - b.tile_y);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestEdge = { from: a, to: b };
+          }
+        }
+      }
+
+      if (!bestEdge) break;
+
+      const { from, to } = bestEdge;
+      const fx = from.tile_x, fy = from.tile_y;
+      const tx = to.tile_x, ty = to.tile_y;
+
+      // L-shaped path: horizontal then vertical
+      const stepX = tx >= fx ? 1 : -1;
+      for (let x = fx + stepX; x !== tx; x += stepX) {
+        roads.add(`${x},${fy}`);
+      }
+      const stepY = ty >= fy ? 1 : -1;
+      for (let y = fy; y !== ty; y += stepY) {
+        const key = `${tx},${y}`;
+        if (!occupiedTiles.has(key)) roads.add(key);
+      }
+
+      roads.add(`${tx},${ty}`);
+
+      connected.push(bestEdge.to);
+      unconnected.splice(unconnected.indexOf(bestEdge.to), 1);
+    }
+  }
+
+  return [...roads].map(key => {
+    const [x, y] = key.split(',').map(Number);
+    return { infra_type: 'road', tile_x: x, tile_y: y, owner_id: null };
+  });
+}
+
 function findDistricts(buildings) {
   const used = new Set();
   const districts = [];
@@ -325,6 +387,30 @@ async function refreshDistricts(context) {
           }
         );
       }
+
+      // Phase 5B: Auto-road generation via MST
+      // Delete old auto-roads
+      await supabaseFetch(
+        context.env,
+        '/rest/v1/world_infrastructure?infra_type=eq.road&owner_id=is.null',
+        { method: 'DELETE', headers: { 'Content-Type': 'application/json' } }
+      );
+      // Generate new roads
+      const roadItems = generateAutoRoads(newDistricts, buildingsResult.data);
+      if (roadItems.length > 0) {
+        for (let i = 0; i < roadItems.length; i += 50) {
+          const batch = roadItems.slice(i, i + 50);
+          await supabaseFetch(
+            context.env,
+            '/rest/v1/world_infrastructure',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+              body: JSON.stringify(batch)
+            }
+          );
+        }
+      }
     } else {
       // No districts, clear all using neq filter
       await supabaseFetch(
@@ -351,6 +437,12 @@ async function refreshDistricts(context) {
           }
         );
       }
+      // Also clear auto-roads when no districts exist
+      await supabaseFetch(
+        context.env,
+        '/rest/v1/world_infrastructure?infra_type=eq.road&owner_id=is.null',
+        { method: 'DELETE', headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     return json({

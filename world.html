@@ -26,8 +26,21 @@
       font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
       display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;
       user-select:none;-webkit-user-select:none;
-    }
-    button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+}
+
+// Phase 5B: Public Works item selection
+document.getElementById('pwGrid').addEventListener('click', (e) => {
+  const pwItem = e.target.closest('.pw-item')
+  if (!pwItem) return
+  const type = pwItem.dataset.type
+  if (!type) return
+  document.querySelectorAll('.pw-item').forEach(i => i.classList.remove('selected'))
+  pwItem.classList.add('selected')
+  state.pwType = type
+  showToast('Public Works', `Click on the map to place ${type}`)
+  document.getElementById('pwPanel').classList.remove('open')
+})
+
 
     #gameCanvas{
       display:block;width:100%;height:100%;
@@ -563,7 +576,7 @@
       }
     }
 
-    .build-panel, .god-panel, .income-panel, .job-panel, .gang-panel {
+    .build-panel, .god-panel, .income-panel, .job-panel, .gang-panel, .pw-panel {
       position: fixed;
       top: 50%;
       left: 50%;
@@ -580,7 +593,7 @@
       max-height: 80vh;
       overflow-y: auto;
     }
-    .build-panel.open, .god-panel.open, .income-panel.open, .job-panel.open, .gang-panel.open { display: block; }
+    .build-panel.open, .god-panel.open, .income-panel.open, .job-panel.open, .gang-panel.open, .pw-panel.open { display: block; }
     .panel-header {
       display: flex;
       justify-content: space-between;
@@ -601,12 +614,12 @@
       line-height: 1;
     }
     .panel-close:hover { color: var(--text); }
-    .build-grid, .god-grid {
+    .build-grid, .god-grid, .pw-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 0.75rem;
     }
-    .build-item, .god-item {
+    .build-item, .god-item, .pw-item {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
@@ -614,20 +627,20 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-    .build-item:hover, .god-item:hover {
+    .build-item:hover, .god-item:hover, .pw-item:hover {
       background: rgba(167, 139, 250, 0.1);
       border-color: var(--bright);
     }
-    .build-item.selected, .god-item.selected {
+    .build-item.selected, .god-item.selected, .pw-item.selected {
       background: rgba(167, 139, 250, 0.2);
       border-color: var(--bright);
     }
-    .build-icon, .god-icon {
+    .build-icon, .god-icon, .pw-item-icon {
       font-size: 2rem;
       text-align: center;
       margin-bottom: 0.5rem;
     }
-    .build-name, .god-name {
+    .build-name, .god-name, .pw-item-name {
       font-size: 0.85rem;
       font-weight: 700;
       color: var(--text);
@@ -637,6 +650,11 @@
     .build-cost, .god-cost {
       font-size: 0.75rem;
       color: var(--gold);
+    }
+    .pw-item-cost {
+      font-size: 0.75rem;
+      color: #4ade80;
+    }
       text-align: center;
       font-weight: 600;
     }
@@ -911,12 +929,12 @@
     }
 
     /* ── PANEL TRANSITIONS ── */
-    .build-panel,.god-panel,.income-panel,.job-panel{
+    .build-panel,.god-panel,.income-panel,.job-panel,.pw-panel{
       transition:opacity 0.25s,transform 0.25s;
       opacity:0;pointer-events:none;
       transform:translate(-50%,-48%) scale(0.97);
     }
-    .build-panel.open,.god-panel.open,.income-panel.open,.job-panel.open{
+    .build-panel.open,.god-panel.open,.income-panel.open,.job-panel.open,.gang-panel.open,.pw-panel.open{
       opacity:1;pointer-events:auto;
       transform:translate(-50%,-50%) scale(1);
     }
@@ -958,7 +976,7 @@
       .welcome-start{padding:0.65rem;font-size:0.8rem}
       .help-prompt{width:calc(100vw - 16px)}
       .help-prompt-inner{flex-wrap:wrap;justify-content:center}
-      .build-panel,.god-panel,.income-panel,.job-panel{max-height:70vh;overflow-y:auto}
+      .build-panel,.god-panel,.income-panel,.job-panel,.pw-panel{max-height:70vh;overflow-y:auto}
       .action-btn{width:58px;height:58px;font-size:1.4rem}
       .tool-btn{width:46px;height:46px;font-size:1.15rem}
       .zoom-btn{width:42px;height:42px;font-size:1.2rem}
@@ -1010,6 +1028,7 @@
   <button class="tool-btn" id="btnMinimap" data-tip="Map">&#x1F5FA;&#xFE0F;</button>
   <button class="tool-btn" id="btnBuild" data-tip="Build">&#x1F3D7;&#xFE0F;</button>
   <button class="tool-btn" id="btnGod" data-tip="God Powers">&#x26A1;</button>
+  <button class="tool-btn" id="btnPW" data-tip="Public Works">&#x1F3F0;</button>
   <button class="tool-btn" id="btnGang" data-tip="Gangs">&#x1F46A;</button>
   <button class="tool-btn" id="btnInfluenceView" data-tip="Influence View"><span id="influenceViewIcon">&#x1F5FA;</span></button>
 </div>
@@ -1130,6 +1149,50 @@
       <div class="job-progress-text" id="jobProgressText">0s / 30s</div>
     </div>
     <button class="job-start-btn" id="jobStartBtn">Start Work</button>
+  </div>
+</div>
+
+<div class="pw-panel" id="pwPanel">
+  <div class="panel-header">
+    <div class="panel-title">Public Works</div>
+    <div class="panel-close" id="pwPanelClose">&times;</div>
+  </div>
+  <div class="pw-grid" id="pwGrid">
+    <div class="pw-item" data-type="tree">
+      <div class="pw-item-icon">&#x1F333;</div>
+      <div class="pw-item-name">Tree</div>
+      <div class="pw-item-cost">5</div>
+    </div>
+    <div class="pw-item" data-type="bench">
+      <div class="pw-item-icon">&#x1F7E2;</div>
+      <div class="pw-item-name">Bench</div>
+      <div class="pw-item-cost">5</div>
+    </div>
+    <div class="pw-item" data-type="light">
+      <div class="pw-item-icon">&#x1F4A1;</div>
+      <div class="pw-item-name">Light</div>
+      <div class="pw-item-cost">10</div>
+    </div>
+    <div class="pw-item" data-type="garden">
+      <div class="pw-item-icon">&#x1F331;</div>
+      <div class="pw-item-name">Garden</div>
+      <div class="pw-item-cost">15</div>
+    </div>
+    <div class="pw-item" data-type="graffiti">
+      <div class="pw-item-icon">&#x1F3A8;</div>
+      <div class="pw-item-name">Graffiti</div>
+      <div class="pw-item-cost">10</div>
+    </div>
+    <div class="pw-item" data-type="fence">
+      <div class="pw-item-icon">&#x1F9F1;</div>
+      <div class="pw-item-name">Fence</div>
+      <div class="pw-item-cost">10</div>
+    </div>
+    <div class="pw-item" data-type="fountain">
+      <div class="pw-item-icon">&#x26F2;</div>
+      <div class="pw-item-name">Fountain</div>
+      <div class="pw-item-cost">25</div>
+    </div>
   </div>
 </div>
 
@@ -1271,7 +1334,10 @@ const state = {
   buildMode: false,
   buildType: null,
   godMode: false,
+  pwMode: false,
+  pwType: null,
   godPower: null,
+  infrastructure: [],
   joystick: { active: false, dx: 0, dy: 0 },
   keys: new Set(),
   mouse: { down: false, lastX: 0, lastY: 0, dragging: false },
@@ -2298,6 +2364,115 @@ function drawDistrict(district) {
   }
 }
 
+// Phase 5B: Draw infrastructure items (roads, trees, lights, etc.)
+function drawInfrastructure() {
+  if (!state.infrastructure || state.infrastructure.length === 0) return
+  const w = canvas.width / (Math.min(window.devicePixelRatio || 1, 2))
+  const h = canvas.height / (Math.min(window.devicePixelRatio || 1, 2))
+
+  for (const item of state.infrastructure) {
+    const s = worldToScreen(item.tile_x, item.tile_y)
+    if (s.x < -TILE_W * state.camera.zoom || s.x > w + TILE_W * state.camera.zoom ||
+        s.y < -TILE_H * state.camera.zoom || s.y > h + TILE_H * state.camera.zoom) continue
+
+    const z = state.camera.zoom
+    const type = item.infra_type
+
+    if (type === 'road') {
+      // Road: subtle gray tile
+      const sz = 4 * z
+      ctx.fillStyle = 'rgba(80, 85, 100, 0.5)'
+      ctx.fillRect(s.x - sz, s.y - sz * 0.6, sz * 2, sz * 1.2)
+      // Center line
+      ctx.fillStyle = 'rgba(255, 255, 200, 0.15)'
+      ctx.fillRect(s.x - 0.5, s.y - sz * 0.4, 1, sz * 0.8)
+    } else if (type === 'tree') {
+      // Tree: green circle
+      const r = 5 * z
+      ctx.beginPath()
+      ctx.arc(s.x, s.y, r, 0, Math.PI * 2)
+      ctx.fillStyle = '#2d8a4e'
+      ctx.fill()
+      ctx.fillStyle = '#1a6b38'
+      ctx.beginPath()
+      ctx.arc(s.x - 1 * z, s.y - 2 * z, r * 0.6, 0, Math.PI * 2)
+      ctx.fill()
+    } else if (type === 'light') {
+      // Light: pole with glow
+      ctx.fillStyle = '#555'
+      ctx.fillRect(s.x - 0.5, s.y, 1, 6 * z)
+      const glow = 4 * z
+      const grad = ctx.createRadialGradient(s.x, s.y - 2 * z, 0, s.x, s.y - 2 * z, glow)
+      grad.addColorStop(0, 'rgba(255, 230, 150, 0.8)')
+      grad.addColorStop(1, 'rgba(255, 230, 150, 0)')
+      ctx.fillStyle = grad
+      ctx.beginPath()
+      ctx.arc(s.x, s.y - 2 * z, glow, 0, Math.PI * 2)
+      ctx.fill()
+    } else if (type === 'bench') {
+      // Bench: brown rectangle
+      ctx.fillStyle = '#8B6914'
+      ctx.fillRect(s.x - 3 * z, s.y - 1.5 * z, 6 * z, 3 * z)
+      ctx.strokeStyle = '#6B4914'
+      ctx.lineWidth = 0.5
+      ctx.strokeRect(s.x - 3 * z, s.y - 1.5 * z, 6 * z, 3 * z)
+    } else if (type === 'garden') {
+      // Garden: green patch with flowers
+      ctx.fillStyle = '#2d6b3e'
+      ctx.fillRect(s.x - 5 * z, s.y - 5 * z, 10 * z, 10 * z)
+      const flowers = ['#ff6b6b', '#ffd93d', '#ff9ff3', '#fff']
+      for (let i = 0; i < 4; i++) {
+        const fx = s.x + (i % 2 === 0 ? -2 : 2) * z
+        const fy = s.y + (i < 2 ? -2 : 2) * z
+        ctx.fillStyle = flowers[i]
+        ctx.beginPath()
+        ctx.arc(fx, fy, 1.5 * z, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    } else if (type === 'graffiti') {
+      // Graffiti: colored square
+      const colors = ['#ff6b6b', '#a78bfa', '#60a5fa', '#34d399', '#fbbf24']
+      ctx.fillStyle = colors[item.id % colors.length]
+      ctx.fillRect(s.x - 3 * z, s.y - 3 * z, 6 * z, 6 * z)
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)'
+      ctx.lineWidth = 0.5
+      ctx.strokeRect(s.x - 3 * z, s.y - 3 * z, 6 * z, 6 * z)
+    } else if (type === 'fence') {
+      // Fence: horizontal line with posts
+      ctx.strokeStyle = '#8B7355'
+      ctx.lineWidth = 1.5 * z
+      ctx.beginPath()
+      ctx.moveTo(s.x - 5 * z, s.y)
+      ctx.lineTo(s.x + 5 * z, s.y)
+      ctx.stroke()
+      for (let i = -4; i <= 4; i += 2) {
+        ctx.fillStyle = '#6B5335'
+        ctx.fillRect(s.x + i * z - 0.5, s.y - 2 * z, 1, 4 * z)
+      }
+    } else if (type === 'fountain') {
+      // Fountain: blue circle with water animation
+      const r = 6 * z
+      ctx.fillStyle = 'rgba(100, 180, 255, 0.3)'
+      ctx.beginPath()
+      ctx.arc(s.x, s.y, r, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(150, 200, 255, 0.5)'
+      ctx.lineWidth = 1
+      ctx.stroke()
+      // Water spray effect
+      const t = performance.now() * 0.002
+      for (let i = 0; i < 3; i++) {
+        const angle = t + i * 2.1
+        const sprayR = 3 * z * Math.abs(Math.sin(t + i))
+        ctx.fillStyle = 'rgba(200, 230, 255, 0.4)'
+        ctx.beginPath()
+        ctx.arc(s.x + Math.cos(angle) * sprayR, s.y + Math.sin(angle * 0.7) * sprayR, 1 * z, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+  }
+}
+
 function drawEntity(wx, wy, color, name, isPlayer) {
   drawEntityAt(wx, wy, color, name, isPlayer, worldToScreen(wx, wy))
 }
@@ -2535,6 +2710,9 @@ function render() {
   for (const district of state.districts) {
     drawDistrict(district)
   }
+
+  // Phase 5B: Draw infrastructure (roads, trees, lights, etc.)
+  drawInfrastructure()
 
   if (state.influenceViewEnabled) {
     for (const district of state.districts) {
@@ -2805,6 +2983,8 @@ function setupMouse() {
       placeBuildingAt(world.x, world.y)
     } else if (state.godMode && state.godPower) {
       triggerGodPower(world.x, world.y)
+    } else if (state.pwMode && state.pwType) {
+      placeInfrastructure(world.x, world.y, state.pwType)
     } else {
       const clickedBuilding = state.buildings.find(b => {
         const dx = Math.abs(b.tile_x - world.x)
@@ -2954,6 +3134,33 @@ function setupUI() {
     document.getElementById('godPanel').classList.remove('open')
     document.getElementById('btnGod').classList.remove('active')
     document.getElementById('modeIndicator').classList.remove('open')
+  })
+  document.getElementById('btnPW').addEventListener('click', () => {
+    state.pwMode = !state.pwMode
+    document.getElementById('pwPanel').classList.toggle('open', state.pwMode)
+    document.getElementById('btnPW').classList.toggle('active', state.pwMode)
+    document.getElementById('modeIndicator').classList.toggle('open', state.pwMode)
+    if (state.pwMode) {
+      state.buildMode = false
+      document.getElementById('buildPanel').classList.remove('open')
+      document.getElementById('btnBuild').classList.remove('active')
+      state.godMode = false
+      document.getElementById('godPanel').classList.remove('open')
+      document.getElementById('btnGod').classList.remove('active')
+      document.getElementById('modeIndicator').textContent = 'Public Works: Click an item, then click the map'
+    } else {
+      state.pwType = null
+      document.querySelectorAll('.pw-item').forEach(el => el.classList.remove('selected'))
+      document.getElementById('modeIndicator').textContent = 'Build Mode: Click to place'
+    }
+  })
+  document.getElementById('pwPanelClose').addEventListener('click', () => {
+    state.pwMode = false
+    state.pwType = null
+    document.getElementById('pwPanel').classList.remove('open')
+    document.getElementById('btnPW').classList.remove('active')
+    document.getElementById('modeIndicator').classList.remove('open')
+    document.querySelectorAll('.pw-item').forEach(el => el.classList.remove('selected'))
   })
   document.getElementById('btnGang').addEventListener('click', () => {
     if (document.getElementById('gangPanel').classList.contains('open')) {
@@ -3884,6 +4091,83 @@ async function triggerGodPower(x, y) {
   }
 }
 
+// Phase 5B: Place infrastructure item on the map
+async function placeInfrastructure(x, y, type) {
+  const cx = Math.max(0, Math.min(200, Math.floor(x)))
+  const cy = Math.max(0, Math.min(200, Math.floor(y)))
+
+  // Check tile not occupied by a building
+  const occupied = state.buildings.some(b => b.tile_x === cx && b.tile_y === cy)
+  if (occupied) {
+    showToast('Error', 'Tile occupied by a building')
+    return
+  }
+
+  // Check tile not already has infrastructure
+  const existingInfra = state.infrastructure.some(item => item.tile_x === cx && item.tile_y === cy)
+  if (existingInfra) {
+    showToast('Error', 'Tile already has infrastructure')
+    return
+  }
+
+  // Check terrain (avoid water for non-road)
+  const cxChunk = Math.floor(cx / CHUNK_SIZE)
+  const cyChunk = Math.floor(cy / CHUNK_SIZE)
+  const chunkKey = `${cxChunk},${cyChunk}`
+  const chunk = state.chunks.get(chunkKey)
+  if (chunk) {
+    const lx = cx - cxChunk * CHUNK_SIZE
+    const ly = cy - cyChunk * CHUNK_SIZE
+    const terrain = chunk.tiles[ly] && chunk.tiles[ly][lx]
+    if (terrain === 'water' || terrain === 'deep_water') {
+      showToast('Error', 'Cannot place on water')
+      return
+    }
+  }
+
+  try {
+    const res = await fetch('/api/world/public-works/place', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, tileX: cx, tileY: cy, userId: state.userId })
+    })
+
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      showToast('Server Offline', 'World API unavailable.')
+      return
+    }
+
+    const data = await res.json()
+    if (data.ok) {
+      // Add to local state immediately
+      state.infrastructure.push({
+        id: data.item.id,
+        infra_type: type,
+        tile_x: cx,
+        tile_y: cy,
+        owner_id: state.userId
+      })
+      // Deduct coins from local state
+      const costs = { tree: 5, bench: 5, light: 10, garden: 15, graffiti: 10, fence: 10, fountain: 25 }
+      const cost = costs[type] || 0
+      if (cost > 0) {
+        state.coins -= cost
+        document.getElementById('statCoins').textContent = state.coins
+      }
+      showToast('Public Works', `${type.charAt(0).toUpperCase() + type.slice(1)} placed!`)
+      // Deselect after placing
+      state.pwType = null
+      document.querySelectorAll('.pw-item').forEach(el => el.classList.remove('selected'))
+    } else {
+      showToast('Error', data.error || 'Failed to place item')
+    }
+  } catch (e) {
+    console.error('[WORLD] placeInfrastructure error:', e)
+    showToast('Error', 'Failed to place item')
+  }
+}
+
 function sendChat() {
   const input = document.getElementById('chatInput')
   const msg = input.value.trim()
@@ -4195,8 +4479,9 @@ async function fetchWorldState() {
         return b
       })
       state.districts = data.districts || []
+      state.infrastructure = data.infrastructure || []
       assignNPCBuildings()
-      console.log('[WORLD] Loaded', state.buildings.length, 'buildings,', state.districts.length, 'districts')
+      console.log('[WORLD] Loaded', state.buildings.length, 'buildings,', state.districts.length, 'districts,', state.infrastructure.length, 'infra')
 
       // Check for newly formed districts (toast notification)
       const existingIds = new Set(state.events.filter(e => e.type === 'district_formed').map(e => e.districtKey || ''))
