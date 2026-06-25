@@ -75,8 +75,9 @@ ALTER TABLE world_districts
 ADD COLUMN IF NOT EXISTS level INTEGER NOT NULL DEFAULT 1;
 
 -- 12. GANG SYSTEM TABLES (create BEFORE policies)
+-- Use UUID for gang_id to match existing world_gangs.id type
 CREATE TABLE IF NOT EXISTS world_gangs (
-  id          BIGSERIAL PRIMARY KEY,
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name        TEXT NOT NULL,
   tag         TEXT NOT NULL,
   color       TEXT NOT NULL,
@@ -87,7 +88,7 @@ CREATE TABLE IF NOT EXISTS world_gangs (
 
 CREATE TABLE IF NOT EXISTS world_gang_members (
   id        BIGSERIAL PRIMARY KEY,
-  gang_id   BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
+  gang_id   UUID REFERENCES world_gangs(id) ON DELETE CASCADE,
   user_id   TEXT,
   npc_id    TEXT,
   joined_at TIMESTAMPTZ DEFAULT now()
@@ -96,7 +97,7 @@ CREATE TABLE IF NOT EXISTS world_gang_members (
 CREATE TABLE IF NOT EXISTS world_district_influence (
   id          BIGSERIAL PRIMARY KEY,
   district_id INTEGER,
-  gang_id     BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
+  gang_id     UUID REFERENCES world_gangs(id) ON DELETE CASCADE,
   percent     INTEGER DEFAULT 0,
   updated_at  TIMESTAMPTZ DEFAULT now()
 );
@@ -104,13 +105,13 @@ CREATE TABLE IF NOT EXISTS world_district_influence (
 CREATE TABLE IF NOT EXISTS world_npc_affiliations (
   id        BIGSERIAL PRIMARY KEY,
   npc_id    TEXT,
-  gang_id   BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
+  gang_id   UUID REFERENCES world_gangs(id) ON DELETE CASCADE,
   joined_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS world_gang_chat (
   id        BIGSERIAL PRIMARY KEY,
-  gang_id   BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
+  gang_id   UUID REFERENCES world_gangs(id) ON DELETE CASCADE,
   user_id   TEXT,
   message   TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
@@ -118,7 +119,7 @@ CREATE TABLE IF NOT EXISTS world_gang_chat (
 
 CREATE TABLE IF NOT EXISTS world_gang_events (
   id        BIGSERIAL PRIMARY KEY,
-  gang_id   BIGINT REFERENCES world_gangs(id) ON DELETE CASCADE,
+  gang_id   UUID REFERENCES world_gangs(id) ON DELETE CASCADE,
   event_type TEXT,
   data      JSONB,
   created_at TIMESTAMPTZ DEFAULT now()
