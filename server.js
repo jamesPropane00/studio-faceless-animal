@@ -638,7 +638,10 @@ async function handleMediaDownload(req, res) {
     }
 
     if (urlPath === '/api/world/player/state' && req.method === 'GET') {
-      handleWorldPlayerState(req, res)
+      handleWorldPlayerState(req, res).catch(err => {
+        console.error('[WORLD:API] Player state error:', err.message)
+        if (!res.headersSent) sendJSON(res, 500, { error: 'Internal server error.' })
+      })
       return
     }
 
@@ -4687,6 +4690,51 @@ function getPlayerState(userId) {
   return worldPlayers[userId]
 }
 
+async function loadPlayerFromDB(userId) {
+  if (worldPlayers[userId]) return worldPlayers[userId]
+  if (!supabase || !userId) return getPlayerState(userId)
+  try {
+    const { data, error } = await supabase
+      .from('world_player_states')
+      .select('coins, reputation')
+      .eq('user_id', userId)
+      .single()
+    if (data && !error) {
+      worldPlayers[userId] = {
+        coins: data.coins ?? 100,
+        reputation: data.reputation ?? 0,
+        currentJob: null,
+        jobStartTime: null
+      }
+      console.log(`[WORLD] Loaded player ${userId} from DB: ${worldPlayers[userId].coins} coins, ${worldPlayers[userId].reputation} rep`)
+    } else {
+      const fresh = getPlayerState(userId)
+      console.log(`[WORLD] Player ${userId} not found in DB, using defaults: ${fresh.coins} coins`)
+      return fresh
+    }
+  } catch (e) {
+    console.warn('[WORLD] Failed to load player from DB:', e.message)
+  }
+  return worldPlayers[userId]
+}
+
+async function savePlayerToDB(userId) {
+  if (!supabase || !userId || !worldPlayers[userId]) return
+  const p = worldPlayers[userId]
+  try {
+    await supabase
+      .from('world_player_states')
+      .upsert({
+        user_id: userId,
+        coins: p.coins,
+        reputation: p.reputation,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' })
+  } catch (e) {
+    console.warn('[WORLD] Failed to save player to DB:', e.message)
+  }
+}
+
 function getRepLevel(reputation) {
   for (let i = REP_LEVELS.length - 1; i >= 0; i--) {
     if (reputation >= REP_LEVELS[i].min) {
@@ -5277,13 +5325,13 @@ function handleWorldGetState(req, res) {
   sendJSON(res, 200, { ok: true, state })
 }
 
-function handleWorldPlayerState(req, res) {
+async function handleWorldPlayerState(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`)
   const userId = url.searchParams.get('userId')
   if (!userId) {
     return sendJSON(res, 400, { ok: false, error: 'Missing userId.' })
   }
-  const player = getPlayerState(userId)
+  const player = await loadPlayerFromDB(userId)
   const repLevel = getRepLevel(player.reputation)
   sendJSON(res, 200, {
     ok: true,
@@ -5326,12 +5374,13 @@ async function handleWorldCollectIncome(req, res) {
     return sendJSON(res, 200, { ok: true, coinsCollected: 0, message: 'No income to collect.' })
   }
 
-  const player = getPlayerState(userId)
+  const player = await loadPlayerFromDB(userId)
   player.coins += income
   player.reputation += 1
   building.last_collected = Date.now()
 
   console.log(`[WORLD] Player ${userId} collected ${income} coins from building ${buildingId}`)
+  savePlayerToDB(userId)
 
   sendJSON(res, 200, {
     ok: true,
@@ -5366,7 +5415,7 @@ async function handleWorldStartJob(req, res) {
     return sendJSON(res, 400, { ok: false, error: 'This building type does not offer jobs.' })
   }
 
-  const player = getPlayerState(userId)
+  const player = await loadPlayerFromDB(userId)
   if (player.currentJob) {
     return sendJSON(res, 400, { ok: false, error: 'You already have an active job.' })
   }
@@ -5402,7 +5451,7 @@ async function handleWorldCompleteJob(req, res) {
     return sendJSON(res, 400, { ok: false, error: 'Missing userId.' })
   }
 
-  const player = getPlayerState(userId)
+  const player = await loadPlayerFromDB(userId)
   if (!player.currentJob) {
     return sendJSON(res, 400, { ok: false, error: 'You do not have an active job.' })
   }
@@ -5433,6 +5482,7 @@ async function handleWorldCompleteJob(req, res) {
   player.jobStartTime = null
 
   console.log(`[WORLD] Player ${userId} completed job at building ${completedJob.buildingId}, earned ${payRate} coins`)
+  savePlayerToDB(userId)
 
   sendJSON(res, 200, {
     ok: true,
@@ -5482,9 +5532,10 @@ async function handleWorldPlaceBuilding(req, res) {
   }
 
   if (userId) {
-    const player = getPlayerState(userId)
+    const player = await loadPlayerFromDB(userId)
     player.reputation += 5
     console.log(`[WORLD] Player ${userId} gained 5 rep for building, now at ${player.reputation}`)
+    savePlayerToDB(userId)
   }
 
   sendJSON(res, 200, { ok: true, building })
@@ -5514,25 +5565,15 @@ async function handleWorldGodPower(req, res) {
   const evtX = Math.max(2, Math.min(WORLD_SIZE - 3, x))
   const evtY = Math.max(2, Math.min(WORLD_SIZE - 3, y))
 
-  // ── Coin validation (check both in-memory and Supabase) ──
+  // ── Coin validation ──
   if (userId) {
-    const player = getPlayerState(userId)
+    const player = await loadPlayerFromDB(userId)
     if (player.coins < cost) {
       return sendJSON(res, 400, { ok: false, error: 'Not enough coins.', currentCoins: player.coins, cost })
     }
     player.coins -= cost
     console.log(`[WORLD] Player ${userId} spent ${cost} coins on ${template.name}, now at ${player.coins} coins`)
-
-    // Sync to Supabase world_player_states
-    if (supabase) {
-      supabase.from('world_player_states').select('coins').eq('user_id', userId).single()
-        .then(({ data }) => {
-          const currentCoins = data?.coins || 0
-          return supabase.from('world_player_states').update({ coins: currentCoins - cost, updated_at: new Date().toISOString() }).eq('user_id', userId)
-        })
-        .then(() => {})
-        .catch(e => console.warn('[WORLD] Coin sync to Supabase failed:', e.message))
-    }
+    savePlayerToDB(userId)
   }
 
   const evt = {
@@ -5590,7 +5631,7 @@ async function handleWorldGodPower(req, res) {
     }).then(() => {}).catch(e => console.warn('[WORLD] Event save failed:', e.message))
   }
 
-  const playerState = userId ? getPlayerState(userId) : null
+  const playerState = userId ? worldPlayers[userId] : null
   sendJSON(res, 200, { ok: true, event: evt, newBalance: playerState ? playerState.coins : null })
 }
 
