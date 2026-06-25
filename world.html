@@ -2956,14 +2956,12 @@ function drawRoads() {
     const cy = s.y
     const half = tilePx * 0.5
 
-    // Determine road width based on type
-    const isBlockRoad = item.infra_type.endsWith('_road')
-    const roadWidth = isBlockRoad ? tilePx * 0.8 : tilePx * 0.6
+    // Road width: 80% of tile (10% sidewalk on each side)
+    const roadWidth = tilePx * 0.8
 
     // --- 1. Asphalt base ---
-    // Slightly darker for block roads, standard for MST roads
-    const baseColor = isBlockRoad ? '#3a3d45' : '#4a4d55'
-    const borderColor = isBlockRoad ? '#5a5d65' : '#5a5d65'
+    const baseColor = '#34363e'
+    const borderColor = '#5a5d65'
 
     // Draw asphalt as a filled rectangle covering the road extent
     ctx.fillStyle = baseColor

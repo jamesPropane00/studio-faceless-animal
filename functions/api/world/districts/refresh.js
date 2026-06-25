@@ -64,9 +64,13 @@ const BUILDING_POPULATION = {
   camp: 1
 };
 
-// Phase 5B: Auto-road generation using Prim's MST (Manhattan distance)
+// Phase 5B: Auto-road generation — SimCity-style grid network
+// Roads form a clean grid/block pattern aligned to a global tile grid,
+// skipping building footprints so roads wrap around development blocks.
 function generateAutoRoads(districts, buildings) {
   const roads = new Set();
+  const ROAD_SPACING = 8; // Tiles between road centers (creates ~6×6 tile blocks)
+  const PAD = 4; // Padding tiles around building cluster bounding box
   const occupiedTiles = new Set(buildings.map(b => `${b.tile_x},${b.tile_y}`));
 
   for (const district of districts) {
@@ -75,52 +79,41 @@ function generateAutoRoads(districts, buildings) {
       const dy = b.tile_y - district.center_y;
       return Math.sqrt(dx * dx + dy * dy) <= district.radius;
     });
-
     if (clusterBuildings.length < 2) continue;
 
-    // Prim's MST
-    const connected = [clusterBuildings.shift()];
-    const unconnected = clusterBuildings;
+    // Compute bounding box of the building cluster
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const b of clusterBuildings) {
+      if (b.tile_x < minX) minX = b.tile_x;
+      if (b.tile_x > maxX) maxX = b.tile_x;
+      if (b.tile_y < minY) minY = b.tile_y;
+      if (b.tile_y > maxY) maxY = b.tile_y;
+    }
 
-    while (unconnected.length > 0) {
-      let bestEdge = null;
-      let bestDist = Infinity;
+    // Pad the bounding box so roads wrap around the development edge
+    minX -= PAD; maxX += PAD;
+    minY -= PAD; maxY += PAD;
 
-      for (const a of connected) {
-        for (const b of unconnected) {
-          const dist = Math.abs(a.tile_x - b.tile_x) + Math.abs(a.tile_y - b.tile_y);
-          if (dist < bestDist) {
-            bestDist = dist;
-            bestEdge = { from: a, to: b };
-          }
-        }
+    // Snap to global grid (multiples of ROAD_SPACING) for alignment across districts
+    const gridMinX = Math.floor(minX / ROAD_SPACING) * ROAD_SPACING;
+    const gridMaxX = Math.ceil(maxX / ROAD_SPACING) * ROAD_SPACING;
+    const gridMinY = Math.floor(minY / ROAD_SPACING) * ROAD_SPACING;
+    const gridMaxY = Math.ceil(maxY / ROAD_SPACING) * ROAD_SPACING;
+
+    // Horizontal road strips along each grid row
+    for (let gy = gridMinY; gy <= gridMaxY; gy += ROAD_SPACING) {
+      for (let x = gridMinX; x <= gridMaxX; x++) {
+        const key = `${x},${gy}`;
+        if (!occupiedTiles.has(key)) roads.add(key);
       }
+    }
 
-      if (!bestEdge) break;
-
-      const { from, to } = bestEdge;
-      const fx = from.tile_x, fy = from.tile_y;
-      const tx = to.tile_x, ty = to.tile_y;
-
-      // L-shaped path: horizontal then vertical
-      if (fx !== tx) {
-        const stepX = tx > fx ? 1 : -1;
-        for (let x = fx + stepX; x !== tx; x += stepX) {
-          roads.add(`${x},${fy}`);
-        }
+    // Vertical road strips along each grid column
+    for (let gx = gridMinX; gx <= gridMaxX; gx += ROAD_SPACING) {
+      for (let y = gridMinY; y <= gridMaxY; y++) {
+        const key = `${gx},${y}`;
+        if (!occupiedTiles.has(key)) roads.add(key);
       }
-      {
-        const stepY = ty >= fy ? 1 : -1;
-        for (let y = fy; y !== ty; y += stepY) {
-          const key = `${tx},${y}`;
-          if (!occupiedTiles.has(key)) roads.add(key);
-        }
-      }
-
-      roads.add(`${tx},${ty}`);
-
-      connected.push(bestEdge.to);
-      unconnected.splice(unconnected.indexOf(bestEdge.to), 1);
     }
   }
 
