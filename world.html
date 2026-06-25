@@ -1346,6 +1346,7 @@ const state = {
   npcs: [],
   buildings: [],
   districts: [],
+  themesDirty: true,
   districtInfluences: [],
   npcGangMap: new Map(),
   userGang: null,
@@ -1780,6 +1781,75 @@ function updateNPCRoutine(npc, dt) {
   } else {
     npc.energy = Math.max(0.1, npc.energy - dt * 0.01)
   }
+}
+
+// Phase 6F: Neighborhood Identity — themed districts
+const NEIGHBORHOOD_THEMES = {
+  purple_pulse: {
+    name: 'Purple Pulse', emoji: '🎵', color: '#a78bfa',
+    roadTint: 'rgba(167, 139, 250, 0.2)',
+    buildingTint: 'rgba(167, 139, 250, 0.06)',
+    glowColor: 'rgba(167, 139, 250, 0.04)',
+    desc: 'Nightlife · Music · Neon'
+  },
+  graffiti_row: {
+    name: 'Graffiti Row', emoji: '🎨', color: '#f43f5e',
+    roadTint: 'rgba(244, 63, 94, 0.15)',
+    buildingTint: 'rgba(251, 191, 36, 0.06)',
+    glowColor: 'rgba(244, 63, 94, 0.04)',
+    desc: 'Murals · Art · Street Culture'
+  },
+  signal_square: {
+    name: 'Signal Square', emoji: '📡', color: '#3b82f6',
+    roadTint: 'rgba(59, 130, 246, 0.15)',
+    buildingTint: 'rgba(96, 165, 250, 0.06)',
+    glowColor: 'rgba(59, 130, 246, 0.04)',
+    desc: 'Media · News · Broadcast'
+  },
+  old_harbor: {
+    name: 'Old Harbor', emoji: '⚓', color: '#d97706',
+    roadTint: 'rgba(217, 119, 6, 0.15)',
+    buildingTint: 'rgba(180, 130, 80, 0.06)',
+    glowColor: 'rgba(217, 119, 6, 0.04)',
+    desc: 'Markets · Docks · Trade'
+  },
+  iron_district: {
+    name: 'Iron District', emoji: '🏭', color: '#6b7280',
+    roadTint: 'rgba(107, 114, 128, 0.2)',
+    buildingTint: 'rgba(156, 163, 175, 0.06)',
+    glowColor: 'rgba(107, 114, 128, 0.04)',
+    desc: 'Industry · Warehouses · Freight'
+  }
+}
+
+function computeDistrictThemes() {
+  if (!state.districts || !state.buildings) return
+  for (const district of state.districts) {
+    const buildings = state.buildings.filter(b => {
+      const dx = (b.tile_x || b.x) - district.center_x
+      const dy = (b.tile_y || b.y) - district.center_y
+      return Math.sqrt(dx * dx + dy * dy) <= district.radius
+    })
+    const counts = { club: 0, warehouse: 0, shop: 0, house: 0, camp: 0 }
+    for (const b of buildings) {
+      if (counts[b.building_type] !== undefined) counts[b.building_type]++
+    }
+    let themeId = 'signal_square'
+    if (counts.club > counts.shop && counts.club > counts.warehouse) themeId = 'purple_pulse'
+    else if (counts.warehouse > counts.shop) themeId = 'iron_district'
+    else if (counts.shop > counts.house) themeId = 'old_harbor'
+    else if (counts.shop > 0 && counts.club > 0) themeId = 'graffiti_row'
+    district._theme = themeId
+  }
+  state.themesDirty = false
+}
+
+function getDistrictAtTile(tx, ty) {
+  for (const d of state.districts) {
+    const dx = tx - d.center_x, dy = ty - d.center_y
+    if (dx * dx + dy * dy <= d.radius * d.radius) return d
+  }
+  return null
 }
 
 // Phase 6E: Walkable tile graph for NPC pathfinding
@@ -2465,7 +2535,37 @@ function drawBuildingAt(building, s) {
       ctx.setLineDash([])
     }
   }
-  
+
+  // Phase 6F: Neighborhood theme tint on building
+  const buildDistrict = getDistrictAtTile(building.tile_x || building.x, building.tile_y || building.y)
+  if (buildDistrict && buildDistrict._theme) {
+    const theme = NEIGHBORHOOD_THEMES[buildDistrict._theme]
+    if (theme) {
+      ctx.fillStyle = theme.buildingTint
+      ctx.beginPath()
+      ctx.moveTo(s.x - hw, s.y)
+      ctx.lineTo(s.x, s.y + hh)
+      ctx.lineTo(s.x, s.y + hh - elev)
+      ctx.lineTo(s.x - hw, s.y - elev)
+      ctx.closePath()
+      ctx.fill()
+      ctx.beginPath()
+      ctx.moveTo(s.x + hw, s.y)
+      ctx.lineTo(s.x, s.y + hh)
+      ctx.lineTo(s.x, s.y + hh - elev)
+      ctx.lineTo(s.x + hw, s.y - elev)
+      ctx.closePath()
+      ctx.fill()
+      ctx.beginPath()
+      ctx.moveTo(s.x, s.y - hh - elev)
+      ctx.lineTo(s.x + hw, s.y - elev)
+      ctx.lineTo(s.x, s.y + hh - elev)
+      ctx.lineTo(s.x - hw, s.y - elev)
+      ctx.closePath()
+      ctx.fill()
+    }
+  }
+
   if (condition < 50 && state.camera.zoom > 0.5) {
     ctx.font = `${8 * state.camera.zoom}px Inter`
     ctx.textAlign = 'center'
@@ -2519,22 +2619,33 @@ function drawDistrict(district) {
 
   const typeColor = DISTRICT_TYPE_COLORS[district.district_type] || '#a78bfa'
 
+  // Phase 6F: Get neighborhood theme
+  const theme = NEIGHBORHOOD_THEMES[district._theme] || null
+
+  // Theme ambient glow (behind district)
+  if (theme && state.camera.zoom > 0.3) {
+    const glowR = radius * 1.8
+    const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, glowR)
+    grad.addColorStop(0, theme.glowColor)
+    grad.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = grad
+    ctx.beginPath()
+    ctx.arc(s.x, s.y, glowR, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
   // Phase A: Wealth-based visual feedback
-  // High wealth (thriving) = brighter fill, low wealth (struggling) = dimmer
   const wealth = district.wealth || 0
   const wealthIntensity = Math.min(1.0, wealth / 600)
   const fillAlpha = 0.10 + (wealthIntensity * 0.20)
   const borderAlpha = 0.30 + (wealthIntensity * 0.30)
 
   // Phase C: Crime visual tint
-  // High crime adds red to the fill/border
   const crimeRate = district.crime_rate || 0
-  const crimeIntensity = Math.min(1, crimeRate / 100)
   let crimeFillAlpha = fillAlpha
   let crimeBorderAlpha = borderAlpha
   let crimeColor = typeColor
   if (crimeRate > 50) {
-    // Blend toward red based on crime severity
     const blend = Math.min(1, (crimeRate - 50) / 50)
     const fillCrimeAdd = blend * 0.15
     const borderCrimeAdd = blend * 0.25
@@ -2562,8 +2673,8 @@ function drawDistrict(district) {
 
   if (state.camera.zoom > 0.4) {
     const icon = DISTRICT_TYPE_ICONS[district.district_type] || ''
-    let labelText = (icon ? icon + ' ' : '') + (district.name || 'District')
-    // Add unsafe indicator if crime > 70
+    const themeEmoji = theme ? theme.emoji + ' ' : ''
+    let labelText = themeEmoji + (icon ? icon + ' ' : '') + (district.name || 'District')
     if (crimeRate > 70) {
       labelText = '⚠ ' + labelText
     }
@@ -2596,6 +2707,14 @@ function drawDistrict(district) {
     ctx.fillStyle = typeColor
     ctx.fillText(labelText, s.x, labelY)
     ctx.restore()
+
+    // Theme subtitle below label
+    if (theme && state.camera.zoom > 0.6) {
+      ctx.font = `${7 * state.camera.zoom}px Inter, sans-serif`
+      ctx.textAlign = 'center'
+      ctx.fillStyle = 'rgba(255,255,255,0.4)'
+      ctx.fillText(theme.desc, s.x, labelY + fs + 4 * state.camera.zoom)
+    }
   }
 }
 
@@ -2773,6 +2892,22 @@ function drawRoads() {
       const ny = cy + ((seed * 31 + i * 47) % 8 - 4) * z
       ctx.fillStyle = `rgba(0,0,0,${0.03 + (seed % 3) * 0.02})`
       ctx.fillRect(nx, ny, 2 * z, 1.5 * z)
+    }
+
+    // Phase 6F: Neighborhood theme tint on road
+    const roadDistrict = getDistrictAtTile(x, y)
+    if (roadDistrict && roadDistrict._theme) {
+      const theme = NEIGHBORHOOD_THEMES[roadDistrict._theme]
+      if (theme) {
+        ctx.fillStyle = theme.roadTint
+        if (vertical && !horizontal) {
+          ctx.fillRect(cx - roadWidth / 2, cy - half, roadWidth, tilePx)
+        } else if (horizontal && !vertical) {
+          ctx.fillRect(cx - half, cy - roadWidth / 2, tilePx, roadWidth)
+        } else {
+          ctx.fillRect(cx - half, cy - half, tilePx, tilePx)
+        }
+      }
     }
 
     // Curbs — bright edge lines
@@ -3299,6 +3434,11 @@ function render() {
   }
 
   drawOrder.sort((a, b) => a.sort - b.sort)
+
+  // Phase 6F: Compute neighborhood themes if dirty
+  if (state.themesDirty) {
+    computeDistrictThemes()
+  }
 
   // Update district screen cache and draw influence overlays
   if (state.influenceViewEnabled) {
@@ -5055,9 +5195,11 @@ async function setupMultiplayer() {
         }
         return b
       })
+      state.themesDirty = true
     }
     if (payload.districts) {
       state.districts = payload.districts
+      state.themesDirty = true
       if (payload.districts.length > 0) completeGoal('formFirstDistrict')
     }
     if (payload.events) {
@@ -5187,6 +5329,7 @@ async function fetchWorldState() {
         return b
       })
       state.districts = data.districts || []
+      state.themesDirty = true
       state.infrastructure = data.infrastructure || []
       state.walkableDirty = true
       state.blocks = data.blocks || []
@@ -5601,6 +5744,11 @@ function showDistrictTooltip(mouseX, mouseY, district) {
 
   let html = `<div class="district-tooltip-name">${district.name || 'Unknown District'}</div>`
   html += `<div class="district-tooltip-type" style="color:${typeColor}">${icon} ${typeLabel} District</div>`
+  // Phase 6F: Neighborhood theme
+  const theme = NEIGHBORHOOD_THEMES[district._theme]
+  if (theme) {
+    html += `<div class="district-tooltip-sub" style="color:${theme.color};margin-top:-2px;">${theme.emoji} ${theme.name} — ${theme.desc}</div>`
+  }
   html += `<div class="district-tooltip-stat"><span>${buildingCount}</span> building${buildingCount === 1 ? '' : 's'}</div>`
 
   // Phase C: Crime badge
