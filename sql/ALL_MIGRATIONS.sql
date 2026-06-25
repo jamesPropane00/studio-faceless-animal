@@ -189,7 +189,19 @@ ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
 ALTER TABLE world_building_states
 ADD COLUMN IF NOT EXISTS pending_income NUMERIC(10,2) NOT NULL DEFAULT 0;
 
--- 17. VERIFY
+-- 17. PHASE 5B: Infrastructure
+CREATE TABLE IF NOT EXISTS world_infrastructure (
+  id BIGSERIAL PRIMARY KEY,
+  infra_type TEXT NOT NULL,
+  tile_x INTEGER NOT NULL,
+  tile_y INTEGER NOT NULL,
+  owner_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_infra_tile ON world_infrastructure(tile_x, tile_y);
+
+-- 18. VERIFY
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'

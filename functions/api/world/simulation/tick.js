@@ -56,19 +56,47 @@ async function supabaseFetch(env, path, options = {}) {
 
 // ── DISTRICT RESOURCE SCORES ──────────────────────────────────
 
-function getDistrictResources(district, buildingsInDistrict) {
+function getDistrictResources(district, buildingsInDistrict, infrastructureInDistrict) {
   const counts = { house: 0, shop: 0, club: 0, warehouse: 0, hide: 0, camp: 0 }
   for (const b of buildingsInDistrict) {
     if (counts[b.building_type] !== undefined) counts[b.building_type]++
   }
 
   const crimeRate = district.crime_rate || 0
-  const safety = Math.max(0, 100 - crimeRate) / 100
+  let safety = Math.max(0, 100 - crimeRate) / 100
+
+  // Phase 5B Pass 2: Infrastructure effects on resource scores
+  if (infrastructureInDistrict && infrastructureInDistrict.length > 0) {
+    const infraCounts = { tree: 0, light: 0, bench: 0, garden: 0, graffiti: 0, fence: 0, fountain: 0, road: 0 }
+    for (const item of infrastructureInDistrict) {
+      if (infraCounts[item.infra_type] !== undefined) infraCounts[item.infra_type]++
+    }
+    // Safety bonuses/penalties
+    safety += infraCounts.tree * 0.02
+    safety += infraCounts.light * 0.03
+    safety += infraCounts.garden * 0.02
+    safety -= infraCounts.graffiti * 0.02
+    safety += infraCounts.fence * 0.03
+    safety += infraCounts.fountain * 0.03
+    safety += infraCounts.road * 0.005
+    safety = Math.max(0.1, Math.min(1.0, safety))
+  }
 
   // Customer potential: how many customers per shop
   // Each house = 3 potential customers, each club = 2 tourists
+  // Infrastructure bonuses: benches, gardens, fountains attract more customers
+  let infraCustomerBonus = 0
+  if (infrastructureInDistrict && infrastructureInDistrict.length > 0) {
+    const infraCounts = { bench: 0, garden: 0, fountain: 0 }
+    for (const item of infrastructureInDistrict) {
+      if (item.infra_type === 'bench') infraCounts.bench++
+      else if (item.infra_type === 'garden') infraCounts.garden++
+      else if (item.infra_type === 'fountain') infraCounts.fountain++
+    }
+    infraCustomerBonus = (infraCounts.bench * 0.02 + infraCounts.garden * 0.02 + infraCounts.fountain * 0.05) / Math.max(1, counts.shop)
+  }
   const customerPotential = counts.shop > 0
-    ? (counts.house * 3 + counts.club * 2) / counts.shop
+    ? (counts.house * 3 + counts.club * 2) / counts.shop + infraCustomerBonus
     : 2
 
   // Supply potential: how many supply units per business
@@ -216,9 +244,36 @@ export async function onRequestPost(context) {
     )
     const districts = (districtsResult.ok && Array.isArray(districtsResult.data)) ? districtsResult.data : []
 
-    // 3. Group buildings by district
-    const districtMap = new Map() // `${center_x},${center_y},${type}` → { district, buildings }
+    // 2b. Fetch all infrastructure (Phase 5B Pass 2)
+    const infraResult = await supabaseFetch(
+      context.env,
+      '/rest/v1/world_infrastructure?select=infra_type,tile_x,tile_y'
+    )
+    const infrastructure = (infraResult.ok && Array.isArray(infraResult.data)) ? infraResult.data : []
+
+    // 3. Group buildings AND infrastructure by district
+    const districtMap = new Map() // `${center_x},${center_y},${type}` → { district, buildings, infrastructure }
     const isolated = []
+
+    // Group infrastructure by district first
+    const infraByDistrict = new Map()
+    for (const item of infrastructure) {
+      let found = false
+      for (const d of districts) {
+        const idx = item.tile_x - d.center_x
+        const idy = item.tile_y - d.center_y
+        const dist = Math.sqrt(idx * idx + idy * idy)
+        if (dist <= d.radius) {
+          const key = `${d.center_x},${d.center_y},${d.district_type}`
+          if (!infraByDistrict.has(key)) {
+            infraByDistrict.set(key, [])
+          }
+          infraByDistrict.get(key).push(item)
+          found = true
+          break
+        }
+      }
+    }
 
     for (const b of buildings) {
       let found = false
@@ -229,7 +284,7 @@ export async function onRequestPost(context) {
         if (dist <= d.radius) {
           const key = `${d.center_x},${d.center_y},${d.district_type}`
           if (!districtMap.has(key)) {
-            districtMap.set(key, { district: d, buildings: [] })
+            districtMap.set(key, { district: d, buildings: [], infrastructure: infraByDistrict.get(key) || [] })
           }
           districtMap.get(key).buildings.push(b)
           found = true
@@ -245,7 +300,7 @@ export async function onRequestPost(context) {
     const updates = []
 
     for (const [, group] of districtMap) {
-      const resources = getDistrictResources(group.district, group.buildings)
+      const resources = getDistrictResources(group.district, group.buildings, group.infrastructure)
 
       for (const b of group.buildings) {
         const fulfillment = getFulfillment(b, resources)

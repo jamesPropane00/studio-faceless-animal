@@ -20,7 +20,10 @@ const REP_LEVELS = [
   { name: 'Worker', min: 50, max: 150 },
   { name: 'Hustler', min: 150, max: 300 },
   { name: 'Operator', min: 300, max: 600 },
-  { name: 'Boss', min: 600, max: Infinity }
+  { name: 'Boss', min: 600, max: 1000 },
+  { name: 'Tycoon', min: 1000, max: 2000 },
+  { name: 'Magnate', min: 2000, max: 5000 },
+  { name: 'Legend', min: 5000, max: Infinity }
 ];
 
 function getRepLevel(reputation) {
