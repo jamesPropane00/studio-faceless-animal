@@ -300,6 +300,8 @@ async function refreshDistricts(context) {
 
     // Delete old districts and insert new ones (simpler than diffing)
     // Use a filter that's always true to delete all rows
+    let roadItems = [];
+    let roadErrors = [];
     if (newDistricts.length > 0) {
       // Delete all existing districts using neq filter (always true)
       const deleteResult = await supabaseFetch(
@@ -395,8 +397,6 @@ async function refreshDistricts(context) {
       }
 
       // Phase 5B: Auto-road generation via MST
-      let roadItems = [];
-      let roadErrors = [];
       try {
         // Delete old auto-roads (with return=minimal to avoid large response body)
         const delResult = await supabaseFetch(
