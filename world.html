@@ -665,6 +665,133 @@
       text-align: center;
       margin-top: 0.15rem;
     }
+
+    /* ── WORLD MAP ── */
+    .world-map-panel {
+      max-width: 400px;
+      right: 60px;
+    }
+    .world-map-content {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 0.5rem 0;
+    }
+    .world-map-region {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 0.6rem;
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      transition: all 0.15s;
+    }
+    .world-map-region.current {
+      border-color: var(--bright);
+      background: rgba(167,139,250,0.1);
+    }
+    .world-map-region .region-icon {
+      font-size: 1.4rem;
+      width: 32px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .world-map-region .region-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .world-map-region .region-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .world-map-region .region-desc {
+      font-size: 0.62rem;
+      color: var(--dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .world-map-region .region-status {
+      font-size: 0.55rem;
+      color: var(--bright);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+    .region-travel-btn {
+      padding: 0.3rem 0.7rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: rgba(167,139,250,0.15);
+      color: var(--bright);
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .region-travel-btn:hover {
+      background: rgba(167,139,250,0.3);
+      border-color: var(--bright);
+    }
+    .region-travel-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ── TRAVEL OVERLAY ── */
+    .travel-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .travel-modal {
+      text-align: center;
+      max-width: 320px;
+      width: 80vw;
+    }
+    .travel-title {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 0.4rem;
+    }
+    .travel-region-label {
+      font-size: 0.85rem;
+      color: var(--bright);
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+    .travel-progress-track {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 0.8rem;
+    }
+    .travel-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--purple), var(--bright));
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+    .travel-status {
+      font-size: 0.7rem;
+      color: var(--dim);
+      font-weight: 600;
+    }
+
     .build-desc, .god-desc {
       font-size: 0.7rem;
       color: var(--dim);
@@ -1131,6 +1258,7 @@
   <button class="tool-btn" id="btnBlock" data-tip="Urban DNA">&#x1F3D8;&#xFE0F;</button>
   <button class="tool-btn" id="btnGang" data-tip="Gangs">&#x1F46A;</button>
   <button class="tool-btn" id="btnInfluenceView" data-tip="Influence View"><span id="influenceViewIcon">&#x1F5FA;</span></button>
+  <button class="tool-btn" id="btnWorldMap" data-tip="World Map">&#x1F5FA;&#xFE0F;</button>
 </div>
 
 <div class="mode-indicator" id="modeIndicator">Build Mode: Click to place</div>
@@ -1337,6 +1465,82 @@
   </div>
 </div>
 
+<div class="world-map-panel game-panel" id="worldMapPanel">
+  <div class="panel-header">
+    <div class="panel-title">World Map</div>
+    <div class="panel-close" id="worldMapClose">&times;</div>
+  </div>
+  <div class="world-map-content" id="worldMapContent">
+    <div class="world-map-region current" data-region="city">
+      <div class="region-icon">&#x1F3D9;&#xFE0F;</div>
+      <div class="region-info">
+        <div class="region-name">Faceless City</div>
+        <div class="region-desc">The beating heart of the world.</div>
+      </div>
+      <div class="region-status">YOU ARE HERE</div>
+    </div>
+    <div class="world-map-region" data-region="farmlands">
+      <div class="region-icon">&#x1F33E;</div>
+      <div class="region-info">
+        <div class="region-name">Farmlands</div>
+        <div class="region-desc">Golden fields and peaceful pastures.</div>
+      </div>
+      <button class="region-travel-btn" data-target="farmlands">Travel</button>
+    </div>
+    <div class="world-map-region" data-region="whisper-woods">
+      <div class="region-icon">&#x1F333;</div>
+      <div class="region-info">
+        <div class="region-name">Whisper Woods</div>
+        <div class="region-desc">Ancient trees and glowing creatures.</div>
+      </div>
+      <button class="region-travel-btn" data-target="whisper-woods">Travel</button>
+    </div>
+    <div class="world-map-region" data-region="mountains">
+      <div class="region-icon">&#x26F0;&#xFE0F;</div>
+      <div class="region-info">
+        <div class="region-name">Mountains</div>
+        <div class="region-desc">Snow-capped peaks and hidden caves.</div>
+      </div>
+      <button class="region-travel-btn" data-target="mountains">Travel</button>
+    </div>
+    <div class="world-map-region" data-region="iron-district">
+      <div class="region-icon">&#x1F3ED;</div>
+      <div class="region-info">
+        <div class="region-name">Iron District</div>
+        <div class="region-desc">Factories and steel.</div>
+      </div>
+      <button class="region-travel-btn" data-target="iron-district">Travel</button>
+    </div>
+    <div class="world-map-region" data-region="coast">
+      <div class="region-icon">&#x1F3DD;&#xFE0F;</div>
+      <div class="region-info">
+        <div class="region-name">Coast</div>
+        <div class="region-desc">Docks, beaches, and ocean trade.</div>
+      </div>
+      <button class="region-travel-btn" data-target="coast">Travel</button>
+    </div>
+    <div class="world-map-region" data-region="purple-pulse">
+      <div class="region-icon">&#x1F3A8;</div>
+      <div class="region-info">
+        <div class="region-name">Purple Pulse</div>
+        <div class="region-desc">Neon-drenched nightlife.</div>
+      </div>
+      <button class="region-travel-btn" data-target="purple-pulse">Travel</button>
+    </div>
+  </div>
+</div>
+
+<div class="travel-overlay" id="travelOverlay" style="display:none">
+  <div class="travel-modal">
+    <div class="travel-title">Traveling...</div>
+    <div class="travel-region-label" id="travelTargetLabel">to Farmlands</div>
+    <div class="travel-progress-track">
+      <div class="travel-progress-fill" id="travelProgressFill"></div>
+    </div>
+    <div class="travel-status" id="travelStatus">Departing...</div>
+  </div>
+</div>
+
 <div class="toast" id="toast">
   <div class="toast-content">
     <div class="toast-title" id="toastTitle"></div>
@@ -1430,11 +1634,77 @@ const TERRAIN_COLORS = {
   [TERRAIN.BUILDING]:   ['#2c2c3a','#24242f'],
 }
 
+// ── REGION DEFINITIONS ─────────────────────────────────────
+const REGIONS = {
+  city: {
+    id: 'city', name: 'Faceless City', type: 'city',
+    desc: 'The beating heart of the world. Neon lights, crowded streets, and endless opportunity.',
+    connections: ['farmlands', 'whisper-woods', 'iron-district'],
+    mapPos: { x: 2, y: 2 },
+    color: '#a78bfa',
+    label: '\u{1F3D9}\uFE0F',
+  },
+  farmlands: {
+    id: 'farmlands', name: 'Farmlands', type: 'farmlands',
+    desc: 'Golden fields and peaceful pastures stretching to the horizon.',
+    connections: ['city', 'whisper-woods'],
+    mapPos: { x: 0, y: 2 },
+    color: '#84cc16',
+    label: '\u{1F33E}',
+  },
+  'whisper-woods': {
+    id: 'whisper-woods', name: 'Whisper Woods', type: 'forest',
+    desc: 'Ancient trees that whisper secrets. Glowing creatures roam the undergrowth.',
+    connections: ['city', 'farmlands', 'mountains'],
+    mapPos: { x: 1, y: 0 },
+    color: '#22c55e',
+    label: '\u{1F333}',
+  },
+  'iron-district': {
+    id: 'iron-district', name: 'Iron District', type: 'industrial',
+    desc: 'Factories never sleep. Smoke and steel dominate the skyline.',
+    connections: ['city', 'mountains'],
+    mapPos: { x: 4, y: 2 },
+    color: '#6b7280',
+    label: '\u{1F3ED}',
+  },
+  mountains: {
+    id: 'mountains', name: 'Mountains', type: 'mountain',
+    desc: 'Snow-capped peaks hide ancient caves and valuable ore.',
+    connections: ['whisper-woods', 'iron-district', 'coast'],
+    mapPos: { x: 3, y: 0 },
+    color: '#a8a29e',
+    label: '\u26F0\uFE0F',
+  },
+  coast: {
+    id: 'coast', name: 'Coast', type: 'coast',
+    desc: 'Where the city meets the sea. Docks, beaches, and ocean trade.',
+    connections: ['mountains', 'purple-pulse'],
+    mapPos: { x: 4, y: 4 },
+    color: '#38bdf8',
+    label: '\u{1F3DD}\uFE0F',
+  },
+  'purple-pulse': {
+    id: 'purple-pulse', name: 'Purple Pulse', type: 'nightlife',
+    desc: 'The underground never sleeps. Music, bass, and neon-drenched alleys.',
+    connections: ['coast', 'city'],
+    mapPos: { x: 2, y: 4 },
+    color: '#c084fc',
+    label: '\u{1F3A8}',
+  },
+}
+
 const state = {
   camera: { x: 0, y: 0, zoom: 1, targetZoom: 1 },
   player: { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, tx: WORLD_SIZE / 2, ty: WORLD_SIZE / 2, speed: 3.5, color: '#a78bfa', name: '' },
   otherPlayers: new Map(),
   chunks: new Map(),
+  currentRegion: 'city',
+  regionChunks: new Map(),
+  regionPlayerPos: {},
+  regionTime: {},
+  travel: { active: false, target: null, progress: 0, fromRegion: null },
+  worldMapOpen: false,
   npcs: [],
   buildings: [],
   districts: [],
@@ -1612,7 +1882,21 @@ function smoothNoise(x, y, seed, scale) {
   return a * (1 - ux) * (1 - uy) + b * ux * (1 - uy) + c * (1 - ux) * uy + d * ux * uy
 }
 
-function getTerrainAt(wx, wy) {
+function getTerrainAt(wx, wy, regionId) {
+  const r = regionId || state.currentRegion
+  const fns = {
+    city: getCityTerrain,
+    farmlands: getFarmlandTerrain,
+    'whisper-woods': getForestTerrain,
+    mountains: getMountainTerrain,
+    'iron-district': getIndustrialTerrain,
+    coast: getCoastTerrain,
+    'purple-pulse': getPurplePulseTerrain,
+  }
+  return (fns[r] || getCityTerrain)(wx, wy)
+}
+
+function getCityTerrain(wx, wy) {
   const seed = 42
   const e = smoothNoise(wx, wy, seed, 40) * 0.5
           + smoothNoise(wx, wy, seed + 100, 20) * 0.3
@@ -1631,20 +1915,104 @@ function getTerrainAt(wx, wy) {
   return TERRAIN.DIRT
 }
 
-function generateChunk(cx, cy) {
-  const key = `${cx},${cy}`
+function getFarmlandTerrain(wx, wy) {
+  const seed = 142
+  const e = smoothNoise(wx, wy, seed, 30) * 0.6
+          + smoothNoise(wx, wy, seed + 50, 12) * 0.3
+          + smoothNoise(wx, wy, seed + 100, 6) * 0.1
+  const m = smoothNoise(wx, wy, seed + 500, 20)
+  // Field pattern: stripes of dirt and grass
+  const fieldStripe = Math.abs(wx) % 8
+  if (e < 0.15) return TERRAIN.WATER
+  if (e < 0.25) return TERRAIN.SAND
+  if (fieldStripe < 2) return TERRAIN.DIRT
+  if (m > 0.6) return TERRAIN.DARK_GRASS
+  return TERRAIN.GRASS
+}
+
+function getForestTerrain(wx, wy) {
+  const seed = 242
+  const e = smoothNoise(wx, wy, seed, 25) * 0.5
+          + smoothNoise(wx, wy, seed + 60, 10) * 0.3
+          + smoothNoise(wx, wy, seed + 120, 5) * 0.2
+  const m = smoothNoise(wx, wy, seed + 500, 15)
+  if (e < 0.1) return TERRAIN.WATER
+  if (e < 0.18) return TERRAIN.SAND
+  if (e < 0.4) return m > 0.4 ? TERRAIN.FOREST : TERRAIN.DARK_GRASS
+  if (e < 0.7) return TERRAIN.FOREST
+  return TERRAIN.DARK_GRASS
+}
+
+function getMountainTerrain(wx, wy) {
+  const seed = 342
+  const e = smoothNoise(wx, wy, seed, 30) * 0.4
+          + smoothNoise(wx, wy, seed + 70, 15) * 0.3
+          + smoothNoise(wx, wy, seed + 140, 7) * 0.3
+  if (e < 0.2) return TERRAIN.STONE
+  if (e < 0.35) return TERRAIN.DIRT
+  if (e < 0.5) return TERRAIN.DARK_GRASS
+  if (e < 0.65) return TERRAIN.GRASS
+  return TERRAIN.STONE
+}
+
+function getIndustrialTerrain(wx, wy) {
+  const seed = 442
+  const e = smoothNoise(wx, wy, seed, 20) * 0.6
+          + smoothNoise(wx, wy, seed + 50, 8) * 0.3
+          + smoothNoise(wx, wy, seed + 100, 4) * 0.1
+  const m = smoothNoise(wx, wy, seed + 500, 15)
+  if (e < 0.1) return TERRAIN.WATER
+  if (e < 0.25) return TERRAIN.SAND
+  if (e < 0.6) return m > 0.5 ? TERRAIN.DIRT : TERRAIN.STONE
+  return TERRAIN.STONE
+}
+
+function getCoastTerrain(wx, wy) {
+  const seed = 542
+  const e = smoothNoise(wx, wy, seed, 35) * 0.5
+          + smoothNoise(wx, wy, seed + 80, 15) * 0.3
+          + smoothNoise(wx, wy, seed + 160, 7) * 0.2
+  if (e < 0.2) return TERRAIN.DEEP_WATER
+  if (e < 0.35) return TERRAIN.WATER
+  if (e < 0.45) return TERRAIN.SAND
+  if (e < 0.6) return TERRAIN.GRASS
+  return TERRAIN.DARK_GRASS
+}
+
+function getPurplePulseTerrain(wx, wy) {
+  const seed = 642
+  const e = smoothNoise(wx, wy, seed, 25) * 0.5
+          + smoothNoise(wx, wy, seed + 60, 10) * 0.3
+          + smoothNoise(wx, wy, seed + 120, 5) * 0.2
+  if (e < 0.1) return TERRAIN.WATER
+  if (e < 0.2) return TERRAIN.SAND
+  if (e < 0.5) return TERRAIN.DIRT
+  if (e < 0.7) return TERRAIN.STONE
+  return TERRAIN.DARK_GRASS
+}
+
+function generateChunk(cx, cy, regionId) {
+  const r = regionId || state.currentRegion
+  const key = `${r}:${cx},${cy}`
   if (state.chunks.has(key)) return state.chunks.get(key)
   const tiles = []
+  const terrainFn = regionId === 'farmlands' ? getFarmlandTerrain
+    : regionId === 'whisper-woods' ? getForestTerrain
+    : regionId === 'mountains' ? getMountainTerrain
+    : regionId === 'iron-district' ? getIndustrialTerrain
+    : regionId === 'coast' ? getCoastTerrain
+    : regionId === 'purple-pulse' ? getPurplePulseTerrain
+    : getCityTerrain
   for (let ly = 0; ly < CHUNK_SIZE; ly++) {
     const row = []
     for (let lx = 0; lx < CHUNK_SIZE; lx++) {
       const wx = cx * CHUNK_SIZE + lx
       const wy = cy * CHUNK_SIZE + ly
-      row.push(getTerrainAt(wx, wy))
+      row.push(terrainFn(wx, wy))
     }
     tiles.push(row)
   }
-  const chunk = { cx, cy, tiles }
+  const chunk = { cx, cy, tiles, region: r }
   state.chunks.set(key, chunk)
   return chunk
 }
@@ -1654,7 +2022,7 @@ function generateRoads() {
   const cy = Math.floor(WORLD_SIZE / 2)
   for (let i = -20; i <= 20; i++) {
     for (const off of [-2, -1, 0, 1, 2]) {
-      const h1 = getTerrainAt(cx + i, cy + off)
+      const h1 = getTerrainAt(cx + i, cy + off, 'city')
       if (h1 !== TERRAIN.WATER && h1 !== TERRAIN.DEEP_WATER) {
         const ck = chunkKey(cx + i, cy + off)
         if (state.chunks.has(ck)) {
@@ -1662,7 +2030,7 @@ function generateRoads() {
           c.tiles[(cy + off) % CHUNK_SIZE][(cx + i) % CHUNK_SIZE] = TERRAIN.ROAD
         }
       }
-      const v1 = getTerrainAt(cx + off, cy + i)
+      const v1 = getTerrainAt(cx + off, cy + i, 'city')
       if (v1 !== TERRAIN.WATER && v1 !== TERRAIN.DEEP_WATER) {
         const ck = chunkKey(cx + off, cy + i)
         if (state.chunks.has(ck)) {
@@ -1674,8 +2042,9 @@ function generateRoads() {
   }
 }
 
-function chunkKey(wx, wy) {
-  return `${Math.floor(wx / CHUNK_SIZE)},${Math.floor(wy / CHUNK_SIZE)}`
+function chunkKey(wx, wy, regionId) {
+  const r = regionId || state.currentRegion
+  return `${r}:${Math.floor(wx / CHUNK_SIZE)},${Math.floor(wy / CHUNK_SIZE)}`
 }
 
 function generateNPCs() {
@@ -3671,7 +4040,9 @@ function update(dt) {
   const maxDist = (WORLD_SIZE / CHUNK_SIZE) * TILE_W
   const pruneKeys = []
   for (const [key] of state.chunks) {
-    const [cx, cy] = key.split(',').map(Number)
+    if (!key.startsWith(state.currentRegion + ':')) continue
+    const coords = key.split(':')[1]
+    const [cx, cy] = coords.split(',').map(Number)
     const chunkCenterX = (cx + 0.5) * CHUNK_SIZE
     const chunkCenterY = (cy + 0.5) * CHUNK_SIZE
     const dist = Math.sqrt((chunkCenterX - state.player.x) ** 2 + (chunkCenterY - state.player.y) ** 2)
@@ -3880,6 +4251,7 @@ const ALL_PANELS = [
   { id: 'gangPanel', stateKey: 'gangMode', btnId: 'btnGang' },
   { id: 'incomePanel', stateKey: null, btnId: null },
   { id: 'jobPanel', stateKey: null, btnId: null },
+  { id: 'worldMapPanel', stateKey: 'worldMapOpen', btnId: 'btnWorldMap' },
 ]
 
 function closeAllPanels() {
@@ -3957,6 +4329,9 @@ function openPanel(panelId, extra) {
     document.getElementById('chatInput')?.focus()
   } else if (panelId === 'minimapWrap') {
     state.minimapOpen = true
+  } else if (panelId === 'worldMapPanel') {
+    state.worldMapOpen = true
+    updateWorldMap()
   }
 }
 
@@ -3964,6 +4339,7 @@ function setupPanelManager() {
   // ESC key closes active panel or cancels active mode
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+      if (state.travel.active) return
       const anyOpen = ALL_PANELS.some(p => {
         const el = document.getElementById(p.id)
         return el && !el.classList.contains('panel-hidden') && el.classList.contains('open')
@@ -3995,6 +4371,17 @@ function setupUI() {
   document.getElementById('gangPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('incomePanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('jobPanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('worldMapClose').addEventListener('click', closeAllPanels)
+
+  // World map travel buttons
+  document.getElementById('worldMapContent').addEventListener('click', (e) => {
+    const btn = e.target.closest('.region-travel-btn')
+    if (!btn || btn.disabled) return
+    const target = btn.dataset.target
+    if (target && target !== state.currentRegion) {
+      startTravel(target)
+    }
+  })
 
   // Gang tab switching
   document.addEventListener('click', (e) => {
@@ -4966,8 +5353,7 @@ async function placeInfrastructure(x, y, type) {
   // Check terrain (avoid water for non-road)
   const cxChunk = Math.floor(cx / CHUNK_SIZE)
   const cyChunk = Math.floor(cy / CHUNK_SIZE)
-  const chunkKey = `${cxChunk},${cyChunk}`
-  const chunk = state.chunks.get(chunkKey)
+  const chunk = state.chunks.get(chunkKey(cx, cy))
   if (chunk) {
     const lx = cx - cxChunk * CHUNK_SIZE
     const ly = cy - cyChunk * CHUNK_SIZE
@@ -5957,6 +6343,142 @@ function loadGoalsFromStorage() {
       Object.assign(state.goals, parsed)
     }
   } catch {}
+}
+
+// ── WORLD MAP & TRAVEL ────────────────────────────────────
+
+function updateWorldMap() {
+  const regions = document.querySelectorAll('.world-map-region')
+  for (const el of regions) {
+    const rid = el.dataset.region
+    const isCurrent = rid === state.currentRegion
+    el.classList.toggle('current', isCurrent)
+    const btn = el.querySelector('.region-travel-btn')
+    const status = el.querySelector('.region-status')
+    if (btn) {
+      btn.style.display = isCurrent ? 'none' : ''
+      btn.disabled = state.travel.active
+    }
+    if (status) {
+      status.style.display = isCurrent ? '' : 'none'
+    }
+  }
+}
+
+function startTravel(targetRegion) {
+  const region = REGIONS[targetRegion]
+  if (!region || targetRegion === state.currentRegion || state.travel.active) return
+
+  const from = state.currentRegion
+  
+  // Save current position
+  state.regionPlayerPos[from] = { x: state.player.x, y: state.player.y }
+
+  // Show travel overlay
+  state.travel.active = true
+  state.travel.target = targetRegion
+  state.travel.fromRegion = from
+  state.travel.progress = 0
+  state.travel.statusText = 'Departing...'
+
+  const overlay = document.getElementById('travelOverlay')
+  overlay.style.display = 'flex'
+  document.getElementById('travelTargetLabel').textContent = `to ${region.name}`
+  document.getElementById('travelProgressFill').style.width = '0%'
+  document.getElementById('travelStatus').textContent = 'Departing...'
+
+  closeAllPanels()
+
+  // Animate travel over ~8 seconds
+  const startTime = performance.now()
+  const duration = 8000
+  const statuses = ['Departing...', 'Leaving the city...', 'En route...', 'Almost there...', 'Arriving...']
+
+  function animateTravel(now) {
+    const elapsed = now - startTime
+    const pct = Math.min(1, elapsed / duration)
+    state.travel.progress = pct
+    document.getElementById('travelProgressFill').style.width = (pct * 100) + '%'
+    const idx = Math.min(statuses.length - 1, Math.floor(pct * statuses.length))
+    document.getElementById('travelStatus').textContent = statuses[idx]
+    state.travel.statusText = statuses[idx]
+
+    if (pct < 1) {
+      requestAnimationFrame(animateTravel)
+    } else {
+      completeTravel(targetRegion)
+    }
+  }
+  requestAnimationFrame(animateTravel)
+}
+
+function completeTravel(targetRegion) {
+  state.currentRegion = targetRegion
+  state.travel.active = false
+  state.worldMapOpen = false
+
+  document.getElementById('travelOverlay').style.display = 'none'
+  closeAllPanels()
+
+  // Save non-city chunks for when we return
+  if (state.travel.fromRegion !== 'city') {
+    state.regionChunks.set(state.travel.fromRegion, new Map(state.chunks))
+  }
+
+  // Clear and regenerate chunks
+  state.chunks.clear()
+  state.infrastructure = []
+  state.blocks = []
+  state.lots = []
+  state.buildings = []
+  state.npcs = []
+  state.walkableGraph = null
+  state.walkableDirty = true
+
+  // Restore or set default position for this region
+  const saved = state.regionPlayerPos[targetRegion]
+  if (saved) {
+    state.player.x = saved.x
+    state.player.y = saved.y
+    state.player.tx = saved.x
+    state.player.ty = saved.y
+  } else {
+    state.player.x = WORLD_SIZE / 2
+    state.player.y = WORLD_SIZE / 2
+    state.player.tx = WORLD_SIZE / 2
+    state.player.ty = WORLD_SIZE / 2
+  }
+
+  // Generate initial chunks around player
+  const startCX = Math.floor(state.player.x / CHUNK_SIZE)
+  const startCY = Math.floor(state.player.y / CHUNK_SIZE)
+  const initRadius = 3
+  for (let dy = -initRadius; dy <= initRadius; dy++) {
+    for (let dx = -initRadius; dx <= initRadius; dx++) {
+      generateChunk(startCX + dx, startCY + dy, targetRegion)
+    }
+  }
+
+  // Generate NPCs only for city and refetch server data
+  if (targetRegion === 'city') {
+    generateNPCs()
+    fetchWorldState().then(() => {
+      refreshDistricts()
+      fetchVisualData()
+      assignNPCBuildings()
+    })
+  }
+
+  // Restore region chunks if available
+  if (state.regionChunks.has(targetRegion)) {
+    const savedChunks = state.regionChunks.get(targetRegion)
+    for (const [k, v] of savedChunks) {
+      if (!state.chunks.has(k)) state.chunks.set(k, v)
+    }
+  }
+
+  showToast(`Arrived at ${REGIONS[targetRegion].name}`, '')
+  invalidateTileCache()
 }
 
 async function init() {
