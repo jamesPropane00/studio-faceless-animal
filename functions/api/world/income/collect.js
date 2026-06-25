@@ -43,7 +43,9 @@ function calculateAccumulatedIncome(building) {
   const maxMs = INCOME_CAP_HOURS * 60 * 60 * 1000;
   const cappedElapsed = Math.min(elapsed, maxMs);
   const minutes = cappedElapsed / 60000;
-  let income = building.income_rate * minutes;
+  // Phase B: business_health affects income (0-100% multiplier)
+  const healthMultiplier = (building.business_health || 100) / 100;
+  let income = building.income_rate * minutes * healthMultiplier;
   if (building.in_district) {
     income *= (1 + DISTRICT_INCOME_BONUS);
   }
@@ -70,8 +72,8 @@ export async function onRequestPost(context) {
       return json({ ok: false, error: 'Missing userId or buildingId.' }, 400);
     }
 
-    // Fetch building from Supabase
-    const buildingQuery = `select=id,owner_id,building_type,income_rate,last_collected_at,in_district&id=eq.${buildingId}`;
+    // Fetch building from Supabase (include business_health for income calc)
+    const buildingQuery = `select=id,owner_id,building_type,income_rate,last_collected_at,in_district,business_health,condition&id=eq.${buildingId}`;
     const buildingResult = await supabaseFetch(context.env, `/rest/v1/world_building_states?${buildingQuery}`);
     
     if (!buildingResult.ok || !Array.isArray(buildingResult.data) || buildingResult.data.length === 0) {

@@ -215,14 +215,16 @@ async function refreshDistricts(context) {
       );
       // ignore delete errors (might be empty)
 
-      // Update buildings to mark in_district
+      // Update buildings to mark in_district + calculate business_health
       const buildingIdsInDistricts = new Set();
+      const buildingDistrictMap = new Map(); // buildingId -> district
       for (const d of newDistricts) {
         for (const b of buildingsResult.data) {
           const dx = b.tile_x - d.center_x;
           const dy = b.tile_y - d.center_y;
           if (Math.sqrt(dx * dx + dy * dy) <= d.radius) {
             buildingIdsInDistricts.add(b.id);
+            buildingDistrictMap.set(b.id, d);
           }
         }
       }
@@ -252,16 +254,39 @@ async function refreshDistricts(context) {
         }, 500);
       }
 
-      // Update in_district flag on buildings
+      // Update in_district flag + business_health on each building
       for (const b of buildingsResult.data) {
         const inDistrict = buildingIdsInDistricts.has(b.id);
+        const district = buildingDistrictMap.get(b.id);
+
+        // Calculate business_health (the cascade!)
+        // Houses/camps: always healthy (residential, not businesses)
+        // Shops/clubs/warehouses/hides: health depends on district population + wealth
+        let health = 100;
+        if (inDistrict && district && b.building_type !== 'house' && b.building_type !== 'camp') {
+          const pop = district.population || 0;
+          const wealth = district.wealth || 0;
+          const condition = b.condition || 100;
+          // Base 30 + population factor + wealth factor + condition factor
+          health = Math.min(100, Math.max(10, Math.floor(
+            30 + pop * 0.8 + wealth * 0.05 + condition * 0.2
+          )));
+        } else if (!inDistrict && b.building_type !== 'house' && b.building_type !== 'camp') {
+          // Isolated businesses: lower health (no customers nearby)
+          const condition = b.condition || 100;
+          health = Math.min(100, Math.max(10, Math.floor(20 + condition * 0.3)));
+        }
+
         await supabaseFetch(
           context.env,
           `/rest/v1/world_building_states?id=eq.${b.id}`,
           {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ in_district: inDistrict })
+            body: JSON.stringify({
+              in_district: inDistrict,
+              business_health: health
+            })
           }
         );
       }
@@ -275,15 +300,19 @@ async function refreshDistricts(context) {
           headers: { 'Content-Type': 'application/json' }
         }
       );
-      // Clear in_district on all buildings
+      // Clear in_district + set low health on all buildings (no districts = no customers)
       for (const b of buildingsResult.data) {
+        const condition = b.condition || 100;
+        const health = (b.building_type === 'house' || b.building_type === 'camp')
+          ? 100
+          : Math.min(100, Math.max(10, Math.floor(20 + condition * 0.3)));
         await supabaseFetch(
           context.env,
           `/rest/v1/world_building_states?id=eq.${b.id}`,
           {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ in_district: false })
+            body: JSON.stringify({ in_district: false, business_health: health })
           }
         );
       }

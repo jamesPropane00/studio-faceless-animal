@@ -724,6 +724,36 @@
       background: rgba(255, 255, 255, 0.04);
       border-color: var(--border2);
     }
+    .income-health-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.2rem 0;
+    }
+    .income-health-label {
+      font-size: 0.7rem;
+      color: var(--dim);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .income-health-bar {
+      flex: 1;
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .income-health-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease, background 0.3s ease;
+    }
+    .income-health-pct {
+      font-size: 0.7rem;
+      font-weight: 700;
+      min-width: 32px;
+      text-align: right;
+    }
     .income-collect-btn, .job-start-btn {
       background: linear-gradient(135deg, var(--purple), var(--bright));
       color: white;
@@ -1061,6 +1091,11 @@
     <div class="income-building-name" id="incomeBuildingName">Shop</div>
     <div class="income-amount">Accumulated: <span id="incomeAmount">0</span> coins</div>
     <div class="income-rate">Rate: <span id="incomeRate">1</span> coin/min</div>
+    <div class="income-health-row" id="incomeHealthRow" style="display:none">
+      <span class="income-health-label">Business Health:</span>
+      <div class="income-health-bar"><div class="income-health-fill" id="incomeHealthFill"></div></div>
+      <span class="income-health-pct" id="incomeHealthPct">100%</span>
+    </div>
     <div class="income-district-badge" id="incomeDistrictBadge" style="display:none">
       In District: <span id="incomeDistrictText" class="badge-name">No</span>
     </div>
@@ -1986,6 +2021,21 @@ function drawBuildingAt(building, s) {
     ctx.textAlign = 'center'
     ctx.fillStyle = condition < 25 ? '#ef4444' : '#f59e0b'
     ctx.fillText(condition < 25 ? '\u26A0' : '\u{1F6A7}', s.x, s.y - elev - 5 * state.camera.zoom)
+  }
+
+  // Phase B: Business health indicator (small dot for low-health businesses)
+  const health = building.business_health
+  if (health != null && health < 70 && building.building_type !== 'house' && building.building_type !== 'camp' && state.camera.zoom > 0.5) {
+    const dotY = s.y - elev - 14 * state.camera.zoom
+    const dotR = 4 * state.camera.zoom
+    const dotColor = health >= 40 ? '#facc15' : '#ef4444'
+    ctx.beginPath()
+    ctx.arc(s.x, dotY, dotR, 0, Math.PI * 2)
+    ctx.fillStyle = dotColor
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'
+    ctx.lineWidth = 1
+    ctx.stroke()
   }
 }
 
@@ -3236,6 +3286,25 @@ function openIncomePanel(buildingId) {
   document.getElementById('incomeBuildingName').textContent = type.name
   document.getElementById('incomeRate').textContent = building.income_rate
 
+  // Business health bar (Phase B)
+  const healthRow = document.getElementById('incomeHealthRow')
+  const healthFill = document.getElementById('incomeHealthFill')
+  const healthPct = document.getElementById('incomeHealthPct')
+  const health = building.business_health != null ? building.business_health : 100
+  healthFill.style.width = health + '%'
+  healthPct.textContent = health + '%'
+  if (health >= 70) {
+    healthFill.style.background = 'linear-gradient(90deg, #22c55e, #4ade80)'
+    healthPct.style.color = '#4ade80'
+  } else if (health >= 40) {
+    healthFill.style.background = 'linear-gradient(90deg, #eab308, #facc15)'
+    healthPct.style.color = '#facc15'
+  } else {
+    healthFill.style.background = 'linear-gradient(90deg, #ef4444, #f87171)'
+    healthPct.style.color = '#f87171'
+  }
+  healthRow.style.display = 'flex'
+
   // District badge
   const badge = document.getElementById('incomeDistrictBadge')
   const badgeText = document.getElementById('incomeDistrictText')
@@ -3313,7 +3382,9 @@ function calculateAccumulatedIncome(building) {
   const maxMs = 24 * 60 * 60 * 1000
   const cappedElapsed = Math.min(elapsed, maxMs)
   const minutes = cappedElapsed / 60000
-  let income = building.income_rate * minutes
+  // Phase B: business_health affects income (0-100% multiplier)
+  const healthMultiplier = (building.business_health || 100) / 100
+  let income = building.income_rate * minutes * healthMultiplier
   if (building.in_district) {
     income *= 1.2
   }
@@ -4111,9 +4182,24 @@ function showDistrictTooltip(mouseX, mouseY, district) {
   const typeLabel = DISTRICT_TYPE_LABELS[district.district_type] || 'District'
   const buildingCount = district.building_count || 0
 
+  // Calculate average business health (happiness) for buildings in this district
+  let healthSum = 0, healthCount = 0
+  for (const b of state.buildings) {
+    if (b.building_type === 'house' || b.building_type === 'camp') continue
+    const dx = b.tile_x - district.center_x
+    const dy = b.tile_y - district.center_y
+    if (Math.sqrt(dx * dx + dy * dy) <= district.radius) {
+      healthSum += (b.business_health || 100)
+      healthCount++
+    }
+  }
+  const happiness = healthCount > 0 ? Math.floor(healthSum / healthCount) : 100
+  const happinessColor = happiness >= 70 ? '#4ade80' : (happiness >= 40 ? '#facc15' : '#ef4444')
+
   let html = `<div class="district-tooltip-name">${district.name || 'Unknown District'}</div>`
   html += `<div class="district-tooltip-type" style="color:${typeColor}">${icon} ${typeLabel} District</div>`
   html += `<div class="district-tooltip-stat"><span>${buildingCount}</span> building${buildingCount === 1 ? '' : 's'}</div>`
+  html += `<div class="district-tooltip-stat">Happiness: <span style="color:${happinessColor}">${happiness}%</span></div>`
   html += `<div class="district-tooltip-bonus">+20% income inside</div>`
 
   if (!influence || !influence.influences || influence.influences.length === 0) {
