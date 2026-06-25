@@ -3712,7 +3712,7 @@ function drawRoads() {
 
     if (useSprite) {
       // ── Sprite mode: 2x2 tile grid ──
-      const roadSize = tilePx * 0.25
+      const roadSize = tilePx * 0.5
       const halfTile = roadSize / 2
       for (let row = -1; row <= 1; row += 2) {
         for (let col = -1; col <= 1; col += 2) {
@@ -3727,7 +3727,7 @@ function drawRoads() {
       }
     } else {
       // ── Procedural fallback ──
-      const roadWidth = tilePx * 0.25
+      const roadWidth = tilePx * 0.5
 
       // Asphalt base
       ctx.fillStyle = '#34363e'
