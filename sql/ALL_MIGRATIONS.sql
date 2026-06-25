@@ -4,7 +4,6 @@
 -- ============================================================
 
 -- 1. HOUSE INCOME: Update houses from 0 to 0.5 income/min
--- (only if you have old houses with income_rate = 0)
 UPDATE world_building_states
 SET income_rate = 0.5
 WHERE building_type = 'house'
@@ -16,23 +15,53 @@ ALTER COLUMN income_rate TYPE NUMERIC(6,2) USING income_rate::NUMERIC(6,2);
 
 -- 3. DISTRICT UUID: Ensure pgcrypto + DEFAULT gen_random_uuid()
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
 ALTER TABLE world_districts
 ALTER COLUMN id SET DEFAULT gen_random_uuid();
 
 -- 4. OWNER ID TEXT: For guest users
+-- MUST drop policies first that depend on these columns
+DROP POLICY IF EXISTS "building_states_select" ON world_building_states;
+DROP POLICY IF EXISTS "building_states_insert" ON world_building_states;
+DROP POLICY IF EXISTS "building_states_update" ON world_building_states;
+DROP POLICY IF EXISTS "building_states_delete" ON world_building_states;
+
+DROP POLICY IF EXISTS "player_states_select" ON world_player_states;
+DROP POLICY IF EXISTS "player_states_insert" ON world_player_states;
+DROP POLICY IF EXISTS "player_states_update" ON world_player_states;
+DROP POLICY IF EXISTS "player_states_delete" ON world_player_states;
+
+DROP POLICY IF EXISTS "gangs_select" ON world_gangs;
+DROP POLICY IF EXISTS "gangs_insert" ON world_gangs;
+DROP POLICY IF EXISTS "gangs_update" ON world_gangs;
+DROP POLICY IF EXISTS "gangs_delete" ON world_gangs;
+
+-- Now alter the column types
 ALTER TABLE world_building_states
 ALTER COLUMN owner_id TYPE TEXT USING owner_id::TEXT;
 
--- 5. PLAYER STATES USER ID TEXT
 ALTER TABLE world_player_states
 ALTER COLUMN user_id TYPE TEXT USING user_id::TEXT;
 
--- 6. GANG LEADER ID TEXT
 ALTER TABLE world_gangs
 ALTER COLUMN leader_id TYPE TEXT USING leader_id::TEXT;
 
--- 7. PHASE A: DISTRICT DEMOGRAPHICS (new columns)
+-- Recreate policies (basic permissive ones for service_role)
+CREATE POLICY "building_states_select" ON world_building_states FOR SELECT TO authenticated USING (true);
+CREATE POLICY "building_states_insert" ON world_building_states FOR INSERT TO service_role WITH CHECK (true);
+CREATE POLICY "building_states_update" ON world_building_states FOR UPDATE TO service_role USING (true);
+CREATE POLICY "building_states_delete" ON world_building_states FOR DELETE TO service_role USING (true);
+
+CREATE POLICY "player_states_select" ON world_player_states FOR SELECT TO authenticated USING (true);
+CREATE POLICY "player_states_insert" ON world_player_states FOR INSERT TO service_role WITH CHECK (true);
+CREATE POLICY "player_states_update" ON world_player_states FOR UPDATE TO service_role USING (true);
+CREATE POLICY "player_states_delete" ON world_player_states FOR DELETE TO service_role USING (true);
+
+CREATE POLICY "gangs_select" ON world_gangs FOR SELECT TO authenticated USING (true);
+CREATE POLICY "gangs_insert" ON world_gangs FOR INSERT TO service_role WITH CHECK (true);
+CREATE POLICY "gangs_update" ON world_gangs FOR UPDATE TO service_role USING (true);
+CREATE POLICY "gangs_delete" ON world_gangs FOR DELETE TO service_role USING (true);
+
+-- 5. PHASE A: DISTRICT DEMOGRAPHICS (new columns)
 ALTER TABLE world_districts
 ADD COLUMN IF NOT EXISTS wealth INTEGER NOT NULL DEFAULT 0;
 
@@ -45,8 +74,7 @@ ADD COLUMN IF NOT EXISTS population INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE world_districts
 ADD COLUMN IF NOT EXISTS level INTEGER NOT NULL DEFAULT 1;
 
--- 8. GANG SYSTEM TABLES (if not already created)
--- (See sql/gang_system_schema.sql for full schema)
+-- 6. GANG SYSTEM TABLES (if not already created)
 CREATE TABLE IF NOT EXISTS world_gangs (
   id          BIGSERIAL PRIMARY KEY,
   name        TEXT NOT NULL,
