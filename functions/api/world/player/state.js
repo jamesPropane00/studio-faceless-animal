@@ -74,13 +74,31 @@ export async function onRequestGet(context) {
     
     let coins = 100;
     let reputation = 0;
+    let needsCreate = false;
     
     if (result.ok && Array.isArray(result.data) && result.data.length > 0) {
       coins = result.data[0].coins || 100;
       reputation = result.data[0].reputation || 0;
-    } else if (!result.ok) {
-      // If table doesn't exist or query fails, use defaults
-      console.warn('Failed to fetch player state, using defaults');
+    } else {
+      // No row exists yet — create one with default values
+      needsCreate = true;
+    }
+
+    // Auto-create player state row if missing (so coins persist from the start)
+    if (needsCreate && userId) {
+      const createResult = await supabaseFetch(context.env, `/rest/v1/world_player_states`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify([{
+          user_id: userId,
+          coins: 100,
+          reputation: 0,
+          updated_at: new Date().toISOString()
+        }])
+      });
+      if (!createResult.ok) {
+        console.warn('[WORLD] player/state: auto-create failed (non-fatal):', createResult.status);
+      }
     }
 
     const repLevel = getRepLevel(reputation);

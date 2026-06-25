@@ -88,8 +88,8 @@ export async function onRequestPost(context) {
 
     const startTime = Date.now();
 
-    // Update player state with job
-    if (userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+    // Update player state with job (for ALL users, not just UUID)
+    if (userId) {
       const updatePlayer = await supabaseFetch(context.env, `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },

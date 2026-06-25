@@ -67,9 +67,8 @@ export async function onRequestPost(context) {
     const evtX = Math.max(2, Math.min(206, x));
     const evtY = Math.max(2, Math.min(206, y));
 
-    // ── Coin validation (only for real UUID users) ──
-    const isUuid = userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
-    if (isUuid) {
+    // ── Coin validation (for ALL users) ──
+    if (userId) {
       const playerQuery = `select=coins&user_id=eq.${encodeURIComponent(userId)}`;
       const playerResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?${playerQuery}`);
 
@@ -78,20 +77,23 @@ export async function onRequestPost(context) {
         return json({ ok: false, error: 'Failed to verify player state.' }, 500);
       }
 
-      if (!Array.isArray(playerResult.data) || playerResult.data.length === 0) {
-        return json({ ok: false, error: 'Player not found.' }, 404);
-      }
+      const currentCoins = (Array.isArray(playerResult.data) && playerResult.data.length > 0)
+        ? (playerResult.data[0].coins || 0)
+        : 0;
 
-      const currentCoins = playerResult.data[0].coins || 0;
       if (currentCoins < power.cost) {
         return json({ ok: false, error: 'Not enough coins.', currentCoins, cost: power.cost }, 400);
       }
 
-      // Deduct coins
-      const deductResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ coins: currentCoins - power.cost, updated_at: new Date().toISOString() }),
+      // Deduct coins (UPSERT so it works even if row doesn't exist yet)
+      const deductResult = await supabaseFetch(context.env, `/rest/v1/world_player_states`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify([{
+          user_id: userId,
+          coins: currentCoins - power.cost,
+          updated_at: new Date().toISOString()
+        }]),
       });
 
       if (!deductResult.ok) {

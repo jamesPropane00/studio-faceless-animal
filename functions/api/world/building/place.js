@@ -143,23 +143,24 @@ export async function onRequestPost(context) {
       }, 500);
     }
 
-    // Update player reputation (+5 for building) - only for real UUID users
-    const isUuid = userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
-    if (isUuid) {
-      const playerQuery = `select=reputation&user_id=eq.${encodeURIComponent(userId)}`;
+    // Update player reputation (+5 for building) - for ALL users
+    if (userId) {
+      const playerQuery = `select=coins,reputation&user_id=eq.${encodeURIComponent(userId)}`;
       const playerResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?${playerQuery}`);
       
+      let currentCoins = 100;
       let currentRep = 0;
       if (playerResult.ok && Array.isArray(playerResult.data) && playerResult.data.length > 0) {
+        currentCoins = playerResult.data[0].coins || 100;
         currentRep = playerResult.data[0].reputation || 0;
       }
 
-      const upsertResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?user_id=eq.${encodeURIComponent(userId)}`, {
+      const upsertResult = await supabaseFetch(context.env, `/rest/v1/world_player_states`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify([{
           user_id: userId,
-          coins: 100,
+          coins: currentCoins,
           reputation: currentRep + 5,
           updated_at: new Date().toISOString()
         }])
