@@ -1500,10 +1500,108 @@ function generateNPCs() {
   }
 }
 
+// ── NPC BUILDING ASSIGNMENT ─────────────────────────────────
+
+let npcBuildingAssignmentNeeded = true
+
+function assignNPCBuildings() {
+  if (!state.buildings || state.buildings.length === 0) return
+
+  const houses = state.buildings.filter(b => b.building_type === 'house')
+  const camps = state.buildings.filter(b => b.building_type === 'camp')
+  const shops = state.buildings.filter(b => b.building_type === 'shop')
+  const clubs = state.buildings.filter(b => b.building_type === 'club')
+  const warehouses = state.buildings.filter(b => b.building_type === 'warehouse')
+  const hides = state.buildings.filter(b => b.building_type === 'hide')
+
+  let houseIdx = 0, campIdx = 0
+
+  for (let i = 0; i < state.npcs.length; i++) {
+    const npc = state.npcs[i]
+    npc.homeBuilding = null
+    npc.workBuilding = null
+    npc.leisureTarget = null
+
+    // Assign home: round-robin through houses, then camps
+    if (houses.length > 0) {
+      npc.homeBuilding = houses[houseIdx % houses.length]
+      houseIdx++
+    } else if (camps.length > 0) {
+      npc.homeBuilding = camps[campIdx % camps.length]
+      campIdx++
+    }
+
+    // Assign workplace based on NPC type
+    if (npc.type === 'vendor' || npc.type === 'merchant') {
+      npc.workBuilding = findNearestBuilding(npc.x, npc.y, shops)
+    } else if (npc.type === 'worker') {
+      npc.workBuilding = findNearestBuilding(npc.x, npc.y, warehouses.length > 0 ? warehouses : shops)
+    } else if (npc.type === 'guard') {
+      npc.workBuilding = findNearestBuilding(npc.x, npc.y, clubs.length > 0 ? clubs : shops)
+    }
+  }
+
+  npcBuildingAssignmentNeeded = false
+}
+
+function findNearestBuilding(wx, wy, buildings) {
+  if (!buildings || buildings.length === 0) return null
+  let best = null, bestDist = Infinity
+  for (const b of buildings) {
+    const dx = (b.tile_x || b.x) - wx
+    const dy = (b.tile_y || b.y) - wy
+    const dist = dx * dx + dy * dy
+    if (dist < bestDist) {
+      bestDist = dist
+      best = b
+    }
+  }
+  return best
+}
+
+function findLeisureDestination(npc) {
+  const t = state.time
+  // Clubs at night (>0.7 or <0.3), shops during the day
+  const isNight = t > 0.7 || t < 0.3
+  const targetType = isNight ? 'club' : 'shop'
+
+  const candidates = state.buildings.filter(b => {
+    if (b.building_type !== targetType) return false
+    const district = state.districts.find(d => {
+      const dx = (b.tile_x || b.x) - d.center_x
+      const dy = (b.tile_y || b.y) - d.center_y
+      return Math.sqrt(dx * dx + dy * dy) <= d.radius
+    })
+    if (district && (district.crime_rate || 0) > 70) return false
+    return true
+  })
+
+  if (candidates.length === 0) return null
+
+  let best = null, bestDist = Infinity
+  for (const b of candidates) {
+    const dx = (b.tile_x || b.x) - npc.x
+    const dy = (b.tile_y || b.y) - npc.y
+    const dist = dx * dx + dy * dy
+    if (dist < bestDist) {
+      bestDist = dist
+      best = b
+    }
+  }
+  return best
+}
+
+function getBuildingPosition(building) {
+  if (!building) return null
+  return { x: (building.tile_x || building.x) + 0.5, y: (building.tile_y || building.y) + 0.5 }
+}
+
+// ── NPC ROUTINE ──────────────────────────────────────────────
+
 function updateNPCRoutine(npc, dt) {
   const t = state.time
   const r = npc.routineData
-  
+
   let shouldBe = 'idle'
   if (t >= r.sleepStart || t < r.sleepEnd) {
     shouldBe = 'sleeping'
@@ -1512,35 +1610,50 @@ function updateNPCRoutine(npc, dt) {
   } else {
     shouldBe = 'leisure'
   }
-  
+
   if (shouldBe !== npc.state) {
     npc.state = shouldBe
     npc.stateTimer = 0
-    
+
     if (shouldBe === 'sleeping') {
-      npc.tx = npc.homeX
-      npc.ty = npc.homeY
+      const pos = getBuildingPosition(npc.homeBuilding)
+      if (pos) {
+        npc.tx = pos.x
+        npc.ty = pos.y
+      } else {
+        npc.tx = npc.homeX
+        npc.ty = npc.homeY
+      }
       npc.speed = 0.4
     } else if (shouldBe === 'working') {
-      if (npc.type === 'vendor' || npc.type === 'merchant') {
+      const pos = getBuildingPosition(npc.workBuilding)
+      if (pos) {
+        npc.tx = pos.x
+        npc.ty = pos.y
+      } else {
         npc.tx = npc.homeX + (Math.random() - 0.5) * 3
         npc.ty = npc.homeY + (Math.random() - 0.5) * 3
-      } else {
-        const angle = Math.random() * Math.PI * 2
-        const dist = 5 + Math.random() * 10
-        npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeX + Math.cos(angle) * dist))
-        npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeY + Math.sin(angle) * dist))
       }
       npc.speed = 0.5 + Math.random() * 0.4
     } else if (shouldBe === 'leisure') {
-      const angle = Math.random() * Math.PI * 2
-      const dist = 2 + Math.random() * 8
-      npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeX + Math.cos(angle) * dist))
-      npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeY + Math.sin(angle) * dist))
+      const spot = findLeisureDestination(npc)
+      if (spot) {
+        const pos = getBuildingPosition(spot)
+        npc.tx = pos.x
+        npc.ty = pos.y
+        npc.leisureTarget = spot
+      } else {
+        const angle = Math.random() * Math.PI * 2
+        const dist = 2 + Math.random() * 8
+        npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeX + Math.cos(angle) * dist))
+        npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.homeY + Math.sin(angle) * dist))
+        const ter = getTerrainAt(Math.floor(npc.tx), Math.floor(npc.ty))
+        if (ter === TERRAIN.DEEP_WATER || ter === TERRAIN.WATER) { npc.tx = npc.x; npc.ty = npc.y }
+      }
       npc.speed = 0.2 + Math.random() * 0.3
     }
   }
-  
+
   if (npc.state === 'sleeping') {
     npc.energy = Math.min(1, npc.energy + dt * 0.1)
   } else {
@@ -1551,61 +1664,66 @@ function updateNPCRoutine(npc, dt) {
 function updateNPCs(dt) {
   for (const npc of state.npcs) {
     updateNPCRoutine(npc, dt)
-    
+
     npc.stateTimer += dt
     npc.animTimer += dt
     if (npc.animTimer > 0.3) {
       npc.animTimer = 0
       npc.animFrame = (npc.animFrame + 1) % 4
     }
-    
-    if (npc.state === 'sleeping') {
-      const ddx = npc.tx - npc.x, ddy = npc.ty - npc.y
-      const dd = Math.sqrt(ddx * ddx + ddy * ddy)
-      if (dd < 0.5) {
+
+    const ddx = npc.tx - npc.x, ddy = npc.ty - npc.y
+    const dd = Math.sqrt(ddx * ddx + ddy * ddy)
+
+    if (dd < 0.5) {
+      // Arrived at destination
+      if (npc.state === 'sleeping') {
         npc.moveTimer = 999
         continue
       }
-    }
-    
-    npc.moveTimer -= dt
-    if (npc.moveTimer <= 0 && npc.state !== 'sleeping') {
-      npc.moveTimer = 2 + Math.random() * 5
-      
-      if (npc.state === 'working') {
-        if (npc.type === 'vendor' || npc.type === 'merchant') {
-          npc.tx = npc.homeX + (Math.random() - 0.5) * 4
-          npc.ty = npc.homeY + (Math.random() - 0.5) * 4
-        } else {
+      // Wait at destination before next action
+      npc.moveTimer -= dt
+      if (npc.moveTimer <= 0) {
+        // Time to move again within current state
+        if (npc.state === 'working') {
+          // Stay at workplace, occasional short wander
+          npc.moveTimer = 8 + Math.random() * 15
           const angle = Math.random() * Math.PI * 2
-          const dist = 3 + Math.random() * 8
-          npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.x + Math.cos(angle) * dist))
-          npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.y + Math.sin(angle) * dist))
+          const dist = 1 + Math.random() * 2
+          const pos = getBuildingPosition(npc.workBuilding)
+          if (pos) {
+            npc.tx = pos.x + Math.cos(angle) * dist
+            npc.ty = pos.y + Math.sin(angle) * dist
+          }
+        } else if (npc.state === 'leisure') {
+          // Visit another leisure spot or wander
+          npc.moveTimer = 5 + Math.random() * 10
+          const spot = findLeisureDestination(npc)
+          if (spot && spot !== npc.leisureTarget) {
+            const pos = getBuildingPosition(spot)
+            npc.tx = pos.x
+            npc.ty = pos.y
+            npc.leisureTarget = spot
+          } else {
+            const angle = Math.random() * Math.PI * 2
+            const dist = 2 + Math.random() * 4
+            npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.x + Math.cos(angle) * dist))
+            npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.y + Math.sin(angle) * dist))
+            const ter = getTerrainAt(Math.floor(npc.tx), Math.floor(npc.ty))
+            if (ter === TERRAIN.DEEP_WATER || ter === TERRAIN.WATER) { npc.tx = npc.x; npc.ty = npc.y }
+          }
         }
-      } else if (npc.state === 'leisure') {
-        const angle = Math.random() * Math.PI * 2
-        const dist = 2 + Math.random() * 6
-        npc.tx = Math.max(2, Math.min(WORLD_SIZE - 3, npc.x + Math.cos(angle) * dist))
-        npc.ty = Math.max(2, Math.min(WORLD_SIZE - 3, npc.y + Math.sin(angle) * dist))
       }
-      
-      const t = getTerrainAt(Math.floor(npc.tx), Math.floor(npc.ty))
-      if (t === TERRAIN.DEEP_WATER || t === TERRAIN.WATER) {
-        npc.tx = npc.x
-        npc.ty = npc.y
-      }
+      continue
     }
-    
-    const ddx = npc.tx - npc.x, ddy = npc.ty - npc.y
-    const dd = Math.sqrt(ddx * ddx + ddy * ddy)
-    if (dd > 0.2) {
-      const speedMult = npc.state === 'sleeping' ? 0.5 : (npc.state === 'leisure' ? 0.7 : 1)
-      const weatherMult = state.weather.type === 'storm' ? 0.6 : (state.weather.type === 'rain' ? 0.8 : 1)
-      const actualSpeed = npc.speed * speedMult * weatherMult * dt
-      npc.x += (ddx / dd) * actualSpeed
-      npc.y += (ddy / dd) * actualSpeed
-      npc.direction = Math.atan2(ddy, ddx)
-    }
+
+    // Move toward destination
+    const speedMult = npc.state === 'sleeping' ? 0.5 : (npc.state === 'leisure' ? 0.7 : 1)
+    const weatherMult = state.weather.type === 'storm' ? 0.6 : (state.weather.type === 'rain' ? 0.8 : 1)
+    const actualSpeed = npc.speed * speedMult * weatherMult * dt
+    npc.x += (ddx / dd) * actualSpeed
+    npc.y += (ddy / dd) * actualSpeed
+    npc.direction = Math.atan2(ddy, ddx)
   }
 }
 
@@ -4012,6 +4130,7 @@ async function setupMultiplayer() {
         } finally {
           tickInProgress = false
           await fetchWorldState()
+          assignNPCBuildings()
         }
       }
       // NPC auto-building (separate from simulation tick, has own cooldown)
@@ -4076,6 +4195,7 @@ async function fetchWorldState() {
         return b
       })
       state.districts = data.districts || []
+      assignNPCBuildings()
       console.log('[WORLD] Loaded', state.buildings.length, 'buildings,', state.districts.length, 'districts')
 
       // Check for newly formed districts (toast notification)
@@ -4277,6 +4397,7 @@ async function evaluateNPCBuildDesire() {
           status: 'active',
           pending_income: 0
         })
+        assignNPCBuildings()
       }
     } else {
       console.log('[NPC-BUILD] Failed:', data.error || 'unknown')
