@@ -5366,7 +5366,8 @@ async function refreshDistricts() {
     }
     const data = await res.json()
     if (data.ok) {
-      console.log('[WORLD] Districts refreshed:', data.count, 'formed,', data.newlyFormed?.length || 0, 'new')
+      console.log('[WORLD] Districts refreshed:', data.count, 'formed,', data.newlyFormed?.length || 0, 'new,', data.roadCount || 0, 'road tiles')
+      if (data.roadErrors) console.warn('[WORLD] road generation errors:', data.roadErrors)
       // Show toast for newly formed districts
       if (data.newlyFormed && data.newlyFormed.length > 0) {
         for (const d of data.newlyFormed) {

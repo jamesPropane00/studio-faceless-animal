@@ -395,19 +395,28 @@ async function refreshDistricts(context) {
       }
 
       // Phase 5B: Auto-road generation via MST
+      let roadItems = [];
+      let roadErrors = [];
       try {
-        // Delete old auto-roads
-        await supabaseFetch(
+        // Delete old auto-roads (with return=minimal to avoid large response body)
+        const delResult = await supabaseFetch(
           context.env,
           '/rest/v1/world_infrastructure?infra_type=eq.road&owner_id=is.null',
-          { method: 'DELETE', headers: { 'Content-Type': 'application/json' } }
+          { method: 'DELETE', headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' } }
         );
+        if (!delResult.ok) {
+          console.warn('[WORLD] auto-road DELETE failed:', delResult.status, delResult.data);
+          roadErrors.push('DELETE failed: ' + delResult.status);
+        } else {
+          console.log('[WORLD] auto-road DELETE succeeded');
+        }
         // Generate new roads
-        const roadItems = generateAutoRoads(newDistricts, buildingsResult.data);
+        roadItems = generateAutoRoads(newDistricts, buildingsResult.data);
+        console.log('[WORLD] auto-road generated', roadItems.length, 'road tiles across', newDistricts.length, 'districts');
         if (roadItems.length > 0) {
           for (let i = 0; i < roadItems.length; i += 50) {
             const batch = roadItems.slice(i, i + 50);
-            await supabaseFetch(
+            const insResult = await supabaseFetch(
               context.env,
               '/rest/v1/world_infrastructure',
               {
@@ -416,10 +425,18 @@ async function refreshDistricts(context) {
                 body: JSON.stringify(batch)
               }
             );
+            if (!insResult.ok) {
+              console.warn('[WORLD] auto-road INSERT batch', i / 50, 'failed:', insResult.status, insResult.data);
+              roadErrors.push('INSERT batch ' + (i / 50) + ' failed: ' + insResult.status);
+            }
           }
+        } else {
+          console.warn('[WORLD] auto-road no road tiles generated — districts may have < 2 buildings in range');
         }
       } catch (e) {
-        console.warn('[WORLD] auto-road generation skipped: table may not exist', e?.message);
+        const msg = e?.message || e?.toString() || 'unknown';
+        console.warn('[WORLD] auto-road generation exception:', msg);
+        roadErrors.push('exception: ' + msg);
       }
     } else {
       // No districts, clear all using neq filter
@@ -458,13 +475,16 @@ async function refreshDistricts(context) {
       }
       // Also clear auto-roads when no districts exist
       try {
-        await supabaseFetch(
+        const delResult = await supabaseFetch(
           context.env,
           '/rest/v1/world_infrastructure?infra_type=eq.road&owner_id=is.null',
-          { method: 'DELETE', headers: { 'Content-Type': 'application/json' } }
+          { method: 'DELETE', headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' } }
         );
+        if (!delResult.ok) {
+          console.warn('[WORLD] no-district auto-road DELETE failed:', delResult.status);
+        }
       } catch (e) {
-        // table may not exist yet
+        console.warn('[WORLD] no-district auto-road DELETE exception:', e?.message);
       }
     }
 
@@ -472,7 +492,9 @@ async function refreshDistricts(context) {
       ok: true,
       districts: newDistricts,
       newlyFormed: newlyFormed,
-      count: newDistricts.length
+      count: newDistricts.length,
+      roadCount: roadItems ? roadItems.length : 0,
+      roadErrors: roadErrors.length > 0 ? roadErrors : undefined
     });
   } catch (error) {
     console.error('[WORLD] district refresh error:', error?.message, error?.stack);
