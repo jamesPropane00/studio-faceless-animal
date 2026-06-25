@@ -28,20 +28,6 @@
       user-select:none;-webkit-user-select:none;
 }
 
-// Phase 5B: Public Works item selection
-document.getElementById('pwGrid').addEventListener('click', (e) => {
-  const pwItem = e.target.closest('.pw-item')
-  if (!pwItem) return
-  const type = pwItem.dataset.type
-  if (!type) return
-  document.querySelectorAll('.pw-item').forEach(i => i.classList.remove('selected'))
-  pwItem.classList.add('selected')
-  state.pwType = type
-  showToast('Public Works', `Click on the map to place ${type}`)
-  document.getElementById('pwPanel').classList.remove('open')
-})
-
-
     #gameCanvas{
       display:block;width:100%;height:100%;
       image-rendering:pixelated;image-rendering:crisp-edges;
@@ -985,11 +971,78 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
       .welcome-start{padding:0.65rem;font-size:0.8rem}
       .help-prompt{width:calc(100vw - 16px)}
       .help-prompt-inner{flex-wrap:wrap;justify-content:center}
-      .build-panel,.god-panel,.income-panel,.job-panel,.pw-panel,.block-panel{max-height:70vh;overflow-y:auto}
       .action-btn{width:58px;height:58px;font-size:1.4rem}
       .tool-btn{width:46px;height:46px;font-size:1.15rem}
       .zoom-btn{width:42px;height:42px;font-size:1.2rem}
       .joystick-zone{width:150px;height:150px}
+    }
+
+    /* ── PANEL MANAGER ── */
+    .panel-hidden { display: none !important; }
+
+    .game-panel {
+      background: rgba(18,20,30,0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      overflow-y: auto;
+      z-index: 100;
+      min-width: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .game-panel.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .panel-backdrop {
+      position: fixed;
+      inset: 0;
+      background: transparent;
+      z-index: 99;
+      display: none;
+    }
+    .panel-backdrop.open {
+      display: block;
+    }
+
+    @media (pointer: fine) {
+      .game-panel {
+        position: fixed;
+        top: 90px;
+        right: 8px;
+        width: 320px;
+        max-height: calc(100vh - 120px);
+        transform: translateY(-4px);
+      }
+      .game-panel.open {
+        transform: translateY(0);
+      }
+      .panel-backdrop { display: none !important; }
+    }
+
+    @media (pointer: coarse) {
+      .game-panel {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-height: 70vh;
+        border-radius: 18px 18px 0 0;
+        transform: translateY(12px);
+      }
+      .game-panel.open {
+        transform: translateY(0);
+      }
+      .toolbar {
+        z-index: 101;
+      }
+      .panel-backdrop { background: rgba(0,0,0,0.4); }
     }
   </style>
 </head>
@@ -1052,7 +1105,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
 
 <div class="hud hud-bottom">
   <div></div>
-  <div class="minimap-wrap" id="minimapWrap" style="display:none">
+  <div class="minimap-wrap game-panel" id="minimapWrap">
     <canvas id="minimapCanvas" width="140" height="140"></canvas>
   </div>
 </div>
@@ -1071,7 +1124,9 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
   <button class="action-btn" id="btnAction2" title="God Power">&#x26A1;</button>
 </div>
 
-<div class="chat-panel panel" id="chatPanel">
+<div class="panel-backdrop" id="panelBackdrop"></div>
+
+<div class="chat-panel panel game-panel" id="chatPanel">
   <div class="chat-messages" id="chatMessages"></div>
   <div class="chat-input-row">
     <input class="chat-input" id="chatInput" placeholder="Say something..." maxlength="200" autocomplete="off" />
@@ -1079,7 +1134,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
   </div>
 </div>
 
-<div class="player-list panel" id="playerList">
+<div class="player-list panel game-panel" id="playerList">
   <div class="player-list-header">
     <h3>ONLINE</h3>
     <span id="playerCount">0</span>
@@ -1087,7 +1142,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
   <div id="playerListBody"></div>
 </div>
 
-<div class="build-panel" id="buildPanel">
+<div class="build-panel game-panel" id="buildPanel">
   <div class="panel-header">
     <div class="panel-title">Build Mode</div>
     <div class="panel-close" id="buildPanelClose">&times;</div>
@@ -1095,7 +1150,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
   <div class="build-grid" id="buildGrid"></div>
 </div>
 
-<div class="god-panel" id="godPanel">
+<div class="god-panel game-panel" id="godPanel">
   <div class="panel-header">
     <div class="panel-title">God Powers</div>
     <div class="panel-close" id="godPanelClose">&times;</div>
@@ -1103,7 +1158,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
   <div class="god-grid" id="godGrid"></div>
 </div>
 
-<div class="gang-panel" id="gangPanel">
+<div class="gang-panel game-panel" id="gangPanel">
   <div class="panel-header">
     <div class="panel-title">Gangs</div>
     <div class="panel-close" id="gangPanelClose">&times;</div>
@@ -1119,7 +1174,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
   </div>
 </div>
 
-<div class="income-panel" id="incomePanel">
+<div class="income-panel game-panel" id="incomePanel">
   <div class="panel-header">
     <div class="panel-title">Collect Income</div>
     <div class="panel-close" id="incomePanelClose">&times;</div>
@@ -1143,7 +1198,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
   </div>
 </div>
 
-<div class="job-panel" id="jobPanel">
+<div class="job-panel game-panel" id="jobPanel">
   <div class="panel-header">
     <div class="panel-title">Work</div>
     <div class="panel-close" id="jobPanelClose">&times;</div>
@@ -1162,7 +1217,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
   </div>
 </div>
 
-<div class="pw-panel" id="pwPanel">
+<div class="pw-panel game-panel" id="pwPanel">
   <div class="panel-header">
     <div class="panel-title">Public Works</div>
     <div class="panel-close" id="pwPanelClose">&times;</div>
@@ -1206,7 +1261,7 @@ document.getElementById('pwGrid').addEventListener('click', (e) => {
   </div>
 </div>
 
-<div class="block-panel" id="blockPanel">
+<div class="block-panel game-panel" id="blockPanel">
   <div class="panel-header">
     <div class="panel-title">Urban DNA — Development Blocks</div>
     <div class="panel-close" id="blockPanelClose">&times;</div>
@@ -1394,6 +1449,7 @@ const state = {
   lots: [],
   blockMode: false,
   blockType: null,
+  gangMode: false,
   joystick: { active: false, dx: 0, dy: 0 },
   keys: new Set(),
   mouse: { down: false, lastX: 0, lastY: 0, dragging: false },
@@ -3825,139 +3881,133 @@ function setupTouch() {
   }, { passive: false })
 }
 
+// ── PANEL MANAGER ─────────────────────────────────────
+const ALL_PANELS = [
+  { id: 'chatPanel', stateKey: 'chatOpen', btnId: 'btnChat' },
+  { id: 'playerList', stateKey: 'playerListOpen', btnId: 'btnPlayers' },
+  { id: 'minimapWrap', stateKey: 'minimapOpen', btnId: 'btnMinimap' },
+  { id: 'buildPanel', stateKey: 'buildMode', btnId: 'btnBuild' },
+  { id: 'godPanel', stateKey: 'godMode', btnId: 'btnGod' },
+  { id: 'pwPanel', stateKey: 'pwMode', btnId: 'btnPW' },
+  { id: 'blockPanel', stateKey: 'blockMode', btnId: 'btnBlock' },
+  { id: 'gangPanel', stateKey: 'gangMode', btnId: 'btnGang' },
+  { id: 'incomePanel', stateKey: null, btnId: null },
+  { id: 'jobPanel', stateKey: null, btnId: null },
+]
+
+function closeAllPanels() {
+  for (const p of ALL_PANELS) {
+    const el = document.getElementById(p.id)
+    if (!el) continue
+    el.classList.add('panel-hidden')
+    el.classList.remove('open')
+    if (p.stateKey) state[p.stateKey] = false
+    if (p.btnId) {
+      const btn = document.getElementById(p.btnId)
+      if (btn) btn.classList.remove('active')
+    }
+  }
+  // Also reset mode-specific states not covered by stateKey
+  state.buildType = null
+  state.godPower = null
+  state.pwType = null
+  state.blockType = null
+  document.getElementById('modeIndicator').classList.remove('open')
+  // Clear grid item selections
+  document.querySelectorAll('.build-item, .god-item, .pw-item, .block-item').forEach(el => el.classList.remove('selected'))
+  // Close income/job specifics
+  stopIncomeCounter?.()
+  currentIncomeBuilding = null
+  if (currentJobBuilding) { currentJobBuilding = null; if (jobTimer) { clearInterval(jobTimer); jobTimer = null } }
+  // Hide backdrop
+  document.getElementById('panelBackdrop').classList.remove('open')
+}
+
+function openPanel(panelId, extra) {
+  // Toggle: if already open, just close it
+  const el = document.getElementById(panelId)
+  if (!el) return
+  if (!el.classList.contains('panel-hidden') && el.classList.contains('open')) {
+    closeAllPanels()
+    return
+  }
+  closeAllPanels()
+  el.classList.remove('panel-hidden')
+  el.classList.add('open')
+  // Set state for this panel
+  const entry = ALL_PANELS.find(p => p.id === panelId)
+  if (entry && entry.stateKey) state[entry.stateKey] = true
+  if (entry && entry.btnId) {
+    const btn = document.getElementById(entry.btnId)
+    if (btn) btn.classList.add('active')
+  }
+  // Show backdrop
+  document.getElementById('panelBackdrop').classList.add('open')
+  // Mode-specific init
+  if (panelId === 'buildPanel') {
+    state.buildMode = true; state.buildType = null
+    document.getElementById('modeIndicator').textContent = 'Build Mode: Click to place'
+    document.getElementById('modeIndicator').classList.add('open')
+    populateBuildGrid()
+  } else if (panelId === 'godPanel') {
+    state.godMode = true; state.godPower = null
+    document.getElementById('modeIndicator').textContent = 'God Mode: Click to trigger power'
+    document.getElementById('modeIndicator').classList.add('open')
+    populateGodGrid()
+  } else if (panelId === 'pwPanel') {
+    state.pwMode = true; state.pwType = null
+    document.getElementById('modeIndicator').textContent = 'Public Works: Click an item, then click the map'
+    document.getElementById('modeIndicator').classList.add('open')
+  } else if (panelId === 'blockPanel') {
+    state.blockMode = true; state.blockType = null
+    document.getElementById('modeIndicator').textContent = 'Urban DNA: Click a block type, then click the map'
+    document.getElementById('modeIndicator').classList.add('open')
+  } else if (panelId === 'gangPanel') {
+    state.gangMode = true
+    loadGangTab(currentGangTab)
+  } else if (panelId === 'chatPanel') {
+    state.chatOpen = true
+    document.getElementById('chatInput')?.focus()
+  } else if (panelId === 'minimapWrap') {
+    state.minimapOpen = true
+  }
+}
+
+function setupPanelManager() {
+  // ESC key closes active panel or cancels active mode
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const anyOpen = ALL_PANELS.some(p => {
+        const el = document.getElementById(p.id)
+        return el && !el.classList.contains('panel-hidden') && el.classList.contains('open')
+      })
+      const anyMode = state.buildMode || state.godMode || state.pwMode || state.blockMode || state.gangMode
+      if (anyOpen || anyMode) closeAllPanels()
+    }
+  })
+  // Backdrop click closes panels on mobile
+  document.getElementById('panelBackdrop').addEventListener('click', closeAllPanels)
+}
+
 function setupUI() {
-  document.getElementById('btnChat').addEventListener('click', () => {
-    state.chatOpen = !state.chatOpen
-    document.getElementById('chatPanel').classList.toggle('open', state.chatOpen)
-    document.getElementById('btnChat').classList.toggle('active', state.chatOpen)
-    if (state.chatOpen) document.getElementById('chatInput').focus()
-  })
-  document.getElementById('btnPlayers').addEventListener('click', () => {
-    state.playerListOpen = !state.playerListOpen
-    document.getElementById('playerList').classList.toggle('open', state.playerListOpen)
-    document.getElementById('btnPlayers').classList.toggle('active', state.playerListOpen)
-  })
-  document.getElementById('btnMinimap').addEventListener('click', () => {
-    state.minimapOpen = !state.minimapOpen
-    document.getElementById('minimapWrap').style.display = state.minimapOpen ? 'block' : 'none'
-    document.getElementById('btnMinimap').classList.toggle('active', state.minimapOpen)
-  })
-  document.getElementById('btnBuild').addEventListener('click', () => {
-    state.buildMode = !state.buildMode
-    document.getElementById('buildPanel').classList.toggle('open', state.buildMode)
-    document.getElementById('btnBuild').classList.toggle('active', state.buildMode)
-    document.getElementById('modeIndicator').classList.toggle('open', state.buildMode)
-    if (state.buildMode) {
-      state.godMode = false
-      document.getElementById('godPanel').classList.remove('open')
-      document.getElementById('btnGod').classList.remove('active')
-      populateBuildGrid()
-    }
-  })
-  document.getElementById('btnGod').addEventListener('click', () => {
-    state.godMode = !state.godMode
-    document.getElementById('godPanel').classList.toggle('open', state.godMode)
-    document.getElementById('btnGod').classList.toggle('active', state.godMode)
-    document.getElementById('modeIndicator').classList.toggle('open', state.godMode)
-    if (state.godMode) {
-      document.getElementById('modeIndicator').textContent = 'God Mode: Click to trigger power'
-      state.buildMode = false
-      document.getElementById('buildPanel').classList.remove('open')
-      document.getElementById('btnBuild').classList.remove('active')
-      populateGodGrid()
-    } else {
-      document.getElementById('modeIndicator').textContent = 'Build Mode: Click to place'
-    }
-  })
-  document.getElementById('buildPanelClose').addEventListener('click', () => {
-    state.buildMode = false
-    document.getElementById('buildPanel').classList.remove('open')
-    document.getElementById('btnBuild').classList.remove('active')
-    document.getElementById('modeIndicator').classList.remove('open')
-  })
-  document.getElementById('godPanelClose').addEventListener('click', () => {
-    state.godMode = false
-    document.getElementById('godPanel').classList.remove('open')
-    document.getElementById('btnGod').classList.remove('active')
-    document.getElementById('modeIndicator').classList.remove('open')
-  })
-  document.getElementById('btnPW').addEventListener('click', () => {
-    state.pwMode = !state.pwMode
-    document.getElementById('pwPanel').classList.toggle('open', state.pwMode)
-    document.getElementById('btnPW').classList.toggle('active', state.pwMode)
-    document.getElementById('modeIndicator').classList.toggle('open', state.pwMode)
-    if (state.pwMode) {
-      state.buildMode = false
-      document.getElementById('buildPanel').classList.remove('open')
-      document.getElementById('btnBuild').classList.remove('active')
-      state.godMode = false
-      document.getElementById('godPanel').classList.remove('open')
-      document.getElementById('btnGod').classList.remove('active')
-      document.getElementById('modeIndicator').textContent = 'Public Works: Click an item, then click the map'
-    } else {
-      state.pwType = null
-      document.querySelectorAll('.pw-item').forEach(el => el.classList.remove('selected'))
-      document.getElementById('modeIndicator').textContent = 'Build Mode: Click to place'
-    }
-  })
-  document.getElementById('pwPanelClose').addEventListener('click', () => {
-    state.pwMode = false
-    state.pwType = null
-    document.getElementById('pwPanel').classList.remove('open')
-    document.getElementById('btnPW').classList.remove('active')
-    document.getElementById('modeIndicator').classList.remove('open')
-    document.querySelectorAll('.pw-item').forEach(el => el.classList.remove('selected'))
-  })
-  document.getElementById('btnBlock').addEventListener('click', () => {
-    state.blockMode = !state.blockMode
-    document.getElementById('blockPanel').classList.toggle('open', state.blockMode)
-    document.getElementById('btnBlock').classList.toggle('active', state.blockMode)
-    document.getElementById('modeIndicator').classList.toggle('open', state.blockMode)
-    if (state.blockMode) {
-      state.buildMode = false
-      document.getElementById('buildPanel').classList.remove('open')
-      document.getElementById('btnBuild').classList.remove('active')
-      state.godMode = false
-      document.getElementById('godPanel').classList.remove('open')
-      document.getElementById('btnGod').classList.remove('active')
-      state.pwMode = false
-      document.getElementById('pwPanel').classList.remove('open')
-      document.getElementById('btnPW').classList.remove('active')
-      document.getElementById('modeIndicator').textContent = 'Urban DNA: Click a block type, then click the map'
-    } else {
-      state.blockType = null
-      document.querySelectorAll('.block-item').forEach(el => el.classList.remove('selected'))
-      document.getElementById('modeIndicator').textContent = 'Build Mode: Click to place'
-    }
-  })
-  document.getElementById('blockPanelClose').addEventListener('click', () => {
-    state.blockMode = false
-    state.blockType = null
-    document.getElementById('blockPanel').classList.remove('open')
-    document.getElementById('btnBlock').classList.remove('active')
-    document.getElementById('modeIndicator').classList.remove('open')
-    document.querySelectorAll('.block-item').forEach(el => el.classList.remove('selected'))
-  })
-  document.getElementById('blockGrid').addEventListener('click', (e) => {
-    const blockItem = e.target.closest('.block-item')
-    if (!blockItem) return
-    const type = blockItem.dataset.type
-    if (!type) return
-    document.querySelectorAll('.block-item').forEach(i => i.classList.remove('selected'))
-    blockItem.classList.add('selected')
-    state.blockType = type
-    showToast('Urban DNA', `Click on the map to place a ${type} block`)
-    document.getElementById('blockPanel').classList.remove('open')
-  })
-  document.getElementById('btnGang').addEventListener('click', () => {
-    if (document.getElementById('gangPanel').classList.contains('open')) {
-      closeGangPanel()
-    } else {
-      openGangPanel()
-    }
-  })
+  document.getElementById('btnChat').addEventListener('click', () => openPanel('chatPanel'))
+  document.getElementById('btnPlayers').addEventListener('click', () => openPanel('playerList'))
+  document.getElementById('btnMinimap').addEventListener('click', () => openPanel('minimapWrap'))
+  document.getElementById('btnBuild').addEventListener('click', () => openPanel('buildPanel'))
+  document.getElementById('btnGod').addEventListener('click', () => openPanel('godPanel'))
+  document.getElementById('btnPW').addEventListener('click', () => openPanel('pwPanel'))
+  document.getElementById('btnBlock').addEventListener('click', () => openPanel('blockPanel'))
+  document.getElementById('btnGang').addEventListener('click', () => openPanel('gangPanel'))
   document.getElementById('btnInfluenceView').addEventListener('click', toggleInfluenceView)
-  document.getElementById('gangPanelClose').addEventListener('click', closeGangPanel)
+
+  // Close buttons
+  document.getElementById('buildPanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('godPanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('pwPanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('blockPanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('gangPanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('incomePanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('jobPanelClose').addEventListener('click', closeAllPanels)
 
   // Gang tab switching
   document.addEventListener('click', (e) => {
@@ -3965,9 +4015,7 @@ function setupUI() {
       loadGangTab(e.target.dataset.tab)
     }
   })
-  document.getElementById('incomePanelClose').addEventListener('click', closeIncomePanel)
   document.getElementById('incomeCollectBtn').addEventListener('click', collectIncome)
-  document.getElementById('jobPanelClose').addEventListener('click', closeJobPanel)
   document.getElementById('jobStartBtn').addEventListener('click', startJob)
   document.getElementById('btnZoomIn').addEventListener('click', () => {
     state.camera.targetZoom = Math.min(3, state.camera.targetZoom * 1.3)
@@ -3990,16 +4038,45 @@ function setupUI() {
 
   document.getElementById('helpBuildBtn').addEventListener('click', () => {
     document.getElementById('helpPrompt').classList.remove('open')
-    state.buildMode = true
-    document.getElementById('buildPanel').classList.add('open')
-    document.getElementById('btnBuild').classList.add('active')
-    document.getElementById('modeIndicator').classList.add('open')
-    populateBuildGrid()
+    openPanel('buildPanel')
   })
   document.getElementById('helpCloseBtn').addEventListener('click', () => {
     document.getElementById('helpPrompt').classList.remove('open')
   })
+
+  // Init panel manager
+  setupPanelManager()
 }
+
+// PW grid item selection
+document.addEventListener('click', (e) => {
+  const pwItem = e.target.closest('.pw-item')
+  if (!pwItem) return
+  const type = pwItem.dataset.type
+  if (!type) return
+  document.querySelectorAll('.pw-item').forEach(i => i.classList.remove('selected'))
+  pwItem.classList.add('selected')
+  state.pwType = type
+  showToast('Public Works', `Click on the map to place ${type}`)
+  document.getElementById('pwPanel').classList.add('panel-hidden')
+  document.getElementById('pwPanel').classList.remove('open')
+  document.getElementById('panelBackdrop').classList.remove('open')
+})
+
+// Block grid item selection
+document.addEventListener('click', (e) => {
+  const blockItem = e.target.closest('.block-item')
+  if (!blockItem) return
+  const type = blockItem.dataset.type
+  if (!type) return
+  document.querySelectorAll('.block-item').forEach(i => i.classList.remove('selected'))
+  blockItem.classList.add('selected')
+  state.blockType = type
+  showToast('Urban DNA', `Click on the map to place a ${type} block`)
+  document.getElementById('blockPanel').classList.add('panel-hidden')
+  document.getElementById('blockPanel').classList.remove('open')
+  document.getElementById('panelBackdrop').classList.remove('open')
+})
 
 function populateBuildGrid() {
   const grid = document.getElementById('buildGrid')
@@ -4020,8 +4097,9 @@ function populateBuildGrid() {
       item.classList.add('selected')
       state.buildType = type
       showToast('Build Mode', `Click on the map to place ${info.name}`)
-      // Close the panel after selection
+      document.getElementById('buildPanel').classList.add('panel-hidden')
       document.getElementById('buildPanel').classList.remove('open')
+      document.getElementById('panelBackdrop').classList.remove('open')
     })
     grid.appendChild(item)
   }
@@ -4044,8 +4122,9 @@ function populateGodGrid() {
       item.classList.add('selected')
       state.godPower = type
       showToast('God Mode', `Click on the map to trigger ${info.name}`)
-      // Close the panel after selection
+      document.getElementById('godPanel').classList.add('panel-hidden')
       document.getElementById('godPanel').classList.remove('open')
+      document.getElementById('panelBackdrop').classList.remove('open')
     })
     grid.appendChild(item)
   }
@@ -4057,16 +4136,11 @@ let allGangsCache = [];
 let districtInfluencesCache = [];
 
 function openGangPanel() {
-  state.gangMode = true;
-  document.getElementById('gangPanel').classList.add('open');
-  document.getElementById('btnGang').classList.add('active');
-  loadGangTab(currentGangTab);
+  openPanel('gangPanel')
 }
 
 function closeGangPanel() {
-  state.gangMode = false;
-  document.getElementById('gangPanel').classList.remove('open');
-  document.getElementById('btnGang').classList.remove('active');
+  closeAllPanels()
 }
 
 function loadGangTab(tab) {
@@ -4472,6 +4546,9 @@ function openIncomePanel(buildingId) {
   currentIncomeBuilding = building
   const type = BUILDING_TYPES[building.building_type]
 
+  // Close any other panels first
+  closeAllPanels()
+
   document.getElementById('incomeBuildingName').textContent = type.name
   document.getElementById('incomeRate').textContent = building.income_rate
 
@@ -4540,12 +4617,14 @@ function openIncomePanel(buildingId) {
 
   // Start real-time counter
   startIncomeCounter()
+  // Show panel via panel manager
+  document.getElementById('incomePanel').classList.remove('panel-hidden')
+  document.getElementById('incomePanel').classList.add('open')
+  document.getElementById('panelBackdrop').classList.add('open')
 }
 
 function closeIncomePanel() {
-  stopIncomeCounter()
-  document.getElementById('incomePanel').classList.remove('open')
-  currentIncomeBuilding = null
+  closeAllPanels()
 }
 
 let incomeCounterInterval = null
@@ -4661,16 +4740,16 @@ function openJobPanel(buildingId) {
   document.getElementById('jobStartBtn').disabled = false
   document.getElementById('jobStartBtn').textContent = 'Start Work'
   
+  // Close any other panels first
+  closeAllPanels()
+  // Show panel via panel manager
+  document.getElementById('jobPanel').classList.remove('panel-hidden')
   document.getElementById('jobPanel').classList.add('open')
+  document.getElementById('panelBackdrop').classList.add('open')
 }
 
 function closeJobPanel() {
-  document.getElementById('jobPanel').classList.remove('open')
-  currentJobBuilding = null
-  if (jobTimer) {
-    clearInterval(jobTimer)
-    jobTimer = null
-  }
+  closeAllPanels()
 }
 
 async function startJob() {
