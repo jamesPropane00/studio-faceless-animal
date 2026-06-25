@@ -93,6 +93,7 @@ function findDistricts(buildings) {
       let cx = 0, cy = 0;
       let wealth = 0;
       let population = 0;
+      let hideCount = 0;
 
       for (const b of cluster) {
         typeCounts[b.building_type] = (typeCounts[b.building_type] || 0) + 1;
@@ -101,6 +102,7 @@ function findDistricts(buildings) {
         population += BUILDING_POPULATION[b.building_type] || 1;
         cx += b.tile_x;
         cy += b.tile_y;
+        if (b.building_type === 'hide') hideCount++;
       }
 
       cx = Math.floor(cx / cluster.length);
@@ -121,6 +123,14 @@ function findDistricts(buildings) {
       // Level: every 3 buildings = 1 level
       const level = Math.max(1, Math.floor(cluster.length / 3));
 
+      // Phase C: Crime rate calculation
+      // Each hide adds 25 crime, capped at 100
+      // More hides = more crime, but diminishing returns
+      const hideCrime = Math.min(100, hideCount * 25);
+      // Wealth reduces crime slightly (rich neighborhoods are safer)
+      const wealthMitigation = Math.min(20, Math.floor(wealth / 50));
+      const targetCrime = Math.max(0, hideCrime - wealthMitigation);
+
       districts.push({
         name: name,
         district_type: dominantType,
@@ -131,7 +141,8 @@ function findDistricts(buildings) {
         wealth: wealth,
         population: population,
         level: level,
-        building_breakdown: breakdown
+        building_breakdown: breakdown,
+        target_crime: targetCrime
       });
     }
   }
@@ -180,25 +191,45 @@ async function refreshDistricts(context) {
     // Calculate new districts
     const newDistricts = findDistricts(buildingsResult.data);
 
-    // Fetch existing districts to detect new ones
+    // Fetch existing districts to detect new ones + preserve crime_rate for decay
     const existingResult = await supabaseFetch(
       context.env,
-      '/rest/v1/world_districts?select=id,name,center_x,center_y,district_type'
+      '/rest/v1/world_districts?select=id,name,center_x,center_y,district_type,crime_rate'
     );
     const existingKeys = new Set();
+    const oldCrimeMap = new Map(); // key -> crime_rate (for gradual decay)
     if (existingResult.ok && Array.isArray(existingResult.data)) {
       for (const d of existingResult.data) {
-        existingKeys.add(`${d.center_x},${d.center_y},${d.district_type}`);
+        const key = `${d.center_x},${d.center_y},${d.district_type}`;
+        existingKeys.add(key);
+        oldCrimeMap.set(key, d.crime_rate || 0);
       }
     }
 
-    // Detect newly formed districts
+    // Detect newly formed districts + blend crime_rate (gradual rise/decay)
     const newlyFormed = [];
     for (const d of newDistricts) {
       const key = `${d.center_x},${d.center_y},${d.district_type}`;
-      if (!existingKeys.has(key)) {
+      const oldCrime = oldCrimeMap.get(key);
+      const targetCrime = d.target_crime || 0;
+
+      if (oldCrime != null) {
+        // Existing district: gradually move toward target crime
+        // Rise fast (+10 per refresh), decay slow (-5 per refresh)
+        if (targetCrime > oldCrime) {
+          d.crime_rate = Math.min(100, oldCrime + 10);
+        } else if (targetCrime < oldCrime) {
+          d.crime_rate = Math.max(0, oldCrime - 5);
+        } else {
+          d.crime_rate = oldCrime;
+        }
+      } else {
+        // New district: start at target crime
+        d.crime_rate = targetCrime;
         newlyFormed.push(d);
       }
+      // Remove target_crime (not a DB column)
+      delete d.target_crime;
     }
 
     // Delete old districts and insert new ones (simpler than diffing)
@@ -256,8 +287,12 @@ async function refreshDistricts(context) {
 
         // Calculate business_health (the cascade!)
         // Houses/camps: always healthy (residential, not businesses)
-        // Shops/clubs/warehouses/hides: health depends on district population + wealth
+        // Shops/clubs/warehouses/hides: health depends on district population + wealth + crime
         let health = 100;
+        let crimeRate = 0;
+        if (inDistrict && district) {
+          crimeRate = district.crime_rate || 0;
+        }
         if (inDistrict && district && b.building_type !== 'house' && b.building_type !== 'camp') {
           const pop = district.population || 0;
           const wealth = district.wealth || 0;
@@ -266,6 +301,11 @@ async function refreshDistricts(context) {
           health = Math.min(100, Math.max(10, Math.floor(
             30 + pop * 0.8 + wealth * 0.05 + condition * 0.2
           )));
+          // Phase C: Crime penalty — high crime reduces business health
+          // At crime=0: full health. At crime=100: health halved
+          const crimePenalty = Math.floor(health * (crimeRate / 200));
+          health = health - crimePenalty;
+          health = Math.max(10, health);
         } else if (!inDistrict && b.building_type !== 'house' && b.building_type !== 'camp') {
           // Isolated businesses: lower health (no customers nearby)
           const condition = b.condition || 100;

@@ -36,6 +36,11 @@ async function supabaseFetch(env, path, options = {}) {
 }
 
 function calculateAccumulatedIncome(building) {
+  // Phase 5A: Use pending_income if available (from simulation tick)
+  const pending = parseFloat(building.pending_income) || 0;
+  if (pending > 0) return Math.floor(pending);
+
+  // Fallback: old calculation based on elapsed time (backward compat)
   if (!building.last_collected_at) return 0;
   const now = Date.now();
   const lastCollected = new Date(building.last_collected_at).getTime();
@@ -72,8 +77,8 @@ export async function onRequestPost(context) {
       return json({ ok: false, error: 'Missing userId or buildingId.' }, 400);
     }
 
-    // Fetch building from Supabase (include business_health for income calc)
-    const buildingQuery = `select=id,owner_id,building_type,income_rate,last_collected_at,in_district,business_health,condition&id=eq.${buildingId}`;
+    // Fetch building from Supabase (include status + pending_income for Phase 5A)
+    const buildingQuery = `select=id,owner_id,building_type,income_rate,last_collected_at,in_district,business_health,condition,status,pending_income&id=eq.${buildingId}`;
     const buildingResult = await supabaseFetch(context.env, `/rest/v1/world_building_states?${buildingQuery}`);
     
     if (!buildingResult.ok || !Array.isArray(buildingResult.data) || buildingResult.data.length === 0) {
@@ -84,6 +89,11 @@ export async function onRequestPost(context) {
     
     if (building.owner_id !== userId) {
       return json({ ok: false, error: 'You do not own this building.' }, 403);
+    }
+
+    // Phase 5A: Closed buildings generate no income
+    if (building.status === 'closed') {
+      return json({ ok: true, coinsCollected: 0, message: 'This building is closed. Renovate it to resume operations.' });
     }
 
     const income = calculateAccumulatedIncome(building);
@@ -125,12 +135,13 @@ export async function onRequestPost(context) {
       }
     }
 
-    // Update building last_collected_at
+    // Update building last_collected_at and reset pending_income
     const updateBuilding = await supabaseFetch(context.env, `/rest/v1/world_building_states?id=eq.${buildingId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        last_collected_at: new Date().toISOString()
+        last_collected_at: new Date().toISOString(),
+        pending_income: 0
       })
     });
 

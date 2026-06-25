@@ -178,7 +178,18 @@ CREATE POLICY "ge_insert" ON world_gang_events FOR INSERT TO service_role WITH C
 CREATE POLICY "ge_update" ON world_gang_events FOR UPDATE TO service_role USING (true);
 CREATE POLICY "ge_delete" ON world_gang_events FOR DELETE TO service_role USING (true);
 
--- 14. VERIFY
+-- 15. PHASE C: Crime & Safety
+ALTER TABLE world_districts
+ADD COLUMN IF NOT EXISTS crime_rate INTEGER NOT NULL DEFAULT 0;
+
+-- 16. PHASE 5A: Resource Simulation
+ALTER TABLE world_building_states
+ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
+
+ALTER TABLE world_building_states
+ADD COLUMN IF NOT EXISTS pending_income NUMERIC(10,2) NOT NULL DEFAULT 0;
+
+-- 17. VERIFY
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'

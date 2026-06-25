@@ -125,7 +125,8 @@ export async function onRequestPost(context) {
       condition: 100,
       income_rate: BUILDING_TYPES[type].income,
       last_collected_at: new Date().toISOString(),
-      in_district: false
+      in_district: false,
+      status: 'active'
     };
 
     const insertResult = await supabaseFetch(context.env, `/rest/v1/world_building_states`, {
@@ -180,7 +181,8 @@ export async function onRequestPost(context) {
         tile_y: tileY,
         owner_id: userId || null,
         condition: 100,
-        income_rate: BUILDING_TYPES[type].income
+        income_rate: BUILDING_TYPES[type].income,
+        status: 'active'
       }
     });
   } catch (error) {
