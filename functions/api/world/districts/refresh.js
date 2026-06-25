@@ -229,19 +229,14 @@ async function refreshDistricts(context) {
         }
       }
 
-      // Generate unique integer IDs for each district (table id is INTEGER max 2147483647)
-      // Use random base + index
-      const baseId = Math.floor(Math.random() * 1000000000) + 1;
-      const districtsWithIds = newDistricts.map((d, i) => ({ id: baseId + i, ...d }));
-
-      // Insert new districts
+      // Insert new districts — let DB auto-generate UUID via DEFAULT gen_random_uuid()
       const insertResult = await supabaseFetch(
         context.env,
         '/rest/v1/world_districts',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
-          body: JSON.stringify(districtsWithIds)
+          body: JSON.stringify(newDistricts)
         }
       );
 
