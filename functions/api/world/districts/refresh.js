@@ -377,23 +377,25 @@ async function refreshDistricts(context) {
 
         buildingUpdates.push({
           id: b.id,
-          body: JSON.stringify({ in_district: inDistrict, business_health: health })
+          in_district: inDistrict,
+          business_health: health
         });
       }
 
-      // Batch PATCH in parallel (25 at a time)
-      const batchSize = 25;
-      for (let i = 0; i < buildingUpdates.length; i += batchSize) {
-        const batch = buildingUpdates.slice(i, i + batchSize);
-        await Promise.allSettled(
-          batch.map(u =>
-            supabaseFetch(
-              context.env,
-              `/rest/v1/world_building_states?id=eq.${u.id}`,
-              { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: u.body }
-            )
-          )
+      // Bulk upsert all building updates in one subrequest (avoids 50-subrequest limit)
+      if (buildingUpdates.length > 0) {
+        const upsertResult = await supabaseFetch(
+          context.env,
+          '/rest/v1/world_building_states',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+            body: JSON.stringify(buildingUpdates)
+          }
         );
+        if (!upsertResult.ok) {
+          console.warn('[WORLD] building upsert failed:', upsertResult.status, upsertResult.data);
+        }
       }
 
       // Phase 5B: Auto-road generation via MST
@@ -414,8 +416,8 @@ async function refreshDistricts(context) {
         roadItems = generateAutoRoads(newDistricts, buildingsResult.data);
         console.log('[WORLD] auto-road generated', roadItems.length, 'road tiles across', newDistricts.length, 'districts');
         if (roadItems.length > 0) {
-          for (let i = 0; i < roadItems.length; i += 50) {
-            const batch = roadItems.slice(i, i + 50);
+          for (let i = 0; i < roadItems.length; i += 500) {
+            const batch = roadItems.slice(i, i + 500);
             const insResult = await supabaseFetch(
               context.env,
               '/rest/v1/world_infrastructure',
@@ -426,8 +428,8 @@ async function refreshDistricts(context) {
               }
             );
             if (!insResult.ok) {
-              console.warn('[WORLD] auto-road INSERT batch', i / 50, 'failed:', insResult.status, insResult.data);
-              roadErrors.push('INSERT batch ' + (i / 50) + ' failed: ' + insResult.status);
+              console.warn('[WORLD] auto-road INSERT batch', i / 500, 'failed:', insResult.status, insResult.data);
+              roadErrors.push('INSERT batch ' + (i / 500) + ' failed: ' + insResult.status);
             }
           }
         } else {
@@ -449,29 +451,31 @@ async function refreshDistricts(context) {
         }
       );
       // Clear in_district + set low health on all buildings (no districts = no customers)
-      const buildingUpdates = [];
+      const noDistBuildingUpdates = [];
       for (const b of buildingsResult.data) {
         const condition = b.condition || 100;
         const health = (b.building_type === 'house' || b.building_type === 'camp')
           ? 100
           : Math.min(100, Math.max(10, Math.floor(20 + condition * 0.3)));
-        buildingUpdates.push({
+        noDistBuildingUpdates.push({
           id: b.id,
-          body: JSON.stringify({ in_district: false, business_health: health })
+          in_district: false,
+          business_health: health
         });
       }
-      const batchSize = 25;
-      for (let i = 0; i < buildingUpdates.length; i += batchSize) {
-        const batch = buildingUpdates.slice(i, i + batchSize);
-        await Promise.allSettled(
-          batch.map(u =>
-            supabaseFetch(
-              context.env,
-              `/rest/v1/world_building_states?id=eq.${u.id}`,
-              { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: u.body }
-            )
-          )
+      if (noDistBuildingUpdates.length > 0) {
+        const upsertResult = await supabaseFetch(
+          context.env,
+          '/rest/v1/world_building_states',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+            body: JSON.stringify(noDistBuildingUpdates)
+          }
         );
+        if (!upsertResult.ok) {
+          console.warn('[WORLD] no-district building upsert failed:', upsertResult.status, upsertResult.data);
+        }
       }
       // Also clear auto-roads when no districts exist
       try {
