@@ -1942,6 +1942,11 @@ import { supabase, SUPABASE_READY } from '/assets/js/supabase-client.js'
 import { getStoredSession } from '/assets/js/auth.js'
 import { mountWorldAccount } from '/assets/js/world-account.js'
 
+import { BUILDING_TYPES, DISTRICT_TYPE_COLORS, DISTRICT_TYPE_ICONS, DISTRICT_TYPE_LABELS } from '/world/js/data/buildings.js'
+import { REGIONS, NEIGHBORHOOD_THEMES } from '/world/js/data/regions.js'
+import { GOD_POWERS, CROP_TYPES } from '/world/js/data/items.js'
+import { WEATHER_TYPES, WEATHER_COLORS } from '/world/js/core/weather.js'
+
 const canvas = document.getElementById('gameCanvas')
 const ctx = canvas.getContext('2d')
 const miniCanvas = document.getElementById('minimapCanvas')
@@ -1972,66 +1977,7 @@ const TERRAIN_COLORS = {
   [TERRAIN.BUILDING]:   ['#2c2c3a','#24242f'],
 }
 
-// ── REGION DEFINITIONS ─────────────────────────────────────
-const REGIONS = {
-  city: {
-    id: 'city', name: 'Faceless City', type: 'city',
-    desc: 'The beating heart of the world. Neon lights, crowded streets, and endless opportunity.',
-    connections: ['farmlands', 'whisper-woods', 'iron-district'],
-    mapPos: { x: 2, y: 2 },
-    color: '#a78bfa',
-    label: '\u{1F3D9}\uFE0F',
-  },
-  farmlands: {
-    id: 'farmlands', name: 'Farmlands', type: 'farmlands',
-    desc: 'Golden fields and peaceful pastures stretching to the horizon.',
-    connections: ['city', 'whisper-woods'],
-    mapPos: { x: 0, y: 2 },
-    color: '#84cc16',
-    label: '\u{1F33E}',
-  },
-  'whisper-woods': {
-    id: 'whisper-woods', name: 'Whisper Woods', type: 'forest',
-    desc: 'Ancient trees that whisper secrets. Glowing creatures roam the undergrowth.',
-    connections: ['city', 'farmlands', 'mountains'],
-    mapPos: { x: 1, y: 0 },
-    color: '#22c55e',
-    label: '\u{1F333}',
-  },
-  'iron-district': {
-    id: 'iron-district', name: 'Iron District', type: 'industrial',
-    desc: 'Factories never sleep. Smoke and steel dominate the skyline.',
-    connections: ['city', 'mountains'],
-    mapPos: { x: 4, y: 2 },
-    color: '#6b7280',
-    label: '\u{1F3ED}',
-  },
-  mountains: {
-    id: 'mountains', name: 'Mountains', type: 'mountain',
-    desc: 'Snow-capped peaks hide ancient caves and valuable ore.',
-    connections: ['whisper-woods', 'iron-district', 'coast'],
-    mapPos: { x: 3, y: 0 },
-    color: '#a8a29e',
-    label: '\u26F0\uFE0F',
-  },
-  coast: {
-    id: 'coast', name: 'Coast', type: 'coast',
-    desc: 'Where the city meets the sea. Docks, beaches, and ocean trade.',
-    connections: ['mountains', 'purple-pulse'],
-    mapPos: { x: 4, y: 4 },
-    color: '#38bdf8',
-    label: '\u{1F3DD}\uFE0F',
-  },
-  'purple-pulse': {
-    id: 'purple-pulse', name: 'Purple Pulse', type: 'nightlife',
-    desc: 'The underground never sleeps. Music, bass, and neon-drenched alleys.',
-    connections: ['coast', 'city'],
-    mapPos: { x: 2, y: 4 },
-    color: '#c084fc',
-    label: '\u{1F3A8}',
-  },
-}
-
+// ── REGION DEFINITIONS ── (imported from /world/js/data/regions.js)
 const state = {
   camera: { x: 0, y: 0, zoom: 1, targetZoom: 1 },
   player: { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, tx: WORLD_SIZE / 2, ty: WORLD_SIZE / 2, speed: 3.5, color: '#a78bfa', name: '' },
@@ -2131,30 +2077,7 @@ function invalidateTileCache() {
   minimapCache.playerX = NaN
 }
 
-const BUILDING_TYPES = {
-  house: { name: 'House', color: '#6B5B8A', height: 12, cost: 50, income: 0.5 },
-  shop: { name: 'Shop', color: '#5B9CFF', height: 10, cost: 100, income: 1, glow: 'rgba(91,156,255,0.15)' },
-  club: { name: 'Club', color: '#FF3CAC', height: 14, cost: 150, income: 2, glow: 'rgba(255,60,172,0.2)' },
-  warehouse: { name: 'Warehouse', color: '#5A6A7A', height: 8, cost: 75, income: 1 },
-  hide: { name: 'Hide', color: '#3A2A4A', height: 6, cost: 200, income: 3 },
-  camp: { name: 'Camp', color: '#6A4A3A', height: 4, cost: 25, income: 0 }
-}
-
-const DISTRICT_TYPE_COLORS = {
-  house:     '#8B7355',
-  shop:      '#4A90E2',
-  club:      '#E91E63',
-  warehouse: '#607D8B',
-  hide:      '#6B7280',
-  camp:      '#795548'
-}
-
-// ── FARM CROP TYPES ───────────────────────────────────────
-const CROP_TYPES = {
-  corn: { name: 'Corn', icon: '\u{1F33D}', growthTime: 45000, stages: 3, yield: 2, color: '#fbbf24' },
-  wheat: { name: 'Wheat', icon: '\u{1F33E}', growthTime: 30000, stages: 3, yield: 1, color: '#eab308' },
-  veggies: { name: 'Vegetables', icon: '\u{1F955}', growthTime: 60000, stages: 4, yield: 3, color: '#4ade80' },
-}
+// BUILDING_TYPES, DISTRICT_TYPE_COLORS, CROP_TYPES — imported from /world/js/data/
 
 // ── FARM DATA (localStorage-managed) ─────────────────────
 function getFarmData() {
@@ -3040,39 +2963,8 @@ function drawFarmCrop(lot) {
   }
 }
 
-const DISTRICT_TYPE_ICONS = {
-  house:     '🏠',
-  shop:      '🏪',
-  club:      '🎵',
-  warehouse: '📦',
-  hide:      '🕶',
-  camp:      '⛺'
-}
-
-const DISTRICT_TYPE_LABELS = {
-  house:     'Residential',
-  shop:      'Commercial',
-  club:      'Entertainment',
-  warehouse: 'Industrial',
-  hide:      'Hidden',
-  camp:      'Outskirts'
-}
-
-const GOD_POWERS = {
-  meteor: { name: 'Meteor Strike', icon: '\u2604\uFE0F', cost: 200, radius: 3, desc: 'Destroy buildings in area' },
-  blessing: { name: 'Divine Blessing', icon: '\u2728', cost: 100, radius: 5, desc: 'Restore buildings in area' },
-  earthquake: { name: 'Earthquake', icon: '\u{1F30B}', cost: 150, radius: 8, desc: 'Damage buildings in area' },
-  spawn_npc: { name: 'Spawn NPC', icon: '\u{1F464}', cost: 25, radius: 0, desc: 'Create a new citizen' }
-}
-
-const WEATHER_TYPES = ['clear', 'cloudy', 'rain', 'storm', 'fog']
-const WEATHER_COLORS = {
-  clear: { sky: 'rgba(135,206,235,0.05)', ground: null },
-  cloudy: { sky: 'rgba(100,100,120,0.15)', ground: null },
-  rain: { sky: 'rgba(70,80,100,0.25)', ground: 'rgba(50,60,80,0.1)' },
-  storm: { sky: 'rgba(40,40,60,0.4)', ground: 'rgba(30,30,50,0.15)' },
-  fog: { sky: 'rgba(180,180,200,0.3)', ground: 'rgba(200,200,220,0.2)' }
-}
+// DISTRICT_TYPE_ICONS, DISTRICT_TYPE_LABELS, GOD_POWERS — imported from /world/js/data/
+// WEATHER_TYPES, WEATHER_COLORS — imported from /world/js/core/weather.js
 
 const NPC_ROUTINES = {
   sleeper: { sleepStart: 0.85, sleepEnd: 0.25, workStart: 0.3, workEnd: 0.7 },
@@ -3508,44 +3400,7 @@ function updateNPCRoutine(npc, dt) {
   }
 }
 
-// Phase 6F: Neighborhood Identity — themed districts
-const NEIGHBORHOOD_THEMES = {
-  purple_pulse: {
-    name: 'Purple Pulse', emoji: '🎵', color: '#a78bfa',
-    roadTint: 'rgba(167, 139, 250, 0.2)',
-    buildingTint: 'rgba(167, 139, 250, 0.06)',
-    glowColor: 'rgba(167, 139, 250, 0.04)',
-    desc: 'Nightlife · Music · Neon'
-  },
-  graffiti_row: {
-    name: 'Graffiti Row', emoji: '🎨', color: '#f43f5e',
-    roadTint: 'rgba(244, 63, 94, 0.15)',
-    buildingTint: 'rgba(251, 191, 36, 0.06)',
-    glowColor: 'rgba(244, 63, 94, 0.04)',
-    desc: 'Murals · Art · Street Culture'
-  },
-  signal_square: {
-    name: 'Signal Square', emoji: '📡', color: '#3b82f6',
-    roadTint: 'rgba(59, 130, 246, 0.15)',
-    buildingTint: 'rgba(96, 165, 250, 0.06)',
-    glowColor: 'rgba(59, 130, 246, 0.04)',
-    desc: 'Media · News · Broadcast'
-  },
-  old_harbor: {
-    name: 'Old Harbor', emoji: '⚓', color: '#d97706',
-    roadTint: 'rgba(217, 119, 6, 0.15)',
-    buildingTint: 'rgba(180, 130, 80, 0.06)',
-    glowColor: 'rgba(217, 119, 6, 0.04)',
-    desc: 'Markets · Docks · Trade'
-  },
-  iron_district: {
-    name: 'Iron District', emoji: '🏭', color: '#6b7280',
-    roadTint: 'rgba(107, 114, 128, 0.2)',
-    buildingTint: 'rgba(156, 163, 175, 0.06)',
-    glowColor: 'rgba(107, 114, 128, 0.04)',
-    desc: 'Industry · Warehouses · Freight'
-  }
-}
+// NEIGHBORHOOD_THEMES — imported from /world/js/data/regions.js
 
 function computeDistrictThemes() {
   if (!state.districts || !state.buildings) return
