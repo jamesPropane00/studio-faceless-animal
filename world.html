@@ -912,6 +912,14 @@
     .region-farmlands { display: none; }
     body.in-farmlands .region-farmlands { display: block; }
 
+    /* Farm warm lighting overlay */
+    .farm-warmth {
+      position: fixed; inset: 0; z-index: 4; pointer-events: none;
+      opacity: 0; transition: opacity 0.8s;
+      background: radial-gradient(ellipse at 50% 30%, rgba(255,200,100,0.06) 0%, rgba(255,160,60,0.03) 40%, transparent 70%);
+    }
+    body.in-farmlands .farm-warmth { opacity: 1; }
+
     .farm-inventory {
       position: fixed;
       top: calc(max(12px, env(safe-area-inset-top,0px)) + 100px);
@@ -920,15 +928,52 @@
       display: flex;
       flex-direction: column;
       gap: 3px;
-      background: rgba(18,20,30,0.82);
-      border: 1px solid var(--border);
+      background: rgba(18,20,30,0.85);
+      border: 1px solid rgba(132,204,22,0.2);
       border-radius: var(--radius-sm);
       padding: 0.4rem 0.6rem;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      min-width: 100px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      min-width: 120px;
     }
     .farm-inventory.hidden { display: none; }
+
+    /* Farm deed header */
+    .farm-deed {
+      margin-bottom: 0.3rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid rgba(132,204,22,0.15);
+    }
+    .farm-deed-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #84cc16;
+      margin-bottom: 0.2rem;
+    }
+    .farm-deed-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.55rem;
+      color: var(--dim);
+      line-height: 1.5;
+    }
+    .farm-deed-label { color: var(--dim2); }
+    .farm-deed-val { font-weight: 600; color: var(--text); }
+    .farm-deed-val.gold { color: var(--gold); }
+
+    .farm-inv-section {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .farm-inv-section-title {
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--dim2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
     .farm-inv-row {
       display: flex;
       align-items: center;
@@ -938,9 +983,10 @@
     }
     .farm-inv-row .icon { font-size: 0.85rem; width: 18px; text-align: center; }
     .farm-inv-row .count { color: var(--bright); font-weight: 700; margin-left: auto; }
+    .farm-inv-row .count.gold { color: var(--gold); }
     .farm-send-btn {
       margin-top: 0.3rem;
-      padding: 0.25rem 0.5rem;
+      padding: 0.3rem 0.5rem;
       border-radius: var(--radius-sm);
       border: 1px solid var(--gold);
       background: rgba(234,179,8,0.12);
@@ -1776,12 +1822,29 @@
 </div>
 
 <div class="world-vignette"></div>
+<div class="farm-warmth"></div>
 
 <div class="farm-inventory hidden" id="farmInventory">
-  <div class="farm-inv-row"><span class="icon">&#x1F33D;</span> Corn <span class="count" id="farmCorn">0</span></div>
-  <div class="farm-inv-row"><span class="icon">&#x1F33E;</span> Wheat <span class="count" id="farmWheat">0</span></div>
-  <div class="farm-inv-row"><span class="icon">&#x1F955;</span> Veggies <span class="count" id="farmVeggies">0</span></div>
-  <button class="farm-send-btn" id="farmSendBtn">Send Crops to City</button>
+  <div class="farm-deed">
+    <div class="farm-deed-title">&#x1F3E1; Pine Hollow Farm</div>
+    <div class="farm-deed-row"><span class="farm-deed-label">Owner</span><span class="farm-deed-val" id="farmDeedOwner">---</span></div>
+    <div class="farm-deed-row"><span class="farm-deed-label">Property Value</span><span class="farm-deed-val gold" id="farmDeedValue">45,000 FC</span></div>
+    <div class="farm-deed-row"><span class="farm-deed-label">Region</span><span class="farm-deed-val" style="color:#84cc16">Farmlands</span></div>
+  </div>
+  <div class="farm-inv-section">
+    <div class="farm-inv-section-title">Inventory</div>
+    <div class="farm-inv-row"><span class="icon">&#x1F33D;</span> Corn <span class="count" id="farmCorn">0</span></div>
+    <div class="farm-inv-row"><span class="icon">&#x1F33E;</span> Wheat <span class="count" id="farmWheat">0</span></div>
+    <div class="farm-inv-row"><span class="icon">&#x1F955;</span> Veggies <span class="count" id="farmVeggies">0</span></div>
+    <div class="farm-inv-row" style="border-top:1px solid var(--border);padding-top:3px;margin-top:3px">
+      <span class="icon">&#x1F372;</span> Food <span class="count gold" id="farmFood">0</span>
+    </div>
+  </div>
+  <div class="farm-inv-row" style="margin-top:2px">
+    <span style="font-size:0.6rem;color:var(--dim)">&#x1F331; Ready:</span>
+    <span class="count" id="farmReadyCount" style="font-size:0.6rem">0</span>
+  </div>
+  <button class="farm-send-btn" id="farmSendBtn">&#x1F69A; Send Crops to City</button>
 </div>
 
 <div class="farm-plant-overlay hidden" id="farmPlantOverlay">
@@ -2062,8 +2125,26 @@ function updateFarmInventory() {
   document.getElementById('farmCorn').textContent = data.inventory.corn || 0
   document.getElementById('farmWheat').textContent = data.inventory.wheat || 0
   document.getElementById('farmVeggies').textContent = data.inventory.veggies || 0
-  const total = (data.inventory.corn || 0) + (data.inventory.wheat || 0) + (data.inventory.veggies || 0)
-  document.getElementById('farmSendBtn').disabled = total < 1
+  // Compute food from raw crops (3:1)
+  const totalRaw = (data.inventory.corn || 0) + (data.inventory.wheat || 0) + (data.inventory.veggies || 0)
+  const food = Math.floor(totalRaw / 3)
+  document.getElementById('farmFood').textContent = food
+  document.getElementById('farmSendBtn').disabled = food < 1
+
+  // Count ready crops
+  const now = Date.now()
+  let ready = 0
+  for (const crop of (data.crops || [])) {
+    const info = CROP_TYPES[crop.type]
+    if (!info) continue
+    const elapsed = now - crop.plantedAt
+    if (elapsed >= info.growthTime) ready++
+  }
+  document.getElementById('farmReadyCount').textContent = ready
+
+  // Set deed owner
+  const name = state.player?.name || state.username || 'Farmer'
+  document.getElementById('farmDeedOwner').textContent = name
 }
 
 function showFarmPlantOverlay(tx, ty) {
@@ -2153,8 +2234,9 @@ function harvestCrop(tx, ty) {
 
 async function sendFoodToCity() {
   const data = getFarmData()
-  const total = (data.inventory.corn || 0) + (data.inventory.wheat || 0) + (data.inventory.veggies || 0)
-  if (total < 1) return
+  const totalRaw = (data.inventory.corn || 0) + (data.inventory.wheat || 0) + (data.inventory.veggies || 0)
+  const food = Math.floor(totalRaw / 3)
+  if (food < 1) return
 
   const btn = document.getElementById('farmSendBtn')
   btn.disabled = true
@@ -2164,7 +2246,7 @@ async function sendFoodToCity() {
     const res = await fetch('/api/world/farm/send-food', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ foodAmount: total, userId: state.userId })
+      body: JSON.stringify({ foodAmount: food, userId: state.userId })
     })
     const result = await res.json()
     if (result.ok) {
@@ -2173,11 +2255,9 @@ async function sendFoodToCity() {
       data.inventory.veggies = 0
       saveFarmData(data)
       updateFarmInventory()
-      state.coins = result.coins || state.coins
-      state.rep = result.rep || state.rep
       document.getElementById('statCoins').textContent = state.coins
       document.getElementById('statRep').textContent = state.rep
-      showToast(`Sent ${total} crops to the city! Earned ${result.reward || 0} coins.`, '')
+      showToast(`Delivered ${food} food to the city!`, '')
     } else {
       showToast('Failed to send: ' + (result.error || 'unknown'), '')
     }
@@ -2185,7 +2265,7 @@ async function sendFoodToCity() {
     showToast('Error sending food', '')
   }
   btn.disabled = false
-  btn.textContent = 'Send Crops to City'
+  btn.textContent = '🚚 Send Crops to City'
 }
 
 // Draw crops on field lots
@@ -2460,6 +2540,32 @@ function generateChunk(cx, cy, regionId) {
     tiles.push(row)
   }
   const chunk = { cx, cy, tiles, region: r }
+  
+  // Generate farm decorations for farmlands
+  if (r === 'farmlands') {
+    const decors = []
+    const seed = cx * 7919 + cy * 6271
+    let rng = seed
+    const rand = () => { rng = (rng * 1664525 + 1013904223) & 0x7fffffff; return rng / 0x7fffffff }
+    const decorTypes = ['fence', 'haybale', 'windmill', 'pond']
+    // Attempt ~6-10 decorations per chunk
+    const count = 4 + Math.floor(rand() * 7)
+    for (let i = 0; i < count; i++) {
+      const lx = Math.floor(rand() * CHUNK_SIZE)
+      const ly = Math.floor(rand() * CHUNK_SIZE)
+      const wx = cx * CHUNK_SIZE + lx
+      const wy = cy * CHUNK_SIZE + ly
+      const terrain = tiles[ly][lx]
+      // Only place on grass/dirt, not on water/building tiles
+      if (terrain === TERRAIN.WATER || terrain === TERRAIN.DEEP_WATER || terrain === TERRAIN.BUILDING) continue
+      const type = decorTypes[Math.floor(rand() * decorTypes.length)]
+      // Don't place too many of the same type
+      if (decors.filter(d => d.type === type).length > 3) continue
+      decors.push({ type, wx, wy, seed: rand() })
+    }
+    chunk.decorations = decors
+  }
+
   state.chunks.set(key, chunk)
   return chunk
 }
@@ -3631,6 +3737,95 @@ function drawDistrict(district) {
   }
 }
 
+// Phase 5A: Farm decorations (fences, haybales, windmills, ponds)
+function drawFarmDecorations() {
+  if (state.currentRegion !== 'farmlands') return
+  const w = canvas.width / (Math.min(window.devicePixelRatio || 1, 2))
+  const h = canvas.height / (Math.min(window.devicePixelRatio || 1, 2))
+  const z = state.camera.zoom
+  if (z < 0.3) return
+
+  const px = Math.floor(state.player.x)
+  const py = Math.floor(state.player.y)
+  const viewRange = Math.ceil(Math.max(w, h) / (TILE_H * z)) + 4
+
+  for (const [key, chunk] of state.chunks) {
+    if (!chunk.decorations || chunk.decorations.length === 0) continue
+    const dcx = chunk.cx * CHUNK_SIZE + CHUNK_SIZE / 2
+    const dcy = chunk.cy * CHUNK_SIZE + CHUNK_SIZE / 2
+    if (Math.abs(dcx - px) > viewRange + CHUNK_SIZE || Math.abs(dcy - py) > viewRange + CHUNK_SIZE) continue
+
+    for (const dec of chunk.decorations) {
+      const s = worldToScreen(dec.wx, dec.wy)
+      // Skip non-visible
+      if (!s || s.x < -TILE_W * z || s.x > w + TILE_W * z || s.y < -TILE_W * z || s.y > h + TILE_W * z) continue
+      
+      // Skip if a building occupies this tile
+      const occupied = state.buildings && state.buildings.some(b => b.tile_x === dec.wx && b.tile_y === dec.ty)
+      if (occupied) continue
+
+      const hw = (TILE_W / 2) * z
+      const hh = (TILE_H / 2) * z
+      const dh = hw * 0.5 // half of half for positioning
+
+      switch (dec.type) {
+        case 'fence': {
+          const fenceDir = dec.seed > 0.5
+          ctx.strokeStyle = 'rgba(180,140,100,0.7)'
+          ctx.lineWidth = 1.5 * z
+          if (fenceDir) {
+            ctx.beginPath(); ctx.moveTo(s.x - hw * 0.6, s.y - hh * 0.3); ctx.lineTo(s.x + hw * 0.6, s.y + hh * 0.3); ctx.stroke()
+            ctx.beginPath(); ctx.moveTo(s.x - hw * 0.4, s.y - hh * 0.5); ctx.lineTo(s.x - hw * 0.4, s.y - hh * 0.1); ctx.stroke()
+            ctx.beginPath(); ctx.moveTo(s.x + hw * 0.4, s.y + hh * 0.1); ctx.lineTo(s.x + hw * 0.4, s.y + hh * 0.5); ctx.stroke()
+          } else {
+            ctx.beginPath(); ctx.moveTo(s.x - hw * 0.3, s.y - hh * 0.6); ctx.lineTo(s.x + hw * 0.3, s.y + hh * 0.6); ctx.stroke()
+            ctx.beginPath(); ctx.moveTo(s.x - hw * 0.5, s.y - hh * 0.4); ctx.lineTo(s.x - hw * 0.1, s.y - hh * 0.4); ctx.stroke()
+            ctx.beginPath(); ctx.moveTo(s.x + hw * 0.1, s.y + hh * 0.4); ctx.lineTo(s.x + hw * 0.5, s.y + hh * 0.4); ctx.stroke()
+          }
+          break
+        }
+        case 'haybale': {
+          const br = 3 * z
+          ctx.fillStyle = 'rgba(218,165,32,0.7)'
+          ctx.beginPath(); ctx.ellipse(s.x + dh * 0.1, s.y - dh * 0.2, br, br * 0.7, 0, 0, Math.PI * 2); ctx.fill()
+          ctx.fillStyle = 'rgba(200,150,30,0.5)'
+          ctx.beginPath(); ctx.ellipse(s.x - dh * 0.1, s.y + dh * 0.1, br * 1.1, br * 0.6, 0.3, 0, Math.PI * 2); ctx.fill()
+          break
+        }
+        case 'windmill': {
+          const mw = 2.5 * z
+          const mh = 8 * z
+          // Tower
+          ctx.fillStyle = 'rgba(160,140,120,0.7)'
+          ctx.beginPath()
+          ctx.moveTo(s.x - mw, s.y - dh * 0.3)
+          ctx.lineTo(s.x + mw, s.y - dh * 0.3)
+          ctx.lineTo(s.x + mw * 0.6, s.y - dh * 0.3 - mh)
+          ctx.lineTo(s.x - mw * 0.6, s.y - dh * 0.3 - mh)
+          ctx.closePath(); ctx.fill()
+          // Roof triangle
+          ctx.fillStyle = 'rgba(120,100,80,0.6)'
+          ctx.beginPath()
+          ctx.moveTo(s.x - mw * 0.8, s.y - dh * 0.3 - mh)
+          ctx.lineTo(s.x + mw * 0.8, s.y - dh * 0.3 - mh)
+          ctx.lineTo(s.x, s.y - dh * 0.3 - mh - 4 * z)
+          ctx.closePath(); ctx.fill()
+          break
+        }
+        case 'pond': {
+          const pr = 4 * z
+          const t = performance.now() * 0.001
+          ctx.fillStyle = 'rgba(100,180,230,0.35)'
+          ctx.beginPath(); ctx.ellipse(s.x, s.y + dh * 0.1, pr * 1.5, pr, 0, 0, Math.PI * 2); ctx.fill()
+          ctx.fillStyle = 'rgba(150,210,255,0.2)'
+          ctx.beginPath(); ctx.ellipse(s.x + pr * 0.3 * Math.sin(t), s.y - pr * 0.3, pr * 0.6, pr * 0.4, 0, 0, Math.PI * 2); ctx.fill()
+          break
+        }
+      }
+    }
+  }
+}
+
 // Phase 5B: Draw infrastructure items (roads, trees, lights, etc.)
 function drawInfrastructure() {
   if (!state.infrastructure || state.infrastructure.length === 0) return
@@ -3757,7 +3952,8 @@ function drawRoads() {
   }
   if (roadItems.length === 0) return
 
-  const useSprite = roadTileImg.complete && roadTileImg.naturalWidth > 0
+  const useSprite = roadTileImg.complete && roadTileImg.naturalWidth > 0 && state.currentRegion !== 'farmlands'
+  const isFarm = state.currentRegion === 'farmlands'
 
   // For each road tile, determine connections and draw
   for (const item of roadItems) {
@@ -3778,7 +3974,7 @@ function drawRoads() {
     const cy = s.y
     const half = tilePx * 0.5
 
-    if (useSprite) {
+    if (useSprite && !isFarm) {
       // ── Sprite mode: 2x2 tile grid ──
       const roadSize = tilePx * 0.5
       const halfTile = roadSize / 2
@@ -3797,9 +3993,32 @@ function drawRoads() {
       // ── Procedural fallback ──
       const roadWidth = tilePx * 0.5
 
-      // Asphalt base
-      ctx.fillStyle = '#34363e'
-      if (vertical && !horizontal) {
+      if (isFarm) {
+        // ── Dirt road (Farmlands) ──
+        ctx.fillStyle = '#8B7355'
+        if (vertical && !horizontal) {
+          ctx.fillRect(cx - roadWidth / 2, cy - half, roadWidth, tilePx)
+        } else if (horizontal && !vertical) {
+          ctx.fillRect(cx - half, cy - roadWidth / 2, tilePx, roadWidth)
+        } else {
+          ctx.fillRect(cx - half, cy - half, tilePx, tilePx)
+        }
+        // Dirt road ruts
+        ctx.lineWidth = 1 * z
+        ctx.strokeStyle = 'rgba(139,115,85,0.5)'
+        ctx.setLineDash([3 * z, 4 * z])
+        if (vertical) {
+          ctx.beginPath(); ctx.moveTo(cx - roadWidth * 0.3, cy - half); ctx.lineTo(cx - roadWidth * 0.3, cy + half); ctx.stroke()
+          ctx.beginPath(); ctx.moveTo(cx + roadWidth * 0.3, cy - half); ctx.lineTo(cx + roadWidth * 0.3, cy + half); ctx.stroke()
+        } else if (horizontal) {
+          ctx.beginPath(); ctx.moveTo(cx - half, cy - roadWidth * 0.3); ctx.lineTo(cx + half, cy - roadWidth * 0.3); ctx.stroke()
+          ctx.beginPath(); ctx.moveTo(cx - half, cy + roadWidth * 0.3); ctx.lineTo(cx + half, cy + roadWidth * 0.3); ctx.stroke()
+        }
+        ctx.setLineDash([])
+      } else {
+        // ── Asphalt road (City) ──
+        ctx.fillStyle = '#34363e'
+        if (vertical && !horizontal) {
         ctx.fillRect(cx - roadWidth / 2, cy - half, roadWidth, tilePx)
       } else if (horizontal && !vertical) {
         ctx.fillRect(cx - half, cy - roadWidth / 2, tilePx, roadWidth)
@@ -4322,6 +4541,9 @@ function render() {
 
   // Phase 5B: Draw infrastructure (roads, trees, lights, etc.)
   drawInfrastructure()
+
+  // Phase 5C: Draw farm decorations
+  drawFarmDecorations()
 
   // Phase 6: Draw development blocks
   drawBlocks()
@@ -7010,13 +7232,17 @@ function completeTravel(targetRegion) {
     }
   }
 
-  showToast(`Arrived at ${REGIONS[targetRegion].name}`, '')
   invalidateTileCache()
 
-  // Toggle farm UI visibility
   document.body.classList.toggle('in-farmlands', targetRegion === 'farmlands')
   document.getElementById('farmInventory').classList.toggle('hidden', targetRegion !== 'farmlands')
-  if (targetRegion === 'farmlands') updateFarmInventory()
+
+  if (targetRegion === 'farmlands') {
+    showToast('Arrived at Farmlands', 'Build your farm, grow food, supply the city.')
+    updateFarmInventory()
+  } else {
+    showToast(`Arrived at ${REGIONS[targetRegion].name}`, '')
+  }
 }
 
 async function init() {
