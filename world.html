@@ -919,6 +919,33 @@
     }
     body.in-farmlands .farm-atmosphere { opacity: 1; }
 
+    /* Region atmosphere profiles */
+    .region-vignette {
+      position: fixed; inset: 0; z-index: 3; pointer-events: none;
+      transition: background 2s ease;
+    }
+    body.region-city .region-vignette {
+      background: radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(10, 8, 20, 0.35) 100%);
+    }
+    body.region-farmlands .region-vignette {
+      background: radial-gradient(ellipse at 50% 50%, rgba(255, 200, 100, 0.03) 40%, rgba(20, 15, 5, 0.25) 100%);
+    }
+    body.region-whisper-woods .region-vignette {
+      background: radial-gradient(ellipse at 50% 50%, rgba(34, 197, 94, 0.04) 30%, rgba(5, 15, 10, 0.35) 100%);
+    }
+    body.region-purple-pulse .region-vignette {
+      background: radial-gradient(ellipse at 50% 50%, rgba(167, 139, 250, 0.06) 40%, rgba(30, 10, 40, 0.3) 100%);
+    }
+    body.region-iron-district .region-vignette {
+      background: radial-gradient(ellipse at 50% 50%, rgba(100, 100, 110, 0.04) 30%, rgba(10, 10, 12, 0.35) 100%);
+    }
+    body.region-coast .region-vignette {
+      background: radial-gradient(ellipse at 50% 50%, rgba(56, 189, 248, 0.04) 30%, rgba(5, 10, 20, 0.25) 100%);
+    }
+    body.region-mountains .region-vignette {
+      background: radial-gradient(ellipse at 50% 50%, rgba(200, 200, 220, 0.03) 30%, rgba(15, 15, 25, 0.3) 100%);
+    }
+
     .farm-inventory {
       position: fixed;
       top: calc(max(12px, env(safe-area-inset-top,0px)) + 100px);
@@ -1441,7 +1468,7 @@
       .game-panel {
         position: fixed;
         top: 90px;
-        right: 8px;
+        right: 90px;
         width: 320px;
         max-height: calc(100vh - 120px);
         transform: translateY(-4px);
@@ -1450,6 +1477,7 @@
         transform: translateY(0);
       }
       .panel-backdrop { display: none !important; }
+      .toolbar { z-index: 101; }
     }
 
     @media (pointer: coarse) {
@@ -1660,6 +1688,59 @@
     .prop-upgrade-btn.applied { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.2); color: var(--green); cursor: default; }
     .prop-storage-row { display: flex; justify-content: space-between; font-size: 0.6rem; color: var(--dim); padding: 0.15rem 0; }
     .prop-storage-row .count { font-weight: 700; color: var(--bright); }
+
+    /* ── CREATURE ENCOUNTER PANEL ── */
+    .encounter-panel {
+      position: fixed; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 150; width: 320px; max-width: 90vw;
+      background: rgba(10, 12, 20, 0.97);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(167,139,250,0.2);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      display: none; text-align: center;
+    }
+    .encounter-panel.open { display: block; }
+    .encounter-creature-name { font-size: 1.1rem; font-weight: 900; color: var(--gold); margin-bottom: 0.2rem; }
+    .encounter-creature-rarity {
+      font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      display: inline-block; padding: 0.1rem 0.4rem; border-radius: 4px;
+      margin-bottom: 0.6rem;
+    }
+    .encounter-creature-rarity.common { background: rgba(148,163,184,0.2); color: #94a3b8; }
+    .encounter-creature-rarity.uncommon { background: rgba(74,222,128,0.15); color: #4ade80; }
+    .encounter-creature-rarity.rare { background: rgba(167,139,250,0.2); color: #a78bfa; }
+    .encounter-mood { font-size: 0.75rem; color: var(--dim); margin-bottom: 0.5rem; }
+    .encounter-trust-box { margin: 0.6rem 0; }
+    .encounter-trust-label { font-size: 0.6rem; color: var(--dim); font-weight: 600; }
+    .encounter-trust-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin: 0.2rem 0; }
+    .encounter-trust-fill { height: 100%; background: linear-gradient(90deg, var(--bright), var(--gold)); border-radius: 3px; transition: width 0.4s; }
+    .encounter-trust-pct { font-size: 0.65rem; color: var(--bright); font-weight: 700; }
+    .encounter-actions { display: flex; flex-direction: column; gap: 5px; margin-top: 0.8rem; }
+    .encounter-btn {
+      padding: 0.5rem; border-radius: var(--radius-sm);
+      border: 1px solid rgba(167,139,250,0.15);
+      background: rgba(167,139,250,0.08);
+      color: var(--text); font-size: 0.75rem; font-weight: 700;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .encounter-btn:hover { background: rgba(167,139,250,0.18); }
+    .encounter-btn:disabled { opacity: 0.4; cursor: default; }
+    .encounter-btn.back { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.15); }
+    .encounter-btn.back:hover { background: rgba(239,68,68,0.2); }
+
+    /* ── CREATURES COLLECTION PANEL ── */
+    .creature-collect-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.45rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .creature-collect-icon { font-size: 1.2rem; width: 28px; text-align: center; }
+    .creature-collect-info { flex: 1; }
+    .creature-collect-name { font-size: 0.78rem; font-weight: 700; color: var(--text); }
+    .creature-collect-detail { font-size: 0.6rem; color: var(--dim); }
+    .creature-collect-trust { font-size: 0.6rem; color: var(--bright); font-weight: 600; }
+    .creature-collect-status { font-size: 0.6rem; color: var(--gold); font-weight: 700; }
   </style>
 </head>
 <body>
@@ -1708,7 +1789,9 @@
   <button class="tool-btn" id="btnGod" data-tip="God Powers">&#x26A1;</button>
   <button class="tool-btn" id="btnPW" data-tip="Public Works">&#x1F3F0;</button>
   <button class="tool-btn" id="btnBlock" data-tip="Urban DNA">&#x1F3D8;&#xFE0F;</button>
+  <button class="tool-btn" id="btnProperty" data-tip="Properties">&#x1F3E1;</button>
   <button class="tool-btn" id="btnGang" data-tip="Gangs">&#x1F46A;</button>
+  <button class="tool-btn" id="btnCreatures" data-tip="Creatures">&#x1F43E;</button>
   <button class="tool-btn" id="btnInfluenceView" data-tip="Influence View"><span id="influenceViewIcon">&#x1F5FA;</span></button>
   <button class="tool-btn" id="btnWorldMap" data-tip="World Map">&#x1F5FA;&#xFE0F;</button>
   <button class="tool-btn" id="btnSettings" data-tip="Settings">&#x2699;&#xFE0F;</button>
@@ -1787,6 +1870,31 @@
   </div>
 </div>
 
+<div class="encounter-panel" id="encounterPanel">
+  <div class="encounter-creature-name" id="encounterName">Neon Fox</div>
+  <div class="encounter-creature-rarity" id="encounterRarity">uncommon</div>
+  <div class="encounter-mood" id="encounterMood">Curious — watching you carefully</div>
+  <div class="encounter-trust-box">
+    <div class="encounter-trust-label">Trust</div>
+    <div class="encounter-trust-bar"><div class="encounter-trust-fill" id="encounterTrustFill" style="width:0%"></div></div>
+    <div class="encounter-trust-pct" id="encounterTrustPct">0 / 100</div>
+  </div>
+  <div class="encounter-actions" id="encounterActions">
+    <button class="encounter-btn" id="encObserveBtn">&#x1F50D; Observe</button>
+    <button class="encounter-btn" id="encFeedBtn">&#x1F372; Offer Food</button>
+    <button class="encounter-btn" id="encCalmBtn">&#x1F9D9; Calm</button>
+    <button class="encounter-btn back" id="encBackBtn">&#x1F519; Back Away</button>
+  </div>
+</div>
+
+<div class="creatures-panel game-panel" id="creaturesPanel">
+  <div class="panel-header">
+    <div class="panel-title">&#x1F43E; Creatures</div>
+    <div class="panel-close" id="creaturesPanelClose">&times;</div>
+  </div>
+  <div id="creaturesList"></div>
+</div>
+
 <div class="income-panel game-panel" id="incomePanel">
   <div class="panel-header">
     <div class="panel-title">Collect Income</div>
@@ -1811,7 +1919,7 @@
   </div>
 </div>
 
-<div class="property-panel" id="propertyPanel">
+<div class="property-panel game-panel" id="propertyPanel">
   <div class="panel-header">
     <div class="panel-title">&#x1F3E1; Property</div>
     <div class="panel-close" id="propPanelClose">&times;</div>
@@ -2033,6 +2141,7 @@
       <div class="start-goal-item" id="goalStart4"><span class="check">4</span> Travel to Farmlands (+25 FC, +10 Rep)</div>
       <div class="start-goal-item" id="goalStart5"><span class="check">5</span> Plant and harvest crops (+50 FC, +15 Rep)</div>
       <div class="start-goal-item" id="goalStart6"><span class="check">6</span> Send food to city (+100 FC, +25 Rep)</div>
+      <div class="start-goal-item" id="goalStart7"><span class="check">7</span> Open Property Deed panel (+75 FC, +20 Rep)</div>
     </div>
     <button class="welcome-start" id="welcomeStartBtn">Start Playing</button>
   </div>
@@ -2044,11 +2153,13 @@
   <button class="farm-prompt-btn" id="farmPromptBtn">Build Farm Block</button>
 </div>
 
-<div class="debug-panel" id="debugPanel">
+<div class="debug-panel" id="debugPanel" style="display:none;">
   <div class="debug-title">&#x2699; Debug</div>
-  <button class="debug-btn" id="debugResetPos">Reset Player Position</button>
+  <button class="debug-btn" id="debugResetPos">Reset Position</button>
+  <button class="debug-btn" id="debugReturnCity">Return to City</button>
   <button class="debug-btn" id="debugGiveFC">Give 500 FC</button>
-  <button class="debug-btn" id="debugClearPanel">Clear Stuck Panel</button>
+  <button class="debug-btn" id="debugClearPanel">Clear Stuck Panels</button>
+  <button class="debug-btn" id="debugDoneBtn" style="background:var(--red);margin-top:4px;">Close Debug</button>
 </div>
 
 <div class="help-prompt" id="helpPrompt">
@@ -2071,6 +2182,7 @@
 </div>
 
 <div class="world-vignette"></div>
+<div class="region-vignette" id="regionVignette"></div>
 <div class="farm-atmosphere" id="farmAtmosphere"></div>
 
 <div class="farm-inventory hidden" id="farmInventory">
@@ -2153,6 +2265,7 @@ const state = {
   otherPlayers: new Map(),
   chunks: new Map(),
   currentRegion: 'city',
+  creatureSighting: null,
   regionChunks: new Map(),
   regionPlayerPos: {},
   regionTime: {},
@@ -3121,6 +3234,422 @@ function clearFarmLife() {
   stopFarmAudio()
 }
 
+// ── CREATURE SIGHTING SYSTEM ────────────────────────────────────
+let _creatureInit = false
+let _creatureSpawnTimer = 0
+let _creatureEncounterId = null
+let _creatureEncounterData = null
+let _creatureSightingAnim = 0
+
+function initCreatureSystem() {
+  if (_creatureInit) return
+  _creatureInit = true
+  state.creatureCollection = {}
+  try {
+    const raw = localStorage.getItem('fas_world_creatures')
+    if (raw) state.creatureCollection = JSON.parse(raw)
+  } catch {}
+}
+
+function saveCreatureCollection() {
+  try { localStorage.setItem('fas_world_creatures', JSON.stringify(state.creatureCollection)) } catch {}
+}
+
+function getCreature(id) { return CREATURES.find(c => c.id === id) }
+
+function spawnCreatureSighting() {
+  if (state.currentRegion !== 'whisper-woods') return
+  if (state.creatureSighting) return
+  const creature = CREATURES[Math.floor(Math.random() * CREATURES.length)]
+  if (!creature) return
+
+  // Place sighting near player but not on top
+  let sx, sy
+  const minDist = 8
+  const maxDist = 15
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const angle = Math.random() * Math.PI * 2
+    const dist = minDist + Math.random() * (maxDist - minDist)
+    sx = state.player.x + Math.cos(angle) * dist
+    sy = state.player.y + Math.sin(angle) * dist
+    if (sx > 1 && sy > 1 && sx < WORLD_SIZE - 1 && sy < WORLD_SIZE - 1) break
+  }
+
+  const moods = ['Curious — watching you carefully', 'Skittish — ready to flee', 'Calm — observing peacefully', 'Agitated — pacing back and forth']
+  state.creatureSighting = {
+    creatureId: creature.id,
+    x: sx, y: sy,
+    phase: 0, // 0=rustle, 1=eyes, 2=reveal, 3=encounter
+    phaseTimer: 0,
+    mood: moods[Math.floor(Math.random() * moods.length)],
+    trust: 0,
+  }
+  _creatureSightingAnim = 0
+  _creatureSpawnTimer = 0
+}
+
+function updateCreatureSightings(dt) {
+  if (state.currentRegion !== 'whisper-woods') {
+    state.creatureSighting = null
+    _creatureSpawnTimer = 0
+    return
+  }
+  // Advance sighting phase
+  if (state.creatureSighting && state.creatureSighting.phase < 3) {
+    state.creatureSighting.phaseTimer += dt
+    if (state.creatureSighting.phaseTimer > 1.5) {
+      state.creatureSighting.phase++
+      state.creatureSighting.phaseTimer = 0
+    }
+  }
+  // Spawn timer
+  _creatureSpawnTimer -= dt
+  if (_creatureSpawnTimer <= 0 && !state.creatureSighting && !_creatureEncounterId) {
+    _creatureSpawnTimer = 25 + Math.random() * 35
+    spawnCreatureSighting()
+  }
+}
+
+function drawCreatureSighting() {
+  const s = state.creatureSighting
+  if (!s || s.phase >= 3) return
+  const sp = worldToScreen(s.x, s.y)
+  const z = state.camera.zoom
+  const t = performance.now() * 0.003
+
+  if (s.phase === 0) {
+    // Rustling bush — green particles/dots moving
+    for (let i = 0; i < 3; i++) {
+      const angle = t + i * 2.1
+      const dist = 4 * z * (0.5 + 0.5 * Math.sin(t * 2 + i))
+      const px = sp.x + Math.cos(angle) * dist
+      const py = sp.y + Math.sin(angle) * dist * 0.5
+      ctx.fillStyle = `rgba(74, 222, 128, ${0.3 + 0.3 * Math.sin(t * 3 + i)})`
+      ctx.beginPath()
+      ctx.arc(px, py, 2 * z, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    // Movement lines
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.25)'
+    ctx.lineWidth = 1.5 * z
+    for (let i = 0; i < 2; i++) {
+      const sway = Math.sin(t * 2 + i * 2) * 3 * z
+      const by = sp.y + 6 * z + i * 3 * z + sway
+      ctx.beginPath()
+      ctx.moveTo(sp.x - 5 * z, by)
+      ctx.quadraticCurveTo(sp.x, by - 3 * z, sp.x + 5 * z, by)
+      ctx.stroke()
+    }
+  } else if (s.phase === 1) {
+    // Glowing eyes
+    const eyeSpread = 4 * z
+    const blink = Math.sin(t * 5) > 0.9 ? 0.2 : 1
+    const glow = 0.4 + 0.4 * Math.sin(t)
+    // Left eye
+    ctx.shadowColor = 'rgba(167, 139, 250, 0.5)'
+    ctx.shadowBlur = 10 * z
+    ctx.fillStyle = `rgba(167, 139, 250, ${glow * blink})`
+    ctx.beginPath()
+    ctx.arc(sp.x - eyeSpread, sp.y - 2 * z, 2.5 * z, 0, Math.PI * 2)
+    ctx.fill()
+    // Right eye
+    ctx.fillStyle = `rgba(167, 139, 250, ${glow * blink})`
+    ctx.beginPath()
+    ctx.arc(sp.x + eyeSpread, sp.y - 2 * z, 2.5 * z, 0, Math.PI * 2)
+    ctx.fill()
+    // Pupils
+    ctx.shadowBlur = 0
+    ctx.fillStyle = '#fff'
+    ctx.beginPath()
+    ctx.arc(sp.x - eyeSpread + 1 * z, sp.y - 2 * z, 1 * z, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(sp.x + eyeSpread + 1 * z, sp.y - 2 * z, 1 * z, 0, Math.PI * 2)
+    ctx.fill()
+    // Shadow body
+    ctx.fillStyle = 'rgba(0,0,0,0.3)'
+    ctx.beginPath()
+    ctx.ellipse(sp.x, sp.y + 2 * z, 8 * z, 4 * z, 0, 0, Math.PI * 2)
+    ctx.fill()
+  } else if (s.phase === 2) {
+    // Reveal — draw creature shadow silhouette
+    const bounce = Math.sin(t * 2) * 1.5 * z
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'
+    ctx.beginPath()
+    ctx.ellipse(sp.x, sp.y + 6 * z + bounce, 6 * z, 3 * z, 0, 0, Math.PI * 2)
+    ctx.fill()
+    // Creature silhouette
+    const creature = getCreature(s.creatureId)
+    if (creature) {
+      ctx.font = `${16 * z}px sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(creature.icon, sp.x, sp.y - 4 * z + bounce)
+    }
+    // Pulsing glow around reveal
+    ctx.shadowColor = 'rgba(167, 139, 250, 0.3)'
+    ctx.shadowBlur = 15 * z * (0.5 + 0.5 * Math.sin(t))
+    ctx.fillStyle = 'rgba(167, 139, 250, 0.06)'
+    ctx.beginPath()
+    ctx.arc(sp.x, sp.y, 12 * z, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.shadowBlur = 0
+  }
+}
+
+function handleSightingClick(wx, wy) {
+  const s = state.creatureSighting
+  if (!s || s.phase < 2) return false
+  const dx = wx - s.x
+  const dy = wy - s.y
+  if (Math.sqrt(dx * dx + dy * dy) < 4) {
+    startCreatureEncounter(s.creatureId)
+    return true
+  }
+  return false
+}
+
+function startCreatureEncounter(creatureId) {
+  const creature = getCreature(creatureId)
+  if (!creature) return
+  const lastMood = state.creatureSighting ? state.creatureSighting.mood : 'Curious'
+  state.creatureSighting = null
+  _creatureSpawnTimer = 60 // Don't spawn during encounter
+  const existing = state.creatureCollection[creatureId]
+  _creatureEncounterId = creatureId
+  _creatureEncounterData = {
+    creatureId,
+    trust: existing ? existing.trust : 0,
+    mood: lastMood,
+  }
+
+  const panel = document.getElementById('encounterPanel')
+  document.getElementById('encounterName').textContent = creature.name
+  document.getElementById('encounterRarity').textContent = creature.rarity
+  document.getElementById('encounterRarity').className = 'encounter-creature-rarity ' + creature.rarity
+  document.getElementById('encounterMood').textContent = _creatureEncounterData.mood
+  updateEncounterTrustUI(_creatureEncounterData.trust)
+  panel.classList.add('open')
+}
+
+function updateEncounterTrustUI(trust) {
+  const fill = document.getElementById('encounterTrustFill')
+  const pct = document.getElementById('encounterTrustPct')
+  const clamped = Math.min(trust, 100)
+  fill.style.width = clamped + '%'
+  pct.textContent = clamped + ' / 100'
+}
+
+function observeCreature() {
+  const creature = getCreature(_creatureEncounterId)
+  if (!creature) return
+  let gain = 5
+  _creatureEncounterData.trust = Math.min(100, _creatureEncounterData.trust + gain)
+  updateEncounterTrustUI(_creatureEncounterData.trust)
+  showToast('Observed', '+' + gain + ' trust — ' + creature.name + ' seems calmer')
+  checkTrustMilestone(_creatureEncounterId, _creatureEncounterData.trust)
+}
+
+function offerFoodToCreature() {
+  const creature = getCreature(_creatureEncounterId)
+  if (!creature) return
+  // Check if player has food
+  const data = getFarmData()
+  if (!data) { showToast('No Food', 'Grow crops on the farm first'); return }
+  let totalFood = 0
+  for (const k in data.inventory) totalFood += data.inventory[k] || 0
+  if (totalFood < 1) { showToast('No Food', 'Grow crops on the farm first'); return }
+  // Consume 1 food
+  for (const k in data.inventory) {
+    if ((data.inventory[k] || 0) > 0) { data.inventory[k]--; break }
+  }
+  saveFarmData(data)
+  updateFarmInventory()
+  let gain = 15 + Math.floor(Math.random() * 11)
+  _creatureEncounterData.trust = Math.min(100, _creatureEncounterData.trust + gain)
+  updateEncounterTrustUI(_creatureEncounterData.trust)
+  showToast('Offered Food', '+' + gain + ' trust — ' + creature.name + ' accepts')
+  checkTrustMilestone(_creatureEncounterId, _creatureEncounterData.trust)
+}
+
+function calmCreature() {
+  const creature = getCreature(_creatureEncounterId)
+  if (!creature) return
+  if (Math.random() < 0.4) {
+    showToast('Failed', creature.name + ' startles and backs away')
+    endCreatureEncounter()
+    return
+  }
+  let gain = 10
+  _creatureEncounterData.trust = Math.min(100, _creatureEncounterData.trust + gain)
+  updateEncounterTrustUI(_creatureEncounterData.trust)
+  showToast('Calmed', '+' + gain + ' trust — ' + creature.name + ' relaxes')
+  checkTrustMilestone(_creatureEncounterId, _creatureEncounterData.trust)
+}
+
+function backAwayFromCreature() {
+  showToast('Backed Away', 'The creature disappears into the woods')
+  endCreatureEncounter()
+}
+
+function endCreatureEncounter() {
+  _creatureEncounterId = null
+  _creatureEncounterData = null
+  document.getElementById('encounterPanel').classList.remove('open')
+  _creatureSpawnTimer = 15 + Math.random() * 20
+}
+
+function checkTrustMilestone(creatureId, trust) {
+  const creature = getCreature(creatureId)
+  if (!creature) return
+  // Save partial progress
+  if (!state.creatureCollection[creatureId]) {
+    state.creatureCollection[creatureId] = { creatureId, name: creature.name, icon: creature.icon, rarity: creature.rarity, region: 'whisper-woods', trust: 0, discovered: Date.now(), trusted: false }
+  }
+  state.creatureCollection[creatureId].trust = trust
+  // Check if trust reached 100
+  if (trust >= 100 && !state.creatureCollection[creatureId].trusted) {
+    state.creatureCollection[creatureId].trusted = true
+    showToast(creature.name + ' trusts you!', 'Added to your creature collection')
+    endCreatureEncounter()
+  }
+  saveCreatureCollection()
+}
+
+function openCreaturesPanel() {
+  const list = document.getElementById('creaturesList')
+  list.innerHTML = ''
+  const ids = Object.keys(state.creatureCollection)
+  if (ids.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--dim);font-size:0.7rem">No creatures discovered yet.<br>Travel to Whisper Woods to find them.</div>'
+  } else {
+    for (const id of ids) {
+      const c = state.creatureCollection[id]
+      const item = document.createElement('div')
+      item.className = 'creature-collect-item'
+      item.innerHTML = '<div class="creature-collect-icon">' + (c.icon || '\u{1F43E}') + '</div>' +
+        '<div class="creature-collect-info">' +
+        '<div class="creature-collect-name">' + c.name + '</div>' +
+        '<div class="creature-collect-detail">' + c.rarity + ' &mdash; ' + c.region + '</div>' +
+        '</div>' +
+        '<div class="creature-collect-trust">' + c.trust + '%</div>' +
+        '<div class="creature-collect-status">' + (c.trusted ? '\u2705 Trusted' : '\u{1F50D} Observing') + '</div>'
+      list.appendChild(item)
+    }
+  }
+  openPanel('creaturesPanel')
+}
+
+// ── WHISPER WOODS AMBIENCE ──
+let wwAudioCtx = null
+let wwAudioNodes = []
+
+function initWWAudio() {
+  if (state.currentRegion !== 'whisper-woods') return
+  if (wwAudioCtx) return
+  try {
+    wwAudioCtx = new (window.AudioContext || window.webkitAudioContext)()
+  } catch { return }
+  wwAudioNodes = []
+  // Wind (lower, deeper)
+  try {
+    const bufSize = wwAudioCtx.sampleRate * 2
+    const buf = wwAudioCtx.createBuffer(1, bufSize, wwAudioCtx.sampleRate)
+    const data = buf.getChannelData(0)
+    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.06
+    const src = wwAudioCtx.createBufferSource()
+    src.buffer = buf
+    src.loop = true
+    const filter = wwAudioCtx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.value = 250
+    const gain = wwAudioCtx.createGain()
+    gain.gain.value = 0.04
+    src.connect(filter).connect(gain).connect(wwAudioCtx.destination)
+    src.start()
+    wwAudioNodes.push({ src, gain, type: 'wind' })
+  } catch {}
+  // Crickets (high-pitched pulse)
+  try {
+    const osc = wwAudioCtx.createOscillator()
+    osc.type = 'sawtooth'
+    osc.frequency.value = 3000
+    const gain = wwAudioCtx.createGain()
+    gain.gain.value = 0.008
+    const lfo = wwAudioCtx.createOscillator()
+    lfo.frequency.value = 2.5
+    const lfoGain = wwAudioCtx.createGain()
+    lfoGain.gain.value = 0.006
+    lfo.connect(lfoGain).connect(gain.gain)
+    osc.connect(gain).connect(wwAudioCtx.destination)
+    osc.start()
+    lfo.start()
+    wwAudioNodes.push({ src: osc, gain, type: 'cricket' })
+    wwAudioNodes.push({ src: lfo, type: 'lfo' })
+  } catch {}
+  // Schedule owl hoots
+  scheduleOwlHoot()
+}
+
+function scheduleOwlHoot() {
+  if (!wwAudioCtx || state.currentRegion !== 'whisper-woods') return
+  const delay = 4000 + Math.random() * 8000
+  setTimeout(() => {
+    if (!wwAudioCtx || state.currentRegion !== 'whisper-woods') return
+    playOwlHoot()
+    scheduleOwlHoot()
+  }, delay)
+}
+
+function playOwlHoot() {
+  try {
+    const t = wwAudioCtx.currentTime
+    const osc = wwAudioCtx.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(300 + Math.random() * 100, t)
+    osc.frequency.linearRampToValueAtTime(400 + Math.random() * 150, t + 0.15)
+    osc.frequency.linearRampToValueAtTime(250 + Math.random() * 100, t + 0.35)
+    const gain = wwAudioCtx.createGain()
+    gain.gain.setValueAtTime(0, t)
+    gain.gain.linearRampToValueAtTime(0.03, t + 0.05)
+    gain.gain.linearRampToValueAtTime(0, t + 0.4)
+    osc.connect(gain).connect(wwAudioCtx.destination)
+    osc.start(t)
+    osc.stop(t + 0.4)
+  } catch {}
+}
+
+function updateWWAudio() {
+  if (!wwAudioCtx) return
+  const t = state.time
+  const isNight = t < 0.2 || t > 0.85
+  const vol = isNight ? 1 : 0.4
+  for (const node of wwAudioNodes) {
+    if (node.type === 'wind' && node.gain) {
+      node.gain.gain.value = 0.04 * vol * (0.7 + Math.sin(performance.now() * 0.0003) * 0.3)
+    }
+    if (node.type === 'cricket' && node.gain) {
+      node.gain.gain.value = 0.008 * vol
+    }
+  }
+}
+
+function stopWWAudio() {
+  if (wwAudioCtx) {
+    wwAudioCtx.close().catch(() => {})
+    wwAudioCtx = null
+  }
+  wwAudioNodes = []
+}
+
+function spawnWWLife() {
+  initWWAudio()
+}
+
+function clearWWLife() {
+  stopWWAudio()
+}
+
 // Draw crops on field lots
 function drawFarmCrop(lot) {
   const crop = getCropAtTile(lot.tile_x, lot.tile_y)
@@ -3428,6 +3957,8 @@ function generateNPCs() {
   const npcTypes = ['walker', 'vendor', 'guard', 'merchant', 'wanderer', 'worker']
   const npcColors = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#ec4899','#8b5cf6','#14b8a6']
   
+  state.npcs = [] // Clear before regenerating
+  
   for (let i = 0; i < 50; i++) {
     const angle = rng() * Math.PI * 2
     const dist = 5 + rng() * 35
@@ -3457,7 +3988,8 @@ function generateNPCs() {
         carrying: rng() > 0.7 ? ['\u{1F4E6}','\u{1F33D}','\u{1F4B0}','\u2694\uFE0F'][Math.floor(rng() * 4)] : null,
         direction: 0,
         animFrame: 0,
-        animTimer: 0
+        animTimer: 0,
+        region_id: 'city'
       })
     }
   }
@@ -3469,13 +4001,14 @@ let npcBuildingAssignmentNeeded = true
 
 function assignNPCBuildings() {
   if (!state.buildings || state.buildings.length === 0) return
-
-  const houses = state.buildings.filter(b => b.building_type === 'house')
-  const camps = state.buildings.filter(b => b.building_type === 'camp')
-  const shops = state.buildings.filter(b => b.building_type === 'shop')
-  const clubs = state.buildings.filter(b => b.building_type === 'club')
-  const warehouses = state.buildings.filter(b => b.building_type === 'warehouse')
-  const hides = state.buildings.filter(b => b.building_type === 'hide')
+  // Only assign buildings that belong to the same region as NPCs (city)
+  const regionBuildings = state.buildings.filter(b => b.region_id === undefined || b.region_id === 'city')
+  const houses = regionBuildings.filter(b => b.building_type === 'house')
+  const camps = regionBuildings.filter(b => b.building_type === 'camp')
+  const shops = regionBuildings.filter(b => b.building_type === 'shop')
+  const clubs = regionBuildings.filter(b => b.building_type === 'club')
+  const warehouses = regionBuildings.filter(b => b.building_type === 'warehouse')
+  const hides = regionBuildings.filter(b => b.building_type === 'hide')
 
   let houseIdx = 0, campIdx = 0
 
@@ -3529,8 +4062,10 @@ function findLeisureDestination(npc) {
   const targetType = isNight ? 'club' : 'shop'
 
   const candidates = state.buildings.filter(b => {
+    if (!isInCurrentRegion(b)) return false
     if (b.building_type !== targetType) return false
     const district = state.districts.find(d => {
+      if (!isInCurrentRegion(d)) return false
       const dx = (b.tile_x || b.x) - d.center_x
       const dy = (b.tile_y || b.y) - d.center_y
       return Math.sqrt(dx * dx + dy * dy) <= d.radius
@@ -3629,7 +4164,9 @@ function updateNPCRoutine(npc, dt) {
 function computeDistrictThemes() {
   if (!state.districts || !state.buildings) return
   for (const district of state.districts) {
+    if (!isInCurrentRegion(district)) continue
     const buildings = state.buildings.filter(b => {
+      if (!isInCurrentRegion(b)) return false
       const dx = (b.tile_x || b.x) - district.center_x
       const dy = (b.tile_y || b.y) - district.center_y
       return Math.sqrt(dx * dx + dy * dy) <= district.radius
@@ -3650,6 +4187,7 @@ function computeDistrictThemes() {
 
 function getDistrictAtTile(tx, ty) {
   for (const d of state.districts) {
+    if (!isInCurrentRegion(d)) continue
     const dx = tx - d.center_x, dy = ty - d.center_y
     if (dx * dx + dy * dy <= d.radius * d.radius) return d
   }
@@ -3661,6 +4199,7 @@ function buildWalkableGraph() {
   const walkable = new Set()
   if (!state.infrastructure) return walkable
   for (const item of state.infrastructure) {
+    if (!isInCurrentRegion(item)) continue
     const type = item.infra_type
     if (type === 'road' || type.endsWith('_road') || type.endsWith('_sidewalk') || type === 'tree' || type === 'garden' || type === 'fountain') {
       walkable.add(`${item.tile_x},${item.tile_y}`)
@@ -3715,6 +4254,7 @@ function updateNPCs(dt) {
   }
 
   for (const npc of state.npcs) {
+    if (!isInCurrentRegion(npc)) continue
     updateNPCRoutine(npc, dt)
 
     npc.stateTimer += dt
@@ -4552,7 +5092,7 @@ function drawFarmDecorations() {
       if (!s || s.x < -TILE_W * z || s.x > w + TILE_W * z || s.y < -TILE_W * z || s.y > h + TILE_W * z) continue
       
       // Skip if a building occupies this tile
-      const occupied = state.buildings && state.buildings.some(b => b.tile_x === dec.wx && b.tile_y === dec.ty)
+      const occupied = state.buildings && state.buildings.some(b => isInCurrentRegion(b) && b.tile_x === dec.wx && b.tile_y === dec.ty)
       if (occupied) continue
 
       const hw = (TILE_W / 2) * z
@@ -4624,6 +5164,7 @@ function drawInfrastructure() {
   const h = canvas.height / (Math.min(window.devicePixelRatio || 1, 2))
 
   for (const item of state.infrastructure) {
+    if (!isInCurrentRegion(item)) continue
     const s = worldToScreen(item.tile_x, item.tile_y)
     if (s.x < -TILE_W * state.camera.zoom || s.x > w + TILE_W * state.camera.zoom ||
         s.y < -TILE_H * state.camera.zoom || s.y > h + TILE_H * state.camera.zoom) continue
@@ -4734,6 +5275,7 @@ function drawRoads() {
   const roadSet = new Set()
   const roadItems = []
   for (const item of state.infrastructure) {
+    if (!isInCurrentRegion(item)) continue
     const type = item.infra_type
     if (type === 'road' || type.endsWith('_road')) {
       const key = `${item.tile_x},${item.tile_y}`
@@ -4928,6 +5470,7 @@ function drawBlocks() {
   }
 
   for (const block of state.blocks) {
+    if (!isInCurrentRegion(block)) continue
     const cx = block.tile_x
     const cy = block.tile_y
     const bw = block.width
@@ -4964,9 +5507,9 @@ function drawBlocks() {
     }
   }
 
-  // Draw lots
+  // Draw lots — only lots whose parent block is in the current region
   if (!state.lots) return
-  const blockMap = new Map(state.blocks.map(b => [b.id, b]))
+  const blockMap = new Map(state.blocks.filter(b => isInCurrentRegion(b)).map(b => [b.id, b]))
   for (const lot of state.lots) {
     const s = worldToScreen(lot.tile_x, lot.tile_y)
     if (s.x < -50 || s.x > w + 50 || s.y < -50 || s.y > h + 50) continue
@@ -5302,11 +5845,13 @@ function render() {
     drawOrder.push({ type: 'other', x: p.x, y: p.y, sort: p.x + p.y, data: p, sx: s })
   }
   for (const npc of state.npcs) {
+    if (!isInCurrentRegion(npc)) continue
     const s = worldToScreen(npc.x, npc.y)
     if (s.x < -50 || s.x > w + 50 || s.y < -80 || s.y > h + 50) continue
     drawOrder.push({ type: 'npc', x: npc.x, y: npc.y, sort: npc.x + npc.y, data: npc, sx: s })
   }
   for (const building of state.buildings) {
+    if (!isInCurrentRegion(building)) continue
     const s = worldToScreen(building.tile_x, building.tile_y)
     if (s.x < -100 || s.x > w + 100 || s.y < -150 || s.y > h + 100) continue
     drawOrder.push({ type: 'building', x: building.tile_x, y: building.tile_y, sort: building.tile_x + building.tile_y, data: building, sx: s })
@@ -5323,11 +5868,13 @@ function render() {
   if (state.influenceViewEnabled) {
     updateDistrictScreenCache()
     for (const district of state.districts) {
+      if (!isInCurrentRegion(district)) continue
       drawDistrictOverlay(district)
     }
   }
 
   for (const district of state.districts) {
+    if (!isInCurrentRegion(district)) continue
     drawDistrict(district)
   }
 
@@ -5345,6 +5892,7 @@ function render() {
     // Highlight owned buildings with a glow
     ctx.save()
     for (const b of state.buildings) {
+      if (!isInCurrentRegion(b)) continue
       if (b.owner_id === state.userId) {
         const s = worldToScreen(b.tile_x, b.tile_y)
         const ts = TILE_W * state.camera.zoom
@@ -5365,6 +5913,7 @@ function render() {
 
   if (state.influenceViewEnabled) {
     for (const district of state.districts) {
+      if (!isInCurrentRegion(district)) continue
       drawTerritoryBorder(district)
     }
   }
@@ -5437,6 +5986,7 @@ function render() {
 
   drawWeatherEffects(w, h)
   drawWorldEvents()
+  drawCreatureSighting()
 
   const vg = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.25, w / 2, h / 2, Math.max(w, h) * 0.7)
   vg.addColorStop(0, 'rgba(10,11,16,0)')
@@ -5514,7 +6064,12 @@ function update(dt) {
   updateFarmAudio()
   updateFarmAtmosphere()
 
+  // Creature updates
+  updateCreatureSightings(dt)
+  updateWWAudio()
+
   for (const npc of state.npcs) {
+    if (!isInCurrentRegion(npc)) continue
     if (npc._serverX !== undefined) {
       npc.x += (npc._serverX - npc.x) * 0.1
       npc.y += (npc._serverY - npc.y) * 0.1
@@ -5573,6 +6128,12 @@ function setupKeyboard() {
     if (state.keys) state.keys.add(e.key.toLowerCase())
     if (e.key === '+' || e.key === '=') state.camera.targetZoom = Math.min(3, state.camera.targetZoom * 1.2)
     if (e.key === '-') state.camera.targetZoom = Math.max(0.3, state.camera.targetZoom / 1.3)
+    // Ctrl+Shift+D toggles debug panel
+    if (e.key === 'D' && e.ctrlKey && e.shiftKey) {
+      const dp = document.getElementById('debugPanel')
+      if (dp.style.display === 'flex') dp.style.display = 'none'
+      else dp.style.display = 'flex'
+    }
   })
   window.addEventListener('keyup', e => {
     if (!e.key) return
@@ -5604,6 +6165,7 @@ function setupMouse() {
     if (state.influenceViewEnabled && state.districts && state.districts.length > 0) {
       const world = screenToWorld(e.clientX, e.clientY)
       const district = state.districts.find(d => {
+        if (!isInCurrentRegion(d)) return false
         const dx = world.x - d.center_x
         const dy = world.y - d.center_y
         return Math.sqrt(dx * dx + dy * dy) < d.radius
@@ -5651,6 +6213,7 @@ function setupMouse() {
       placeBlock(world.x, world.y, state.blockType)
     } else {
       const clickedBuilding = state.buildings.find(b => {
+        if (!isInCurrentRegion(b)) return false
         const dx = Math.abs(b.tile_x - world.x)
         const dy = Math.abs(b.tile_y - world.y)
         return dx < 1 && dy < 1
@@ -5665,6 +6228,8 @@ function setupMouse() {
             openJobPanel(clickedBuilding.id)
           }
         }
+      } else if (state.currentRegion === 'whisper-woods' && handleSightingClick(world.x, world.y)) {
+        // Creature sighting handled
       } else if (state.currentRegion === 'farmlands') {
         // Check farm lot click
         const tx = Math.round(world.x)
@@ -5764,10 +6329,11 @@ const ALL_PANELS = [
   { id: 'blockPanel', stateKey: 'blockMode', btnId: 'btnBlock' },
   { id: 'gangPanel', stateKey: 'gangMode', btnId: 'btnGang' },
   { id: 'incomePanel', stateKey: null, btnId: null },
-  { id: 'propertyPanel', stateKey: null, btnId: null },
+  { id: 'propertyPanel', stateKey: 'propertyPanelOpen', btnId: 'btnProperty' },
   { id: 'jobPanel', stateKey: null, btnId: null },
   { id: 'worldMapPanel', stateKey: 'worldMapOpen', btnId: 'btnWorldMap' },
   { id: 'settingsPanel', stateKey: 'settingsPanelOpen', btnId: 'btnSettings' },
+  { id: 'creaturesPanel', stateKey: null, btnId: 'btnCreatures' },
 ]
 
 function closeAllPanels() {
@@ -5882,9 +6448,19 @@ function setupUI() {
   document.getElementById('btnPW').addEventListener('click', () => openPanel('pwPanel'))
   document.getElementById('btnBlock').addEventListener('click', () => openPanel('blockPanel'))
   document.getElementById('btnGang').addEventListener('click', () => openPanel('gangPanel'))
+  document.getElementById('btnProperty').addEventListener('click', () => {
+    if (state.propertyPanelOpen) { closeAllPanels(); return }
+    const owned = state.currentProperty || state.buildings.find(b => b.owner_id === state.userId)
+    if (owned) {
+      openPropertyPanel(owned.id)
+    } else {
+      showToast('No Properties', 'Place a building first to open the Property Deed.')
+    }
+  })
   document.getElementById('btnInfluenceView').addEventListener('click', toggleInfluenceView)
   document.getElementById('btnWorldMap').addEventListener('click', () => openPanel('worldMapPanel'))
   document.getElementById('btnSettings').addEventListener('click', () => openPanel('settingsPanel'))
+  document.getElementById('btnCreatures').addEventListener('click', openCreaturesPanel)
 
   // Close buttons
   document.getElementById('buildPanelClose').addEventListener('click', closeAllPanels)
@@ -5897,6 +6473,13 @@ function setupUI() {
   document.getElementById('propPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('jobPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('worldMapClose').addEventListener('click', closeAllPanels)
+  document.getElementById('creaturesPanelClose').addEventListener('click', closeAllPanels)
+
+  // Encounter panel buttons
+  document.getElementById('encObserveBtn').addEventListener('click', observeCreature)
+  document.getElementById('encFeedBtn').addEventListener('click', offerFoodToCreature)
+  document.getElementById('encCalmBtn').addEventListener('click', calmCreature)
+  document.getElementById('encBackBtn').addEventListener('click', backAwayFromCreature)
 
   // Farm button handlers
   document.getElementById('farmSendBtn').addEventListener('click', sendFoodToCity)
@@ -5938,6 +6521,14 @@ function setupUI() {
     state.player.ty = WORLD_SIZE / 2
     showToast('Debug', 'Position reset to center')
   })
+  document.getElementById('debugReturnCity').addEventListener('click', () => {
+    if (state.currentRegion !== 'city') {
+      completeTravel('city')
+      showToast('Debug', 'Returned to City')
+    } else {
+      showToast('Debug', 'Already in City')
+    }
+  })
   document.getElementById('debugGiveFC').addEventListener('click', () => {
     state.coins = (state.coins || 0) + 500
     document.getElementById('statCoins').textContent = state.coins
@@ -5946,6 +6537,9 @@ function setupUI() {
   document.getElementById('debugClearPanel').addEventListener('click', () => {
     closeAllPanels()
     showToast('Debug', 'All panels closed')
+  })
+  document.getElementById('debugDoneBtn').addEventListener('click', () => {
+    document.getElementById('debugPanel').style.display = 'none'
   })
 
   // Gang tab switching
@@ -6584,6 +7178,8 @@ function openPropertyPanel(buildingId) {
   const type = BUILDING_TYPES[building.building_type]
   if (!type) return
   state.currentProperty = building
+  state._openedProperty = true
+  completeGoal('openPropertyPanel')
   closeAllPanels()
   document.getElementById('propDeedTitle').textContent = type.name + ' Deed'
   document.getElementById('propDeedSub').textContent = 'Property #' + String(buildingId).slice(-6)
@@ -6735,6 +7331,7 @@ function openIncomePanel(buildingId) {
   const badgeText = document.getElementById('incomeDistrictText')
   if (building.in_district) {
     const district = state.districts.find(d => {
+      if (!isInCurrentRegion(d)) return false
       const dx = building.tile_x - d.center_x
       const dy = building.tile_y - d.center_y
       return Math.sqrt(dx * dx + dy * dy) < d.radius
@@ -7019,7 +7616,8 @@ async function placeBuildingAt(x, y) {
         x: Math.floor(x),
         y: Math.floor(y),
         type: state.buildType,
-        userId: state.userId
+        userId: state.userId,
+        region_id: state.currentRegion
       })
     })
     
@@ -7110,15 +7708,15 @@ async function placeInfrastructure(x, y, type) {
   const cx = Math.max(0, Math.min(200, Math.floor(x)))
   const cy = Math.max(0, Math.min(200, Math.floor(y)))
 
-  // Check tile not occupied by a building
-  const occupied = state.buildings.some(b => b.tile_x === cx && b.tile_y === cy)
+  // Check tile not occupied by a building in this region
+  const occupied = state.buildings.some(b => isInCurrentRegion(b) && b.tile_x === cx && b.tile_y === cy)
   if (occupied) {
     showToast('Error', 'Tile occupied by a building')
     return
   }
 
-  // Check tile not already has infrastructure
-  const existingInfra = state.infrastructure.some(item => item.tile_x === cx && item.tile_y === cy)
+  // Check tile not already has infrastructure in this region
+  const existingInfra = state.infrastructure.some(item => isInCurrentRegion(item) && item.tile_x === cx && item.tile_y === cy)
   if (existingInfra) {
     showToast('Error', 'Tile already has infrastructure')
     return
@@ -7142,7 +7740,7 @@ async function placeInfrastructure(x, y, type) {
     const res = await fetch('/api/world/public-works/place', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, tileX: cx, tileY: cy, userId: state.userId })
+      body: JSON.stringify({ type, tileX: cx, tileY: cy, userId: state.userId, region_id: state.currentRegion })
     })
 
     const contentType = res.headers.get('content-type')
@@ -7159,7 +7757,8 @@ async function placeInfrastructure(x, y, type) {
         infra_type: type,
         tile_x: cx,
         tile_y: cy,
-        owner_id: state.userId
+        owner_id: state.userId,
+        region_id: state.currentRegion
       })
       state.walkableDirty = true
       // Deduct coins from local state
@@ -7198,8 +7797,9 @@ async function placeBlock(x, y, blockType) {
     return
   }
 
-  // Overlap check with existing blocks
+  // Overlap check with existing blocks in this region
   for (const block of state.blocks) {
+    if (!isInCurrentRegion(block)) continue
     const overlapX = cx < block.tile_x + block.width && cx + d.w > block.tile_x
     const overlapY = cy < block.tile_y + block.height && cy + d.h > block.tile_y
     if (overlapX && overlapY) {
@@ -7218,7 +7818,7 @@ async function placeBlock(x, y, blockType) {
     const res = await fetch('/api/world/block/place', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ blockType, tileX: cx, tileY: cy, userId: state.userId })
+      body: JSON.stringify({ blockType, tileX: cx, tileY: cy, userId: state.userId, region_id: state.currentRegion })
     })
     const contentType = res.headers.get('content-type')
     if (!contentType || !contentType.includes('application/json')) {
@@ -7227,7 +7827,7 @@ async function placeBlock(x, y, blockType) {
     }
     const data = await res.json()
     if (data.ok) {
-      state.blocks.push({ id: data.block.id, block_type: blockType, tile_x: cx, tile_y: cy, width: d.w, height: d.h, owner_id: state.userId })
+      state.blocks.push({ id: data.block.id, block_type: blockType, tile_x: cx, tile_y: cy, width: d.w, height: d.h, owner_id: state.userId, region_id: state.currentRegion })
       state.coins -= d.c
       document.getElementById('statCoins').textContent = state.coins
       showToast('Urban DNA', `${blockType.charAt(0).toUpperCase() + blockType.slice(1)} block placed!`)
@@ -7424,7 +8024,7 @@ async function setupMultiplayer() {
       state.themesDirty = true
     }
     if (payload.districts) {
-      state.districts = payload.districts
+      state.districts = payload.districts.map(d => { d.region_id = d.region_id || 'city'; return d })
       state.themesDirty = true
       if (payload.districts.length > 0) completeGoal('formFirstDistrict')
     }
@@ -7552,20 +8152,22 @@ async function fetchWorldState() {
         if (b.last_collected_at && !b.last_collected) {
           b.last_collected = new Date(b.last_collected_at).getTime()
         }
+        if (b.region_id === undefined) b.region_id = 'city'
         return b
       })
-      state.districts = data.districts || []
+      state.districts = (data.districts || []).map(d => { d.region_id = d.region_id || 'city'; return d })
       state.themesDirty = true
-      state.infrastructure = data.infrastructure || []
+      state.infrastructure = (data.infrastructure || []).map(i => { i.region_id = i.region_id || 'city'; return i })
       state.walkableDirty = true
-      state.blocks = data.blocks || []
-      state.lots = data.lots || []
+      state.blocks = (data.blocks || []).map(b => { b.region_id = b.region_id || 'city'; return b })
+      state.lots = (data.lots || []).map(l => { l.region_id = l.region_id || 'city'; return l })
       assignNPCBuildings()
       console.log('[WORLD] Loaded', state.buildings.length, 'buildings,', state.districts.length, 'districts,', state.infrastructure.length, 'infra')
 
       // Check for newly formed districts (toast notification)
       const existingIds = new Set(state.events.filter(e => e.type === 'district_formed').map(e => e.districtKey || ''))
       for (const d of state.districts) {
+        if (!isInCurrentRegion(d)) continue
         const key = `${d.center_x},${d.center_y},${d.district_type}`
         if (!existingIds.has(key)) {
           showToast('🏘️ New District!', `${d.name} formed (${d.building_count} ${d.district_type}s)`)
@@ -7642,6 +8244,7 @@ const NPC_BUILDER_WEIGHTS = {
 function findNearestDistrict(wx, wy, districts) {
   let best = null, bestDist = Infinity
   for (const d of districts) {
+    if (!isInCurrentRegion(d)) continue
     const dx = wx - d.center_x
     const dy = wy - d.center_y
     const dist = Math.sqrt(dx * dx + dy * dy)
@@ -7727,7 +8330,7 @@ async function evaluateNPCBuildDesire() {
 
   if (!buildingType) return
 
-  const tile = findNPCBuildTile(npc.x, npc.y, buildingType, state.buildings)
+  const tile = findNPCBuildTile(npc.x, npc.y, buildingType, state.buildings.filter(b => b.region_id === undefined || b.region_id === 'city'))
   if (!tile) {
     console.log('[NPC-BUILD]', npc.name, 'wanted to build', buildingType, 'but found no valid tile')
     return
@@ -7761,7 +8364,8 @@ async function evaluateNPCBuildDesire() {
           in_district: false,
           business_health: 100,
           status: 'active',
-          pending_income: 0
+          pending_income: 0,
+          region_id: data.building.region_id || 'city'
         })
         assignNPCBuildings()
       }
@@ -7953,6 +8557,7 @@ function showDistrictTooltip(mouseX, mouseY, district) {
   // Calculate average business health (happiness) for buildings in this district
   let healthSum = 0, healthCount = 0
   for (const b of state.buildings) {
+    if (!isInCurrentRegion(b)) continue
     if (b.building_type === 'house' || b.building_type === 'camp') continue
     const dx = b.tile_x - district.center_x
     const dy = b.tile_y - district.center_y
@@ -8093,6 +8698,15 @@ const GOAL_STEPS = [
   { key: 'travelToFarmlands', label: 'Travel to Farmlands', check: s => s._visitedFarmlands === true, reward: { fc: 25, rep: 10 } },
   { key: 'plantAndHarvest', label: 'Plant and harvest crops', check: s => s._harvestedCrop === true, reward: { fc: 50, rep: 15 } },
   { key: 'sendFoodToCity', label: 'Send food to city', check: s => s._sentFood === true, reward: { fc: 100, rep: 25 } },
+  { key: 'openPropertyPanel', label: 'Open the Property Deed panel', check: s => s._openedProperty === true, reward: { fc: 75, rep: 20 } },
+]
+
+const CREATURES = [
+  { id: 'neon-fox', name: 'Neon Fox', icon: '\u{1F98A}', rarity: 'uncommon', preferredTime: 'night', preferredWeather: 'clear', favoriteFood: 'glow-berry', trustDifficulty: 30 },
+  { id: 'echo-owl', name: 'Echo Owl', icon: '\u{1F989}', rarity: 'rare', preferredTime: 'dusk', preferredWeather: 'fog', favoriteFood: 'moon-seed', trustDifficulty: 40 },
+  { id: 'lantern-deer', name: 'Lantern Deer', icon: '\u{1F98C}', rarity: 'uncommon', preferredTime: 'dawn', preferredWeather: 'clear', favoriteFood: 'forest-blossom', trustDifficulty: 25 },
+  { id: 'static-crow', name: 'Static Crow', icon: '\u{1F426}', rarity: 'common', preferredTime: 'day', preferredWeather: 'rain', favoriteFood: 'spark-berry', trustDifficulty: 20 },
+  { id: 'moss-hound', name: 'Moss Hound', icon: '\u{1F436}', rarity: 'rare', preferredTime: 'night', preferredWeather: 'fog', favoriteFood: 'truffle-root', trustDifficulty: 45 },
 ]
 
 function updateGoalHUD() {
@@ -8150,8 +8764,8 @@ function completeGoalSendFood() {
 }
 
 function updateStartScreenGoals() {
-  const ids = ['goalStart1','goalStart2','goalStart3','goalStart4','goalStart5','goalStart6']
-  const keys = ['placeFirstHouse','placeFirstShop','collectFirstIncome','travelToFarmlands','plantAndHarvest','sendFoodToCity']
+  const ids = ['goalStart1','goalStart2','goalStart3','goalStart4','goalStart5','goalStart6','goalStart7']
+  const keys = ['placeFirstHouse','placeFirstShop','collectFirstIncome','travelToFarmlands','plantAndHarvest','sendFoodToCity','openPropertyPanel']
   for (let i = 0; i < ids.length; i++) {
     const el = document.getElementById(ids[i])
     if (!el) continue
@@ -8310,6 +8924,11 @@ function completeTravel(targetRegion) {
 
   document.getElementById('travelOverlay').style.display = 'none'
 
+  // Set body class for region atmosphere
+  document.body.className = document.body.className.split(' ').filter(c => !c.startsWith('region-') && c !== 'in-farmlands').join(' ')
+  document.body.classList.add('region-' + targetRegion)
+  if (targetRegion === 'farmlands') document.body.classList.add('in-farmlands')
+
   // Reposition vehicle to new current region
   const curPos = getNodePos(targetRegion)
   const vehicle = document.getElementById('wmVehicle')
@@ -8324,15 +8943,13 @@ function completeTravel(targetRegion) {
     state.regionChunks.set(state.travel.fromRegion, new Map(state.chunks))
   }
 
-  // Clear and regenerate chunks
+  // Clear chunks for the new region (terrain differs per region)
   state.chunks.clear()
-  state.infrastructure = []
-  state.blocks = []
-  state.lots = []
-  state.buildings = []
-  state.npcs = []
   state.walkableGraph = null
   state.walkableDirty = true
+
+  // Do NOT clear buildings/blocks/lots/infrastructure/npcs —
+  // they persist in memory and are filtered at render time by region_id.
 
   // Restore or set default position for this region
   const saved = state.regionPlayerPos[targetRegion]
@@ -8386,69 +9003,100 @@ function completeTravel(targetRegion) {
     updateFarmInventory()
     spawnFarmLife()
     completeGoalTravelFarm()
-    // Show farm prompt
     setTimeout(() => {
       showFarmPrompt('Place a Farm Block to start', 'farm')
     }, 1500)
+  } else if (targetRegion === 'whisper-woods') {
+    showToast('Entered Whisper Woods', 'Listen for movement in the trees.')
+    spawnWWLife()
+    _creatureSpawnTimer = 5 + Math.random() * 10
   } else {
     showToast(`Arrived at ${REGIONS[targetRegion].name}`, '')
-    // Clean up farm life if leaving farmlands
-    if (state.travel.fromRegion === 'farmlands') clearFarmLife()
+  }
+  // Clean up region-specific systems when leaving
+  if (state.travel.fromRegion === 'farmlands') clearFarmLife()
+  if (state.travel.fromRegion === 'whisper-woods') {
+    clearWWLife()
+    state.creatureSighting = null
+    _creatureSpawnTimer = 0
+    if (_creatureEncounterId) {
+      _creatureEncounterId = null
+      _creatureEncounterData = null
+      document.getElementById('encounterPanel').classList.remove('open')
+    }
   }
 }
 
+// ── REGION ISOLATION ───────────────────────────────────────────
+function isInCurrentRegion(obj) {
+  if (obj == null) return false
+  if (obj.region_id === undefined || obj.region_id === null) {
+    return state.currentRegion === 'city'
+  }
+  return obj.region_id === state.currentRegion
+}
+
+let _initDone = false
 async function init() {
+  if (_initDone) return
+  _initDone = true
+  initCreatureSystem()
   const bar = document.getElementById('loadingBar')
   const text = document.getElementById('loadingText')
 
-  text.textContent = 'Setting up canvas...'
-  bar.style.width = '10%'
-  resize()
-  window.addEventListener('resize', resize)
+  try {
+    text.textContent = 'Setting up canvas...'
+    bar.style.width = '10%'
+    resize()
+    window.addEventListener('resize', resize)
 
-  text.textContent = 'Generating terrain...'
-  bar.style.width = '30%'
-  await new Promise(r => setTimeout(r, 100))
+    text.textContent = 'Generating terrain...'
+    bar.style.width = '30%'
+    await new Promise(r => setTimeout(r, 100))
 
-  const startCX = Math.floor((WORLD_SIZE / 2) / CHUNK_SIZE)
-  const startCY = Math.floor((WORLD_SIZE / 2) / CHUNK_SIZE)
-  const initRadius = 3
-  let total = (initRadius * 2 + 1) ** 2
-  let done = 0
-  for (let dy = -initRadius; dy <= initRadius; dy++) {
-    for (let dx = -initRadius; dx <= initRadius; dx++) {
-      generateChunk(startCX + dx, startCY + dy)
-      done++
-      if (done % 5 === 0) {
-        bar.style.width = (30 + (done / total) * 40) + '%'
-        await new Promise(r => setTimeout(r, 10))
+    const startCX = Math.floor((WORLD_SIZE / 2) / CHUNK_SIZE)
+    const startCY = Math.floor((WORLD_SIZE / 2) / CHUNK_SIZE)
+    const initRadius = 3
+    let total = (initRadius * 2 + 1) ** 2
+    let done = 0
+    for (let dy = -initRadius; dy <= initRadius; dy++) {
+      for (let dx = -initRadius; dx <= initRadius; dx++) {
+        generateChunk(startCX + dx, startCY + dy)
+        done++
+        if (done % 5 === 0) {
+          bar.style.width = (30 + (done / total) * 40) + '%'
+          await new Promise(r => setTimeout(r, 10))
+        }
       }
     }
+
+    text.textContent = 'Building roads...'
+    bar.style.width = '75%'
+    generateRoads()
+    await new Promise(r => setTimeout(r, 50))
+
+    text.textContent = 'Spawning life...'
+    bar.style.width = '85%'
+    generateNPCs()
+    await new Promise(r => setTimeout(r, 50))
+
+    text.textContent = 'Connecting to world...'
+    bar.style.width = '95%'
+
+    setupKeyboard()
+    setupMouse()
+    setupTouch()
+    setupUI()
+
+    await setupMultiplayer()
+    await fetchPlayerState()
+    await fetchWorldState()
+    await refreshDistricts()
+    await fetchVisualData()
+  } catch (err) {
+    console.error('[INIT] Error during initialization:', err)
+    text.textContent = 'Error loading — continuing anyway'
   }
-
-  text.textContent = 'Building roads...'
-  bar.style.width = '75%'
-  generateRoads()
-  await new Promise(r => setTimeout(r, 50))
-
-  text.textContent = 'Spawning life...'
-  bar.style.width = '85%'
-  generateNPCs()
-  await new Promise(r => setTimeout(r, 50))
-
-  text.textContent = 'Connecting to world...'
-  bar.style.width = '95%'
-
-  setupKeyboard()
-  setupMouse()
-  setupTouch()
-  setupUI()
-
-  await setupMultiplayer()
-  await fetchPlayerState()
-  await fetchWorldState()
-  await refreshDistricts()
-  await fetchVisualData()
 
   bar.style.width = '100%'
   text.textContent = 'Welcome to The World'
@@ -8468,6 +9116,9 @@ async function init() {
     checkHelpPrompt()
     updateGoalHUD()
   }
+
+  // Initialize region atmosphere
+  document.body.classList.add('region-city')
 
   // Initialize farm UI
   document.body.classList.remove('in-farmlands')
