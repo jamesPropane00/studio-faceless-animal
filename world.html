@@ -1800,6 +1800,7 @@
       <div class="rep-bar-progress" id="repProgress">0/50</div>
     </div>
     <div class="skill-title-display" id="skillTitleDisplay"></div>
+    <div id="citySupplyReadout"></div>
     <div class="stat-row"><span class="stat-icon">&#x1F30D;</span><span class="stat-label">Online</span><span class="stat-value green" id="statOnline">1</span></div>
   </div>
 </div>
@@ -2660,7 +2661,8 @@ async function sendFoodToCity() {
       showToast(`Delivered ${food} food to the city!`, '')
       completeGoalSendFood()
       awardSkillXP('farmer', 15)
-      createNewsItem('City', 'New shipment from Pine Hollow Farm feeds the city.', food + ' units of food delivered.', 'city', 3)
+      const supply = addCityFood(food)
+      createNewsItem('City', 'New shipment from Pine Hollow Farm feeds the city.', food + ' units delivered — total supply: ' + supply.food, 'city', 3)
     } else {
       showToast('Failed to send: ' + (result.error || 'unknown'), '')
     }
@@ -7486,6 +7488,7 @@ function calculateAccumulatedIncome(building) {
   let income = building.income_rate * minutes * healthMultiplier
   const skillMult = 1 + getSkillBonus('builder', 'income') + getSkillBonus('developer', 'income')
   income *= skillMult
+  income *= 1 + getCityFoodBonus()
   if (building.in_district) {
     income *= 1.2
   }
@@ -8661,6 +8664,8 @@ function showDistrictTooltip(mouseX, mouseY, district) {
   if (crimeRate > 0) {
     happiness = Math.max(10, happiness - Math.floor(crimeRate * 0.3))
   }
+  const supply = getCitySupply()
+  happiness = Math.min(100, happiness + (supply.cityHappinessBonus || 0))
   const happinessColor = happiness >= 70 ? '#4ade80' : (happiness >= 40 ? '#facc15' : '#ef4444')
 
   let html = `<div class="district-tooltip-name">${district.name || 'Unknown District'}</div>`
@@ -8993,6 +8998,56 @@ function updateSignalWire() {
     clearBtn.onclick = () => { state.signalWire = []; saveSignalWire(); updateSignalWire() }
     container.appendChild(clearBtn)
   }
+}
+
+// ── CITY DEMAND + FARM SUPPLY ────────────────────────
+function getCitySupply() {
+  try {
+    const raw = localStorage.getItem('fas_city_supply')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return { food: 0, lastUpdated: Date.now(), totalShipments: 0, cityHappinessBonus: 0 }
+}
+
+function saveCitySupply(data) {
+  try { localStorage.setItem('fas_city_supply', JSON.stringify(data)) } catch {}
+}
+
+function addCityFood(amount) {
+  const supply = getCitySupply()
+  supply.food += amount
+  supply.totalShipments++
+  supply.cityHappinessBonus = Math.min(10, Math.floor(supply.food / 20))
+  supply.lastUpdated = Date.now()
+  saveCitySupply(supply)
+  updateCitySupplyUI()
+  return supply
+}
+
+function applyCityDecay() {
+  const supply = getCitySupply()
+  const elapsed = Date.now() - supply.lastUpdated
+  const decay = Math.floor(elapsed / 300000)
+  if (decay > 0) {
+    supply.food = Math.max(0, supply.food - decay)
+    supply.cityHappinessBonus = Math.min(10, Math.floor(supply.food / 20))
+    supply.lastUpdated = Date.now()
+    saveCitySupply(supply)
+    updateCitySupplyUI()
+  }
+}
+
+function getCityFoodBonus() {
+  const supply = getCitySupply()
+  return Math.min(0.05, Math.floor(Math.min(supply.food, 50)) * 0.01)
+}
+
+function updateCitySupplyUI() {
+  const supply = getCitySupply()
+  const el = document.getElementById('citySupplyReadout')
+  if (!el) return
+  const bonus = getCityFoodBonus()
+  el.innerHTML = '<div class="stat-row"><span class="stat-icon">\u{1F33E}</span><span class="stat-label">Food Supply</span><span class="stat-value gold" id="citySupplyFood">' + supply.food + '</span></div><div class="stat-row"><span class="stat-icon">\u{1F69A}</span><span class="stat-label">Shipments</span><span class="stat-value" id="citySupplyShipments">' + supply.totalShipments + '</span></div><div class="stat-row"><span class="stat-icon">\u{1F4C8}</span><span class="stat-label">City Bonus</span><span class="stat-value green" id="citySupplyBonus">+' + Math.floor(bonus * 100) + '% income / +' + supply.cityHappinessBonus + ' happiness</span></div>'
 }
 
 function updateGoalHUD() {
@@ -9401,6 +9456,9 @@ async function init() {
   loadSkills()
   updateSkillTitleUI()
   loadSignalWire()
+  applyCityDecay()
+  updateCitySupplyUI()
+  setInterval(() => { applyCityDecay(); updateCitySupplyUI() }, 60000)
 
   if (!state.tutorialSeen) {
     showWelcomeOverlay()
