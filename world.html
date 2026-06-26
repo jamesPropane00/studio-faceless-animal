@@ -2255,6 +2255,8 @@ async function sendFoodToCity() {
       data.inventory.veggies = 0
       saveFarmData(data)
       updateFarmInventory()
+      state.coins = result.coins || state.coins
+      state.rep = result.rep || state.rep
       document.getElementById('statCoins').textContent = state.coins
       document.getElementById('statRep').textContent = state.rep
       showToast(`Delivered ${food} food to the city!`, '')
