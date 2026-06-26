@@ -1606,6 +1606,60 @@
       cursor: pointer; text-align: left; transition: background 0.15s;
     }
     .debug-btn:hover { background: rgba(239,68,68,0.2); }
+
+    /* ── PROPERTY PANEL ── */
+    .property-panel {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(18,20,30,0.97); backdrop-filter: blur(16px);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1.5rem; z-index: 100; display: none;
+      min-width: 360px; max-width: 90vw; max-height: 85vh; overflow-y: auto;
+    }
+    .property-panel.open { display: block; }
+    .prop-deed {
+      background: linear-gradient(135deg, rgba(167,139,250,0.08), rgba(124,58,237,0.04));
+      border: 1px solid rgba(167,139,250,0.2); border-radius: var(--radius-sm);
+      padding: 0.8rem; margin-bottom: 0.8rem;
+    }
+    .prop-deed-title { font-size: 1rem; font-weight: 900; color: var(--gold); margin-bottom: 0.2rem; }
+    .prop-deed-sub { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+    .prop-deed-row { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--dim); line-height: 1.7; }
+    .prop-deed-row .label { color: var(--dim2); }
+    .prop-deed-row .val { font-weight: 700; color: var(--text); }
+    .prop-deed-row .val.gold { color: var(--gold); }
+    .prop-deed-row .val.green { color: var(--green); }
+    .prop-level-badge {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.25);
+      border-radius: 12px; padding: 0.2rem 0.5rem; font-size: 0.6rem; font-weight: 800; color: var(--green);
+    }
+    .prop-level-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; margin: 0.3rem 0; }
+    .prop-level-fill { height: 100%; background: linear-gradient(90deg, var(--green), #84cc16); border-radius: 2px; transition: width 0.3s; }
+    .prop-section { margin-bottom: 0.6rem; }
+    .prop-section-title { font-size: 0.6rem; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+    .prop-task { display: flex; align-items: center; gap: 0.4rem; padding: 0.25rem 0; font-size: 0.65rem; color: var(--dim); }
+    .prop-task.done { color: var(--text); opacity: 0.5; text-decoration: line-through; }
+    .prop-task .check { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.45rem; cursor: pointer; }
+    .prop-task.done .check { background: var(--green); border-color: var(--green); color: #fff; }
+    .prop-task .reward { color: var(--gold); font-weight: 700; margin-left: auto; font-size: 0.58rem; }
+    .prop-upgrade-item {
+      display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem; margin-bottom: 0.3rem;
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    }
+    .prop-upgrade-icon { font-size: 1rem; width: 28px; text-align: center; flex-shrink: 0; }
+    .prop-upgrade-info { flex: 1; }
+    .prop-upgrade-name { font-size: 0.7rem; font-weight: 700; color: var(--text); }
+    .prop-upgrade-desc { font-size: 0.58rem; color: var(--dim); }
+    .prop-upgrade-cost { font-size: 0.6rem; font-weight: 700; color: var(--gold); }
+    .prop-upgrade-btn {
+      padding: 0.3rem 0.6rem; border-radius: 4px;
+      background: rgba(167,139,250,0.15); border: 1px solid rgba(167,139,250,0.25);
+      color: var(--bright); font-size: 0.6rem; font-weight: 700; cursor: pointer;
+    }
+    .prop-upgrade-btn:hover { background: rgba(167,139,250,0.25); }
+    .prop-upgrade-btn.applied { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.2); color: var(--green); cursor: default; }
+    .prop-storage-row { display: flex; justify-content: space-between; font-size: 0.6rem; color: var(--dim); padding: 0.15rem 0; }
+    .prop-storage-row .count { font-weight: 700; color: var(--bright); }
   </style>
 </head>
 <body>
@@ -1755,6 +1809,33 @@
     </div>
     <button class="income-collect-btn" id="incomeCollectBtn">Collect</button>
   </div>
+</div>
+
+<div class="property-panel" id="propertyPanel">
+  <div class="panel-header">
+    <div class="panel-title">&#x1F3E1; Property</div>
+    <div class="panel-close" id="propPanelClose">&times;</div>
+  </div>
+  <div class="prop-deed" id="propDeed">
+    <div class="prop-deed-title" id="propDeedTitle">Property Deed</div>
+    <div class="prop-deed-sub" id="propDeedSub">Certificate of Ownership</div>
+    <div class="prop-deed-row"><span class="label">Type</span><span class="val" id="propDeedType">House</span></div>
+    <div class="prop-deed-row"><span class="label">Level</span><span class="val"><span class="prop-level-badge" id="propLevelBadge">Lv.1</span></span></div>
+    <div class="prop-level-bar"><div class="prop-level-fill" id="propLevelFill" style="width:0%"></div></div>
+    <div class="prop-deed-row"><span class="label">Property Value</span><span class="val gold" id="propValue">50 FC</span></div>
+    <div class="prop-deed-row"><span class="label">Income Rate</span><span class="val green" id="propIncome">0.5/min</span></div>
+    <div class="prop-deed-row"><span class="label">Upgrades</span><span class="val" id="propUpgradeCount">0</span></div>
+    <div class="prop-deed-row"><span class="label">District Bonus</span><span class="val" id="propDistrictBonus">None</span></div>
+  </div>
+  <div class="prop-section">
+    <div class="prop-section-title">&#x1F4CB; Daily Tasks</div>
+    <div id="propTasks"></div>
+  </div>
+  <div class="prop-section">
+    <div class="prop-section-title">&#x1F527; Upgrades</div>
+    <div id="propUpgrades"></div>
+  </div>
+  <button class="income-collect-btn" id="propCollectBtn" style="margin-top:0.6rem;width:100%">Collect Income</button>
 </div>
 
 <div class="job-panel game-panel" id="jobPanel">
@@ -2148,7 +2229,9 @@ const state = {
   settingsPanelOpen: false,
   settings: {
     farmAmbience: true
-  }
+  },
+  properties: {},
+  currentProperty: null
 }
 
 // ── RENDER CACHE (offscreen canvases) ──────────────────────
@@ -5575,7 +5658,7 @@ function setupMouse() {
       
       if (clickedBuilding) {
         if (clickedBuilding.owner_id === state.userId) {
-          openIncomePanel(clickedBuilding.id)
+          openPropertyPanel(clickedBuilding.id)
         } else {
           const payRates = { shop: 2, club: 3, warehouse: 1, hide: 5 }
           if (payRates[clickedBuilding.building_type]) {
@@ -5681,6 +5764,7 @@ const ALL_PANELS = [
   { id: 'blockPanel', stateKey: 'blockMode', btnId: 'btnBlock' },
   { id: 'gangPanel', stateKey: 'gangMode', btnId: 'btnGang' },
   { id: 'incomePanel', stateKey: null, btnId: null },
+  { id: 'propertyPanel', stateKey: null, btnId: null },
   { id: 'jobPanel', stateKey: null, btnId: null },
   { id: 'worldMapPanel', stateKey: 'worldMapOpen', btnId: 'btnWorldMap' },
   { id: 'settingsPanel', stateKey: 'settingsPanelOpen', btnId: 'btnSettings' },
@@ -5810,6 +5894,7 @@ function setupUI() {
   document.getElementById('gangPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('settingsPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('incomePanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('propPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('jobPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('worldMapClose').addEventListener('click', closeAllPanels)
 
@@ -6349,6 +6434,218 @@ let currentIncomeBuilding = null
 let currentJobBuilding = null
 let jobTimer = null
 
+// ── PROPERTY SYSTEM ────────────────────────────────────
+
+const PROPERTY_UPGRADES = {
+  house: [
+    { key: 'renovation', name: 'Renovation', icon: '🔨', desc: '+10% value, +0.2 income', cost: 100 },
+    { key: 'security', name: 'Security', icon: '🔒', desc: 'Protects income during gang activity', cost: 150 },
+    { key: 'garden', name: 'Garden', icon: '🌿', desc: '+5% value, +5 rep', cost: 75 },
+  ],
+  shop: [
+    { key: 'signage', name: 'Signage', icon: '📋', desc: '+20% income rate', cost: 150 },
+    { key: 'inventory', name: 'Inventory', icon: '📦', desc: '+25% income', cost: 200 },
+    { key: 'staff', name: 'Staff Training', icon: '👥', desc: '+15% income, +10 rep', cost: 180 },
+  ],
+  club: [
+    { key: 'sound', name: 'Sound System', icon: '🔊', desc: '+30% income rate', cost: 250 },
+    { key: 'lighting', name: 'Lighting', icon: '💡', desc: '+15% income', cost: 200 },
+    { key: 'vip', name: 'VIP Lounge', icon: '🍾', desc: '+25% income, +15 rep', cost: 300 },
+  ],
+  warehouse: [
+    { key: 'shelving', name: 'Shelving', icon: '📚', desc: '+10 storage slots', cost: 100 },
+    { key: 'logistics', name: 'Logistics', icon: '🚚', desc: '+0.5 income', cost: 150 },
+    { key: 'cold_storage', name: 'Cold Storage', icon: '❄️', desc: '+20% value', cost: 200 },
+  ],
+  hide: [
+    { key: 'reinforced', name: 'Reinforced', icon: '🛡️', desc: '+30% income, secure', cost: 250 },
+    { key: 'comms', name: 'Comms System', icon: '📡', desc: '+15% income, +10 rep', cost: 200 },
+    { key: 'network', name: 'Network', icon: '🕸️', desc: '+25% income', cost: 350 },
+  ],
+  camp: [
+    { key: 'firepit', name: 'Fire Pit', icon: '🔥', desc: '+10% income', cost: 50 },
+    { key: 'shelter', name: 'Shelter', icon: '⛺', desc: '+5% value', cost: 75 },
+    { key: 'signal', name: 'Signal Fire', icon: '🪄', desc: '+15% income, +5 rep', cost: 100 },
+  ],
+}
+
+const PROPERTY_TASKS = {
+  house: [
+    { key: 'visit', label: 'Visit your property', xp: 20 },
+    { key: 'collect', label: 'Collect income', xp: 30 },
+  ],
+  shop: [
+    { key: 'collect', label: 'Collect shop income', xp: 30 },
+    { key: 'work', label: 'Work a shift', xp: 40 },
+  ],
+  club: [
+    { key: 'collect', label: 'Collect club income', xp: 35 },
+    { key: 'promote', label: 'Promote the club', xp: 25 },
+  ],
+  warehouse: [
+    { key: 'collect', label: 'Collect warehouse income', xp: 25 },
+    { key: 'organize', label: 'Organize inventory', xp: 20 },
+  ],
+  hide: [
+    { key: 'collect', label: 'Collect hide income', xp: 30 },
+    { key: 'patrol', label: 'Patrol district', xp: 35 },
+  ],
+  camp: [
+    { key: 'collect', label: 'Collect camp income', xp: 15 },
+    { key: 'maintain', label: 'Maintain camp', xp: 20 },
+  ],
+}
+
+function getPropertyData(buildingId) {
+  if (!state.properties[buildingId]) {
+    state.properties[buildingId] = {
+      level: 1, xp: 0, xpToNext: 100,
+      upgrades: [], tasks: {}, lastDailyReset: 0,
+    }
+  }
+  const prop = state.properties[buildingId]
+  const today = new Date().toISOString().slice(0, 10)
+  if (prop.lastDailyReset !== today) {
+    prop.tasks = {}
+    prop.lastDailyReset = today
+    savePropertyData()
+  }
+  return prop
+}
+
+function savePropertyData() {
+  try { localStorage.setItem('fas_properties', JSON.stringify(state.properties)) } catch {}
+}
+
+function loadPropertyData() {
+  try {
+    const raw = localStorage.getItem('fas_properties')
+    if (raw) state.properties = JSON.parse(raw)
+  } catch {}
+}
+
+function calcPropertyLevel(prop) {
+  const levels = [0, 100, 250, 500, 800, 1200, 1700, 2300, 3000, 4000]
+  for (let i = levels.length - 1; i >= 0; i--) {
+    if (prop.xp >= levels[i]) { prop.level = i + 1; return i + 1 }
+  }
+  return 1
+}
+
+function addPropertyXP(prop, amount) {
+  prop.xp += amount
+  const old = prop.level
+  calcPropertyLevel(prop)
+  if (prop.level > old) showToast('Property Level Up!', 'Reached Level ' + prop.level + '!')
+  savePropertyData()
+}
+
+function calcPropertyValue(building) {
+  const prop = state.properties[building.id]
+  if (!prop) return BUILDING_TYPES[building.building_type]?.cost || 50
+  const type = BUILDING_TYPES[building.building_type]
+  let base = type.cost || 50
+  let mult = 1
+  for (const key of prop.upgrades) {
+    const list = PROPERTY_UPGRADES[building.building_type] || []
+    const u = list.find(x => x.key === key)
+    if (key === 'renovation' || key === 'garden' || key === 'cold_storage' || key === 'shelter') mult += 0.05
+    if (key === 'renovation') mult += 0.05
+  }
+  const levelMult = 1 + (prop.level - 1) * 0.1
+  return Math.floor(base * mult * levelMult)
+}
+
+function getEffectiveIncome(building) {
+  const prop = state.properties[building.id]
+  if (!prop) return building.income_rate || 0
+  let mult = 1, bonus = 0
+  for (const key of prop.upgrades) {
+    const list = PROPERTY_UPGRADES[building.building_type] || []
+    const u = list.find(x => x.key === key)
+    if (!u) continue
+    if (key === 'signage' || key === 'sound' || key === 'reinforced') mult += 0.2
+    if (key === 'inventory') mult += 0.25
+    if (key === 'staff' || key === 'lighting' || key === 'comms') mult += 0.15
+    if (key === 'vip' || key === 'network') mult += 0.25
+    if (key === 'firepit') mult += 0.1
+    if (key === 'signal' || key === 'logistics') mult += 0.15
+    if (key === 'renovation') bonus += 0.2
+    if (key === 'logistics') bonus += 0.3
+  }
+  const levelMult = 1 + (prop.level - 1) * 0.05
+  return ((building.income_rate || 0) * mult + bonus) * levelMult
+}
+
+function openPropertyPanel(buildingId) {
+  const building = state.buildings.find(b => b.id === buildingId)
+  if (!building) return
+  const prop = getPropertyData(buildingId)
+  const type = BUILDING_TYPES[building.building_type]
+  if (!type) return
+  state.currentProperty = building
+  closeAllPanels()
+  document.getElementById('propDeedTitle').textContent = type.name + ' Deed'
+  document.getElementById('propDeedSub').textContent = 'Property #' + String(buildingId).slice(-6)
+  document.getElementById('propDeedType').textContent = type.name
+  document.getElementById('propLevelBadge').textContent = 'Lv.' + prop.level
+  const pct = prop.xpToNext ? Math.min(100, (prop.xp % prop.xpToNext) / prop.xpToNext * 100) : 0
+  document.getElementById('propLevelFill').style.width = pct + '%'
+  document.getElementById('propValue').textContent = calcPropertyValue(building) + ' FC'
+  document.getElementById('propIncome').textContent = getEffectiveIncome(building).toFixed(1) + '/min'
+  document.getElementById('propUpgradeCount').textContent = prop.upgrades.length + ' / 3'
+  document.getElementById('propDistrictBonus').textContent = building.in_district ? 'Yes (+20%)' : 'None'
+  // Tasks
+  const tasks = PROPERTY_TASKS[building.building_type] || []
+  const tContainer = document.getElementById('propTasks')
+  tContainer.innerHTML = ''
+  for (const t of tasks) {
+    const done = prop.tasks[t.key]
+    const item = document.createElement('div')
+    item.className = 'prop-task' + (done ? ' done' : '')
+    item.innerHTML = '<span class="check">' + (done ? '✓' : '') + '</span><span>' + t.label + '</span><span class="reward">+' + t.xp + ' XP</span>'
+    if (!done) {
+      item.querySelector('.check').onclick = () => {
+        if (prop.tasks[t.key]) return
+        prop.tasks[t.key] = true
+        addPropertyXP(prop, t.xp)
+        savePropertyData()
+        showToast('Task Complete!', '+' + t.xp + ' XP')
+        openPropertyPanel(buildingId)
+      }
+    }
+    tContainer.appendChild(item)
+  }
+  // Upgrades
+  const upgrades = PROPERTY_UPGRADES[building.building_type] || []
+  const uContainer = document.getElementById('propUpgrades')
+  uContainer.innerHTML = ''
+  for (const u of upgrades) {
+    const applied = prop.upgrades.includes(u.key)
+    const item = document.createElement('div')
+    item.className = 'prop-upgrade-item'
+    item.innerHTML = '<span class="prop-upgrade-icon">' + u.icon + '</span><div class="prop-upgrade-info"><div class="prop-upgrade-name">' + u.name + '</div><div class="prop-upgrade-desc">' + u.desc + '</div></div><div><div class="prop-upgrade-cost">' + u.cost + ' FC</div><button class="prop-upgrade-btn' + (applied ? ' applied' : '') + '"' + (applied ? ' disabled' : '') + '>' + (applied ? 'Owned' : 'Buy') + '</button></div>'
+    if (!applied) {
+      item.querySelector('.prop-upgrade-btn').onclick = () => {
+        if (prop.upgrades.includes(u.key)) return
+        if (state.coins < u.cost) { showToast('Not enough FC', 'Need ' + u.cost + ' FC'); return }
+        state.coins -= u.cost
+        document.getElementById('statCoins').textContent = state.coins
+        prop.upgrades.push(u.key)
+        addPropertyXP(prop, 50)
+        savePropertyData()
+        showToast('Upgrade Applied!', u.name + ' installed')
+        openPropertyPanel(buildingId)
+      }
+    }
+    uContainer.appendChild(item)
+  }
+  document.getElementById('propCollectBtn').onclick = () => { closeAllPanels(); setTimeout(() => openIncomePanel(buildingId), 200) }
+  document.getElementById('propertyPanel').classList.remove('panel-hidden')
+  document.getElementById('propertyPanel').classList.add('open')
+  document.getElementById('panelBackdrop').classList.add('open')
+}
+
 function openIncomePanel(buildingId) {
   const building = state.buildings.find(b => b.id === buildingId)
   if (!building) return
@@ -6554,6 +6851,9 @@ async function collectIncome() {
         document.getElementById('statRep').textContent = state.rep
         currentIncomeBuilding.last_collected = Date.now()
         currentIncomeBuilding.last_collected_at = new Date().toISOString()
+        // Award property XP for collecting income
+        const prop = state.properties[currentIncomeBuilding.id]
+        if (prop) addPropertyXP(prop, 10)
         showToast('Income Collected', `+${data.coinsCollected} coins`)
         closeIncomePanel()
         completeGoalCollectIncome()
@@ -8160,6 +8460,7 @@ async function init() {
 
   state.tutorialSeen = !!localStorage.getItem('fas_world_tutorial')
   loadGoalsFromStorage()
+  loadPropertyData()
 
   if (!state.tutorialSeen) {
     showWelcomeOverlay()
