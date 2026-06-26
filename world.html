@@ -222,6 +222,17 @@
 
     .skill-title-display{font-size:0.6rem;color:var(--bright);margin-top:0.25rem;text-align:center;font-weight:600}
 
+    /* ── SIGNAL WIRE PANEL ── */
+    .signal-item { padding: 0.55rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .signal-item:last-child { border-bottom: none; }
+    .signal-cat { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.15rem; }
+    .signal-headline { font-size: 0.78rem; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 0.1rem; }
+    .signal-body { font-size: 0.62rem; color: var(--dim); line-height: 1.4; margin-bottom: 0.2rem; }
+    .signal-meta { display: flex; gap: 0.6rem; font-size: 0.5rem; color: var(--dim2); align-items: center; }
+    .signal-region { text-transform: capitalize; }
+    .signal-time { margin-left: auto; }
+    .signal-importance { letter-spacing: 0.1em; }
+
     .loading-screen{
       position:fixed;inset:0;z-index:200;
       background:var(--bg);display:flex;flex-direction:column;
@@ -1811,6 +1822,7 @@
   <button class="tool-btn" id="btnGang" data-tip="Gangs">&#x1F46A;</button>
   <button class="tool-btn" id="btnCreatures" data-tip="Creatures">&#x1F43E;</button>
   <button class="tool-btn" id="btnSkills" data-tip="Skill Trees">&#x1F331;</button>
+  <button class="tool-btn" id="btnSignalWire" data-tip="Signal Wire">&#x1F4F0;</button>
   <button class="tool-btn" id="btnInfluenceView" data-tip="Influence View"><span id="influenceViewIcon">&#x1F5FA;</span></button>
   <button class="tool-btn" id="btnWorldMap" data-tip="World Map">&#x1F5FA;&#xFE0F;</button>
   <button class="tool-btn" id="btnSettings" data-tip="Settings">&#x2699;&#xFE0F;</button>
@@ -1920,6 +1932,14 @@
     <div class="panel-close" id="skillTreesPanelClose">&times;</div>
   </div>
   <div id="skillTreesList"></div>
+</div>
+
+<div class="signal-wire-panel game-panel" id="signalWirePanel">
+  <div class="panel-header">
+    <div class="panel-title">&#x1F4F0; Signal Wire</div>
+    <div class="panel-close" id="signalWirePanelClose">&times;</div>
+  </div>
+  <div id="signalWireList"></div>
 </div>
 
 <div class="income-panel game-panel" id="incomePanel">
@@ -2372,7 +2392,8 @@ const state = {
   },
   properties: {},
   currentProperty: null,
-  skills: {}
+  skills: {},
+  signalWire: []
 }
 
 // ── RENDER CACHE (offscreen canvases) ──────────────────────
@@ -2599,6 +2620,7 @@ function harvestCrop(tx, ty) {
 
   saveFarmData(data)
   awardSkillXP('farmer', 10)
+  createNewsItem('Farm', 'Crops harvested at the farm.', yield_ + ' ' + info.name + ' brought in.', 'farmlands', 2)
   closeFarmOverlay()
   updateFarmInventory()
   showToast(`Harvested ${yield_} ${info.name}!`, '')
@@ -2636,6 +2658,7 @@ async function sendFoodToCity() {
       showToast(`Delivered ${food} food to the city!`, '')
       completeGoalSendFood()
       awardSkillXP('farmer', 15)
+      createNewsItem('City', 'New shipment from Pine Hollow Farm feeds the city.', food + ' units of food delivered.', 'city', 3)
     } else {
       showToast('Failed to send: ' + (result.error || 'unknown'), '')
     }
@@ -3545,6 +3568,7 @@ function checkTrustMilestone(creatureId, trust) {
   if (trust >= 100 && !state.creatureCollection[creatureId].trusted) {
     state.creatureCollection[creatureId].trusted = true
     showToast(creature.name + ' trusts you!', 'Added to your creature collection')
+    createNewsItem('Wildlife', creature.name + ' trusted in Whisper Woods.', '', 'whisper-woods', 4)
     endCreatureEncounter()
   }
   saveCreatureCollection()
@@ -6369,6 +6393,7 @@ const ALL_PANELS = [
   { id: 'settingsPanel', stateKey: 'settingsPanelOpen', btnId: 'btnSettings' },
   { id: 'creaturesPanel', stateKey: null, btnId: 'btnCreatures' },
   { id: 'skillTreesPanel', stateKey: null, btnId: 'btnSkills' },
+  { id: 'signalWirePanel', stateKey: null, btnId: 'btnSignalWire' },
 ]
 
 function closeAllPanels() {
@@ -6497,6 +6522,7 @@ function setupUI() {
   document.getElementById('btnSettings').addEventListener('click', () => openPanel('settingsPanel'))
   document.getElementById('btnCreatures').addEventListener('click', openCreaturesPanel)
   document.getElementById('btnSkills').addEventListener('click', openSkillsPanel)
+  document.getElementById('btnSignalWire').addEventListener('click', openSignalWirePanel)
 
   // Close buttons
   document.getElementById('buildPanelClose').addEventListener('click', closeAllPanels)
@@ -6507,6 +6533,7 @@ function setupUI() {
   document.getElementById('settingsPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('incomePanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('skillTreesPanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('signalWirePanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('propPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('jobPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('worldMapClose').addEventListener('click', closeAllPanels)
@@ -6934,6 +6961,7 @@ async function createGang() {
       addChatMessage('', `${state.username} created gang ${data.gang.name} [${data.gang.tag}]`, true);
       closeGangPanel();
       awardSkillXP('gangLeader', 50)
+      createNewsItem('Gangs', 'New gang formed: ' + name + '.', 'Tag: [' + tag + ']', 'city', 5)
     } else {
       showToast('Error', data.error || 'Failed to create gang.');
     }
@@ -7052,6 +7080,7 @@ async function recruitNPC(npcId) {
         document.getElementById('statCoins').textContent = state.coins;
         showToast('NPC Recruited', `Successfully recruited NPC! Gang influence: ${data.gangInfluence}`);
         awardSkillXP('gangLeader', 20)
+        createNewsItem('Gangs', 'New recruit joins ' + (userCurrentGang?.name || 'a gang') + '.', '', 'city', 3)
       } else {
         showToast('Recruitment Failed', data.message || 'The NPC declined.');
       }
@@ -7269,6 +7298,7 @@ function openPropertyPanel(buildingId) {
         prop.upgrades.push(u.key)
         addPropertyXP(prop, 50)
         awardSkillXP('developer', 30)
+        createNewsItem('Property', 'Property upgraded: ' + u.name + '.', '', state.currentRegion, 3)
         savePropertyData()
         showToast('Upgrade Applied!', u.name + ' installed')
         openPropertyPanel(buildingId)
@@ -7494,6 +7524,7 @@ async function collectIncome() {
         const prop = state.properties[currentIncomeBuilding.id]
         if (prop) addPropertyXP(prop, 10)
         awardSkillXP('entertainer', currentIncomeBuilding.building_type === 'club' ? 15 : 5)
+        createNewsItem('Economy', 'Income flows from ' + (BUILDING_TYPES[currentIncomeBuilding.building_type]?.name || currentIncomeBuilding.building_type) + '.', '+' + data.coinsCollected + ' coins collected.', state.currentRegion, 2)
         showToast('Income Collected', `+${data.coinsCollected} coins`)
         closeIncomePanel()
         completeGoalCollectIncome()
@@ -7685,6 +7716,7 @@ async function placeBuildingAt(x, y) {
       await fetchWorldState()
       await refreshDistricts()
       awardSkillXP('builder', {house:15,camp:15,shop:25,club:35,warehouse:20,hide:10}[state.buildType]||15)
+      createNewsItem(state.buildType === 'shop' || state.buildType === 'club' ? 'Economy' : 'Property', 'New ' + type.name + ' rises in ' + state.currentRegion + '.', '', state.currentRegion, state.buildType === 'club' ? 3 : 2)
     } else {
       console.error('[WORLD] placeBuildingAt failed:', res.status, data)
       showToast('Error', data.error || 'Failed to place building')
@@ -7813,7 +7845,10 @@ async function placeInfrastructure(x, y, type) {
         document.getElementById('statCoins').textContent = state.coins
       }
       showToast('Public Works', `${type.charAt(0).toUpperCase() + type.slice(1)} placed!`)
-      if (type === 'graffiti' || type === 'garden' || type === 'tree') awardSkillXP('streetArtist', 10)
+      if (type === 'graffiti' || type === 'garden' || type === 'tree') {
+        awardSkillXP('streetArtist', 10)
+        createNewsItem('Culture', 'New ' + type + ' adds character to ' + state.currentRegion + '.', '', state.currentRegion, 2)
+      }
       // Deselect after placing
       state.pwType = null
       document.querySelectorAll('.pw-item').forEach(el => el.classList.remove('selected'))
@@ -7879,6 +7914,7 @@ async function placeBlock(x, y, blockType) {
       state.blockType = null
       document.querySelectorAll('.block-item').forEach(el => el.classList.remove('selected'))
       awardSkillXP('developer', 10 + ({residential:5,commercial:10,industrial:15,entertainment:20,park:5,farm:10}[blockType]||0))
+      createNewsItem('Property', 'New ' + blockType + ' block developed in ' + state.currentRegion + '.', '', state.currentRegion, 2)
     } else {
       showToast('Error', data.error || 'Failed to place block')
     }
@@ -8095,6 +8131,7 @@ async function setupMultiplayer() {
               timer: 10,
               startTime: performance.now()
             })
+            createNewsItem('City', 'New district formed: ' + se.name + '.', se.desc || '', state.currentRegion, 4)
             continue
           }
           const template = WORLD_EVENTS.find(t => t.type === se.type)
@@ -8108,6 +8145,8 @@ async function setupMultiplayer() {
             })
             showToast(template.icon + ' ' + template.name, template.desc)
             addChatMessage('', `${template.icon} ${template.name} — ${template.desc}`, true)
+            const evCat = template.type === 'storm' || template.type === 'fog' || template.type === 'heatwave' ? 'Weather' : 'City'
+            createNewsItem(evCat, template.name + ' in ' + state.currentRegion + '.', template.desc || '', state.currentRegion, 3)
           }
         }
       }
@@ -8812,6 +8851,7 @@ function awardSkillXP(treeId, amount) {
   const tree = SKILL_TREES.find(t => t.id === treeId)
   if (newLevel > oldLevel) {
     showToast('\u{2B50} ' + tree.name + ' Level Up!', 'Reached ' + getSkillTitle(treeId) + ' (Lv.' + newLevel + ')', 'toast-levelup')
+    createNewsItem('Culture', getSkillTitle(treeId) + ' rises in ' + state.currentRegion + '.', tree.name + ' reached level ' + newLevel + '.', state.currentRegion, 3)
   } else {
     showToast('+' + amount + ' ' + tree.name + ' XP', getSkillTitle(treeId) + ' (Lv.' + newLevel + ')')
   }
@@ -8883,6 +8923,73 @@ function updateSkillsPanel() {
     item.className = 'skill-item'
     item.innerHTML = '<div class="skill-icon">' + tree.icon + '</div><div class="skill-info"><div class="skill-name">' + tree.name + '</div><div class="skill-level">' + title + ' (Lv.' + level + ')</div>' + bonusHtml + progressHtml + '</div>'
     container.appendChild(item)
+  }
+}
+
+// ── SIGNAL WIRE NEWS SYSTEM ──────────────────────────
+const SIGNAL_CATEGORIES = {
+  City: { icon: '\u{1F3D9}', color: '#a78bfa' },
+  Farm: { icon: '\u{1F33E}', color: '#10b981' },
+  Wildlife: { icon: '\u{1F43E}', color: '#f59e0b' },
+  Gangs: { icon: '\u{1F46A}', color: '#ef4444' },
+  Economy: { icon: '\u{1F4B0}', color: '#fbbf24' },
+  Property: { icon: '\u{1F3E1}', color: '#3b82f6' },
+  Culture: { icon: '\u{1F3AD}', color: '#ec4899' },
+  Weather: { icon: '\u{1F324}', color: '#14b8a6' },
+}
+
+function createNewsItem(category, headline, body, region, importance) {
+  state.signalWire.unshift({
+    id: Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    timestamp: Date.now(),
+    category, headline, body,
+    region: region || 'city',
+    importance: Math.max(1, Math.min(5, importance || 1)),
+  })
+  if (state.signalWire.length > 100) state.signalWire.length = 100
+  saveSignalWire()
+}
+
+function saveSignalWire() {
+  try { localStorage.setItem('fas_signal_wire_news', JSON.stringify(state.signalWire)) } catch {}
+}
+
+function loadSignalWire() {
+  try {
+    const raw = localStorage.getItem('fas_signal_wire_news')
+    if (raw) state.signalWire = JSON.parse(raw)
+  } catch {}
+}
+
+function openSignalWirePanel() {
+  openPanel('signalWirePanel')
+  updateSignalWire()
+}
+
+function updateSignalWire() {
+  const container = document.getElementById('signalWireList')
+  if (!container) return
+  container.innerHTML = ''
+  if (!state.signalWire || state.signalWire.length === 0) {
+    container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--dim);font-size:0.7rem">No news yet.<br>Go do something in the world.</div>'
+    return
+  }
+  const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  for (const item of state.signalWire) {
+    const cat = SIGNAL_CATEGORIES[item.category] || { icon: '\u{1F4F0}', color: '#888' }
+    const timeStr = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const stars = '\u{2605}'.repeat(item.importance) + '\u{2606}'.repeat(5 - item.importance)
+    const el = document.createElement('div')
+    el.className = 'signal-item'
+    el.innerHTML = '<div class="signal-cat" style="color:' + cat.color + '">' + cat.icon + ' ' + item.category + '</div><div class="signal-headline">' + item.headline + '</div>' + (item.body ? '<div class="signal-body">' + item.body + '</div>' : '') + '<div class="signal-meta"><span class="signal-region">' + item.region + '</span><span class="signal-time">' + timeStr + '</span><span class="signal-importance" style="color:' + cat.color + '">' + stars + '</span></div>'
+    container.appendChild(el)
+  }
+  if (isDev && state.signalWire.length > 0) {
+    const clearBtn = document.createElement('button')
+    clearBtn.className = 'signal-clear-btn'
+    clearBtn.textContent = 'Clear All (dev)'
+    clearBtn.onclick = () => { state.signalWire = []; saveSignalWire(); updateSignalWire() }
+    container.appendChild(clearBtn)
   }
 }
 
@@ -9191,6 +9298,7 @@ function completeTravel(targetRegion) {
     showToast(`Arrived at ${REGIONS[targetRegion].name}`, '')
   }
   awardSkillXP('explorer', targetRegion === 'city' ? 10 : 25)
+  createNewsItem('Culture', 'Explorer arrives in ' + (REGIONS[targetRegion]?.name || targetRegion) + '.', '', targetRegion, 2)
   // Clean up region-specific systems when leaving
   if (state.travel.fromRegion === 'farmlands') clearFarmLife()
   if (state.travel.fromRegion === 'whisper-woods') {
@@ -9290,6 +9398,7 @@ async function init() {
   initSkills()
   loadSkills()
   updateSkillTitleUI()
+  loadSignalWire()
 
   if (!state.tutorialSeen) {
     showWelcomeOverlay()
