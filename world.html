@@ -1741,6 +1741,18 @@
     .creature-collect-detail { font-size: 0.6rem; color: var(--dim); }
     .creature-collect-trust { font-size: 0.6rem; color: var(--bright); font-weight: 600; }
     .creature-collect-status { font-size: 0.6rem; color: var(--gold); font-weight: 700; }
+
+    /* ── SKILL TREES PANEL ── */
+    .skill-item { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .skill-item:last-child { border-bottom: none; }
+    .skill-icon { font-size: 1.4rem; width: 32px; text-align: center; flex-shrink: 0; }
+    .skill-info { flex: 1; min-width: 0; }
+    .skill-name { font-size: 0.78rem; font-weight: 700; color: var(--text); }
+    .skill-level { font-size: 0.6rem; color: var(--dim); margin-bottom: 0.15rem; }
+    .skill-bonus { font-size: 0.55rem; color: var(--green); margin-bottom: 0.2rem; }
+    .skill-xp-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; margin-bottom: 0.15rem; }
+    .skill-xp-fill { height: 100%; background: linear-gradient(90deg, var(--purple-bright), #c084fc); border-radius: 2px; transition: width 0.3s; }
+    .skill-xp-text { font-size: 0.55rem; color: var(--dim); }
   </style>
 </head>
 <body>
@@ -1792,6 +1804,7 @@
   <button class="tool-btn" id="btnProperty" data-tip="Properties">&#x1F3E1;</button>
   <button class="tool-btn" id="btnGang" data-tip="Gangs">&#x1F46A;</button>
   <button class="tool-btn" id="btnCreatures" data-tip="Creatures">&#x1F43E;</button>
+  <button class="tool-btn" id="btnSkills" data-tip="Skill Trees">&#x1F331;</button>
   <button class="tool-btn" id="btnInfluenceView" data-tip="Influence View"><span id="influenceViewIcon">&#x1F5FA;</span></button>
   <button class="tool-btn" id="btnWorldMap" data-tip="World Map">&#x1F5FA;&#xFE0F;</button>
   <button class="tool-btn" id="btnSettings" data-tip="Settings">&#x2699;&#xFE0F;</button>
@@ -1893,6 +1906,14 @@
     <div class="panel-close" id="creaturesPanelClose">&times;</div>
   </div>
   <div id="creaturesList"></div>
+</div>
+
+<div class="skill-trees-panel game-panel" id="skillTreesPanel">
+  <div class="panel-header">
+    <div class="panel-title">&#x1F331; Skill Trees</div>
+    <div class="panel-close" id="skillTreesPanelClose">&times;</div>
+  </div>
+  <div id="skillTreesList"></div>
 </div>
 
 <div class="income-panel game-panel" id="incomePanel">
@@ -2344,7 +2365,8 @@ const state = {
     farmAmbience: true
   },
   properties: {},
-  currentProperty: null
+  currentProperty: null,
+  skills: {}
 }
 
 // ── RENDER CACHE (offscreen canvases) ──────────────────────
@@ -2551,6 +2573,7 @@ function plantCrop(tx, ty, cropType) {
   saveFarmData(data)
   closeFarmOverlay()
   showToast('Planted ' + CROP_TYPES[cropType].name, '')
+  awardSkillXP('farmer', 5)
   invalidateTileCache()
 }
 
@@ -2564,10 +2587,12 @@ function harvestCrop(tx, ty) {
 
   data.crops.splice(idx, 1)
   const info = CROP_TYPES[crop.type]
-  const yield_ = info.yield || 1
+  let yield_ = info.yield || 1
+  yield_ = Math.floor(yield_ * (1 + getSkillBonus('farmer', 'cropYield')))
   data.inventory[crop.type] = (data.inventory[crop.type] || 0) + yield_
 
   saveFarmData(data)
+  awardSkillXP('farmer', 10)
   closeFarmOverlay()
   updateFarmInventory()
   showToast(`Harvested ${yield_} ${info.name}!`, '')
@@ -2604,6 +2629,7 @@ async function sendFoodToCity() {
       document.getElementById('statRep').textContent = state.rep
       showToast(`Delivered ${food} food to the city!`, '')
       completeGoalSendFood()
+      awardSkillXP('farmer', 15)
     } else {
       showToast('Failed to send: ' + (result.error || 'unknown'), '')
     }
@@ -3443,7 +3469,7 @@ function updateEncounterTrustUI(trust) {
 function observeCreature() {
   const creature = getCreature(_creatureEncounterId)
   if (!creature) return
-  let gain = 5
+  let gain = Math.floor(5 * (1 + getSkillBonus('creatureKeeper', 'trustGain')))
   _creatureEncounterData.trust = Math.min(100, _creatureEncounterData.trust + gain)
   updateEncounterTrustUI(_creatureEncounterData.trust)
   showToast('Observed', '+' + gain + ' trust — ' + creature.name + ' seems calmer')
@@ -3465,7 +3491,7 @@ function offerFoodToCreature() {
   }
   saveFarmData(data)
   updateFarmInventory()
-  let gain = 15 + Math.floor(Math.random() * 11)
+  let gain = Math.floor((15 + Math.floor(Math.random() * 11)) * (1 + getSkillBonus('creatureKeeper', 'trustGain')))
   _creatureEncounterData.trust = Math.min(100, _creatureEncounterData.trust + gain)
   updateEncounterTrustUI(_creatureEncounterData.trust)
   showToast('Offered Food', '+' + gain + ' trust — ' + creature.name + ' accepts')
@@ -3480,7 +3506,7 @@ function calmCreature() {
     endCreatureEncounter()
     return
   }
-  let gain = 10
+  let gain = Math.floor(10 * (1 + getSkillBonus('creatureKeeper', 'trustGain')))
   _creatureEncounterData.trust = Math.min(100, _creatureEncounterData.trust + gain)
   updateEncounterTrustUI(_creatureEncounterData.trust)
   showToast('Calmed', '+' + gain + ' trust — ' + creature.name + ' relaxes')
@@ -3506,7 +3532,9 @@ function checkTrustMilestone(creatureId, trust) {
   if (!state.creatureCollection[creatureId]) {
     state.creatureCollection[creatureId] = { creatureId, name: creature.name, icon: creature.icon, rarity: creature.rarity, region: 'whisper-woods', trust: 0, discovered: Date.now(), trusted: false }
   }
+  const prevTrust = state.creatureCollection[creatureId].trust || 0
   state.creatureCollection[creatureId].trust = trust
+  awardSkillXP('creatureKeeper', Math.max(0, trust - prevTrust))
   // Check if trust reached 100
   if (trust >= 100 && !state.creatureCollection[creatureId].trusted) {
     state.creatureCollection[creatureId].trusted = true
@@ -6334,6 +6362,7 @@ const ALL_PANELS = [
   { id: 'worldMapPanel', stateKey: 'worldMapOpen', btnId: 'btnWorldMap' },
   { id: 'settingsPanel', stateKey: 'settingsPanelOpen', btnId: 'btnSettings' },
   { id: 'creaturesPanel', stateKey: null, btnId: 'btnCreatures' },
+  { id: 'skillTreesPanel', stateKey: null, btnId: 'btnSkills' },
 ]
 
 function closeAllPanels() {
@@ -6461,6 +6490,7 @@ function setupUI() {
   document.getElementById('btnWorldMap').addEventListener('click', () => openPanel('worldMapPanel'))
   document.getElementById('btnSettings').addEventListener('click', () => openPanel('settingsPanel'))
   document.getElementById('btnCreatures').addEventListener('click', openCreaturesPanel)
+  document.getElementById('btnSkills').addEventListener('click', openSkillsPanel)
 
   // Close buttons
   document.getElementById('buildPanelClose').addEventListener('click', closeAllPanels)
@@ -6470,6 +6500,7 @@ function setupUI() {
   document.getElementById('gangPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('settingsPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('incomePanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('skillTreesPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('propPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('jobPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('worldMapClose').addEventListener('click', closeAllPanels)
@@ -6896,6 +6927,7 @@ async function createGang() {
       showToast('Gang Created', `${data.gang.name} [${data.gang.tag}] has been created!`);
       addChatMessage('', `${state.username} created gang ${data.gang.name} [${data.gang.tag}]`, true);
       closeGangPanel();
+      awardSkillXP('gangLeader', 50)
     } else {
       showToast('Error', data.error || 'Failed to create gang.');
     }
@@ -7013,6 +7045,7 @@ async function recruitNPC(npcId) {
         state.coins = data.newBalance;
         document.getElementById('statCoins').textContent = state.coins;
         showToast('NPC Recruited', `Successfully recruited NPC! Gang influence: ${data.gangInfluence}`);
+        awardSkillXP('gangLeader', 20)
       } else {
         showToast('Recruitment Failed', data.message || 'The NPC declined.');
       }
@@ -7229,6 +7262,7 @@ function openPropertyPanel(buildingId) {
         document.getElementById('statCoins').textContent = state.coins
         prop.upgrades.push(u.key)
         addPropertyXP(prop, 50)
+        awardSkillXP('developer', 30)
         savePropertyData()
         showToast('Upgrade Applied!', u.name + ' installed')
         openPropertyPanel(buildingId)
@@ -7412,6 +7446,8 @@ function calculateAccumulatedIncome(building) {
   const minutes = cappedElapsed / 60000
   const healthMultiplier = (building.business_health || 100) / 100
   let income = building.income_rate * minutes * healthMultiplier
+  const skillMult = 1 + getSkillBonus('builder', 'income') + getSkillBonus('developer', 'income')
+  income *= skillMult
   if (building.in_district) {
     income *= 1.2
   }
@@ -7451,6 +7487,7 @@ async function collectIncome() {
         // Award property XP for collecting income
         const prop = state.properties[currentIncomeBuilding.id]
         if (prop) addPropertyXP(prop, 10)
+        awardSkillXP('entertainer', currentIncomeBuilding.building_type === 'club' ? 15 : 5)
         showToast('Income Collected', `+${data.coinsCollected} coins`)
         closeIncomePanel()
         completeGoalCollectIncome()
@@ -7641,6 +7678,7 @@ async function placeBuildingAt(x, y) {
       updateGoalHUD()
       await fetchWorldState()
       await refreshDistricts()
+      awardSkillXP('builder', {house:15,camp:15,shop:25,club:35,warehouse:20,hide:10}[state.buildType]||15)
     } else {
       console.error('[WORLD] placeBuildingAt failed:', res.status, data)
       showToast('Error', data.error || 'Failed to place building')
@@ -7769,6 +7807,7 @@ async function placeInfrastructure(x, y, type) {
         document.getElementById('statCoins').textContent = state.coins
       }
       showToast('Public Works', `${type.charAt(0).toUpperCase() + type.slice(1)} placed!`)
+      if (type === 'graffiti' || type === 'garden' || type === 'tree') awardSkillXP('streetArtist', 10)
       // Deselect after placing
       state.pwType = null
       document.querySelectorAll('.pw-item').forEach(el => el.classList.remove('selected'))
@@ -7833,6 +7872,7 @@ async function placeBlock(x, y, blockType) {
       showToast('Urban DNA', `${blockType.charAt(0).toUpperCase() + blockType.slice(1)} block placed!`)
       state.blockType = null
       document.querySelectorAll('.block-item').forEach(el => el.classList.remove('selected'))
+      awardSkillXP('developer', 10 + ({residential:5,commercial:10,industrial:15,entertainment:20,park:5,farm:10}[blockType]||0))
     } else {
       showToast('Error', data.error || 'Failed to place block')
     }
@@ -8709,6 +8749,117 @@ const CREATURES = [
   { id: 'moss-hound', name: 'Moss Hound', icon: '\u{1F436}', rarity: 'rare', preferredTime: 'night', preferredWeather: 'fog', favoriteFood: 'truffle-root', trustDifficulty: 45 },
 ]
 
+// ── SKILL TREES SYSTEM ─────────────────────────────────
+const SKILL_TREES = [
+  { id: 'builder', name: 'Builder', icon: '\u{1F3D7}', bonus: { type: 'income', perLevel: 0.01, label: '+1% income/level' } },
+  { id: 'farmer', name: 'Farmer', icon: '\u{1F33E}', bonus: { type: 'cropYield', perLevel: 0.01, label: '+1% crop yield/level' } },
+  { id: 'explorer', name: 'Explorer', icon: '\u{1F5FA}', bonus: null },
+  { id: 'creatureKeeper', name: 'Creature Keeper', icon: '\u{1F43E}', bonus: { type: 'trustGain', perLevel: 0.01, label: '+1% trust gain/level' } },
+  { id: 'developer', name: 'Developer', icon: '\u{1F3D8}', bonus: { type: 'income', perLevel: 0.01, label: '+1% income/level' } },
+  { id: 'entertainer', name: 'Entertainer', icon: '\u{1F3B5}', bonus: null },
+  { id: 'gangLeader', name: 'Gang Leader', icon: '\u{1F46A}', bonus: null },
+  { id: 'streetArtist', name: 'Street Artist', icon: '\u{1F3A8}', bonus: null },
+  { id: 'broadcaster', name: 'Broadcaster', icon: '\u{1F4E1}', bonus: null },
+]
+const SKILL_XP_PER_LEVEL = [0, 10, 30, 60, 100, 160, 240, 350, 500, 700, 1000]
+const SKILL_TITLES = ['Nobody', 'Apprentice', 'Operator', 'Specialist', 'Boss', 'Legend']
+
+function getSkillLevel(treeId) {
+  const s = state.skills[treeId]
+  if (!s) return 0
+  let level = 0
+  for (let i = 1; i < SKILL_XP_PER_LEVEL.length; i++) {
+    if (s.xp >= SKILL_XP_PER_LEVEL[i]) level = i
+    else break
+  }
+  return level
+}
+
+function getSkillTitle(treeId) {
+  const level = getSkillLevel(treeId)
+  if (level <= 0) return SKILL_TITLES[0]
+  if (level <= 2) return SKILL_TITLES[1]
+  if (level <= 4) return SKILL_TITLES[2]
+  if (level <= 6) return SKILL_TITLES[3]
+  if (level <= 8) return SKILL_TITLES[4]
+  return SKILL_TITLES[5]
+}
+
+function getSkillXPProgress(treeId) {
+  const level = getSkillLevel(treeId)
+  const currentXP = state.skills[treeId]?.xp || 0
+  const currentReq = SKILL_XP_PER_LEVEL[level]
+  const nextIdx = level + 1
+  if (nextIdx >= SKILL_XP_PER_LEVEL.length) return { current: currentXP, next: null, pct: 100 }
+  const nextReq = SKILL_XP_PER_LEVEL[nextIdx]
+  const pct = nextReq > currentReq ? ((currentXP - currentReq) / (nextReq - currentReq)) * 100 : 0
+  return { current: currentXP, next: nextReq, pct: Math.min(100, Math.max(0, pct)) }
+}
+
+function awardSkillXP(treeId, amount) {
+  if (!state.skills[treeId]) state.skills[treeId] = { xp: 0 }
+  const oldLevel = getSkillLevel(treeId)
+  state.skills[treeId].xp += amount
+  const newLevel = getSkillLevel(treeId)
+  if (newLevel > oldLevel) {
+    const tree = SKILL_TREES.find(t => t.id === treeId)
+    showToast('\u{2B50} ' + tree.name + ' Level Up!', 'Reached ' + getSkillTitle(treeId) + ' (Lv.' + newLevel + ')')
+  }
+  saveSkills()
+}
+
+function getSkillBonus(treeId, bonusType) {
+  const tree = SKILL_TREES.find(t => t.id === treeId)
+  if (!tree || !tree.bonus || tree.bonus.type !== bonusType) return 0
+  return getSkillLevel(treeId) * tree.bonus.perLevel
+}
+
+function initSkills() {
+  if (state.skills && Object.keys(state.skills).length > 0) return
+  state.skills = {}
+  for (const tree of SKILL_TREES) {
+    state.skills[tree.id] = { xp: 0 }
+  }
+}
+
+function saveSkills() {
+  try { localStorage.setItem('fas_world_skills', JSON.stringify(state.skills)) } catch {}
+}
+
+function loadSkills() {
+  try {
+    const raw = localStorage.getItem('fas_world_skills')
+    if (raw) state.skills = JSON.parse(raw)
+  } catch {}
+}
+
+function openSkillsPanel() {
+  openPanel('skillTreesPanel')
+  updateSkillsPanel()
+}
+
+function updateSkillsPanel() {
+  const container = document.getElementById('skillTreesList')
+  if (!container) return
+  container.innerHTML = ''
+  for (const tree of SKILL_TREES) {
+    const level = getSkillLevel(tree.id)
+    const title = getSkillTitle(tree.id)
+    const prog = getSkillXPProgress(tree.id)
+    const bonusHtml = tree.bonus ? '<div class="skill-bonus">' + tree.bonus.label + '</div>' : ''
+    let progressHtml
+    if (prog.next === null) {
+      progressHtml = '<div class="skill-xp-text" style="color:var(--gold)">MAX LEVEL</div>'
+    } else {
+      progressHtml = '<div class="skill-xp-bar"><div class="skill-xp-fill" style="width:' + prog.pct + '%"></div></div><div class="skill-xp-text">' + prog.current + ' / ' + prog.next + ' XP</div>'
+    }
+    const item = document.createElement('div')
+    item.className = 'skill-item'
+    item.innerHTML = '<div class="skill-icon">' + tree.icon + '</div><div class="skill-info"><div class="skill-name">' + tree.name + '</div><div class="skill-level">' + title + ' (Lv.' + level + ')</div>' + bonusHtml + progressHtml + '</div>'
+    container.appendChild(item)
+  }
+}
+
 function updateGoalHUD() {
   if (!state.tutorialSeen || state.loadingGoal) return
   const hud = document.getElementById('goalHud')
@@ -9013,6 +9164,7 @@ function completeTravel(targetRegion) {
   } else {
     showToast(`Arrived at ${REGIONS[targetRegion].name}`, '')
   }
+  awardSkillXP('explorer', targetRegion === 'city' ? 10 : 25)
   // Clean up region-specific systems when leaving
   if (state.travel.fromRegion === 'farmlands') clearFarmLife()
   if (state.travel.fromRegion === 'whisper-woods') {
@@ -9109,6 +9261,8 @@ async function init() {
   state.tutorialSeen = !!localStorage.getItem('fas_world_tutorial')
   loadGoalsFromStorage()
   loadPropertyData()
+  initSkills()
+  loadSkills()
 
   if (!state.tutorialSeen) {
     showWelcomeOverlay()
