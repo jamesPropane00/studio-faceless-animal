@@ -822,6 +822,15 @@
       0%, 100% { transform: scale(1); opacity: 0.9; }
       50% { transform: scale(1.2); opacity: 1; }
     }
+    .wm-shipment {
+      position: absolute; z-index: 4;
+      font-size: 1rem; transform: translate(-50%, -50%);
+      pointer-events: none; animation: wmTruckBounce 0.8s ease-in-out infinite;
+    }
+    @keyframes wmTruckBounce {
+      0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+      50% { transform: translate(-50%, -50%) translateY(-3px); }
+    }
 
     /* ── Travel Overlay ── */
     .travel-overlay {
@@ -1801,6 +1810,7 @@
     </div>
     <div class="skill-title-display" id="skillTitleDisplay"></div>
     <div id="citySupplyReadout"></div>
+    <div id="logisticsReadout"></div>
     <div class="stat-row"><span class="stat-icon">&#x1F30D;</span><span class="stat-label">Online</span><span class="stat-value green" id="statOnline">1</span></div>
   </div>
 </div>
@@ -2117,6 +2127,7 @@
     <div class="wm-vehicle" id="wmVehicle">
       <div class="wm-vehicle-dot"></div>
     </div>
+    <div class="wm-shipment" id="wmShipment" style="display:none">\u{1F69A}</div>
   </div>
 </div>
 
@@ -2396,7 +2407,8 @@ const state = {
   properties: {},
   currentProperty: null,
   skills: {},
-  signalWire: []
+  signalWire: [],
+  shipments: { active: [], delivered: [] }
 }
 
 // ── RENDER CACHE (offscreen canvases) ──────────────────────
@@ -2661,8 +2673,8 @@ async function sendFoodToCity() {
       showToast(`Delivered ${food} food to the city!`, '')
       completeGoalSendFood()
       awardSkillXP('farmer', 15)
-      const supply = addCityFood(food)
-      createNewsItem('City', 'New shipment from Pine Hollow Farm feeds the city.', food + ' units delivered — total supply: ' + supply.food, 'city', 3)
+      createShipment(food)
+      createNewsItem('City', 'Farm shipment en route from Pine Hollow Farm.', food + ' units traveling to Faceless City.', 'city', 2)
     } else {
       showToast('Failed to send: ' + (result.error || 'unknown'), '')
     }
@@ -9050,6 +9062,68 @@ function updateCitySupplyUI() {
   el.innerHTML = '<div class="stat-row"><span class="stat-icon">\u{1F33E}</span><span class="stat-label">Food Supply</span><span class="stat-value gold" id="citySupplyFood">' + supply.food + '</span></div><div class="stat-row"><span class="stat-icon">\u{1F69A}</span><span class="stat-label">Shipments</span><span class="stat-value" id="citySupplyShipments">' + supply.totalShipments + '</span></div><div class="stat-row"><span class="stat-icon">\u{1F4C8}</span><span class="stat-label">City Bonus</span><span class="stat-value green" id="citySupplyBonus">+' + Math.floor(bonus * 100) + '% income / +' + supply.cityHappinessBonus + ' happiness</span></div>'
 }
 
+// ── LOGISTICS: SHIPMENTS ─────────────────────────────
+function getShipments() {
+  if (state.shipments && state.shipments.active) return state.shipments
+  try {
+    const raw = localStorage.getItem('fas_shipments')
+    if (raw) state.shipments = JSON.parse(raw)
+  } catch {}
+  if (!state.shipments || !state.shipments.active) state.shipments = { active: [], delivered: [] }
+  return state.shipments
+}
+
+function saveShipments() {
+  try { localStorage.setItem('fas_shipments', JSON.stringify(state.shipments)) } catch {}
+}
+
+function createShipment(amount) {
+  const data = getShipments()
+  data.active.push({
+    id: Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    fromRegion: 'farmlands', toRegion: 'city',
+    amount, status: 'traveling',
+    createdAt: Date.now(), etaMs: 30000,
+  })
+  saveShipments()
+  updateLogisticsUI()
+  return data.active[data.active.length - 1]
+}
+
+function checkShipmentDeliveries() {
+  const data = getShipments()
+  let changed = false
+  for (let i = data.active.length - 1; i >= 0; i--) {
+    const s = data.active[i]
+    if (Date.now() - s.createdAt >= s.etaMs) {
+      s.status = 'delivered'; s.deliveredAt = Date.now()
+      addCityFood(s.amount)
+      createNewsItem('City', 'Farm shipment arrived in Faceless City.', s.amount + ' units of food delivered.', 'city', 3)
+      data.delivered.unshift(s)
+      if (data.delivered.length > 10) data.delivered.length = 10
+      data.active.splice(i, 1)
+      changed = true
+    }
+  }
+  if (changed) { saveShipments(); updateLogisticsUI() }
+}
+
+function updateLogisticsUI() {
+  const data = getShipments()
+  const el = document.getElementById('logisticsReadout')
+  if (!el) return
+  const active = data.active.length
+  let html = '<div class="stat-row" style="margin-top:0.15rem"><span class="stat-icon">\u{1F69A}</span><span class="stat-label">In Transit</span><span class="stat-value' + (active > 0 ? ' gold' : '') + '">' + active + '</span></div>'
+  if (active > 0) {
+    for (const s of data.active) {
+      const elapsed = Date.now() - s.createdAt
+      const pct = Math.min(100, Math.floor((elapsed / s.etaMs) * 100))
+      html += '<div style="font-size:0.5rem;color:var(--dim);padding-left:1.4rem">' + s.amount + ' food en route ' + pct + '%</div>'
+    }
+  }
+  el.innerHTML = html
+}
+
 function updateGoalHUD() {
   if (!state.tutorialSeen || state.loadingGoal) return
   const hud = document.getElementById('goalHud')
@@ -9186,6 +9260,24 @@ function updateWorldMap() {
   vehicle.style.left = curPos.x + '%'
   vehicle.style.top = curPos.y + '%'
   vehicle.classList.add('active')
+
+  // Position shipment truck on world map
+  const shipmentEl = document.getElementById('wmShipment')
+  const shipments = getShipments()
+  const traveling = shipments.active.filter(s => s.fromRegion === 'farmlands' && s.toRegion === 'city')
+  if (traveling.length > 0) {
+    const s = traveling[0]
+    const from = getNodePos('farmlands'), to = getNodePos('city')
+    const elapsed = Date.now() - s.createdAt
+    const pct = Math.min(1, elapsed / s.etaMs)
+    const x = from.x + (to.x - from.x) * pct
+    const y = from.y + (to.y - from.y) * pct
+    shipmentEl.style.left = x + '%'
+    shipmentEl.style.top = y + '%'
+    shipmentEl.style.display = 'flex'
+  } else {
+    shipmentEl.style.display = 'none'
+  }
 }
 
 function startTravel(targetRegion) {
@@ -9456,9 +9548,18 @@ async function init() {
   loadSkills()
   updateSkillTitleUI()
   loadSignalWire()
+  getShipments()
+  updateLogisticsUI()
   applyCityDecay()
   updateCitySupplyUI()
-  setInterval(() => { applyCityDecay(); updateCitySupplyUI() }, 60000)
+  setInterval(() => {
+    checkShipmentDeliveries()
+    applyCityDecay()
+    updateCitySupplyUI()
+    updateLogisticsUI()
+    const wmPanel = document.getElementById('worldMapPanel')
+    if (wmPanel && wmPanel.classList.contains('open')) updateWorldMap()
+  }, 2000)
 
   if (!state.tutorialSeen) {
     showWelcomeOverlay()
