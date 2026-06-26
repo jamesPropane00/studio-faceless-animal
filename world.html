@@ -1534,6 +1534,78 @@
       transform: translateX(18px);
       background: #fff;
     }
+
+    /* ── START SCREEN ACTIONS ── */
+    .start-actions {
+      display: flex; flex-direction: column; gap: 0.6rem; margin: 1rem 0;
+    }
+    .start-btn {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.85rem 1rem; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+      color: var(--text); font-size: 0.8rem; font-weight: 700;
+      cursor: pointer; transition: all 0.15s; text-align: left;
+    }
+    .start-btn:hover { background: rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.3); }
+    .start-btn:active { transform: scale(0.98); }
+    .start-btn-icon { font-size: 1.3rem; width: 36px; text-align: center; flex-shrink: 0; }
+    .start-btn-label { flex: 1; }
+    .start-btn-desc { font-size: 0.6rem; color: var(--dim); font-weight: 400; margin-top: 0.15rem; }
+    .start-btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--bright));
+      border-color: transparent; color: #fff;
+    }
+    .start-btn-primary:hover { box-shadow: 0 4px 20px rgba(124,58,237,0.3); }
+    .start-goal-list { margin-top: 1rem; }
+    .start-goal-title { font-size: 0.65rem; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+    .start-goal-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0; font-size: 0.68rem; color: var(--dim); }
+    .start-goal-item .check { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; }
+    .start-goal-item.done .check { background: var(--green); border-color: var(--green); color: #fff; }
+    .start-goal-item.done { color: var(--text); text-decoration: line-through; opacity: 0.5; }
+
+    /* ── FARM PROMPTS ── */
+    .farm-prompt {
+      position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%; transform: translateX(-50%);
+      z-index: 55; display: none;
+      background: rgba(18,20,30,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(132,204,22,0.25); border-radius: var(--radius);
+      padding: 0.6rem 1rem; box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .farm-prompt.show { display: block; }
+    .farm-prompt-title { font-size: 0.75rem; font-weight: 800; color: #84cc16; margin-bottom: 0.15rem; }
+    .farm-prompt-desc { font-size: 0.62rem; color: var(--dim); }
+    .farm-prompt-btn {
+      margin-top: 0.4rem; padding: 0.35rem 0.8rem; border-radius: 6px;
+      background: rgba(132,204,22,0.2); border: 1px solid rgba(132,204,22,0.3);
+      color: #84cc16; font-size: 0.65rem; font-weight: 700; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .farm-prompt-btn:hover { background: rgba(132,204,22,0.3); }
+
+    /* ── CITY BUILD HIGHLIGHT ── */
+    .build-highlight {
+      position: fixed; inset: 0; z-index: 10; pointer-events: none;
+      display: none;
+    }
+    .build-highlight.show { display: block; }
+
+    /* ── DEBUG PANEL ── */
+    .debug-panel {
+      position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 8px;
+      z-index: 200; display: none; flex-direction: column; gap: 4px;
+      background: rgba(18,20,30,0.92); backdrop-filter: blur(12px);
+      border: 1px solid var(--red); border-radius: var(--radius-sm);
+      padding: 0.6rem;
+    }
+    .debug-panel.show { display: flex; }
+    .debug-title { font-size: 0.55rem; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+    .debug-btn {
+      padding: 0.3rem 0.6rem; border-radius: 4px; border: 1px solid var(--border);
+      background: rgba(239,68,68,0.1); color: var(--red); font-size: 0.6rem; font-weight: 700;
+      cursor: pointer; text-align: left; transition: background 0.15s;
+    }
+    .debug-btn:hover { background: rgba(239,68,68,0.2); }
   </style>
 </head>
 <body>
@@ -1857,29 +1929,45 @@
 <div class="welcome-overlay" id="welcomeOverlay">
   <div class="welcome-modal">
     <div class="welcome-title">FACELESS <span>WORLD</span></div>
-    <div class="welcome-sub">Your first steps</div>
-    <div class="welcome-step">
-      <div class="welcome-step-icon">&#x1F3E0;</div>
-      <div class="welcome-step-text"><strong>Place a house</strong> &mdash; Your first shelter costs 50 coins.<div class="welcome-step-hint">Open Build (&#x1F3D7;&#xFE0F;) and click the map.</div></div>
+    <div class="welcome-sub">Choose where to begin</div>
+    <div class="start-actions">
+      <button class="start-btn start-btn-primary" id="startCityBtn">
+        <span class="start-btn-icon">&#x1F3D9;&#xFE0F;</span>
+        <span class="start-btn-label">Play City<span class="start-btn-desc">Build houses, shops, earn income</span></span>
+      </button>
+      <button class="start-btn" id="startFarmBtn">
+        <span class="start-btn-icon">&#x1F33E;</span>
+        <span class="start-btn-label">Travel to Farm<span class="start-btn-desc">Grow crops, harvest, supply the city</span></span>
+      </button>
+      <button class="start-btn" id="startWorldMapBtn">
+        <span class="start-btn-icon">&#x1F5FA;&#xFE0F;</span>
+        <span class="start-btn-label">Open World Map<span class="start-btn-desc">Explore regions and travel</span></span>
+      </button>
     </div>
-    <div class="welcome-step">
-      <div class="welcome-step-icon">&#x1F3EA;</div>
-      <div class="welcome-step-text"><strong>Place a shop</strong> &mdash; Shops earn you income over time.<div class="welcome-step-hint">Costs 100 coins. Build near your house.</div></div>
+    <div class="start-goal-list">
+      <div class="start-goal-title">&#x1F3AF; Your Goals</div>
+      <div class="start-goal-item" id="goalStart1"><span class="check">1</span> Place a house (+50 FC, +10 Rep)</div>
+      <div class="start-goal-item" id="goalStart2"><span class="check">2</span> Place a shop (+100 FC, +20 Rep)</div>
+      <div class="start-goal-item" id="goalStart3"><span class="check">3</span> Collect income (+50 FC, +15 Rep)</div>
+      <div class="start-goal-item" id="goalStart4"><span class="check">4</span> Travel to Farmlands (+25 FC, +10 Rep)</div>
+      <div class="start-goal-item" id="goalStart5"><span class="check">5</span> Plant and harvest crops (+50 FC, +15 Rep)</div>
+      <div class="start-goal-item" id="goalStart6"><span class="check">6</span> Send food to city (+100 FC, +25 Rep)</div>
     </div>
-    <div class="welcome-step">
-      <div class="welcome-step-icon">&#x1F4B0;</div>
-      <div class="welcome-step-text"><strong>Collect income</strong> &mdash; Tap your shop to collect coins.<div class="welcome-step-hint">Buildings generate income every minute.</div></div>
-    </div>
-    <div class="welcome-step">
-      <div class="welcome-step-icon">&#x1F3D9;&#xFE0F;</div>
-      <div class="welcome-step-text"><strong>Form a district</strong> &mdash; Build 3+ buildings close together to create a district.<div class="welcome-step-hint">Districts boost income and unlock new powers.</div></div>
-    </div>
-    <div class="welcome-step">
-      <div class="welcome-step-icon">&#x26A1;</div>
-      <div class="welcome-step-text"><strong>Explore god powers</strong> &mdash; Trigger events, spawn NPCs, and shape the world.<div class="welcome-step-hint">Unlock more as you grow your reputation.</div></div>
-    </div>
-    <button class="welcome-start" id="welcomeStartBtn">Start Building</button>
+    <button class="welcome-start" id="welcomeStartBtn">Start Playing</button>
   </div>
+</div>
+
+<div class="farm-prompt" id="farmPrompt">
+  <div class="farm-prompt-title">&#x1F33E; Farmlands</div>
+  <div class="farm-prompt-desc" id="farmPromptDesc">Place a Farm Block to start growing crops</div>
+  <button class="farm-prompt-btn" id="farmPromptBtn">Build Farm Block</button>
+</div>
+
+<div class="debug-panel" id="debugPanel">
+  <div class="debug-title">&#x2699; Debug</div>
+  <button class="debug-btn" id="debugResetPos">Reset Player Position</button>
+  <button class="debug-btn" id="debugGiveFC">Give 500 FC</button>
+  <button class="debug-btn" id="debugClearPanel">Clear Stuck Panel</button>
 </div>
 
 <div class="help-prompt" id="helpPrompt">
@@ -2209,6 +2297,57 @@ function closeFarmOverlay() {
   document.getElementById('farmPlantOverlay').classList.add('hidden')
 }
 
+// ── FARM PROMPTS ──
+function showFarmPrompt(desc, action) {
+  const el = document.getElementById('farmPrompt')
+  document.getElementById('farmPromptDesc').textContent = desc
+  const btn = document.getElementById('farmPromptBtn')
+  if (action === 'farm') {
+    btn.textContent = 'Build Farm Block'
+    btn.onclick = () => {
+      el.classList.remove('show')
+      openPanel('blockPanel')
+      setTimeout(() => {
+        const farmItem = document.querySelector('.block-item[data-type="farm"]')
+        if (farmItem) farmItem.click()
+      }, 200)
+    }
+  } else if (action === 'plant') {
+    btn.textContent = 'Plant a Crop'
+    btn.onclick = () => {
+      el.classList.remove('show')
+      showToast('Tip', 'Click on a field tile to plant crops')
+    }
+  } else {
+    btn.textContent = 'OK'
+    btn.onclick = () => el.classList.remove('show')
+  }
+  el.classList.add('show')
+  setTimeout(() => el.classList.remove('show'), 8000)
+}
+
+function hideFarmPrompt() {
+  document.getElementById('farmPrompt').classList.remove('show')
+}
+
+// ── CROP HARVEST NOTIFICATION ──
+let lastHarvestCheck = 0
+function checkCropsReady() {
+  const now = Date.now()
+  if (now - lastHarvestCheck < 10000) return
+  lastHarvestCheck = now
+  const data = getFarmData()
+  if (!data || !data.crops) return
+  for (const crop of data.crops) {
+    const info = CROP_TYPES[crop.type]
+    if (!info) continue
+    if (now - crop.plantedAt >= info.growthTime) {
+      showToast('Crops Ready!', 'Harvest your ' + info.name + ' in the farmlands!')
+      break
+    }
+  }
+}
+
 function plantCrop(tx, ty, cropType) {
   const data = getFarmData()
   if (data.crops.some(c => c.tx === tx && c.ty === ty)) return
@@ -2236,6 +2375,7 @@ function harvestCrop(tx, ty) {
   closeFarmOverlay()
   updateFarmInventory()
   showToast(`Harvested ${yield_} ${info.name}!`, '')
+  completeGoalHarvest()
   invalidateTileCache()
 }
 
@@ -2267,6 +2407,7 @@ async function sendFoodToCity() {
       document.getElementById('statCoins').textContent = state.coins
       document.getElementById('statRep').textContent = state.rep
       showToast(`Delivered ${food} food to the city!`, '')
+      completeGoalSendFood()
     } else {
       showToast('Failed to send: ' + (result.error || 'unknown'), '')
     }
@@ -5116,6 +5257,24 @@ function render() {
   // Phase 6: Draw development blocks
   drawBlocks()
 
+  // ── BUILD MODE HIGHLIGHTING ──
+  if (state.buildMode && state.buildType) {
+    // Highlight owned buildings with a glow
+    ctx.save()
+    for (const b of state.buildings) {
+      if (b.owner_id === state.userId) {
+        const s = worldToScreen(b.tile_x, b.tile_y)
+        const ts = TILE_W * state.camera.zoom
+        ctx.strokeStyle = 'rgba(74,222,128,0.5)'
+        ctx.lineWidth = 2 * state.camera.zoom
+        ctx.setLineDash([4 * state.camera.zoom, 4 * state.camera.zoom])
+        ctx.strokeRect(s.x - ts / 2, s.y - ts / 2, ts, ts)
+        ctx.setLineDash([])
+      }
+    }
+    ctx.restore()
+  }
+
   // Phase 8.3: Living farm (animals, workers, home details)
   drawFarmAnimals()
   drawFarmWorkers()
@@ -5306,6 +5465,11 @@ function update(dt) {
     if (dist > maxDist * 0.7) pruneKeys.push(key)
   }
   for (const key of pruneKeys) state.chunks.delete(key)
+
+  // Check for ready crops
+  if (state.currentRegion !== 'farmlands' && state.loaded) {
+    checkCropsReady()
+  }
 }
 
 let lastTime = performance.now()
@@ -5673,6 +5837,30 @@ function setupUI() {
     if (target && target !== state.currentRegion) {
       startTravel(target)
     }
+  })
+
+  // Debug panel (Ctrl+Shift+D to toggle)
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+      e.preventDefault()
+      document.getElementById('debugPanel').classList.toggle('show')
+    }
+  })
+  document.getElementById('debugResetPos').addEventListener('click', () => {
+    state.player.x = WORLD_SIZE / 2
+    state.player.y = WORLD_SIZE / 2
+    state.player.tx = WORLD_SIZE / 2
+    state.player.ty = WORLD_SIZE / 2
+    showToast('Debug', 'Position reset to center')
+  })
+  document.getElementById('debugGiveFC').addEventListener('click', () => {
+    state.coins = (state.coins || 0) + 500
+    document.getElementById('statCoins').textContent = state.coins
+    showToast('Debug', '+500 FC added')
+  })
+  document.getElementById('debugClearPanel').addEventListener('click', () => {
+    closeAllPanels()
+    showToast('Debug', 'All panels closed')
   })
 
   // Gang tab switching
@@ -6700,7 +6888,7 @@ async function placeBlock(x, y, blockType) {
   const cy = Math.max(0, Math.min(200, Math.floor(y)))
 
   const dims = { residential: { w: 8, h: 8, c: 200 }, commercial: { w: 6, h: 6, c: 300 },
-    industrial: { w: 10, h: 8, c: 250 }, entertainment: { w: 8, h: 6, c: 400 }, park: { w: 6, h: 6, c: 150 } }
+    industrial: { w: 10, h: 8, c: 250 }, entertainment: { w: 8, h: 6, c: 400 }, park: { w: 6, h: 6, c: 150 }, farm: { w: 10, h: 10, c: 100 } }
   const d = dims[blockType]
   if (!d) return
 
@@ -7550,13 +7738,34 @@ function toggleInfluenceView() {
 
 /* ── ONBOARDING ── */
 function showWelcomeOverlay() {
-  document.getElementById('welcomeOverlay').classList.add('open')
-  document.getElementById('welcomeStartBtn').onclick = () => {
+  const overlay = document.getElementById('welcomeOverlay')
+  overlay.classList.add('open')
+  updateStartScreenGoals()
+  const dismiss = () => {
     localStorage.setItem('fas_world_tutorial', '1')
     state.tutorialSeen = true
-    document.getElementById('welcomeOverlay').classList.remove('open')
+    overlay.classList.remove('open')
     checkHelpPrompt()
     updateGoalHUD()
+  }
+  document.getElementById('welcomeStartBtn').onclick = dismiss
+  document.getElementById('startCityBtn').onclick = () => {
+    dismiss()
+    setTimeout(() => openPanel('buildPanel'), 300)
+  }
+  document.getElementById('startFarmBtn').onclick = () => {
+    dismiss()
+    setTimeout(() => {
+      if (state.currentRegion !== 'farmlands') {
+        if (REGIONS.city.connections.includes('farmlands')) {
+          startTravel('farmlands')
+        }
+      }
+    }, 300)
+  }
+  document.getElementById('startWorldMapBtn').onclick = () => {
+    dismiss()
+    setTimeout(() => openPanel('worldMapPanel'), 300)
   }
 }
 
@@ -7578,11 +7787,12 @@ function checkHelpPrompt() {
 }
 
 const GOAL_STEPS = [
-  { key: 'placeFirstHouse', label: 'Place your first house', check: s => s.ownBuildingsCount >= 1 },
-  { key: 'placeFirstShop', label: 'Place a shop', check: s => s.buildings.some(b => b.owner_id === s.userId && b.building_type === 'shop') },
-  { key: 'collectFirstIncome', label: 'Collect income from a building', check: s => s._collectedIncome },
-  { key: 'formFirstDistrict', label: 'Form your first district', check: s => s.districts.length > 0 },
-  { key: 'exploreGodPower', label: 'Explore god powers', check: s => s._triedGodPower },
+  { key: 'placeFirstHouse', label: 'Place your first house', check: s => s.ownBuildingsCount >= 1, reward: { fc: 50, rep: 10 } },
+  { key: 'placeFirstShop', label: 'Place a shop', check: s => s.buildings.some(b => b.owner_id === s.userId && b.building_type === 'shop'), reward: { fc: 100, rep: 20 } },
+  { key: 'collectFirstIncome', label: 'Collect income from a building', check: s => s._collectedIncome, reward: { fc: 50, rep: 15 } },
+  { key: 'travelToFarmlands', label: 'Travel to Farmlands', check: s => s._visitedFarmlands === true, reward: { fc: 25, rep: 10 } },
+  { key: 'plantAndHarvest', label: 'Plant and harvest crops', check: s => s._harvestedCrop === true, reward: { fc: 50, rep: 15 } },
+  { key: 'sendFoodToCity', label: 'Send food to city', check: s => s._sentFood === true, reward: { fc: 100, rep: 25 } },
 ]
 
 function updateGoalHUD() {
@@ -7603,8 +7813,20 @@ function completeGoal(key) {
   if (state.goals[key]) return
   state.goals[key] = true
   const step = GOAL_STEPS.find(g => g.key === key)
-  if (step) showGoalComplete('&#x2705; ' + step.label)
+  if (step) {
+    showGoalComplete('&#x2705; ' + step.label)
+    if (step.reward) {
+      state.coins = (state.coins || 0) + step.reward.fc
+      state.rep = (state.rep || 0) + step.reward.rep
+      document.getElementById('statCoins').textContent = state.coins
+      document.getElementById('statRep').textContent = state.rep
+      updateRepBarUI()
+      showToast('Goal Complete!', '+' + step.reward.fc + ' FC, +' + step.reward.rep + ' Rep')
+    }
+  }
   updateGoalHUD()
+  updateStartScreenGoals()
+  saveGoalsToStorage()
 }
 
 function completeGoalCollectIncome() {
@@ -7612,9 +7834,35 @@ function completeGoalCollectIncome() {
   completeGoal('collectFirstIncome')
 }
 
-function completeGoalGodPower() {
-  state._triedGodPower = true
-  completeGoal('exploreGodPower')
+function completeGoalTravelFarm() {
+  state._visitedFarmlands = true
+  completeGoal('travelToFarmlands')
+}
+
+function completeGoalHarvest() {
+  state._harvestedCrop = true
+  completeGoal('plantAndHarvest')
+}
+
+function completeGoalSendFood() {
+  state._sentFood = true
+  completeGoal('sendFoodToCity')
+}
+
+function updateStartScreenGoals() {
+  const ids = ['goalStart1','goalStart2','goalStart3','goalStart4','goalStart5','goalStart6']
+  const keys = ['placeFirstHouse','placeFirstShop','collectFirstIncome','travelToFarmlands','plantAndHarvest','sendFoodToCity']
+  for (let i = 0; i < ids.length; i++) {
+    const el = document.getElementById(ids[i])
+    if (!el) continue
+    if (state.goals[keys[i]]) {
+      el.classList.add('done')
+      el.querySelector('.check').textContent = '✓'
+    } else {
+      el.classList.remove('done')
+      el.querySelector('.check').textContent = '' + (i + 1)
+    }
+  }
 }
 
 function saveGoalsToStorage() {
@@ -7837,6 +8085,11 @@ function completeTravel(targetRegion) {
     showToast('Arrived at Farmlands', 'Build your farm, grow food, supply the city.')
     updateFarmInventory()
     spawnFarmLife()
+    completeGoalTravelFarm()
+    // Show farm prompt
+    setTimeout(() => {
+      showFarmPrompt('Place a Farm Block to start', 'farm')
+    }, 1500)
   } else {
     showToast(`Arrived at ${REGIONS[targetRegion].name}`, '')
     // Clean up farm life if leaving farmlands
