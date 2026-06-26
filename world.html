@@ -216,6 +216,11 @@
     }
     .toast-title{font-size:0.85rem;font-weight:900;color:var(--gold);margin-bottom:0.2rem}
     .toast-desc{font-size:0.7rem;color:var(--dim)}
+    .toast-levelup .toast-title{font-size:1.1rem;color:var(--green);text-shadow:0 0 20px rgba(74,222,128,0.4)}
+    .toast-levelup .toast-desc{font-size:0.8rem}
+    .toast-levelup .toast-content{border-color:rgba(74,222,128,0.3)}
+
+    .skill-title-display{font-size:0.6rem;color:var(--bright);margin-top:0.25rem;text-align:center;font-weight:600}
 
     .loading-screen{
       position:fixed;inset:0;z-index:200;
@@ -1781,6 +1786,7 @@
       </div>
       <div class="rep-bar-progress" id="repProgress">0/50</div>
     </div>
+    <div class="skill-title-display" id="skillTitleDisplay"></div>
     <div class="stat-row"><span class="stat-icon">&#x1F30D;</span><span class="stat-label">Online</span><span class="stat-value green" id="statOnline">1</span></div>
   </div>
 </div>
@@ -7930,12 +7936,14 @@ function updatePlayerList() {
   }
 }
 
-function showToast(title, desc) {
+function showToast(title, desc, cls) {
   const toast = document.getElementById('toast')
   document.getElementById('toastTitle').textContent = title
   document.getElementById('toastDesc').textContent = desc
+  toast.className = 'toast' + (cls ? ' ' + cls : '')
   toast.classList.add('show')
-  setTimeout(() => toast.classList.remove('show'), 3000)
+  clearTimeout(toast._hideTimer)
+  toast._hideTimer = setTimeout(() => { toast.classList.remove('show'); toast.className = 'toast' }, cls === 'toast-levelup' ? 5000 : 3000)
 }
 
 function updateRepBarUI() {
@@ -8801,11 +8809,29 @@ function awardSkillXP(treeId, amount) {
   const oldLevel = getSkillLevel(treeId)
   state.skills[treeId].xp += amount
   const newLevel = getSkillLevel(treeId)
+  const tree = SKILL_TREES.find(t => t.id === treeId)
   if (newLevel > oldLevel) {
-    const tree = SKILL_TREES.find(t => t.id === treeId)
-    showToast('\u{2B50} ' + tree.name + ' Level Up!', 'Reached ' + getSkillTitle(treeId) + ' (Lv.' + newLevel + ')')
+    showToast('\u{2B50} ' + tree.name + ' Level Up!', 'Reached ' + getSkillTitle(treeId) + ' (Lv.' + newLevel + ')', 'toast-levelup')
+  } else {
+    showToast('+' + amount + ' ' + tree.name + ' XP', getSkillTitle(treeId) + ' (Lv.' + newLevel + ')')
   }
   saveSkills()
+  updateSkillTitleUI()
+}
+
+function getTopSkillTitle() {
+  let best = { tree: null, level: -1 }
+  for (const tree of SKILL_TREES) {
+    const lvl = getSkillLevel(tree.id)
+    if (lvl > best.level) best = { tree, level: lvl }
+  }
+  if (!best.tree || best.level <= 0) return ''
+  return best.tree.icon + ' ' + best.tree.name + ' ' + getSkillTitle(best.tree.id)
+}
+
+function updateSkillTitleUI() {
+  const el = document.getElementById('skillTitleDisplay')
+  if (el) el.textContent = getTopSkillTitle()
 }
 
 function getSkillBonus(treeId, bonusType) {
@@ -9263,6 +9289,7 @@ async function init() {
   loadPropertyData()
   initSkills()
   loadSkills()
+  updateSkillTitleUI()
 
   if (!state.tutorialSeen) {
     showWelcomeOverlay()
