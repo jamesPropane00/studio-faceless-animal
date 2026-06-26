@@ -912,13 +912,12 @@
     .region-farmlands { display: none; }
     body.in-farmlands .region-farmlands { display: block; }
 
-    /* Farm warm lighting overlay */
-    .farm-warmth {
+    /* Farm atmosphere overlay */
+    .farm-atmosphere {
       position: fixed; inset: 0; z-index: 4; pointer-events: none;
-      opacity: 0; transition: opacity 0.8s;
-      background: radial-gradient(ellipse at 50% 30%, rgba(255,200,100,0.06) 0%, rgba(255,160,60,0.03) 40%, transparent 70%);
+      opacity: 0; transition: opacity 2s;
     }
-    body.in-farmlands .farm-warmth { opacity: 1; }
+    body.in-farmlands .farm-atmosphere { opacity: 1; }
 
     .farm-inventory {
       position: fixed;
@@ -1472,6 +1471,69 @@
       }
       .panel-backdrop { background: rgba(0,0,0,0.4); }
     }
+
+    /* ── SETTINGS PANEL ── */
+    .settings-body {
+      padding: 0.6rem 0;
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      cursor: pointer;
+    }
+    .settings-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .settings-hint {
+      font-size: 0.7rem;
+      color: var(--dim2, #666);
+      margin-top: -0.3rem;
+      padding-bottom: 0.3rem;
+    }
+
+    /* Toggle switch */
+    .toggle-wrap {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+    .toggle-input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: #333;
+      border-radius: 22px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      left: 2px;
+      bottom: 2px;
+      width: 18px;
+      height: 18px;
+      background: #888;
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .toggle-input:checked + .toggle-slider {
+      background: #84cc16;
+    }
+    .toggle-input:checked + .toggle-slider::before {
+      transform: translateX(18px);
+      background: #fff;
+    }
   </style>
 </head>
 <body>
@@ -1523,6 +1585,7 @@
   <button class="tool-btn" id="btnGang" data-tip="Gangs">&#x1F46A;</button>
   <button class="tool-btn" id="btnInfluenceView" data-tip="Influence View"><span id="influenceViewIcon">&#x1F5FA;</span></button>
   <button class="tool-btn" id="btnWorldMap" data-tip="World Map">&#x1F5FA;&#xFE0F;</button>
+  <button class="tool-btn" id="btnSettings" data-tip="Settings">&#x2699;&#xFE0F;</button>
 </div>
 
 <div class="mode-indicator" id="modeIndicator">Build Mode: Click to place</div>
@@ -1746,6 +1809,23 @@
   </div>
 </div>
 
+<div class="settings-panel game-panel" id="settingsPanel">
+  <div class="panel-header">
+    <div class="panel-title">&#x2699;&#xFE0F; Settings</div>
+    <div class="panel-close" id="settingsPanelClose">&times;</div>
+  </div>
+  <div class="settings-body">
+    <label class="settings-row">
+      <span class="settings-label">&#x1F33E; Farm Ambience</span>
+      <span class="toggle-wrap">
+        <input type="checkbox" class="toggle-input" id="toggleFarmAmbience" checked />
+        <span class="toggle-slider"></span>
+      </span>
+    </label>
+    <div class="settings-hint">Animals, workers, particles, ambient audio</div>
+  </div>
+</div>
+
 <div class="travel-overlay" id="travelOverlay" style="display:none">
   <div class="travel-modal">
     <div class="travel-title">Traveling...</div>
@@ -1822,7 +1902,7 @@
 </div>
 
 <div class="world-vignette"></div>
-<div class="farm-warmth"></div>
+<div class="farm-atmosphere" id="farmAtmosphere"></div>
 
 <div class="farm-inventory hidden" id="farmInventory">
   <div class="farm-deed">
@@ -2031,6 +2111,10 @@ const state = {
     exploreGodPower: false,
   },
   ownBuildingsCount: 0,
+  settingsPanelOpen: false,
+  settings: {
+    farmAmbience: true
+  }
 }
 
 // ── RENDER CACHE (offscreen canvases) ──────────────────────
@@ -2268,6 +2352,626 @@ async function sendFoodToCity() {
   }
   btn.disabled = false
   btn.textContent = '🚚 Send Crops to City'
+}
+
+// ═══════════════════════════════════════════════════════
+// PHASE 8.3 — LIVING FARM (atmosphere, animals, workers, audio)
+// ═══════════════════════════════════════════════════════
+
+// ── Farm atmosphere (time-of-day overlay) ──
+function updateFarmAtmosphere() {
+  if (state.currentRegion !== 'farmlands') return
+  const el = document.getElementById('farmAtmosphere')
+  if (!el) return
+  const t = state.time
+  let bg = 'transparent'
+
+  if (t < 0.2 || t > 0.85) {
+    // Night: deep blue
+    bg = 'radial-gradient(ellipse at 50% 30%, rgba(10,15,40,0.3) 0%, rgba(5,10,30,0.5) 100%)'
+  } else if (t < 0.28) {
+    // Sunrise: golden orange
+    const p = (t - 0.2) / 0.08
+    bg = `radial-gradient(ellipse at 50% 30%, rgba(255,180,80,${0.06 * p}) 0%, rgba(200,100,40,${0.04 * p}) 40%, transparent 70%)`
+  } else if (t < 0.35) {
+    // Morning: soft gold
+    bg = 'radial-gradient(ellipse at 50% 30%, rgba(255,200,100,0.06) 0%, rgba(255,160,60,0.03) 40%, transparent 70%)'
+  } else if (t < 0.6) {
+    // Midday: warm bright
+    bg = 'radial-gradient(ellipse at 50% 30%, rgba(255,220,150,0.04) 0%, rgba(200,200,180,0.02) 40%, transparent 70%)'
+  } else if (t < 0.73) {
+    // Sunset: orange red
+    const p = (t - 0.6) / 0.13
+    bg = `radial-gradient(ellipse at 50% 30%, rgba(255,140,60,${0.05 * p}) 0%, rgba(220,80,30,${0.04 * p}) 40%, transparent 70%)`
+  } else {
+    // Dusk: purple
+    const p = (t - 0.73) / 0.12
+    bg = `radial-gradient(ellipse at 50% 30%, rgba(140,80,180,${0.04 * p}) 0%, rgba(80,40,120,${0.04 * p}) 40%, transparent 70%)`
+  }
+  el.style.background = bg
+}
+
+// ── Farm caps (max counts) ──
+const FARM_CAPS = {
+  butterflies: 6,
+  bees: 4,
+  leaves: 8,
+  clouds: 3,
+  birds: 2,
+  animals: 14,
+  workers: 4
+}
+
+// ── Farm ambient particles ──
+function spawnFarmAmbientParticles() {
+  if (state.currentRegion !== 'farmlands') return
+  if (!state.settings.farmAmbience) return
+  if (state.particles.length > 300) return
+  const now = performance.now()
+
+  // Butterflies (one every ~2s)
+  if (Math.random() < 0.003 && state.particles.filter(p => p.type === 'butterfly').length < FARM_CAPS.butterflies) {
+    const angle = Math.random() * Math.PI * 2
+    const dist = 5 + Math.random() * 15
+    state.particles.push({
+      x: state.player.x + Math.cos(angle) * dist,
+      y: state.player.y + Math.sin(angle) * dist,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.3,
+      life: 5 + Math.random() * 5,
+      type: 'butterfly',
+      hue: 200 + Math.random() * 160,
+      size: 2 + Math.random() * 2,
+      phase: Math.random() * Math.PI * 2,
+      seed: Math.random() * 100
+    })
+  }
+
+  // Bees (one every ~3s)
+  if (Math.random() < 0.002 && state.particles.filter(p => p.type === 'bee').length < FARM_CAPS.bees) {
+    const angle = Math.random() * Math.PI * 2
+    const dist = 3 + Math.random() * 12
+    state.particles.push({
+      x: state.player.x + Math.cos(angle) * dist,
+      y: state.player.y + Math.sin(angle) * dist,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: (Math.random() - 0.4) * 0.4,
+      life: 3 + Math.random() * 4,
+      type: 'bee',
+      phase: Math.random() * Math.PI * 2
+    })
+  }
+
+  // Leaves (one every ~1.5s)
+  if (Math.random() < 0.004 && state.particles.filter(p => p.type === 'leaf').length < FARM_CAPS.leaves) {
+    const wx = state.player.x + (Math.random() - 0.5) * 30
+    state.particles.push({
+      x: wx,
+      y: state.player.y - 5 - Math.random() * 5,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: 0.2 + Math.random() * 0.3,
+      life: 4 + Math.random() * 3,
+      type: 'leaf',
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 2,
+      size: 2 + Math.random() * 2
+    })
+  }
+
+  // Clouds (distant, one every ~5s)
+  if (Math.random() < 0.001 && state.particles.filter(p => p.type === 'cloud').length < FARM_CAPS.clouds) {
+    state.particles.push({
+      x: state.player.x - 20 + Math.random() * 10,
+      y: state.player.y - 12 - Math.random() * 6,
+      vx: 0.05 + Math.random() * 0.05,
+      vy: 0,
+      life: 20 + Math.random() * 15,
+      type: 'cloud',
+      size: 6 + Math.random() * 8,
+      opacity: 0.15 + Math.random() * 0.1
+    })
+  }
+
+  // Birds (distant flock, one every ~8s)
+  if (Math.random() < 0.0006 && state.particles.filter(p => p.type === 'bird').length < FARM_CAPS.birds) {
+    const side = Math.random() > 0.5 ? -1 : 1
+    state.particles.push({
+      x: state.player.x + side * 25,
+      y: state.player.y - 10 - Math.random() * 5,
+      vx: -side * 0.3,
+      vy: (Math.random() - 0.5) * 0.1,
+      life: 8 + Math.random() * 6,
+      type: 'bird',
+      size: 3 + Math.random() * 2,
+      wingPhase: Math.random() * Math.PI * 2
+    })
+  }
+}
+
+// Draw ambient particles (called from drawWeatherEffects-equivalent)
+function drawFarmAmbientParticles() {
+  if (state.currentRegion !== 'farmlands') return
+  if (!state.settings.farmAmbience) return
+  const w = canvas.width / (Math.min(window.devicePixelRatio || 1, 2))
+  const h = canvas.height / (Math.min(window.devicePixelRatio || 1, 2))
+  const z = state.camera.zoom
+  const now = performance.now()
+
+  for (const p of state.particles) {
+    if (p.type === 'butterfly') {
+      const s = worldToScreen(p.x, p.y)
+      if (!s || s.x < -20 || s.x > w + 20 || s.y < -20 || s.y > h + 20) continue
+      const bw = p.size * z
+      const bh = bw * 0.7
+      const bob = Math.sin(now * 0.003 + p.phase) * 1.5 * z
+      ctx.save()
+      ctx.translate(s.x, s.y + bob)
+      // Left wing
+      ctx.fillStyle = `hsl(${p.hue}, 70%, 60%)`
+      ctx.beginPath(); ctx.ellipse(-bw * 0.4, 0, bw * 0.6, bh * 0.5, -0.3 + Math.sin(now * 0.005 + p.seed) * 0.2, 0, Math.PI * 2); ctx.fill()
+      // Right wing
+      ctx.fillStyle = `hsl(${p.hue + 30}, 70%, 55%)`
+      ctx.beginPath(); ctx.ellipse(bw * 0.4, 0, bw * 0.6, bh * 0.5, 0.3 + Math.sin(now * 0.005 + p.seed + 1) * 0.2, 0, Math.PI * 2); ctx.fill()
+      ctx.restore()
+    } else if (p.type === 'bee') {
+      const s = worldToScreen(p.x, p.y)
+      if (!s || s.x < -10 || s.x > w + 10 || s.y < -10 || s.y > h + 10) continue
+      const beeW = 2 * z
+      const bob = Math.sin(now * 0.008 + p.phase) * 1.2 * z
+      ctx.fillStyle = '#f5c542'
+      ctx.beginPath(); ctx.ellipse(s.x, s.y + bob, beeW, beeW * 0.6, 0, 0, Math.PI * 2); ctx.fill()
+      ctx.fillStyle = '#2a2a2a'
+      ctx.fillRect(s.x - beeW * 0.5, s.y + bob - beeW * 0.4, beeW * 0.3, beeW * 0.8)
+      ctx.fillRect(s.x + beeW * 0.2, s.y + bob - beeW * 0.4, beeW * 0.3, beeW * 0.8)
+    } else if (p.type === 'leaf') {
+      const s = worldToScreen(p.x, p.y)
+      if (!s || s.x < -10 || s.x > w + 10 || s.y < -10 || s.y > h + 10) continue
+      ctx.save()
+      ctx.translate(s.x, s.y)
+      ctx.rotate(p.rot + now * 0.001 * p.rotSpeed)
+      ctx.fillStyle = `rgba(180,140,50,${0.4 + p.life * 0.1})`
+      const ls = p.size * z
+      ctx.beginPath(); ctx.ellipse(0, 0, ls, ls * 0.4, 0, 0, Math.PI * 2); ctx.fill()
+      ctx.restore()
+    } else if (p.type === 'cloud') {
+      const s = worldToScreen(p.x, p.y)
+      if (!s || s.x < -40 || s.x > w + 40 || s.y < -30 || s.y > h + 30) continue
+      const cs = p.size * z
+      ctx.fillStyle = `rgba(220,220,230,${p.opacity * p.life * 0.1})`
+      ctx.beginPath()
+      ctx.arc(s.x - cs * 0.5, s.y, cs * 0.6, 0, Math.PI * 2)
+      ctx.arc(s.x + cs * 0.5, s.y, cs * 0.5, 0, Math.PI * 2)
+      ctx.arc(s.x, s.y - cs * 0.3, cs * 0.7, 0, Math.PI * 2)
+      ctx.fill()
+    } else if (p.type === 'bird') {
+      const s = worldToScreen(p.x, p.y)
+      if (!s || s.x < -30 || s.x > w + 30 || s.y < -20 || s.y > h + 20) continue
+      const bs = p.size * z
+      const wing = Math.sin(now * 0.005 + p.wingPhase) * bs * 0.5
+      ctx.strokeStyle = 'rgba(80,80,100,0.6)'
+      ctx.lineWidth = 1.2 * z
+      ctx.beginPath()
+      ctx.moveTo(s.x - bs, s.y + wing)
+      ctx.lineTo(s.x, s.y)
+      ctx.lineTo(s.x + bs, s.y + wing * 0.7)
+      ctx.stroke()
+    }
+  }
+}
+
+// ── Decorative farm animals ──
+function spawnFarmAnimals() {
+  if (state.currentRegion !== 'farmlands') return
+  if (!state.settings.farmAmbience) return
+  state.farmAnimals = []
+  const count = Math.min(FARM_CAPS.animals, 8 + Math.floor(Math.random() * 6))
+  const types = ['chicken', 'cow', 'sheep']
+  for (let i = 0; i < count; i++) {
+    const type = types[Math.floor(Math.random() * types.length)]
+    const wx = 20 + Math.random() * (WORLD_SIZE - 40)
+    const wy = 20 + Math.random() * (WORLD_SIZE - 40)
+    const ter = getTerrainAt(Math.floor(wx), Math.floor(wy), 'farmlands')
+    if (ter === TERRAIN.DEEP_WATER || ter === TERRAIN.WATER) continue
+    state.farmAnimals.push({
+      type,
+      x: wx, y: wy,
+      tx: wx, ty: wy,
+      speed: type === 'chicken' ? 0.15 + Math.random() * 0.1 : 0.08 + Math.random() * 0.1,
+      animTimer: Math.random() * 10,
+      moveTimer: Math.random() * 10,
+      phase: Math.random() * Math.PI * 2,
+      size: type === 'cow' ? 1 : type === 'sheep' ? 0.9 : 0.5
+    })
+  }
+}
+
+function updateFarmAnimals(dt) {
+  if (!state.farmAnimals) return
+  if (!state.settings.farmAmbience) return
+  for (const a of state.farmAnimals) {
+    a.animTimer += dt
+    const dx = a.tx - a.x
+    const dy = a.ty - a.y
+    const dd = Math.sqrt(dx * dx + dy * dy)
+    if (dd < 0.3) {
+      a.moveTimer -= dt
+      if (a.moveTimer <= 0) {
+        a.moveTimer = 3 + Math.random() * 6
+        a.tx = a.x + (Math.random() - 0.5) * 4
+        a.ty = a.y + (Math.random() - 0.5) * 4
+        const ter = getTerrainAt(Math.floor(a.tx), Math.floor(a.ty), 'farmlands')
+        if (ter === TERRAIN.WATER || ter === TERRAIN.DEEP_WATER || ter === TERRAIN.BUILDING) { a.tx = a.x; a.ty = a.y }
+      }
+    } else {
+      const speed = a.speed * dt
+      a.x += (dx / dd) * speed
+      a.y += (dy / dd) * speed
+    }
+  }
+}
+
+function drawFarmAnimals() {
+  if (!state.farmAnimals || state.farmAnimals.length === 0) return
+  if (!state.settings.farmAmbience) return
+  const w = canvas.width / (Math.min(window.devicePixelRatio || 1, 2))
+  const h = canvas.height / (Math.min(window.devicePixelRatio || 1, 2))
+  const z = state.camera.zoom
+  const now = performance.now()
+
+  for (const a of state.farmAnimals) {
+    const s = worldToScreen(a.x, a.y)
+    if (!s || s.x < -30 || s.x > w + 30 || s.y < -40 || s.y > h + 40) continue
+    const sz = a.size * 4 * z
+
+    if (a.type === 'chicken') {
+      // White body
+      const bob = Math.sin(a.animTimer * 4) * 0.5 * z
+      ctx.fillStyle = '#f5f0e8'
+      ctx.beginPath(); ctx.arc(s.x, s.y + bob, sz, 0, Math.PI * 2); ctx.fill()
+      // Red comb
+      ctx.fillStyle = '#e84040'
+      ctx.beginPath(); ctx.arc(s.x, s.y + bob - sz * 1.1, sz * 0.3, 0, Math.PI * 2); ctx.fill()
+      // Beak
+      ctx.fillStyle = '#e8a030'
+      ctx.beginPath(); ctx.moveTo(s.x + sz * 0.6, s.y + bob - sz * 0.2); ctx.lineTo(s.x + sz * 1.2, s.y + bob); ctx.lineTo(s.x + sz * 0.6, s.y + bob + sz * 0.2); ctx.fill()
+    } else if (a.type === 'cow') {
+      // Black/white body
+      const browse = Math.sin(a.animTimer * 0.5) * 0.5 * z
+      ctx.fillStyle = '#e8e0d8'
+      ctx.beginPath(); ctx.ellipse(s.x, s.y + browse, sz * 1.2, sz * 0.8, 0, 0, Math.PI * 2); ctx.fill()
+      // Black patches
+      ctx.fillStyle = '#3a3a3a'
+      ctx.beginPath(); ctx.ellipse(s.x - sz * 0.4, s.y + browse - sz * 0.3, sz * 0.5, sz * 0.4, 0.2, 0, Math.PI * 2); ctx.fill()
+      ctx.beginPath(); ctx.ellipse(s.x + sz * 0.6, s.y + browse + sz * 0.2, sz * 0.4, sz * 0.4, -0.2, 0, Math.PI * 2); ctx.fill()
+      // Head
+      ctx.fillStyle = '#f0e8e0'
+      ctx.beginPath(); ctx.ellipse(s.x + sz * 1.2, s.y + browse - sz * 0.3, sz * 0.5, sz * 0.5, 0, 0, Math.PI * 2); ctx.fill()
+      // Horns
+      ctx.strokeStyle = '#c0b8a8'
+      ctx.lineWidth = 1.5 * z
+      ctx.beginPath(); ctx.moveTo(s.x + sz * 1.3, s.y + browse - sz * 0.6); ctx.lineTo(s.x + sz * 1.6, s.y + browse - sz * 1.1); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(s.x + sz * 1.0, s.y + browse - sz * 0.6); ctx.lineTo(s.x + sz * 0.7, s.y + browse - sz * 1.1); ctx.stroke()
+    } else if (a.type === 'sheep') {
+      // Fluffy white body
+      const graze = Math.sin(a.animTimer * 0.3) * 0.3 * z
+      ctx.fillStyle = '#f5f0ea'
+      // Multiple circles for fluffy look
+      for (let j = 0; j < 5; j++) {
+        const offX = Math.cos(j * 1.3) * sz * 0.6
+        const offY = Math.sin(j * 1.3) * sz * 0.4
+        ctx.beginPath(); ctx.arc(s.x + offX, s.y + graze + offY, sz * 0.5, 0, Math.PI * 2); ctx.fill()
+      }
+      // Dark face
+      ctx.fillStyle = '#4a4a4a'
+      ctx.beginPath(); ctx.ellipse(s.x + sz * 0.8, s.y + graze - sz * 0.2, sz * 0.3, sz * 0.35, 0, 0, Math.PI * 2); ctx.fill()
+    }
+  }
+}
+
+// ── Farm NPC workers ──
+function spawnFarmWorkers() {
+  if (state.currentRegion !== 'farmlands') return
+  state.farmWorkers = []
+  const names = ['Old MacDonald', 'Farmer Joe', 'Molly', 'Sam', 'Grandpa Tom', 'Aunt Ruth']
+  const roles = ['watering', 'carrying', 'walking']
+  const count = Math.min(FARM_CAPS.workers, 2 + Math.floor(Math.random() * 2))
+  for (let i = 0; i < count; i++) {
+    const role = roles[i % roles.length]
+    const wx = 25 + Math.random() * (WORLD_SIZE - 50)
+    const wy = 25 + Math.random() * (WORLD_SIZE - 50)
+    state.farmWorkers.push({
+      name: names[i % names.length],
+      role,
+      x: wx, y: wy,
+      tx: wx + (Math.random() - 0.5) * 6,
+      ty: wy + (Math.random() - 0.5) * 6,
+      speed: 0.2 + Math.random() * 0.15,
+      animTimer: Math.random() * 10,
+      moveTimer: 2 + Math.random() * 4,
+      phase: Math.random() * Math.PI * 2,
+      color: `hsl(${20 + Math.random() * 20}, 40%, ${50 + Math.random() * 20}%)`
+    })
+  }
+}
+
+function updateFarmWorkers(dt) {
+  if (!state.farmWorkers) return
+  if (!state.settings.farmAmbience) return
+  for (const w of state.farmWorkers) {
+    w.animTimer += dt
+    const dx = w.tx - w.x
+    const dy = w.ty - w.y
+    const dd = Math.sqrt(dx * dx + dy * dy)
+    if (dd < 0.5) {
+      w.moveTimer -= dt
+      if (w.moveTimer <= 0) {
+        w.moveTimer = 4 + Math.random() * 5
+        const angle = Math.random() * Math.PI * 2
+        const dist = 3 + Math.random() * 5
+        w.tx = Math.max(5, Math.min(WORLD_SIZE - 5, w.x + Math.cos(angle) * dist))
+        w.ty = Math.max(5, Math.min(WORLD_SIZE - 5, w.y + Math.sin(angle) * dist))
+        const ter = getTerrainAt(Math.floor(w.tx), Math.floor(w.ty), 'farmlands')
+        if (ter === TERRAIN.WATER || ter === TERRAIN.DEEP_WATER) { w.tx = w.x; w.ty = w.y }
+      }
+    } else {
+      const speed = w.speed * dt
+      w.x += (dx / dd) * speed
+      w.y += (dy / dd) * speed
+    }
+  }
+}
+
+function drawFarmWorkers() {
+  if (!state.farmWorkers) return
+  if (!state.settings.farmAmbience) return
+  const w = canvas.width / (Math.min(window.devicePixelRatio || 1, 2))
+  const h = canvas.height / (Math.min(window.devicePixelRatio || 1, 2))
+  const z = state.camera.zoom
+
+  for (const worker of state.farmWorkers) {
+    const s = worldToScreen(worker.x, worker.y)
+    if (!s || s.x < -30 || s.x > w + 30 || s.y < -50 || s.y > h + 50) continue
+
+    // Simple farmer figure
+    const sz = 3 * z
+    const bob = Math.sin(worker.animTimer * 3) * 0.8 * z
+
+    // Body (overalls)
+    ctx.fillStyle = worker.color
+    ctx.beginPath()
+    ctx.moveTo(s.x - sz * 0.6, s.y + bob - sz * 1.5)
+    ctx.lineTo(s.x + sz * 0.6, s.y + bob - sz * 1.5)
+    ctx.lineTo(s.x + sz * 0.5, s.y + bob)
+    ctx.lineTo(s.x - sz * 0.5, s.y + bob)
+    ctx.closePath(); ctx.fill()
+
+    // Head
+    ctx.fillStyle = '#edd4b0'
+    ctx.beginPath(); ctx.arc(s.x, s.y + bob - sz * 2.2, sz * 0.6, 0, Math.PI * 2); ctx.fill()
+
+    // Hat
+    ctx.fillStyle = '#8B7355'
+    ctx.fillRect(s.x - sz * 0.8, s.y + bob - sz * 2.8, sz * 1.6, sz * 0.3)
+    ctx.fillRect(s.x - sz * 0.5, s.y + bob - sz * 3.2, sz * 1.0, sz * 0.5)
+
+    // Role indicator
+    if (worker.role === 'carrying') {
+      ctx.font = `${6 * z}px Inter`
+      ctx.textAlign = 'center'
+      ctx.fillStyle = '#d4a030'
+      ctx.fillText('🌾', s.x + sz * 1.2, s.y + bob - sz * 0.5)
+    } else if (worker.role === 'watering') {
+      ctx.fillStyle = 'rgba(100,180,255,0.3)'
+      ctx.beginPath(); ctx.arc(s.x + sz * 1.5, s.y + bob, sz * 0.4, 0, Math.PI * 2); ctx.fill()
+    }
+  }
+}
+
+// ── Home details (chimney smoke, dog, mailbox, flowers) ──
+function drawHomeDetails() {
+  if (state.currentRegion !== 'farmlands') return
+  if (!state.settings.farmAmbience) return
+  // Don't draw if player is far from home area
+  const homeX = WORLD_SIZE / 2
+  const homeY = WORLD_SIZE / 2
+  if (Math.abs(state.player.x - homeX) > 25 || Math.abs(state.player.y - homeY) > 25) return
+
+  const z = state.camera.zoom
+  const now = performance.now()
+
+  // Draw near home center
+  const spots = [
+    { dx: -8, dy: -6, label: 'home' },    // chimney smoke
+    { dx: 7, dy: -4, label: 'dog' },
+    { dx: -9, dy: -3, label: 'mailbox' },
+    { dx: -6, dy: -7, label: 'flowers' },
+    { dx: 9, dy: -7, label: 'flowers2' },
+    { dx: -9, dy: 2, label: 'fence' },
+  ]
+
+  for (const spot of spots) {
+    const s = worldToScreen(homeX + spot.dx, homeY + spot.dy)
+    if (!s || s.x < -20 || s.x > canvas.width + 20 || s.y < -30 || s.y > canvas.height + 30) continue
+
+    if (spot.label === 'home') {
+      // Chimney smoke
+      const t = now * 0.001
+      for (let i = 0; i < 3; i++) {
+        const rise = (t * 1.5 + i * 0.7) % 4
+        const drift = Math.sin(t * 2 + i * 1.3) * 2 * z
+        ctx.fillStyle = `rgba(180,180,190,${0.15 - rise * 0.03})`
+        const sr = (1.5 + rise * 0.5) * z
+        ctx.beginPath(); ctx.arc(s.x + drift, s.y - rise * 4 * z, sr, 0, Math.PI * 2); ctx.fill()
+      }
+    } else if (spot.label === 'dog') {
+      // Sleeping dog
+      const dogBob = Math.sin(now * 0.002) * 0.3 * z
+      ctx.fillStyle = '#c0a878'
+      ctx.beginPath(); ctx.ellipse(s.x, s.y + dogBob, 3 * z, 1.5 * z, 0, 0, Math.PI * 2); ctx.fill()
+      // Head
+      ctx.fillStyle = '#b89868'
+      ctx.beginPath(); ctx.arc(s.x + 2.5 * z, s.y + dogBob - z, 1.2 * z, 0, Math.PI * 2); ctx.fill()
+      // Nose
+      ctx.fillStyle = '#4a3a28'
+      ctx.beginPath(); ctx.arc(s.x + 3.3 * z, s.y + dogBob - z * 0.8, 0.3 * z, 0, Math.PI * 2); ctx.fill()
+    } else if (spot.label === 'mailbox') {
+      // Red mailbox
+      ctx.fillStyle = '#cc3333'
+      ctx.fillRect(s.x - 0.8 * z, s.y - 3 * z, 1.6 * z, 2.5 * z)
+      ctx.fillStyle = '#222'
+      ctx.fillRect(s.x - 0.3 * z, s.y - 0.5 * z, 0.6 * z, 0.5 * z)
+      // Post
+      ctx.fillStyle = '#8a7a6a'
+      ctx.fillRect(s.x - 0.3 * z, s.y + 2 * z, 0.6 * z, 2 * z)
+    } else if (spot.label === 'flowers') {
+      // Garden flowers
+      const sway = Math.sin(now * 0.002 + spot.dx) * 0.5 * z
+      for (let f = 0; f < 4; f++) {
+        const fx = s.x + (f - 1.5) * 2 * z
+        ctx.fillStyle = ['#ff6b8a', '#ffb347', '#c084fc', '#4ade80'][f]
+        ctx.beginPath(); ctx.arc(fx, s.y - 1.5 * z + sway * (f % 2 ? 1 : -1), 1.2 * z, 0, Math.PI * 2); ctx.fill()
+        ctx.fillStyle = '#4a7a3a'
+        ctx.fillRect(fx - 0.2 * z, s.y - 1 * z, 0.4 * z, 2 * z)
+      }
+    } else if (spot.label === 'flowers2') {
+      // Another flower patch
+      for (let f = 0; f < 3; f++) {
+        const fx = s.x + (f - 1) * 2.5 * z
+        ctx.fillStyle = '#f5d050'
+        ctx.beginPath(); ctx.arc(fx, s.y - 1.5 * z + Math.sin(now * 0.003 + f) * 0.5 * z, 1 * z, 0, Math.PI * 2); ctx.fill()
+        ctx.fillStyle = '#3a6a2a'
+        ctx.fillRect(fx - 0.15 * z, s.y - 0.8 * z, 0.3 * z, 1.5 * z)
+      }
+    }
+  }
+}
+
+// ── Farm audio (ambient procedural audio using Web Audio API) ──
+let farmAudioCtx = null
+let farmAudioNodes = []
+
+function initFarmAudio() {
+  if (state.currentRegion !== 'farmlands') return
+  if (!state.settings.farmAmbience) return
+  if (farmAudioCtx) return
+  try {
+    farmAudioCtx = new (window.AudioContext || window.webkitAudioContext)()
+  } catch { return }
+  farmAudioNodes = []
+
+  // Wind (filtered noise)
+  try {
+    const bufSize = farmAudioCtx.sampleRate * 2
+    const buf = farmAudioCtx.createBuffer(1, bufSize, farmAudioCtx.sampleRate)
+    const data = buf.getChannelData(0)
+    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.08
+    const src = farmAudioCtx.createBufferSource()
+    src.buffer = buf
+    src.loop = true
+    const filter = farmAudioCtx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.value = 400
+    const gain = farmAudioCtx.createGain()
+    gain.gain.value = 0.06
+    src.connect(filter).connect(gain).connect(farmAudioCtx.destination)
+    src.start()
+    farmAudioNodes.push({ src, gain, type: 'wind' })
+  } catch {}
+
+  // Insects (high-frequency oscillator)
+  try {
+    const osc = farmAudioCtx.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.value = 5000
+    const gain = farmAudioCtx.createGain()
+    gain.gain.value = 0.015
+    const lfo = farmAudioCtx.createOscillator()
+    lfo.frequency.value = 4
+    const lfoGain = farmAudioCtx.createGain()
+    lfoGain.gain.value = 0.008
+    lfo.connect(lfoGain).connect(gain.gain)
+    osc.connect(gain).connect(farmAudioCtx.destination)
+    osc.start()
+    lfo.start()
+    farmAudioNodes.push({ src: osc, gain, type: 'insect' })
+    farmAudioNodes.push({ src: lfo, type: 'lfo' })
+  } catch {}
+
+  // Birds (periodic chirps)
+  scheduleBirdChirp()
+}
+
+function scheduleBirdChirp() {
+  if (!farmAudioCtx || state.currentRegion !== 'farmlands') return
+  const delay = 2000 + Math.random() * 5000
+  setTimeout(() => {
+    if (!farmAudioCtx || state.currentRegion !== 'farmlands') return
+    playBirdChirp()
+    scheduleBirdChirp()
+  }, delay)
+}
+
+function playBirdChirp() {
+  try {
+    const t = farmAudioCtx.currentTime
+    const osc = farmAudioCtx.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(2000 + Math.random() * 1500, t)
+    osc.frequency.exponentialRampToValueAtTime(3000 + Math.random() * 1000, t + 0.05)
+    osc.frequency.exponentialRampToValueAtTime(1500 + Math.random() * 500, t + 0.1)
+    const gain = farmAudioCtx.createGain()
+    gain.gain.setValueAtTime(0, t)
+    gain.gain.linearRampToValueAtTime(0.04, t + 0.02)
+    gain.gain.linearRampToValueAtTime(0, t + 0.15)
+    osc.connect(gain).connect(farmAudioCtx.destination)
+    osc.start(t)
+    osc.stop(t + 0.15)
+  } catch {}
+}
+
+function updateFarmAudio() {
+  if (!farmAudioCtx) return
+  if (!state.settings.farmAmbience) { stopFarmAudio(); return }
+  // Adjust volume based on time of day (quieter at night)
+  const t = state.time
+  const isNight = t < 0.2 || t > 0.85
+  const vol = isNight ? 0.3 : 1
+  for (const node of farmAudioNodes) {
+    if (node.type === 'wind' && node.gain) {
+      node.gain.gain.value = 0.06 * vol * (0.7 + Math.sin(performance.now() * 0.0003) * 0.3)
+    }
+    if (node.type === 'insect' && node.gain) {
+      node.gain.gain.value = 0.015 * vol
+    }
+  }
+}
+
+function stopFarmAudio() {
+  if (farmAudioCtx) {
+    farmAudioCtx.close().catch(() => {})
+    farmAudioCtx = null
+  }
+  farmAudioNodes = []
+}
+
+// ── Initialize / clean up farm life ──
+function spawnFarmLife() {
+  if (state.farmLifeSpawned) return
+  state.farmLifeSpawned = true
+  spawnFarmAnimals()
+  spawnFarmWorkers()
+  initFarmAudio()
+}
+
+function clearFarmLife() {
+  state.farmLifeSpawned = false
+  state.farmAnimals = []
+  state.farmWorkers = []
+  state.particles = state.particles.filter(p =>
+    p.type !== 'butterfly' && p.type !== 'bee' && p.type !== 'leaf' &&
+    p.type !== 'cloud' && p.type !== 'bird'
+  )
+  stopFarmAudio()
 }
 
 // Draw crops on field lots
@@ -3086,6 +3790,9 @@ function updateParticles(dt) {
       })
     }
   }
+
+  // Farm ambient particles
+  spawnFarmAmbientParticles()
   
   for (let i = state.particles.length - 1; i >= 0; i--) {
     const p = state.particles[i]
@@ -3166,7 +3873,10 @@ function drawWeatherEffects(w, h) {
       ctx.stroke()
     }
   }
-  
+
+  // Farm ambient particles
+  drawFarmAmbientParticles()
+
   if (weather.lightning > 0) {
     ctx.fillStyle = `rgba(255,255,255,${weather.lightning * 0.4})`
     ctx.fillRect(0, 0, w, h)
@@ -4550,6 +5260,11 @@ function render() {
   // Phase 6: Draw development blocks
   drawBlocks()
 
+  // Phase 8.3: Living farm (animals, workers, home details)
+  drawFarmAnimals()
+  drawFarmWorkers()
+  drawHomeDetails()
+
   if (state.influenceViewEnabled) {
     for (const district of state.districts) {
       drawTerritoryBorder(district)
@@ -4694,6 +5409,12 @@ function update(dt) {
   updateWeather(dt)
   updateParticles(dt)
   updateEvents(dt)
+
+  // Farm living updates
+  updateFarmAnimals(dt)
+  updateFarmWorkers(dt)
+  updateFarmAudio()
+  updateFarmAtmosphere()
 
   for (const npc of state.npcs) {
     if (npc._serverX !== undefined) {
@@ -4942,6 +5663,7 @@ const ALL_PANELS = [
   { id: 'incomePanel', stateKey: null, btnId: null },
   { id: 'jobPanel', stateKey: null, btnId: null },
   { id: 'worldMapPanel', stateKey: 'worldMapOpen', btnId: 'btnWorldMap' },
+  { id: 'settingsPanel', stateKey: 'settingsPanelOpen', btnId: 'btnSettings' },
 ]
 
 function closeAllPanels() {
@@ -5025,6 +5747,8 @@ function openPanel(panelId, extra) {
   } else if (panelId === 'worldMapPanel') {
     state.worldMapOpen = true
     updateWorldMap()
+  } else if (panelId === 'settingsPanel') {
+    state.settingsPanelOpen = true
   }
 }
 
@@ -5056,6 +5780,7 @@ function setupUI() {
   document.getElementById('btnGang').addEventListener('click', () => openPanel('gangPanel'))
   document.getElementById('btnInfluenceView').addEventListener('click', toggleInfluenceView)
   document.getElementById('btnWorldMap').addEventListener('click', () => openPanel('worldMapPanel'))
+  document.getElementById('btnSettings').addEventListener('click', () => openPanel('settingsPanel'))
 
   // Close buttons
   document.getElementById('buildPanelClose').addEventListener('click', closeAllPanels)
@@ -5063,6 +5788,7 @@ function setupUI() {
   document.getElementById('pwPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('blockPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('gangPanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('settingsPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('incomePanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('jobPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('worldMapClose').addEventListener('click', closeAllPanels)
@@ -5070,6 +5796,18 @@ function setupUI() {
   // Farm button handlers
   document.getElementById('farmSendBtn').addEventListener('click', sendFoodToCity)
   document.getElementById('farmOverlayClose').addEventListener('click', closeFarmOverlay)
+
+  // Settings toggle
+  document.getElementById('toggleFarmAmbience').addEventListener('change', function() {
+    state.settings.farmAmbience = this.checked
+    if (this.checked && state.currentRegion === 'farmlands') {
+      if (!state.farmAnimals || state.farmAnimals.length === 0) spawnFarmAnimals()
+      if (!state.farmWorkers || state.farmWorkers.length === 0) spawnFarmWorkers()
+      initFarmAudio()
+    } else if (!this.checked && state.currentRegion === 'farmlands') {
+      stopFarmAudio()
+    }
+  })
 
   // World map travel buttons
   document.getElementById('worldMapNodes').addEventListener('click', (e) => {
@@ -7242,8 +7980,11 @@ function completeTravel(targetRegion) {
   if (targetRegion === 'farmlands') {
     showToast('Arrived at Farmlands', 'Build your farm, grow food, supply the city.')
     updateFarmInventory()
+    spawnFarmLife()
   } else {
     showToast(`Arrived at ${REGIONS[targetRegion].name}`, '')
+    // Clean up farm life if leaving farmlands
+    if (state.travel.fromRegion === 'farmlands') clearFarmLife()
   }
 }
 
