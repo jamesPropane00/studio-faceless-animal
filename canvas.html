@@ -1269,10 +1269,14 @@
     const videoEls = {};
     const audioEls = {};
 
+    function isLocalObjectUrl(src) {
+      return String(src || '').startsWith('blob:') || String(src || '').startsWith('data:');
+    }
+
     function getOrCreateVideo(src) {
       if (videoEls[src]) return videoEls[src];
       const v = document.createElement('video');
-      v.crossOrigin = 'anonymous';
+      if (!isLocalObjectUrl(src)) v.crossOrigin = 'anonymous';
       v.preload = 'auto';
       v.muted = true;
       v.playsInline = true;
@@ -1376,7 +1380,7 @@
               img.set({ scaleX: s, scaleY: s });
               applyClipAppearance(img, clip);
               canvas.add(img); canvas.renderAll();
-            }, { crossOrigin: 'anonymous' });
+            }, isLocalObjectUrl(clip.src) ? undefined : { crossOrigin: 'anonymous' });
           }
         }
 
@@ -1415,7 +1419,8 @@
         if ((c.type==='image'||c.type==='video') && c.src && !imgCache[c.src]) {
           if (c.type === 'image') {
             ps.push(new Promise(res => {
-              const i = new Image(); i.crossOrigin = 'anonymous';
+              const i = new Image();
+              if (!isLocalObjectUrl(c.src)) i.crossOrigin = 'anonymous';
               i.onload = () => { imgCache[c.src]=i; res(); };
               i.onerror = () => res(); i.src = c.src;
             }));
