@@ -177,8 +177,9 @@
     }
     .add-media-btn:active { border-color: var(--bright); color: var(--text); }
     .selected-tools {
-      display: none; align-items: center; gap: 0.3rem; padding: 0.25rem 0.4rem;
-      background: var(--surface); border-bottom: 1px solid var(--border2);
+      display: none; align-items: center; gap: 0.35rem; padding: 0.35rem 0.5rem;
+      background: rgba(18,20,30,0.92); border-bottom: 1px solid var(--border2);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.18); backdrop-filter: blur(10px);
       overflow-x: auto; flex-shrink: 0; -webkit-overflow-scrolling: touch;
     }
     .selected-tools.show { display: flex; }
@@ -187,11 +188,21 @@
       color: var(--dim); font-size: 0.62rem; font-weight: 800; text-transform: uppercase;
       letter-spacing: 0.08em; white-space: nowrap; flex-shrink: 0;
     }
+    .selected-tools .tool-btn {
+      border-radius: 999px; background: rgba(255,255,255,0.04);
+      min-height: 32px; padding: 0.35rem 0.65rem;
+    }
     .selected-tools select {
-      min-height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+      min-height: 32px; border-radius: 999px; border: 1px solid var(--border);
       background: var(--surface2); color: var(--text); padding: 0 0.35rem; font-size: 0.68rem;
       flex-shrink: 0;
     }
+    .selected-tools .range-pill {
+      display: inline-flex; align-items: center; gap: 0.15rem; padding: 0.15rem;
+      border: 1px solid var(--border); border-radius: 999px; background: rgba(255,255,255,0.035);
+      flex-shrink: 0;
+    }
+    .selected-tools .range-pill .tool-btn { min-height: 26px; padding: 0.25rem 0.45rem; font-size: 0.6rem; }
     .selected-tools .mini-range {
       display: inline-flex; align-items: center; gap: 0.25rem; color: var(--dim);
       font-size: 0.62rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;
@@ -538,7 +549,7 @@
           <input id="editTrimEnd" type="number" min="0.1" step="0.1" value="4" onchange="updateSelectedClipFromEditor()" />
         </div>
         <div>
-          <label for="editFilter">Filter</label>
+          <label for="editFilter">Filter / Look</label>
           <select id="editFilter" onchange="updateSelectedClipFromEditor()">
             <option value="none">None</option>
             <option value="grayscale">B&amp;W</option>
@@ -551,6 +562,33 @@
             <option value="dream">Dream</option>
             <option value="invert">Invert</option>
           </select>
+        </div>
+        <div>
+          <label for="editEffect">Video effect</label>
+          <select id="editEffect" onchange="updateSelectedClipFromEditor()">
+            <option value="none">None</option>
+            <option value="fire">Fire</option>
+            <option value="sparkles">Sparkles</option>
+            <option value="bad-tv">Bad TV</option>
+            <option value="vhs">VHS</option>
+            <option value="glitch">Glitch</option>
+          </select>
+        </div>
+        <div>
+          <label for="editFilterStart">Filter start</label>
+          <input id="editFilterStart" type="number" min="0" step="0.1" value="0" onchange="updateSelectedClipFromEditor()" />
+        </div>
+        <div>
+          <label for="editFilterEnd">Filter end</label>
+          <input id="editFilterEnd" type="number" min="0.1" step="0.1" value="4" onchange="updateSelectedClipFromEditor()" />
+        </div>
+        <div>
+          <label for="editEffectStart">Effect start</label>
+          <input id="editEffectStart" type="number" min="0" step="0.1" value="0" onchange="updateSelectedClipFromEditor()" />
+        </div>
+        <div>
+          <label for="editEffectEnd">Effect end</label>
+          <input id="editEffectEnd" type="number" min="0.1" step="0.1" value="4" onchange="updateSelectedClipFromEditor()" />
         </div>
         <div>
           <label for="editAspect">Canvas</label>
@@ -996,6 +1034,11 @@
         contrast: 0,
         saturation: 0,
         filter: 'none',
+        filterStart: 0,
+        filterEnd: sourceDuration,
+        effect: 'none',
+        effectStart: 0,
+        effectEnd: sourceDuration,
         opacity: 1,
         volume: 1,
         _text: opts.text || null,
@@ -1061,6 +1104,7 @@
       const speed = String(clip.speed || 1);
       const fit = clip.fit || 'contain';
       const filter = clip.filter || 'none';
+      const effect = clip.effect || 'none';
       const muted = Number(clip.volume == null ? 1 : clip.volume) <= 0;
       const volume = Math.round(Number(clip.volume == null ? 1 : clip.volume) * 100);
       const title = clip.type === 'video' ? 'Video tools' : clip.type === 'music' ? 'Audio tools' : 'Clip tools';
@@ -1077,8 +1121,8 @@
           <option value="2"${speed === '2' ? ' selected' : ''}>2x</option>
         </select>
         ${clip.type !== 'music' ? `
-          <select aria-label="Effect" onchange="setSelectedFilter(this.value)">
-            <option value="none"${filter === 'none' ? ' selected' : ''}>No effect</option>
+          <select aria-label="Filter" onchange="setSelectedFilter(this.value)">
+            <option value="none"${filter === 'none' ? ' selected' : ''}>No filter</option>
             <option value="cinematic"${filter === 'cinematic' ? ' selected' : ''}>Cinematic</option>
             <option value="vivid"${filter === 'vivid' ? ' selected' : ''}>Vivid</option>
             <option value="noir"${filter === 'noir' ? ' selected' : ''}>Noir</option>
@@ -1089,6 +1133,22 @@
             <option value="sepia"${filter === 'sepia' ? ' selected' : ''}>Sepia</option>
             <option value="invert"${filter === 'invert' ? ' selected' : ''}>Invert</option>
           </select>
+          <span class="range-pill">
+            <button class="tool-btn" type="button" onclick="markSelectedRange('filter','start')">Filter In</button>
+            <button class="tool-btn" type="button" onclick="markSelectedRange('filter','end')">Out</button>
+          </span>
+          <select aria-label="Video effect" onchange="setSelectedEffect(this.value)">
+            <option value="none"${effect === 'none' ? ' selected' : ''}>No effect</option>
+            <option value="fire"${effect === 'fire' ? ' selected' : ''}>Fire</option>
+            <option value="sparkles"${effect === 'sparkles' ? ' selected' : ''}>Sparkles</option>
+            <option value="bad-tv"${effect === 'bad-tv' ? ' selected' : ''}>Bad TV</option>
+            <option value="vhs"${effect === 'vhs' ? ' selected' : ''}>VHS</option>
+            <option value="glitch"${effect === 'glitch' ? ' selected' : ''}>Glitch</option>
+          </select>
+          <span class="range-pill">
+            <button class="tool-btn" type="button" onclick="markSelectedRange('effect','start')">FX In</button>
+            <button class="tool-btn" type="button" onclick="markSelectedRange('effect','end')">Out</button>
+          </span>
           <button class="tool-btn" type="button" onclick="setSelectedFit('${fit === 'cover' ? 'contain' : 'cover'}')">${fit === 'cover' ? 'Fit' : 'Fill'}</button>
           <button class="tool-btn" type="button" onclick="rotateClip(90)">Rotate</button>
         ` : ''}
@@ -1112,6 +1172,12 @@
       document.getElementById('editTrimStart').value = Number(clip.trimStart || 0).toFixed(1);
       document.getElementById('editTrimEnd').value = Number(clip.trimEnd || clip.sourceDuration || clip.duration || 4).toFixed(1);
       document.getElementById('editFilter').value = clip.filter || 'none';
+      document.getElementById('editEffect').value = clip.effect || 'none';
+      const sourceDuration = Number(clip.sourceDuration || clip.duration || 4);
+      document.getElementById('editFilterStart').value = Number(clip.filterStart || 0).toFixed(1);
+      document.getElementById('editFilterEnd').value = Number(clip.filterEnd == null ? sourceDuration : clip.filterEnd).toFixed(1);
+      document.getElementById('editEffectStart').value = Number(clip.effectStart || 0).toFixed(1);
+      document.getElementById('editEffectEnd').value = Number(clip.effectEnd == null ? sourceDuration : clip.effectEnd).toFixed(1);
       ['Brightness', 'Contrast', 'Saturation'].forEach(name => {
         const key = name.toLowerCase();
         const value = Math.round(Number(clip[key] || 0) * 100);
@@ -1146,6 +1212,11 @@
       clip.trimEnd = trimEnd;
       clip.duration = Math.max(0.1, (trimEnd - trimStart) / speed);
       clip.filter = document.getElementById('editFilter').value;
+      clip.effect = document.getElementById('editEffect').value;
+      clip.filterStart = Math.max(0, Math.min(sourceDuration, Number(document.getElementById('editFilterStart').value || 0)));
+      clip.filterEnd = Math.max(clip.filterStart, Math.min(sourceDuration, Number(document.getElementById('editFilterEnd').value || sourceDuration)));
+      clip.effectStart = Math.max(0, Math.min(sourceDuration, Number(document.getElementById('editEffectStart').value || 0)));
+      clip.effectEnd = Math.max(clip.effectStart, Math.min(sourceDuration, Number(document.getElementById('editEffectEnd').value || sourceDuration)));
       clip.brightness = Number(document.getElementById('editBrightness').value || 0) / 100;
       clip.contrast = Number(document.getElementById('editContrast').value || 0) / 100;
       clip.saturation = Number(document.getElementById('editSaturation').value || 0) / 100;
@@ -1194,6 +1265,32 @@
       const clip = selectedClip();
       if (!clip) return toast('Select a clip first');
       clip.filter = value || 'none';
+      invalidateExport();
+      renderSelectedTools();
+      renderFrame();
+    }
+
+    function setSelectedEffect(value) {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      clip.effect = value || 'none';
+      invalidateExport();
+      renderSelectedTools();
+      renderFrame();
+    }
+
+    function markSelectedRange(kind, edge) {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      const local = Math.max(0, Math.min(Number(clip.sourceDuration || clip.duration || 0), (STATE.playhead - clip.startTime) * Number(clip.speed || 1) + Number(clip.trimStart || 0)));
+      const startKey = kind + 'Start';
+      const endKey = kind + 'End';
+      if (edge === 'start') {
+        clip[startKey] = local;
+        if (clip[endKey] == null || clip[endKey] < local) clip[endKey] = Number(clip.sourceDuration || clip.duration || local);
+      } else {
+        clip[endKey] = Math.max(local, Number(clip[startKey] || 0));
+      }
       invalidateExport();
       renderSelectedTools();
       renderFrame();
@@ -1587,7 +1684,20 @@
         : Math.min(scaleX, scaleY);
     }
 
-    function clipCanvasFilter(clip) {
+    function clipSourceTime(clip, localT) {
+      return Number(clip.trimStart || 0) + Math.max(0, localT) * Number(clip.speed || 1);
+    }
+
+    function isTimedFeatureActive(clip, kind, sourceTime) {
+      const value = clip[kind] || 'none';
+      if (!value || value === 'none') return false;
+      const start = Number(clip[kind + 'Start'] || 0);
+      const fallbackEnd = Number(clip.sourceDuration || clip.duration || 0);
+      const end = Number(clip[kind + 'End'] == null ? fallbackEnd : clip[kind + 'End']);
+      return sourceTime >= start && sourceTime <= end;
+    }
+
+    function clipCanvasFilter(clip, sourceTime) {
       const brightness = 100 + Math.round(Number(clip.brightness || 0) * 100);
       const contrast = 100 + Math.round(Number(clip.contrast || 0) * 100);
       const saturation = 100 + Math.round(Number(clip.saturation || 0) * 100);
@@ -1596,6 +1706,7 @@
         `contrast(${Math.max(0, contrast)}%)`,
         `saturate(${Math.max(0, saturation)}%)`,
       ];
+      if (!isTimedFeatureActive(clip, 'filter', sourceTime)) return filters.join(' ');
       switch (clip.filter || 'none') {
         case 'grayscale':
           filters.push('grayscale(100%)');
@@ -1628,32 +1739,33 @@
       return filters.join(' ');
     }
 
-    function applyClipAppearance(object, clip) {
+    function applyClipAppearance(object, clip, sourceTime) {
       const filters = [];
       const filterSet = fabric.Image.filters || {};
-      if (clip.filter === 'grayscale' && filterSet.Grayscale) filters.push(new filterSet.Grayscale());
-      if (clip.filter === 'sepia' && filterSet.Sepia) filters.push(new filterSet.Sepia());
-      if (clip.filter === 'invert' && filterSet.Invert) filters.push(new filterSet.Invert());
-      if (clip.filter === 'cinematic') {
+      const filterActive = isTimedFeatureActive(clip, 'filter', sourceTime);
+      if (filterActive && clip.filter === 'grayscale' && filterSet.Grayscale) filters.push(new filterSet.Grayscale());
+      if (filterActive && clip.filter === 'sepia' && filterSet.Sepia) filters.push(new filterSet.Sepia());
+      if (filterActive && clip.filter === 'invert' && filterSet.Invert) filters.push(new filterSet.Invert());
+      if (filterActive && clip.filter === 'cinematic') {
         if (filterSet.Contrast) filters.push(new filterSet.Contrast({ contrast: 0.18 }));
         if (filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: 0.12 }));
         if (filterSet.Brightness) filters.push(new filterSet.Brightness({ brightness: -0.04 }));
       }
-      if (clip.filter === 'vivid') {
+      if (filterActive && clip.filter === 'vivid') {
         if (filterSet.Contrast) filters.push(new filterSet.Contrast({ contrast: 0.15 }));
         if (filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: 0.35 }));
       }
-      if (clip.filter === 'noir') {
+      if (filterActive && clip.filter === 'noir') {
         if (filterSet.Grayscale) filters.push(new filterSet.Grayscale());
         if (filterSet.Contrast) filters.push(new filterSet.Contrast({ contrast: 0.35 }));
         if (filterSet.Brightness) filters.push(new filterSet.Brightness({ brightness: -0.08 }));
       }
-      if (clip.filter === 'warm') {
+      if (filterActive && clip.filter === 'warm') {
         if (filterSet.Sepia) filters.push(new filterSet.Sepia());
         if (filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: 0.2 }));
       }
-      if (clip.filter === 'cool' && filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: 0.12 }));
-      if (clip.filter === 'dream') {
+      if (filterActive && clip.filter === 'cool' && filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: 0.12 }));
+      if (filterActive && clip.filter === 'dream') {
         if (filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: 0.25 }));
         if (filterSet.Brightness) filters.push(new filterSet.Brightness({ brightness: 0.1 }));
       }
@@ -1677,20 +1789,81 @@
       return object;
     }
 
-    function drawVideoFrame(video, clip) {
+    function drawClipEffect(ctx, clip, sourceTime) {
+      if (!isTimedFeatureActive(clip, 'effect', sourceTime)) return;
+      const effect = clip.effect || 'none';
+      const w = canvas.getWidth();
+      const h = canvas.getHeight();
+      const time = STATE.playhead + sourceTime;
+      ctx.save();
+      if (effect === 'fire') {
+        const grad = ctx.createLinearGradient(0, h, 0, h * 0.52);
+        grad.addColorStop(0, 'rgba(255,70,0,0.62)');
+        grad.addColorStop(0.45, 'rgba(255,170,0,0.24)');
+        grad.addColorStop(1, 'rgba(255,220,120,0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, h * 0.45, w, h * 0.55);
+        for (let i = 0; i < 22; i++) {
+          const x = ((i * 73 + Math.sin(time * 2 + i) * 40) % w + w) % w;
+          const y = h - ((i * 37 + time * 90) % (h * 0.36));
+          const r = 18 + (i % 5) * 8;
+          ctx.fillStyle = i % 2 ? 'rgba(255,210,80,0.32)' : 'rgba(255,55,0,0.28)';
+          ctx.beginPath(); ctx.ellipse(x, y, r * 0.55, r, 0, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (effect === 'sparkles') {
+        ctx.fillStyle = 'rgba(255,255,210,0.85)';
+        for (let i = 0; i < 38; i++) {
+          const x = ((i * 97 + Math.sin(time + i) * 50) % w + w) % w;
+          const y = ((i * 53 + Math.cos(time * 1.4 + i) * 35) % h + h) % h;
+          const r = 1.5 + ((i + Math.floor(time * 8)) % 4);
+          ctx.beginPath();
+          ctx.moveTo(x, y - r * 2); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r * 2); ctx.lineTo(x - r, y); ctx.closePath(); ctx.fill();
+        }
+      } else if (effect === 'bad-tv' || effect === 'vhs') {
+        ctx.globalAlpha = effect === 'bad-tv' ? 0.22 : 0.14;
+        for (let y = 0; y < h; y += effect === 'bad-tv' ? 5 : 7) {
+          ctx.fillStyle = y % 2 ? '#000' : '#fff';
+          ctx.fillRect(0, y, w, 1);
+        }
+        ctx.globalAlpha = effect === 'bad-tv' ? 0.18 : 0.1;
+        for (let i = 0; i < 80; i++) {
+          const x = (i * 47 + time * 300) % w;
+          const y = (i * 83 + time * 180) % h;
+          ctx.fillStyle = i % 2 ? '#fff' : '#000';
+          ctx.fillRect(x, y, 2 + (i % 9), 1);
+        }
+        if (effect === 'vhs') {
+          ctx.globalAlpha = 0.18;
+          ctx.fillStyle = '#22d3ee'; ctx.fillRect(0, 0, 8, h);
+          ctx.fillStyle = '#f472b6'; ctx.fillRect(w - 8, 0, 8, h);
+        }
+      } else if (effect === 'glitch') {
+        for (let i = 0; i < 10; i++) {
+          const y = ((i * 91 + time * 130) % h);
+          const sliceH = 4 + (i % 4) * 4;
+          const dx = Math.sin(time * 8 + i) * 18;
+          ctx.globalAlpha = 0.18;
+          ctx.drawImage(canvas.lowerCanvasEl, 0, y, w, sliceH, dx, y, w, sliceH);
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawVideoFrame(video, clip, sourceTime) {
       const sourceWidth = video.videoWidth || 1920;
       const sourceHeight = video.videoHeight || 1080;
       const scale = mediaScale(clip, sourceWidth, sourceHeight);
       const ctx = canvas.contextContainer;
       ctx.save();
       ctx.globalAlpha = clip.opacity == null ? 1 : clip.opacity;
-      ctx.filter = clipCanvasFilter(clip);
+      ctx.filter = clipCanvasFilter(clip, sourceTime);
       ctx.translate(canvas.getWidth() / 2, canvas.getHeight() / 2);
       ctx.rotate((Number(clip.rotation || 0) * Math.PI) / 180);
       ctx.scale(Boolean(clip.flipX) ? -1 : 1, Boolean(clip.flipY) ? -1 : 1);
       ctx.drawImage(video, -(sourceWidth * scale) / 2, -(sourceHeight * scale) / 2, sourceWidth * scale, sourceHeight * scale);
       ctx.filter = 'none';
       ctx.restore();
+      drawClipEffect(ctx, clip, sourceTime);
     }
 
     function renderFrame() {
@@ -1702,21 +1875,24 @@
 
       active.forEach(clip => {
         const localT = t - clip.startTime;
+        const sourceTime = clipSourceTime(clip, localT);
 
         if ((clip.type === 'image') && clip.src) {
           if (imgCache[clip.src] instanceof HTMLImageElement && imgCache[clip.src].complete) {
             const img = new fabric.Image(imgCache[clip.src], { originX: 'center', originY: 'center', selectable: false, evented: false });
             const s = mediaScale(clip, imgCache[clip.src].naturalWidth, imgCache[clip.src].naturalHeight);
             img.set({ scaleX: s, scaleY: s });
-            applyClipAppearance(img, clip);
+            applyClipAppearance(img, clip, sourceTime);
             canvas.add(img); canvas.renderAll();
+            drawClipEffect(canvas.contextContainer, clip, sourceTime);
           } else {
             fabric.Image.fromURL(clip.src, (img) => {
               if (!img) return;
               const s = mediaScale(clip, img.width, img.height);
               img.set({ scaleX: s, scaleY: s });
-              applyClipAppearance(img, clip);
+              applyClipAppearance(img, clip, sourceTime);
               canvas.add(img); canvas.renderAll();
+              drawClipEffect(canvas.contextContainer, clip, sourceTime);
             }, isLocalObjectUrl(clip.src) ? undefined : { crossOrigin: 'anonymous' });
           }
         }
@@ -1724,13 +1900,12 @@
         if (clip.type === 'video' && clip.src) {
           const v = getOrCreateVideo(clip.src);
           try {
-            const sourceTime = Number(clip.trimStart || 0) + localT * Number(clip.speed || 1);
             if (!STATE.playing && Math.abs(v.currentTime - sourceTime) > 0.1) {
               v.currentTime = sourceTime;
             }
             if (v.readyState >= 2) {
               canvas.renderAll();
-              drawVideoFrame(v, clip);
+              drawVideoFrame(v, clip, sourceTime);
             }
           } catch {}
         }
