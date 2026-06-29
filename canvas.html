@@ -783,6 +783,18 @@
       return label + ' could not be loaded.';
     }
 
+    function mediaErrorDetail(media) {
+      const err = media && media.error;
+      if (!err) return '';
+      const labels = {
+        1: 'loading was aborted',
+        2: 'network read failed',
+        3: 'decode failed',
+        4: 'format or codec is unsupported',
+      };
+      return labels[err.code] ? ' (' + labels[err.code] + ')' : '';
+    }
+
     function readMediaDuration(src, type, file) {
       return new Promise((resolve, reject) => {
         if (type === 'image') return resolve(4);
@@ -792,7 +804,7 @@
           const value = Number(media.duration || 0);
           resolve(Number.isFinite(value) && value > 0 ? value : (type === 'music' ? 10 : 6));
         };
-        media.onerror = () => reject(new Error(mediaLoadErrorMessage(file, type)));
+        media.onerror = () => reject(new Error(mediaLoadErrorMessage(file, type) + mediaErrorDetail(media)));
         media.src = src;
         media.load();
       });
@@ -1379,6 +1391,20 @@
       return object;
     }
 
+    function drawVideoFrame(video, clip) {
+      const sourceWidth = video.videoWidth || 1920;
+      const sourceHeight = video.videoHeight || 1080;
+      const scale = mediaScale(clip, sourceWidth, sourceHeight);
+      const ctx = canvas.contextContainer;
+      ctx.save();
+      ctx.globalAlpha = clip.opacity == null ? 1 : clip.opacity;
+      ctx.translate(canvas.getWidth() / 2, canvas.getHeight() / 2);
+      ctx.rotate((Number(clip.rotation || 0) * Math.PI) / 180);
+      ctx.scale(Boolean(clip.flipX) ? -1 : 1, Boolean(clip.flipY) ? -1 : 1);
+      ctx.drawImage(video, -(sourceWidth * scale) / 2, -(sourceHeight * scale) / 2, sourceWidth * scale, sourceHeight * scale);
+      ctx.restore();
+    }
+
     function renderFrame() {
       const t = STATE.playhead;
       const active = STATE.clips.filter(c => t >= c.startTime && t < c.startTime + c.duration);
@@ -1415,11 +1441,8 @@
               v.currentTime = sourceTime;
             }
             if (v.readyState >= 2) {
-              const img = new fabric.Image(v, { originX: 'center', originY: 'center', selectable: false, evented: false });
-              const s = mediaScale(clip, v.videoWidth || 1920, v.videoHeight || 1080);
-              img.set({ scaleX: s, scaleY: s });
-              applyClipAppearance(img, clip);
-              canvas.add(img); canvas.renderAll();
+              canvas.renderAll();
+              drawVideoFrame(v, clip);
             }
           } catch {}
         }
