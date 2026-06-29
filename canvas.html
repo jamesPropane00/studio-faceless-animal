@@ -543,6 +543,13 @@
             <option value="none">None</option>
             <option value="grayscale">B&amp;W</option>
             <option value="sepia">Sepia</option>
+            <option value="cinematic">Cinematic</option>
+            <option value="vivid">Vivid</option>
+            <option value="noir">Noir</option>
+            <option value="warm">Warm</option>
+            <option value="cool">Cool</option>
+            <option value="dream">Dream</option>
+            <option value="invert">Invert</option>
           </select>
         </div>
         <div>
@@ -1053,6 +1060,7 @@
       }
       const speed = String(clip.speed || 1);
       const fit = clip.fit || 'contain';
+      const filter = clip.filter || 'none';
       const muted = Number(clip.volume == null ? 1 : clip.volume) <= 0;
       const volume = Math.round(Number(clip.volume == null ? 1 : clip.volume) * 100);
       const title = clip.type === 'video' ? 'Video tools' : clip.type === 'music' ? 'Audio tools' : 'Clip tools';
@@ -1069,6 +1077,18 @@
           <option value="2"${speed === '2' ? ' selected' : ''}>2x</option>
         </select>
         ${clip.type !== 'music' ? `
+          <select aria-label="Effect" onchange="setSelectedFilter(this.value)">
+            <option value="none"${filter === 'none' ? ' selected' : ''}>No effect</option>
+            <option value="cinematic"${filter === 'cinematic' ? ' selected' : ''}>Cinematic</option>
+            <option value="vivid"${filter === 'vivid' ? ' selected' : ''}>Vivid</option>
+            <option value="noir"${filter === 'noir' ? ' selected' : ''}>Noir</option>
+            <option value="warm"${filter === 'warm' ? ' selected' : ''}>Warm</option>
+            <option value="cool"${filter === 'cool' ? ' selected' : ''}>Cool</option>
+            <option value="dream"${filter === 'dream' ? ' selected' : ''}>Dream</option>
+            <option value="grayscale"${filter === 'grayscale' ? ' selected' : ''}>B&W</option>
+            <option value="sepia"${filter === 'sepia' ? ' selected' : ''}>Sepia</option>
+            <option value="invert"${filter === 'invert' ? ' selected' : ''}>Invert</option>
+          </select>
           <button class="tool-btn" type="button" onclick="setSelectedFit('${fit === 'cover' ? 'contain' : 'cover'}')">${fit === 'cover' ? 'Fit' : 'Fill'}</button>
           <button class="tool-btn" type="button" onclick="rotateClip(90)">Rotate</button>
         ` : ''}
@@ -1165,6 +1185,15 @@
       const clip = selectedClip();
       if (!clip) return toast('Select a clip first');
       clip.fit = value === 'cover' ? 'cover' : 'contain';
+      invalidateExport();
+      renderSelectedTools();
+      renderFrame();
+    }
+
+    function setSelectedFilter(value) {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      clip.filter = value || 'none';
       invalidateExport();
       renderSelectedTools();
       renderFrame();
@@ -1450,7 +1479,7 @@
     //  PLAYBACK
     // ────────────────────────────────────────────────────────────
     function togglePlay() {
-      STATE.playing ? pausePlay() : play();
+      STATE.playing ? pause() : play();
     }
 
     function play() {
@@ -1558,11 +1587,76 @@
         : Math.min(scaleX, scaleY);
     }
 
+    function clipCanvasFilter(clip) {
+      const brightness = 100 + Math.round(Number(clip.brightness || 0) * 100);
+      const contrast = 100 + Math.round(Number(clip.contrast || 0) * 100);
+      const saturation = 100 + Math.round(Number(clip.saturation || 0) * 100);
+      const filters = [
+        `brightness(${Math.max(0, brightness)}%)`,
+        `contrast(${Math.max(0, contrast)}%)`,
+        `saturate(${Math.max(0, saturation)}%)`,
+      ];
+      switch (clip.filter || 'none') {
+        case 'grayscale':
+          filters.push('grayscale(100%)');
+          break;
+        case 'sepia':
+          filters.push('sepia(75%)');
+          break;
+        case 'cinematic':
+          filters.push('contrast(118%) saturate(112%) brightness(94%)');
+          break;
+        case 'vivid':
+          filters.push('contrast(115%) saturate(145%)');
+          break;
+        case 'noir':
+          filters.push('grayscale(100%) contrast(135%) brightness(88%)');
+          break;
+        case 'warm':
+          filters.push('sepia(28%) saturate(120%) brightness(104%)');
+          break;
+        case 'cool':
+          filters.push('hue-rotate(190deg) saturate(112%) brightness(98%)');
+          break;
+        case 'dream':
+          filters.push('saturate(125%) brightness(110%) blur(0.35px)');
+          break;
+        case 'invert':
+          filters.push('invert(100%)');
+          break;
+      }
+      return filters.join(' ');
+    }
+
     function applyClipAppearance(object, clip) {
       const filters = [];
       const filterSet = fabric.Image.filters || {};
       if (clip.filter === 'grayscale' && filterSet.Grayscale) filters.push(new filterSet.Grayscale());
       if (clip.filter === 'sepia' && filterSet.Sepia) filters.push(new filterSet.Sepia());
+      if (clip.filter === 'invert' && filterSet.Invert) filters.push(new filterSet.Invert());
+      if (clip.filter === 'cinematic') {
+        if (filterSet.Contrast) filters.push(new filterSet.Contrast({ contrast: 0.18 }));
+        if (filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: 0.12 }));
+        if (filterSet.Brightness) filters.push(new filterSet.Brightness({ brightness: -0.04 }));
+      }
+      if (clip.filter === 'vivid') {
+        if (filterSet.Contrast) filters.push(new filterSet.Contrast({ contrast: 0.15 }));
+        if (filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: 0.35 }));
+      }
+      if (clip.filter === 'noir') {
+        if (filterSet.Grayscale) filters.push(new filterSet.Grayscale());
+        if (filterSet.Contrast) filters.push(new filterSet.Contrast({ contrast: 0.35 }));
+        if (filterSet.Brightness) filters.push(new filterSet.Brightness({ brightness: -0.08 }));
+      }
+      if (clip.filter === 'warm') {
+        if (filterSet.Sepia) filters.push(new filterSet.Sepia());
+        if (filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: 0.2 }));
+      }
+      if (clip.filter === 'cool' && filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: 0.12 }));
+      if (clip.filter === 'dream') {
+        if (filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: 0.25 }));
+        if (filterSet.Brightness) filters.push(new filterSet.Brightness({ brightness: 0.1 }));
+      }
       if (clip.brightness && filterSet.Brightness) filters.push(new filterSet.Brightness({ brightness: clip.brightness }));
       if (clip.contrast && filterSet.Contrast) filters.push(new filterSet.Contrast({ contrast: clip.contrast }));
       if (clip.saturation && filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: clip.saturation }));
@@ -1590,10 +1684,12 @@
       const ctx = canvas.contextContainer;
       ctx.save();
       ctx.globalAlpha = clip.opacity == null ? 1 : clip.opacity;
+      ctx.filter = clipCanvasFilter(clip);
       ctx.translate(canvas.getWidth() / 2, canvas.getHeight() / 2);
       ctx.rotate((Number(clip.rotation || 0) * Math.PI) / 180);
       ctx.scale(Boolean(clip.flipX) ? -1 : 1, Boolean(clip.flipY) ? -1 : 1);
       ctx.drawImage(video, -(sourceWidth * scale) / 2, -(sourceHeight * scale) / 2, sourceWidth * scale, sourceHeight * scale);
+      ctx.filter = 'none';
       ctx.restore();
     }
 
