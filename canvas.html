@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/fabric@5.3.0/dist/fabric.min.js"></script>
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.15/dist/umd/ffmpeg.js"></script>
-  <script src="https://unpkg.com/@ffmpeg/util@0.12.2/dist/umd/index.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
@@ -813,11 +812,21 @@
     }
 
     let ffmpegInstance = null;
+    async function fileToUint8Array(file) {
+      return new Uint8Array(await file.arrayBuffer());
+    }
+
+    async function urlToBlobURL(url, mimeType) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Could not load video converter.');
+      const blob = new Blob([await response.arrayBuffer()], { type: mimeType });
+      return URL.createObjectURL(blob);
+    }
+
     async function getFFmpeg() {
-      if (!window.FFmpegWASM || !window.FFmpegUtil) throw new Error('Video converter is still loading. Try again in a moment.');
+      if (!window.FFmpegWASM) throw new Error('Video converter is still loading. Try again in a moment.');
       if (ffmpegInstance && ffmpegInstance.loaded) return ffmpegInstance;
       const { FFmpeg } = window.FFmpegWASM;
-      const { toBlobURL } = window.FFmpegUtil;
       const base = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd';
       const ffmpeg = ffmpegInstance || new FFmpeg();
       ffmpeg.on('progress', ({ progress }) => {
@@ -825,8 +834,8 @@
         toast('Converting video... ' + pct + '%');
       });
       await ffmpeg.load({
-        coreURL: await toBlobURL(base + '/ffmpeg-core.js', 'text/javascript'),
-        wasmURL: await toBlobURL(base + '/ffmpeg-core.wasm', 'application/wasm'),
+        coreURL: await urlToBlobURL(base + '/ffmpeg-core.js', 'text/javascript'),
+        wasmURL: await urlToBlobURL(base + '/ffmpeg-core.wasm', 'application/wasm'),
       });
       ffmpegInstance = ffmpeg;
       return ffmpeg;
@@ -835,11 +844,10 @@
     async function convertVideoForBrowser(file) {
       toast('Converting video for browser playback...');
       const ffmpeg = await getFFmpeg();
-      const { fetchFile } = window.FFmpegUtil;
       const ext = (String(file.name || '').match(/\.[a-z0-9]+$/i) || ['.video'])[0].toLowerCase();
       const inputName = 'input-' + Date.now() + ext;
       const outputName = 'output-' + Date.now() + '.mp4';
-      await ffmpeg.writeFile(inputName, await fetchFile(file));
+      await ffmpeg.writeFile(inputName, await fileToUint8Array(file));
       await ffmpeg.exec([
         '-i', inputName,
         '-map', '0:v:0',
