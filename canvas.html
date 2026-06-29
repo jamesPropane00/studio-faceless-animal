@@ -776,8 +776,15 @@
       return '';
     }
 
-    function readMediaDuration(src, type) {
-      return new Promise(resolve => {
+    function mediaLoadErrorMessage(file, type) {
+      const label = file && file.name ? file.name : 'This file';
+      if (type === 'video') return label + ' is not playable in this browser. Use MP4/H.264 or WebM.';
+      if (type === 'music') return label + ' is not playable in this browser.';
+      return label + ' could not be loaded.';
+    }
+
+    function readMediaDuration(src, type, file) {
+      return new Promise((resolve, reject) => {
         if (type === 'image') return resolve(4);
         const media = document.createElement(type === 'music' ? 'audio' : 'video');
         media.preload = 'metadata';
@@ -785,14 +792,16 @@
           const value = Number(media.duration || 0);
           resolve(Number.isFinite(value) && value > 0 ? value : (type === 'music' ? 10 : 6));
         };
-        media.onerror = () => resolve(type === 'music' ? 10 : 6);
+        media.onerror = () => reject(new Error(mediaLoadErrorMessage(file, type)));
         media.src = src;
+        media.load();
       });
     }
 
     async function handleImportedFiles(files) {
       const selected = Array.from(files || []).filter(Boolean);
       if (!selected.length) return;
+      let imported = 0;
       for (const file of selected) {
         const type = getImportedMediaType(file);
         if (!type) {
@@ -800,7 +809,14 @@
           continue;
         }
         const src = URL.createObjectURL(file);
-        const duration = await readMediaDuration(src, type);
+        let duration = 4;
+        try {
+          duration = await readMediaDuration(src, type, file);
+        } catch (error) {
+          URL.revokeObjectURL(src);
+          toast(error.message || 'Import failed');
+          continue;
+        }
         const item = {
           id: 'm' + (STATE._mid++),
           type,
@@ -811,9 +827,10 @@
         };
         STATE.mediaPool.push(item);
         addClip({ type, src, file, label: file.name, duration, sourceDuration: duration });
+        imported++;
       }
       renderMediaPool();
-      toast(selected.length === 1 ? 'Media imported' : selected.length + ' files imported');
+      if (imported) toast(imported === 1 ? 'Media imported' : imported + ' files imported');
     }
 
     document.getElementById('mediaImportInput').addEventListener('change', event => {
@@ -1280,6 +1297,12 @@
       v.preload = 'auto';
       v.muted = true;
       v.playsInline = true;
+      v.setAttribute('playsinline', '');
+      v.onloadeddata = () => {
+        const active = STATE.clips.some(clip => clip.src === src && STATE.playhead >= clip.startTime && STATE.playhead < clip.startTime + clip.duration);
+        if (active) renderFrame();
+      };
+      v.onerror = () => toast('Video could not play in this browser');
       v.src = src;
       v.load();
       videoEls[src] = v;
