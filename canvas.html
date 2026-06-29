@@ -1382,10 +1382,9 @@
 
         if (clip.type === 'video' && clip.src) {
           const v = getOrCreateVideo(clip.src);
-          // Seek to correct time
           try {
             const sourceTime = Number(clip.trimStart || 0) + localT * Number(clip.speed || 1);
-            if (Math.abs(v.currentTime - sourceTime) > 0.1) {
+            if (!STATE.playing && Math.abs(v.currentTime - sourceTime) > 0.1) {
               v.currentTime = sourceTime;
             }
             if (v.readyState >= 2) {
