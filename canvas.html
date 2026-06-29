@@ -549,7 +549,7 @@
           <input id="editTrimEnd" type="number" min="0.1" step="0.1" value="4" onchange="updateSelectedClipFromEditor()" />
         </div>
         <div>
-          <label for="editFilter">Filter / Look</label>
+          <label for="editFilter">Look</label>
           <select id="editFilter" onchange="updateSelectedClipFromEditor()">
             <option value="none">None</option>
             <option value="grayscale">B&amp;W</option>
@@ -564,30 +564,36 @@
           </select>
         </div>
         <div>
-          <label for="editEffect">Video effect</label>
+          <label for="editEffect">Filters</label>
           <select id="editEffect" onchange="updateSelectedClipFromEditor()">
             <option value="none">None</option>
             <option value="fire">Fire</option>
             <option value="sparkles">Sparkles</option>
             <option value="bad-tv">Bad TV</option>
             <option value="vhs">VHS</option>
+            <option value="old-vhs">Old VHS</option>
             <option value="glitch">Glitch</option>
+            <option value="rgb-split">RGB Split</option>
+            <option value="static">Static</option>
+            <option value="scanlines">Scanlines</option>
+            <option value="film-burn">Film Burn</option>
+            <option value="light-leak">Light Leak</option>
           </select>
         </div>
         <div>
-          <label for="editFilterStart">Filter start</label>
+          <label for="editFilterStart">Look start</label>
           <input id="editFilterStart" type="number" min="0" step="0.1" value="0" onchange="updateSelectedClipFromEditor()" />
         </div>
         <div>
-          <label for="editFilterEnd">Filter end</label>
+          <label for="editFilterEnd">Look end</label>
           <input id="editFilterEnd" type="number" min="0.1" step="0.1" value="4" onchange="updateSelectedClipFromEditor()" />
         </div>
         <div>
-          <label for="editEffectStart">Effect start</label>
+          <label for="editEffectStart">Filter start</label>
           <input id="editEffectStart" type="number" min="0" step="0.1" value="0" onchange="updateSelectedClipFromEditor()" />
         </div>
         <div>
-          <label for="editEffectEnd">Effect end</label>
+          <label for="editEffectEnd">Filter end</label>
           <input id="editEffectEnd" type="number" min="0.1" step="0.1" value="4" onchange="updateSelectedClipFromEditor()" />
         </div>
         <div>
@@ -1121,8 +1127,8 @@
           <option value="2"${speed === '2' ? ' selected' : ''}>2x</option>
         </select>
         ${clip.type !== 'music' ? `
-          <select aria-label="Filter" onchange="setSelectedFilter(this.value)">
-            <option value="none"${filter === 'none' ? ' selected' : ''}>No filter</option>
+          <select aria-label="Look" onchange="setSelectedFilter(this.value)">
+            <option value="none"${filter === 'none' ? ' selected' : ''}>No look</option>
             <option value="cinematic"${filter === 'cinematic' ? ' selected' : ''}>Cinematic</option>
             <option value="vivid"${filter === 'vivid' ? ' selected' : ''}>Vivid</option>
             <option value="noir"${filter === 'noir' ? ' selected' : ''}>Noir</option>
@@ -1134,19 +1140,25 @@
             <option value="invert"${filter === 'invert' ? ' selected' : ''}>Invert</option>
           </select>
           <span class="range-pill">
-            <button class="tool-btn" type="button" onclick="markSelectedRange('filter','start')">Filter In</button>
+            <button class="tool-btn" type="button" onclick="markSelectedRange('filter','start')">Look In</button>
             <button class="tool-btn" type="button" onclick="markSelectedRange('filter','end')">Out</button>
           </span>
-          <select aria-label="Video effect" onchange="setSelectedEffect(this.value)">
-            <option value="none"${effect === 'none' ? ' selected' : ''}>No effect</option>
+          <select aria-label="Filters" onchange="setSelectedEffect(this.value)">
+            <option value="none"${effect === 'none' ? ' selected' : ''}>No filter</option>
             <option value="fire"${effect === 'fire' ? ' selected' : ''}>Fire</option>
             <option value="sparkles"${effect === 'sparkles' ? ' selected' : ''}>Sparkles</option>
             <option value="bad-tv"${effect === 'bad-tv' ? ' selected' : ''}>Bad TV</option>
             <option value="vhs"${effect === 'vhs' ? ' selected' : ''}>VHS</option>
+            <option value="old-vhs"${effect === 'old-vhs' ? ' selected' : ''}>Old VHS</option>
             <option value="glitch"${effect === 'glitch' ? ' selected' : ''}>Glitch</option>
+            <option value="rgb-split"${effect === 'rgb-split' ? ' selected' : ''}>RGB Split</option>
+            <option value="static"${effect === 'static' ? ' selected' : ''}>Static</option>
+            <option value="scanlines"${effect === 'scanlines' ? ' selected' : ''}>Scanlines</option>
+            <option value="film-burn"${effect === 'film-burn' ? ' selected' : ''}>Film Burn</option>
+            <option value="light-leak"${effect === 'light-leak' ? ' selected' : ''}>Light Leak</option>
           </select>
           <span class="range-pill">
-            <button class="tool-btn" type="button" onclick="markSelectedRange('effect','start')">FX In</button>
+            <button class="tool-btn" type="button" onclick="markSelectedRange('effect','start')">Filter In</button>
             <button class="tool-btn" type="button" onclick="markSelectedRange('effect','end')">Out</button>
           </span>
           <button class="tool-btn" type="button" onclick="setSelectedFit('${fit === 'cover' ? 'contain' : 'cover'}')">${fit === 'cover' ? 'Fit' : 'Fill'}</button>
@@ -1819,23 +1831,36 @@
           ctx.beginPath();
           ctx.moveTo(x, y - r * 2); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r * 2); ctx.lineTo(x - r, y); ctx.closePath(); ctx.fill();
         }
-      } else if (effect === 'bad-tv' || effect === 'vhs') {
-        ctx.globalAlpha = effect === 'bad-tv' ? 0.22 : 0.14;
-        for (let y = 0; y < h; y += effect === 'bad-tv' ? 5 : 7) {
+      } else if (effect === 'bad-tv' || effect === 'vhs' || effect === 'old-vhs' || effect === 'scanlines') {
+        ctx.globalAlpha = effect === 'bad-tv' ? 0.22 : effect === 'old-vhs' ? 0.2 : 0.14;
+        for (let y = 0; y < h; y += effect === 'bad-tv' ? 5 : effect === 'scanlines' ? 4 : 7) {
           ctx.fillStyle = y % 2 ? '#000' : '#fff';
           ctx.fillRect(0, y, w, 1);
         }
-        ctx.globalAlpha = effect === 'bad-tv' ? 0.18 : 0.1;
-        for (let i = 0; i < 80; i++) {
-          const x = (i * 47 + time * 300) % w;
-          const y = (i * 83 + time * 180) % h;
-          ctx.fillStyle = i % 2 ? '#fff' : '#000';
-          ctx.fillRect(x, y, 2 + (i % 9), 1);
+        if (effect !== 'scanlines') {
+          ctx.globalAlpha = effect === 'bad-tv' ? 0.18 : effect === 'old-vhs' ? 0.22 : 0.1;
+          for (let i = 0; i < 95; i++) {
+            const x = (i * 47 + time * 300) % w;
+            const y = (i * 83 + time * 180) % h;
+            ctx.fillStyle = i % 2 ? '#fff' : '#000';
+            ctx.fillRect(x, y, 2 + (i % 9), 1);
+          }
         }
-        if (effect === 'vhs') {
+        if (effect === 'vhs' || effect === 'old-vhs') {
           ctx.globalAlpha = 0.18;
           ctx.fillStyle = '#22d3ee'; ctx.fillRect(0, 0, 8, h);
           ctx.fillStyle = '#f472b6'; ctx.fillRect(w - 8, 0, 8, h);
+        }
+        if (effect === 'old-vhs') {
+          ctx.globalAlpha = 0.2;
+          ctx.fillStyle = 'rgba(180,120,40,0.34)';
+          ctx.fillRect(0, 0, w, h);
+          ctx.globalAlpha = 0.16;
+          for (let i = 0; i < 9; i++) {
+            const y = (time * 42 + i * 137) % h;
+            ctx.fillStyle = i % 2 ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)';
+            ctx.fillRect(0, y, w, 2 + (i % 3));
+          }
         }
       } else if (effect === 'glitch') {
         for (let i = 0; i < 10; i++) {
@@ -1845,6 +1870,35 @@
           ctx.globalAlpha = 0.18;
           ctx.drawImage(canvas.lowerCanvasEl, 0, y, w, sliceH, dx, y, w, sliceH);
         }
+      } else if (effect === 'rgb-split') {
+        ctx.globalAlpha = 0.26;
+        ctx.globalCompositeOperation = 'screen';
+        ctx.drawImage(canvas.lowerCanvasEl, 6, 0);
+        ctx.fillStyle = 'rgba(255,0,80,0.28)';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(canvas.lowerCanvasEl, -6, 0);
+        ctx.fillStyle = 'rgba(0,210,255,0.24)';
+        ctx.fillRect(0, 0, w, h);
+      } else if (effect === 'static') {
+        ctx.globalAlpha = 0.18;
+        for (let i = 0; i < 360; i++) {
+          const x = (i * 29 + time * 911) % w;
+          const y = (i * 71 + time * 617) % h;
+          const shade = (i * 37 + Math.floor(time * 60)) % 255;
+          ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
+          ctx.fillRect(x, y, 1 + (i % 3), 1 + (i % 2));
+        }
+      } else if (effect === 'film-burn' || effect === 'light-leak') {
+        const x = effect === 'film-burn' ? w * (0.12 + 0.08 * Math.sin(time)) : w * (0.75 + 0.08 * Math.sin(time * 0.7));
+        const y = effect === 'film-burn' ? h * 0.82 : h * 0.18;
+        const r = effect === 'film-burn' ? Math.max(w, h) * 0.55 : Math.max(w, h) * 0.42;
+        const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+        grad.addColorStop(0, effect === 'film-burn' ? 'rgba(255,80,0,0.62)' : 'rgba(255,220,120,0.42)');
+        grad.addColorStop(0.35, effect === 'film-burn' ? 'rgba(255,190,40,0.26)' : 'rgba(244,114,182,0.18)');
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
       }
       ctx.restore();
     }
