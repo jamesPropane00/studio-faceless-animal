@@ -212,6 +212,7 @@ export async function onRequestPost(context) {
     const title = cleanText(body.title, 120);
     const description = cleanText(body.description, 500);
     const visibility = String(body.visibility || 'public').toLowerCase() === 'private' ? 'private' : 'public';
+    const publishToDirectory = body.publish_to_directory !== false;
     const fileName = cleanText(body.file_name || 'clip.mp4', 120);
     const fileType = String(body.file_type || 'video/mp4').toLowerCase();
     const sourceUrl = cleanText(body.source_url || body.sourceUrl || '', 500);
@@ -301,7 +302,7 @@ export async function onRequestPost(context) {
       return json({ ok: false, error: insert.data?.message || insert.text || 'Could not save upload.' }, 500);
     }
 
-    const directoryPost = visibility === 'public'
+    const directoryPost = visibility === 'public' && publishToDirectory
       ? await createDirectoryPost(context.env, username, title, publicSrc)
       : { ok: false, post: null, error: null };
     return json({
@@ -309,7 +310,7 @@ export async function onRequestPost(context) {
       upload: Array.isArray(insert.data) ? insert.data[0] : insert.data,
       directory_post_created: directoryPost.ok,
       directory_post: directoryPost.post || null,
-      warning: directoryPost.ok || visibility !== 'public' ? null : directoryPost.error,
+      warning: directoryPost.ok || visibility !== 'public' || !publishToDirectory ? null : directoryPost.error,
     });
   } catch (err) {
     return json({ ok: false, error: err?.message || 'Upload failed.' }, 500);

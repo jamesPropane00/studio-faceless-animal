@@ -1481,7 +1481,73 @@
       min-height: 1.1em;
     }
 
-    /* compression handled inline in floating panel */
+    .tv-compress-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      margin-top: 0.7rem;
+    }
+
+    .tv-compress-widget {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+      padding: 0.85rem;
+      border: 1px solid rgba(33,244,208,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.28);
+    }
+
+    .tv-compress-widget[hidden] {
+      display: none;
+    }
+
+    .tv-compress-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .tv-compress-head strong {
+      color: #fff;
+      font-size: 0.92rem;
+    }
+
+    .tv-compress-close {
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      cursor: pointer;
+      font: inherit;
+      font-size: 1.15rem;
+    }
+
+    .tv-compress-progress {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .tv-compress-progress span {
+      display: block;
+      width: var(--progress, 0%);
+      height: 100%;
+      background: var(--tv-cyan);
+      transition: width 160ms linear;
+    }
+
+    .tv-compress-status {
+      min-height: 1.1em;
+      color: var(--tv-cyan);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
 
     .tv-list {
       display: grid;
@@ -2530,6 +2596,21 @@
                 <label for="tv-upload-file">Video file</label>
                 <input class="tv-input" id="tv-upload-file" name="file" type="file" accept="video/*" />
                 <p class="tv-form-note" id="tv-upload-size" aria-live="polite">Choose a video to see its file size.</p>
+                <div class="tv-compress-actions">
+                  <button class="tv-btn" id="tv-compress-open" type="button" disabled>Compress Video</button>
+                </div>
+                <section class="tv-compress-widget" id="tv-compress-widget" hidden aria-hidden="true" aria-label="Video compression">
+                  <div class="tv-compress-head">
+                    <strong>Video Compression</strong>
+                    <button class="tv-compress-close" id="tv-compress-close" type="button" aria-label="Close compression">&times;</button>
+                  </div>
+                  <p class="tv-form-note" id="tv-compress-estimate">Choose a video first.</p>
+                  <div class="tv-compress-progress" id="tv-compress-progress" role="progressbar" aria-label="Compression progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <span></span>
+                  </div>
+                  <button class="tv-btn primary" id="tv-compress-start" type="button" disabled>Compress Selected Video</button>
+                  <div class="tv-compress-status" id="tv-compress-status" aria-live="polite"></div>
+                </section>
               </div>
             </div>
             <div class="tv-field">
@@ -2541,8 +2622,6 @@
             <div class="tv-form-status" id="tv-upload-status" aria-live="polite"></div>
           </form>
         </div>
-
-        <!-- compression now inline in the floating panel -->
 
         <div class="tv-studio-grid">
           <div class="tv-panel">
@@ -2637,7 +2716,7 @@
         </div>
         <div id="tv-upload-compress-section" hidden>
           <div class="uw-compress-row">
-            <small>Over 30MB? Compress before uploading.</small>
+            <small>Compress before uploading.</small>
             <button class="uw-btn" id="tv-upload-compress-btn" type="button">Compress</button>
           </div>
           <div class="uw-compress-row" id="tv-upload-compress-meter-row" hidden>
@@ -2672,7 +2751,7 @@
   <script>
     window.FAS_TV_ORIGIN = window.FAS_TV_ORIGIN || window.location.origin;
   </script>
-  <script type="module" src="assets/js/tv-network.js?v=20260620-faceless-play-mark"></script>
+  <script type="module" src="assets/js/tv-network.js?v=20260629-upload-compression"></script>
 
   <!-- compression now handled inline in the panel JS below -->
 
@@ -2724,10 +2803,17 @@
       }
       var session = null;
       try { session = JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch (e) {}
-      if (!channels.length || !session) {
+      if (!session) {
         channelSelect.innerHTML = '<option value="">Sign in to load channels</option>';
         channelSelect.disabled = true;
         return;
+      }
+      if (!channels.some(function(c) { return c && c.is_owner; })) {
+        channels.unshift({
+          is_owner: true,
+          channel_slug: 'faceless-animal-studios',
+          channel_name: 'Faceless Animal Studios'
+        });
       }
       var owned = channels.filter(function(c) {
         if (c.is_owner) return true;
@@ -2804,7 +2890,7 @@
       if (fileSize) fileSize.textContent = formatBytes(file.size);
       if (filePreview) filePreview.hidden = false;
       if (dropzone) dropzone.style.display = 'none';
-      if (compressSection) compressSection.hidden = !(file.size > 30 * 1024 * 1024);
+      if (compressSection) compressSection.hidden = false;
       if (compressMeterRow) compressMeterRow.hidden = true;
     }
 

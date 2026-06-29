@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  <script src="assets/vendor/fabric-5.3.1.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
@@ -256,6 +256,50 @@
     .export-progress .bar { height: 5px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 0.4rem 0; }
     .export-progress .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--purple), var(--bright)); border-radius: 4px; transition: width 0.3s; }
 
+    .edit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.55rem;
+    }
+    .edit-grid .wide { grid-column: 1 / -1; }
+    .edit-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.65rem; }
+    .range-row {
+      display: grid;
+      grid-template-columns: minmax(86px, 0.7fr) minmax(0, 1.3fr) 52px;
+      gap: 0.45rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .range-row label { margin: 0; }
+    .range-row input[type="range"] { width: 100%; accent-color: var(--bright); }
+    .range-row output { color: var(--text); font-size: 0.72rem; text-align: right; }
+    .publish-targets {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.45rem;
+      margin-bottom: 0.6rem;
+    }
+    .publish-target {
+      display: flex !important;
+      align-items: center;
+      gap: 0.45rem;
+      min-height: 42px;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text) !important;
+      cursor: pointer;
+    }
+    .publish-target input { width: auto; margin: 0; }
+    .post-image-preview {
+      display: none;
+      width: 100%;
+      max-height: 220px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #050609;
+    }
+
     .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.15); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -285,6 +329,7 @@
   </style>
 </head>
 <body>
+  <input id="mediaImportInput" type="file" accept="image/*,video/*,audio/*" multiple hidden />
 
   <!-- ─── APP BAR ─── -->
   <div class="app-bar">
@@ -297,6 +342,7 @@
     <div class="tool-group">
       <button class="tool-btn" onclick="openDrawer('tabImage')" title="AI Generate">✨ AI</button>
       <button class="tool-btn" onclick="addTextClip()" title="Add text">T Text</button>
+      <button class="tool-btn" onclick="openClipEditor()" title="Edit selected clip">Edit</button>
     </div>
     <span class="sep hide-mobile"></span>
     <div class="tool-group hide-mobile">
@@ -352,6 +398,7 @@
     <div class="bottom-bar" id="bottomBar">
       <button class="b-btn" onclick="importMedia()"><span class="icon">📁</span>Import</button>
       <button class="b-btn" onclick="openDrawer('tabImage')"><span class="icon">✨</span>AI</button>
+      <button class="b-btn" onclick="openClipEditor()"><span class="icon">Edit</span>Adjust</button>
       <button class="b-btn" onclick="addTextClip()"><span class="icon">T</span>Text</button>
       <button class="b-btn" onclick="exportVideo()"><span class="icon">🎬</span>Export</button>
       <button class="b-btn" onclick="postToDirectory()"><span class="icon">📡</span>Post</button>
@@ -414,14 +461,118 @@
   </div>
 
   <!-- ─── POST MODAL ─── -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h2>Edit Clip</h2>
+      <p id="editClipName">Select a photo or video clip.</p>
+      <div class="edit-actions">
+        <button class="tool-btn" type="button" onclick="rotateClip(-90)">Rotate Left</button>
+        <button class="tool-btn" type="button" onclick="rotateClip(90)">Rotate Right</button>
+        <button class="tool-btn" type="button" onclick="flipClip('x')">Flip H</button>
+        <button class="tool-btn" type="button" onclick="flipClip('y')">Flip V</button>
+        <button class="tool-btn" type="button" onclick="splitSelectedClip()">Split</button>
+        <button class="tool-btn" type="button" onclick="duplicateSelectedClip()">Duplicate</button>
+      </div>
+      <div class="edit-grid">
+        <div>
+          <label for="editFit">Frame</label>
+          <select id="editFit" onchange="updateSelectedClipFromEditor()">
+            <option value="contain">Fit</option>
+            <option value="cover">Fill</option>
+          </select>
+        </div>
+        <div>
+          <label for="editSpeed">Speed</label>
+          <select id="editSpeed" onchange="updateSelectedClipFromEditor()">
+            <option value="0.25">0.25x</option>
+            <option value="0.5">0.5x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+        </div>
+        <div>
+          <label for="editTrimStart">Trim start</label>
+          <input id="editTrimStart" type="number" min="0" step="0.1" value="0" onchange="updateSelectedClipFromEditor()" />
+        </div>
+        <div>
+          <label for="editTrimEnd">Trim end</label>
+          <input id="editTrimEnd" type="number" min="0.1" step="0.1" value="4" onchange="updateSelectedClipFromEditor()" />
+        </div>
+        <div>
+          <label for="editFilter">Filter</label>
+          <select id="editFilter" onchange="updateSelectedClipFromEditor()">
+            <option value="none">None</option>
+            <option value="grayscale">B&amp;W</option>
+            <option value="sepia">Sepia</option>
+          </select>
+        </div>
+        <div>
+          <label for="editAspect">Canvas</label>
+          <select id="editAspect" onchange="setCanvasAspect(this.value)">
+            <option value="9:16">9:16</option>
+            <option value="16:9">16:9</option>
+            <option value="1:1">1:1</option>
+            <option value="4:5">4:5</option>
+          </select>
+        </div>
+      </div>
+      <div class="range-row">
+        <label for="editBrightness">Brightness</label>
+        <input id="editBrightness" type="range" min="-100" max="100" value="0" oninput="updateSelectedClipFromEditor()" />
+        <output id="editBrightnessOut">0</output>
+      </div>
+      <div class="range-row">
+        <label for="editContrast">Contrast</label>
+        <input id="editContrast" type="range" min="-100" max="100" value="0" oninput="updateSelectedClipFromEditor()" />
+        <output id="editContrastOut">0</output>
+      </div>
+      <div class="range-row">
+        <label for="editSaturation">Saturation</label>
+        <input id="editSaturation" type="range" min="-100" max="100" value="0" oninput="updateSelectedClipFromEditor()" />
+        <output id="editSaturationOut">0</output>
+      </div>
+      <div class="range-row">
+        <label for="editOpacity">Opacity</label>
+        <input id="editOpacity" type="range" min="0" max="100" value="100" oninput="updateSelectedClipFromEditor()" />
+        <output id="editOpacityOut">100</output>
+      </div>
+      <div class="range-row">
+        <label for="editVolume">Volume</label>
+        <input id="editVolume" type="range" min="0" max="100" value="100" oninput="updateSelectedClipFromEditor()" />
+        <output id="editVolumeOut">100</output>
+      </div>
+      <div class="actions">
+        <button class="tool-btn pink" type="button" onclick="deleteSelectedClip()">Delete</button>
+        <button class="tool-btn primary" type="button" onclick="closeModal('editModal')">Done</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="postModal">
     <div class="modal">
       <h2>📡 Post</h2>
-      <p>Post your video to the Signal directory.</p>
-      <label>Caption</label>
+      <p>Send the exported edit to the Board, Faceless TV, or both.</p>
+      <label for="postTitle">Title</label>
+      <input id="postTitle" maxlength="120" placeholder="Edit title" />
+      <label for="postCaption">Caption</label>
       <textarea id="postCaption" placeholder="Write a caption..." rows="2"></textarea>
+      <div class="publish-targets">
+        <label class="publish-target"><input id="postToBoard" type="checkbox" checked /> Board</label>
+        <label class="publish-target"><input id="postToTv" type="checkbox" /> Faceless TV</label>
+      </div>
+      <div id="postTvOptions" hidden>
+        <label for="postTvChannel">TV channel</label>
+        <select id="postTvChannel"></select>
+        <label for="postVisibility">Visibility</label>
+        <select id="postVisibility">
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+        </select>
+      </div>
       <div id="postPreview" style="display:none;margin-bottom:0.4rem;">
         <video id="postVideoPreview" controls style="width:100%;max-height:180px;border-radius:8px;"></video>
+        <img id="postImagePreview" class="post-image-preview" alt="" />
       </div>
       <div id="postProgress" class="export-progress">
         <div class="bar"><div class="bar-fill" id="postProgressFill"></div></div>
@@ -439,6 +590,13 @@
     <div class="modal">
       <h2>🎬 Export Video</h2>
       <p>Render and download your project.</p>
+      <label>Format</label>
+      <select id="exportFormat">
+        <option value="auto">Auto</option>
+        <option value="video">Video WebM</option>
+        <option value="png">PNG Image</option>
+        <option value="jpeg">JPEG Image</option>
+      </select>
       <label>Quality</label>
       <select id="exportQuality">
         <option value="0.6">Standard</option>
@@ -473,13 +631,15 @@
       mediaPool: [],
       playing: false,
       playhead: 0,
-      duration: 10,
+      duration: 0,
       fps: 24,
       zoom: 100,
       _cid: 1,
       _mid: 1,
       exportedBlob: null,
       exportedVideoURL: null,
+      exportedKind: '',
+      exportedName: '',
     };
 
     // ────────────────────────────────────────────────────────────
@@ -496,18 +656,31 @@
     let animFrame = null;
     const imgCache = {};
 
+    function invalidateExport() {
+      if (STATE.exportedVideoURL) URL.revokeObjectURL(STATE.exportedVideoURL);
+      STATE.exportedBlob = null;
+      STATE.exportedVideoURL = null;
+      STATE.exportedKind = '';
+      STATE.exportedName = '';
+    }
+
     // ────────────────────────────────────────────────────────────
     //  LAYOUT
     // ────────────────────────────────────────────────────────────
     function fitCanvas() {
       const wrap = document.getElementById('canvasWrap');
-      const w = wrap.clientWidth - 16;
-      const h = wrap.clientHeight - 16;
+      const wrapStyle = getComputedStyle(wrap);
+      const w = wrap.clientWidth - parseFloat(wrapStyle.paddingLeft || 0) - parseFloat(wrapStyle.paddingRight || 0);
+      const h = wrap.clientHeight - parseFloat(wrapStyle.paddingTop || 0) - parseFloat(wrapStyle.paddingBottom || 0);
       if (w <= 0 || h <= 0) return;
-      const cw = canvas.width, ch = canvas.height;
+      const cw = canvas.getWidth(), ch = canvas.getHeight();
       const scale = Math.min(w / cw, h / ch, 1);
       const dw = Math.round(cw * scale), dh = Math.round(ch * scale);
-      canvas.setWidth(dw); canvas.setHeight(dh);
+      [canvas.wrapperEl, canvas.lowerCanvasEl, canvas.upperCanvasEl].forEach(node => {
+        if (!node) return;
+        node.style.width = dw + 'px';
+        node.style.height = dh + 'px';
+      });
       canvas.calcOffset(); canvas.renderAll();
     }
     window.addEventListener('resize', fitCanvas);
@@ -579,30 +752,58 @@
     //  MEDIA IMPORT
     // ────────────────────────────────────────────────────────────
     function importMedia() {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*,video/*,audio/*';
-      input.multiple = true;
-      input.onchange = (e) => {
-        for (const file of e.target.files) {
-          if (!file) continue;
-          const reader = new FileReader();
-          const isVid = file.type.startsWith('video/');
-          const isAud = file.type.startsWith('audio/');
-          const isImg = file.type.startsWith('image/');
-          reader.onload = (ev) => {
-            const id = 'm' + (STATE._mid++);
-            const item = { id, type: isVid ? 'video' : isAud ? 'music' : 'image', src: ev.target.result, label: file.name };
-            STATE.mediaPool.push(item);
-            renderMediaPool();
-            const dur = isVid ? 6 : isAud ? 10 : 4;
-            addClip({ type: item.type, src: item.src, label: item.label, duration: dur });
-          };
-          reader.readAsDataURL(file);
-        }
-      };
+      const input = document.getElementById('mediaImportInput');
+      if (!input) return toast('Import control is unavailable');
+      input.value = '';
       input.click();
     }
+
+    function readMediaDuration(src, type) {
+      return new Promise(resolve => {
+        if (type === 'image') return resolve(4);
+        const media = document.createElement(type === 'music' ? 'audio' : 'video');
+        media.preload = 'metadata';
+        media.onloadedmetadata = () => {
+          const value = Number(media.duration || 0);
+          resolve(Number.isFinite(value) && value > 0 ? value : (type === 'music' ? 10 : 6));
+        };
+        media.onerror = () => resolve(type === 'music' ? 10 : 6);
+        media.src = src;
+      });
+    }
+
+    async function handleImportedFiles(files) {
+      const selected = Array.from(files || []).filter(Boolean);
+      if (!selected.length) return;
+      for (const file of selected) {
+        const isVid = file.type.startsWith('video/');
+        const isAud = file.type.startsWith('audio/');
+        const isImg = file.type.startsWith('image/');
+        if (!isVid && !isAud && !isImg) {
+          toast('Unsupported file: ' + file.name);
+          continue;
+        }
+        const src = URL.createObjectURL(file);
+        const type = isVid ? 'video' : isAud ? 'music' : 'image';
+        const duration = await readMediaDuration(src, type);
+        const item = {
+          id: 'm' + (STATE._mid++),
+          type,
+          src,
+          file,
+          label: file.name,
+          duration,
+        };
+        STATE.mediaPool.push(item);
+        addClip({ type, src, file, label: file.name, duration, sourceDuration: duration });
+      }
+      renderMediaPool();
+      toast(selected.length === 1 ? 'Media imported' : selected.length + ' files imported');
+    }
+
+    document.getElementById('mediaImportInput').addEventListener('change', event => {
+      handleImportedFiles(event.target.files).catch(err => toast(err.message || 'Import failed'));
+    });
 
     function renderMediaPool() {
       const pool = document.getElementById('mediaPool');
@@ -618,7 +819,7 @@
         const b = document.createElement('span'); b.className = 'type-badge';
         b.textContent = item.type === 'video' ? 'vid' : item.type === 'music' ? 'aud' : 'img';
         el.appendChild(b);
-        el.onclick = () => addClip({ type: item.type, src: item.src, label: item.label, duration: item.type === 'video' ? 6 : item.type === 'music' ? 10 : 4 });
+        el.onclick = () => addClip({ type: item.type, src: item.src, file: item.file, label: item.label, duration: item.duration, sourceDuration: item.duration });
         pool.appendChild(el);
       });
     }
@@ -627,13 +828,29 @@
     //  CLIPS
     // ────────────────────────────────────────────────────────────
     function addClip(opts) {
+      const sourceDuration = Number(opts.sourceDuration || opts.duration || 4);
       const clip = {
         id: 'c' + (STATE._cid++),
         type: opts.type || 'image',
         src: opts.src || '',
+        file: opts.file || null,
         label: opts.label || 'Clip',
         duration: opts.duration || 4,
-        startTime: STATE.duration,
+        sourceDuration,
+        startTime: STATE.clips.length ? STATE.duration : 0,
+        trimStart: 0,
+        trimEnd: sourceDuration,
+        speed: 1,
+        fit: 'contain',
+        rotation: 0,
+        flipX: false,
+        flipY: false,
+        brightness: 0,
+        contrast: 0,
+        saturation: 0,
+        filter: 'none',
+        opacity: 1,
+        volume: 1,
         _text: opts.text || null,
         _fontSize: opts.fontSize || 48,
         _fill: opts.fill || '#ffffff',
@@ -644,11 +861,19 @@
         tmp.preload = 'metadata';
         tmp.onloadedmetadata = () => {
           const d = tmp.duration;
-          if (d && isFinite(d) && d > 0) { clip.duration = Math.min(d, 30); recalcDuration(); renderTimeline(); }
+          if (d && isFinite(d) && d > 0) {
+            clip.sourceDuration = d;
+            clip.trimEnd = d;
+            clip.duration = d / clip.speed;
+            recalcDuration();
+            renderTimeline();
+            if (clip._active) syncClipEditor(clip);
+          }
         };
         tmp.src = clip.src;
       }
       STATE.clips.push(clip);
+      invalidateExport();
       recalcDuration(); renderTimeline(); selectClip(clip.id);
       // Close drawer on mobile if open and AI gen was the source
       if (window.innerWidth <= 767 && drawerOpen) closeDrawer();
@@ -662,6 +887,7 @@
 
     function removeClip(id) {
       STATE.clips = STATE.clips.filter(c => c.id !== id);
+      invalidateExport();
       recalcDuration(); renderTimeline();
       if (!STATE.clips.length) { canvas.clear(); canvas.backgroundColor = '#1a1c26'; canvas.renderAll(); }
     }
@@ -671,8 +897,149 @@
       renderTimeline(); renderFrame();
     }
 
+    function selectedClip() {
+      return STATE.clips.find(c => c._active) || null;
+    }
+
+    function syncClipEditor(clip) {
+      if (!clip) return;
+      document.getElementById('editClipName').textContent = clip.label || 'Selected clip';
+      document.getElementById('editFit').value = clip.fit || 'contain';
+      document.getElementById('editSpeed').value = String(clip.speed || 1);
+      document.getElementById('editTrimStart').value = Number(clip.trimStart || 0).toFixed(1);
+      document.getElementById('editTrimEnd').value = Number(clip.trimEnd || clip.sourceDuration || clip.duration || 4).toFixed(1);
+      document.getElementById('editFilter').value = clip.filter || 'none';
+      ['Brightness', 'Contrast', 'Saturation'].forEach(name => {
+        const key = name.toLowerCase();
+        const value = Math.round(Number(clip[key] || 0) * 100);
+        document.getElementById('edit' + name).value = String(value);
+        document.getElementById('edit' + name + 'Out').textContent = String(value);
+      });
+      const opacity = Math.round(Number(clip.opacity == null ? 1 : clip.opacity) * 100);
+      const volume = Math.round(Number(clip.volume == null ? 1 : clip.volume) * 100);
+      document.getElementById('editOpacity').value = String(opacity);
+      document.getElementById('editOpacityOut').textContent = String(opacity);
+      document.getElementById('editVolume').value = String(volume);
+      document.getElementById('editVolumeOut').textContent = String(volume);
+    }
+
+    function openClipEditor() {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      syncClipEditor(clip);
+      document.getElementById('editModal').classList.add('open');
+    }
+
+    function updateSelectedClipFromEditor() {
+      const clip = selectedClip();
+      if (!clip) return;
+      const speed = Math.max(0.25, Number(document.getElementById('editSpeed').value || 1));
+      const sourceDuration = Math.max(0.1, Number(clip.sourceDuration || clip.duration || 4));
+      const trimStart = Math.max(0, Math.min(sourceDuration - 0.1, Number(document.getElementById('editTrimStart').value || 0)));
+      const trimEnd = Math.max(trimStart + 0.1, Math.min(sourceDuration, Number(document.getElementById('editTrimEnd').value || sourceDuration)));
+      clip.fit = document.getElementById('editFit').value;
+      clip.speed = speed;
+      clip.trimStart = trimStart;
+      clip.trimEnd = trimEnd;
+      clip.duration = Math.max(0.1, (trimEnd - trimStart) / speed);
+      clip.filter = document.getElementById('editFilter').value;
+      clip.brightness = Number(document.getElementById('editBrightness').value || 0) / 100;
+      clip.contrast = Number(document.getElementById('editContrast').value || 0) / 100;
+      clip.saturation = Number(document.getElementById('editSaturation').value || 0) / 100;
+      clip.opacity = Number(document.getElementById('editOpacity').value || 100) / 100;
+      clip.volume = Number(document.getElementById('editVolume').value || 100) / 100;
+      document.getElementById('editBrightnessOut').textContent = document.getElementById('editBrightness').value;
+      document.getElementById('editContrastOut').textContent = document.getElementById('editContrast').value;
+      document.getElementById('editSaturationOut').textContent = document.getElementById('editSaturation').value;
+      document.getElementById('editOpacityOut').textContent = document.getElementById('editOpacity').value;
+      document.getElementById('editVolumeOut').textContent = document.getElementById('editVolume').value;
+      invalidateExport();
+      recalcDuration();
+      renderTimeline();
+      renderFrame();
+    }
+
+    function rotateClip(amount) {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      clip.rotation = ((Number(clip.rotation || 0) + amount) % 360 + 360) % 360;
+      invalidateExport();
+      renderFrame();
+    }
+
+    function flipClip(axis) {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      if (axis === 'x') clip.flipX = !clip.flipX;
+      else clip.flipY = !clip.flipY;
+      invalidateExport();
+      renderFrame();
+    }
+
+    function splitSelectedClip() {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      const offset = STATE.playhead - clip.startTime;
+      if (offset <= 0.1 || offset >= clip.duration - 0.1) return toast('Move the playhead inside the clip');
+      const sourceSplit = clip.trimStart + offset * clip.speed;
+      const right = Object.assign({}, clip, {
+        id: 'c' + (STATE._cid++),
+        startTime: STATE.playhead,
+        trimStart: sourceSplit,
+        duration: (clip.trimEnd - sourceSplit) / clip.speed,
+        _active: true,
+      });
+      clip.trimEnd = sourceSplit;
+      clip.duration = (sourceSplit - clip.trimStart) / clip.speed;
+      clip._active = false;
+      STATE.clips.push(right);
+      invalidateExport();
+      recalcDuration();
+      renderTimeline();
+      renderFrame();
+      syncClipEditor(right);
+    }
+
+    function duplicateSelectedClip() {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      STATE.clips.forEach(item => { item._active = false; });
+      const copy = Object.assign({}, clip, {
+        id: 'c' + (STATE._cid++),
+        startTime: clip.startTime + clip.duration,
+        _active: true,
+      });
+      STATE.clips.push(copy);
+      invalidateExport();
+      recalcDuration();
+      renderTimeline();
+      renderFrame();
+      syncClipEditor(copy);
+    }
+
+    function deleteSelectedClip() {
+      const clip = selectedClip();
+      if (!clip) return;
+      closeModal('editModal');
+      removeClip(clip.id);
+    }
+
+    function setCanvasAspect(value) {
+      const sizes = {
+        '9:16': [1080, 1920],
+        '16:9': [1920, 1080],
+        '1:1': [1080, 1080],
+        '4:5': [1080, 1350],
+      };
+      const size = sizes[value] || sizes['9:16'];
+      canvas.setDimensions({ width: size[0], height: size[1] });
+      invalidateExport();
+      fitCanvas();
+      renderFrame();
+    }
+
     function recalcDuration() {
-      if (!STATE.clips.length) { STATE.duration = 10; return; }
+      if (!STATE.clips.length) { STATE.duration = 0; return; }
       STATE.duration = Math.max(STATE.clips.reduce((m, c) => Math.max(m, c.startTime + c.duration), 0), 1);
     }
 
@@ -817,6 +1184,7 @@
         } else {
           clip.duration = Math.max(0.5, oD + dx);
         }
+        invalidateExport();
         recalcDuration(); renderTimeline();
       }
 
@@ -837,6 +1205,7 @@
       if (!STATE.clips.length) return;
       if (!confirm('Clear all clips?')) return;
       STATE.clips = []; STATE.playhead = 0;
+      invalidateExport();
       recalcDuration(); renderTimeline();
       canvas.clear(); canvas.backgroundColor = '#1a1c26'; canvas.renderAll();
     }
@@ -861,6 +1230,7 @@
         if (!STATE.playing) return;
         const dt = (now - last) / 1000; last = now; acc += dt;
         while (acc >= step) { acc -= step; STATE.playhead += step; if (STATE.playhead >= STATE.duration) { STATE.playhead = STATE.duration; pause(); renderFrame(); updatePlayhead(); updateTimeDisplay(); return; } }
+        syncMediaPlayback();
         renderFrame(); updatePlayhead(); updateTimeDisplay(); autoScrollTimeline();
         animFrame = requestAnimationFrame(tick);
       }
@@ -872,6 +1242,8 @@
       document.getElementById('playBtn').textContent = '▶';
       document.getElementById('playbackBadge').style.display = 'none';
       if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+      Object.values(videoEls).forEach(media => media.pause());
+      Object.values(audioEls).forEach(media => media.pause());
     }
 
     function stopPlayback() { pause(); STATE.playhead = 0; renderFrame(); updatePlayhead(); updateTimeDisplay(); }
@@ -880,6 +1252,7 @@
     //  VIDEO FRAME RENDERING
     // ────────────────────────────────────────────────────────────
     const videoEls = {};
+    const audioEls = {};
 
     function getOrCreateVideo(src) {
       if (videoEls[src]) return videoEls[src];
@@ -892,6 +1265,76 @@
       v.load();
       videoEls[src] = v;
       return v;
+    }
+
+    function getOrCreateAudio(src) {
+      if (audioEls[src]) return audioEls[src];
+      const audio = document.createElement('audio');
+      audio.preload = 'auto';
+      audio.src = src;
+      audioEls[src] = audio;
+      return audio;
+    }
+
+    function syncMediaPlayback() {
+      const activeSources = new Set();
+      STATE.clips.forEach(clip => {
+        if (!['video', 'music'].includes(clip.type) || !clip.src) return;
+        const active = STATE.playhead >= clip.startTime && STATE.playhead < clip.startTime + clip.duration;
+        const media = clip.type === 'video' ? getOrCreateVideo(clip.src) : getOrCreateAudio(clip.src);
+        if (!active) {
+          media.pause();
+          return;
+        }
+        activeSources.add(clip.src);
+        const localTime = STATE.playhead - clip.startTime;
+        const sourceTime = Number(clip.trimStart || 0) + localTime * Number(clip.speed || 1);
+        try {
+          if (Math.abs(media.currentTime - sourceTime) > 0.3) media.currentTime = sourceTime;
+          media.playbackRate = Number(clip.speed || 1);
+          media.volume = Math.max(0, Math.min(1, Number(clip.volume == null ? 1 : clip.volume)));
+          media.muted = media.volume === 0;
+          if (media.paused) media.play().catch(() => {});
+        } catch {}
+      });
+      Object.keys(videoEls).forEach(src => { if (!activeSources.has(src)) videoEls[src].pause(); });
+      Object.keys(audioEls).forEach(src => { if (!activeSources.has(src)) audioEls[src].pause(); });
+    }
+
+    function mediaScale(clip, sourceWidth, sourceHeight) {
+      const rotated = Number(clip.rotation || 0) % 180 !== 0;
+      const width = rotated ? sourceHeight : sourceWidth;
+      const height = rotated ? sourceWidth : sourceHeight;
+      const scaleX = canvas.getWidth() / Math.max(1, width);
+      const scaleY = canvas.getHeight() / Math.max(1, height);
+      return (clip.fit || 'contain') === 'cover'
+        ? Math.max(scaleX, scaleY)
+        : Math.min(scaleX, scaleY);
+    }
+
+    function applyClipAppearance(object, clip) {
+      const filters = [];
+      const filterSet = fabric.Image.filters || {};
+      if (clip.filter === 'grayscale' && filterSet.Grayscale) filters.push(new filterSet.Grayscale());
+      if (clip.filter === 'sepia' && filterSet.Sepia) filters.push(new filterSet.Sepia());
+      if (clip.brightness && filterSet.Brightness) filters.push(new filterSet.Brightness({ brightness: clip.brightness }));
+      if (clip.contrast && filterSet.Contrast) filters.push(new filterSet.Contrast({ contrast: clip.contrast }));
+      if (clip.saturation && filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: clip.saturation }));
+      object.set({
+        left: canvas.getWidth() / 2,
+        top: canvas.getHeight() / 2,
+        originX: 'center',
+        originY: 'center',
+        angle: Number(clip.rotation || 0),
+        flipX: Boolean(clip.flipX),
+        flipY: Boolean(clip.flipY),
+        opacity: clip.opacity == null ? 1 : clip.opacity,
+        selectable: false,
+        evented: false,
+      });
+      object.filters = filters;
+      if (filters.length && object.applyFilters) object.applyFilters();
+      return object;
     }
 
     function renderFrame() {
@@ -907,14 +1350,16 @@
         if ((clip.type === 'image') && clip.src) {
           if (imgCache[clip.src] instanceof HTMLImageElement && imgCache[clip.src].complete) {
             const img = new fabric.Image(imgCache[clip.src], { originX: 'center', originY: 'center', selectable: false, evented: false });
-            const s = Math.min(canvas.width / imgCache[clip.src].naturalWidth * 0.92, canvas.height / imgCache[clip.src].naturalHeight * 0.92);
-            img.set({ scaleX: s, scaleY: s, left: canvas.width/2, top: canvas.height/2 });
+            const s = mediaScale(clip, imgCache[clip.src].naturalWidth, imgCache[clip.src].naturalHeight);
+            img.set({ scaleX: s, scaleY: s });
+            applyClipAppearance(img, clip);
             canvas.add(img); canvas.renderAll();
           } else {
             fabric.Image.fromURL(clip.src, (img) => {
               if (!img) return;
-              const s = Math.min(canvas.width / img.width * 0.92, canvas.height / img.height * 0.92);
-              img.set({ scaleX: s, scaleY: s, left: canvas.width/2, top: canvas.height/2, originX: 'center', originY: 'center', selectable: false, evented: false });
+              const s = mediaScale(clip, img.width, img.height);
+              img.set({ scaleX: s, scaleY: s });
+              applyClipAppearance(img, clip);
               canvas.add(img); canvas.renderAll();
             }, { crossOrigin: 'anonymous' });
           }
@@ -924,13 +1369,15 @@
           const v = getOrCreateVideo(clip.src);
           // Seek to correct time
           try {
-            if (Math.abs(v.currentTime - localT) > 0.1) {
-              v.currentTime = localT;
+            const sourceTime = Number(clip.trimStart || 0) + localT * Number(clip.speed || 1);
+            if (Math.abs(v.currentTime - sourceTime) > 0.1) {
+              v.currentTime = sourceTime;
             }
             if (v.readyState >= 2) {
               const img = new fabric.Image(v, { originX: 'center', originY: 'center', selectable: false, evented: false });
-              const s = Math.min(canvas.width / (v.videoWidth||1920) * 0.92, canvas.height / (v.videoHeight||1080) * 0.92);
-              img.set({ scaleX: s, scaleY: s, left: canvas.width/2, top: canvas.height/2 });
+              const s = mediaScale(clip, v.videoWidth || 1920, v.videoHeight || 1080);
+              img.set({ scaleX: s, scaleY: s });
+              applyClipAppearance(img, clip);
               canvas.add(img); canvas.renderAll();
             }
           } catch {}
@@ -938,7 +1385,7 @@
 
         if (clip.type === 'text') {
           const text = new fabric.IText(clip._text || clip.label, {
-            left: canvas.width/2, top: canvas.height/2, fontSize: clip._fontSize||48,
+            left: canvas.getWidth()/2, top: canvas.getHeight()/2, fontSize: clip._fontSize||48,
             fill: clip._fill||'#ffffff', fontFamily: 'Inter, sans-serif', fontWeight: 700,
             originX: 'center', originY: 'center', textAlign: 'center', selectable: false, evented: false,
           });
@@ -1135,11 +1582,35 @@
 
     function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-    async function startExport() {
+    function isStillProject() {
+      return STATE.clips.length === 1 && ['image', 'text'].includes(STATE.clips[0].type);
+    }
+
+    function downloadBlob(blob, name) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function rememberExport(blob, kind, name) {
+      if (STATE.exportedVideoURL) URL.revokeObjectURL(STATE.exportedVideoURL);
+      STATE.exportedBlob = blob;
+      STATE.exportedKind = kind;
+      STATE.exportedName = name;
+      STATE.exportedVideoURL = URL.createObjectURL(blob);
+    }
+
+    async function startExport(options = {}) {
       const btn = document.getElementById('exportBtn');
       btn.disabled = true;
       const fps = parseInt(document.getElementById('exportFps').value) || 24;
       const quality = parseFloat(document.getElementById('exportQuality').value) || 1;
+      const requested = options.format || document.getElementById('exportFormat').value || 'auto';
       const totalFrames = Math.ceil(STATE.duration * fps);
       const fill = document.getElementById('exportProgressFill');
       const txt = document.getElementById('exportProgressText');
@@ -1148,6 +1619,32 @@
       // Preload images
       txt.textContent = 'Preloading...';
       await preloadImages();
+
+      const stillFormat = requested === 'png' || requested === 'jpeg'
+        ? requested
+        : (requested === 'auto' && isStillProject() ? 'png' : '');
+      if (stillFormat) {
+        const origPH = STATE.playhead;
+        const clip = selectedClip() || STATE.clips[0];
+        STATE.playhead = clip ? clip.startTime : 0;
+        renderFrame();
+        await new Promise(resolve => setTimeout(resolve, 80));
+        const dataUrl = canvas.toDataURL({
+          format: stillFormat === 'jpeg' ? 'jpeg' : 'png',
+          quality: stillFormat === 'jpeg' ? quality : 1,
+        });
+        const blob = await fetch(dataUrl).then(response => response.blob());
+        const name = 'canvas-edit-' + Date.now() + (stillFormat === 'jpeg' ? '.jpg' : '.png');
+        rememberExport(blob, 'image', name);
+        STATE.playhead = origPH;
+        renderFrame();
+        fill.style.width = '100%';
+        txt.textContent = 'Done. Image ready.';
+        if (options.download !== false) downloadBlob(blob, name);
+        btn.disabled = false;
+        toast(options.download === false ? 'Image ready to publish' : 'Image downloaded');
+        return blob;
+      }
 
       // Setup recorder
       const stream = canvasEl.captureStream(fps);
@@ -1166,7 +1663,7 @@
         STATE.playhead = Math.min(f * step, STATE.duration);
         renderFrame();
         // Wait for async renders to catch up
-        await new Promise(r => setTimeout(r, 1000 / fps / 3));
+        await new Promise(r => setTimeout(r, 1000 / fps));
         if (f % 5 === 0) {
           const pct = Math.min(100, (f / totalFrames) * 100);
           fill.style.width = pct + '%';
@@ -1177,20 +1674,20 @@
       mr.stop();
       txt.textContent = 'Finalizing...';
 
-      STATE.exportedBlob = await done;
-      STATE.exportedVideoURL = URL.createObjectURL(STATE.exportedBlob);
+      const videoBlob = await done;
+      const videoName = 'canvas-edit-' + Date.now() + '.webm';
+      rememberExport(videoBlob, 'video', videoName);
 
       STATE.playhead = origPH;
       renderFrame(); updatePlayhead(); updateTimeDisplay();
 
-      const a = document.createElement('a');
-      a.href = STATE.exportedVideoURL; a.download = 'studio-'+Date.now()+'.webm';
-      a.click();
+      if (options.download !== false) downloadBlob(videoBlob, videoName);
 
       fill.style.width = '100%';
       txt.textContent = '✅ Done! Video downloaded.';
       btn.disabled = false;
-      toast('Exported!');
+      toast(options.download === false ? 'Video ready to publish' : 'Video downloaded');
+      return videoBlob;
     }
 
     // ────────────────────────────────────────────────────────────
@@ -1198,7 +1695,12 @@
     // ────────────────────────────────────────────────────────────
     async function saveToMedia() {
       if (STATE.exportedBlob) {
-        await saveBlob(STATE.exportedBlob, 'studio-'+Date.now()+'.webm', 'video/webm'); return;
+        await saveBlob(
+          STATE.exportedBlob,
+          STATE.exportedName || ('canvas-edit-' + Date.now() + (STATE.exportedKind === 'image' ? '.png' : '.webm')),
+          STATE.exportedBlob.type || (STATE.exportedKind === 'image' ? 'image/png' : 'video/webm')
+        );
+        return;
       }
       const d = canvas.toDataURL({ format:'png', multiplier:2 });
       const b64 = d.split(',')[1];
@@ -1226,70 +1728,226 @@
     // ────────────────────────────────────────────────────────────
     //  POST TO DIRECTORY
     // ────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────
+    //  UTILS
+    // ────────────────────────────────────────────────────────────
+    const CANVAS_SUPABASE_URL = 'https://ghufaozjwondqcrcucjs.supabase.co';
+    const CANVAS_SUPABASE_KEY = 'sb_publishable_kixI74nB7Drt6mQKooaXHg_nPoE0h_-';
+
+    function syncPostDestinationOptions() {
+      const toTv = document.getElementById('postToTv').checked;
+      document.getElementById('postTvOptions').hidden = !toTv;
+    }
+
+    async function loadPublishChannels(session) {
+      const select = document.getElementById('postTvChannel');
+      const main = { channel_slug: 'faceless-animal-studios', channel_name: 'Faceless Animal Studios', is_owner: true };
+      let channels = [main];
+      try {
+        const response = await fetch('/api/tv/channels', {
+          headers: { 'x-fas-user': JSON.stringify(session) },
+        });
+        if (response.ok) {
+          const payload = await response.json();
+          channels = [payload.owner || main].concat(payload.mine || [], payload.channels || []);
+        }
+      } catch {}
+      const seen = {};
+      const owned = channels.filter(channel => {
+        const slug = String(channel && channel.channel_slug || '');
+        if (!slug || seen[slug]) return false;
+        seen[slug] = true;
+        return channel.is_owner || String(channel.username || '').toLowerCase() === String(session.username || '').toLowerCase();
+      });
+      select.innerHTML = owned.map(channel => {
+        const label = channel.is_owner ? 'Main / ' + (channel.channel_name || channel.channel_slug) : (channel.channel_name || channel.channel_slug);
+        return '<option value="' + esc(channel.channel_slug) + '">' + esc(label) + '</option>';
+      }).join('');
+    }
+
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+        reader.onerror = () => reject(new Error('Could not read exported file.'));
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function uploadBoardMedia(blob, session) {
+      const safeName = (STATE.exportedName || 'canvas-edit.bin').replace(/[^a-z0-9._-]+/gi, '-').toLowerCase();
+      const path = encodeURIComponent(String(session.username).toLowerCase()) + '/canvas-' + Date.now() + '-' + encodeURIComponent(safeName);
+      const response = await fetch(CANVAS_SUPABASE_URL + '/storage/v1/object/profile-images/' + path, {
+        method: 'POST',
+        headers: {
+          apikey: CANVAS_SUPABASE_KEY,
+          Authorization: 'Bearer ' + CANVAS_SUPABASE_KEY,
+          'Content-Type': blob.type || 'application/octet-stream',
+          'x-upsert': 'true',
+        },
+        body: blob,
+      });
+      if (!response.ok) throw new Error('Could not upload the edited file to the Board.');
+      return CANVAS_SUPABASE_URL + '/storage/v1/object/public/profile-images/' + path;
+    }
+
+    async function createBoardPost(session, title, caption, mediaUrl) {
+      const category = STATE.exportedKind === 'image' ? 'picture' : 'video';
+      const bodyText = caption || title || 'Posted from Canvas';
+      const headers = {
+        apikey: CANVAS_SUPABASE_KEY,
+        Authorization: 'Bearer ' + CANVAS_SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      };
+      const signal = await fetch(CANVAS_SUPABASE_URL + '/rest/v1/signal_posts', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          author_username: String(session.username).toLowerCase(),
+          post_type: category,
+          category,
+          body_text: bodyText,
+          media_url: mediaUrl,
+          moderation_state: 'approved',
+          visibility: 'public',
+        }),
+      });
+      if (signal.ok) return true;
+      const board = await fetch(CANVAS_SUPABASE_URL + '/rest/v1/board_posts', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          username: String(session.username).toLowerCase(),
+          post_text: bodyText,
+          category,
+          image_url: mediaUrl,
+          is_approved: true,
+          visibility_status: 'visible',
+        }),
+      });
+      if (!board.ok) throw new Error('The edit uploaded, but the Board post failed.');
+      return true;
+    }
+
+    async function uploadCanvasToTv(blob, session, title, caption, channelSlug, visibility, publishToBoard) {
+      if (STATE.exportedKind !== 'video') throw new Error('Faceless TV requires a video export.');
+      if (blob.size > 50 * 1024 * 1024) throw new Error('TV uploads are limited to 50MB.');
+      const fileB64 = await blobToBase64(blob);
+      const response = await fetch('/api/tv/uploads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-fas-user': JSON.stringify(session),
+        },
+        body: JSON.stringify({
+          channel_slug: channelSlug,
+          title,
+          description: caption,
+          visibility,
+          file_name: STATE.exportedName || 'canvas-edit.webm',
+          file_type: blob.type || 'video/webm',
+          file_size_bytes: blob.size,
+          file_b64: fileB64,
+          publish_to_directory: publishToBoard,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'TV upload failed.');
+      return payload;
+    }
+
     async function postToDirectory() {
-      const s = JSON.parse(localStorage.getItem('fas_user')||'null');
-      if (!s||!s.username) return toast('Log in first');
-      if (!STATE.exportedBlob) {
-        if (STATE.clips.length) { toast('Export first, then post'); exportVideo(); return; }
-        return toast('Create something first');
-      }
-      document.getElementById('postModal').classList.add('open');
+      const session = JSON.parse(localStorage.getItem('fas_user') || 'null');
+      if (!session || !session.username) return toast('Log in first');
+      if (!STATE.clips.length) return toast('Create something first');
+      const modal = document.getElementById('postModal');
+      const active = selectedClip() || STATE.clips[0];
+      modal.classList.add('open');
       document.getElementById('postProgress').className = 'export-progress';
       document.getElementById('postProgressFill').style.width = '0%';
       document.getElementById('postProgressText').textContent = 'Ready';
       document.getElementById('postBtn').disabled = false;
-      const prev = document.getElementById('postVideoPreview');
-      prev.src = STATE.exportedVideoURL;
+      if (!document.getElementById('postTitle').value) {
+        document.getElementById('postTitle').value = (active.label || 'Canvas edit').replace(/\.[^.]+$/, '').slice(0, 120);
+      }
+      await loadPublishChannels(session);
+      syncPostDestinationOptions();
+      const videoPreview = document.getElementById('postVideoPreview');
+      const imagePreview = document.getElementById('postImagePreview');
+      videoPreview.style.display = 'none';
+      imagePreview.style.display = 'none';
+      if (STATE.exportedBlob && STATE.exportedKind === 'video') {
+        videoPreview.src = STATE.exportedVideoURL;
+        videoPreview.style.display = 'block';
+      } else {
+        const original = STATE.playhead;
+        STATE.playhead = active.startTime;
+        await preloadImages();
+        renderFrame();
+        await new Promise(resolve => setTimeout(resolve, 60));
+        imagePreview.src = canvas.toDataURL({ format: 'png' });
+        imagePreview.style.display = 'block';
+        STATE.playhead = original;
+        renderFrame();
+      }
       document.getElementById('postPreview').style.display = 'block';
     }
 
     async function confirmPost() {
-      const session = JSON.parse(localStorage.getItem('fas_user')||'null');
-      if (!session||!session.username) return toast('Log in');
-      const btn = document.getElementById('postBtn'); btn.disabled = true;
+      const session = JSON.parse(localStorage.getItem('fas_user') || 'null');
+      if (!session || !session.username) return toast('Log in first');
+      const toBoard = document.getElementById('postToBoard').checked;
+      const toTv = document.getElementById('postToTv').checked;
+      if (!toBoard && !toTv) return toast('Choose Board, TV, or both');
+      const title = document.getElementById('postTitle').value.trim() || 'Canvas edit';
+      const caption = document.getElementById('postCaption').value.trim() || title;
+      const btn = document.getElementById('postBtn');
       const fill = document.getElementById('postProgressFill');
       const txt = document.getElementById('postProgressText');
+      btn.disabled = true;
       document.getElementById('postProgress').className = 'export-progress show';
       try {
-        let mediaUrl = null;
-        if (STATE.exportedBlob) {
-          txt.textContent = 'Uploading video...';
-          fill.style.width = '30%';
-          const r = new FileReader();
-          const b64 = await new Promise(res => { r.onload = () => res(r.result.split(',')[1]); r.readAsDataURL(STATE.exportedBlob); });
-          const body = { data:b64, filename:'post-'+Date.now()+'.webm', contentType:'video/webm' };
-          if (session.username) body.username = session.username;
-          const r2 = await fetch('/api/media/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-          if (r2.ok) { const saved = await r2.json(); mediaUrl = saved.public_url || saved.url || null; }
-          fill.style.width = '60%';
+        if (!STATE.exportedBlob || (toTv && STATE.exportedKind !== 'video')) {
+          txt.textContent = 'Rendering edit...';
+          fill.style.width = '15%';
+          await startExport({ download: false, format: toTv ? 'video' : (isStillProject() ? 'png' : 'video') });
         }
-        txt.textContent = 'Posting to directory...';
-        const caption = document.getElementById('postCaption').value.trim() || 'Posted from Studio';
-        const SUPABASE_URL = localStorage.getItem('fas_supabase_url') || 'https://ghufaozjwondqcrcucjs.supabase.co';
-        const SUPABASE_ANON_KEY = localStorage.getItem('fas_supabase_anon_key') || '';
-        const payload = { author_username:String(session.username).toLowerCase(), post_type:'video', category:'video', body_text:caption, media_url:mediaUrl, moderation_state:'approved', visibility:'public' };
-        let ok = false;
-        const r = await fetch(SUPABASE_URL+'/rest/v1/signal_posts', {
-          method:'POST', headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-          body:JSON.stringify(payload),
-        });
-        if (r.ok) ok = true;
-        else {
-          const r2 = await fetch(SUPABASE_URL+'/rest/v1/board_posts', {
-            method:'POST', headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-            body:JSON.stringify({ username:String(session.username).toLowerCase(), post_text:caption, category:'video', image_url:mediaUrl, is_approved:true, visibility_status:'visible' }),
-          });
-          if (r2.ok) ok = true;
+        let boardPostedByTv = false;
+        let mediaUrl = '';
+        if (toTv) {
+          txt.textContent = 'Uploading to Faceless TV...';
+          fill.style.width = '55%';
+          const tvResult = await uploadCanvasToTv(
+            STATE.exportedBlob,
+            session,
+            title,
+            caption,
+            document.getElementById('postTvChannel').value || 'faceless-animal-studios',
+            document.getElementById('postVisibility').value || 'public',
+            toBoard
+          );
+          boardPostedByTv = Boolean(tvResult.directory_post_created);
+          mediaUrl = tvResult.upload && (tvResult.upload.source_url || tvResult.upload.external_video_url) || '';
         }
-        if (ok) { fill.style.width = '100%'; txt.textContent = '✅ Posted!'; toast('Posted to directory!'); setTimeout(()=>closeModal('postModal'), 1500); }
-        else throw Error('Post failed');
-      } catch(e) { txt.textContent = '❌ '+e.message; toast('Post failed'); }
-      finally { btn.disabled = false; }
+        if (toBoard && !boardPostedByTv) {
+          txt.textContent = 'Posting to the Board...';
+          fill.style.width = '78%';
+          if (!mediaUrl) mediaUrl = await uploadBoardMedia(STATE.exportedBlob, session);
+          await createBoardPost(session, title, caption, mediaUrl);
+        }
+        fill.style.width = '100%';
+        txt.textContent = 'Published.';
+        toast(toBoard && toTv ? 'Published to Board and TV' : (toTv ? 'Published to TV' : 'Published to Board'));
+        setTimeout(() => closeModal('postModal'), 1200);
+      } catch (error) {
+        txt.textContent = error.message || 'Publish failed';
+        toast(error.message || 'Publish failed');
+      } finally {
+        btn.disabled = false;
+      }
     }
 
-    // ────────────────────────────────────────────────────────────
-    //  UTILS
-    // ────────────────────────────────────────────────────────────
     function fmt(s) { const m = Math.floor(s/60), sec = Math.floor(s%60); return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'); }
     function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function toast(msg) {
@@ -1316,6 +1974,8 @@
     // ────────────────────────────────────────────────────────────
     //  INIT
     // ────────────────────────────────────────────────────────────
+    document.getElementById('postToTv').addEventListener('change', syncPostDestinationOptions);
+    document.getElementById('postToBoard').addEventListener('change', syncPostDestinationOptions);
     renderMediaPool();
     renderTimeline();
     updateTimeDisplay();

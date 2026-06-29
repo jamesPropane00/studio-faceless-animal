@@ -1058,6 +1058,21 @@
       word-break: break-word;
     }
 
+    .feed-item-text a,
+    .feed-content-link {
+      color: var(--purple-bright);
+      text-decoration: underline;
+      text-underline-offset: 0.18em;
+      overflow-wrap: anywhere;
+    }
+
+    .feed-content-link {
+      display: inline-flex;
+      margin-top: 0.6rem;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
     .feed-media {
       display: block;
       margin-top: 0.75rem;
@@ -2045,10 +2060,26 @@
       return 'Station ' + match[1] + (match[2] ? ' · ' + match[2].trim() : '') + ' · Community Signal';
     }
 
+    function renderPostText(value) {
+      var parts = String(value || '').split(/((?:https?:\/\/|www\.)[^\s<>"']+)/gi);
+      return parts.map(function (part) {
+        if (!/^(?:https?:\/\/|www\.)/i.test(part)) {
+          return esc(part).replace(/\r?\n/g, '<br>');
+        }
+        var trailing = '';
+        var urlText = part.replace(/[),.!?;:]+$/g, function (suffix) {
+          trailing = suffix;
+          return '';
+        });
+        var href = /^www\./i.test(urlText) ? 'https://' + urlText : urlText;
+        return '<a href="' + esc(href) + '" target="_self">' + esc(urlText) + '</a>' + esc(trailing);
+      }).join('');
+    }
+
     function renderFeedMedia(url, row) {
       if (!url) return '';
       if (isImageUrl(url)) {
-        return '<a class="feed-media" href="' + esc(url) + '"><img src="' + esc(url) + '" alt="" loading="lazy"></a>';
+        return '<a class="feed-media" href="' + esc(url) + '" target="_self"><img src="' + esc(url) + '" alt="" loading="lazy"></a>';
       }
       if (isAudioUrl(url)) {
         var name = audioPostTitle(row, url);
@@ -2075,15 +2106,17 @@
           + '</div>'
           + '<audio class="feed-audio-native" preload="metadata" src="' + esc(url) + '"></audio>'
           + '</div>'
-          + '</div>';
+          + '</div>'
+          + '<a class="feed-content-link" href="' + esc(url) + '" target="_self">Open audio</a>';
       }
       if (isVideoUrl(url)) {
         return '<div class="feed-video-wrap">'
           + '<video class="feed-video" playsinline preload="metadata" src="' + esc(url) + '#t=0.1"></video>'
           + '<span class="feed-video-play">Play</span>'
-          + '</div>';
+          + '</div>'
+          + '<a class="feed-content-link" href="' + esc(url) + '" target="_self">Open video</a>';
       }
-      return '<a class="feed-media" href="' + esc(url) + '">' + esc(url) + '</a>';
+      return '<a class="feed-media" href="' + esc(url) + '" target="_self">' + esc(url) + '</a>';
     }
 
     function feedPostKey(row) {
@@ -3015,7 +3048,7 @@
           feedKeys.push(key);
           var likes = feedLikeCount(key);
           var comments = feedComments(key);
-          var body = esc((row.body_text || '').slice(0, 420));
+          var body = renderPostText((row.body_text || '').slice(0, 420));
           var type = readablePostType(row.post_type || row.category || 'update');
           var media = renderFeedMedia(row.media_url, row);
 

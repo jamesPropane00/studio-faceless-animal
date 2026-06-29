@@ -2097,7 +2097,7 @@
     writeLocalJson('uploads_cache', mergedUploadPayload);
 
     var ownedChannels = state.channels.filter(function (item) {
-      if (item.is_owner) return true;
+      if (item.is_owner) return Boolean(state.session);
       return state.session && String(item.username || '').toLowerCase() === String(state.session.username || '').toLowerCase();
     });
 
@@ -2112,6 +2112,12 @@
     syncFilterButtons();
     setShellMode();
     scheduleLineupRefresh();
+    document.dispatchEvent(new CustomEvent('fas:tv-ready', {
+      detail: {
+        channels: state.channels.slice(),
+        session: state.session,
+      },
+    }));
   }
 
   function bindFilterRail() {
@@ -2192,10 +2198,13 @@
     var fileInput = el.uploadForm.file;
     if (fileInput) {
       fileInput.addEventListener('change', function () {
+        var chosenFile = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
         state.compressedUploadFile = null;
         setCompressionProgress(0);
         setCompressionStatus('');
-        updateUploadSizeNote(fileInput.files && fileInput.files[0] ? fileInput.files[0] : null);
+        updateUploadSizeNote(chosenFile);
+        if (el.compressOpen) el.compressOpen.disabled = !chosenFile;
+        if (!chosenFile) hideCompressionWidget();
         updateCompressionEstimate();
       });
     }
@@ -2251,6 +2260,8 @@
         setStatus(el.uploadStatus, 'Upload published: ' + (result.upload && result.upload.title ? result.upload.title : 'done'), 'success');
         el.uploadForm.reset();
         state.compressedUploadFile = null;
+        if (el.compressOpen) el.compressOpen.disabled = true;
+        hideCompressionWidget();
         updateUploadSizeNote(null);
         setCompressionProgress(0);
         setCompressionStatus('');
@@ -2287,6 +2298,8 @@
         setStatus(el.uploadStatus, 'Saved in Faceless TV test mode.', 'success');
         el.uploadForm.reset();
         state.compressedUploadFile = null;
+        if (el.compressOpen) el.compressOpen.disabled = true;
+        hideCompressionWidget();
         updateUploadSizeNote(null);
         setCompressionProgress(0);
         setCompressionStatus('');
@@ -2523,6 +2536,10 @@
 
   function boot() {
     initDom();
+    window.FAS_TV = {
+      state: state,
+      loadNetwork: loadNetwork,
+    };
     state.soundUnlocked = readSoundUnlocked();
     document.addEventListener('click', function (event) {
       var target = event.target && event.target.closest ? event.target.closest('#tv-resume') : null;
