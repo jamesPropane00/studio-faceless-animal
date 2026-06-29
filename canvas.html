@@ -192,6 +192,16 @@
       background: var(--surface2); color: var(--text); padding: 0 0.35rem; font-size: 0.68rem;
       flex-shrink: 0;
     }
+    .selected-tools .mini-range {
+      display: inline-flex; align-items: center; gap: 0.25rem; color: var(--dim);
+      font-size: 0.62rem; font-weight: 700; white-space: nowrap; flex-shrink: 0;
+    }
+    .selected-tools .mini-range input {
+      width: 78px; height: 3px; accent-color: var(--bright);
+    }
+    .selected-tools .mini-range output {
+      min-width: 28px; text-align: right; color: var(--text); font-variant-numeric: tabular-nums;
+    }
 
     /* ── BOTTOM BAR (CapCut-style) ── */
     .bottom-bar {
@@ -1044,6 +1054,7 @@
       const speed = String(clip.speed || 1);
       const fit = clip.fit || 'contain';
       const muted = Number(clip.volume == null ? 1 : clip.volume) <= 0;
+      const volume = Math.round(Number(clip.volume == null ? 1 : clip.volume) * 100);
       const title = clip.type === 'video' ? 'Video tools' : clip.type === 'music' ? 'Audio tools' : 'Clip tools';
       bar.classList.add('show');
       bar.innerHTML = `
@@ -1061,7 +1072,13 @@
           <button class="tool-btn" type="button" onclick="setSelectedFit('${fit === 'cover' ? 'contain' : 'cover'}')">${fit === 'cover' ? 'Fit' : 'Fill'}</button>
           <button class="tool-btn" type="button" onclick="rotateClip(90)">Rotate</button>
         ` : ''}
-        ${clip.type !== 'image' ? `<button class="tool-btn" type="button" onclick="toggleSelectedMute()">${muted ? 'Unmute' : 'Mute'}</button>` : ''}
+        ${clip.type !== 'image' ? `
+          <button class="tool-btn" type="button" onclick="toggleSelectedMute()">${muted ? 'Unmute' : 'Mute'}</button>
+          <label class="mini-range">Volume
+            <input type="range" min="0" max="100" value="${volume}" oninput="setSelectedVolume(this.value)" />
+            <output>${volume}</output>
+          </label>
+        ` : ''}
         <button class="tool-btn" type="button" onclick="duplicateSelectedClip()">Duplicate</button>
         <button class="tool-btn pink" type="button" onclick="deleteSelectedClip()">Delete</button>
       `;
@@ -1159,6 +1176,17 @@
       clip.volume = Number(clip.volume == null ? 1 : clip.volume) > 0 ? 0 : 1;
       invalidateExport();
       renderSelectedTools();
+      renderFrame();
+    }
+
+    function setSelectedVolume(value) {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      const volume = Math.max(0, Math.min(100, Number(value || 0)));
+      clip.volume = volume / 100;
+      const activeOutput = document.activeElement && document.activeElement.nextElementSibling;
+      if (activeOutput && activeOutput.tagName === 'OUTPUT') activeOutput.textContent = String(Math.round(volume));
+      invalidateExport();
       renderFrame();
     }
 
