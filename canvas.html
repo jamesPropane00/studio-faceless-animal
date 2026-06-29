@@ -176,6 +176,22 @@
       display: flex; align-items: center; justify-content: center; touch-action: manipulation;
     }
     .add-media-btn:active { border-color: var(--bright); color: var(--text); }
+    .selected-tools {
+      display: none; align-items: center; gap: 0.3rem; padding: 0.25rem 0.4rem;
+      background: var(--surface); border-bottom: 1px solid var(--border2);
+      overflow-x: auto; flex-shrink: 0; -webkit-overflow-scrolling: touch;
+    }
+    .selected-tools.show { display: flex; }
+    .selected-tools::-webkit-scrollbar { display: none; }
+    .selected-tools .label {
+      color: var(--dim); font-size: 0.62rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.08em; white-space: nowrap; flex-shrink: 0;
+    }
+    .selected-tools select {
+      min-height: 32px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+      background: var(--surface2); color: var(--text); padding: 0 0.35rem; font-size: 0.68rem;
+      flex-shrink: 0;
+    }
 
     /* ── BOTTOM BAR (CapCut-style) ── */
     .bottom-bar {
@@ -372,6 +388,8 @@
     <div class="media-pool" id="mediaPool">
       <button class="add-media-btn" onclick="importMedia()">+</button>
     </div>
+
+    <div class="selected-tools" id="selectedTools"></div>
 
     <!-- Canvas preview -->
     <div class="canvas-wrap" id="canvasWrap">
@@ -1001,16 +1019,52 @@
       STATE.clips = STATE.clips.filter(c => c.id !== id);
       invalidateExport();
       recalcDuration(); renderTimeline();
+      renderSelectedTools();
       if (!STATE.clips.length) { canvas.clear(); canvas.backgroundColor = '#1a1c26'; canvas.renderAll(); }
     }
 
     function selectClip(id) {
       STATE.clips.forEach(c => c._active = c.id === id);
-      renderTimeline(); renderFrame();
+      renderTimeline(); renderSelectedTools(); renderFrame();
     }
 
     function selectedClip() {
       return STATE.clips.find(c => c._active) || null;
+    }
+
+    function renderSelectedTools() {
+      const bar = document.getElementById('selectedTools');
+      if (!bar) return;
+      const clip = selectedClip();
+      if (!clip) {
+        bar.classList.remove('show');
+        bar.innerHTML = '';
+        return;
+      }
+      const speed = String(clip.speed || 1);
+      const fit = clip.fit || 'contain';
+      const muted = Number(clip.volume == null ? 1 : clip.volume) <= 0;
+      const title = clip.type === 'video' ? 'Video tools' : clip.type === 'music' ? 'Audio tools' : 'Clip tools';
+      bar.classList.add('show');
+      bar.innerHTML = `
+        <span class="label">${title}</span>
+        <button class="tool-btn" type="button" onclick="openClipEditor()">Trim</button>
+        <button class="tool-btn" type="button" onclick="splitSelectedClip()">Split</button>
+        <select aria-label="Speed" onchange="setSelectedSpeed(this.value)">
+          <option value="0.25"${speed === '0.25' ? ' selected' : ''}>0.25x</option>
+          <option value="0.5"${speed === '0.5' ? ' selected' : ''}>0.5x</option>
+          <option value="1"${speed === '1' ? ' selected' : ''}>1x</option>
+          <option value="1.5"${speed === '1.5' ? ' selected' : ''}>1.5x</option>
+          <option value="2"${speed === '2' ? ' selected' : ''}>2x</option>
+        </select>
+        ${clip.type !== 'music' ? `
+          <button class="tool-btn" type="button" onclick="setSelectedFit('${fit === 'cover' ? 'contain' : 'cover'}')">${fit === 'cover' ? 'Fit' : 'Fill'}</button>
+          <button class="tool-btn" type="button" onclick="rotateClip(90)">Rotate</button>
+        ` : ''}
+        ${clip.type !== 'image' ? `<button class="tool-btn" type="button" onclick="toggleSelectedMute()">${muted ? 'Unmute' : 'Mute'}</button>` : ''}
+        <button class="tool-btn" type="button" onclick="duplicateSelectedClip()">Duplicate</button>
+        <button class="tool-btn pink" type="button" onclick="deleteSelectedClip()">Delete</button>
+      `;
     }
 
     function syncClipEditor(clip) {
@@ -1068,6 +1122,43 @@
       invalidateExport();
       recalcDuration();
       renderTimeline();
+      renderSelectedTools();
+      renderFrame();
+    }
+
+    function setSelectedSpeed(value) {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      const speed = Math.max(0.25, Number(value || 1));
+      const sourceDuration = Math.max(0.1, Number(clip.sourceDuration || clip.duration || 4));
+      const trimStart = Math.max(0, Math.min(sourceDuration - 0.1, Number(clip.trimStart || 0)));
+      const trimEnd = Math.max(trimStart + 0.1, Math.min(sourceDuration, Number(clip.trimEnd || sourceDuration)));
+      clip.speed = speed;
+      clip.trimStart = trimStart;
+      clip.trimEnd = trimEnd;
+      clip.duration = Math.max(0.1, (trimEnd - trimStart) / speed);
+      invalidateExport();
+      recalcDuration();
+      renderTimeline();
+      renderSelectedTools();
+      renderFrame();
+    }
+
+    function setSelectedFit(value) {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      clip.fit = value === 'cover' ? 'cover' : 'contain';
+      invalidateExport();
+      renderSelectedTools();
+      renderFrame();
+    }
+
+    function toggleSelectedMute() {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      clip.volume = Number(clip.volume == null ? 1 : clip.volume) > 0 ? 0 : 1;
+      invalidateExport();
+      renderSelectedTools();
       renderFrame();
     }
 
@@ -1076,6 +1167,7 @@
       if (!clip) return toast('Select a clip first');
       clip.rotation = ((Number(clip.rotation || 0) + amount) % 360 + 360) % 360;
       invalidateExport();
+      renderSelectedTools();
       renderFrame();
     }
 
@@ -1085,6 +1177,7 @@
       if (axis === 'x') clip.flipX = !clip.flipX;
       else clip.flipY = !clip.flipY;
       invalidateExport();
+      renderSelectedTools();
       renderFrame();
     }
 
@@ -1108,6 +1201,7 @@
       invalidateExport();
       recalcDuration();
       renderTimeline();
+      renderSelectedTools();
       renderFrame();
       syncClipEditor(right);
     }
@@ -1125,6 +1219,7 @@
       invalidateExport();
       recalcDuration();
       renderTimeline();
+      renderSelectedTools();
       renderFrame();
       syncClipEditor(copy);
     }
@@ -1319,6 +1414,7 @@
       STATE.clips = []; STATE.playhead = 0;
       invalidateExport();
       recalcDuration(); renderTimeline();
+      renderSelectedTools();
       canvas.clear(); canvas.backgroundColor = '#1a1c26'; canvas.renderAll();
     }
 
