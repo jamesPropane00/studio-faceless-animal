@@ -2624,38 +2624,6 @@
     // ────────────────────────────────────────────────────────────
     //  SAVE TO MEDIA
     // ────────────────────────────────────────────────────────────
-    async function saveToMedia() {
-      if (STATE.exportedBlob) {
-        await saveBlob(
-          STATE.exportedBlob,
-          STATE.exportedName || ('canvas-edit-' + Date.now() + (STATE.exportedKind === 'image' ? '.png' : '.webm')),
-          STATE.exportedBlob.type || (STATE.exportedKind === 'image' ? 'image/png' : 'video/webm')
-        );
-        return;
-      }
-      const d = canvas.toDataURL({ format:'png', multiplier:2 });
-      const b64 = d.split(',')[1];
-      const body = { data:b64, filename:'studio-'+Date.now()+'.png', contentType:'image/png' };
-      const s = JSON.parse(localStorage.getItem('fas_user')||'null');
-      if (s&&s.username) body.username = s.username;
-      try {
-        const r = await fetch('/api/media/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-        if (!r.ok) throw Error(); toast('Saved!');
-      } catch { toast('Save failed'); }
-    }
-
-    async function saveBlob(blob, name, type) {
-      const r = new FileReader();
-      const b64 = await new Promise(res => { r.onload = () => res(r.result.split(',')[1]); r.readAsDataURL(blob); });
-      const body = { data:b64, filename:name, contentType:type };
-      const s = JSON.parse(localStorage.getItem('fas_user')||'null');
-      if (s&&s.username) body.username = s.username;
-      try {
-        const r2 = await fetch('/api/media/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-        if (!r2.ok) throw Error(); toast('Saved to My Media!');
-      } catch { toast('Save failed'); }
-    }
-
     // ────────────────────────────────────────────────────────────
     //  POST TO DIRECTORY
     // ────────────────────────────────────────────────────────────
@@ -2911,7 +2879,7 @@
     renderTimeline();
     updateTimeDisplay();
     fitCanvas();
-    console.log('Studio ready');
+    console.log('Studio ready - local save build 2026-06-29');
   </script>
 </body>
 </html>
