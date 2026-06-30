@@ -1978,6 +1978,43 @@
     .encounter-btn:disabled { opacity: 0.4; cursor: default; }
     .encounter-btn.back { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.15); }
     .encounter-btn.back:hover { background: rgba(239,68,68,0.2); }
+    .encounter-panel {
+      width: min(760px, calc(100vw - 1rem)); max-width: none; padding: 0; overflow: hidden;
+      border-color: rgba(192,132,252,0.38);
+      background: linear-gradient(145deg,rgba(6,7,12,0.985),rgba(15,8,24,0.985));
+      box-shadow: 0 30px 100px rgba(0,0,0,0.75), 0 0 60px rgba(126,34,206,0.12);
+      text-align: left;
+    }
+    .ue-head { display:flex; align-items:center; justify-content:space-between; padding:0.75rem 0.9rem; border-bottom:1px solid rgba(192,132,252,0.18); }
+    .ue-kicker { color:#c084fc; font-size:0.54rem; font-weight:950; letter-spacing:0.14em; }
+    .ue-type { color:#71677a; font-size:0.52rem; margin-top:2px; }
+    .ue-close { border:0; background:none; color:#897d90; font-size:1.1rem; cursor:pointer; }
+    .ue-stage { display:grid; grid-template-columns:1fr auto 1fr; align-items:stretch; gap:0.7rem; padding:0.8rem; }
+    .ue-side { padding:0.75rem; border:1px solid rgba(255,255,255,0.075); border-radius:10px; background:rgba(255,255,255,0.025); }
+    .ue-side.target { border-color:rgba(192,132,252,0.2); background:rgba(126,34,206,0.045); }
+    .ue-avatar { width:48px; height:48px; display:grid; place-items:center; margin-bottom:0.45rem; border-radius:50%; background:rgba(255,255,255,0.05); font-size:1.55rem; }
+    .ue-name { color:#f4f0f8; font-size:0.82rem; font-weight:950; }
+    .ue-role { color:#817589; font-size:0.52rem; text-transform:uppercase; letter-spacing:0.08em; }
+    .ue-status-label { display:flex; justify-content:space-between; margin-top:0.65rem; color:#a79daf; font-size:0.5rem; }
+    .ue-status-bar { height:7px; margin-top:0.25rem; overflow:hidden; border-radius:999px; background:rgba(255,255,255,0.07); }
+    .ue-status-bar span { display:block; height:100%; background:linear-gradient(90deg,#7c3aed,#c084fc,#f5c451); transition:width .3s; }
+    .ue-versus { align-self:center; color:#c084fc; font-size:1rem; filter:drop-shadow(0 0 10px rgba(192,132,252,.45)); }
+    .ue-dialogue { margin:0 0.8rem 0.65rem; padding:0.7rem 0.8rem; min-height:58px; border:1px solid rgba(192,132,252,0.16); border-radius:8px; background:rgba(126,34,206,0.055); color:#d8cedf; font-size:0.65rem; line-height:1.5; }
+    .ue-dialogue::before { content:'SIGNAL '; color:#c084fc; font-size:0.48rem; font-weight:950; letter-spacing:.12em; }
+    .ue-log { max-height:86px; overflow-y:auto; margin:0 0.8rem 0.65rem; padding:0.55rem; border-radius:7px; background:rgba(0,0,0,0.2); }
+    .ue-log-line { color:#897f91; font-size:0.52rem; line-height:1.5; }
+    .ue-log-line strong { color:#cbbdd5; }
+    .encounter-actions { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:0.45rem; margin:0; padding:0 0.8rem 0.8rem; }
+    .encounter-btn { min-height:52px; padding:0.45rem 0.25rem; font-size:0.6rem; }
+    .ue-footer { display:flex; align-items:center; justify-content:space-between; gap:0.6rem; padding:0.6rem 0.8rem; border-top:1px solid rgba(255,255,255,0.055); color:#71677a; font-size:0.52rem; }
+    .ue-report { padding:0.38rem 0.55rem; border:1px solid rgba(192,132,252,0.3); border-radius:5px; background:rgba(126,34,206,0.1); color:#d8b4fe; font-size:0.52rem; font-weight:850; cursor:pointer; }
+    .ue-report.hidden { display:none; }
+    @media (max-width:650px) {
+      .ue-stage { grid-template-columns:1fr 1fr; }
+      .ue-versus { display:none; }
+      .encounter-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .encounter-panel { max-height:calc(100vh - 1rem); overflow-y:auto; }
+    }
     .encounter-scene {
       margin: 0.55rem 0; padding: 0.55rem; border: 1px solid rgba(167,139,250,0.12);
       border-radius: 7px; background: rgba(167,139,250,0.045); color: #b6acc7;
@@ -2190,23 +2227,36 @@
   </div>
 </div>
 
-<div class="encounter-panel" id="encounterPanel">
-  <div class="encounter-creature-name" id="encounterName">Neon Fox</div>
-  <div class="encounter-creature-rarity" id="encounterRarity">uncommon</div>
-  <div class="encounter-mood" id="encounterMood">Curious — watching you carefully</div>
-  <div class="encounter-scene" id="encounterScene">The woods have gone quiet. The creature is deciding whether to stay.</div>
-  <div class="encounter-trust-box">
-    <div class="encounter-trust-label">Trust</div>
-    <div class="encounter-trust-bar"><div class="encounter-trust-fill" id="encounterTrustFill" style="width:0%"></div></div>
-    <div class="encounter-trust-pct" id="encounterTrustPct">0 / 100</div>
+<div class="encounter-panel" id="encounterPanel" role="dialog" aria-label="Encounter">
+  <header class="ue-head">
+    <div><div class="ue-kicker">FACELESS ENCOUNTER</div><div class="ue-type" id="encounterTypeLabel">WILDLIFE / DISCOVERY</div></div>
+    <button class="ue-close" id="encounterClose" type="button" aria-label="Leave encounter">&times;</button>
+  </header>
+  <div class="ue-stage">
+    <section class="ue-side player">
+      <div class="ue-avatar">&#x1F464;</div>
+      <div class="ue-name" id="encounterPlayerName">Resident</div>
+      <div class="ue-role" id="encounterPlayerRole">Pine Hollow Resident</div>
+      <div class="ue-status-label"><span>Composure</span><span id="encounterPlayerStatusText">100</span></div>
+      <div class="ue-status-bar"><span id="encounterPlayerStatus" style="width:100%"></span></div>
+    </section>
+    <div class="ue-versus">&#x26A1;</div>
+    <section class="ue-side target">
+      <div class="ue-avatar" id="encounterTargetAvatar">&#x1F98A;</div>
+      <div class="ue-name" id="encounterName">Unknown</div>
+      <div class="ue-role"><span id="encounterRarity">uncommon</span> / <span id="encounterTargetRole">creature</span></div>
+      <div class="ue-status-label"><span id="encounterStatusLabel">Trust</span><span id="encounterTrustPct">0 / 100</span></div>
+      <div class="ue-status-bar"><span id="encounterTrustFill" style="width:0%"></span></div>
+      <div class="encounter-mood" id="encounterMood">Curious</div>
+    </section>
   </div>
-  <div class="encounter-actions" id="encounterActions">
-    <button class="encounter-btn" id="encObserveBtn">&#x1F50D; Observe</button>
-    <button class="encounter-btn" id="encFeedBtn">&#x1F372; Offer Food</button>
-    <button class="encounter-btn" id="encCalmBtn">&#x1FAB6; Stay Still</button>
-    <button class="encounter-btn" id="encApproachBtn">&#x1F6B6; Slowly Approach</button>
-    <button class="encounter-btn back" id="encBackBtn">&#x1F44B; Leave Quietly</button>
-  </div>
+  <div class="ue-dialogue" id="encounterScene">The world waits for your choice.</div>
+  <div class="ue-log" id="encounterOutcomeLog"><div class="ue-log-line">Encounter started.</div></div>
+  <div class="encounter-actions" id="encounterActions"></div>
+  <footer class="ue-footer">
+    <span id="encounterTurnLabel">Turn 1 · Choose an action</span>
+    <button class="ue-report hidden" id="encounterReportBtn" type="button">&#x1F4F0; Report to Signal Wire</button>
+  </footer>
 </div>
 
 <aside class="woods-hud" id="woodsHud">
@@ -4917,6 +4967,277 @@ function prepareWhisperWoodsVisit() {
   updateWoodsHUD()
 }
 
+const ENCOUNTER_ACTIONS = {
+  creature:[
+    { id:'observe', icon:'👀', label:'Observe' },
+    { id:'food', icon:'🥕', label:'Offer Food' },
+    { id:'still', icon:'🪶', label:'Stay Still' },
+    { id:'calm', icon:'✨', label:'Calm' },
+    { id:'retreat', icon:'👋', label:'Retreat', back:true }
+  ],
+  npc:[
+    { id:'talk', icon:'💬', label:'Talk' },
+    { id:'help', icon:'🤝', label:'Help' },
+    { id:'trade', icon:'📦', label:'Trade' },
+    { id:'persuade', icon:'🗣️', label:'Persuade' },
+    { id:'leave', icon:'👋', label:'Leave', back:true }
+  ]
+}
+let encounterStoreCache = null
+const encounterEngine = {
+  active:false, completed:false, type:null, target:null, targetId:null,
+  status:0, mood:'Neutral', playerStatus:100, turn:1, actions:0, log:[],
+  result:null, reported:false, startedAt:0
+}
+
+function getEncounterStore() {
+  if (!encounterStoreCache) {
+    try { encounterStoreCache = JSON.parse(localStorage.getItem('fas_encounter_history_v1') || 'null') } catch {}
+  }
+  if (!encounterStoreCache || typeof encounterStoreCache !== 'object') encounterStoreCache = {}
+  encounterStoreCache.history = Array.isArray(encounterStoreCache.history) ? encounterStoreCache.history : []
+  encounterStoreCache.npcRelationships = encounterStoreCache.npcRelationships || {}
+  return encounterStoreCache
+}
+function saveEncounterStore() {
+  try { localStorage.setItem('fas_encounter_history_v1',JSON.stringify(getEncounterStore())) } catch {}
+}
+function encounterTargetId(type,target) {
+  return type === 'creature' ? target.id : String(target.id || target.name || `${target.type}_${Math.round(target.x)}_${Math.round(target.y)}`)
+}
+function addEncounterLog(message,strong = '') {
+  encounterEngine.log.push({ message, strong, at:Date.now() })
+  encounterEngine.log = encounterEngine.log.slice(-12)
+}
+function encounterDialogue(text) {
+  document.getElementById('encounterScene').textContent = text
+}
+
+function beginEncounter(type,target,options = {}) {
+  if (!ENCOUNTER_ACTIONS[type] || !target) return
+  if (encounterEngine.active) closeEncounterPanel()
+  document.getElementById('farmReturnCard')?.classList.remove('open')
+  document.getElementById('woodsHub')?.classList.add('hidden')
+  const store = getEncounterStore(), targetId = encounterTargetId(type,target)
+  const existingCreature = type === 'creature' ? state.creatureCollection[targetId] : null
+  const relation = type === 'creature'
+    ? Number(options.trust ?? existingCreature?.trust ?? 0)
+    : Number(store.npcRelationships[targetId]?.relationship || 0)
+  Object.assign(encounterEngine,{
+    active:true, completed:false, type, target, targetId,
+    status:Math.max(0,Math.min(100,relation)), mood:options.mood || (type === 'creature' ? 'Curious' : npcEncounterMood(target)),
+    playerStatus:100, turn:1, actions:0, log:[], result:null, reported:false, startedAt:Date.now()
+  })
+  addEncounterLog(type === 'creature' ? 'A quiet wildlife encounter begins.' : `${target.name} stops to speak with you.`,'Encounter')
+  if (type === 'creature') {
+    _creatureEncounterId = targetId
+    _creatureEncounterData = { creatureId:targetId, trust:encounterEngine.status, mood:encounterEngine.mood, actions:0 }
+  }
+  document.getElementById('encounterTypeLabel').textContent = type === 'creature' ? 'WILDLIFE / DISCOVERY' : 'RESIDENT / SOCIAL'
+  document.getElementById('encounterPlayerName').textContent = state.player?.name || state.username || 'Resident'
+  document.getElementById('encounterPlayerRole').textContent = type === 'creature' ? 'Patient Observer' : 'Faceless City Resident'
+  document.getElementById('encounterTargetAvatar').textContent = type === 'creature' ? (target.icon || '🐾') : npcEncounterIcon(target)
+  document.getElementById('encounterName').textContent = target.name || 'Unknown'
+  document.getElementById('encounterRarity').textContent = type === 'creature' ? (target.rarity || 'unknown') : (target.type || 'resident')
+  document.getElementById('encounterTargetRole').textContent = type
+  document.getElementById('encounterStatusLabel').textContent = type === 'creature' ? 'Trust' : 'Rapport'
+  encounterDialogue(options.dialogue || (type === 'creature'
+    ? 'The woods hold their breath. The creature waits to see what kind of resident you are.'
+    : npcOpeningDialogue(target)))
+  document.getElementById('encounterReportBtn').classList.add('hidden')
+  renderEncounterUI()
+  document.getElementById('encounterPanel').classList.add('open')
+}
+
+function npcEncounterIcon(npc) {
+  return { vendor:'🧑‍🌾', merchant:'🧳', guard:'🛡️', worker:'🧰', wanderer:'🥾', walker:'🚶' }[npc.type] || '👤'
+}
+function npcEncounterMood(npc) {
+  if (npc.state === 'working') return 'Busy'
+  if (npc.energy < 0.35) return 'Tired'
+  if (npc.mood > 0.75) return 'Friendly'
+  return 'Cautious'
+}
+function npcOpeningDialogue(npc) {
+  const lines = {
+    vendor:'I have a minute. Are you buying, helping, or just passing through?',
+    merchant:'Every route tells a story. What brings you over?',
+    guard:'Keep it respectful and we will understand each other.',
+    worker:'Long shift today. What do you need?',
+    wanderer:'Funny meeting someone all the way out here.'
+  }
+  return lines[npc.type] || 'The resident studies you for a moment, waiting for you to speak.'
+}
+function renderEncounterUI() {
+  const status = Math.max(0,Math.min(100,Math.round(encounterEngine.status)))
+  document.getElementById('encounterTrustFill').style.width = `${status}%`
+  document.getElementById('encounterTrustPct').textContent = `${status} / 100`
+  document.getElementById('encounterPlayerStatus').style.width = `${encounterEngine.playerStatus}%`
+  document.getElementById('encounterPlayerStatusText').textContent = Math.round(encounterEngine.playerStatus)
+  document.getElementById('encounterMood').textContent = encounterEngine.mood
+  document.getElementById('encounterTurnLabel').textContent = encounterEngine.completed
+    ? `Encounter complete · ${encounterEngine.result?.status || 'closed'}`
+    : `Turn ${encounterEngine.turn} · Choose an action`
+  document.getElementById('encounterOutcomeLog').innerHTML = encounterEngine.log.map(entry=>
+    `<div class="ue-log-line">${entry.strong ? `<strong>${entry.strong}:</strong> ` : ''}${entry.message}</div>`).join('')
+  const actions = encounterEngine.completed
+    ? [{ id:'close', icon:'✓', label:'Close' }]
+    : ENCOUNTER_ACTIONS[encounterEngine.type]
+  document.getElementById('encounterActions').innerHTML = actions.map(action=>
+    `<button class="encounter-btn ${action.back ? 'back' : ''}" data-encounter-action="${action.id}">${action.icon}<br>${action.label}</button>`).join('')
+}
+
+function chooseEncounterAction(action) {
+  if (action === 'close') { closeEncounterPanel(); return }
+  if (!encounterEngine.active || encounterEngine.completed) return
+  resolveEncounterTurn(action)
+}
+function resolveEncounterTurn(action) {
+  if (encounterEngine.type === 'creature') resolveCreatureEncounterAction(action)
+  else if (encounterEngine.type === 'npc') resolveNpcEncounterAction(action)
+  if (!encounterEngine.completed) {
+    encounterEngine.actions++
+    encounterEngine.turn++
+    renderEncounterUI()
+  }
+}
+function resolveCreatureEncounterAction(action) {
+  const creature = encounterEngine.target
+  if (action === 'retreat') {
+    addEncounterLog('You leave without forcing the moment.','Retreat')
+    encounterDialogue(`${creature.name} watches you go and remembers that you respected its space.`)
+    endEncounter({ status:'peaceful', message:'You left the woods quietly.' })
+    return
+  }
+  let gain = 0
+  if (action === 'observe') {
+    gain = 5; encounterEngine.mood = 'Curious'
+    encounterDialogue(`${creature.name} notices that you are watching without moving closer.`)
+  } else if (action === 'food') {
+    const farm = getFarmData(), crop = Object.keys(CROP_TYPES).find(key=>(farm.inventory[key] || 0)>0)
+    if (!crop) {
+      addEncounterLog('You have no farm food to offer.','Offer Food')
+      encounterDialogue('An empty hand communicates nothing. The creature continues waiting.')
+      return
+    }
+    farm.inventory[crop]--; saveFarmData(farm)
+    gain = 18+Math.floor(Math.random()*8); encounterEngine.mood = 'Interested'
+    encounterDialogue(`${creature.name} waits for you to step back, then accepts the ${CROP_TYPES[crop].name.toLowerCase()}.`)
+  } else if (action === 'still') {
+    gain = 8+Math.floor(Math.random()*4); encounterEngine.mood = 'Calm'
+    encounterDialogue(`You match the stillness of the woods. ${creature.name} takes one careful step closer.`)
+  } else if (action === 'calm') {
+    gain = encounterEngine.status >= 20 ? 12 : 7; encounterEngine.mood = 'Reassured'
+    encounterDialogue(`Your low voice blends with the wind. ${creature.name} decides to remain.`)
+  }
+  gain = Math.floor(gain*(1+getSkillBonus('creatureKeeper','trustGain')))
+  encounterEngine.status = Math.min(100,encounterEngine.status+gain)
+  if (_creatureEncounterData) _creatureEncounterData.trust = encounterEngine.status
+  addEncounterLog(`+${gain} trust. ${creature.name} is ${encounterEngine.mood.toLowerCase()}.`,ENCOUNTER_ACTIONS.creature.find(item=>item.id===action)?.label)
+  awardSkillXP('explorer',2)
+  checkTrustMilestone(encounterEngine.targetId,encounterEngine.status)
+  if (encounterEngine.status >= 100 && !encounterEngine.completed) {
+    encounterDialogue(`${creature.name} chooses trust. This relationship can continue beyond one encounter.`)
+    endEncounter({ status:'trusted', major:true, message:`${creature.name} now trusts you.` })
+  }
+}
+function resolveNpcEncounterAction(action) {
+  const npc = encounterEngine.target, store = getEncounterStore()
+  const relation = store.npcRelationships[encounterEngine.targetId] || { relationship:encounterEngine.status, meetings:0 }
+  if (action === 'leave') {
+    addEncounterLog('You end the conversation respectfully.','Leave')
+    encounterDialogue(`${npc.name} nods and returns to the rhythm of the city.`)
+    endEncounter({ status:'peaceful', message:'The conversation ended respectfully.' })
+    return
+  }
+  let gain = 0
+  if (action === 'talk') {
+    gain = 5; encounterEngine.mood = 'Listening'
+    encounterDialogue(`${npc.name} shares a small piece of life in ${REGIONS[state.currentRegion]?.name || 'the city'}.`)
+  } else if (action === 'help') {
+    gain = 9; encounterEngine.mood = 'Grateful'
+    encounterDialogue(`You help with a simple problem. It is not heroic—just neighborly.`)
+  } else if (action === 'trade') {
+    if (state.coins < 3) {
+      addEncounterLog('You need 3 FC to make a fair trade.','Trade')
+      encounterDialogue(`${npc.name} does not take offense. “Come back when it works for both of us.”`)
+      return
+    }
+    state.coins -= 3
+    const farm = getFarmData(), crop = ['wheat','corn','carrots','tomatoes'][Math.floor(Math.random()*4)]
+    farm.inventory[crop]++; saveFarmData(farm)
+    document.getElementById('statCoins').textContent = state.coins
+    gain = 7; encounterEngine.mood = 'Satisfied'
+    encounterDialogue(`A fair exchange: 3 FC for one ${CROP_TYPES[crop].name}.`)
+  } else if (action === 'persuade') {
+    const chance = Math.min(.9,.35+(state.rep || 0)/200+encounterEngine.status/160)
+    if (Math.random() > chance) {
+      gain = -2; encounterEngine.playerStatus = Math.max(55,encounterEngine.playerStatus-8); encounterEngine.mood = 'Unconvinced'
+      encounterDialogue(`${npc.name} hears you out, but your argument does not land.`)
+    } else {
+      gain = 12; encounterEngine.mood = 'Convinced'
+      encounterDialogue(`${npc.name} considers your words, then agrees to give the idea a chance.`)
+    }
+  }
+  encounterEngine.status = Math.max(0,Math.min(100,encounterEngine.status+gain))
+  relation.relationship = encounterEngine.status
+  relation.meetings = (relation.meetings || 0)+1
+  relation.lastMetAt = Date.now()
+  store.npcRelationships[encounterEngine.targetId] = relation
+  saveEncounterStore()
+  addEncounterLog(`${gain >= 0 ? '+' : ''}${gain} rapport. ${npc.name} is ${encounterEngine.mood.toLowerCase()}.`,ENCOUNTER_ACTIONS.npc.find(item=>item.id===action)?.label)
+  awardSkillXP('explorer',action === 'help' ? 5 : 2)
+  if (encounterEngine.status >= 30 && encounterEngine.actions >= 2) {
+    encounterDialogue(`${npc.name} will remember this conversation. A city relationship has begun.`)
+    endEncounter({ status:'connected', major:true, message:`You formed a connection with ${npc.name}.` })
+  }
+}
+function endEncounter(result = {}) {
+  if (encounterEngine.completed) return
+  encounterEngine.active = false
+  encounterEngine.completed = true
+  encounterEngine.result = { status:result.status || 'ended', message:result.message || 'Encounter ended.', major:!!result.major }
+  addEncounterLog(encounterEngine.result.message,'Outcome')
+  const store = getEncounterStore()
+  const record = {
+    id:`enc_${Date.now()}_${Math.random().toString(36).slice(2,6)}`, type:encounterEngine.type,
+    targetId:encounterEngine.targetId, targetName:encounterEngine.target?.name || 'Unknown',
+    status:encounterEngine.result.status, major:encounterEngine.result.major, score:Math.round(encounterEngine.status),
+    turns:encounterEngine.turn, startedAt:encounterEngine.startedAt, endedAt:Date.now(), reported:false,
+    log:encounterEngine.log.slice()
+  }
+  store.history.unshift(record); store.history = store.history.slice(0,50)
+  encounterEngine.historyId = record.id
+  saveEncounterStore()
+  if (result.major) reportEncounter(true)
+  else if (encounterEngine.actions >= 2) document.getElementById('encounterReportBtn').classList.remove('hidden')
+  renderEncounterUI()
+}
+function reportEncounter(automatic = false) {
+  if (encounterEngine.reported || !encounterEngine.target) return
+  encounterEngine.reported = true
+  const store = getEncounterStore(), record = store.history.find(item=>item.id === encounterEngine.historyId)
+  if (record) record.reported = true
+  saveEncounterStore()
+  const category = encounterEngine.type === 'creature' ? 'Wildlife' : 'Culture'
+  const headline = encounterEngine.type === 'creature'
+    ? `${encounterEngine.target.name} encounter reported from Whisper Woods.`
+    : `A resident connection grows in ${REGIONS[state.currentRegion]?.name || 'Faceless City'}.`
+  createNewsItem(category,headline,encounterEngine.result?.message || 'A resident shared what happened.',''+state.currentRegion,encounterEngine.result?.major ? 4 : 2)
+  awardSkillXP('broadcaster',automatic ? 8 : 5)
+  document.getElementById('encounterReportBtn').classList.add('hidden')
+  addEncounterLog('The outcome was reported to Signal Wire.','Broadcast')
+  renderEncounterUI()
+}
+function closeEncounterPanel() {
+  if (!encounterEngine.completed && encounterEngine.active) endEncounter({ status:'closed', message:'The encounter ended without a final outcome.' })
+  document.getElementById('encounterPanel').classList.remove('open')
+  encounterEngine.active = false
+  _creatureEncounterId = null
+  _creatureEncounterData = null
+  _creatureSpawnTimer = 15+Math.random()*20
+}
+
 let _creatureInit = false
 let _creatureSpawnTimer = 0
 let _creatureEncounterId = null
@@ -5103,26 +5424,15 @@ function startCreatureEncounter(creatureId) {
   if (!creature) return
   const lastMood = state.creatureSighting ? state.creatureSighting.mood : 'Curious'
   state.creatureSighting = null
-  _creatureSpawnTimer = 60 // Don't spawn during encounter
+  _creatureSpawnTimer = 60
   const existing = state.creatureCollection[creatureId]
   const woodsData = getWoodsData()
   const preparationBonus = (woodsData.campsites.feedStation ? 3 : 0)+Math.min(5,woodsData.trackingKnowledge)
-  _creatureEncounterId = creatureId
-  _creatureEncounterData = {
-    creatureId,
-    trust: Math.min(100,(existing ? existing.trust : 0)+preparationBonus),
-    mood: lastMood,
-    actions: 0,
-  }
-
-  const panel = document.getElementById('encounterPanel')
-  document.getElementById('encounterName').textContent = creature.name
-  document.getElementById('encounterRarity').textContent = creature.rarity
-  document.getElementById('encounterRarity').className = 'encounter-creature-rarity ' + creature.rarity
-  document.getElementById('encounterMood').textContent = _creatureEncounterData.mood
-  document.getElementById('encounterScene').textContent = 'The birds stop singing. The creature watches your hands and waits.'
-  updateEncounterTrustUI(_creatureEncounterData.trust)
-  panel.classList.add('open')
+  beginEncounter('creature',creature,{
+    trust:Math.min(100,(existing ? existing.trust : 0)+preparationBonus),
+    mood:lastMood,
+    dialogue:'The birds stop singing. Leaves settle. The creature watches your hands and waits.'
+  })
 }
 
 function updateEncounterTrustUI(trust) {
@@ -5237,8 +5547,10 @@ function checkTrustMilestone(creatureId, trust) {
     state.creatureCollection[creatureId].trusted = true
     state.creatureCollection[creatureId].sanctuaryEligible = true
     showToast(creature.name + ' trusts you!', 'It may follow you home when the Sanctuary opens')
-    createNewsItem('Wildlife', creature.name + ' trusts a resident of Pine Hollow.', 'The creature may be ready for a future Sanctuary home.', 'whisper-woods', 4)
-    endCreatureEncounter()
+    if (!encounterEngine.active) {
+      createNewsItem('Wildlife', creature.name + ' trusts a resident of Pine Hollow.', 'The creature may be ready for a future Sanctuary home.', 'whisper-woods', 4)
+      endCreatureEncounter()
+    }
   }
   saveCreatureCollection()
 }
@@ -5698,6 +6010,7 @@ function generateNPCs() {
       const homeX = nx, homeY = ny
       
       state.npcs.push({
+        id: `city_npc_${i + 1}`,
         x: nx, y: ny, tx: nx, ty: ny,
         homeX, homeY,
         speed: 0.3 + rng() * 0.6,
@@ -7949,6 +8262,9 @@ function setupMouse() {
     } else if (state.blockMode && state.blockType) {
       placeBlock(world.x, world.y, state.blockType)
     } else {
+      const clickedNPC = state.npcs.find(npc =>
+        isInCurrentRegion(npc) && Math.hypot(npc.x-world.x,npc.y-world.y) < 1.8
+      )
       const clickedBuilding = state.buildings.find(b => {
         if (!isInCurrentRegion(b)) return false
         const dx = Math.abs(b.tile_x - world.x)
@@ -7956,7 +8272,9 @@ function setupMouse() {
         return dx < 1 && dy < 1
       })
       
-      if (clickedBuilding) {
+      if (clickedNPC) {
+        beginEncounter('npc',clickedNPC)
+      } else if (clickedBuilding) {
         if (clickedBuilding.owner_id === state.userId) {
           openPropertyPanel(clickedBuilding.id)
         } else {
@@ -8220,12 +8538,14 @@ function setupUI() {
   document.getElementById('worldMapClose').addEventListener('click', closeAllPanels)
   document.getElementById('creaturesPanelClose').addEventListener('click', closeAllPanels)
 
-  // Encounter panel buttons
-  document.getElementById('encObserveBtn').addEventListener('click', observeCreature)
-  document.getElementById('encFeedBtn').addEventListener('click', offerFoodToCreature)
-  document.getElementById('encCalmBtn').addEventListener('click', calmCreature)
-  document.getElementById('encApproachBtn').addEventListener('click', approachCreatureSlowly)
-  document.getElementById('encBackBtn').addEventListener('click', backAwayFromCreature)
+  // Universal encounter controls
+  document.getElementById('encounterActions').addEventListener('click', event => {
+    const button = event.target.closest('[data-encounter-action]')
+    if (!button || button.disabled) return
+    chooseEncounterAction(button.dataset.encounterAction)
+  })
+  document.getElementById('encounterClose').addEventListener('click', closeEncounterPanel)
+  document.getElementById('encounterReportBtn').addEventListener('click', () => reportEncounter(false))
 
   document.getElementById('woodsOpenBtn').addEventListener('click', () => {
     if (state.currentRegion !== 'whisper-woods') return
