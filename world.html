@@ -1191,6 +1191,64 @@
     .farm-card h3 { margin: 0; color: #f0f5eb; font-size: 0.76rem; }
     .farm-card p { margin: 0; color: #91a087; font-size: 0.6rem; line-height: 1.45; }
     .farm-card-meta { color: #c8d2c0; font: 500 0.56rem "DM Mono", monospace; }
+    .animal-profile-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0.7rem; margin-top: 0.75rem; }
+    .animal-profile {
+      padding: 0.85rem; border: 1px solid rgba(255,255,255,0.09); border-radius: 11px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018));
+    }
+    .animal-profile.needs-care { border-color: rgba(245,196,81,0.35); }
+    .animal-profile.ready { border-color: rgba(163,230,53,0.52); box-shadow: inset 0 0 28px rgba(132,204,22,0.06); }
+    .animal-head { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.65rem; }
+    .animal-avatar {
+      width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%;
+      background: rgba(132,204,22,0.09); border: 1px solid rgba(163,230,53,0.25); font-size: 1.55rem;
+    }
+    .animal-name { color: #f4ffe5; font-size: 0.82rem; font-weight: 950; }
+    .animal-species { color: #84917b; font-size: 0.54rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .animal-mood {
+      padding: 0.3rem 0.45rem; border-radius: 999px; color: #dfffaa; background: rgba(132,204,22,0.1);
+      border: 1px solid rgba(163,230,53,0.22); font-size: 0.54rem; font-weight: 900;
+    }
+    .animal-mood.Hungry, .animal-mood.Lonely { color: #f5c451; border-color: rgba(245,196,81,0.3); background: rgba(245,196,81,0.08); }
+    .animal-mood.Sick { color: #fca5a5; border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.08); }
+    .animal-details {
+      display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0.38rem;
+      margin: 0.7rem 0;
+    }
+    .animal-detail { padding: 0.42rem; border-radius: 6px; background: rgba(0,0,0,0.14); }
+    .animal-detail b { display: block; color: #83907b; font-size: 0.48rem; text-transform: uppercase; letter-spacing: 0.07em; }
+    .animal-detail span { display: block; margin-top: 2px; color: #dbe7d2; font-size: 0.56rem; }
+    .animal-bond-row { display: flex; align-items: center; justify-content: space-between; color: #9eaa97; font-size: 0.54rem; }
+    .animal-bond-bar { height: 6px; margin: 0.3rem 0 0.65rem; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,0.07); }
+    .animal-bond-bar span { display: block; height: 100%; background: linear-gradient(90deg,#84cc16,#f5c451); }
+    .animal-production {
+      display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+      margin-bottom: 0.6rem; padding: 0.5rem; border-radius: 7px; background: rgba(132,204,22,0.06);
+      color: #cbd5c3; font-size: 0.54rem;
+    }
+    .animal-production button {
+      padding: 0.3rem 0.45rem; border: 1px solid rgba(163,230,53,0.35); border-radius: 5px;
+      background: rgba(132,204,22,0.12); color: #dfffaa; font-size: 0.52rem; font-weight: 900; cursor: pointer;
+    }
+    .animal-care-actions { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 0.35rem; }
+    .animal-care-action {
+      padding: 0.42rem 0.2rem; border: 1px solid rgba(255,255,255,0.09); border-radius: 6px;
+      background: rgba(255,255,255,0.035); color: #cbd5c3; font-size: 0.5rem; font-weight: 800; cursor: pointer;
+    }
+    .animal-care-action:hover { border-color: rgba(163,230,53,0.4); background: rgba(132,204,22,0.1); }
+    .animal-care-action:disabled { opacity: 0.32; cursor: not-allowed; }
+    .sanctuary-foundation {
+      min-height: 360px; display: grid; place-items: center; padding: 1rem;
+      border: 1px solid rgba(192,132,252,0.28); border-radius: 12px;
+      background: radial-gradient(circle at 50% 20%,rgba(126,34,206,0.14),rgba(12,16,13,0.3) 58%);
+    }
+    .sanctuary-lock { max-width: 620px; text-align: center; }
+    .sanctuary-icon { font-size: 3rem; filter: drop-shadow(0 0 18px rgba(192,132,252,0.35)); }
+    .sanctuary-lock h2 { margin: 0.55rem 0 0.25rem; color: #f3e8ff; font-size: 1.15rem; }
+    .sanctuary-lock > p { margin: 0; color: #ad9bb8; font-size: 0.64rem; line-height: 1.5; }
+    .sanctuary-purpose { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0.55rem; margin: 1rem 0; text-align: left; }
+    .sanctuary-purpose div { padding: 0.65rem; border-radius: 8px; background: rgba(255,255,255,0.035); color: #d7c8df; font-size: 0.58rem; }
+    .sanctuary-status { color: #c084fc; font-size: 0.58rem; font-weight: 900; letter-spacing: 0.1em; }
     .farm-action {
       width: 100%; padding: 0.48rem; border: 1px solid rgba(163,230,53,0.4);
       border-radius: 6px; background: rgba(132,204,22,0.12); color: #d9ffa0;
@@ -1206,12 +1264,15 @@
       .farm-hub { inset: 4rem 0.5rem 0.5rem; }
       .farm-card-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
       .farm-today-hero { grid-template-columns: 1fr; }
+      .animal-profile-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 520px) {
       .farm-card-grid { grid-template-columns: 1fr; }
       .farm-hub-head { padding: 0.7rem; }
       .farm-ready-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
       .farm-return-card { top: 3.8rem; }
+      .animal-care-actions { grid-template-columns: repeat(3,minmax(0,1fr)); }
+      .sanctuary-purpose { grid-template-columns: 1fr; }
     }
 
     /* ── FARM PLANT OVERLAY ── */
@@ -2459,6 +2520,7 @@
     <button class="farm-tab" data-farm-tab="storage">Storage</button>
     <button class="farm-tab" data-farm-tab="shipments">Shipments</button>
     <button class="farm-tab" data-farm-tab="upgrades">Upgrades</button>
+    <button class="farm-tab" data-farm-tab="sanctuary">&#x1F512; Sanctuary</button>
   </nav>
   <div class="farm-hub-body" id="farmHubBody"></div>
 </section>
@@ -2709,6 +2771,27 @@ function getFarmData() {
     sunny.friendId = molly.id
     molly.friendId = sunny.id
   }
+  const pepper = data.animalResidents.find(animal => animal.name === 'Pepper')
+  const clover = data.animalResidents.find(animal => animal.name === 'Clover')
+  if (pepper && clover && !pepper.friendId && !clover.friendId) {
+    pepper.friendId = clover.id
+    clover.friendId = pepper.id
+  }
+  data.animalResidents.forEach(animal => {
+    const moodMap = { happy:'Happy', content:'Happy', proud:'Excited', curious:'Excited', gentle:'Happy', playful:'Excited', calm:'Happy', sleepy:'Tired' }
+    animal.mood = moodMap[animal.mood] || animal.mood || 'Happy'
+    animal.trust = Math.max(0,Math.min(100,Number(animal.trust) || 0))
+    animal.bondXP = Math.max(0,Number(animal.bondXP) || 0)
+    animal.lastCaredFor = Number(animal.lastCaredFor) || 0
+    animal.moodUntil = Number(animal.moodUntil) || 0
+    animal.sickUntil = Number(animal.sickUntil) || 0
+    animal.cleanliness = Math.max(0,Math.min(100,Number(animal.cleanliness) || 75))
+    animal.careCooldowns = animal.careCooldowns || {}
+  })
+  refreshAnimalMoods(data)
+  data.sanctuary = data.sanctuary && typeof data.sanctuary === 'object'
+    ? data.sanctuary
+    : { status:'locked', level:0, unlockedAt:0 }
   data.buildings = data.buildings || {}
   const buildingDefaults = { farmhouse:1, barn:1, silo:1, chickenCoop:1, cowPasture:0, feedMill:1, bakery:0, dairy:0, roadsideStand:0 }
   for (const [key, value] of Object.entries(buildingDefaults)) {
@@ -3111,6 +3194,17 @@ const FARM_DAILY_GOALS = [
   { id:'shipment', label:'Send a truck to the city', target:1, fc:18, xp:14 }
 ]
 
+const ANIMAL_MOOD_EFFECTS = {
+  Happy: { time:0.92, fcChance:0.24, icon:'😊' },
+  Hungry: { time:1.18, fcChance:0, icon:'🍽️' },
+  Lonely: { time:1.1, fcChance:0.02, icon:'🥺' },
+  Tired: { time:1.15, fcChance:0.04, icon:'😴' },
+  Excited: { time:0.84, fcChance:0.38, icon:'🤩' },
+  Sick: { time:1.35, fcChance:0, icon:'🤒' }
+}
+const ANIMAL_BOND_LEVELS = [0,10,25,50,90,140,210]
+const ANIMAL_CARE_COOLDOWN = 10000
+
 let activeFarmTab = 'today'
 let lastFarmMvpTick = 0
 let farmSessionSummary = null
@@ -3139,12 +3233,116 @@ function formatFarmAwayTime(ms) {
 function ensureFarmDaily(data) {
   const date = farmDateKey()
   if (data.daily.date !== date) {
-    data.daily = { date, stats:{ plant:0, harvest:0, produce:0, care:0, order:0, shipment:0 }, claimed:{} }
+    data.daily = { date, stats:{ plant:0, harvest:0, produce:0, care:0, order:0, shipment:0 }, claimed:{}, animalBond:{} }
   }
   data.daily.stats = data.daily.stats || {}
   data.daily.claimed = data.daily.claimed || {}
+  data.daily.animalBond = data.daily.animalBond || {}
   const seed = [...date].reduce((sum,char)=>sum+char.charCodeAt(0),0)
   return [0,1,2].map(offset => FARM_DAILY_GOALS[(seed+offset*2)%FARM_DAILY_GOALS.length])
+}
+
+function animalGroupKey(animal) {
+  return animal.species === 'chicken' ? 'chickens' : 'cows'
+}
+
+function animalProductKey(animal) {
+  return animal.species === 'chicken' ? 'eggs' : 'milk'
+}
+
+function animalFeedKey(animal) {
+  return animal.species === 'chicken' ? 'chickenFeed' : 'cowFeed'
+}
+
+function animalFavoriteCrop(animal) {
+  const key = String(animal.favoriteFood || '').toLowerCase()
+  return key === 'carrot' ? 'carrots' : key
+}
+
+function animalBondLevel(animal) {
+  let level = 1
+  for (let index = 1; index < ANIMAL_BOND_LEVELS.length; index++) {
+    if (animal.bondXP >= ANIMAL_BOND_LEVELS[index]) level = index + 1
+    else break
+  }
+  return level
+}
+
+function animalBondProgress(animal) {
+  const level = animalBondLevel(animal)
+  if (level >= ANIMAL_BOND_LEVELS.length) return 100
+  const floor = ANIMAL_BOND_LEVELS[level-1]
+  const ceiling = ANIMAL_BOND_LEVELS[level]
+  return Math.max(0,Math.min(100,((animal.bondXP-floor)/(ceiling-floor))*100))
+}
+
+function refreshAnimalMoods(data) {
+  const now = Date.now()
+  const lateHour = new Date().getHours() >= 21 || new Date().getHours() < 6
+  for (const animal of data.animalResidents || []) {
+    const group = data.animals[animalGroupKey(animal)]
+    if (animal.sickUntil > now) {
+      animal.mood = 'Sick'
+      continue
+    }
+    if (animal.moodUntil > now) continue
+    if (group?.fed && group.readyAt <= now) animal.mood = 'Excited'
+    else if (!group?.fed) animal.mood = 'Hungry'
+    else if (animal.lastCaredFor && now-animal.lastCaredFor > 8*60*60*1000) animal.mood = 'Lonely'
+    else if (lateHour) animal.mood = 'Tired'
+    else animal.mood = 'Happy'
+  }
+}
+
+function animalMoodMultiplier(data, species) {
+  const residents = data.animalResidents.filter(animal=>animal.species === species)
+  if (!residents.length) return 1
+  return residents.reduce((sum,animal)=>sum+(ANIMAL_MOOD_EFFECTS[animal.mood]?.time || 1),0)/residents.length
+}
+
+function animalProductionStatus(data, animal, now = Date.now()) {
+  const group = data.animals[animalGroupKey(animal)]
+  if (!group?.fed) return `Needs ${FARM_GOODS[animalFeedKey(animal)].name}`
+  if (group.readyAt <= now) return `${FARM_GOODS[animalProductKey(animal)].name} ready to collect`
+  return `Producing · ${Math.max(1,Math.ceil((group.readyAt-now)/1000))}s remaining`
+}
+
+function relativeFarmCareTime(timestamp) {
+  if (!timestamp) return 'Not yet'
+  const elapsed = Math.max(0,Date.now()-timestamp)
+  if (elapsed < 60000) return 'Just now'
+  if (elapsed < 3600000) return `${Math.floor(elapsed/60000)}m ago`
+  if (elapsed < 86400000) return `${Math.floor(elapsed/3600000)}h ago`
+  return `${Math.floor(elapsed/86400000)}d ago`
+}
+
+function bestAnimalBondToday(data) {
+  ensureFarmDaily(data)
+  const entries = Object.entries(data.daily.animalBond)
+  if (!entries.length) return null
+  entries.sort((a,b)=>b[1]-a[1])
+  const animal = data.animalResidents.find(item=>item.id === entries[0][0])
+  return animal ? { animal, gained:entries[0][1] } : null
+}
+
+function maybeTriggerRareAnimalMood(data) {
+  const date = farmDateKey()
+  if (data.rareMoodCheckedDate === date || !data.animalResidents.length) return
+  data.rareMoodCheckedDate = date
+  if (Math.random() >= 0.08) return
+  const animal = data.animalResidents[Math.floor(Math.random()*data.animalResidents.length)]
+  animal.sickUntil = Date.now()+10*60*1000
+  animal.mood = 'Sick'
+  animal.moodUntil = animal.sickUntil
+  createNewsItem('Farm',`${animal.name} needs a little extra care.`,`Pine Hollow is keeping a close eye on the ${animal.species}.`,'farmlands',3)
+}
+
+function unlockCreatureSanctuary(data) {
+  if (data.sanctuary.status === 'unlocked') return
+  data.sanctuary.status = 'unlocked'
+  data.sanctuary.level = 1
+  data.sanctuary.unlockedAt = Date.now()
+  createNewsItem('Wildlife','Pine Hollow Creature Sanctuary opened.','Trusted Whisper Woods creatures now have a home in Farmlands.','farmlands',5)
 }
 
 function recordFarmDaily(data, metric, amount = 1) {
@@ -3165,13 +3363,20 @@ function recordFarmDaily(data, metric, amount = 1) {
 function getFarmReadyCounts(data, since = 0) {
   const now = Date.now()
   const machines = Object.values(data.machineQueues).flat().filter(job => job.readyAt <= now).length
-  const animals = Object.values(data.animals).filter(animal => animal.fed && animal.readyAt <= now).length
+  refreshAnimalMoods(data)
+  const animals = data.animalResidents.filter(animal => {
+    const group = data.animals[animalGroupKey(animal)]
+    return group?.fed && group.readyAt <= now
+  }).length
+  const needsFood = data.animalResidents.filter(animal=>!data.animals[animalGroupKey(animal)]?.fed).length
+  const needsCare = data.animalResidents.filter(animal=>['Lonely','Sick','Hungry'].includes(animal.mood)).length
+  const bestBond = bestAnimalBondToday(data)
   const orders = (data.farmOrders || []).filter(order => farmHasIngredients(data,order.needs)).length
   const shipmentData = getShipments()
   const trucks = (shipmentData.delivered || []).filter(item => (item.deliveredAt || 0) >= since).length
   return {
     crops:data.fields.filter(field => field.readyAt <= now).length,
-    machines, animals, orders, trucks,
+    machines, animals, needsFood, needsCare, bestBond, orders, trucks,
     activeTrucks:(shipmentData.active || []).length
   }
 }
@@ -3180,6 +3385,7 @@ function prepareFarmLifeSession() {
   const data = getFarmData()
   ensureFarmDaily(data)
   ensureFarmMvpOrders(data)
+  maybeTriggerRareAnimalMood(data)
   const previous = data.lastActiveAt || Date.now()
   farmSessionStartedAt = Date.now()
   farmSessionSummary = { awayMs:Math.max(0,farmSessionStartedAt-previous), ...getFarmReadyCounts(data,previous) }
@@ -3275,6 +3481,53 @@ function farmCard(title, icon, description, meta, action, label, disabled = fals
   </article>`
 }
 
+function animalProfileHtml(data, animal, now) {
+  const groupKey = animalGroupKey(animal)
+  const group = data.animals[groupKey]
+  const product = FARM_GOODS[animalProductKey(animal)]
+  const feed = FARM_GOODS[animalFeedKey(animal)]
+  const friend = data.animalResidents.find(item=>item.id === animal.friendId)
+  const level = animalBondLevel(animal)
+  const mood = ANIMAL_MOOD_EFFECTS[animal.mood] || ANIMAL_MOOD_EFFECTS.Happy
+  const buildingLocked = animal.species === 'cow' && data.buildings.cowPasture < 1
+  const ready = !buildingLocked && group.fed && group.readyAt <= now
+  const favoriteCrop = animalFavoriteCrop(animal)
+  const cooldown = action => now-(Number(animal.careCooldowns[action]) || 0) < ANIMAL_CARE_COOLDOWN
+  const feedDisabled = buildingLocked || group.fed || data.goods[animalFeedKey(animal)] < 1 || cooldown('feed')
+  const profileClass = ready ? 'ready' : (['Hungry','Lonely','Sick'].includes(animal.mood) ? 'needs-care' : '')
+  const status = buildingLocked ? 'Cow Pasture required for milk production' : animalProductionStatus(data,animal,now)
+  const collect = ready
+    ? `<button data-farm-action="collect:${groupKey}">Collect ${product.name}</button>`
+    : ''
+  const actionButton = (action,icon,label,disabled=false) =>
+    `<button class="animal-care-action" data-farm-action="animal-care:${animal.id}:${action}" ${disabled ? 'disabled' : ''}>${icon}<br>${label}</button>`
+  return `<article class="animal-profile ${profileClass}">
+    <div class="animal-head">
+      <div class="animal-avatar">${animal.species === 'chicken' ? '🐔' : '🐄'}</div>
+      <div><div class="animal-name">${animal.name}</div><div class="animal-species">${animal.variant === 'normal' ? '' : animal.variant+' '}${animal.species}</div></div>
+      <div class="animal-mood ${animal.mood}">${mood.icon} ${animal.mood}</div>
+    </div>
+    <div class="animal-details">
+      <div class="animal-detail"><b>Trust</b><span>${animal.trust}%</span></div>
+      <div class="animal-detail"><b>Bond XP</b><span>${animal.bondXP} · Level ${level}</span></div>
+      <div class="animal-detail"><b>Favorite food</b><span>${animal.favoriteFood || 'Unknown'}</span></div>
+      <div class="animal-detail"><b>Favorite weather</b><span>${animal.favoriteWeather || 'Any weather'}</span></div>
+      <div class="animal-detail"><b>Friend</b><span>${friend?.name || 'Still making friends'}</span></div>
+      <div class="animal-detail"><b>Last cared for</b><span>${relativeFarmCareTime(animal.lastCaredFor)}</span></div>
+    </div>
+    <div class="animal-bond-row"><span>Bond Level ${level}</span><span>${Math.round(animalBondProgress(animal))}%</span></div>
+    <div class="animal-bond-bar"><span style="width:${animalBondProgress(animal)}%"></span></div>
+    <div class="animal-production"><span><b>${feed.icon} Production:</b> ${status}</span>${collect}</div>
+    <div class="animal-care-actions">
+      ${actionButton('feed','🍽️','Feed',feedDisabled)}
+      ${actionButton('pet','🫶','Pet',cooldown('pet'))}
+      ${actionButton('clean','🧼','Clean',cooldown('clean'))}
+      ${actionButton('talk','💬','Talk',cooldown('talk'))}
+      ${actionButton('treat','⭐','Favorite Treat',!favoriteCrop || data.inventory[favoriteCrop] < 1 || cooldown('treat'))}
+    </div>
+  </article>`
+}
+
 function renderFarmHub() {
   const hub = document.getElementById('farmHub')
   if (!hub || hub.classList.contains('hidden')) return
@@ -3305,9 +3558,9 @@ function renderFarmHub() {
           <div class="farm-ready-item ${ready.crops ? 'ready' : ''}"><span class="farm-ready-value">${ready.crops}</span><span class="farm-ready-label">crops ready</span></div>
           <div class="farm-ready-item ${ready.machines ? 'ready' : ''}"><span class="farm-ready-value">${ready.machines}</span><span class="farm-ready-label">machine goods</span></div>
           <div class="farm-ready-item ${ready.animals ? 'ready' : ''}"><span class="farm-ready-value">${ready.animals}</span><span class="farm-ready-label">animals ready</span></div>
-          <div class="farm-ready-item ${ready.orders ? 'ready' : ''}"><span class="farm-ready-value">${ready.orders}</span><span class="farm-ready-label">orders fillable</span></div>
-          <div class="farm-ready-item ${ready.activeTrucks ? 'ready' : ''}"><span class="farm-ready-value">${ready.activeTrucks}</span><span class="farm-ready-label">trucks traveling</span></div>
-          <div class="farm-ready-item"><span class="farm-ready-value">${residents.length}</span><span class="farm-ready-label">named animals</span></div>
+          <div class="farm-ready-item ${ready.needsFood ? 'ready' : ''}"><span class="farm-ready-value">${ready.needsFood}</span><span class="farm-ready-label">need food</span></div>
+          <div class="farm-ready-item ${ready.needsCare ? 'ready' : ''}"><span class="farm-ready-value">${ready.needsCare}</span><span class="farm-ready-label">need care</span></div>
+          <div class="farm-ready-item"><span class="farm-ready-value">${ready.bestBond ? ready.bestBond.animal.name : '—'}</span><span class="farm-ready-label">${ready.bestBond ? `best bond +${ready.bestBond.gained}` : 'best bond today'}</span></div>
         </div>
       </section>
       <section class="farm-daily-card">
@@ -3328,7 +3581,7 @@ function renderFarmHub() {
     </div>
     <div class="farm-card-grid">
       ${farmCard('Fields','🌾','Plant, wait, and harvest your crops.',`${ready.crops} ready · ${data.fields.length} growing`,'go-tab:crops','Open Crops',false,ready.crops ? 'ready' : '')}
-      ${farmCard('Animal Care','🐓',animalNames ? `${animalNames} live on Pine Hollow.` : 'Your animals are waiting to meet you.',`${ready.animals} ready · ${data.goods.eggs || 0} eggs · ${data.goods.milk || 0} milk`,'go-tab:animals','Check Animals',false,ready.animals ? 'ready' : '')}
+      ${farmCard('Animal Care','🐓',animalNames ? `${animalNames} live on Pine Hollow.` : 'Your animals are waiting to meet you.',`${ready.animals} ready · ${ready.needsFood} hungry · ${ready.needsCare} need care`,'go-tab:animals','Check Animals',false,ready.animals || ready.needsCare ? 'ready' : '')}
       ${farmCard('Production','⚙️','Collect finished goods or start a new recipe.',`${ready.machines} ready`,'go-tab:machines','Open Machines',false,ready.machines ? 'ready' : '')}
       ${farmCard('Order Board','📋','Fresh city requests arrive every day.',`${ready.orders} can be completed now`,'go-tab:orders','View Orders',false,ready.orders ? 'ready' : '')}
       ${farmCard('Truck Route','🚚','Move Pine Hollow goods into Faceless City.',`${ready.activeTrucks} traveling · ${ready.trucks} recently returned`,'go-tab:shipments','View Shipments')}
@@ -3356,23 +3609,22 @@ function renderFarmHub() {
     }
     html += '</div>'
   } else if (activeFarmTab === 'animals') {
-    const chicken = data.animals.chickens
-    const cow = data.animals.cows
-    const chickenReady = chicken.fed && chicken.readyAt <= now
-    const cowReady = cow.fed && cow.readyAt <= now
-    const chickenNames = data.animalResidents.filter(animal=>animal.species === 'chicken').map(animal=>animal.name).join(' & ')
-    const cowNames = data.animalResidents.filter(animal=>animal.species === 'cow').map(animal=>animal.name).join(' & ')
-    html += '<div class="farm-card-grid">'
-    html += farmCard('Chickens','\u{1F414}',`${chickenNames || 'Your chickens'} · Use Chicken Feed. Eggs supply the Bakery and city orders.`,
-      `${chicken.count} chickens · ${chicken.fed ? (chickenReady ? 'Eggs ready' : Math.ceil((chicken.readyAt-now)/1000)+'s') : 'Hungry'}`,
-      chickenReady ? 'collect:chickens' : 'feed:chickens', chickenReady ? 'Collect Eggs' : 'Feed Chickens',
-      chickenReady ? false : chicken.fed || data.goods.chickenFeed < 1, chickenReady ? 'ready' : '')
-    const cowLocked = data.buildings.cowPasture < 1
-    html += farmCard('Cows','\u{1F404}',`${cowNames || 'Your cows'} · Use Cow Feed. Milk becomes cream and cheese.`,
-      cowLocked ? 'Build Cow Pasture at farm level 2' : `${cow.count} cows · ${cow.fed ? (cowReady ? 'Milk ready' : Math.ceil((cow.readyAt-now)/1000)+'s') : 'Hungry'}`,
-      cowLocked ? '' : (cowReady ? 'collect:cows' : 'feed:cows'), cowReady ? 'Collect Milk' : 'Feed Cows',
-      cowLocked ? true : (cowReady ? false : cow.fed || data.goods.cowFeed < 1), cowLocked ? 'locked' : (cowReady ? 'ready' : ''))
-    html += '</div>'
+    refreshAnimalMoods(data)
+    const ready = getFarmReadyCounts(data)
+    const best = bestAnimalBondToday(data)
+    html += `<div class="farm-today-hero">
+      <section class="farm-morning-card">
+        <div class="farm-morning-kicker">ANIMAL CARE</div>
+        <h2>${ready.needsCare ? `${ready.needsCare} friends need you.` : 'Everyone feels cared for.'}</h2>
+        <p>Mood gently changes production time and the chance of a small FC quality bonus.</p>
+      </section>
+      <section class="farm-daily-card">
+        <div class="farm-daily-kicker">BEST BOND TODAY</div>
+        <h2 style="margin:.3rem 0;color:#f4ffe5">${best ? `${best.animal.name} +${best.gained} bond XP` : 'Spend time with an animal'}</h2>
+        <p>${ready.animals} ready to collect · ${ready.needsFood} need food · ${ready.needsCare} need care</p>
+      </section>
+    </div>
+    <div class="animal-profile-grid">${data.animalResidents.map(animal=>animalProfileHtml(data,animal,now)).join('')}</div>`
   } else if (activeFarmTab === 'machines') {
     html += '<div class="farm-card-grid">'
     for (const [key, recipe] of Object.entries(FARM_RECIPES)) {
@@ -3433,6 +3685,22 @@ function renderFarmHub() {
         `upgrade:${key}`, level ? 'Upgrade' : 'Build', !unlocked || state.coins < cost, !unlocked ? 'locked' : '')
     }
     html += '</div>'
+  } else if (activeFarmTab === 'sanctuary') {
+    html += `<section class="sanctuary-foundation">
+      <div class="sanctuary-lock">
+        <div class="sanctuary-icon">🦊</div>
+        <div class="sanctuary-status">🔒 FOUNDATION RESERVED</div>
+        <h2>Creature Sanctuary — Coming Soon</h2>
+        <p>This quiet corner of Pine Hollow will become a permanent home for trusted creatures discovered in Whisper Woods.</p>
+        <div class="sanctuary-purpose">
+          <div>🌲 House trusted Whisper Woods creatures</div>
+          <div>👥 Welcome visitors to see rare animals</div>
+          <div>🏡 Increase Pine Hollow's property value</div>
+          <div>✨ Create rare products and special events</div>
+        </div>
+        <p>No combat. The Sanctuary grows through trust, care, and discovery.</p>
+      </div>
+    </section>`
   }
   body.innerHTML = html
 }
@@ -3491,22 +3759,100 @@ function collectFarmProduction(machine, recipeKey) {
   showToast('Goods Collected',`${farmFormatNeeds(recipe.output)} added to the Barn.`)
 }
 
+function handleAnimalCare(animalId, action) {
+  const data = getFarmData(), now = Date.now()
+  ensureFarmDaily(data)
+  refreshAnimalMoods(data)
+  const animal = data.animalResidents.find(item=>item.id === animalId)
+  if (!animal || now-(Number(animal.careCooldowns[action]) || 0) < ANIMAL_CARE_COOLDOWN) return
+  const oldBondLevel = animalBondLevel(animal)
+  const groupKey = animalGroupKey(animal)
+  const group = data.animals[groupKey]
+  let bond = 0, trust = 0, mood = 'Happy', message = ''
+
+  if (action === 'feed') {
+    const feedKey = animalFeedKey(animal)
+    if ((animal.species === 'cow' && data.buildings.cowPasture < 1) || group.fed || data.goods[feedKey] < 1) return
+    data.goods[feedKey]--
+    group.fed = true
+    const baseTime = animal.species === 'chicken' ? 12000 : 18000
+    group.readyAt = now+baseTime
+    refreshAnimalMoods(data)
+    const multiplier = animalMoodMultiplier(data,animal.species)
+    group.readyAt = now+Math.round(baseTime*multiplier)
+    if (animal.species === 'chicken' && data.farmGuideStep === 'feedChickens') data.farmGuideStep = 'collectEggs'
+    bond = 2; trust = 1
+    message = `${animal.name} ate ${FARM_GOODS[feedKey].name}. Production started.`
+  } else if (action === 'pet') {
+    bond = 3; trust = 2
+    message = `${animal.name} leans into your hand.`
+  } else if (action === 'clean') {
+    bond = 2; trust = 1
+    animal.cleanliness = 100
+    message = `${animal.name} looks fresh and comfortable.`
+  } else if (action === 'talk') {
+    bond = 2; trust = 2; mood = 'Excited'
+    message = `${animal.name} listens closely to your voice.`
+  } else if (action === 'treat') {
+    const crop = animalFavoriteCrop(animal)
+    if (!crop || data.inventory[crop] < 1) return
+    data.inventory[crop]--
+    bond = 6; trust = 4; mood = 'Excited'
+    message = `${animal.name} loved the ${animal.favoriteFood}.`
+  } else return
+
+  if (animal.mood === 'Sick' && (action === 'clean' || action === 'treat')) {
+    animal.sickUntil = 0
+    mood = 'Happy'
+    message += ' The extra care helped them feel better.'
+  }
+  animal.mood = mood
+  animal.moodUntil = now+2*60*1000
+  animal.lastCaredFor = now
+  animal.careCooldowns[action] = now
+  animal.bondXP += bond
+  animal.trust = Math.min(100,animal.trust+trust)
+  data.daily.animalBond[animal.id] = (Number(data.daily.animalBond[animal.id]) || 0)+bond
+  addFarmXP(data,2)
+  recordFarmDaily(data,'care')
+  awardSkillXP('creatureKeeper',3)
+
+  const newBondLevel = animalBondLevel(animal)
+  if (newBondLevel > oldBondLevel) {
+    createNewsItem('Farm',`${animal.name} reached Bond Level ${newBondLevel}.`,`A friendship is growing at Pine Hollow Farm.`,'farmlands',3)
+  }
+  if (mood === 'Excited' && animal.trust >= 80 && animal.rareMoodStoryDate !== farmDateKey()) {
+    animal.rareMoodStoryDate = farmDateKey()
+    createNewsItem('Farm',`${animal.name} had a burst of joy.`,`The ${animal.species}'s excitement drew visitors to Pine Hollow.`,'farmlands',3)
+  }
+  saveFarmData(data)
+  updateFarmInventory()
+  renderFarmHub()
+  showToast(`${animal.name}: ${mood}`,`${message} +${bond} bond XP`)
+}
+
 function feedFarmAnimal(type) {
   const data = getFarmData()
   const config = type === 'chickens' ? { feed:'chickenFeed', time:12000, building:'chickenCoop', name:'Chickens' } : { feed:'cowFeed', time:18000, building:'cowPasture', name:'Cows' }
   if (data.buildings[config.building] < 1 || data.animals[type].fed || data.goods[config.feed] < 1) return
-  data.goods[config.feed]--; data.animals[type].fed = true; data.animals[type].readyAt = Date.now()+config.time
-  if (type === 'chickens' && data.farmGuideStep === 'feedChickens') data.farmGuideStep = 'collectEggs'
   const species = type === 'chickens' ? 'chicken' : 'cow'
+  data.animals[type].fed = true
+  data.animals[type].readyAt = Date.now()+config.time
+  refreshAnimalMoods(data)
+  const duration = Math.round(config.time*animalMoodMultiplier(data,species))
+  data.goods[config.feed]--; data.animals[type].readyAt = Date.now()+duration
+  if (type === 'chickens' && data.farmGuideStep === 'feedChickens') data.farmGuideStep = 'collectEggs'
   data.animalResidents.filter(animal=>animal.species === species).forEach(animal=>{
-    animal.mood = 'content'
+    animal.mood = 'Happy'
+    animal.moodUntil = Date.now()+2*60*1000
+    animal.lastCaredFor = Date.now()
     animal.bondXP = (Number(animal.bondXP) || 0) + 1
     animal.trust = Math.min(100,(Number(animal.trust) || 0) + 1)
   })
   addFarmXP(data,3)
   recordFarmDaily(data,'care')
   saveFarmData(data); updateFarmInventory(); renderFarmHub()
-  showToast(`${config.name} Fed`,`Production ready in ${config.time/1000} seconds.`)
+  showToast(`${config.name} Fed`,`Mood-adjusted production ready in ${Math.ceil(duration/1000)} seconds.`)
 }
 
 function collectFarmAnimal(type) {
@@ -3517,15 +3863,33 @@ function collectFarmAnimal(type) {
   data.goods[key] += amount; animal.fed = false; animal.readyAt = 0
   if (type === 'chickens' && data.farmGuideStep === 'collectEggs') data.farmGuideStep = 'completeOrder'
   const species = type === 'chickens' ? 'chicken' : 'cow'
-  data.animalResidents.filter(resident=>resident.species === species).forEach(resident=>{
-    resident.mood = 'proud'
+  const residents = data.animalResidents.filter(resident=>resident.species === species)
+  const qualityChance = residents.length
+    ? residents.reduce((sum,resident)=>sum+(ANIMAL_MOOD_EFFECTS[resident.mood]?.fcChance || 0),0)/residents.length
+    : 0
+  const qualityBonus = Math.random() < qualityChance ? 2+Math.floor(Math.random()*4) : 0
+  ensureFarmDaily(data)
+  residents.forEach(resident=>{
+    const oldLevel = animalBondLevel(resident)
+    resident.mood = 'Excited'
+    resident.moodUntil = Date.now()+2*60*1000
+    resident.lastCaredFor = Date.now()
     resident.bondXP = (Number(resident.bondXP) || 0) + 2
     resident.trust = Math.min(100,(Number(resident.trust) || 0) + 1)
+    data.daily.animalBond[resident.id] = (Number(data.daily.animalBond[resident.id]) || 0)+2
+    const newLevel = animalBondLevel(resident)
+    if (newLevel > oldLevel) {
+      createNewsItem('Farm',`${resident.name} reached Bond Level ${newLevel}.`,`Collecting ${FARM_GOODS[key].name.toLowerCase()} brought you closer.`,'farmlands',3)
+    }
   })
+  if (qualityBonus) {
+    state.coins += qualityBonus
+    document.getElementById('statCoins').textContent = state.coins
+  }
   addFarmXP(data,8)
   recordFarmDaily(data,'care')
   saveFarmData(data); updateFarmInventory(); renderFarmHub()
-  showToast(`Collected ${FARM_GOODS[key].name}`,`+${amount} ${FARM_GOODS[key].name} · +8 XP`)
+  showToast(`Collected ${FARM_GOODS[key].name}`,`+${amount} ${FARM_GOODS[key].name} · +8 XP${qualityBonus ? ` · +${qualityBonus} FC quality bonus` : ''}`)
 }
 
 function completeFarmMvpOrder(index) {
@@ -3620,6 +3984,7 @@ function handleFarmHubAction(action) {
   else if (type === 'upgrade') upgradeFarmBuilding(a)
   else if (type === 'sell-surplus') sellFarmSurplus()
   else if (type === 'claim-seeds') claimFarmSeeds()
+  else if (type === 'animal-care') handleAnimalCare(a,b)
   else if (type === 'go-tab') {
     activeFarmTab = a
     renderFarmHub()
