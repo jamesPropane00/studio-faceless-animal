@@ -571,7 +571,7 @@
           <input id="editTrimEnd" type="number" min="0.1" step="0.1" value="4" onchange="updateSelectedClipFromEditor()" />
         </div>
         <div>
-          <label for="editFilter">Look</label>
+          <label for="editFilter">Filter</label>
           <select id="editFilter" onchange="updateSelectedClipFromEditor()">
             <option value="none">None</option>
             <option value="grayscale">B&amp;W</option>
@@ -586,20 +586,32 @@
           </select>
         </div>
         <div>
-          <label for="editEffect">Filters</label>
+          <label for="editEffect">Effect</label>
           <select id="editEffect" onchange="updateSelectedClipFromEditor()">
             <option value="none">None</option>
-            <option value="fire">Fire</option>
-            <option value="sparkles">Sparkles</option>
-            <option value="bad-tv">Bad TV</option>
-            <option value="vhs">VHS</option>
-            <option value="old-vhs">Old VHS</option>
-            <option value="glitch">Glitch</option>
-            <option value="rgb-split">RGB Split</option>
-            <option value="static">Static</option>
-            <option value="scanlines">Scanlines</option>
-            <option value="film-burn">Film Burn</option>
-            <option value="light-leak">Light Leak</option>
+            <optgroup label="Camera">
+              <option value="camera-shake">Camera Shake</option>
+              <option value="zoom-pulse">Zoom Pulse</option>
+              <option value="strobe">Strobe</option>
+            </optgroup>
+            <optgroup label="Digital">
+              <option value="glitch">Digital Glitch</option>
+              <option value="rgb-split">Chromatic Split</option>
+              <option value="prism">Prism Trails</option>
+              <option value="bad-tv">Bad TV</option>
+              <option value="vhs">VHS</option>
+              <option value="old-vhs">Old VHS</option>
+              <option value="static">Static</option>
+              <option value="scanlines">Scanlines</option>
+            </optgroup>
+            <optgroup label="Light & Atmosphere">
+              <option value="dream-glow">Dream Glow</option>
+              <option value="edge-glow">Edge Glow</option>
+              <option value="fire">Fire</option>
+              <option value="sparkles">Sparkles</option>
+              <option value="film-burn">Film Burn</option>
+              <option value="light-leak">Light Leak</option>
+            </optgroup>
           </select>
         </div>
         <div>
@@ -611,11 +623,11 @@
           <input id="editFilterEnd" type="number" min="0.1" step="0.1" value="4" onchange="updateSelectedClipFromEditor()" />
         </div>
         <div>
-          <label for="editEffectStart">Filter start</label>
+          <label for="editEffectStart">Effect start</label>
           <input id="editEffectStart" type="number" min="0" step="0.1" value="0" onchange="updateSelectedClipFromEditor()" />
         </div>
         <div>
-          <label for="editEffectEnd">Filter end</label>
+          <label for="editEffectEnd">Effect end</label>
           <input id="editEffectEnd" type="number" min="0.1" step="0.1" value="4" onchange="updateSelectedClipFromEditor()" />
         </div>
         <div>
@@ -627,6 +639,11 @@
             <option value="4:5">4:5</option>
           </select>
         </div>
+      </div>
+      <div class="range-row">
+        <label for="editEffectIntensity">Effect strength</label>
+        <input id="editEffectIntensity" type="range" min="0" max="100" value="70" oninput="updateSelectedClipFromEditor()" />
+        <output id="editEffectIntensityOut">70</output>
       </div>
       <div class="range-row">
         <label for="editBrightness">Brightness</label>
@@ -1160,6 +1177,7 @@
         effect: 'none',
         effectStart: 0,
         effectEnd: sourceDuration,
+        effectIntensity: 0.7,
         opacity: 1,
         volume: 1,
         _text: opts.text || null,
@@ -1226,6 +1244,7 @@
       const fit = clip.fit || 'contain';
       const filter = clip.filter || 'none';
       const effect = clip.effect || 'none';
+      const effectIntensity = Math.round(Number(clip.effectIntensity == null ? 0.7 : clip.effectIntensity) * 100);
       const muted = Number(clip.volume == null ? 1 : clip.volume) <= 0;
       const volume = Math.round(Number(clip.volume == null ? 1 : clip.volume) * 100);
       const title = clip.type === 'video' ? 'Video tools' : clip.type === 'music' ? 'Audio tools' : 'Clip tools';
@@ -1242,8 +1261,8 @@
           <option value="2"${speed === '2' ? ' selected' : ''}>2x</option>
         </select>
         ${clip.type !== 'music' ? `
-          <select aria-label="Look" onchange="setSelectedFilter(this.value)">
-            <option value="none"${filter === 'none' ? ' selected' : ''}>No look</option>
+          <select aria-label="Filter" onchange="setSelectedFilter(this.value)">
+            <option value="none"${filter === 'none' ? ' selected' : ''}>No filter</option>
             <option value="cinematic"${filter === 'cinematic' ? ' selected' : ''}>Cinematic</option>
             <option value="vivid"${filter === 'vivid' ? ' selected' : ''}>Vivid</option>
             <option value="noir"${filter === 'noir' ? ' selected' : ''}>Noir</option>
@@ -1255,27 +1274,43 @@
             <option value="invert"${filter === 'invert' ? ' selected' : ''}>Invert</option>
           </select>
           <span class="range-pill">
-            <button class="tool-btn" type="button" onclick="markSelectedRange('filter','start')">Look In</button>
+            <button class="tool-btn" type="button" onclick="markSelectedRange('filter','start')">Filter In</button>
             <button class="tool-btn" type="button" onclick="markSelectedRange('filter','end')">Out</button>
           </span>
-          <select aria-label="Filters" onchange="setSelectedEffect(this.value)">
-            <option value="none"${effect === 'none' ? ' selected' : ''}>No filter</option>
-            <option value="fire"${effect === 'fire' ? ' selected' : ''}>Fire</option>
-            <option value="sparkles"${effect === 'sparkles' ? ' selected' : ''}>Sparkles</option>
-            <option value="bad-tv"${effect === 'bad-tv' ? ' selected' : ''}>Bad TV</option>
-            <option value="vhs"${effect === 'vhs' ? ' selected' : ''}>VHS</option>
-            <option value="old-vhs"${effect === 'old-vhs' ? ' selected' : ''}>Old VHS</option>
-            <option value="glitch"${effect === 'glitch' ? ' selected' : ''}>Glitch</option>
-            <option value="rgb-split"${effect === 'rgb-split' ? ' selected' : ''}>RGB Split</option>
-            <option value="static"${effect === 'static' ? ' selected' : ''}>Static</option>
-            <option value="scanlines"${effect === 'scanlines' ? ' selected' : ''}>Scanlines</option>
-            <option value="film-burn"${effect === 'film-burn' ? ' selected' : ''}>Film Burn</option>
-            <option value="light-leak"${effect === 'light-leak' ? ' selected' : ''}>Light Leak</option>
+          <select aria-label="Effect" onchange="setSelectedEffect(this.value)">
+            <option value="none"${effect === 'none' ? ' selected' : ''}>No effect</option>
+            <optgroup label="Camera">
+              <option value="camera-shake"${effect === 'camera-shake' ? ' selected' : ''}>Camera Shake</option>
+              <option value="zoom-pulse"${effect === 'zoom-pulse' ? ' selected' : ''}>Zoom Pulse</option>
+              <option value="strobe"${effect === 'strobe' ? ' selected' : ''}>Strobe</option>
+            </optgroup>
+            <optgroup label="Digital">
+              <option value="glitch"${effect === 'glitch' ? ' selected' : ''}>Digital Glitch</option>
+              <option value="rgb-split"${effect === 'rgb-split' ? ' selected' : ''}>Chromatic Split</option>
+              <option value="prism"${effect === 'prism' ? ' selected' : ''}>Prism Trails</option>
+              <option value="bad-tv"${effect === 'bad-tv' ? ' selected' : ''}>Bad TV</option>
+              <option value="vhs"${effect === 'vhs' ? ' selected' : ''}>VHS</option>
+              <option value="old-vhs"${effect === 'old-vhs' ? ' selected' : ''}>Old VHS</option>
+              <option value="static"${effect === 'static' ? ' selected' : ''}>Static</option>
+              <option value="scanlines"${effect === 'scanlines' ? ' selected' : ''}>Scanlines</option>
+            </optgroup>
+            <optgroup label="Light">
+              <option value="dream-glow"${effect === 'dream-glow' ? ' selected' : ''}>Dream Glow</option>
+              <option value="edge-glow"${effect === 'edge-glow' ? ' selected' : ''}>Edge Glow</option>
+              <option value="fire"${effect === 'fire' ? ' selected' : ''}>Fire</option>
+              <option value="sparkles"${effect === 'sparkles' ? ' selected' : ''}>Sparkles</option>
+              <option value="film-burn"${effect === 'film-burn' ? ' selected' : ''}>Film Burn</option>
+              <option value="light-leak"${effect === 'light-leak' ? ' selected' : ''}>Light Leak</option>
+            </optgroup>
           </select>
           <span class="range-pill">
-            <button class="tool-btn" type="button" onclick="markSelectedRange('effect','start')">Filter In</button>
+            <button class="tool-btn" type="button" onclick="markSelectedRange('effect','start')">Effect In</button>
             <button class="tool-btn" type="button" onclick="markSelectedRange('effect','end')">Out</button>
           </span>
+          <label class="mini-range">Strength
+            <input type="range" min="0" max="100" value="${effectIntensity}" oninput="setSelectedEffectIntensity(this.value)" />
+            <output>${effectIntensity}</output>
+          </label>
           <button class="tool-btn" type="button" onclick="setSelectedFit('${fit === 'cover' ? 'contain' : 'cover'}')">${fit === 'cover' ? 'Fit' : 'Fill'}</button>
           <button class="tool-btn" type="button" onclick="rotateClip(90)">Rotate</button>
         ` : ''}
@@ -1305,6 +1340,9 @@
       document.getElementById('editFilterEnd').value = Number(clip.filterEnd == null ? sourceDuration : clip.filterEnd).toFixed(1);
       document.getElementById('editEffectStart').value = Number(clip.effectStart || 0).toFixed(1);
       document.getElementById('editEffectEnd').value = Number(clip.effectEnd == null ? sourceDuration : clip.effectEnd).toFixed(1);
+      const effectIntensity = Math.round(Number(clip.effectIntensity == null ? 0.7 : clip.effectIntensity) * 100);
+      document.getElementById('editEffectIntensity').value = String(effectIntensity);
+      document.getElementById('editEffectIntensityOut').textContent = String(effectIntensity);
       ['Brightness', 'Contrast', 'Saturation'].forEach(name => {
         const key = name.toLowerCase();
         const value = Math.round(Number(clip[key] || 0) * 100);
@@ -1344,6 +1382,7 @@
       clip.filterEnd = Math.max(clip.filterStart, Math.min(sourceDuration, Number(document.getElementById('editFilterEnd').value || sourceDuration)));
       clip.effectStart = Math.max(0, Math.min(sourceDuration, Number(document.getElementById('editEffectStart').value || 0)));
       clip.effectEnd = Math.max(clip.effectStart, Math.min(sourceDuration, Number(document.getElementById('editEffectEnd').value || sourceDuration)));
+      clip.effectIntensity = Number(document.getElementById('editEffectIntensity').value || 0) / 100;
       clip.brightness = Number(document.getElementById('editBrightness').value || 0) / 100;
       clip.contrast = Number(document.getElementById('editContrast').value || 0) / 100;
       clip.saturation = Number(document.getElementById('editSaturation').value || 0) / 100;
@@ -1354,6 +1393,7 @@
       document.getElementById('editSaturationOut').textContent = document.getElementById('editSaturation').value;
       document.getElementById('editOpacityOut').textContent = document.getElementById('editOpacity').value;
       document.getElementById('editVolumeOut').textContent = document.getElementById('editVolume').value;
+      document.getElementById('editEffectIntensityOut').textContent = document.getElementById('editEffectIntensity').value;
       invalidateExport();
       recalcDuration();
       renderTimeline();
@@ -1401,6 +1441,15 @@
       const clip = selectedClip();
       if (!clip) return toast('Select a clip first');
       clip.effect = value || 'none';
+      invalidateExport();
+      renderSelectedTools();
+      renderFrame();
+    }
+
+    function setSelectedEffectIntensity(value) {
+      const clip = selectedClip();
+      if (!clip) return toast('Select a clip first');
+      clip.effectIntensity = Math.max(0, Math.min(1, Number(value || 0) / 100));
       invalidateExport();
       renderSelectedTools();
       renderFrame();
@@ -1831,6 +1880,30 @@
       return sourceTime >= start && sourceTime <= end;
     }
 
+    function clipEffectStrength(clip, sourceTime) {
+      if (!isTimedFeatureActive(clip, 'effect', sourceTime)) return 0;
+      return Math.max(0, Math.min(1, Number(clip.effectIntensity == null ? 0.7 : clip.effectIntensity)));
+    }
+
+    function clipFrameMotion(clip, sourceTime) {
+      const strength = clipEffectStrength(clip, sourceTime);
+      const effect = clip.effect || 'none';
+      const time = STATE.playhead + sourceTime;
+      if (effect === 'camera-shake') {
+        return {
+          x: (Math.sin(time * 31) + Math.sin(time * 57) * 0.45) * 11 * strength,
+          y: (Math.cos(time * 37) + Math.sin(time * 43) * 0.4) * 8 * strength,
+          zoom: 1 + 0.035 * strength,
+          angle: Math.sin(time * 23) * 0.8 * strength,
+        };
+      }
+      if (effect === 'zoom-pulse') {
+        const pulse = (Math.sin(time * Math.PI * 2.2) + 1) / 2;
+        return { x: 0, y: 0, zoom: 1 + pulse * 0.12 * strength, angle: 0 };
+      }
+      return { x: 0, y: 0, zoom: 1, angle: 0 };
+    }
+
     function clipCanvasFilter(clip, sourceTime) {
       const brightness = 100 + Math.round(Number(clip.brightness || 0) * 100);
       const contrast = 100 + Math.round(Number(clip.contrast || 0) * 100);
@@ -1876,6 +1949,7 @@
     function applyClipAppearance(object, clip, sourceTime) {
       const filters = [];
       const filterSet = fabric.Image.filters || {};
+      const motion = clipFrameMotion(clip, sourceTime);
       const filterActive = isTimedFeatureActive(clip, 'filter', sourceTime);
       if (filterActive && clip.filter === 'grayscale' && filterSet.Grayscale) filters.push(new filterSet.Grayscale());
       if (filterActive && clip.filter === 'sepia' && filterSet.Sepia) filters.push(new filterSet.Sepia());
@@ -1907,11 +1981,13 @@
       if (clip.contrast && filterSet.Contrast) filters.push(new filterSet.Contrast({ contrast: clip.contrast }));
       if (clip.saturation && filterSet.Saturation) filters.push(new filterSet.Saturation({ saturation: clip.saturation }));
       object.set({
-        left: canvas.getWidth() / 2,
-        top: canvas.getHeight() / 2,
+        left: canvas.getWidth() / 2 + motion.x,
+        top: canvas.getHeight() / 2 + motion.y,
         originX: 'center',
         originY: 'center',
-        angle: Number(clip.rotation || 0),
+        angle: Number(clip.rotation || 0) + motion.angle,
+        scaleX: Number(object.scaleX || 1) * motion.zoom,
+        scaleY: Number(object.scaleY || 1) * motion.zoom,
         flipX: Boolean(clip.flipX),
         flipY: Boolean(clip.flipY),
         opacity: clip.opacity == null ? 1 : clip.opacity,
@@ -1926,41 +2002,51 @@
     function drawClipEffect(ctx, clip, sourceTime) {
       if (!isTimedFeatureActive(clip, 'effect', sourceTime)) return;
       const effect = clip.effect || 'none';
+      const strength = clipEffectStrength(clip, sourceTime);
+      if (strength <= 0) return;
       const w = canvas.getWidth();
       const h = canvas.getHeight();
       const time = STATE.playhead + sourceTime;
       ctx.save();
       if (effect === 'fire') {
+        ctx.globalCompositeOperation = 'screen';
         const grad = ctx.createLinearGradient(0, h, 0, h * 0.52);
-        grad.addColorStop(0, 'rgba(255,70,0,0.62)');
-        grad.addColorStop(0.45, 'rgba(255,170,0,0.24)');
+        grad.addColorStop(0, `rgba(255,45,0,${0.7 * strength})`);
+        grad.addColorStop(0.45, `rgba(255,170,0,${0.3 * strength})`);
         grad.addColorStop(1, 'rgba(255,220,120,0)');
         ctx.fillStyle = grad;
         ctx.fillRect(0, h * 0.45, w, h * 0.55);
-        for (let i = 0; i < 22; i++) {
+        ctx.shadowBlur = 18 * strength;
+        ctx.shadowColor = '#ff5a00';
+        for (let i = 0; i < 34; i++) {
           const x = ((i * 73 + Math.sin(time * 2 + i) * 40) % w + w) % w;
           const y = h - ((i * 37 + time * 90) % (h * 0.36));
           const r = 18 + (i % 5) * 8;
-          ctx.fillStyle = i % 2 ? 'rgba(255,210,80,0.32)' : 'rgba(255,55,0,0.28)';
+          ctx.fillStyle = i % 2 ? `rgba(255,225,90,${0.38 * strength})` : `rgba(255,45,0,${0.34 * strength})`;
           ctx.beginPath(); ctx.ellipse(x, y, r * 0.55, r, 0, 0, Math.PI * 2); ctx.fill();
         }
       } else if (effect === 'sparkles') {
-        ctx.fillStyle = 'rgba(255,255,210,0.85)';
-        for (let i = 0; i < 38; i++) {
+        ctx.globalCompositeOperation = 'screen';
+        ctx.shadowColor = '#fff7bd';
+        for (let i = 0; i < 52; i++) {
           const x = ((i * 97 + Math.sin(time + i) * 50) % w + w) % w;
           const y = ((i * 53 + Math.cos(time * 1.4 + i) * 35) % h + h) % h;
-          const r = 1.5 + ((i + Math.floor(time * 8)) % 4);
+          const twinkle = Math.max(0.1, (Math.sin(time * 5 + i * 1.7) + 1) / 2);
+          const r = (1.5 + (i % 5)) * twinkle * (0.55 + strength);
+          ctx.globalAlpha = Math.min(1, (0.25 + twinkle * 0.75) * strength);
+          ctx.shadowBlur = r * 2.5;
+          ctx.fillStyle = i % 4 ? '#fffce1' : '#f9a8d4';
           ctx.beginPath();
           ctx.moveTo(x, y - r * 2); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r * 2); ctx.lineTo(x - r, y); ctx.closePath(); ctx.fill();
         }
       } else if (effect === 'bad-tv' || effect === 'vhs' || effect === 'old-vhs' || effect === 'scanlines') {
-        ctx.globalAlpha = effect === 'bad-tv' ? 0.22 : effect === 'old-vhs' ? 0.2 : 0.14;
+        ctx.globalAlpha = (effect === 'bad-tv' ? 0.3 : effect === 'old-vhs' ? 0.26 : 0.2) * strength;
         for (let y = 0; y < h; y += effect === 'bad-tv' ? 5 : effect === 'scanlines' ? 4 : 7) {
           ctx.fillStyle = y % 2 ? '#000' : '#fff';
           ctx.fillRect(0, y, w, 1);
         }
         if (effect !== 'scanlines') {
-          ctx.globalAlpha = effect === 'bad-tv' ? 0.18 : effect === 'old-vhs' ? 0.22 : 0.1;
+          ctx.globalAlpha = (effect === 'bad-tv' ? 0.24 : effect === 'old-vhs' ? 0.28 : 0.16) * strength;
           for (let i = 0; i < 95; i++) {
             const x = (i * 47 + time * 300) % w;
             const y = (i * 83 + time * 180) % h;
@@ -1969,15 +2055,21 @@
           }
         }
         if (effect === 'vhs' || effect === 'old-vhs') {
-          ctx.globalAlpha = 0.18;
+          ctx.globalAlpha = 0.24 * strength;
           ctx.fillStyle = '#22d3ee'; ctx.fillRect(0, 0, 8, h);
           ctx.fillStyle = '#f472b6'; ctx.fillRect(w - 8, 0, 8, h);
+          const trackingY = ((time * 86) % (h + 80)) - 40;
+          ctx.globalAlpha = 0.3 * strength;
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, trackingY, w, 2);
+          ctx.globalAlpha = 0.12 * strength;
+          ctx.fillRect(0, trackingY - 7, w, 5);
         }
         if (effect === 'old-vhs') {
-          ctx.globalAlpha = 0.2;
+          ctx.globalAlpha = 0.25 * strength;
           ctx.fillStyle = 'rgba(180,120,40,0.34)';
           ctx.fillRect(0, 0, w, h);
-          ctx.globalAlpha = 0.16;
+          ctx.globalAlpha = 0.2 * strength;
           for (let i = 0; i < 9; i++) {
             const y = (time * 42 + i * 137) % h;
             ctx.fillStyle = i % 2 ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)';
@@ -1985,25 +2077,37 @@
           }
         }
       } else if (effect === 'glitch') {
-        for (let i = 0; i < 10; i++) {
+        const burst = Math.pow(Math.max(0, Math.sin(time * 5.7)), 8);
+        for (let i = 0; i < 16; i++) {
           const y = ((i * 91 + time * 130) % h);
           const sliceH = 4 + (i % 4) * 4;
-          const dx = Math.sin(time * 8 + i) * 18;
-          ctx.globalAlpha = 0.18;
+          const dx = Math.sin(time * 8 + i) * (8 + 34 * burst) * strength;
+          ctx.globalAlpha = (0.12 + burst * 0.28) * strength;
           ctx.drawImage(canvas.lowerCanvasEl, 0, y, w, sliceH, dx, y, w, sliceH);
         }
       } else if (effect === 'rgb-split') {
-        ctx.globalAlpha = 0.26;
+        const split = (5 + 10 * Math.abs(Math.sin(time * 2.5))) * strength;
+        ctx.globalAlpha = 0.32 * strength;
         ctx.globalCompositeOperation = 'screen';
-        ctx.drawImage(canvas.lowerCanvasEl, 6, 0);
+        ctx.drawImage(canvas.lowerCanvasEl, split, 0);
         ctx.fillStyle = 'rgba(255,0,80,0.28)';
         ctx.fillRect(0, 0, w, h);
-        ctx.drawImage(canvas.lowerCanvasEl, -6, 0);
+        ctx.drawImage(canvas.lowerCanvasEl, -split, 0);
         ctx.fillStyle = 'rgba(0,210,255,0.24)';
         ctx.fillRect(0, 0, w, h);
+      } else if (effect === 'prism') {
+        ctx.globalCompositeOperation = 'screen';
+        const drift = (8 + 16 * Math.sin(time * 1.7)) * strength;
+        const colors = ['rgba(255,40,120,0.16)', 'rgba(60,220,255,0.14)', 'rgba(255,220,70,0.12)'];
+        [-1, 0, 1].forEach((direction, index) => {
+          ctx.globalAlpha = 0.38 * strength;
+          ctx.drawImage(canvas.lowerCanvasEl, drift * direction, drift * Math.sin(time + index) * 0.35);
+          ctx.fillStyle = colors[index];
+          ctx.fillRect(0, 0, w, h);
+        });
       } else if (effect === 'static') {
-        ctx.globalAlpha = 0.18;
-        for (let i = 0; i < 360; i++) {
+        ctx.globalAlpha = 0.26 * strength;
+        for (let i = 0; i < 560; i++) {
           const x = (i * 29 + time * 911) % w;
           const y = (i * 71 + time * 617) % h;
           const shade = (i * 37 + Math.floor(time * 60)) % 255;
@@ -2018,8 +2122,30 @@
         grad.addColorStop(0, effect === 'film-burn' ? 'rgba(255,80,0,0.62)' : 'rgba(255,220,120,0.42)');
         grad.addColorStop(0.35, effect === 'film-burn' ? 'rgba(255,190,40,0.26)' : 'rgba(244,114,182,0.18)');
         grad.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.globalAlpha = 1;
+        ctx.globalAlpha = strength;
         ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+      } else if (effect === 'dream-glow') {
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.42 * strength;
+        ctx.filter = `blur(${4 + 12 * strength}px) saturate(145%) brightness(118%)`;
+        ctx.drawImage(canvas.lowerCanvasEl, -3 * strength, -3 * strength, w + 6 * strength, h + 6 * strength);
+        const glow = ctx.createRadialGradient(w * 0.5, h * 0.35, 0, w * 0.5, h * 0.35, Math.max(w, h) * 0.72);
+        glow.addColorStop(0, `rgba(255,220,255,${0.17 * strength})`);
+        glow.addColorStop(0.55, `rgba(120,220,255,${0.08 * strength})`);
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.filter = 'none';
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, w, h);
+      } else if (effect === 'edge-glow') {
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.38 * strength;
+        ctx.filter = `grayscale(100%) contrast(320%) invert(100%) sepia(100%) saturate(600%) hue-rotate(135deg) blur(${1 + strength * 2}px)`;
+        ctx.drawImage(canvas.lowerCanvasEl, 0, 0);
+      } else if (effect === 'strobe') {
+        const flash = Math.pow(Math.max(0, Math.sin(time * Math.PI * 6)), 12);
+        ctx.globalAlpha = flash * 0.78 * strength;
+        ctx.fillStyle = '#fff';
         ctx.fillRect(0, 0, w, h);
       }
       ctx.restore();
@@ -2030,12 +2156,13 @@
       const sourceHeight = video.videoHeight || 1080;
       const scale = mediaScale(clip, sourceWidth, sourceHeight);
       const ctx = canvas.contextContainer;
+      const motion = clipFrameMotion(clip, sourceTime);
       ctx.save();
       ctx.globalAlpha = clip.opacity == null ? 1 : clip.opacity;
       ctx.filter = clipCanvasFilter(clip, sourceTime);
-      ctx.translate(canvas.getWidth() / 2, canvas.getHeight() / 2);
-      ctx.rotate((Number(clip.rotation || 0) * Math.PI) / 180);
-      ctx.scale(Boolean(clip.flipX) ? -1 : 1, Boolean(clip.flipY) ? -1 : 1);
+      ctx.translate(canvas.getWidth() / 2 + motion.x, canvas.getHeight() / 2 + motion.y);
+      ctx.rotate(((Number(clip.rotation || 0) + motion.angle) * Math.PI) / 180);
+      ctx.scale((Boolean(clip.flipX) ? -1 : 1) * motion.zoom, (Boolean(clip.flipY) ? -1 : 1) * motion.zoom);
       ctx.drawImage(video, -(sourceWidth * scale) / 2, -(sourceHeight * scale) / 2, sourceWidth * scale, sourceHeight * scale);
       ctx.filter = 'none';
       ctx.restore();
