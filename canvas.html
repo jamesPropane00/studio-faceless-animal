@@ -384,6 +384,14 @@
       border-left: 3px solid #38bdf8; background: rgba(14,165,233,0.08);
       color: #bae6fd; font-size: 0.68rem; line-height: 1.4;
     }
+    .tv-compression {
+      display: flex !important; align-items: center; gap: 0.5rem;
+      min-height: 42px; margin: 0.55rem 0; padding: 0.55rem 0.65rem;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.025); color: var(--text) !important;
+    }
+    .tv-compression input { width: 18px; height: 18px; margin: 0; accent-color: #0ea5e9; }
+    .tv-compression span { font-size: 0.7rem; line-height: 1.35; }
     .post-image-preview {
       display: none;
       width: 100%;
@@ -738,6 +746,15 @@
           <option value="public">Public</option>
           <option value="private">Private</option>
         </select>
+        <label class="tv-compression">
+          <input id="postCompressTv" type="checkbox" checked />
+          <span>Compress automatically when the video exceeds the 50 MB TV limit.</span>
+        </label>
+        <label for="postCompressionTarget">Compressed size</label>
+        <select id="postCompressionTarget">
+          <option value="45" selected>Balanced quality (about 45 MB)</option>
+          <option value="30">Smaller file (about 30 MB)</option>
+        </select>
       </div>
       <div id="postPreview" style="display:none;margin-bottom:0.4rem;">
         <video id="postVideoPreview" controls style="width:100%;max-height:180px;border-radius:8px;"></video>
@@ -983,6 +1000,7 @@
     }
 
     let ffmpegInstance = null;
+    let ffmpegProgressCallback = null;
     async function fileToUint8Array(file) {
       return new Uint8Array(await file.arrayBuffer());
     }
@@ -1002,7 +1020,8 @@
       const ffmpeg = ffmpegInstance || new FFmpeg();
       ffmpeg.on('progress', ({ progress }) => {
         const pct = Math.max(1, Math.min(99, Math.round((progress || 0) * 100)));
-        toast('Converting video... ' + pct + '%');
+        if (ffmpegProgressCallback) ffmpegProgressCallback(pct);
+        else toast('Converting video... ' + pct + '%');
       });
       await ffmpeg.load({
         coreURL: await urlToBlobURL(base + '/ffmpeg-core.js', 'text/javascript'),
@@ -2664,7 +2683,9 @@
     function syncPostDestinationOptions() {
       const toBoard = document.getElementById('postToBoard').checked;
       const toTv = document.getElementById('postToTv').checked;
+      const compressTv = document.getElementById('postCompressTv').checked;
       document.getElementById('postTvOptions').hidden = !toTv;
+      document.getElementById('postCompressionTarget').disabled = !compressTv;
       const summary = document.getElementById('postDestinationSummary');
       const button = document.getElementById('postBtn');
       if (toBoard && toTv) summary.textContent = 'Publishing to Community Board and Faceless TV.';
@@ -2712,6 +2733,9 @@
     async function publishCanvasToBoard(blob, session, title, caption) {
       if (!blob || !blob.size) throw new Error('Render the project before publishing.');
       if (blob.size > 50 * 1024 * 1024) throw new Error('Board uploads are limited to 50MB.');
+      const boardFileName = blob.type === 'video/mp4'
+        ? String(STATE.exportedName || 'canvas-edit.webm').replace(/\.[^.]+$/, '') + '.mp4'
+        : (STATE.exportedName || (STATE.exportedKind === 'image' ? 'canvas-edit.png' : 'canvas-edit.webm'));
       const response = await fetch('/api/canvas/publish', {
         method: 'POST',
         headers: {
@@ -2721,7 +2745,7 @@
         body: JSON.stringify({
           title,
           caption,
-          file_name: STATE.exportedName || (STATE.exportedKind === 'image' ? 'canvas-edit.png' : 'canvas-edit.webm'),
+          file_name: boardFileName,
           file_type: blob.type || (STATE.exportedKind === 'image' ? 'image/png' : 'video/webm'),
           file_size_bytes: blob.size,
           file_b64: await blobToBase64(blob),
@@ -2732,9 +2756,54 @@
       return payload;
     }
 
+    async function compressVideoForTv(blob, targetMegabytes, onProgress) {
+      const ffmpeg = await getFFmpeg();
+      const stamp = Date.now();
+      const sourceName = 'tv-source-' + stamp + (blob.type === 'video/mp4' ? '.mp4' : '.webm');
+      const outputName = 'tv-compressed-' + stamp + '.mp4';
+      const duration = Math.max(1, Number(STATE.duration || 1));
+      const targetBytes = Math.max(10, Number(targetMegabytes || 45)) * 1024 * 1024;
+      const totalKbps = Math.max(80, Math.floor((targetBytes * 8 * 0.9) / duration / 1000));
+      const audioKbps = Math.max(24, Math.min(96, Math.floor(totalKbps * 0.14)));
+      const videoKbps = Math.max(48, Math.min(12000, totalKbps - audioKbps));
+
+      ffmpegProgressCallback = percent => {
+        if (onProgress) onProgress(percent);
+      };
+      try {
+        await ffmpeg.writeFile(sourceName, await fileToUint8Array(blob));
+        await ffmpeg.exec([
+          '-i', sourceName,
+          '-map', '0:v:0',
+          '-map', '0:a?',
+          '-c:v', 'libx264',
+          '-preset', 'veryfast',
+          '-b:v', videoKbps + 'k',
+          '-maxrate', Math.ceil(videoKbps * 1.08) + 'k',
+          '-bufsize', Math.ceil(videoKbps * 2) + 'k',
+          '-pix_fmt', 'yuv420p',
+          '-c:a', 'aac',
+          '-b:a', audioKbps + 'k',
+          '-movflags', 'faststart',
+          outputName,
+        ]);
+        const data = await ffmpeg.readFile(outputName);
+        const compressed = new Blob([data], { type: 'video/mp4' });
+        if (!compressed.size) throw new Error('Video compression produced an empty file.');
+        return compressed;
+      } finally {
+        ffmpegProgressCallback = null;
+        await ffmpeg.deleteFile(sourceName).catch(() => {});
+        await ffmpeg.deleteFile(outputName).catch(() => {});
+      }
+    }
+
     async function uploadCanvasToTv(blob, session, title, caption, channelSlug, visibility, publishToBoard) {
       if (STATE.exportedKind !== 'video') throw new Error('Faceless TV requires a video export.');
       if (blob.size > 50 * 1024 * 1024) throw new Error('TV uploads are limited to 50MB.');
+      const uploadName = blob.type === 'video/mp4'
+        ? String(STATE.exportedName || 'canvas-edit.webm').replace(/\.[^.]+$/, '') + '.mp4'
+        : (STATE.exportedName || 'canvas-edit.webm');
       const fileB64 = await blobToBase64(blob);
       const response = await fetch('/api/tv/uploads', {
         method: 'POST',
@@ -2747,7 +2816,7 @@
           title,
           description: caption,
           visibility,
-          file_name: STATE.exportedName || 'canvas-edit.webm',
+          file_name: uploadName,
           file_type: blob.type || 'video/webm',
           file_size_bytes: blob.size,
           file_b64: fileB64,
@@ -2815,13 +2884,31 @@
           fill.style.width = '15%';
           await startExport({ download: false, format: toTv ? 'video' : (isStillProject() ? 'png' : 'video') });
         }
+        let publishBlob = STATE.exportedBlob;
+        if (!publishBlob || !publishBlob.size) throw new Error('The project could not be rendered for publishing.');
+        if (toTv && publishBlob.size > 50 * 1024 * 1024) {
+          if (!document.getElementById('postCompressTv').checked) {
+            throw new Error('This video exceeds 50 MB. Enable TV compression or shorten the edit.');
+          }
+          const targetMb = Number(document.getElementById('postCompressionTarget').value || 45);
+          txt.textContent = 'Compressing video for Faceless TV...';
+          fill.style.width = '28%';
+          publishBlob = await compressVideoForTv(publishBlob, targetMb, percent => {
+            fill.style.width = (28 + percent * 0.24) + '%';
+            txt.textContent = `Compressing video for Faceless TV... ${percent}%`;
+          });
+          if (publishBlob.size > 50 * 1024 * 1024) {
+            throw new Error('The compressed video is still over 50 MB. Choose the smaller file option.');
+          }
+          txt.textContent = 'Compression complete.';
+        }
         let boardPostedByTv = false;
         let mediaUrl = '';
         if (toTv) {
           txt.textContent = 'Uploading to Faceless TV...';
           fill.style.width = '55%';
           const tvResult = await uploadCanvasToTv(
-            STATE.exportedBlob,
+            publishBlob,
             session,
             title,
             caption,
@@ -2835,7 +2922,7 @@
         if (toBoard && !boardPostedByTv) {
           txt.textContent = 'Posting to the Board...';
           fill.style.width = '78%';
-          const boardResult = await publishCanvasToBoard(STATE.exportedBlob, session, title, caption);
+          const boardResult = await publishCanvasToBoard(publishBlob, session, title, caption);
           mediaUrl = boardResult.media_url || mediaUrl;
         }
         fill.style.width = '100%';
@@ -2878,6 +2965,7 @@
     // ────────────────────────────────────────────────────────────
     document.getElementById('postToTv').addEventListener('change', syncPostDestinationOptions);
     document.getElementById('postToBoard').addEventListener('change', syncPostDestinationOptions);
+    document.getElementById('postCompressTv').addEventListener('change', syncPostDestinationOptions);
     renderMediaPool();
     renderTimeline();
     updateTimeDisplay();
