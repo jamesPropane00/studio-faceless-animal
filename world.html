@@ -6169,18 +6169,24 @@ function drawRegionalBasePaths() {
   ctx.save()
   ctx.lineCap = 'round'
   for (const [from,to] of segments) {
-    ctx.strokeStyle = '#777985'
+    ctx.strokeStyle = '#0b0c0f'
     ctx.lineWidth = Math.max(5,TILE_H*state.camera.zoom*0.42)
     ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); ctx.stroke()
-    ctx.strokeStyle = '#34363e'
+    ctx.strokeStyle = '#18191d'
     ctx.lineWidth = Math.max(3,TILE_H*state.camera.zoom*0.34)
     ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); ctx.stroke()
-    ctx.strokeStyle = '#e8b830'
-    ctx.lineWidth = Math.max(1,state.camera.zoom)
-    ctx.setLineDash([6*state.camera.zoom,7*state.camera.zoom])
-    ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); ctx.stroke()
+    const dx = to.x-from.x, dy = to.y-from.y
+    const length = Math.hypot(dx,dy)
+    const nx = length ? -dy/length : 0, ny = length ? dx/length : 0
+    for (let i=1;i<Math.floor(length/15);i++) {
+      const t = i/(Math.floor(length/15) || 1)
+      const jitter = ((i*17)%9-4)*state.camera.zoom*0.35
+      ctx.beginPath()
+      ctx.arc(from.x+dx*t+nx*jitter,from.y+dy*t+ny*jitter,Math.max(.35,.55*state.camera.zoom),0,Math.PI*2)
+      ctx.fillStyle = i%3 === 0 ? 'rgba(90,92,98,.28)' : 'rgba(0,0,0,.28)'
+      ctx.fill()
+    }
   }
-  ctx.setLineDash([])
   ctx.restore()
 }
 
@@ -7666,7 +7672,7 @@ function drawRoads() {
         ctx.setLineDash([])
       } else {
         // ── Asphalt road (City) ──
-        ctx.fillStyle = '#34363e'
+        ctx.fillStyle = '#18191d'
         if (vertical && !horizontal) {
         ctx.fillRect(cx - roadWidth / 2, cy - half, roadWidth, tilePx)
       } else if (horizontal && !vertical) {
@@ -7675,96 +7681,18 @@ function drawRoads() {
         ctx.beginPath(); ctx.arc(cx,cy,roadWidth*0.72,0,Math.PI*2); ctx.fill()
       }
 
-      // Curbs
-      ctx.lineWidth = 1.5 * z
-      if (vertical) {
-        ctx.strokeStyle = '#6c6c7a'
-        ctx.beginPath(); ctx.moveTo(cx - roadWidth / 2, cy - half + 1); ctx.lineTo(cx - roadWidth / 2, cy + half - 1); ctx.stroke()
-        ctx.beginPath(); ctx.moveTo(cx + roadWidth / 2, cy - half + 1); ctx.lineTo(cx + roadWidth / 2, cy + half - 1); ctx.stroke()
+      // Quiet blacktop texture: small aggregate flecks, never lane markings.
+      for (let i=0;i<9;i++) {
+        const seed = Math.abs(Math.sin((x*37+y*71+i*19)*12.9898))
+        const along = (seed-.5)*tilePx*.82
+        const across = (Math.abs(Math.sin(seed*91+i))-.5)*roadWidth*.7
+        const px = vertical && !horizontal ? cx+across : cx+along
+        const py = vertical && !horizontal ? cy+along : cy+across
+        ctx.beginPath()
+        ctx.arc(px,py,Math.max(.3,.45*z),0,Math.PI*2)
+        ctx.fillStyle = i%3 === 0 ? 'rgba(86,88,94,.24)' : 'rgba(0,0,0,.24)'
+        ctx.fill()
       }
-      if (horizontal) {
-        ctx.strokeStyle = '#6c6c7a'
-        ctx.beginPath(); ctx.moveTo(cx - half + 1, cy - roadWidth / 2); ctx.lineTo(cx + half - 1, cy - roadWidth / 2); ctx.stroke()
-        ctx.beginPath(); ctx.moveTo(cx - half + 1, cy + roadWidth / 2); ctx.lineTo(cx + half - 1, cy + roadWidth / 2); ctx.stroke()
-      }
-
-      // Yellow center lines
-      ctx.lineWidth = 2 * z
-      ctx.strokeStyle = '#e8b830'
-      ctx.setLineDash([5 * z, 5 * z])
-      if (horizontal && !vertical) {
-        ctx.beginPath()
-        ctx.moveTo(cx - half + 2, cy)
-        ctx.lineTo(cx + half - 2, cy)
-        ctx.stroke()
-      } else if (vertical && !horizontal) {
-        ctx.beginPath()
-        ctx.moveTo(cx, cy - half + 2)
-        ctx.lineTo(cx, cy + half - 2)
-        ctx.stroke()
-      } else if (horizontal && vertical) {
-        ctx.beginPath()
-        ctx.moveTo(cx - half + 2, cy)
-        ctx.lineTo(cx - 4 * z, cy)
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.moveTo(cx + 4 * z, cy)
-        ctx.lineTo(cx + half - 2, cy)
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.moveTo(cx, cy - half + 2)
-        ctx.lineTo(cx, cy - 4 * z)
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.moveTo(cx, cy + 4 * z)
-        ctx.lineTo(cx, cy + half - 2)
-        ctx.stroke()
-        // Crosswalks at intersection
-        ctx.strokeStyle = '#ffffff'
-        ctx.lineWidth = 1.5 * z
-        for (let dw = -1; dw <= 1; dw += 2) {
-          for (let d = -2; d <= 2; d++) {
-            const offset = d * 2 * z
-            ctx.setLineDash([])
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)'
-            ctx.fillRect(cx - roadWidth / 2 + dw * 1.5 * z, cy + offset, 1.5 * z, 1.2 * z)
-          }
-        }
-        for (let dw = -1; dw <= 1; dw += 2) {
-          for (let d = -2; d <= 2; d++) {
-            const offset = d * 2 * z
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)'
-            ctx.fillRect(cx + offset, cy - roadWidth / 2 + dw * 1.5 * z, 1.2 * z, 1.5 * z)
-          }
-        }
-      }
-      ctx.setLineDash([])
-
-      // White parking lines
-      ctx.lineWidth = 1 * z
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
-      ctx.setLineDash([3 * z, 4 * z])
-      if (horizontal && !vertical) {
-        ctx.beginPath()
-        ctx.moveTo(cx - half + 2, cy - roadWidth * 0.32)
-        ctx.lineTo(cx + half - 2, cy - roadWidth * 0.32)
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.moveTo(cx - half + 2, cy + roadWidth * 0.32)
-        ctx.lineTo(cx + half - 2, cy + roadWidth * 0.32)
-        ctx.stroke()
-      }
-      if (vertical && !horizontal) {
-        ctx.beginPath()
-        ctx.moveTo(cx - roadWidth * 0.32, cy - half + 2)
-        ctx.lineTo(cx - roadWidth * 0.32, cy + half - 2)
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.moveTo(cx + roadWidth * 0.32, cy - half + 2)
-        ctx.lineTo(cx + roadWidth * 0.32, cy + half - 2)
-        ctx.stroke()
-      }
-      ctx.setLineDash([])
     }
   }
   }
