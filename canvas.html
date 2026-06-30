@@ -69,6 +69,12 @@
       box-shadow: 0 0 0 2px rgba(34,197,94,0.16), 0 5px 16px rgba(22,163,74,0.28);
     }
     .save-video-btn:hover { background: #15803d; }
+    .publish-btn {
+      min-height: 38px; padding: 0.45rem 0.8rem; border-color: #0284c7;
+      background: #0284c7; color: #fff; font-size: 0.74rem; font-weight: 800;
+      box-shadow: 0 0 0 2px rgba(14,165,233,0.14), 0 5px 16px rgba(2,132,199,0.25);
+    }
+    .publish-btn:hover { background: #0369a1; }
 
     /* ── MAIN LAYOUT ── */
     .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; min-height: 0; }
@@ -250,6 +256,10 @@
       color: #fff; background: #16a34a; border-radius: 6px; min-width: 54px;
       box-shadow: 0 3px 10px rgba(22,163,74,0.28);
     }
+    .b-btn.publish-bottom-btn {
+      color: #fff; background: #0284c7; border-radius: 6px; min-width: 58px;
+      box-shadow: 0 3px 10px rgba(2,132,199,0.25);
+    }
 
     /* ── AI BOTTOM DRAWER ── */
     .drawer-overlay {
@@ -351,15 +361,29 @@
     .publish-target {
       display: flex !important;
       align-items: center;
-      gap: 0.45rem;
-      min-height: 42px;
-      padding: 0.55rem 0.65rem;
+      gap: 0.6rem;
+      min-height: 64px;
+      padding: 0.65rem;
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text) !important;
       cursor: pointer;
+      background: rgba(255,255,255,0.025);
+      transition: border-color 0.12s, background 0.12s;
     }
-    .publish-target input { width: auto; margin: 0; }
+    .publish-target:has(input:checked) {
+      border-color: #38bdf8;
+      background: rgba(14,165,233,0.11);
+    }
+    .publish-target input { width: 18px; height: 18px; margin: 0; accent-color: #0ea5e9; flex-shrink: 0; }
+    .publish-target-copy { display: flex; flex-direction: column; gap: 0.12rem; min-width: 0; }
+    .publish-target-copy strong { color: #fff; font-size: 0.78rem; }
+    .publish-target-copy span { color: var(--dim); font-size: 0.62rem; line-height: 1.35; }
+    .publish-summary {
+      padding: 0.55rem 0.65rem; margin-bottom: 0.6rem;
+      border-left: 3px solid #38bdf8; background: rgba(14,165,233,0.08);
+      color: #bae6fd; font-size: 0.68rem; line-height: 1.4;
+    }
     .post-image-preview {
       display: none;
       width: 100%;
@@ -422,7 +446,7 @@
     </div>
     <div style="margin-left:auto;display:flex;gap:0.2rem;">
       <button class="tool-btn save-video-btn" onclick="exportVideo()" title="Save video to your computer">&#8595; Save Video</button>
-      <button class="tool-btn green" onclick="postToDirectory()" title="Post">📡</button>
+      <button class="tool-btn publish-btn" onclick="postToDirectory()" title="Publish to the Board or Faceless TV">&#8593; Publish</button>
     </div>
   </div>
 
@@ -475,7 +499,7 @@
       <button class="b-btn" onclick="openClipEditor()"><span class="icon">Edit</span>Adjust</button>
       <button class="b-btn" onclick="addTextClip()"><span class="icon">T</span>Text</button>
       <button class="b-btn save-bottom-btn" onclick="exportVideo()"><span class="icon">&#8595;</span>Save</button>
-      <button class="b-btn" onclick="postToDirectory()"><span class="icon">📡</span>Post</button>
+      <button class="b-btn publish-bottom-btn" onclick="postToDirectory()"><span class="icon">&#8593;</span>Publish</button>
     </div>
   </div>
 
@@ -689,16 +713,23 @@
 
   <div class="modal-overlay" id="postModal">
     <div class="modal">
-      <h2>📡 Post</h2>
-      <p>Send the exported edit to the Board, Faceless TV, or both.</p>
+      <h2>Publish Project</h2>
+      <p>Choose where this edit should appear. Publishing renders and uploads the current timeline.</p>
       <label for="postTitle">Title</label>
       <input id="postTitle" maxlength="120" placeholder="Edit title" />
       <label for="postCaption">Caption</label>
       <textarea id="postCaption" placeholder="Write a caption..." rows="2"></textarea>
       <div class="publish-targets">
-        <label class="publish-target"><input id="postToBoard" type="checkbox" checked /> Board</label>
-        <label class="publish-target"><input id="postToTv" type="checkbox" /> Faceless TV</label>
+        <label class="publish-target">
+          <input id="postToBoard" type="checkbox" checked />
+          <span class="publish-target-copy"><strong>Community Board</strong><span>Share in the public community feed.</span></span>
+        </label>
+        <label class="publish-target">
+          <input id="postToTv" type="checkbox" />
+          <span class="publish-target-copy"><strong>Faceless TV</strong><span>Upload video to one of your TV channels.</span></span>
+        </label>
       </div>
+      <div class="publish-summary" id="postDestinationSummary">Publishing to Community Board.</div>
       <div id="postTvOptions" hidden>
         <label for="postTvChannel">TV channel</label>
         <select id="postTvChannel"></select>
@@ -718,7 +749,7 @@
       </div>
       <div class="actions">
         <button class="tool-btn" onclick="closeModal('postModal')">Cancel</button>
-        <button class="tool-btn green" id="postBtn" onclick="confirmPost()">Post</button>
+        <button class="tool-btn publish-btn" id="postBtn" onclick="confirmPost()">Publish Now</button>
       </div>
     </div>
   </div>
@@ -2630,12 +2661,17 @@
     // ────────────────────────────────────────────────────────────
     //  UTILS
     // ────────────────────────────────────────────────────────────
-    const CANVAS_SUPABASE_URL = 'https://ghufaozjwondqcrcucjs.supabase.co';
-    const CANVAS_SUPABASE_KEY = 'sb_publishable_kixI74nB7Drt6mQKooaXHg_nPoE0h_-';
-
     function syncPostDestinationOptions() {
+      const toBoard = document.getElementById('postToBoard').checked;
       const toTv = document.getElementById('postToTv').checked;
       document.getElementById('postTvOptions').hidden = !toTv;
+      const summary = document.getElementById('postDestinationSummary');
+      const button = document.getElementById('postBtn');
+      if (toBoard && toTv) summary.textContent = 'Publishing to Community Board and Faceless TV.';
+      else if (toTv) summary.textContent = 'Publishing to Faceless TV.';
+      else if (toBoard) summary.textContent = 'Publishing to Community Board.';
+      else summary.textContent = 'Choose at least one destination.';
+      button.disabled = !toBoard && !toTv;
     }
 
     async function loadPublishChannels(session) {
@@ -2673,60 +2709,27 @@
       });
     }
 
-    async function uploadBoardMedia(blob, session) {
-      const safeName = (STATE.exportedName || 'canvas-edit.bin').replace(/[^a-z0-9._-]+/gi, '-').toLowerCase();
-      const path = encodeURIComponent(String(session.username).toLowerCase()) + '/canvas-' + Date.now() + '-' + encodeURIComponent(safeName);
-      const response = await fetch(CANVAS_SUPABASE_URL + '/storage/v1/object/profile-images/' + path, {
+    async function publishCanvasToBoard(blob, session, title, caption) {
+      if (!blob || !blob.size) throw new Error('Render the project before publishing.');
+      if (blob.size > 50 * 1024 * 1024) throw new Error('Board uploads are limited to 50MB.');
+      const response = await fetch('/api/canvas/publish', {
         method: 'POST',
         headers: {
-          apikey: CANVAS_SUPABASE_KEY,
-          Authorization: 'Bearer ' + CANVAS_SUPABASE_KEY,
-          'Content-Type': blob.type || 'application/octet-stream',
-          'x-upsert': 'true',
+          'Content-Type': 'application/json',
+          'x-fas-user': JSON.stringify(session),
         },
-        body: blob,
-      });
-      if (!response.ok) throw new Error('Could not upload the edited file to the Board.');
-      return CANVAS_SUPABASE_URL + '/storage/v1/object/public/profile-images/' + path;
-    }
-
-    async function createBoardPost(session, title, caption, mediaUrl) {
-      const category = STATE.exportedKind === 'image' ? 'picture' : 'video';
-      const bodyText = caption || title || 'Posted from Canvas';
-      const headers = {
-        apikey: CANVAS_SUPABASE_KEY,
-        Authorization: 'Bearer ' + CANVAS_SUPABASE_KEY,
-        'Content-Type': 'application/json',
-        Prefer: 'return=representation',
-      };
-      const signal = await fetch(CANVAS_SUPABASE_URL + '/rest/v1/signal_posts', {
-        method: 'POST',
-        headers,
         body: JSON.stringify({
-          author_username: String(session.username).toLowerCase(),
-          post_type: category,
-          category,
-          body_text: bodyText,
-          media_url: mediaUrl,
-          moderation_state: 'approved',
-          visibility: 'public',
+          title,
+          caption,
+          file_name: STATE.exportedName || (STATE.exportedKind === 'image' ? 'canvas-edit.png' : 'canvas-edit.webm'),
+          file_type: blob.type || (STATE.exportedKind === 'image' ? 'image/png' : 'video/webm'),
+          file_size_bytes: blob.size,
+          file_b64: await blobToBase64(blob),
         }),
       });
-      if (signal.ok) return true;
-      const board = await fetch(CANVAS_SUPABASE_URL + '/rest/v1/board_posts', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          username: String(session.username).toLowerCase(),
-          post_text: bodyText,
-          category,
-          image_url: mediaUrl,
-          is_approved: true,
-          visibility_status: 'visible',
-        }),
-      });
-      if (!board.ok) throw new Error('The edit uploaded, but the Board post failed.');
-      return true;
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) throw new Error(payload.error || 'Community Board publish failed.');
+      return payload;
     }
 
     async function uploadCanvasToTv(blob, session, title, caption, channelSlug, visibility, publishToBoard) {
@@ -2832,8 +2835,8 @@
         if (toBoard && !boardPostedByTv) {
           txt.textContent = 'Posting to the Board...';
           fill.style.width = '78%';
-          if (!mediaUrl) mediaUrl = await uploadBoardMedia(STATE.exportedBlob, session);
-          await createBoardPost(session, title, caption, mediaUrl);
+          const boardResult = await publishCanvasToBoard(STATE.exportedBlob, session, title, caption);
+          mediaUrl = boardResult.media_url || mediaUrl;
         }
         fill.style.width = '100%';
         txt.textContent = 'Published.';
