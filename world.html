@@ -5429,7 +5429,7 @@ let encounterStoreCache = null
 const encounterEngine = {
   active:false, completed:false, type:null, target:null, targetId:null,
   status:0, mood:'Neutral', playerStatus:100, turn:1, actions:0, log:[],
-  result:null, reported:false, startedAt:0
+  result:null, reported:false, startedAt:0, region:'city'
 }
 
 function getEncounterStore() {
@@ -5468,7 +5468,8 @@ function beginEncounter(type,target,options = {}) {
   Object.assign(encounterEngine,{
     active:true, completed:false, type, target, targetId,
     status:Math.max(0,Math.min(100,relation)), mood:options.mood || (type === 'creature' ? 'Curious' : npcEncounterMood(target)),
-    playerStatus:100, turn:1, actions:0, log:[], result:null, reported:false, startedAt:Date.now()
+    playerStatus:100, turn:1, actions:0, log:[], result:null, reported:false,
+    startedAt:Date.now(), region:target.region || state.currentRegion
   })
   addEncounterLog(type === 'creature' ? 'A quiet wildlife encounter begins.' : `${target.name} stops to speak with you.`,'Encounter')
   if (type === 'creature') {
@@ -5484,7 +5485,7 @@ function beginEncounter(type,target,options = {}) {
   document.getElementById('encounterTargetRole').textContent = type
   document.getElementById('encounterStatusLabel').textContent = type === 'creature' ? 'Trust' : 'Rapport'
   encounterDialogue(options.dialogue || (type === 'creature'
-    ? 'The woods hold their breath. The creature waits to see what kind of resident you are.'
+    ? `${REGIONS[encounterEngine.region]?.name || 'The region'} grows quiet. The creature waits to see what kind of resident you are.`
     : npcOpeningDialogue(target)))
   document.getElementById('encounterReportBtn').classList.add('hidden')
   renderEncounterUI()
@@ -5548,7 +5549,7 @@ function resolveCreatureEncounterAction(action) {
   if (action === 'retreat') {
     addEncounterLog('You leave without forcing the moment.','Retreat')
     encounterDialogue(`${creature.name} watches you go and remembers that you respected its space.`)
-    endEncounter({ status:'peaceful', message:'You left the woods quietly.' })
+    endEncounter({ status:'peaceful', message:`You left ${REGIONS[encounterEngine.region]?.name || 'the area'} quietly.` })
     return
   }
   let gain = 0
@@ -5563,6 +5564,7 @@ function resolveCreatureEncounterAction(action) {
       return
     }
     farm.inventory[crop]--; saveFarmData(farm)
+    updateFarmInventory()
     gain = 18+Math.floor(Math.random()*8); encounterEngine.mood = 'Interested'
     encounterDialogue(`${creature.name} waits for you to step back, then accepts the ${CROP_TYPES[crop].name.toLowerCase()}.`)
   } else if (action === 'still') {
@@ -5644,6 +5646,7 @@ function endEncounter(result = {}) {
   const record = {
     id:`enc_${Date.now()}_${Math.random().toString(36).slice(2,6)}`, type:encounterEngine.type,
     targetId:encounterEngine.targetId, targetName:encounterEngine.target?.name || 'Unknown',
+    region:encounterEngine.region,
     status:encounterEngine.result.status, major:encounterEngine.result.major, score:Math.round(encounterEngine.status),
     turns:encounterEngine.turn, startedAt:encounterEngine.startedAt, endedAt:Date.now(), reported:false,
     log:encounterEngine.log.slice()
@@ -5663,9 +5666,9 @@ function reportEncounter(automatic = false) {
   saveEncounterStore()
   const category = encounterEngine.type === 'creature' ? 'Wildlife' : 'Culture'
   const headline = encounterEngine.type === 'creature'
-    ? `${encounterEngine.target.name} encounter reported from Whisper Woods.`
-    : `A resident connection grows in ${REGIONS[state.currentRegion]?.name || 'Faceless City'}.`
-  createNewsItem(category,headline,encounterEngine.result?.message || 'A resident shared what happened.',''+state.currentRegion,encounterEngine.result?.major ? 4 : 2)
+    ? `${encounterEngine.target.name} encounter reported from ${REGIONS[encounterEngine.region]?.name || 'the world'}.`
+    : `A resident connection grows in ${REGIONS[encounterEngine.region]?.name || 'Faceless City'}.`
+  createNewsItem(category,headline,encounterEngine.result?.message || 'A resident shared what happened.',''+encounterEngine.region,encounterEngine.result?.major ? 4 : 2)
   awardSkillXP('broadcaster',automatic ? 8 : 5)
   document.getElementById('encounterReportBtn').classList.add('hidden')
   addEncounterLog('The outcome was reported to Signal Wire.','Broadcast')
@@ -5874,12 +5877,14 @@ function startCreatureEncounter(creatureId) {
   state.creatureSighting = null
   _creatureSpawnTimer = 60
   const existing = state.creatureCollection[creatureId]
-  const woodsData = getWoodsData()
-  const preparationBonus = (woodsData.campsites.feedStation ? 3 : 0)+Math.min(5,woodsData.trackingKnowledge)
+  const woodsData = state.currentRegion === 'whisper-woods' ? getWoodsData() : null
+  const preparationBonus = woodsData ? (woodsData.campsites.feedStation ? 3 : 0)+Math.min(5,woodsData.trackingKnowledge) : 0
   beginEncounter('creature',creature,{
     trust:Math.min(100,(existing ? existing.trust : 0)+preparationBonus),
     mood:lastMood,
-    dialogue:'The birds stop singing. Leaves settle. The creature watches your hands and waits.'
+    dialogue:state.currentRegion === 'whisper-woods'
+      ? 'The birds stop singing. Leaves settle. The creature watches your hands and waits.'
+      : `${REGIONS[state.currentRegion]?.name || 'The region'} falls quiet around the sighting. The creature watches your next move.`
   })
 }
 
@@ -5997,7 +6002,8 @@ function checkTrustMilestone(creatureId, trust) {
     state.creatureCollection[creatureId].sanctuaryEligible = true
     showToast(creature.name + ' trusts you!', 'It may follow you home when the Sanctuary opens')
     if (!encounterEngine.active) {
-      createNewsItem('Wildlife', creature.name + ' trusts a resident of Pine Hollow.', 'The creature may be ready for a future Sanctuary home.', 'whisper-woods', 4)
+      const regionId=creature.region || state.currentRegion
+      createNewsItem('Wildlife', creature.name + ' trusts a Faceless Animal resident.', `The bond began in ${REGIONS[regionId]?.name || 'the world'}; the creature may be ready for a future Sanctuary home.`, regionId, 4)
       endCreatureEncounter()
     }
   }
@@ -6009,7 +6015,7 @@ function openCreaturesPanel() {
   list.innerHTML = ''
   const ids = Object.keys(state.creatureCollection)
   if (ids.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--dim);font-size:0.7rem">No creatures discovered yet.<br>Travel to Whisper Woods to find them.</div>'
+    list.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--dim);font-size:0.7rem">No creatures discovered yet.<br>Explore any region and watch for a sighting.</div>'
   } else {
     for (const id of ids) {
       const c = state.creatureCollection[id]
@@ -8972,7 +8978,7 @@ function setupMouse() {
         }
       } else if (state.currentRegion === 'whisper-woods' && handleWoodsDiscoveryClick(world.x, world.y)) {
         // Small woodland discovery collected
-      } else if (state.currentRegion === 'whisper-woods' && handleSightingClick(world.x, world.y)) {
+      } else if (handleSightingClick(world.x, world.y)) {
         // Creature sighting handled
       } else if (state.currentRegion === 'farmlands') {
         // Check farm lot click
