@@ -2107,11 +2107,18 @@
       border-radius: 7px; background: rgba(167,139,250,0.045); color: #b6acc7;
       font-size: 0.62rem; line-height: 1.45; min-height: 42px;
     }
-    body:not(.region-whisper-woods) .woods-hud { display: none; }
     .woods-hud {
       position: fixed; left: 1rem; top: 7rem; z-index: 72; width: 260px; padding: 0.75rem;
       border: 1px solid rgba(74,222,128,0.24); border-radius: 11px;
       background: rgba(7,18,14,0.9); box-shadow: 0 16px 50px rgba(0,0,0,0.42); backdrop-filter: blur(12px);
+    }
+    body:not(.region-whisper-woods) .woods-hud { width:auto; padding:0.45rem; top:auto; bottom:4.75rem; }
+    body:not(.region-whisper-woods) .woods-hud-kicker,
+    body:not(.region-whisper-woods) .woods-hud-title,
+    body:not(.region-whisper-woods) .woods-hud-status { display:none; }
+    @media (max-width:650px) {
+      .woods-hud { left:0.45rem; top:auto; bottom:4.25rem; width:min(220px,calc(100vw - .9rem)); padding:.5rem; }
+      body:not(.region-whisper-woods) .woods-hud { width:auto; }
     }
     .woods-hud-kicker { color: #4ade80; font-size: 0.5rem; font-weight: 950; letter-spacing: 0.13em; }
     .woods-hud-title { margin-top: 2px; color: #e6fff0; font-size: 0.82rem; font-weight: 950; }
@@ -2348,7 +2355,7 @@
 </div>
 
 <aside class="woods-hud" id="woodsHud">
-  <div class="woods-hud-kicker">WHISPER WOODS</div>
+  <div class="woods-hud-kicker" id="woodsHudKicker">REGIONAL FIELD NOTES</div>
   <div class="woods-hud-title" id="woodsHudTitle">Old Oak Trail</div>
   <div class="woods-hud-status" id="woodsHudStatus">Listen. Look for small changes in the trees.</div>
   <div class="woods-track-row"><span>Tracking clues</span><b id="woodsTrackCount">0 / 3</b><div class="woods-track-bar"><span id="woodsTrackBar" style="width:0%"></span></div></div>
@@ -2357,7 +2364,7 @@
 
 <section class="woods-hub hidden" id="woodsHub" aria-label="Whisper Woods Trail Journal">
   <header class="woods-hub-head">
-    <div><div class="woods-hub-title">&#x1F332; Whisper Woods Trail Journal</div><div class="woods-hub-sub" id="woodsHubSub">Tiny discoveries tell a larger story.</div></div>
+    <div><div class="woods-hub-title" id="woodsHubTitle">&#x1F332; Whisper Woods Trail Journal</div><div class="woods-hub-sub" id="woodsHubSub">Tiny discoveries tell a larger story.</div></div>
     <button class="woods-hub-close" id="woodsHubClose" type="button" aria-label="Close trail journal">&times;</button>
   </header>
   <nav class="woods-tabs" id="woodsTabs">
@@ -2951,8 +2958,10 @@ const REGIONAL_BUILD_CATALOGS = {
     ['roadside-stand','Roadside Stand','🛒',75,'Sell surplus goods for FC.','business'],
     ['fence','Fence','🪵',6,'Organize fields and animal areas.','decoration'],
     ['pond','Pond','🎣',55,'A calm fishing spot with a future mini-game.','nature'],
-    ['orchard','Orchard','🍎',80,'A future home for growing fruit trees.','crop'],
-    ['farm-road','Farm Road','🟫',5,'A narrow dirt path between farm lots.','infrastructure'],
+    ['orchard-row','Orchard Row','🍎',80,'Even rows of fruit trees that grow as a real orchard.','crop'],
+    ['farm-road','Dirt Path','🟫',5,'A narrow dirt path between farm lots.','infrastructure'],
+    ['windmill','Windmill','🌬️',95,'A working farm landmark that supports production.','machine'],
+    ['bee-box','Bee Box','🐝',45,'A pollinator home that supports crops and orchards.','animal'],
     ['farm-decoration','Farm Decoration','🌻',10,'Warm details that improve farm character.','decoration']
   ],
   'whisper-woods': [
@@ -3015,7 +3024,7 @@ const REGIONAL_BUILD_TYPES = {}
 for (const [regionId, entries] of Object.entries(REGIONAL_BUILD_CATALOGS)) {
   for (const [id,name,icon,cost,desc,category] of entries) {
     const infrastructure = category === 'infrastructure'
-    const footprint = ['development-block','field-plot','cow-pasture','freight-yard','factory'].includes(id) ? 2 : 1
+    const footprint = ['development-block','field-plot','cow-pasture','orchard-row','freight-yard','factory'].includes(id) ? 2 : 1
     const palette = {
       city:'#6B5B8A', farmlands:'#84a94b', 'whisper-woods':'#237a46',
       'purple-pulse':'#a855f7', 'iron-district':'#64748b', coast:'#38bdf8', mountains:'#78716c'
@@ -3484,6 +3493,8 @@ function harvestCrop(tx, ty, bonusYield=0) {
   const info = CROP_TYPES[crop.type]
   let yield_ = info.yield || 1
   yield_ = Math.floor(yield_ * (1 + getSkillBonus('farmer', 'cropYield')))
+  const soilQuality = getRegionalHealth('farmlands')['Soil quality'] || 50
+  if (soilQuality >= 75) yield_ += 1
   yield_ += Math.max(0,Number(bonusYield) || 0)
   const siloUsed = ['wheat','corn','carrots','tomatoes'].reduce((sum, key) => sum + (data.inventory[key] || 0), 0)
   if (siloUsed + yield_ > data.siloCapacity) {
@@ -3493,6 +3504,8 @@ function harvestCrop(tx, ty, bonusYield=0) {
   data.crops.splice(idx, 1)
   data.inventory[crop.type] = (data.inventory[crop.type] || 0) + yield_
   addFarmXP(data, 6)
+  if (data.farmGuideStep === 'harvest') data.farmGuideStep = 'makeFeed'
+  recordFarmDaily(data,'harvest')
 
   saveFarmData(data)
   awardSkillXP('farmer', 10)
@@ -3782,7 +3795,7 @@ function getFarmReadyCounts(data, since = 0) {
   const shipmentData = getShipments()
   const trucks = (shipmentData.delivered || []).filter(item => (item.deliveredAt || 0) >= since).length
   return {
-    crops:data.fields.filter(field => field.readyAt <= now).length,
+    crops:data.crops.filter(crop => getCropStageInfo(crop)?.done).length,
     machines, animals, needsFood, needsCare, bestBond, orders, trucks,
     activeTrucks:(shipmentData.active || []).length
   }
@@ -3867,7 +3880,7 @@ function ensureFarmMvpOrders(data) {
 
 function farmNextAction(data) {
   const now = Date.now()
-  if (data.fields.some(field => field.readyAt <= now)) return 'Harvest a ready crop'
+  if (data.crops.some(crop => getCropStageInfo(crop)?.done)) return 'Harvest a ready crop row'
   const guide = {
     plant:'Plant Wheat', harvest:'Wait for Wheat, then harvest it',
     makeFeed:'Make Chicken Feed', feedChickens:'Feed Chickens',
@@ -4004,7 +4017,7 @@ function renderFarmHub() {
       </section>
     </div>
     <div class="farm-card-grid">
-      ${farmCard('Fields','🌾','Plant, wait, and harvest your crops.',`${ready.crops} ready · ${data.fields.length} growing`,'go-tab:crops','Open Crops',false,ready.crops ? 'ready' : '')}
+      ${farmCard('Fields','🌾','Plant placed crop rows, wait, then harvest them by hand.',`${ready.crops} ready · ${data.crops.length} planted`,'go-tab:crops','Open Crops',false,ready.crops ? 'ready' : '')}
       ${farmCard('Animal Care','🐓',animalNames ? `${animalNames} live on Pine Hollow.` : 'Your animals are waiting to meet you.',`${ready.animals} ready · ${ready.needsFood} hungry · ${ready.needsCare} need care`,'go-tab:animals','Check Animals',false,ready.animals || ready.needsCare ? 'ready' : '')}
       ${farmCard('Production','⚙️','Collect finished goods or start a new recipe.',`${ready.machines} ready`,'go-tab:machines','Open Machines',false,ready.machines ? 'ready' : '')}
       ${farmCard('Order Board','📋','Fresh city requests arrive every day.',`${ready.orders} can be completed now`,'go-tab:orders','View Orders',false,ready.orders ? 'ready' : '')}
@@ -4021,10 +4034,11 @@ function renderFarmHub() {
         'claim-seeds','Claim Seed Crate',seedWait > 0,'ready')
     }
     for (const [key, crop] of Object.entries(CROP_TYPES)) {
-      const planted = data.fields.filter(field => field.crop === key)
-      const ready = planted.filter(field => field.readyAt <= now).length
-      const fieldCap = 6 + (data.buildings.farmhouse - 1) * 2
-      const canPlant = (data.inventory[key] || 0) > 0 && data.fields.length < fieldCap
+      const planted = data.crops.filter(field => field.type === key)
+      const ready = planted.filter(field => getCropStageInfo(field)?.done).length
+      const availableRows = state.buildings.filter(item=>isInCurrentRegion(item) && ['crop-row','field-plot'].includes(item.object_type || item.building_type))
+        .filter(item=>!data.crops.some(crop=>crop.tx === item.tile_x && crop.ty === item.tile_y))
+      const canPlant = (data.inventory[key] || 0) > 0 && availableRows.length > 0
       const action = ready ? `harvest:${key}` : `plant:${key}`
       html += farmCard(crop.name, crop.icon,
         `${crop.growthTime/1000}s grow time · yields ${crop.yield} · ${crop.xp} XP`,
@@ -4131,29 +4145,23 @@ function renderFarmHub() {
 
 function plantFarmField(cropKey) {
   const data = getFarmData(), crop = CROP_TYPES[cropKey]
-  const cap = 6 + (data.buildings.farmhouse - 1) * 2
-  if (!crop || data.fields.length >= cap || data.inventory[cropKey] < 1) return
-  data.inventory[cropKey]--
-  data.fields.push({ id:Date.now()+'_'+Math.random().toString(36).slice(2,5), crop:cropKey, plantedAt:Date.now(), readyAt:Date.now()+crop.growthTime })
-  if (data.farmGuideStep === 'plant') data.farmGuideStep = 'harvest'
-  addFarmXP(data,1)
-  recordFarmDaily(data,'plant')
-  saveFarmData(data); updateFarmInventory(); renderFarmHub()
-  showToast(`Planted ${crop.name}`,`Ready in ${crop.growthTime/1000} seconds.`)
+  const row = state.buildings.filter(item=>isInCurrentRegion(item) && ['crop-row','field-plot'].includes(item.object_type || item.building_type))
+    .find(item=>!data.crops.some(planted=>planted.tx === item.tile_x && planted.ty === item.tile_y))
+  if (!crop || data.inventory[cropKey] < 1) return
+  if (!row) { showToast('Place a Crop Row','The Farm panel only plants real crop rows placed in the world.'); return }
+  plantCrop(row.tile_x,row.tile_y,cropKey)
+  const updated=getFarmData()
+  if (updated.farmGuideStep === 'plant') updated.farmGuideStep='harvest'
+  recordFarmDaily(updated,'plant'); saveFarmData(updated); renderFarmHub()
 }
 
 function harvestFarmField(cropKey) {
-  const data = getFarmData(), now = Date.now()
-  const index = data.fields.findIndex(field => field.crop === cropKey && field.readyAt <= now)
-  if (index < 0) return
-  const crop = CROP_TYPES[cropKey]
-  if (farmSiloUsed(data)+crop.yield > data.siloCapacity) { showToast('Silo Full','Use crops or upgrade the Silo.'); return }
-  data.fields.splice(index,1); data.inventory[cropKey] += crop.yield
-  if (data.farmGuideStep === 'harvest') data.farmGuideStep = 'makeFeed'
-  addFarmXP(data,crop.xp)
-  recordFarmDaily(data,'harvest')
-  saveFarmData(data); updateFarmInventory(); renderFarmHub()
-  showToast(`Harvested ${crop.name}`,`+${crop.yield} crops · +${crop.xp} XP`)
+  const data=getFarmData()
+  const crop=data.crops.find(item=>item.type === cropKey && getCropStageInfo(item)?.done)
+  if (!crop) return
+  closeFarmHub()
+  showFarmPlantOverlay(crop.tx,crop.ty)
+  showToast('Harvest by Hand','Gather the ripe crop from its real row. Nothing auto-collects.')
 }
 
 function startFarmProduction(recipeKey) {
@@ -4422,11 +4430,11 @@ function farmMvpTick() {
   lastFarmMvpTick = now
   const data = getFarmData()
   let changed = false
-  for (const field of data.fields) {
-    const key = `field_${field.id}`
-    if (field.readyAt <= now && !data.readyNotices[key]) {
+  for (const field of data.crops) {
+    const key = `field_${field.tx}_${field.ty}_${field.plantedAt}`
+    if (getCropStageInfo(field)?.done && !data.readyNotices[key]) {
       data.readyNotices[key] = true; changed = true
-      showToast('Crop Ready!',`${CROP_TYPES[field.crop].name} is ready to harvest.`)
+      showToast('Crop Ready!',`${CROP_TYPES[field.type].name} is ready. Click its crop row to harvest.`)
     }
   }
   for (const [machine,queue] of Object.entries(data.machineQueues)) {
@@ -5078,7 +5086,30 @@ const WOODS_RARE_EVENTS = [
 ]
 let woodsDataCache = null
 let activeWoodsTab = 'discoveries'
-const woodsRuntime = { discoveries:[], spawnTimer:0, eventTimer:30, activeEvent:null, ambience:0 }
+const woodsRuntime = { discoveries:[], spawnTimer:0, eventTimer:30, activeEvent:null, ambience:0, growthAgents:[], wildlife:[] }
+let regionalJournalsCache = null
+
+function getRegionalJournals() {
+  if (!regionalJournalsCache) {
+    try { regionalJournalsCache = JSON.parse(localStorage.getItem('fas_regional_trail_journals_v1') || '{}') } catch { regionalJournalsCache = {} }
+  }
+  return regionalJournalsCache
+}
+function getRegionalJournal(regionId = state.currentRegion) {
+  const journals = getRegionalJournals()
+  journals[regionId] = journals[regionId] || { sightings:{}, discoveries:[], landmarks:[], lastSightingSignalAt:0 }
+  return journals[regionId]
+}
+function saveRegionalJournals() {
+  try { localStorage.setItem('fas_regional_trail_journals_v1',JSON.stringify(getRegionalJournals())) } catch {}
+}
+function recordRegionalSighting(creatureId, regionId = state.currentRegion) {
+  const journal = getRegionalJournal(regionId)
+  journal.sightings[creatureId] = (journal.sightings[creatureId] || 0)+1
+  journal.discoveries.unshift({ creatureId, at:Date.now() })
+  journal.discoveries = journal.discoveries.slice(0,30)
+  saveRegionalJournals()
+}
 
 function getWoodsData() {
   if (!woodsDataCache) {
@@ -5194,6 +5225,30 @@ function updateWoodsExploration(dt) {
 
 function updateRegionalNature(dt) {
   if (state.currentRegion !== 'whisper-woods') return
+  if (!woodsRuntime.growthAgents.length) {
+    const saved = getWoodsData().growthAgents
+    woodsRuntime.growthAgents = Array.isArray(saved) && saved.length ? saved : [
+      { id:'mosskeeper', name:'Mosskeeper', icon:'🌿', x:state.player.x-6, y:state.player.y+3, tx:state.player.x+4, ty:state.player.y-2 },
+      { id:'hollow-hare', name:'Hollow Hare', icon:'🐇', x:state.player.x+5, y:state.player.y+5, tx:state.player.x-3, ty:state.player.y+1 },
+      { id:'grove-warden', name:'Grove Warden', icon:'🦌', x:state.player.x+2, y:state.player.y-7, tx:state.player.x-4, ty:state.player.y+4 }
+    ]
+  }
+  for (const agent of woodsRuntime.growthAgents) {
+    if (Math.hypot(agent.tx-agent.x,agent.ty-agent.y)<1) {
+      agent.tx=Math.max(2,Math.min(WORLD_SIZE-2,agent.x+(Math.random()-.5)*18))
+      agent.ty=Math.max(2,Math.min(WORLD_SIZE-2,agent.y+(Math.random()-.5)*18))
+    }
+    const d=Math.hypot(agent.tx-agent.x,agent.ty-agent.y) || 1
+    agent.x+=(agent.tx-agent.x)/d*dt*.45
+    agent.y+=(agent.ty-agent.y)/d*dt*.45
+  }
+  if (!woodsRuntime.wildlife.length) {
+    const species=[['🦋','Butterfly'],['🐦‍⬛','Crow'],['🐇','Rabbit'],['🐸','Frog'],['🦉','Owl'],['🐞','Beetle']]
+    woodsRuntime.wildlife=Array.from({length:10},(_,i)=>({
+      icon:species[i%species.length][0], name:species[i%species.length][1],
+      x:state.player.x+(Math.random()-.5)*30, y:state.player.y+(Math.random()-.5)*30, phase:Math.random()*6
+    }))
+  }
   regionalRuntime.natureAccumulator += dt
   if (regionalRuntime.natureAccumulator < 45) return
   regionalRuntime.natureAccumulator = 0
@@ -5216,13 +5271,17 @@ function updateRegionalNature(dt) {
     const terrain = getTerrainAt(tileX,tileY,'whisper-woods')
     if (![TERRAIN.GRASS,TERRAIN.DARK_GRASS,TERRAIN.FOREST].includes(terrain)) continue
     if (state.infrastructure.some(item => isInCurrentRegion(item) && item.tile_x === tileX && item.tile_y === tileY)) continue
+    const caretaker=woodsRuntime.growthAgents[Math.floor(Math.random()*woodsRuntime.growthAgents.length)]
     state.infrastructure.push({
       id:`nature_whisper-woods_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
       region_id:'whisper-woods', tile_x:tileX, tile_y:tileY,
       owner_id:'world-nature', object_type:naturalType, object_category:'habitat',
       infra_type:naturalType === 'young-tree' ? 'tree' : naturalType,
-      natural:true, _regionalLocal:true, placed_at:Date.now(), sync_status:'local'
+      natural:true, caretaker:caretaker?.name, _regionalLocal:true, placed_at:Date.now(), sync_status:'local'
     })
+    const woodsData=getWoodsData()
+    woodsData.growthAgents=woodsRuntime.growthAgents
+    saveWoodsData(woodsData)
     saveRegionalObjects()
     if (existing.length % 5 === 0) showToast('🌿 Whisper Woods Grew','Healthy habitat encouraged new life nearby.')
     break
@@ -5232,6 +5291,33 @@ function updateRegionalNature(dt) {
 function drawWoodsExploration() {
   if (state.currentRegion !== 'whisper-woods') return
   const now = performance.now()*0.002
+  // New England woodland floor: native trees, ferns, moss, rocks, logs, and
+  // wetland pockets are deterministic per chunk and remain lightweight.
+  for (const chunk of state.chunks.values()) {
+    if (chunk.region !== 'whisper-woods' || !chunk.woodsDecorations) continue
+    for (const decor of chunk.woodsDecorations) {
+      const p=worldToScreen(decor.wx,decor.wy), z=state.camera.zoom
+      if (p.x < -40 || p.x > canvas.width+40 || p.y < -40 || p.y > canvas.height+40) continue
+      if (['oak','pine','maple','birch'].includes(decor.type)) {
+        ctx.fillStyle=decor.type === 'birch' ? '#d7d3c8' : '#5d3a24';ctx.fillRect(p.x-1.4*z,p.y-12*z,2.8*z,13*z)
+        ctx.beginPath();ctx.arc(p.x,p.y-15*z,(decor.type==='pine'?7:6)*z,0,Math.PI*2)
+        ctx.fillStyle=decor.type==='maple' ? '#7f3f24' : decor.type==='pine' ? '#164e3a' : '#285c35';ctx.fill()
+      } else {
+        const icons={ log:'🪵', rock:'🪨', fern:'🌿', moss:'☘️', mushroom:'🍄', wetland:'💧' }
+        ctx.font=`${Math.max(7,10*z)}px sans-serif`;ctx.textAlign='center';ctx.fillText(icons[decor.type] || '🌿',p.x,p.y)
+      }
+    }
+  }
+  for (const animal of woodsRuntime.wildlife) {
+    const p=worldToScreen(animal.x,animal.y)
+    ctx.font=`${Math.max(8,11*state.camera.zoom)}px sans-serif`;ctx.textAlign='center'
+    ctx.fillText(animal.icon,p.x,p.y+Math.sin(now+animal.phase)*2)
+  }
+  for (const agent of woodsRuntime.growthAgents) {
+    const p=worldToScreen(agent.x,agent.y), z=state.camera.zoom
+    ctx.font=`${Math.max(11,15*z)}px sans-serif`;ctx.textAlign='center';ctx.fillText(agent.icon,p.x,p.y)
+    if (z>.6) { ctx.font=`700 ${Math.max(7,8*z)}px Inter`;ctx.fillStyle='#d9f99d';ctx.fillText(agent.name,p.x,p.y-13*z) }
+  }
   for (const item of woodsRuntime.discoveries) {
     const info = WOODS_DISCOVERY_TYPES[item.type], s = worldToScreen(item.x,item.y), z = state.camera.zoom
     ctx.save()
@@ -5257,10 +5343,17 @@ function drawWoodsExploration() {
 function updateWoodsHUD() {
   const count = document.getElementById('woodsTrackCount')
   if (!count) return
-  const data = getWoodsData()
+  const data = getWoodsData(), region = REGIONS[state.currentRegion], isWoods = state.currentRegion === 'whisper-woods'
+  document.getElementById('woodsHudKicker').textContent = (region?.name || 'REGION').toUpperCase()
+  document.getElementById('woodsHudTitle').textContent = isWoods ? 'Old Oak Trail' : `${region?.name || 'Regional'} Trail Journal`
+  document.getElementById('woodsHubTitle').textContent = `${isWoods ? '🌲' : '🗺️'} ${region?.name || 'Regional'} Trail Journal`
+  document.getElementById('woodsHubSub').textContent = isWoods ? 'Tiny discoveries tell a larger story.' : 'Creatures, discoveries, landmarks, and regional health.'
+  document.querySelector('.woods-track-row').style.display = isWoods ? '' : 'none'
   count.textContent = `${data.trackingClues} / 3`
   document.getElementById('woodsTrackBar').style.width = `${data.trackingClues/3*100}%`
-  document.getElementById('woodsHudStatus').textContent = woodsRuntime.activeEvent
+  document.getElementById('woodsHudStatus').textContent = !isWoods
+    ? `${(REGIONAL_CREATURES[state.currentRegion] || []).length} local creatures · ${getRegionalJournal().discoveries.length} sightings recorded`
+    : woodsRuntime.activeEvent
     ? `${woodsRuntime.activeEvent.icon} ${woodsRuntime.activeEvent.name}: ${woodsRuntime.activeEvent.desc}`
     : (data.lastDiscovery ? `${WOODS_DISCOVERY_TYPES[data.lastDiscovery.type].icon} Last found: ${WOODS_DISCOVERY_TYPES[data.lastDiscovery.type].name}` : 'Listen. Look for small changes in the trees.')
 }
@@ -5268,6 +5361,21 @@ function renderWoodsHub() {
   const hub = document.getElementById('woodsHub')
   if (!hub || hub.classList.contains('hidden')) return
   const data = getWoodsData()
+  const isWoods = state.currentRegion === 'whisper-woods'
+  updateWoodsHUD()
+  document.getElementById('woodsTabs').style.display = isWoods ? '' : 'none'
+  if (!isWoods) {
+    const journal=getRegionalJournal(), creatures=REGIONAL_CREATURES[state.currentRegion] || []
+    const health=getRegionalHealth(state.currentRegion)
+    const builds=[...state.buildings,...state.infrastructure].filter(item=>isInCurrentRegion(item))
+    journal.landmarks=[...new Set(builds.map(item=>BUILDING_TYPES[item.object_type || item.building_type]?.name).filter(Boolean))]
+    saveRegionalJournals()
+    document.getElementById('woodsHubBody').innerHTML = `
+      <div class="woods-event-banner"><b>Regional Health</b> · ${Object.entries(health).map(([key,value])=>`${key}: ${Math.round(value)}%`).join(' · ')}</div>
+      <div class="woods-card-grid">${creatures.map(creature=>`<article class="woods-card ${creature.rarity === 'rare' ? 'rare' : ''}"><div><div class="woods-card-icon">${creature.icon}</div><h3>${creature.name}</h3><p>${creature.rarity} · favors ${creature.preferredWeather} weather</p></div><div class="woods-card-meta">Sightings ${journal.sightings[creature.id] || 0}</div></article>`).join('')}</div>
+      <div class="woods-event-banner"><b>Landmarks</b> · ${journal.landmarks.join(', ') || 'Build something in this region to begin the landmark record.'}</div>`
+    return
+  }
   document.querySelectorAll('.woods-tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.woodsTab === activeWoodsTab))
   const body = document.getElementById('woodsHubBody')
   let html = woodsRuntime.activeEvent ? `<div class="woods-event-banner">${woodsRuntime.activeEvent.icon} <b>${woodsRuntime.activeEvent.name}</b> — ${woodsRuntime.activeEvent.desc}</div>` : ''
@@ -5595,12 +5703,14 @@ function saveCreatureCollection() {
 function getCreature(id) { return CREATURES.find(c => c.id === id) }
 
 function spawnCreatureSighting() {
-  if (state.currentRegion !== 'whisper-woods') return
+  const regionalPool = REGIONAL_CREATURES[state.currentRegion] || []
+  if (!regionalPool.length) return
   if (state.creatureSighting) return
-  const woodsHealth = getRegionalHealth('whisper-woods')
-  const healthyHabitat = ((woodsHealth.Biodiversity || 0)+(woodsHealth['Forest density'] || 0))/2
-  const rarePool = CREATURES.filter(item => item.rarity === 'rare')
-  const creaturePool = healthyHabitat >= 72 && Math.random() < 0.42 ? rarePool : CREATURES
+  const regionHealth = getRegionalHealth(state.currentRegion)
+  const healthValues = Object.values(regionHealth).filter(Number.isFinite)
+  const healthyHabitat = healthValues.length ? healthValues.reduce((a,b)=>a+b,0)/healthValues.length : 50
+  const rarePool = regionalPool.filter(item => item.rarity === 'rare')
+  const creaturePool = healthyHabitat >= 72 && Math.random() < 0.42 ? rarePool : regionalPool
   const creature = creaturePool[Math.floor(Math.random() * creaturePool.length)]
   if (!creature) return
 
@@ -5625,18 +5735,18 @@ function spawnCreatureSighting() {
     mood: moods[Math.floor(Math.random() * moods.length)],
     trust: 0,
   }
-  const woodsData = getWoodsData()
-  if (Date.now()-(woodsData.lastSightingSignalAt || 0) > 60000) {
-    woodsData.lastSightingSignalAt = Date.now()
-    saveWoodsData(woodsData)
-    createNewsItem('Wildlife',`${creature.name} seen near Old Oak Trail.`,`Leaves moved, the birds went quiet, and ${creature.rarity} wildlife was reported.`,'whisper-woods',4)
+  const journal = getRegionalJournal(state.currentRegion)
+  if (Date.now()-(journal.lastSightingSignalAt || 0) > 60000) {
+    journal.lastSightingSignalAt = Date.now()
+    saveRegionalJournals()
+    createNewsItem('Wildlife',`${creature.name} seen in ${REGIONS[state.currentRegion].name}.`,`A ${creature.rarity} wildlife sighting was added to the regional trail journal.`,state.currentRegion,4)
   }
   _creatureSightingAnim = 0
   _creatureSpawnTimer = 0
 }
 
 function updateCreatureSightings(dt) {
-  if (state.currentRegion !== 'whisper-woods') {
+  if (!REGIONAL_CREATURES[state.currentRegion]?.length) {
     state.creatureSighting = null
     _creatureSpawnTimer = 0
     return
@@ -5652,7 +5762,7 @@ function updateCreatureSightings(dt) {
   // Spawn timer
   _creatureSpawnTimer -= dt
   if (_creatureSpawnTimer <= 0 && !state.creatureSighting && !_creatureEncounterId) {
-    const tower = getWoodsData().campsites.tower
+    const tower = state.currentRegion === 'whisper-woods' && getWoodsData().campsites.tower
     _creatureSpawnTimer = (tower ? 12 : 25) + Math.random() * (tower ? 20 : 35)
     spawnCreatureSighting()
   }
@@ -5875,7 +5985,8 @@ function checkTrustMilestone(creatureId, trust) {
   if (!creature) return
   // Save partial progress
   if (!state.creatureCollection[creatureId]) {
-    state.creatureCollection[creatureId] = { creatureId, name: creature.name, icon: creature.icon, rarity: creature.rarity, region: 'whisper-woods', trust: 0, discovered: Date.now(), trusted: false }
+    state.creatureCollection[creatureId] = { creatureId, name: creature.name, icon: creature.icon, rarity: creature.rarity, region: creature.region || state.currentRegion, trust: 0, discovered: Date.now(), trusted: false }
+    recordRegionalSighting(creatureId,creature.region || state.currentRegion)
   }
   const prevTrust = state.creatureCollection[creatureId].trust || 0
   state.creatureCollection[creatureId].trust = trust
@@ -6293,6 +6404,19 @@ function generateChunk(cx, cy, regionId) {
     }
     chunk.decorations = decors
   }
+  if (r === 'whisper-woods') {
+    const decors=[], types=['oak','pine','maple','birch','log','rock','fern','fern','moss','mushroom','wetland']
+    let rng=(cx*104729+cy*130363+1777)|0
+    const rand=()=>{rng=(Math.imul(rng,1664525)+1013904223)|0;return (rng>>>0)/4294967296}
+    const count=12+Math.floor(rand()*9)
+    for (let i=0;i<count;i++) {
+      const lx=Math.floor(rand()*CHUNK_SIZE), ly=Math.floor(rand()*CHUNK_SIZE)
+      const terrain=tiles[ly][lx]
+      if ([TERRAIN.WATER,TERRAIN.DEEP_WATER,TERRAIN.BUILDING].includes(terrain)) continue
+      decors.push({ type:types[Math.floor(rand()*types.length)], wx:cx*CHUNK_SIZE+lx, wy:cy*CHUNK_SIZE+ly })
+    }
+    chunk.woodsDecorations=decors
+  }
 
   state.chunks.set(key, chunk)
   return chunk
@@ -6316,26 +6440,27 @@ function pavementConnections(roadSet,x,y,z) {
 }
 
 function drawBlackPavementTile(s,x,y,links,z) {
-  const width = Math.max(7,TILE_H*z*.38)
-  const halfWidth = width*.5
+  const halfW = TILE_W*z*.39
+  const halfH = TILE_H*z*.39
   ctx.fillStyle = '#111216'
-
-  // Each arm ends exactly at the shared isometric tile boundary. Adjacent
-  // pavement tiles meet at that same boundary, so streets cannot drift apart.
+  // A simple black pavement block is visibly smaller than a building lot.
+  // Wide under-connectors meet neighboring blocks without lane lines.
   for (const link of links) {
-    const length = Math.hypot(link.dx,link.dy) || 1
-    const px = -link.dy/length*halfWidth
-    const py = link.dx/length*halfWidth
+    const length=Math.hypot(link.dx,link.dy) || 1
+    const px=-link.dy/length*halfH*.72, py=link.dx/length*halfH*.72
     ctx.beginPath()
     ctx.moveTo(s.x+px,s.y+py)
     ctx.lineTo(s.x+link.dx+px,s.y+link.dy+py)
     ctx.lineTo(s.x+link.dx-px,s.y+link.dy-py)
     ctx.lineTo(s.x-px,s.y-py)
-    ctx.closePath()
-    ctx.fill()
+    ctx.closePath(); ctx.fill()
   }
   ctx.beginPath()
-  ctx.arc(s.x,s.y,width*.56,0,Math.PI*2)
+  ctx.moveTo(s.x,s.y-halfH)
+  ctx.lineTo(s.x+halfW,s.y)
+  ctx.lineTo(s.x,s.y+halfH)
+  ctx.lineTo(s.x-halfW,s.y)
+  ctx.closePath()
   ctx.fill()
 
   // Raised aggregate gives the surface a bumpy pavement texture. Every mark is
@@ -6350,7 +6475,7 @@ function drawBlackPavementTile(s,x,y,links,z) {
       const t=.08+pavementNoise(linkIndex*20+i)*.84
       const length=Math.hypot(link.dx,link.dy) || 1
       const nx=-link.dy/length, ny=link.dx/length
-      const jitter=(pavementNoise(linkIndex*20+i+9)-.5)*width*.72
+      const jitter=(pavementNoise(linkIndex*20+i+9)-.5)*halfH*1.2
       bumps.push({
         x:s.x+link.dx*t+nx*jitter,
         y:s.y+link.dy*t+ny*jitter,
@@ -6360,7 +6485,7 @@ function drawBlackPavementTile(s,x,y,links,z) {
   })
   for (let i=0;i<7;i++) {
     const angle=pavementNoise(100+i)*Math.PI*2
-    const radius=width*(.08+pavementNoise(120+i)*.38)
+    const radius=halfW*(.08+pavementNoise(120+i)*.38)
     bumps.push({
       x:s.x+Math.cos(angle)*radius,
       y:s.y+Math.sin(angle)*radius*.55,
@@ -7172,7 +7297,7 @@ function drawBuildPreview() {
 
 function drawFarmPlacedObject(building,s) {
   const typeId=building.object_type || building.building_type
-  const groundTypes=new Set(['crop-row','field-plot','fence','pond','orchard','farm-decoration'])
+  const groundTypes=new Set(['crop-row','field-plot','fence','pond','orchard','orchard-row','farm-decoration','windmill','bee-box'])
   if (!groundTypes.has(typeId)) return false
   const z=state.camera.zoom
   const hw=TILE_W*z*.44
@@ -7258,14 +7383,34 @@ function drawFarmPlacedObject(building,s) {
     ctx.beginPath(); ctx.ellipse(s.x-3*z,s.y-2*z,hw*.42,hh*.24,-.1,0,Math.PI*2)
     ctx.fillStyle='rgba(103,232,249,.2)'; ctx.fill()
     ctx.font=`${Math.max(8,10*z)}px sans-serif`; ctx.textAlign='center'; ctx.fillText('🌿',s.x+hw*.45,s.y)
-  } else if (typeId === 'orchard') {
-    diamond(s,'rgba(77,124,15,.22)',null)
-    ;[[-.28,-.16],[.2,-.05],[-.02,.24]].forEach(([x,y],i)=>{
-      const px=s.x+x*hw, py=s.y+y*hh
-      ctx.fillStyle='#6b4423'; ctx.fillRect(px-1.2*z,py-6*z,2.4*z,7*z)
-      ctx.beginPath(); ctx.arc(px,py-8*z,5*z,0,Math.PI*2); ctx.fillStyle='#3f7d20'; ctx.fill()
-      ctx.beginPath(); ctx.arc(px+(i%2 ? 2 : -2)*z,py-9*z,1.2*z,0,Math.PI*2); ctx.fillStyle='#ef4444'; ctx.fill()
+  } else if (typeId === 'orchard' || typeId === 'orchard-row') {
+    const cells=typeId === 'orchard-row' ? 2 : 1
+    for (let ox=0;ox<cells;ox++) for (let oy=0;oy<cells;oy++) {
+      const cell=building.tile_x == null ? s : worldToScreen(building.tile_x+ox,building.tile_y+oy)
+      diamond(cell,'rgba(77,124,15,.25)',null)
+    }
+    // Two straight, evenly spaced tree rows make this read as an orchard,
+    // never as a house or an irregular decorative grove.
+    const orchardTrees=[]
+    for (let row=-1;row<=1;row+=2) for (let col=-2;col<=2;col++) orchardTrees.push([col*.34,row*.34])
+    orchardTrees.forEach(([u,v],i)=>{
+      const px=s.x+(u-v)*TILE_W*.31*z, py=s.y+(u+v)*TILE_H*.31*z
+      ctx.fillStyle='#6b4423'; ctx.fillRect(px-1.4*z,py-8*z,2.8*z,9*z)
+      ctx.beginPath(); ctx.arc(px,py-10*z,5.7*z,0,Math.PI*2); ctx.fillStyle=i%2 ? '#3f7d20' : '#4d8b26'; ctx.fill()
+      ctx.beginPath(); ctx.arc(px+(i%3-1)*2*z,py-11*z,1.15*z,0,Math.PI*2); ctx.fillStyle='#ef4444'; ctx.fill()
     })
+  } else if (typeId === 'bee-box') {
+    diamond(s,'rgba(101,126,46,.15)',null)
+    ctx.fillStyle='#d6a52a'; ctx.fillRect(s.x-7*z,s.y-8*z,14*z,9*z)
+    ctx.strokeStyle='#6b4a18'; ctx.lineWidth=Math.max(1,z)
+    for (let y=-6;y<=-1;y+=3) { ctx.beginPath();ctx.moveTo(s.x-7*z,s.y+y*z);ctx.lineTo(s.x+7*z,s.y+y*z);ctx.stroke() }
+    ctx.font=`${Math.max(8,10*z)}px sans-serif`; ctx.fillText('🐝',s.x+10*z,s.y-8*z)
+  } else if (typeId === 'windmill') {
+    diamond(s,'rgba(101,126,46,.14)',null)
+    ctx.strokeStyle='#c2b59b'; ctx.lineWidth=Math.max(1.4,2*z)
+    ctx.beginPath();ctx.moveTo(s.x-5*z,s.y);ctx.lineTo(s.x,s.y-22*z);ctx.lineTo(s.x+5*z,s.y);ctx.stroke()
+    ctx.translate(s.x,s.y-22*z); ctx.rotate(performance.now()*.0004)
+    for (let blade=0;blade<4;blade++){ctx.rotate(Math.PI/2);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-11*z);ctx.stroke()}
   } else if (typeId === 'farm-decoration') {
     diamond(s,'rgba(101,126,46,.16)',null)
     const flowers=['🌻','🌼','🌷']
@@ -9090,7 +9235,6 @@ function setupUI() {
   document.getElementById('encounterReportBtn').addEventListener('click', () => reportEncounter(false))
 
   document.getElementById('woodsOpenBtn').addEventListener('click', () => {
-    if (state.currentRegion !== 'whisper-woods') return
     document.getElementById('woodsHub').classList.remove('hidden')
     renderWoodsHub()
   })
@@ -10418,7 +10562,10 @@ function onInteractBuildObject(object) {
   }
   const hooks = {
     pond:'Fishing mini-game hook ready for a later phase.',
-    orchard:'Fruit growth hook ready for a later phase.',
+    orchard:'The orchard is planted in rows and will support fruit growth.',
+    'orchard-row':'The orchard is planted in rows and will support fruit growth.',
+    'bee-box':'The bees are supporting pollination across Pine Hollow Farm.',
+    windmill:'The windmill is supporting farm production.',
     'trail-camera':'Wildlife observation hook ready. It also improves rare sighting chances.',
     stage:'Performance mini-game hook ready for a later phase.'
   }
@@ -11561,13 +11708,55 @@ const GOAL_STEPS = [
   { key: 'openPropertyPanel', label: 'Open the Property Deed panel', check: s => s._openedProperty === true, reward: { fc: 75, rep: 20 } },
 ]
 
-const CREATURES = [
-  { id: 'neon-fox', name: 'Neon Fox', icon: '\u{1F98A}', rarity: 'uncommon', preferredTime: 'night', preferredWeather: 'clear', favoriteFood: 'glow-berry', trustDifficulty: 30 },
-  { id: 'echo-owl', name: 'Echo Owl', icon: '\u{1F989}', rarity: 'rare', preferredTime: 'dusk', preferredWeather: 'fog', favoriteFood: 'moon-seed', trustDifficulty: 40 },
-  { id: 'lantern-deer', name: 'Lantern Deer', icon: '\u{1F98C}', rarity: 'uncommon', preferredTime: 'dawn', preferredWeather: 'clear', favoriteFood: 'forest-blossom', trustDifficulty: 25 },
-  { id: 'static-crow', name: 'Static Crow', icon: '\u{1F426}', rarity: 'common', preferredTime: 'day', preferredWeather: 'rain', favoriteFood: 'spark-berry', trustDifficulty: 20 },
-  { id: 'moss-hound', name: 'Moss Hound', icon: '\u{1F436}', rarity: 'rare', preferredTime: 'night', preferredWeather: 'fog', favoriteFood: 'truffle-root', trustDifficulty: 45 },
-]
+const REGIONAL_CREATURES = {
+  city:[
+    { id:'alley-cat', name:'Signal Alley Cat', icon:'🐈', rarity:'common' },
+    { id:'rooftop-pigeon', name:'Rooftop Pigeon', icon:'🕊️', rarity:'common' },
+    { id:'neon-raccoon', name:'Neon Raccoon', icon:'🦝', rarity:'uncommon' }
+  ],
+  farmlands:[
+    { id:'field-rabbit', name:'Pine Hollow Rabbit', icon:'🐇', rarity:'common' },
+    { id:'redtail-hawk', name:'Red-tail Hawk', icon:'🦅', rarity:'uncommon' },
+    { id:'graffiti-rooster', name:'Graffiti Rooster', icon:'🐓', rarity:'rare' }
+  ],
+  'whisper-woods':[
+    { id:'neon-fox', name:'Neon Fox', icon:'🦊', rarity:'uncommon' },
+    { id:'echo-owl', name:'Echo Owl', icon:'🦉', rarity:'rare' },
+    { id:'lantern-deer', name:'Lantern Deer', icon:'🦌', rarity:'uncommon' },
+    { id:'static-crow', name:'Static Crow', icon:'🐦', rarity:'common' },
+    { id:'moss-hound', name:'Moss Hound', icon:'🐕', rarity:'rare' }
+  ],
+  'purple-pulse':[
+    { id:'bass-bat', name:'Bassline Bat', icon:'🦇', rarity:'common' },
+    { id:'violet-moth', name:'Violet Pulse Moth', icon:'🦋', rarity:'uncommon' },
+    { id:'stage-gecko', name:'Stage-Light Gecko', icon:'🦎', rarity:'rare' }
+  ],
+  'iron-district':[
+    { id:'rail-rat', name:'Rail Yard Rat', icon:'🐀', rarity:'common' },
+    { id:'smoke-raven', name:'Smokestack Raven', icon:'🐦‍⬛', rarity:'uncommon' },
+    { id:'copper-hound', name:'Copper Hound', icon:'🐕', rarity:'rare' }
+  ],
+  coast:[
+    { id:'harbor-seal', name:'Harbor Seal', icon:'🦭', rarity:'common' },
+    { id:'storm-gull', name:'Storm Gull', icon:'🐦', rarity:'uncommon' },
+    { id:'signal-otter', name:'Signal Otter', icon:'🦦', rarity:'rare' }
+  ],
+  mountains:[
+    { id:'ridge-goat', name:'Ridge Goat', icon:'🐐', rarity:'common' },
+    { id:'granite-eagle', name:'Granite Eagle', icon:'🦅', rarity:'uncommon' },
+    { id:'aurora-lynx', name:'Aurora Lynx', icon:'🐈', rarity:'rare' }
+  ]
+}
+for (const [region,creatures] of Object.entries(REGIONAL_CREATURES)) {
+  creatures.forEach(creature=>Object.assign(creature,{
+    region,
+    preferredTime:creature.preferredTime || 'day',
+    preferredWeather:creature.preferredWeather || 'clear',
+    favoriteFood:creature.favoriteFood || 'region forage',
+    trustDifficulty:creature.trustDifficulty || (creature.rarity === 'rare' ? 42 : creature.rarity === 'uncommon' ? 30 : 20)
+  }))
+}
+const CREATURES = Object.values(REGIONAL_CREATURES).flat()
 
 // ── SKILL TREES SYSTEM ─────────────────────────────────
 const SKILL_TREES = [
@@ -12234,6 +12423,7 @@ function completeTravel(targetRegion) {
   document.getElementById('farmInventory').classList.toggle('hidden', targetRegion !== 'farmlands')
   closeFarmHub()
   updatePlayerList()
+  updateWoodsHUD()
 
   if (targetRegion === 'farmlands') {
     showToast('Arrived at Farmlands', 'Build your farm, grow food, supply the city.')
@@ -12255,6 +12445,7 @@ function completeTravel(targetRegion) {
     _creatureSpawnTimer = 5 + Math.random() * 10
   } else {
     showToast(`Arrived at ${REGIONS[targetRegion].name}`, '')
+    _creatureSpawnTimer = 10 + Math.random()*15
   }
   awardSkillXP('explorer', targetRegion === 'city' ? 10 : 25)
   createNewsItem('Culture', 'Explorer arrives in ' + (REGIONS[targetRegion]?.name || targetRegion) + '.', '', targetRegion, 2)
