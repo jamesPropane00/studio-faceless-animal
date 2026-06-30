@@ -1349,6 +1349,26 @@
     .farm-plant-overlay.hidden { display: none; }
     .farm-plant-title { font-size: 0.85rem; font-weight: 800; color: var(--text); margin-bottom: 0.6rem; }
     .farm-crop-list { display: flex; flex-direction: column; gap: 4px; }
+    .farm-harvest-game { display:none; margin-top:.55rem; }
+    .farm-harvest-game.active { display:block; }
+    .farm-harvest-status {
+      display:flex; justify-content:space-between; gap:.5rem; margin-bottom:.45rem;
+      color:#dfffaa; font:800 .6rem "DM Mono",monospace;
+    }
+    .farm-harvest-timer { color:#f5c451; }
+    .farm-harvest-grid {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:.38rem;
+      width:min(290px,calc(100vw - 3rem));
+    }
+    .farm-harvest-cell {
+      aspect-ratio:1; display:grid; place-items:center; border:1px solid rgba(163,230,53,.22);
+      border-radius:9px; background:linear-gradient(145deg,rgba(81,58,33,.85),rgba(46,55,30,.9));
+      font-size:1.45rem; cursor:pointer; transition:transform .12s,opacity .12s,background .12s;
+      touch-action:manipulation;
+    }
+    .farm-harvest-cell:hover,.farm-harvest-cell:active { transform:scale(.94); background:rgba(132,204,22,.16); }
+    .farm-harvest-cell.collected { opacity:.18; transform:scale(.72); pointer-events:none; }
+    .farm-harvest-cell.empty { cursor:default; opacity:.3; pointer-events:none; }
     .farm-crop-item {
       display: flex;
       align-items: center;
@@ -2739,7 +2759,11 @@
   <div class="farm-crop-list" id="farmCropList"></div>
   <div id="farmHarvestArea" style="display:none">
     <div class="farm-plant-title" style="margin-top:0.6rem">Ready to Harvest!</div>
-    <button class="farm-harvest-btn" id="farmHarvestBtn">Harvest</button>
+    <button class="farm-harvest-btn" id="farmHarvestBtn">Start Harvest Mini-Game</button>
+  </div>
+  <div class="farm-harvest-game" id="farmHarvestGame">
+    <div class="farm-harvest-status"><span id="farmHarvestScore">0 / 7 gathered</span><span class="farm-harvest-timer" id="farmHarvestTimer">12.0s</span></div>
+    <div class="farm-harvest-grid" id="farmHarvestGrid"></div>
   </div>
 </div>
 
@@ -3254,6 +3278,72 @@ function updateFarmInventory() {
   document.getElementById('farmDeedValue').textContent = `${(data.propertyValue || 45000).toLocaleString()} FC`
 }
 
+const farmHarvestRuntime = { interval:null, tx:null, ty:null, total:7, collected:0, deadline:0 }
+
+function stopFarmHarvestGame() {
+  if (farmHarvestRuntime.interval) clearInterval(farmHarvestRuntime.interval)
+  farmHarvestRuntime.interval = null
+}
+
+function startCropHarvestGame(tx,ty) {
+  const crop=getCropAtTile(tx,ty)
+  const cropState=crop && getCropStageInfo(crop)
+  if (!cropState?.done) return
+  stopFarmHarvestGame()
+  farmHarvestRuntime.tx=tx
+  farmHarvestRuntime.ty=ty
+  farmHarvestRuntime.collected=0
+  farmHarvestRuntime.deadline=Date.now()+12000
+  const game=document.getElementById('farmHarvestGame')
+  const grid=document.getElementById('farmHarvestGrid')
+  const score=document.getElementById('farmHarvestScore')
+  const timer=document.getElementById('farmHarvestTimer')
+  document.getElementById('farmHarvestArea').style.display='none'
+  document.getElementById('farmPlantTitle').textContent=`Gather the ${cropState.info.name}!`
+  game.classList.add('active')
+  score.textContent=`0 / ${farmHarvestRuntime.total} gathered`
+  timer.textContent='12.0s'
+  const cells=[
+    ...Array.from({length:farmHarvestRuntime.total},()=>cropState.info.icon),
+    ...Array.from({length:2},()=>'')
+  ].sort(()=>Math.random()-.5)
+  grid.innerHTML=''
+  cells.forEach(icon=>{
+    const cell=document.createElement('button')
+    cell.type='button'
+    cell.className='farm-harvest-cell'+(icon ? '' : ' empty')
+    cell.textContent=icon || '·'
+    if (icon) {
+      cell.addEventListener('click',()=>{
+        if (cell.classList.contains('collected')) return
+        cell.classList.add('collected')
+        farmHarvestRuntime.collected++
+        score.textContent=`${farmHarvestRuntime.collected} / ${farmHarvestRuntime.total} gathered`
+        if (farmHarvestRuntime.collected >= farmHarvestRuntime.total) {
+          const remaining=Math.max(0,farmHarvestRuntime.deadline-Date.now())
+          const bonus=remaining>8000 ? 2 : (remaining>4000 ? 1 : 0)
+          stopFarmHarvestGame()
+          game.classList.remove('active')
+          harvestCrop(tx,ty,bonus)
+        }
+      })
+    }
+    grid.appendChild(cell)
+  })
+  farmHarvestRuntime.interval=setInterval(()=>{
+    const remaining=Math.max(0,farmHarvestRuntime.deadline-Date.now())
+    timer.textContent=`${(remaining/1000).toFixed(1)}s`
+    if (remaining <= 0) {
+      stopFarmHarvestGame()
+      game.classList.remove('active')
+      document.getElementById('farmPlantTitle').textContent='The row still needs harvesting'
+      document.getElementById('farmHarvestArea').style.display='block'
+      document.getElementById('farmHarvestBtn').textContent='Try Harvest Again'
+      showToast('Harvest Paused','Tap every crop before time runs out. Nothing was lost.')
+    }
+  },100)
+}
+
 function showFarmPlantOverlay(tx, ty) {
   const existing = getCropAtTile(tx, ty)
   const overlay = document.getElementById('farmPlantOverlay')
@@ -3262,8 +3352,11 @@ function showFarmPlantOverlay(tx, ty) {
   const harvestArea = document.getElementById('farmHarvestArea')
 
   // Clear
+  stopFarmHarvestGame()
   list.innerHTML = ''
   harvestArea.style.display = 'none'
+  document.getElementById('farmHarvestGame').classList.remove('active')
+  document.getElementById('farmHarvestBtn').textContent='Start Harvest Mini-Game'
 
   if (existing) {
     // Show harvest info
@@ -3271,7 +3364,7 @@ function showFarmPlantOverlay(tx, ty) {
     if (state && state.done) {
       title.textContent = `Harvest ${state.info.icon} ${state.info.name}`
       harvestArea.style.display = 'block'
-      document.getElementById('farmHarvestBtn').onclick = () => harvestCrop(tx, ty)
+      document.getElementById('farmHarvestBtn').onclick = () => startCropHarvestGame(tx, ty)
     } else {
       const pct = state ? Math.floor(state.progress * 100) : 0
       title.textContent = `Growing ${state.info.icon} ${state.info.name} (${pct}%)`
@@ -3307,6 +3400,8 @@ function showFarmPlantOverlay(tx, ty) {
 }
 
 function closeFarmOverlay() {
+  stopFarmHarvestGame()
+  document.getElementById('farmHarvestGame').classList.remove('active')
   document.getElementById('farmPlantOverlay').classList.add('hidden')
 }
 
@@ -3378,7 +3473,7 @@ function plantCrop(tx, ty, cropType) {
   invalidateTileCache()
 }
 
-function harvestCrop(tx, ty) {
+function harvestCrop(tx, ty, bonusYield=0) {
   const data = getFarmData()
   const idx = data.crops.findIndex(c => c.tx === tx && c.ty === ty)
   if (idx === -1) return
@@ -3386,15 +3481,16 @@ function harvestCrop(tx, ty) {
   const state = getCropStageInfo(crop)
   if (!state || !state.done) return
 
-  data.crops.splice(idx, 1)
   const info = CROP_TYPES[crop.type]
   let yield_ = info.yield || 1
   yield_ = Math.floor(yield_ * (1 + getSkillBonus('farmer', 'cropYield')))
+  yield_ += Math.max(0,Number(bonusYield) || 0)
   const siloUsed = ['wheat','corn','carrots','tomatoes'].reduce((sum, key) => sum + (data.inventory[key] || 0), 0)
   if (siloUsed + yield_ > data.siloCapacity) {
     showToast('Silo Full', 'Fill a delivery order or send crops to the city first.')
     return
   }
+  data.crops.splice(idx, 1)
   data.inventory[crop.type] = (data.inventory[crop.type] || 0) + yield_
   addFarmXP(data, 6)
 
@@ -3403,7 +3499,7 @@ function harvestCrop(tx, ty) {
   createNewsItem('Farm', 'Crops harvested at the farm.', yield_ + ' ' + info.name + ' brought in.', 'farmlands', 2)
   closeFarmOverlay()
   updateFarmInventory()
-  showToast(`Harvested ${yield_} ${info.name}!`, '')
+  showToast(`Harvested ${yield_} ${info.name}!`, bonusYield ? `Fast hands bonus: +${bonusYield}` : 'Row cleared and ready to plant again.')
   completeGoalHarvest()
   invalidateTileCache()
 }
@@ -7052,7 +7148,10 @@ function drawBuildPreview() {
   }
   const center = worldToScreen(preview.x + (footprint - 1) / 2,preview.y + (footprint - 1) / 2)
   ctx.globalAlpha = 0.55
-  if (!spec.infrastructure) drawBuildingAt({ building_type:state.buildType, condition:100, status:'active' },worldToScreen(preview.x,preview.y))
+  if (!spec.infrastructure) drawBuildingAt({
+    building_type:state.buildType, object_type:state.buildType,
+    tile_x:preview.x, tile_y:preview.y, condition:100, status:'active'
+  },worldToScreen(preview.x,preview.y))
   ctx.globalAlpha = 1
   ctx.font = `800 ${Math.max(10,11*state.camera.zoom)}px Inter`
   ctx.textAlign = 'center'
@@ -7071,9 +7170,116 @@ function drawBuildPreview() {
   ctx.restore()
 }
 
+function drawFarmPlacedObject(building,s) {
+  const typeId=building.object_type || building.building_type
+  const groundTypes=new Set(['crop-row','field-plot','fence','pond','orchard','farm-decoration'])
+  if (!groundTypes.has(typeId)) return false
+  const z=state.camera.zoom
+  const hw=TILE_W*z*.44
+  const hh=TILE_H*z*.44
+  const diamond=(center,fill,stroke='rgba(255,255,255,.08)')=>{
+    ctx.beginPath()
+    ctx.moveTo(center.x,center.y-hh)
+    ctx.lineTo(center.x+hw,center.y)
+    ctx.lineTo(center.x,center.y+hh)
+    ctx.lineTo(center.x-hw,center.y)
+    ctx.closePath()
+    ctx.fillStyle=fill; ctx.fill()
+    if (stroke) { ctx.strokeStyle=stroke; ctx.lineWidth=Math.max(.5,z); ctx.stroke() }
+  }
+  ctx.save()
+
+  if (typeId === 'crop-row' || typeId === 'field-plot') {
+    const footprint=typeId === 'field-plot' ? 2 : 1
+    for (let ox=0;ox<footprint;ox++) {
+      for (let oy=0;oy<footprint;oy++) {
+        const cell=building.tile_x == null ? s : worldToScreen(building.tile_x+ox,building.tile_y+oy)
+        diamond(cell,'#553b28','rgba(164,116,70,.42)')
+        ctx.strokeStyle='rgba(35,23,16,.7)'
+        ctx.lineWidth=Math.max(1,1.2*z)
+        for (let row=-1;row<=1;row++) {
+          const offset=row*4*z
+          ctx.beginPath()
+          ctx.moveTo(cell.x-hw*.55,cell.y-hh*.28+offset)
+          ctx.lineTo(cell.x+hw*.55,cell.y+hh*.28+offset)
+          ctx.stroke()
+        }
+      }
+    }
+    const crop=building.tile_x == null ? null : getCropAtTile(building.tile_x,building.tile_y)
+    const cropState=crop && getCropStageInfo(crop)
+    if (cropState) {
+      const maturity=Math.max(.2,cropState.progress)
+      const cropColor=cropState.done ? cropState.info.color : '#65a30d'
+      const plantRows=typeId === 'field-plot' ? 4 : 3
+      const plantsPerRow=typeId === 'field-plot' ? 5 : 4
+      for (let row=0;row<plantRows;row++) {
+        for (let col=0;col<plantsPerRow;col++) {
+          const u=(col/(plantsPerRow-1)-.5)*(typeId === 'field-plot' ? 1.35 : .72)
+          const v=(row/(plantRows-1)-.5)*(typeId === 'field-plot' ? 1.35 : .58)
+          const px=s.x+(u-v)*(TILE_W*.27*z)
+          const py=s.y+(u+v)*(TILE_H*.27*z)
+          const stem=Math.max(2,7*z*maturity)
+          ctx.strokeStyle='#3f6212'; ctx.lineWidth=Math.max(1,1.2*z)
+          ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,py-stem); ctx.stroke()
+          ctx.beginPath(); ctx.arc(px,py-stem,Math.max(1.2,2.1*z*maturity),0,Math.PI*2)
+          ctx.fillStyle=cropColor; ctx.fill()
+          if (cropState.done) {
+            ctx.beginPath(); ctx.arc(px-0.5*z,py-stem-0.5*z,Math.max(.4,.65*z),0,Math.PI*2)
+            ctx.fillStyle='rgba(255,244,180,.72)'; ctx.fill()
+          }
+        }
+      }
+      if (cropState.done) {
+        ctx.font=`${Math.max(10,12*z)}px sans-serif`
+        ctx.textAlign='center'
+        ctx.fillText('✨',s.x,s.y-hh-8*z)
+      }
+    } else {
+      ctx.font=`${Math.max(9,11*z)}px sans-serif`
+      ctx.textAlign='center'
+      ctx.globalAlpha=.7
+      ctx.fillText('🌱',s.x,s.y-2*z)
+      ctx.globalAlpha=1
+    }
+  } else if (typeId === 'fence') {
+    const points=[[-hw*.72,hh*.18],[0,-hh*.18],[hw*.72,-hh*.54]]
+    ctx.strokeStyle='#8b5e34'; ctx.lineWidth=Math.max(2,2.6*z)
+    for (let rail=-1;rail<=1;rail+=2) {
+      ctx.beginPath()
+      points.forEach(([x,y],i)=>i ? ctx.lineTo(s.x+x,s.y+y+rail*2*z) : ctx.moveTo(s.x+x,s.y+y+rail*2*z))
+      ctx.stroke()
+    }
+    ctx.fillStyle='#5f3d22'
+    points.forEach(([x,y])=>ctx.fillRect(s.x+x-1.4*z,s.y+y-7*z,2.8*z,10*z))
+  } else if (typeId === 'pond') {
+    ctx.beginPath(); ctx.ellipse(s.x,s.y,hw*.72,hh*.62,0,0,Math.PI*2)
+    ctx.fillStyle='#164e63'; ctx.fill()
+    ctx.beginPath(); ctx.ellipse(s.x-3*z,s.y-2*z,hw*.42,hh*.24,-.1,0,Math.PI*2)
+    ctx.fillStyle='rgba(103,232,249,.2)'; ctx.fill()
+    ctx.font=`${Math.max(8,10*z)}px sans-serif`; ctx.textAlign='center'; ctx.fillText('🌿',s.x+hw*.45,s.y)
+  } else if (typeId === 'orchard') {
+    diamond(s,'rgba(77,124,15,.22)',null)
+    ;[[-.28,-.16],[.2,-.05],[-.02,.24]].forEach(([x,y],i)=>{
+      const px=s.x+x*hw, py=s.y+y*hh
+      ctx.fillStyle='#6b4423'; ctx.fillRect(px-1.2*z,py-6*z,2.4*z,7*z)
+      ctx.beginPath(); ctx.arc(px,py-8*z,5*z,0,Math.PI*2); ctx.fillStyle='#3f7d20'; ctx.fill()
+      ctx.beginPath(); ctx.arc(px+(i%2 ? 2 : -2)*z,py-9*z,1.2*z,0,Math.PI*2); ctx.fillStyle='#ef4444'; ctx.fill()
+    })
+  } else if (typeId === 'farm-decoration') {
+    diamond(s,'rgba(101,126,46,.16)',null)
+    const flowers=['🌻','🌼','🌷']
+    ctx.font=`${Math.max(10,13*z)}px sans-serif`; ctx.textAlign='center'
+    flowers.forEach((flower,i)=>ctx.fillText(flower,s.x+(i-1)*7*z,s.y+(i%2)*3*z))
+  }
+  ctx.restore()
+  return true
+}
+
 function drawBuildingAt(building, s) {
   const type = BUILDING_TYPES[building.building_type]
   if (!type) return
+  if (drawFarmPlacedObject(building,s)) return
   
   const hw = (TILE_W / 2) * state.camera.zoom
   const hh = (TILE_H / 2) * state.camera.zoom
