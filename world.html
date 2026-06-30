@@ -180,6 +180,8 @@
     .toolbar{
       position:fixed;top:245px;right:max(14px, env(safe-area-inset-right,0px));
       display:flex;flex-direction:column;gap:6px;z-index:60;
+      max-height:calc(100vh - 260px);overflow-y:auto;overflow-x:hidden;
+      padding:1px 3px 4px;scrollbar-width:thin;scrollbar-color:rgba(167,139,250,.35) transparent;
     }
     .tool-btn{
       width:40px;height:40px;border-radius:var(--radius-sm);
@@ -261,7 +263,8 @@
     @media(pointer:coarse){
       .joystick-zone{display:block}
       .action-buttons{display:flex}
-      .toolbar{top:auto;bottom:max(16px, env(safe-area-inset-bottom,0px));right:max(12px, env(safe-area-inset-right,0px));left:auto;flex-direction:row}
+      .toolbar{top:auto;bottom:max(16px, env(safe-area-inset-bottom,0px));right:max(12px, env(safe-area-inset-right,0px));left:auto;flex-direction:row;max-height:none;max-width:calc(100vw - 190px);overflow-x:auto;overflow-y:hidden}
+      .tool-btn{flex:0 0 auto}
     }
     @media(pointer:fine){
       .joystick-zone{display:none!important}
@@ -653,6 +656,27 @@
       font-size: 0.75rem;
       color: var(--gold);
     }
+    .build-panel { max-height: min(78vh, 720px); overflow-y: auto; }
+    .build-region-summary {
+      margin-bottom: 0.65rem; padding: 0.65rem 0.75rem;
+      border: 1px solid rgba(167,139,250,0.24); border-radius: 8px;
+      background: linear-gradient(135deg,rgba(124,58,237,0.12),rgba(15,23,42,0.78));
+    }
+    .build-region-name { color:#fff; font-size:0.72rem; font-weight:900; letter-spacing:0.05em; }
+    .build-region-rule { margin-top:0.18rem; color:var(--dim); font-size:0.57rem; line-height:1.35; }
+    .build-health-row { display:flex; gap:0.35rem; flex-wrap:wrap; margin-top:0.48rem; }
+    .build-health-chip {
+      padding:0.2rem 0.35rem; border-radius:999px; background:rgba(255,255,255,0.055);
+      color:#c4b5fd; font-size:0.48rem; font-weight:800;
+    }
+    .build-item { position:relative; overflow:hidden; }
+    .build-item::after {
+      content:attr(data-footprint); position:absolute; top:0.3rem; right:0.3rem;
+      color:rgba(255,255,255,0.42); font-size:0.43rem; font-weight:900;
+    }
+    .build-icon { font-size:1.25rem; }
+    .build-desc { min-height:2.3em; line-height:1.2; }
+    .build-requirement { color:#a78bfa; font-size:0.48rem; font-weight:800; }
     .pw-item-cost {
       font-size: 0.75rem;
       color: #4ade80;
@@ -1658,7 +1682,7 @@
 
     /* ── TABLET / SMALL DESKTOP ── */
     @media(max-width:768px){
-      .toolbar{top:auto;bottom:max(12px, env(safe-area-inset-bottom,0px));right:max(10px, env(safe-area-inset-right,0px));left:auto;flex-direction:row;gap:4px}
+      .toolbar{top:auto;bottom:max(12px, env(safe-area-inset-bottom,0px));right:max(10px, env(safe-area-inset-right,0px));left:auto;flex-direction:row;gap:4px;max-height:none;max-width:calc(100vw - 175px);overflow-x:auto;overflow-y:hidden}
       .stats-panel{min-width:100px}
       .stat-label{min-width:auto}
       .stat-row{font-size:0.6rem}
@@ -1750,6 +1774,17 @@
     }
 
     /* ── SETTINGS PANEL ── */
+    @media (max-width: 768px) {
+      .build-panel,.god-panel,.income-panel,.job-panel,.pw-panel,.block-panel,.gang-panel {
+        position:fixed!important; left:8px!important; right:8px!important; top:auto!important;
+        bottom:72px!important; width:auto!important; min-width:0!important; max-width:none!important;
+        max-height:72vh!important; transform:none!important; border-radius:14px!important;
+      }
+      .build-panel.open,.god-panel.open,.income-panel.open,.job-panel.open,.pw-panel.open,.block-panel.open,.gang-panel.open {
+        transform:none!important;
+      }
+    }
+
     .settings-body {
       padding: 0.6rem 0;
     }
@@ -2197,9 +2232,10 @@
 
 <div class="build-panel game-panel" id="buildPanel">
   <div class="panel-header">
-    <div class="panel-title">Build Mode</div>
+    <div class="panel-title" id="buildPanelTitle">Build Mode</div>
     <div class="panel-close" id="buildPanelClose">&times;</div>
   </div>
+  <div class="build-region-summary" id="buildRegionSummary"></div>
   <div class="build-grid" id="buildGrid"></div>
 </div>
 
@@ -2768,6 +2804,7 @@ const state = {
   minimapOpen: false,
   buildMode: false,
   buildType: null,
+  buildPreview: { x: 0, y: 0, visible: false, valid: false, reason: '' },
   godMode: false,
   pwMode: false,
   pwType: null,
@@ -2807,6 +2844,12 @@ const state = {
   shipments: { active: [], delivered: [] }
 }
 
+const regionalRuntime = {
+  health: {},
+  natureAccumulator: 0,
+  natureLastTick: 0
+}
+
 // ── RENDER CACHE (offscreen canvases) ──────────────────────
 const tileCache = { canvas: null, ctx: null, cameraX: NaN, cameraY: NaN, zoom: NaN, time: NaN, region: null }
 const minimapCache = { canvas: null, ctx: null, playerX: NaN, playerY: NaN, region: null }
@@ -2826,6 +2869,114 @@ function invalidateTileCache() {
 // BUILDING_TYPES, DISTRICT_TYPE_COLORS, CROP_TYPES — imported from /world/js/data/
 
 // ── FARM DATA (localStorage-managed) ─────────────────────
+// Phase 12A: every region has its own build language. These definitions also form
+// the shared persistence contract used by localStorage and future server sync.
+const REGIONAL_BUILD_CATALOGS = {
+  city: [
+    ['house','House','🏠',50,'A home lot for city residents.','property'],
+    ['shop','Shop','🏪',100,'A storefront that supports local business.','business'],
+    ['club','Club','🎵',150,'Nightlife, culture, and entertainment.','business'],
+    ['warehouse','Warehouse','📦',75,'Storage and distribution for city goods.','industry'],
+    ['hide','Hideout','🕶️',200,'A discreet city property.','special'],
+    ['development-block','Development Block','🏘️',180,'A planned block for future growth.','planning'],
+    ['road','Roads','🛣️',8,'Narrow asphalt streets between city lots.','infrastructure'],
+    ['public-works','Public Works','⛲',60,'A civic improvement for the neighborhood.','infrastructure']
+  ],
+  farmlands: [
+    ['crop-row','Crop Row','🌱',12,'Plant and harvest a working crop row.','crop'],
+    ['field-plot','Field Plot','🌾',24,'A larger piece of productive soil.','crop'],
+    ['barn','Barn','🏚️',90,'Stores processed farm goods.','storage'],
+    ['silo','Silo','🛢️',85,'Stores harvested crops.','storage'],
+    ['chicken-coop','Chicken Coop','🐔',70,'Feed chickens and collect eggs.','animal'],
+    ['cow-pasture','Cow Pasture','🐄',110,'Feed cows and collect milk.','animal'],
+    ['feed-mill','Feed Mill','⚙️',95,'Turn crops into animal feed.','machine'],
+    ['bakery','Bakery','🥖',120,'Bake bread and egg bread.','machine'],
+    ['dairy','Dairy','🥛',130,'Make cream and cheese.','machine'],
+    ['roadside-stand','Roadside Stand','🛒',75,'Sell surplus goods for FC.','business'],
+    ['fence','Fence','🪵',6,'Organize fields and animal areas.','decoration'],
+    ['pond','Pond','🎣',55,'A calm fishing spot with a future mini-game.','nature'],
+    ['orchard','Orchard','🍎',80,'A future home for growing fruit trees.','crop'],
+    ['farm-road','Farm Road','🟫',5,'A narrow dirt path between farm lots.','infrastructure'],
+    ['farm-decoration','Farm Decoration','🌻',10,'Warm details that improve farm character.','decoration']
+  ],
+  'whisper-woods': [
+    ['trail','Trail','🥾',4,'A light woodland path, never asphalt.','infrastructure'],
+    ['campsite','Campsite','⛺',30,'A peaceful base for exploration.','habitat'],
+    ['trail-camera','Trail Camera','📷',45,'Observe wildlife without disturbing it.','observation'],
+    ['feed-station','Feed Station','🥕',35,'Supports small animals and sightings.','habitat'],
+    ['observation-tower','Observation Tower','🔭',90,'Improves long-range wildlife observation.','observation'],
+    ['ranger-cabin','Ranger Cabin','🛖',115,'A stewardship post for the forest.','habitat'],
+    ['bug-habitat','Bug Habitat','🐞',25,'Raises pollinator and insect diversity.','habitat'],
+    ['bird-nest-area','Bird Nest Area','🪺',28,'Creates safe nesting space for birds.','habitat'],
+    ['mushroom-patch','Mushroom Patch','🍄',18,'Thrives after rain and heavy fog.','habitat'],
+    ['tree-grove','Tree Grove','🌲',35,'A healthy cluster of native trees.','habitat'],
+    ['wildlife-pond','Wildlife Pond','💧',65,'Improves water quality and animal visits.','habitat']
+  ],
+  'purple-pulse': [
+    ['stage','Stage','🎤',160,'A platform for future performances.','music'],
+    ['pulse-club','Club','🪩',180,'A neon nightlife destination.','music'],
+    ['studio','Studio','🎛️',150,'A home for recording and production.','music'],
+    ['vendor-booth','Vendor Booth','🎪',45,'Food and goods for show nights.','business'],
+    ['light-tower','Light Tower','💡',70,'Neon lighting for an event zone.','infrastructure'],
+    ['crowd-zone','Crowd Zone','🙌',35,'Defines safe space for an audience.','event'],
+    ['merch-stand','Merch Stand','👕',60,'Sells artist and venue merchandise.','business'],
+    ['neon-road','Neon Road','🟪',10,'A narrow glowing route through the district.','infrastructure']
+  ],
+  'iron-district': [
+    ['factory','Factory','🏭',190,'Produces industrial goods.','industry'],
+    ['iron-warehouse','Warehouse','📦',100,'Heavy storage for the district.','industry'],
+    ['loading-dock','Loading Dock','🚛',90,'Moves freight between facilities.','logistics'],
+    ['freight-yard','Freight Yard','🚚',160,'A large logistics staging area.','logistics'],
+    ['power-station','Power Station','⚡',220,'Supplies power to industrial builds.','utility'],
+    ['rail-spur','Rail Spur','🛤️',45,'A narrow freight connection.','infrastructure']
+  ],
+  coast: [
+    ['dock','Dock','⚓',110,'A working edge for coastal trade.','waterfront'],
+    ['fish-market','Fish Market','🐟',90,'Sells the daily catch.','business'],
+    ['boat-slip','Boat Slip','⛵',75,'A small berth for working boats.','waterfront'],
+    ['beach-stand','Beach Stand','🏖️',45,'Serves visitors along the shore.','business'],
+    ['lighthouse','Lighthouse','🗼',180,'Guides traffic and defines the coast.','utility'],
+    ['seafood-shack','Seafood Shack','🦞',80,'Turns local catch into meals.','business']
+  ],
+  mountains: [
+    ['mountain-trail','Mountain Trail','🥾',6,'A careful path across high ground.','infrastructure'],
+    ['lookout','Lookout','🔭',85,'A safe place to watch the peaks.','observation'],
+    ['shelter','Trail Shelter','🛖',70,'Protection from mountain weather.','habitat']
+  ]
+}
+
+const REGIONAL_BUILD_META = {
+  city: { rule:'Urban planning, property, business, and public streets.', health:['Property value','Happiness','Safety','Business health'] },
+  farmlands: { rule:'Production life: crops, animals, machines, storage, and dirt paths.', health:['Soil quality','Production','Animal happiness','Storage efficiency'] },
+  'whisper-woods': { rule:'Nature stewardship: habitats, trails, observation, and slow growth.', health:['Forest density','Biodiversity','Water quality','Mystery level'] },
+  'purple-pulse': { rule:'Music, nightlife, performances, vendors, and neon movement.', health:['Crowd energy','Venue quality','Safety','Culture'] },
+  'iron-district': { rule:'Industry, power, freight, storage, and rail logistics.', health:['Output','Logistics','Power','Air quality'] },
+  coast: { rule:'Working waterfronts, fishing, tourism, and ocean trade.', health:['Water quality','Trade','Tourism','Marine life'] },
+  mountains: { rule:'Low-impact trails, shelters, and observation.', health:['Trail safety','Habitat','Weather readiness','Discovery'] }
+}
+
+const REGIONAL_BUILD_TYPES = {}
+for (const [regionId, entries] of Object.entries(REGIONAL_BUILD_CATALOGS)) {
+  for (const [id,name,icon,cost,desc,category] of entries) {
+    const infrastructure = category === 'infrastructure'
+    const footprint = ['development-block','field-plot','cow-pasture','freight-yard','factory'].includes(id) ? 2 : 1
+    const palette = {
+      city:'#6B5B8A', farmlands:'#84a94b', 'whisper-woods':'#237a46',
+      'purple-pulse':'#a855f7', 'iron-district':'#64748b', coast:'#38bdf8', mountains:'#78716c'
+    }
+    REGIONAL_BUILD_TYPES[id] = {
+      name, icon, cost, desc, category, regionId, footprint,
+      color: palette[regionId] || '#6B5B8A',
+      height: infrastructure ? 1 : (footprint === 2 ? 12 : 8),
+      income: ['business','music','waterfront','industry'].includes(category) ? 1 : 0,
+      infrastructure
+    }
+  }
+}
+Object.assign(BUILDING_TYPES, REGIONAL_BUILD_TYPES)
+
+const REGIONAL_OBJECTS_KEY = 'fas_regional_build_objects_v1'
+
 function getFarmData() {
   let data = null
   try {
@@ -4895,6 +5046,44 @@ function updateWoodsExploration(dt) {
     if (woodsRuntime.activeEvent.remaining <= 0) woodsRuntime.activeEvent = null
   }
 }
+
+function updateRegionalNature(dt) {
+  if (state.currentRegion !== 'whisper-woods') return
+  regionalRuntime.natureAccumulator += dt
+  if (regionalRuntime.natureAccumulator < 45) return
+  regionalRuntime.natureAccumulator = 0
+  const existing = state.infrastructure.filter(item => isInCurrentRegion(item) && item.natural)
+  if (existing.length >= 36) return
+  const placedHabitats = [
+    ...state.buildings,
+    ...state.infrastructure
+  ].filter(item => isInCurrentRegion(item) && ['habitat','observation'].includes(item.object_category))
+  const foggy = state.weather.type === 'rain' || state.weather.type === 'fog'
+  const roll = Math.random()
+  const naturalType = foggy && roll < 0.42 ? 'wild-mushroom' :
+    (placedHabitats.some(item => item.object_type === 'bird-nest-area') && roll < 0.62 ? 'wild-bird' :
+    (placedHabitats.some(item => ['feed-station','wildlife-pond'].includes(item.object_type)) && roll < 0.78 ? 'small-animal' : 'young-tree'))
+  for (let attempt = 0; attempt < 18; attempt++) {
+    const angle = Math.random()*Math.PI*2
+    const distance = 5+Math.random()*15
+    const tileX = Math.round(state.player.x+Math.cos(angle)*distance)
+    const tileY = Math.round(state.player.y+Math.sin(angle)*distance)
+    const terrain = getTerrainAt(tileX,tileY,'whisper-woods')
+    if (![TERRAIN.GRASS,TERRAIN.DARK_GRASS,TERRAIN.FOREST].includes(terrain)) continue
+    if (state.infrastructure.some(item => isInCurrentRegion(item) && item.tile_x === tileX && item.tile_y === tileY)) continue
+    state.infrastructure.push({
+      id:`nature_whisper-woods_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
+      region_id:'whisper-woods', tile_x:tileX, tile_y:tileY,
+      owner_id:'world-nature', object_type:naturalType, object_category:'habitat',
+      infra_type:naturalType === 'young-tree' ? 'tree' : naturalType,
+      natural:true, _regionalLocal:true, placed_at:Date.now(), sync_status:'local'
+    })
+    saveRegionalObjects()
+    if (existing.length % 5 === 0) showToast('🌿 Whisper Woods Grew','Healthy habitat encouraged new life nearby.')
+    break
+  }
+}
+
 function drawWoodsExploration() {
   if (state.currentRegion !== 'whisper-woods') return
   const now = performance.now()*0.002
@@ -5263,7 +5452,11 @@ function getCreature(id) { return CREATURES.find(c => c.id === id) }
 function spawnCreatureSighting() {
   if (state.currentRegion !== 'whisper-woods') return
   if (state.creatureSighting) return
-  const creature = CREATURES[Math.floor(Math.random() * CREATURES.length)]
+  const woodsHealth = getRegionalHealth('whisper-woods')
+  const healthyHabitat = ((woodsHealth.Biodiversity || 0)+(woodsHealth['Forest density'] || 0))/2
+  const rarePool = CREATURES.filter(item => item.rarity === 'rare')
+  const creaturePool = healthyHabitat >= 72 && Math.random() < 0.42 ? rarePool : CREATURES
+  const creature = creaturePool[Math.floor(Math.random() * creaturePool.length)]
   if (!creature) return
 
   // Place sighting near player but not on top
@@ -5961,28 +6154,34 @@ function generateChunk(cx, cy, regionId) {
 }
 
 function generateRoads() {
-  const cx = Math.floor(WORLD_SIZE / 2)
-  const cy = Math.floor(WORLD_SIZE / 2)
-  for (let i = -20; i <= 20; i++) {
-    for (const off of [-2, -1, 0, 1, 2]) {
-      const h1 = getTerrainAt(cx + i, cy + off, 'city')
-      if (h1 !== TERRAIN.WATER && h1 !== TERRAIN.DEEP_WATER) {
-        const ck = chunkKey(cx + i, cy + off)
-        if (state.chunks.has(ck)) {
-          const c = state.chunks.get(ck)
-          c.tiles[(cy + off) % CHUNK_SIZE][(cx + i) % CHUNK_SIZE] = TERRAIN.ROAD
-        }
-      }
-      const v1 = getTerrainAt(cx + off, cy + i, 'city')
-      if (v1 !== TERRAIN.WATER && v1 !== TERRAIN.DEEP_WATER) {
-        const ck = chunkKey(cx + off, cy + i)
-        if (state.chunks.has(ck)) {
-          const c = state.chunks.get(ck)
-          c.tiles[(cy + i) % CHUNK_SIZE][(cx + off) % CHUNK_SIZE] = TERRAIN.ROAD
-        }
-      }
-    }
+  // Base streets are rendered as narrow paths instead of converting five rows
+  // of terrain into full road tiles. This preserves visible lots and landscape.
+  state.generatedRoads = true
+}
+
+function drawRegionalBasePaths() {
+  if (state.currentRegion !== 'city' || !state.generatedRoads) return
+  const center = Math.floor(WORLD_SIZE/2)
+  const segments = [
+    [worldToScreen(center-20,center),worldToScreen(center+20,center)],
+    [worldToScreen(center,center-20),worldToScreen(center,center+20)]
+  ]
+  ctx.save()
+  ctx.lineCap = 'round'
+  for (const [from,to] of segments) {
+    ctx.strokeStyle = '#777985'
+    ctx.lineWidth = Math.max(5,TILE_H*state.camera.zoom*0.42)
+    ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); ctx.stroke()
+    ctx.strokeStyle = '#34363e'
+    ctx.lineWidth = Math.max(3,TILE_H*state.camera.zoom*0.34)
+    ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); ctx.stroke()
+    ctx.strokeStyle = '#e8b830'
+    ctx.lineWidth = Math.max(1,state.camera.zoom)
+    ctx.setLineDash([6*state.camera.zoom,7*state.camera.zoom])
+    ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); ctx.stroke()
   }
+  ctx.setLineDash([])
+  ctx.restore()
 }
 
 function chunkKey(wx, wy, regionId) {
@@ -6720,6 +6919,46 @@ function drawBuilding(building) {
   drawBuildingAt(building, worldToScreen(building.tile_x, building.tile_y))
 }
 
+function drawBuildPreview() {
+  const preview = state.buildPreview
+  const spec = BUILDING_TYPES[state.buildType]
+  if (!state.buildMode || !state.buildType || !preview?.visible || !spec) return
+  const footprint = spec.footprint || 1
+  ctx.save()
+  for (let ox = 0; ox < footprint; ox++) {
+    for (let oy = 0; oy < footprint; oy++) {
+      const s = worldToScreen(preview.x + ox,preview.y + oy)
+      const hw = TILE_W * state.camera.zoom * 0.48
+      const hh = TILE_H * state.camera.zoom * 0.48
+      ctx.beginPath()
+      ctx.moveTo(s.x,s.y-hh); ctx.lineTo(s.x+hw,s.y); ctx.lineTo(s.x,s.y+hh); ctx.lineTo(s.x-hw,s.y); ctx.closePath()
+      ctx.fillStyle = preview.valid ? 'rgba(74,222,128,0.28)' : 'rgba(248,113,113,0.32)'
+      ctx.strokeStyle = preview.valid ? '#4ade80' : '#f87171'
+      ctx.lineWidth = 2 * state.camera.zoom
+      ctx.fill(); ctx.stroke()
+    }
+  }
+  const center = worldToScreen(preview.x + (footprint - 1) / 2,preview.y + (footprint - 1) / 2)
+  ctx.globalAlpha = 0.55
+  if (!spec.infrastructure) drawBuildingAt({ building_type:state.buildType, condition:100, status:'active' },worldToScreen(preview.x,preview.y))
+  ctx.globalAlpha = 1
+  ctx.font = `800 ${Math.max(10,11*state.camera.zoom)}px Inter`
+  ctx.textAlign = 'center'
+  ctx.fillStyle = '#fff'
+  ctx.strokeStyle = 'rgba(0,0,0,0.8)'
+  ctx.lineWidth = 3
+  const label = `${spec.icon} ${spec.name} · ${spec.cost} FC · ${REGIONS[state.currentRegion].name}`
+  ctx.strokeText(label,center.x,center.y-26*state.camera.zoom)
+  ctx.fillText(label,center.x,center.y-26*state.camera.zoom)
+  if (!preview.valid) {
+    ctx.font = `700 ${Math.max(9,9*state.camera.zoom)}px Inter`
+    ctx.fillStyle = '#fecaca'
+    ctx.strokeText(preview.reason,center.x,center.y-13*state.camera.zoom)
+    ctx.fillText(preview.reason,center.x,center.y-13*state.camera.zoom)
+  }
+  ctx.restore()
+}
+
 function drawBuildingAt(building, s) {
   const type = BUILDING_TYPES[building.building_type]
   if (!type) return
@@ -6924,6 +7163,13 @@ function drawBuildingAt(building, s) {
       ctx.stroke()
       ctx.setLineDash([])
     }
+  }
+
+  if (REGIONAL_BUILD_TYPES[building.object_type || building.building_type] && state.camera.zoom > 0.48) {
+    ctx.font = `${Math.max(11,14*state.camera.zoom)}px sans-serif`
+    ctx.textAlign = 'center'
+    ctx.fillStyle = '#fff'
+    ctx.fillText(type.icon || '◆',s.x,s.y-elev-hh-3*state.camera.zoom)
   }
 
   // Phase 6F: Neighborhood theme tint on building
@@ -7298,6 +7544,18 @@ function drawInfrastructure() {
         ctx.arc(s.x + Math.cos(angle) * sprayR, s.y + Math.sin(angle * 0.7) * sprayR, 1 * z, 0, Math.PI * 2)
         ctx.fill()
       }
+    } else if (['wild-mushroom','wild-bird','small-animal'].includes(type)) {
+      const icon = { 'wild-mushroom':'🍄', 'wild-bird':'🐦', 'small-animal':'🐇' }[type]
+      ctx.font = `${Math.max(12,15*z)}px sans-serif`
+      ctx.textAlign = 'center'
+      ctx.fillText(icon,s.x,s.y+Math.sin(performance.now()*0.002+item.tile_x)*1.5*z)
+    } else {
+      const spec = BUILDING_TYPES[item.object_type]
+      if (spec?.icon) {
+        ctx.font = `${Math.max(12,16*z)}px sans-serif`
+        ctx.textAlign = 'center'
+        ctx.fillText(spec.icon,s.x,s.y)
+      }
     }
   }
   drawRoads()
@@ -7325,8 +7583,11 @@ function drawRoads() {
   }
   if (roadItems.length === 0) return
 
-  const useSprite = roadTileImg.complete && roadTileImg.naturalWidth > 0 && state.currentRegion !== 'farmlands'
+  // Procedural roads keep the traveled surface narrow enough that buildings
+  // visually dominate a block; full-tile sprites made streets feel like slabs.
+  const useSprite = false
   const isFarm = state.currentRegion === 'farmlands'
+  const isTrail = state.currentRegion === 'whisper-woods' || state.currentRegion === 'mountains'
 
   // For each road tile, determine connections and draw
   for (const item of roadItems) {
@@ -7364,9 +7625,24 @@ function drawRoads() {
       }
     } else {
       // ── Procedural fallback ──
-      const roadWidth = tilePx * 0.5
+      const roadWidth = tilePx * (isTrail ? 0.18 : (isFarm ? 0.28 : 0.34))
 
-      if (isFarm) {
+      if (isTrail) {
+        ctx.fillStyle = '#66533d'
+        if (vertical && !horizontal) {
+          ctx.fillRect(cx-roadWidth/2,cy-half,roadWidth,tilePx)
+        } else if (horizontal && !vertical) {
+          ctx.fillRect(cx-half,cy-roadWidth/2,tilePx,roadWidth)
+        } else {
+          ctx.beginPath(); ctx.arc(cx,cy,roadWidth*0.62,0,Math.PI*2); ctx.fill()
+        }
+        ctx.strokeStyle = 'rgba(207,181,139,0.35)'
+        ctx.lineWidth = Math.max(0.7,z)
+        ctx.setLineDash([2*z,5*z])
+        if (vertical) { ctx.beginPath(); ctx.moveTo(cx,cy-half); ctx.lineTo(cx,cy+half); ctx.stroke() }
+        if (horizontal) { ctx.beginPath(); ctx.moveTo(cx-half,cy); ctx.lineTo(cx+half,cy); ctx.stroke() }
+        ctx.setLineDash([])
+      } else if (isFarm) {
         // ── Dirt road (Farmlands) ──
         ctx.fillStyle = '#8B7355'
         if (vertical && !horizontal) {
@@ -7374,7 +7650,7 @@ function drawRoads() {
         } else if (horizontal && !vertical) {
           ctx.fillRect(cx - half, cy - roadWidth / 2, tilePx, roadWidth)
         } else {
-          ctx.fillRect(cx - half, cy - half, tilePx, tilePx)
+          ctx.beginPath(); ctx.arc(cx,cy,roadWidth*0.68,0,Math.PI*2); ctx.fill()
         }
         // Dirt road ruts
         ctx.lineWidth = 1 * z
@@ -7396,7 +7672,7 @@ function drawRoads() {
       } else if (horizontal && !vertical) {
         ctx.fillRect(cx - half, cy - roadWidth / 2, tilePx, roadWidth)
       } else {
-        ctx.fillRect(cx - half, cy - half, tilePx, tilePx)
+        ctx.beginPath(); ctx.arc(cx,cy,roadWidth*0.72,0,Math.PI*2); ctx.fill()
       }
 
       // Curbs
@@ -7880,6 +8156,7 @@ function render() {
   ctx.setTransform(1, 0, 0, 1, 0, 0)
   ctx.drawImage(tileCache.canvas, 0, 0)
   ctx.restore()
+  drawRegionalBasePaths()
 
   // ── BUILD DRAW ORDER (entities only — tiles done via cache) ──
   const drawOrder = []
@@ -7932,6 +8209,7 @@ function render() {
 
   // Phase 6: Draw development blocks
   drawBlocks()
+  drawBuildPreview()
 
   // ── BUILD MODE HIGHLIGHTING ──
   if (state.buildMode && state.buildType) {
@@ -8114,6 +8392,7 @@ function update(dt) {
 
   // Creature and woodland exploration updates
   updateWoodsExploration(dt)
+  updateRegionalNature(dt)
   updateCreatureSightings(dt)
   updateWWAudio()
 
@@ -8211,6 +8490,20 @@ function setupMouse() {
       state.mouse.lastY = e.clientY
     }
 
+    if (state.buildMode && state.buildType && !state.mouse.dragging) {
+      const world = screenToWorld(e.clientX,e.clientY)
+      const result = validateRegionalPlacement(state.buildType,world.x,world.y)
+      state.buildPreview = {
+        x:result.tileX ?? Math.round(world.x),
+        y:result.tileY ?? Math.round(world.y),
+        visible:true,
+        valid:result.valid,
+        reason:result.reason
+      }
+      document.getElementById('modeIndicator').textContent =
+        `${BUILDING_TYPES[state.buildType].icon} ${BUILDING_TYPES[state.buildType].name} · ${result.valid ? 'Valid tile' : result.reason}`
+    }
+
     // District hover tooltip
     if (state.influenceViewEnabled && state.districts && state.districts.length > 0) {
       const world = screenToWorld(e.clientX, e.clientY)
@@ -8275,7 +8568,9 @@ function setupMouse() {
       if (clickedNPC) {
         beginEncounter('npc',clickedNPC)
       } else if (clickedBuilding) {
-        if (clickedBuilding.owner_id === state.userId) {
+        if (onInteractBuildObject(clickedBuilding)) {
+          // Region gameplay hook handled this object.
+        } else if (clickedBuilding.owner_id === state.userId && !clickedBuilding._regionalLocal) {
           openPropertyPanel(clickedBuilding.id)
         } else {
           const payRates = { shop: 2, club: 3, warehouse: 1, hide: 5 }
@@ -8720,28 +9015,121 @@ document.addEventListener('click', (e) => {
   document.getElementById('panelBackdrop').classList.remove('open')
 })
 
+function getRegionalSavedObjects() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(REGIONAL_OBJECTS_KEY) || '{}')
+    return {
+      buildings: Array.isArray(parsed.buildings) ? parsed.buildings : [],
+      infrastructure: Array.isArray(parsed.infrastructure) ? parsed.infrastructure : [],
+      version: 1
+    }
+  } catch {
+    return { buildings: [], infrastructure: [], version: 1 }
+  }
+}
+
+function mergeRegionalObjects(target, saved) {
+  const byId = new Map((target || []).map(item => [String(item.id), item]))
+  for (const raw of saved || []) {
+    const item = {
+      ...raw,
+      region_id: normalizeRegionId(raw.region_id),
+      tile_x: Number(raw.tile_x),
+      tile_y: Number(raw.tile_y),
+      owner_id: raw.owner_id || state.userId || 'local-player'
+    }
+    if (!byId.has(String(item.id))) {
+      target.push(item)
+      byId.set(String(item.id), item)
+    }
+  }
+  return target
+}
+
+function loadRegionalObjects() {
+  const saved = getRegionalSavedObjects()
+  mergeRegionalObjects(state.buildings, saved.buildings)
+  mergeRegionalObjects(state.infrastructure, saved.infrastructure)
+}
+
+function saveRegionalObjects() {
+  try {
+    localStorage.setItem(REGIONAL_OBJECTS_KEY, JSON.stringify({
+      version: 1,
+      buildings: state.buildings.filter(item => item._regionalLocal),
+      infrastructure: state.infrastructure.filter(item => item._regionalLocal)
+    }))
+  } catch {}
+}
+
+function getRegionalHealth(regionId = state.currentRegion) {
+  const objects = [
+    ...state.buildings.filter(item => normalizeRegionId(item.region_id) === regionId),
+    ...state.infrastructure.filter(item => normalizeRegionId(item.region_id) === regionId)
+  ]
+  const categories = new Set(objects.map(item => item.object_category).filter(Boolean))
+  const base = Math.min(95, 45 + objects.length * 3 + categories.size * 4)
+  if (regionId === 'farmlands') {
+    const farm = getFarmData()
+    return {
+      'Soil quality': Math.min(100, base + (farm.crops?.length || 0) * 2),
+      Production: Math.min(100, 40 + objects.filter(o => ['crop','machine'].includes(o.object_category)).length * 8),
+      'Animal happiness': Math.round((typeof getAverageAnimalHappiness === 'function' && getAverageAnimalHappiness()) || 72),
+      'Storage efficiency': Math.min(100, 48 + objects.filter(o => o.object_category === 'storage').length * 14)
+    }
+  }
+  if (regionId === 'whisper-woods') {
+    const habitat = objects.filter(o => o.object_category === 'habitat').length
+    const ponds = objects.filter(o => o.object_type === 'wildlife-pond').length
+    return {
+      'Forest density': Math.min(100, 55 + objects.filter(o => o.object_type === 'tree-grove' || o.natural).length * 4),
+      Biodiversity: Math.min(100, 42 + habitat * 7),
+      'Water quality': Math.min(100, 55 + ponds * 14),
+      'Mystery level': Math.min(100, 60 + habitat * 3)
+    }
+  }
+  const labels = REGIONAL_BUILD_META[regionId]?.health || ['Quality']
+  return Object.fromEntries(labels.map((label,index) => [label, Math.max(25, Math.min(100, base - index * 3))]))
+}
+
 function populateBuildGrid() {
   const grid = document.getElementById('buildGrid')
+  const catalog = REGIONAL_BUILD_CATALOGS[state.currentRegion] || []
+  const region = REGIONS[state.currentRegion]
+  const meta = REGIONAL_BUILD_META[state.currentRegion] || { rule:'Region-specific development.', health:[] }
+  const health = getRegionalHealth()
+  document.getElementById('buildPanelTitle').textContent = `${region?.label || '🏗️'} ${region?.name || state.currentRegion} Builds`
+  document.getElementById('buildRegionSummary').innerHTML = `
+    <div class="build-region-name">${region?.name || state.currentRegion}</div>
+    <div class="build-region-rule">${meta.rule}</div>
+    <div class="build-health-row">${Object.entries(health).map(([name,value]) => `<span class="build-health-chip">${name} ${Math.round(value)}%</span>`).join('')}</div>
+  `
   grid.innerHTML = ''
-  for (const [type, info] of Object.entries(BUILDING_TYPES)) {
+  for (const [type] of catalog) {
+    const info = BUILDING_TYPES[type]
     const item = document.createElement('div')
     item.className = 'build-item'
+    item.dataset.footprint = `${info.footprint}×${info.footprint}`
     const incomeText = info.income > 0 ? `Income: ${info.income}/min` : 'No Income'
     const incomeClass = info.income > 0 ? 'build-income' : 'build-income-none'
     item.innerHTML = `
-      <div class="build-icon" style="color:${info.color}">&#x1F3E0;</div>
+      <div class="build-icon" style="color:${info.color}">${info.icon}</div>
       <div class="build-name">${info.name}</div>
       <div class="build-cost">${info.cost} coins</div>
       <div class="${incomeClass}">${incomeText}</div>
+      <div class="build-desc">${info.desc}</div>
+      <div class="build-requirement">${region?.name || state.currentRegion} only</div>
     `
     item.addEventListener('click', () => {
       document.querySelectorAll('.build-item').forEach(i => i.classList.remove('selected'))
       item.classList.add('selected')
       state.buildType = type
-      showToast('Build Mode', `Click on the map to place ${info.name}`)
+      state.buildPreview.visible = false
+      showToast('Build Mode', `${info.name} · ${info.footprint}×${info.footprint} · ${info.cost} FC`)
       document.getElementById('buildPanel').classList.add('panel-hidden')
       document.getElementById('buildPanel').classList.remove('open')
       document.getElementById('panelBackdrop').classList.remove('open')
+      document.getElementById('modeIndicator').textContent = `${info.icon} ${info.name} · ${info.cost} FC · ${region?.name || state.currentRegion}`
     })
     grid.appendChild(item)
   }
@@ -9722,61 +10110,144 @@ async function completeJob() {
   }
 }
 
+function validateRegionalPlacement(typeId, x, y) {
+  const spec = BUILDING_TYPES[typeId]
+  if (!spec || spec.regionId !== state.currentRegion) return { valid:false, reason:`Requires ${REGIONS[spec?.regionId]?.name || 'another region'}` }
+  const tileX = Math.round(x), tileY = Math.round(y)
+  const footprint = spec.footprint || 1
+  const waterBuilds = new Set(['dock','boat-slip'])
+  for (let ox = 0; ox < footprint; ox++) {
+    for (let oy = 0; oy < footprint; oy++) {
+      const tx = tileX + ox, ty = tileY + oy
+      if (tx < 0 || ty < 0 || tx >= WORLD_SIZE || ty >= WORLD_SIZE) return { valid:false, reason:'Outside the region boundary' }
+      const terrain = getTerrainAt(tx,ty,state.currentRegion)
+      const water = terrain === TERRAIN.WATER || terrain === TERRAIN.DEEP_WATER
+      if (water !== waterBuilds.has(typeId)) return { valid:false, reason:water ? 'Choose dry land' : 'Place this on the water' }
+      const occupiedBuilding = state.buildings.some(item => {
+        if (!isInCurrentRegion(item)) return false
+        const other = BUILDING_TYPES[item.object_type || item.building_type] || { footprint:1 }
+        return tx >= item.tile_x && tx < item.tile_x + (other.footprint || 1) &&
+          ty >= item.tile_y && ty < item.tile_y + (other.footprint || 1)
+      })
+      const occupiedInfra = state.infrastructure.some(item => isInCurrentRegion(item) && item.tile_x === tx && item.tile_y === ty)
+      if (occupiedBuilding || occupiedInfra) return { valid:false, reason:'That tile is already occupied' }
+    }
+  }
+  return { valid:true, reason:'Ready to build', tileX, tileY }
+}
+
+function regionalInfraType(typeId) {
+  return {
+    road:'road', 'farm-road':'farm_road', trail:'trail_road', 'neon-road':'neon_road',
+    'rail-spur':'rail_road', 'mountain-trail':'trail_road', 'public-works':'fountain',
+    'light-tower':'light'
+  }[typeId] || typeId
+}
+
+function connectFarmBuildToGameplay(typeId) {
+  const keys = {
+    barn:'barn', silo:'silo', 'chicken-coop':'chickenCoop', 'cow-pasture':'cowPasture',
+    'feed-mill':'feedMill', bakery:'bakery', dairy:'dairy', 'roadside-stand':'roadsideStand'
+  }
+  const key = keys[typeId]
+  if (!key) return
+  const farm = getFarmData()
+  farm.buildings[key] = Math.max(1, Number(farm.buildings[key]) || 0)
+  saveFarmData(farm)
+}
+
+function onInteractBuildObject(object) {
+  if (!object) return false
+  const typeId = object.object_type || object.building_type
+  const farmTabs = {
+    'chicken-coop':'animals', 'cow-pasture':'animals', 'feed-mill':'machines',
+    bakery:'machines', dairy:'machines', barn:'storage', silo:'storage',
+    'roadside-stand':'storage'
+  }
+  if (typeId === 'crop-row' || typeId === 'field-plot') {
+    showFarmPlantOverlay(object.tile_x,object.tile_y)
+    return true
+  }
+  if (farmTabs[typeId]) {
+    activeFarmTab = farmTabs[typeId]
+    document.getElementById('farmHub').classList.remove('hidden')
+    renderFarmHub()
+    showToast(BUILDING_TYPES[typeId].name,'Production panel opened.')
+    return true
+  }
+  const hooks = {
+    pond:'Fishing mini-game hook ready for a later phase.',
+    orchard:'Fruit growth hook ready for a later phase.',
+    'trail-camera':'Wildlife observation hook ready. It also improves rare sighting chances.',
+    stage:'Performance mini-game hook ready for a later phase.'
+  }
+  if (hooks[typeId]) {
+    showToast(BUILDING_TYPES[typeId].name,hooks[typeId])
+    return true
+  }
+  return false
+}
+
 async function placeBuildingAt(x, y) {
   if (!state.buildType) {
     showToast('Error', 'Select a building type first')
     return
   }
-  
-  const type = BUILDING_TYPES[state.buildType]
+
+  const typeId = state.buildType
+  const type = BUILDING_TYPES[typeId]
+  const placement = validateRegionalPlacement(typeId,x,y)
+  if (!placement.valid) {
+    showToast('Invalid Placement',placement.reason)
+    return
+  }
   if (state.coins < type.cost) {
     showToast('Error', 'Not enough coins')
     return
   }
-  
-  try {
-    const res = await fetch('/api/world/building/place', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        x: Math.floor(x),
-        y: Math.floor(y),
-        type: state.buildType,
-        userId: state.userId,
-        region_id: state.currentRegion
-      })
-    })
-    
-    // Check if response is JSON
-    const contentType = res.headers.get('content-type')
-    if (!contentType || !contentType.includes('application/json')) {
-      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
-      return
-    }
-    
-    const data = await res.json()
-    if (data.ok) {
-      state.coins -= type.cost
-      state.ownBuildingsCount = state.buildings.filter(b => b.owner_id === state.userId).length + 1
-      document.getElementById('statCoins').textContent = state.coins
-      showToast('Building Placed', `${type.name} built successfully!`)
-      addChatMessage('', `${state.username} built a ${type.name}`, true)
-      if (state.buildType === 'house') completeGoal('placeFirstHouse')
-      if (state.buildType === 'shop') completeGoal('placeFirstShop')
-      checkHelpPrompt()
-      updateGoalHUD()
-      await fetchWorldState()
-      await refreshDistricts()
-      awardSkillXP('builder', {house:15,camp:15,shop:25,club:35,warehouse:20,hide:10}[state.buildType]||15)
-      createNewsItem(state.buildType === 'shop' || state.buildType === 'club' ? 'Economy' : 'Property', 'New ' + type.name + ' rises in ' + state.currentRegion + '.', '', state.currentRegion, state.buildType === 'club' ? 3 : 2)
-    } else {
-      console.error('[WORLD] placeBuildingAt failed:', res.status, data)
-      showToast('Error', data.error || 'Failed to place building')
-    }
-  } catch (e) {
-    console.error('[WORLD] placeBuildingAt exception:', e)
-    showToast('Error', 'Failed to place building')
+
+  const object = {
+    id:`regional_${state.currentRegion}_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+    region_id:state.currentRegion,
+    tile_x:placement.tileX,
+    tile_y:placement.tileY,
+    owner_id:state.userId || 'local-player',
+    object_type:typeId,
+    object_category:type.category,
+    building_type:typeId,
+    footprint:type.footprint || 1,
+    placed_at:Date.now(),
+    sync_status:'local',
+    _regionalLocal:true,
+    condition:100,
+    status:'active'
   }
+  if (type.infrastructure) {
+    object.infra_type = regionalInfraType(typeId)
+    state.infrastructure.push(object)
+    state.walkableDirty = true
+  } else {
+    state.buildings.push(object)
+    state.themesDirty = true
+  }
+  state.coins -= type.cost
+  state.ownBuildingsCount = state.buildings.filter(b => b.owner_id === (state.userId || 'local-player')).length
+  document.getElementById('statCoins').textContent = state.coins
+  connectFarmBuildToGameplay(typeId)
+  saveRegionalObjects()
+  showToast(`${type.icon} ${type.name} Built`,`${REGIONS[state.currentRegion].name} · ${type.footprint}×${type.footprint}`)
+  addChatMessage('',`${state.username} built a ${type.name} in ${REGIONS[state.currentRegion].name}`,true)
+  if (typeId === 'house') completeGoal('placeFirstHouse')
+  if (typeId === 'shop') completeGoal('placeFirstShop')
+  awardSkillXP(state.currentRegion === 'farmlands' ? 'farmer' : (state.currentRegion === 'whisper-woods' ? 'explorer' : 'builder'),12)
+  createNewsItem(state.currentRegion === 'whisper-woods' ? 'Wildlife' : (state.currentRegion === 'farmlands' ? 'Farm' : 'Property'),`New ${type.name} placed in ${REGIONS[state.currentRegion].name}.`,type.desc,state.currentRegion,2)
+  state.buildType = null
+  state.buildPreview.visible = false
+  state.buildPreview.visible = false
+  state.buildMode = false
+  document.getElementById('modeIndicator').classList.remove('open')
+  checkHelpPrompt()
+  updateGoalHUD()
 }
 
 async function triggerGodPower(x, y) {
@@ -10161,6 +10632,7 @@ async function setupMultiplayer() {
         b.region_id = normalizeRegionId(b.region_id)
         return b
       })
+      loadRegionalObjects()
       state.themesDirty = true
     }
     if (payload.districts) {
@@ -10305,6 +10777,7 @@ async function fetchWorldState() {
       state.walkableDirty = true
       state.blocks = (data.blocks || []).map(b => { b.region_id = normalizeRegionId(b.region_id); return b })
       state.lots = (data.lots || []).map(l => { l.region_id = normalizeRegionId(l.region_id); return l })
+      loadRegionalObjects()
       assignNPCBuildings()
       console.log('[WORLD] Loaded', state.buildings.length, 'buildings,', state.districts.length, 'districts,', state.infrastructure.length, 'infra')
 
@@ -11629,6 +12102,7 @@ async function init() {
     await setupMultiplayer()
     await fetchPlayerState()
     await fetchWorldState()
+    loadRegionalObjects()
     await refreshDistricts()
     await fetchVisualData()
   } catch (err) {
