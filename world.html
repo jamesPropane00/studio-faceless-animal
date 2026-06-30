@@ -1280,6 +1280,26 @@
     .sanctuary-purpose { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0.55rem; margin: 1rem 0; text-align: left; }
     .sanctuary-purpose div { padding: 0.65rem; border-radius: 8px; background: rgba(255,255,255,0.035); color: #d7c8df; font-size: 0.58rem; }
     .sanctuary-status { color: #c084fc; font-size: 0.58rem; font-weight: 900; letter-spacing: 0.1em; }
+    .sanctuary-dashboard { display:grid; gap:.7rem; }
+    .sanctuary-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.5rem; }
+    .sanctuary-stat { padding:.65rem; border:1px solid rgba(192,132,252,.18); border-radius:9px; background:rgba(126,34,206,.055); }
+    .sanctuary-stat b { display:block; color:#f3e8ff; font-size:.85rem; }
+    .sanctuary-stat span { color:#96869f; font-size:.52rem; }
+    .sanctuary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.55rem; }
+    .sanctuary-slot { min-height:190px; padding:.7rem; border:1px solid rgba(192,132,252,.18); border-radius:10px; background:linear-gradient(145deg,rgba(126,34,206,.07),rgba(255,255,255,.02)); }
+    .sanctuary-slot.empty { display:grid; place-items:center; text-align:center; color:#786c80; border-style:dashed; }
+    .sanctuary-creature-head { display:flex; align-items:center; gap:.5rem; }
+    .sanctuary-creature-icon { font-size:1.65rem; }
+    .sanctuary-creature-head h3 { margin:0; color:#f4edfa; font-size:.72rem; }
+    .sanctuary-creature-head small { color:#8f8198; font-size:.48rem; }
+    .sanctuary-meter { height:6px; margin:.45rem 0; overflow:hidden; border-radius:999px; background:rgba(255,255,255,.07); }
+    .sanctuary-meter span { display:block; height:100%; background:linear-gradient(90deg,#7c3aed,#c084fc,#84cc16); }
+    .sanctuary-details { display:grid; gap:.2rem; color:#a99bb1; font-size:.52rem; }
+    .sanctuary-actions { display:grid; grid-template-columns:1fr 1fr; gap:.35rem; margin-top:.55rem; }
+    .sanctuary-upgrades { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.45rem; }
+    .sanctuary-upgrade { padding:.6rem; border:1px solid rgba(255,255,255,.08); border-radius:8px; background:rgba(255,255,255,.025); }
+    .sanctuary-upgrade h4 { margin:0 0 .25rem; color:#e9d5ff; font-size:.58rem; }
+    .sanctuary-upgrade p { min-height:35px; margin:0 0 .45rem; color:#8f8198; font-size:.49rem; line-height:1.4; }
     .farm-action {
       width: 100%; padding: 0.48rem; border: 1px solid rgba(163,230,53,0.4);
       border-radius: 6px; background: rgba(132,204,22,0.12); color: #d9ffa0;
@@ -1329,6 +1349,8 @@
       .farm-return-card { top: 3.8rem; }
       .animal-care-actions { grid-template-columns: repeat(3,minmax(0,1fr)); }
       .sanctuary-purpose { grid-template-columns: 1fr; }
+      .sanctuary-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .sanctuary-grid, .sanctuary-upgrades { grid-template-columns:1fr; }
     }
 
     /* ── FARM PLANT OVERLAY ── */
@@ -3136,6 +3158,18 @@ function getFarmData() {
   data.sanctuary = data.sanctuary && typeof data.sanctuary === 'object'
     ? data.sanctuary
     : { status:'locked', level:0, unlockedAt:0 }
+  data.sanctuary.status = data.sanctuary.status === 'unlocked' ? 'unlocked' : 'locked'
+  data.sanctuary.level = Math.max(0,Number(data.sanctuary.level) || 0)
+  data.sanctuary.slots = Array.isArray(data.sanctuary.slots) ? data.sanctuary.slots.slice(0,3) : []
+  while (data.sanctuary.slots.length < 3) data.sanctuary.slots.push(null)
+  data.sanctuary.upgrades = data.sanctuary.upgrades || {}
+  data.sanctuary.habitats = Array.isArray(data.sanctuary.habitats) ? data.sanctuary.habitats : ['farm']
+  if (!data.sanctuary.habitats.includes('farm')) data.sanctuary.habitats.unshift('farm')
+  data.sanctuary.tipsPending = Math.max(0,Number(data.sanctuary.tipsPending) || 0)
+  data.sanctuary.keeperXPPending = Math.max(0,Number(data.sanctuary.keeperXPPending) || 0)
+  data.sanctuary.lastTickAt = Number(data.sanctuary.lastTickAt) || Date.now()
+  data.sanctuary.lastStoryAt = Number(data.sanctuary.lastStoryAt) || 0
+  data.sanctuary.propertyBonus = Math.max(0,Number(data.sanctuary.propertyBonus) || 0)
   data.buildings = data.buildings || {}
   const buildingDefaults = { farmhouse:1, barn:1, silo:1, chickenCoop:1, cowPasture:0, feedMill:1, bakery:0, dairy:0, roadsideStand:0 }
   for (const [key, value] of Object.entries(buildingDefaults)) {
@@ -3757,12 +3791,191 @@ function maybeTriggerRareAnimalMood(data) {
   createNewsItem('Farm',`${animal.name} needs a little extra care.`,`Pine Hollow is keeping a close eye on the ${animal.species}.`,'farmlands',3)
 }
 
-function unlockCreatureSanctuary(data) {
-  if (data.sanctuary.status === 'unlocked') return
-  data.sanctuary.status = 'unlocked'
-  data.sanctuary.level = 1
-  data.sanctuary.unlockedAt = Date.now()
-  createNewsItem('Wildlife','Pine Hollow Creature Sanctuary opened.','Trusted Whisper Woods creatures now have a home in Farmlands.','farmlands',5)
+const SANCTUARY_UPGRADES = {
+  woodland:{ name:'Woodland Habitat', icon:'🌲', cost:180, desc:'Matches woodland and mountain creatures.', habitat:'woodland' },
+  pond:{ name:'Pond Habitat', icon:'💧', cost:160, desc:'Matches creatures discovered along the coast.', habitat:'pond' },
+  neon:{ name:'Neon Shelter', icon:'🟣', cost:220, desc:'Matches city, nightlife, and industrial creatures.', habitat:'neon' },
+  feeding:{ name:'Feeding Station', icon:'🥕', cost:140, desc:'Slows mood loss and makes care more effective.' },
+  visitorPath:{ name:'Visitor Path', icon:'🥾', cost:200, desc:'Adds visitor appeal and improves tip income.' }
+}
+
+function trustedSanctuaryCreatures() {
+  return Object.values(state.creatureCollection || {}).filter(creature=>creature.trusted || creature.trust >= 100)
+}
+function sanctuaryPreferredHabitat(creature) {
+  return {
+    'whisper-woods':'woodland', city:'city', farmlands:'farm', coast:'coast',
+    mountains:'mountain', 'purple-pulse':'neon', 'iron-district':'industrial'
+  }[creature?.region] || 'farm'
+}
+function sanctuaryHabitatMatches(habitat,preferred) {
+  if (habitat === preferred) return true
+  if (habitat === 'woodland' && preferred === 'mountain') return true
+  if (habitat === 'pond' && preferred === 'coast') return true
+  if (habitat === 'neon' && ['city','industrial'].includes(preferred)) return true
+  return false
+}
+function sanctuaryHabitatLabel(habitat) {
+  return { farm:'Farm Meadow', woodland:'Woodland Habitat', pond:'Pond Habitat', neon:'Neon Shelter' }[habitat] || 'Farm Meadow'
+}
+function sanctuaryUnlockedHabitats(data) {
+  const habitats=['farm']
+  for (const [key,upgrade] of Object.entries(SANCTUARY_UPGRADES)) {
+    if (upgrade.habitat && data.sanctuary.upgrades[key]) habitats.push(upgrade.habitat)
+  }
+  return habitats
+}
+function sanctuaryCreatureForSlot(slot) {
+  return slot?.creatureId ? state.creatureCollection?.[slot.creatureId] : null
+}
+function sanctuaryVisitorAppeal(data) {
+  let appeal=data.sanctuary.upgrades.visitorPath ? 15 : 0
+  for (const slot of data.sanctuary.slots) {
+    const creature=sanctuaryCreatureForSlot(slot)
+    if (!creature) continue
+    appeal+=(creature.rarity === 'rare' ? 35 : creature.rarity === 'uncommon' ? 22 : 12)+Math.round((slot.mood || 60)/5)
+  }
+  return appeal
+}
+function sanctuaryAverageMood(data) {
+  const occupied=data.sanctuary.slots.filter(slot=>sanctuaryCreatureForSlot(slot))
+  if (!occupied.length) return 0
+  return Math.round(occupied.reduce((sum,slot)=>sum+(Number(slot.mood) || 60),0)/occupied.length)
+}
+function updateSanctuaryState(data,now=Date.now()) {
+  const sanctuary=data.sanctuary
+  if (sanctuary.status !== 'unlocked') { sanctuary.lastTickAt=now; return false }
+  const minutes=Math.min(240,Math.floor(Math.max(0,now-sanctuary.lastTickAt)/60000))
+  let changed=false
+  if (minutes > 0) {
+    let occupied=0
+    for (const slot of sanctuary.slots) {
+      const creature=sanctuaryCreatureForSlot(slot)
+      if (!creature) continue
+      occupied++
+      const matched=sanctuaryHabitatMatches(slot.habitat,sanctuaryPreferredHabitat(creature))
+      const delta=matched ? Math.ceil(minutes/3) : -Math.ceil(minutes/2)
+      const feedingBonus=sanctuary.upgrades.feeding ? Math.ceil(minutes/4) : 0
+      slot.mood=Math.max(20,Math.min(100,(Number(slot.mood) || 70)+delta+feedingBonus))
+      slot.lastUpdatedAt=now
+    }
+    if (occupied) {
+      const appeal=sanctuaryVisitorAppeal(data)
+      sanctuary.tipsPending=Math.min(500,sanctuary.tipsPending+Math.max(1,Math.floor(minutes*appeal/25)))
+      sanctuary.keeperXPPending=Math.min(250,sanctuary.keeperXPPending+minutes*occupied)
+      if (now-sanctuary.lastStoryAt > 5*60*1000 && Math.random() < .18) {
+        const featured=sanctuary.slots.map(sanctuaryCreatureForSlot).find(Boolean)
+        if (featured) {
+          sanctuary.lastStoryAt=now
+          createNewsItem('Wildlife',`${featured.name} settles into Pine Hollow Sanctuary.`,`Visitors report a sanctuary mood of ${sanctuaryAverageMood(data)}%.`,'farmlands',3)
+        }
+      }
+    }
+    sanctuary.lastTickAt+=minutes*60000
+    changed=true
+  }
+  const occupiedCount=sanctuary.slots.filter(slot=>sanctuaryCreatureForSlot(slot)).length
+  const desiredBonus=150+occupiedCount*80+Object.values(sanctuary.upgrades).filter(Boolean).length*50
+  if (desiredBonus !== sanctuary.propertyBonus) {
+    data.propertyValue=(Number(data.propertyValue) || 45000)+(desiredBonus-sanctuary.propertyBonus)
+    sanctuary.propertyBonus=desiredBonus
+    changed=true
+  }
+  return changed
+}
+function sanctuaryReadySummary(data) {
+  if (updateSanctuaryState(data)) saveFarmData(data)
+  const occupied=data.sanctuary.slots.filter(slot=>sanctuaryCreatureForSlot(slot))
+  return {
+    occupied:occupied.length,
+    needsCare:occupied.filter(slot=>(slot.mood || 0)<55).length,
+    mood:sanctuaryAverageMood(data),
+    appeal:sanctuaryVisitorAppeal(data),
+    tips:Math.floor(data.sanctuary.tipsPending || 0)
+  }
+}
+function unlockCreatureSanctuary() {
+  const data=getFarmData(), trusted=trustedSanctuaryCreatures()
+  const eligible=data.farmLevel >= 3 || trusted.length >= 2
+  if (data.sanctuary.status === 'unlocked' || !eligible || state.coins < 500) return
+  state.coins-=500
+  document.getElementById('statCoins').textContent=state.coins
+  data.sanctuary.status='unlocked'
+  data.sanctuary.level=1
+  data.sanctuary.unlockedAt=Date.now()
+  data.sanctuary.lastTickAt=Date.now()
+  updateSanctuaryState(data)
+  saveFarmData(data)
+  updateFarmInventory()
+  createNewsItem('Wildlife','Pine Hollow Creature Sanctuary opened.','Trusted creatures from across the world now have a peaceful home in Farmlands.','farmlands',5)
+  showToast('Creature Sanctuary Open','Three peaceful habitat slots are ready.')
+  renderFarmHub()
+}
+function assignSanctuaryCreature(creatureId) {
+  const data=getFarmData(), creature=state.creatureCollection?.[creatureId]
+  if (data.sanctuary.status !== 'unlocked' || !creature || !(creature.trusted || creature.trust >= 100)) return
+  if (data.sanctuary.slots.some(slot=>slot?.creatureId === creatureId)) return
+  const index=data.sanctuary.slots.findIndex(slot=>!sanctuaryCreatureForSlot(slot))
+  if (index < 0) return
+  const preferred=sanctuaryPreferredHabitat(creature)
+  const habitat=sanctuaryUnlockedHabitats(data).find(item=>sanctuaryHabitatMatches(item,preferred)) || 'farm'
+  data.sanctuary.slots[index]={ creatureId, habitat, mood:72, assignedAt:Date.now(), lastUpdatedAt:Date.now(), lastCaredAt:0 }
+  updateSanctuaryState(data); saveFarmData(data); updateFarmInventory()
+  createNewsItem('Wildlife',`${creature.name} arrives at Pine Hollow Sanctuary.`,`The trusted ${creature.rarity} creature now lives in the ${sanctuaryHabitatLabel(habitat)}.`,'farmlands',3)
+  showToast(`${creature.icon} ${creature.name} Assigned`,'The Sanctuary has a new resident.')
+  renderFarmHub()
+}
+function removeSanctuaryCreature(index) {
+  const data=getFarmData(), slot=data.sanctuary.slots[index], creature=sanctuaryCreatureForSlot(slot)
+  if (!creature) return
+  data.sanctuary.slots[index]=null
+  updateSanctuaryState(data); saveFarmData(data); updateFarmInventory()
+  showToast(`${creature.name} Released`,'The creature remains trusted in your collection.')
+  renderFarmHub()
+}
+function cycleSanctuaryHabitat(index) {
+  const data=getFarmData(), slot=data.sanctuary.slots[index]
+  if (!slot) return
+  const habitats=sanctuaryUnlockedHabitats(data), current=habitats.indexOf(slot.habitat)
+  slot.habitat=habitats[(current+1)%habitats.length]
+  slot.lastUpdatedAt=Date.now()
+  saveFarmData(data); renderFarmHub()
+}
+function careForSanctuaryCreature(index) {
+  const data=getFarmData(), slot=data.sanctuary.slots[index], creature=sanctuaryCreatureForSlot(slot), now=Date.now()
+  if (!creature || now-(slot.lastCaredAt || 0)<30000) return
+  const crop=Object.keys(CROP_TYPES).find(key=>(data.inventory[key] || 0)>0)
+  if (!crop && !data.sanctuary.upgrades.feeding) { showToast('Sanctuary Needs Food','Harvest a crop or build the Feeding Station.'); return }
+  if (crop) data.inventory[crop]--
+  slot.mood=Math.min(100,(slot.mood || 60)+(data.sanctuary.upgrades.feeding ? 22 : 15))
+  slot.lastCaredAt=now
+  data.sanctuary.keeperXPPending+=3
+  saveFarmData(data); updateFarmInventory(); renderFarmHub()
+  showToast(`${creature.icon} ${creature.name} Cared For`,'Their sanctuary mood improved.')
+}
+function collectSanctuaryTips() {
+  const data=getFarmData(), amount=Math.floor(data.sanctuary.tipsPending || 0), xp=Math.floor(data.sanctuary.keeperXPPending || 0)
+  if (amount < 1 && xp < 1) return
+  data.sanctuary.tipsPending=0
+  data.sanctuary.keeperXPPending=0
+  state.coins+=amount
+  document.getElementById('statCoins').textContent=state.coins
+  saveFarmData(data)
+  if (xp) awardSkillXP('creatureKeeper',xp)
+  showToast('Sanctuary Tips Collected',`+${amount} FC · +${xp} Creature Keeper XP`)
+  renderFarmHub()
+}
+function buySanctuaryUpgrade(key) {
+  const data=getFarmData(), upgrade=SANCTUARY_UPGRADES[key]
+  if (!upgrade || data.sanctuary.status !== 'unlocked' || data.sanctuary.upgrades[key] || state.coins < upgrade.cost) return
+  state.coins-=upgrade.cost
+  document.getElementById('statCoins').textContent=state.coins
+  data.sanctuary.upgrades[key]=true
+  if (upgrade.habitat && !data.sanctuary.habitats.includes(upgrade.habitat)) data.sanctuary.habitats.push(upgrade.habitat)
+  updateSanctuaryState(data); saveFarmData(data)
+  updateFarmInventory()
+  showToast(`${upgrade.icon} ${upgrade.name} Built`,upgrade.desc)
+  renderFarmHub()
 }
 
 function recordFarmDaily(data, metric, amount = 1) {
@@ -3794,10 +4007,11 @@ function getFarmReadyCounts(data, since = 0) {
   const orders = (data.farmOrders || []).filter(order => farmHasIngredients(data,order.needs)).length
   const shipmentData = getShipments()
   const trucks = (shipmentData.delivered || []).filter(item => (item.deliveredAt || 0) >= since).length
+  const sanctuary = sanctuaryReadySummary(data)
   return {
     crops:data.crops.filter(crop => getCropStageInfo(crop)?.done).length,
     machines, animals, needsFood, needsCare, bestBond, orders, trucks,
-    activeTrucks:(shipmentData.active || []).length
+    activeTrucks:(shipmentData.active || []).length, sanctuary
   }
 }
 
@@ -3974,6 +4188,8 @@ function renderFarmHub() {
   const now = Date.now()
   document.getElementById('farmHubSummary').textContent =
     `Level ${data.farmLevel} / 20 · ${data.farmXP}/${farmXPNeeded(data.farmLevel)} XP · ${state.coins} FC`
+  const sanctuaryTab=document.querySelector('[data-farm-tab="sanctuary"]')
+  if (sanctuaryTab) sanctuaryTab.textContent=`${data.sanctuary.status === 'unlocked' ? '🦊' : '🔒'} Sanctuary`
   document.querySelectorAll('.farm-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.farmTab === activeFarmTab))
   const body = document.getElementById('farmHubBody')
   let html = `<div class="farm-next"><b>WHAT TO DO NEXT</b><span>${farmNextAction(data)}</span></div>`
@@ -3998,6 +4214,8 @@ function renderFarmHub() {
           <div class="farm-ready-item ${ready.needsFood ? 'ready' : ''}"><span class="farm-ready-value">${ready.needsFood}</span><span class="farm-ready-label">need food</span></div>
           <div class="farm-ready-item ${ready.needsCare ? 'ready' : ''}"><span class="farm-ready-value">${ready.needsCare}</span><span class="farm-ready-label">need care</span></div>
           <div class="farm-ready-item"><span class="farm-ready-value">${ready.bestBond ? ready.bestBond.animal.name : '—'}</span><span class="farm-ready-label">${ready.bestBond ? `best bond +${ready.bestBond.gained}` : 'best bond today'}</span></div>
+          <div class="farm-ready-item ${ready.sanctuary.needsCare ? 'ready' : ''}"><span class="farm-ready-value">${ready.sanctuary.needsCare}</span><span class="farm-ready-label">sanctuary care</span></div>
+          <div class="farm-ready-item ${ready.sanctuary.tips ? 'ready' : ''}"><span class="farm-ready-value">${ready.sanctuary.tips} FC</span><span class="farm-ready-label">visitor tips ready</span></div>
         </div>
       </section>
       <section class="farm-daily-card">
@@ -4022,6 +4240,7 @@ function renderFarmHub() {
       ${farmCard('Production','⚙️','Collect finished goods or start a new recipe.',`${ready.machines} ready`,'go-tab:machines','Open Machines',false,ready.machines ? 'ready' : '')}
       ${farmCard('Order Board','📋','Fresh city requests arrive every day.',`${ready.orders} can be completed now`,'go-tab:orders','View Orders',false,ready.orders ? 'ready' : '')}
       ${farmCard('Truck Route','🚚','Move Pine Hollow goods into Faceless City.',`${ready.activeTrucks} traveling · ${ready.trucks} recently returned`,'go-tab:shipments','View Shipments')}
+      ${farmCard('Creature Sanctuary','🦊',data.sanctuary.status === 'unlocked' ? 'A peaceful home for trusted creatures.' : 'Unlock a home for creatures who trust you.',data.sanctuary.status === 'unlocked' ? `${ready.sanctuary.occupied}/3 residents · ${ready.sanctuary.mood}% mood · ${ready.sanctuary.appeal} appeal` : 'Locked · Farm level 3 or 2 trusted creatures','go-tab:sanctuary','Open Sanctuary',false,ready.sanctuary.tips || ready.sanctuary.needsCare ? 'ready' : '')}
       ${farmCard('Farm Improvements','🏡','Grow storage, production, and property value.',`Farm level ${data.farmLevel} / 20`,'go-tab:upgrades','View Upgrades')}
     </div>`
   } else if (activeFarmTab === 'crops') {
@@ -4124,21 +4343,73 @@ function renderFarmHub() {
     }
     html += '</div>'
   } else if (activeFarmTab === 'sanctuary') {
-    html += `<section class="sanctuary-foundation">
-      <div class="sanctuary-lock">
-        <div class="sanctuary-icon">🦊</div>
-        <div class="sanctuary-status">🔒 FOUNDATION RESERVED</div>
-        <h2>Creature Sanctuary — Coming Soon</h2>
-        <p>This quiet corner of Pine Hollow will become a permanent home for trusted creatures discovered in Whisper Woods.</p>
-        <div class="sanctuary-purpose">
-          <div>🌲 House trusted Whisper Woods creatures</div>
-          <div>👥 Welcome visitors to see rare animals</div>
-          <div>🏡 Increase Pine Hollow's property value</div>
-          <div>✨ Create rare products and special events</div>
+    updateSanctuaryState(data)
+    const trusted=trustedSanctuaryCreatures()
+    const assignedIds=new Set(data.sanctuary.slots.filter(Boolean).map(slot=>slot.creatureId))
+    const available=trusted.filter(creature=>!assignedIds.has(creature.creatureId || creature.id))
+    const eligible=data.farmLevel >= 3 || trusted.length >= 2
+    if (data.sanctuary.status !== 'unlocked') {
+      html += `<section class="sanctuary-foundation">
+        <div class="sanctuary-lock">
+          <div class="sanctuary-icon">🦊</div>
+          <div class="sanctuary-status">🔒 PINE HOLLOW SANCTUARY</div>
+          <h2>Give trusted creatures a peaceful home.</h2>
+          <p>Unlock at Farm Level 3 or after earning the trust of two creatures. Construction costs 500 FC.</p>
+          <div class="sanctuary-purpose">
+            <div>${data.farmLevel >= 3 ? '✅' : '🔒'} Farm level ${data.farmLevel} / 3</div>
+            <div>${trusted.length >= 2 ? '✅' : '🔒'} Trusted creatures ${trusted.length} / 2</div>
+            <div>${state.coins >= 500 ? '✅' : '🔒'} Construction funds ${state.coins} / 500 FC</div>
+            <div>🌿 Three starting habitat slots</div>
+          </div>
+          <button class="farm-action gold" data-farm-action="sanctuary-unlock" ${!eligible || state.coins < 500 ? 'disabled' : ''}>Unlock Sanctuary · 500 FC</button>
         </div>
-        <p>No combat. The Sanctuary grows through trust, care, and discovery.</p>
-      </div>
-    </section>`
+      </section>`
+    } else {
+      const summary=sanctuaryReadySummary(data)
+      html += `<section class="sanctuary-dashboard">
+        <div class="sanctuary-summary">
+          <div class="sanctuary-stat"><b>${summary.occupied} / 3</b><span>sanctuary residents</span></div>
+          <div class="sanctuary-stat"><b>${summary.mood}%</b><span>average mood</span></div>
+          <div class="sanctuary-stat"><b>${summary.appeal}</b><span>visitor appeal</span></div>
+          <div class="sanctuary-stat"><b>${summary.tips} FC</b><span>tips waiting</span></div>
+        </div>
+        <button class="farm-action gold" data-farm-action="sanctuary-collect" ${summary.tips < 1 && data.sanctuary.keeperXPPending < 1 ? 'disabled' : ''}>Collect Tips · ${summary.tips} FC</button>
+        <div class="sanctuary-grid">${data.sanctuary.slots.map((slot,index)=>{
+          const resident=sanctuaryCreatureForSlot(slot)
+          if (!resident) return `<article class="sanctuary-slot empty"><div><div class="sanctuary-creature-icon">＋</div><b>Open Habitat Slot</b><br><small>Assign a trusted creature below.</small></div></article>`
+          const profile=getCreature(resident.creatureId || resident.id) || resident
+          const preferred=sanctuaryPreferredHabitat(resident)
+          const matched=sanctuaryHabitatMatches(slot.habitat,preferred)
+          return `<article class="sanctuary-slot">
+            <div class="sanctuary-creature-head"><div class="sanctuary-creature-icon">${resident.icon || '🐾'}</div><div><h3>${resident.name}</h3><small>${resident.rarity} · ${matched ? 'habitat matched' : 'habitat mismatch'}</small></div></div>
+            <div class="sanctuary-meter"><span style="width:${slot.mood || 0}%"></span></div>
+            <div class="sanctuary-details">
+              <span>Mood: ${slot.mood >= 75 ? 'Happy' : slot.mood >= 55 ? 'Settling In' : 'Needs Care'} · ${Math.round(slot.mood || 0)}%</span>
+              <span>Trust: ${Math.round(resident.trust || 100)}%</span>
+              <span>Favorite food: ${profile.favoriteFood || 'region forage'}</span>
+              <span>Found: ${REGIONS[resident.region]?.name || resident.region || 'Unknown'}</span>
+              <span>Habitat: ${sanctuaryHabitatLabel(slot.habitat)} · prefers ${preferred}</span>
+              <span>Visitor appeal: ${(resident.rarity === 'rare' ? 35 : resident.rarity === 'uncommon' ? 22 : 12)+Math.round((slot.mood || 60)/5)}</span>
+            </div>
+            <div class="sanctuary-actions">
+              <button class="farm-action" data-farm-action="sanctuary-care:${index}" ${now-(slot.lastCaredAt || 0)<30000 ? 'disabled' : ''}>Care</button>
+              <button class="farm-action" data-farm-action="sanctuary-habitat:${index}">Change Habitat</button>
+              <button class="farm-action" data-farm-action="sanctuary-remove:${index}">Release Slot</button>
+            </div>
+          </article>`
+        }).join('')}</div>
+        <div class="farm-card-grid">${available.length ? available.map(creature=>farmCard(
+          creature.name,creature.icon || '🐾',`${creature.rarity} · found in ${REGIONS[creature.region]?.name || creature.region || 'the world'}`,
+          `Trust ${Math.round(creature.trust || 100)}% · prefers ${sanctuaryPreferredHabitat(creature)}`,
+          `sanctuary-assign:${creature.creatureId || creature.id}`,'Assign to Sanctuary',summary.occupied >= 3,'ready'
+        )).join('') : '<div class="farm-empty">All trusted creatures are assigned, or none are ready yet. Build trust through regional encounters.</div>'}</div>
+        <h3 style="color:#e9d5ff;margin:.35rem 0 0">Sanctuary Upgrades</h3>
+        <div class="sanctuary-upgrades">${Object.entries(SANCTUARY_UPGRADES).map(([key,upgrade])=>{
+          const built=!!data.sanctuary.upgrades[key]
+          return `<article class="sanctuary-upgrade"><h4>${upgrade.icon} ${upgrade.name}</h4><p>${upgrade.desc}</p><button class="farm-action" data-farm-action="sanctuary-upgrade:${key}" ${built || state.coins < upgrade.cost ? 'disabled' : ''}>${built ? 'Built' : `${upgrade.cost} FC`}</button></article>`
+        }).join('')}</div>
+      </section>`
+    }
   }
   body.innerHTML = html
 }
@@ -4417,6 +4688,13 @@ function handleFarmHubAction(action) {
   else if (type === 'sell-surplus') sellFarmSurplus()
   else if (type === 'claim-seeds') claimFarmSeeds()
   else if (type === 'animal-care') handleAnimalCare(a,b)
+  else if (type === 'sanctuary-unlock') unlockCreatureSanctuary()
+  else if (type === 'sanctuary-assign') assignSanctuaryCreature(a)
+  else if (type === 'sanctuary-remove') removeSanctuaryCreature(Number(a))
+  else if (type === 'sanctuary-habitat') cycleSanctuaryHabitat(Number(a))
+  else if (type === 'sanctuary-care') careForSanctuaryCreature(Number(a))
+  else if (type === 'sanctuary-collect') collectSanctuaryTips()
+  else if (type === 'sanctuary-upgrade') buySanctuaryUpgrade(a)
   else if (type === 'go-tab') {
     activeFarmTab = a
     renderFarmHub()
@@ -4430,6 +4708,7 @@ function farmMvpTick() {
   lastFarmMvpTick = now
   const data = getFarmData()
   let changed = false
+  if (updateSanctuaryState(data,now)) changed=true
   for (const field of data.crops) {
     const key = `field_${field.tx}_${field.ty}_${field.plantedAt}`
     if (getCropStageInfo(field)?.done && !data.readyNotices[key]) {
