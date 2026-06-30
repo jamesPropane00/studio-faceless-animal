@@ -1116,6 +1116,69 @@
     }
     .farm-next b { color: #f5c451; font-size: 0.68rem; }
     .farm-next span { color: #cbd5c3; font-size: 0.65rem; }
+    .farm-today-hero {
+      display: grid; grid-template-columns: 1.4fr 1fr; gap: 0.75rem;
+      margin-bottom: 0.8rem;
+    }
+    .farm-morning-card, .farm-daily-card {
+      padding: 0.9rem; border: 1px solid rgba(163,230,53,0.22);
+      border-radius: 11px; background: linear-gradient(145deg, rgba(132,204,22,0.1), rgba(245,196,81,0.035));
+    }
+    .farm-morning-kicker, .farm-daily-kicker {
+      color: #a3e635; font-size: 0.56rem; font-weight: 950; letter-spacing: 0.12em;
+    }
+    .farm-morning-card h2 { margin: 0.25rem 0 0.35rem; color: #f4ffe5; font-size: 1rem; }
+    .farm-morning-card p, .farm-daily-card p { margin: 0; color: #9eb08e; font-size: 0.62rem; line-height: 1.5; }
+    .farm-ready-grid {
+      display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    .farm-ready-item {
+      padding: 0.6rem; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px; background: rgba(0,0,0,0.16);
+    }
+    .farm-ready-item.ready { border-color: rgba(163,230,53,0.48); background: rgba(132,204,22,0.08); }
+    .farm-ready-value { display: block; color: #f4ffe5; font-size: 1rem; font-weight: 950; }
+    .farm-ready-label { display: block; margin-top: 2px; color: #91a087; font-size: 0.53rem; }
+    .farm-daily-list { display: grid; gap: 0.45rem; margin-top: 0.65rem; }
+    .farm-daily-goal {
+      display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.5rem;
+      padding: 0.48rem; border-radius: 7px; background: rgba(0,0,0,0.16);
+    }
+    .farm-daily-goal.done { background: rgba(132,204,22,0.1); }
+    .farm-daily-check {
+      width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%;
+      border: 1px solid rgba(163,230,53,0.4); color: #a3e635; font-size: 0.58rem; font-weight: 900;
+    }
+    .farm-daily-name { color: #dbe7d2; font-size: 0.58rem; font-weight: 800; }
+    .farm-daily-progress { color: #f5c451; font: 600 0.52rem "DM Mono", monospace; }
+    .farm-return-card {
+      position: fixed; right: 1rem; top: 4.5rem; z-index: 230; width: min(360px, calc(100vw - 2rem));
+      padding: 1rem; border: 1px solid rgba(163,230,53,0.38); border-radius: 13px;
+      background: rgba(12,16,13,0.97); box-shadow: 0 22px 65px rgba(0,0,0,0.62);
+      backdrop-filter: blur(18px); transform: translateX(calc(100% + 2rem)); opacity: 0;
+      pointer-events: none; transition: transform 0.28s ease, opacity 0.28s ease;
+    }
+    .farm-return-card.open { transform: translateX(0); opacity: 1; pointer-events: auto; }
+    .farm-return-close {
+      position: absolute; right: 0.65rem; top: 0.45rem; border: 0; background: none;
+      color: #91a087; font-size: 1rem; cursor: pointer;
+    }
+    .farm-return-card h2 { margin: 0.25rem 1.5rem 0.3rem 0; color: #f4ffe5; font-size: 0.95rem; }
+    .farm-return-card p { margin: 0 0 0.7rem; color: #9eb08e; font-size: 0.62rem; line-height: 1.45; }
+    .farm-return-summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.35rem; margin-bottom: 0.7rem; }
+    .farm-return-stat {
+      padding: 0.45rem 0.25rem; text-align: center; border-radius: 7px; background: rgba(255,255,255,0.045);
+      color: #dfffaa; font-size: 0.55rem; font-weight: 800;
+    }
+    .farm-return-stat b { display: block; color: #fff; font-size: 0.82rem; }
+    .farm-return-actions { display: flex; gap: 0.5rem; }
+    .farm-return-actions button {
+      flex: 1; padding: 0.55rem; border-radius: 7px; cursor: pointer;
+      border: 1px solid rgba(163,230,53,0.4); background: rgba(132,204,22,0.14);
+      color: #dfffaa; font-size: 0.6rem; font-weight: 900;
+    }
+    .farm-return-actions button.secondary { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: #9eb08e; }
     .farm-card-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0.65rem; }
     .farm-card {
       min-height: 135px; padding: 0.75rem; display: grid; align-content: space-between; gap: 0.5rem;
@@ -1142,10 +1205,13 @@
     @media (max-width: 850px) {
       .farm-hub { inset: 4rem 0.5rem 0.5rem; }
       .farm-card-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .farm-today-hero { grid-template-columns: 1fr; }
     }
     @media (max-width: 520px) {
       .farm-card-grid { grid-template-columns: 1fr; }
       .farm-hub-head { padding: 0.7rem; }
+      .farm-ready-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .farm-return-card { top: 3.8rem; }
     }
 
     /* ── FARM PLANT OVERLAY ── */
@@ -2385,7 +2451,8 @@
     <button class="farm-hub-close" id="farmHubClose" type="button" aria-label="Close farm hub">&times;</button>
   </header>
   <nav class="farm-tabs" id="farmTabs" aria-label="Farm sections">
-    <button class="farm-tab active" data-farm-tab="crops">Crops</button>
+    <button class="farm-tab active" data-farm-tab="today">Farm Today</button>
+    <button class="farm-tab" data-farm-tab="crops">Crops</button>
     <button class="farm-tab" data-farm-tab="animals">Animals</button>
     <button class="farm-tab" data-farm-tab="machines">Machines</button>
     <button class="farm-tab" data-farm-tab="orders">Orders</button>
@@ -2395,6 +2462,18 @@
   </nav>
   <div class="farm-hub-body" id="farmHubBody"></div>
 </section>
+
+<aside class="farm-return-card" id="farmReturnCard" aria-live="polite">
+  <button class="farm-return-close" id="farmReturnClose" type="button" aria-label="Dismiss farm update">&times;</button>
+  <div class="farm-morning-kicker">PINE HOLLOW FARM</div>
+  <h2 id="farmReturnTitle">Good morning, Farmer.</h2>
+  <p id="farmReturnText">Your farm kept moving while you were away.</p>
+  <div class="farm-return-summary" id="farmReturnSummary"></div>
+  <div class="farm-return-actions">
+    <button id="farmReturnPrimary" type="button">Check the Farm</button>
+    <button class="secondary" id="farmReturnLater" type="button">Later</button>
+  </div>
+</aside>
 
 <div class="farm-plant-overlay hidden" id="farmPlantOverlay">
   <div class="farm-overlay-close" id="farmOverlayClose">&times;</div>
@@ -2599,6 +2678,37 @@ function getFarmData() {
   }
   data.animals.chickens = data.animals.chickens || { count: 2, readyAt: 0, fed: false }
   data.animals.cows = data.animals.cows || { count: 2, readyAt: 0, fed: false }
+  data.animalResidents = Array.isArray(data.animalResidents) ? data.animalResidents : []
+  const animalSeeds = {
+    chicken: [
+      { name:'Sunny', mood:'happy', trust:62, favoriteFood:'Corn', favoriteWeather:'Sunny' },
+      { name:'Pepper', mood:'curious', trust:48, favoriteFood:'Wheat', favoriteWeather:'Cloudy' },
+      { name:'Goldie', mood:'gentle', trust:40, favoriteFood:'Corn', favoriteWeather:'Sunny' },
+      { name:'Junebug', mood:'playful', trust:38, favoriteFood:'Wheat', favoriteWeather:'Rain' }
+    ],
+    cow: [
+      { name:'Molly', mood:'calm', trust:58, favoriteFood:'Carrots', favoriteWeather:'Sunny' },
+      { name:'Clover', mood:'sleepy', trust:51, favoriteFood:'Corn', favoriteWeather:'Cloudy' },
+      { name:'Maple', mood:'gentle', trust:44, favoriteFood:'Carrots', favoriteWeather:'Rain' }
+    ]
+  }
+  for (const [group, species] of [['chickens','chicken'],['cows','cow']]) {
+    const needed = Math.max(0, Number(data.animals[group].count) || 0)
+    const existing = data.animalResidents.filter(animal => animal.species === species)
+    for (let index = existing.length; index < needed; index++) {
+      const seed = animalSeeds[species][index % animalSeeds[species].length]
+      data.animalResidents.push({
+        id:`${species}_${Date.now()}_${index}_${Math.random().toString(36).slice(2,6)}`,
+        species, variant:'normal', bornAt:Date.now(), bondXP:0, friendId:null, ...seed
+      })
+    }
+  }
+  const sunny = data.animalResidents.find(animal => animal.name === 'Sunny')
+  const molly = data.animalResidents.find(animal => animal.name === 'Molly')
+  if (sunny && molly && !sunny.friendId && !molly.friendId) {
+    sunny.friendId = molly.id
+    molly.friendId = sunny.id
+  }
   data.buildings = data.buildings || {}
   const buildingDefaults = { farmhouse:1, barn:1, silo:1, chickenCoop:1, cowPasture:0, feedMill:1, bakery:0, dairy:0, roadsideStand:0 }
   for (const [key, value] of Object.entries(buildingDefaults)) {
@@ -2609,6 +2719,9 @@ function getFarmData() {
   data.readyNotices = data.readyNotices || {}
   data.lastSeedCrateAt = Number(data.lastSeedCrateAt) || 0
   data.farmGuideStep = data.farmGuideStep || 'plant'
+  data.lastActiveAt = Number(data.lastActiveAt) || Date.now()
+  data.lastFarmVisitAt = Number(data.lastFarmVisitAt) || 0
+  data.daily = data.daily && typeof data.daily === 'object' ? data.daily : {}
   localStorage.setItem('fas_farm_data', JSON.stringify(data))
   return data
 }
@@ -2989,8 +3102,115 @@ const FARM_ORDER_TEMPLATES = [
   { id:'market-cheese', label:'City Market', needs:{ cheese:1 }, fc:75, xp:44, rep:2 }
 ]
 
-let activeFarmTab = 'crops'
+const FARM_DAILY_GOALS = [
+  { id:'plant', label:'Plant 3 crops', target:3, fc:8, xp:6 },
+  { id:'harvest', label:'Harvest 3 fields', target:3, fc:10, xp:8 },
+  { id:'produce', label:'Collect 2 machine goods', target:2, fc:12, xp:10 },
+  { id:'care', label:'Care for animals twice', target:2, fc:10, xp:8 },
+  { id:'order', label:'Complete a city order', target:1, fc:15, xp:12 },
+  { id:'shipment', label:'Send a truck to the city', target:1, fc:18, xp:14 }
+]
+
+let activeFarmTab = 'today'
 let lastFarmMvpTick = 0
+let farmSessionSummary = null
+let farmSessionStartedAt = Date.now()
+let farmReturnShown = false
+let lastFarmActivityTouch = Date.now()
+
+function farmDateKey(date = new Date()) {
+  return date.toISOString().slice(0,10)
+}
+
+function farmGreeting() {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 18) return 'Good afternoon'
+  return 'Good evening'
+}
+
+function formatFarmAwayTime(ms) {
+  if (ms < 60000) return 'a moment'
+  if (ms < 3600000) return `${Math.max(1,Math.floor(ms/60000))} min`
+  if (ms < 86400000) return `${Math.max(1,Math.floor(ms/3600000))} hr`
+  return `${Math.max(1,Math.floor(ms/86400000))} day`
+}
+
+function ensureFarmDaily(data) {
+  const date = farmDateKey()
+  if (data.daily.date !== date) {
+    data.daily = { date, stats:{ plant:0, harvest:0, produce:0, care:0, order:0, shipment:0 }, claimed:{} }
+  }
+  data.daily.stats = data.daily.stats || {}
+  data.daily.claimed = data.daily.claimed || {}
+  const seed = [...date].reduce((sum,char)=>sum+char.charCodeAt(0),0)
+  return [0,1,2].map(offset => FARM_DAILY_GOALS[(seed+offset*2)%FARM_DAILY_GOALS.length])
+}
+
+function recordFarmDaily(data, metric, amount = 1) {
+  const goals = ensureFarmDaily(data)
+  data.daily.stats[metric] = (Number(data.daily.stats[metric]) || 0) + amount
+  for (const goal of goals) {
+    const progress = Number(data.daily.stats[goal.id]) || 0
+    if (progress >= goal.target && !data.daily.claimed[goal.id]) {
+      data.daily.claimed[goal.id] = true
+      state.coins += goal.fc
+      addFarmXP(data,goal.xp)
+      document.getElementById('statCoins').textContent = state.coins
+      showToast('Farm Goal Complete',`${goal.label} · +${goal.fc} FC · +${goal.xp} XP`)
+    }
+  }
+}
+
+function getFarmReadyCounts(data, since = 0) {
+  const now = Date.now()
+  const machines = Object.values(data.machineQueues).flat().filter(job => job.readyAt <= now).length
+  const animals = Object.values(data.animals).filter(animal => animal.fed && animal.readyAt <= now).length
+  const orders = (data.farmOrders || []).filter(order => farmHasIngredients(data,order.needs)).length
+  const shipmentData = getShipments()
+  const trucks = (shipmentData.delivered || []).filter(item => (item.deliveredAt || 0) >= since).length
+  return {
+    crops:data.fields.filter(field => field.readyAt <= now).length,
+    machines, animals, orders, trucks,
+    activeTrucks:(shipmentData.active || []).length
+  }
+}
+
+function prepareFarmLifeSession() {
+  const data = getFarmData()
+  ensureFarmDaily(data)
+  ensureFarmMvpOrders(data)
+  const previous = data.lastActiveAt || Date.now()
+  farmSessionStartedAt = Date.now()
+  farmSessionSummary = { awayMs:Math.max(0,farmSessionStartedAt-previous), ...getFarmReadyCounts(data,previous) }
+  data.lastActiveAt = farmSessionStartedAt
+  saveFarmData(data)
+}
+
+function touchFarmActivity() {
+  const data = getFarmData()
+  data.lastActiveAt = Date.now()
+  saveFarmData(data)
+}
+
+function showFarmReturnBriefing(force = false) {
+  if (farmReturnShown && !force) return
+  const data = getFarmData()
+  const summary = farmSessionSummary || { awayMs:0, ...getFarmReadyCounts(data) }
+  const name = state.player?.name || state.username || 'Farmer'
+  document.getElementById('farmReturnTitle').textContent = `${farmGreeting()}, ${name}.`
+  document.getElementById('farmReturnText').textContent = summary.awayMs >= 60000
+    ? `You were away for ${formatFarmAwayTime(summary.awayMs)}. Pine Hollow kept moving.`
+    : 'Pine Hollow Farm has a fresh list of things to do.'
+  document.getElementById('farmReturnSummary').innerHTML = [
+    ['🌾',summary.crops,'crops'],
+    ['⚙️',summary.machines,'goods'],
+    ['🐓',summary.animals,'animals'],
+    ['🚚',summary.trucks || summary.activeTrucks,'trucks']
+  ].map(([icon,value,label])=>`<div class="farm-return-stat">${icon}<b>${value}</b>${label}</div>`).join('')
+  document.getElementById('farmReturnCard').classList.add('open')
+  farmReturnShown = true
+}
 
 function farmItemCount(data, key) {
   return (data.inventory[key] || 0) + (data.goods[key] || 0)
@@ -3023,8 +3243,12 @@ function farmFormatNeeds(needs) {
 }
 
 function ensureFarmMvpOrders(data) {
-  if (data.farmOrders.length === 0) {
-    data.farmOrders = FARM_ORDER_TEMPLATES.map(order => ({ ...order, needs:{...order.needs} }))
+  const date = farmDateKey()
+  if (data.farmOrderDate !== date || data.farmOrders.length === 0) {
+    const rotation = [...FARM_ORDER_TEMPLATES]
+    const offset = Number(date.replaceAll('-','')) % rotation.length
+    data.farmOrders = rotation.slice(offset).concat(rotation.slice(0,offset)).map(order => ({ ...order, needs:{...order.needs} }))
+    data.farmOrderDate = date
   }
 }
 
@@ -3064,7 +3288,53 @@ function renderFarmHub() {
   const body = document.getElementById('farmHubBody')
   let html = `<div class="farm-next"><b>WHAT TO DO NEXT</b><span>${farmNextAction(data)}</span></div>`
 
-  if (activeFarmTab === 'crops') {
+  if (activeFarmTab === 'today') {
+    const ready = getFarmReadyCounts(data,farmSessionStartedAt)
+    const goals = ensureFarmDaily(data)
+    const residents = data.animalResidents || []
+    const animalNames = residents.slice(0,4).map(animal=>animal.name).join(', ')
+    const awayText = farmSessionSummary?.awayMs >= 60000
+      ? `Welcome back. You were away for ${formatFarmAwayTime(farmSessionSummary.awayMs)}.`
+      : 'Everything important on Pine Hollow is gathered here.'
+    html += `<div class="farm-today-hero">
+      <section class="farm-morning-card">
+        <div class="farm-morning-kicker">FARM TODAY</div>
+        <h2>${farmGreeting()}, ${state.player?.name || state.username || 'Farmer'}.</h2>
+        <p>${awayText}</p>
+        <div class="farm-ready-grid">
+          <div class="farm-ready-item ${ready.crops ? 'ready' : ''}"><span class="farm-ready-value">${ready.crops}</span><span class="farm-ready-label">crops ready</span></div>
+          <div class="farm-ready-item ${ready.machines ? 'ready' : ''}"><span class="farm-ready-value">${ready.machines}</span><span class="farm-ready-label">machine goods</span></div>
+          <div class="farm-ready-item ${ready.animals ? 'ready' : ''}"><span class="farm-ready-value">${ready.animals}</span><span class="farm-ready-label">animals ready</span></div>
+          <div class="farm-ready-item ${ready.orders ? 'ready' : ''}"><span class="farm-ready-value">${ready.orders}</span><span class="farm-ready-label">orders fillable</span></div>
+          <div class="farm-ready-item ${ready.activeTrucks ? 'ready' : ''}"><span class="farm-ready-value">${ready.activeTrucks}</span><span class="farm-ready-label">trucks traveling</span></div>
+          <div class="farm-ready-item"><span class="farm-ready-value">${residents.length}</span><span class="farm-ready-label">named animals</span></div>
+        </div>
+      </section>
+      <section class="farm-daily-card">
+        <div class="farm-daily-kicker">TODAY'S FARM GOALS</div>
+        <p>Fresh each day · rewards are collected automatically.</p>
+        <div class="farm-daily-list">
+          ${goals.map(goal=>{
+            const progress = Math.min(goal.target,Number(data.daily.stats[goal.id]) || 0)
+            const done = !!data.daily.claimed[goal.id]
+            return `<div class="farm-daily-goal ${done ? 'done' : ''}">
+              <span class="farm-daily-check">${done ? '✓' : ''}</span>
+              <span class="farm-daily-name">${goal.label}<br><small>+${goal.fc} FC · +${goal.xp} XP</small></span>
+              <span class="farm-daily-progress">${progress}/${goal.target}</span>
+            </div>`
+          }).join('')}
+        </div>
+      </section>
+    </div>
+    <div class="farm-card-grid">
+      ${farmCard('Fields','🌾','Plant, wait, and harvest your crops.',`${ready.crops} ready · ${data.fields.length} growing`,'go-tab:crops','Open Crops',false,ready.crops ? 'ready' : '')}
+      ${farmCard('Animal Care','🐓',animalNames ? `${animalNames} live on Pine Hollow.` : 'Your animals are waiting to meet you.',`${ready.animals} ready · ${data.goods.eggs || 0} eggs · ${data.goods.milk || 0} milk`,'go-tab:animals','Check Animals',false,ready.animals ? 'ready' : '')}
+      ${farmCard('Production','⚙️','Collect finished goods or start a new recipe.',`${ready.machines} ready`,'go-tab:machines','Open Machines',false,ready.machines ? 'ready' : '')}
+      ${farmCard('Order Board','📋','Fresh city requests arrive every day.',`${ready.orders} can be completed now`,'go-tab:orders','View Orders',false,ready.orders ? 'ready' : '')}
+      ${farmCard('Truck Route','🚚','Move Pine Hollow goods into Faceless City.',`${ready.activeTrucks} traveling · ${ready.trucks} recently returned`,'go-tab:shipments','View Shipments')}
+      ${farmCard('Farm Improvements','🏡','Grow storage, production, and property value.',`Farm level ${data.farmLevel} / 20`,'go-tab:upgrades','View Upgrades')}
+    </div>`
+  } else if (activeFarmTab === 'crops') {
     html += '<div class="farm-card-grid">'
     const needsSeeds = Object.keys(CROP_TYPES).some(key => (data.inventory[key] || 0) < 1)
     if (needsSeeds) {
@@ -3090,13 +3360,15 @@ function renderFarmHub() {
     const cow = data.animals.cows
     const chickenReady = chicken.fed && chicken.readyAt <= now
     const cowReady = cow.fed && cow.readyAt <= now
+    const chickenNames = data.animalResidents.filter(animal=>animal.species === 'chicken').map(animal=>animal.name).join(' & ')
+    const cowNames = data.animalResidents.filter(animal=>animal.species === 'cow').map(animal=>animal.name).join(' & ')
     html += '<div class="farm-card-grid">'
-    html += farmCard('Chickens','\u{1F414}','Use Chicken Feed. Eggs are used by the Bakery and city orders.',
+    html += farmCard('Chickens','\u{1F414}',`${chickenNames || 'Your chickens'} · Use Chicken Feed. Eggs supply the Bakery and city orders.`,
       `${chicken.count} chickens · ${chicken.fed ? (chickenReady ? 'Eggs ready' : Math.ceil((chicken.readyAt-now)/1000)+'s') : 'Hungry'}`,
       chickenReady ? 'collect:chickens' : 'feed:chickens', chickenReady ? 'Collect Eggs' : 'Feed Chickens',
       chickenReady ? false : chicken.fed || data.goods.chickenFeed < 1, chickenReady ? 'ready' : '')
     const cowLocked = data.buildings.cowPasture < 1
-    html += farmCard('Cows','\u{1F404}','Use Cow Feed. Milk becomes cream and cheese in the Dairy.',
+    html += farmCard('Cows','\u{1F404}',`${cowNames || 'Your cows'} · Use Cow Feed. Milk becomes cream and cheese.`,
       cowLocked ? 'Build Cow Pasture at farm level 2' : `${cow.count} cows · ${cow.fed ? (cowReady ? 'Milk ready' : Math.ceil((cow.readyAt-now)/1000)+'s') : 'Hungry'}`,
       cowLocked ? '' : (cowReady ? 'collect:cows' : 'feed:cows'), cowReady ? 'Collect Milk' : 'Feed Cows',
       cowLocked ? true : (cowReady ? false : cow.fed || data.goods.cowFeed < 1), cowLocked ? 'locked' : (cowReady ? 'ready' : ''))
@@ -3173,6 +3445,7 @@ function plantFarmField(cropKey) {
   data.fields.push({ id:Date.now()+'_'+Math.random().toString(36).slice(2,5), crop:cropKey, plantedAt:Date.now(), readyAt:Date.now()+crop.growthTime })
   if (data.farmGuideStep === 'plant') data.farmGuideStep = 'harvest'
   addFarmXP(data,1)
+  recordFarmDaily(data,'plant')
   saveFarmData(data); updateFarmInventory(); renderFarmHub()
   showToast(`Planted ${crop.name}`,`Ready in ${crop.growthTime/1000} seconds.`)
 }
@@ -3186,6 +3459,7 @@ function harvestFarmField(cropKey) {
   data.fields.splice(index,1); data.inventory[cropKey] += crop.yield
   if (data.farmGuideStep === 'harvest') data.farmGuideStep = 'makeFeed'
   addFarmXP(data,crop.xp)
+  recordFarmDaily(data,'harvest')
   saveFarmData(data); updateFarmInventory(); renderFarmHub()
   showToast(`Harvested ${crop.name}`,`+${crop.yield} crops · +${crop.xp} XP`)
 }
@@ -3212,6 +3486,7 @@ function collectFarmProduction(machine, recipeKey) {
   for (const [key,n] of Object.entries(recipe.output)) data.goods[key] += n
   if (recipeKey === 'chickenFeed' && data.farmGuideStep === 'makeFeed') data.farmGuideStep = 'feedChickens'
   addFarmXP(data,5)
+  recordFarmDaily(data,'produce',amount)
   saveFarmData(data); updateFarmInventory(); renderFarmHub()
   showToast('Goods Collected',`${farmFormatNeeds(recipe.output)} added to the Barn.`)
 }
@@ -3222,7 +3497,14 @@ function feedFarmAnimal(type) {
   if (data.buildings[config.building] < 1 || data.animals[type].fed || data.goods[config.feed] < 1) return
   data.goods[config.feed]--; data.animals[type].fed = true; data.animals[type].readyAt = Date.now()+config.time
   if (type === 'chickens' && data.farmGuideStep === 'feedChickens') data.farmGuideStep = 'collectEggs'
+  const species = type === 'chickens' ? 'chicken' : 'cow'
+  data.animalResidents.filter(animal=>animal.species === species).forEach(animal=>{
+    animal.mood = 'content'
+    animal.bondXP = (Number(animal.bondXP) || 0) + 1
+    animal.trust = Math.min(100,(Number(animal.trust) || 0) + 1)
+  })
   addFarmXP(data,3)
+  recordFarmDaily(data,'care')
   saveFarmData(data); updateFarmInventory(); renderFarmHub()
   showToast(`${config.name} Fed`,`Production ready in ${config.time/1000} seconds.`)
 }
@@ -3234,7 +3516,14 @@ function collectFarmAnimal(type) {
   if (farmBarnUsed(data)+amount > data.barnCapacity) { showToast('Barn Full','Make room before collecting.'); return }
   data.goods[key] += amount; animal.fed = false; animal.readyAt = 0
   if (type === 'chickens' && data.farmGuideStep === 'collectEggs') data.farmGuideStep = 'completeOrder'
+  const species = type === 'chickens' ? 'chicken' : 'cow'
+  data.animalResidents.filter(resident=>resident.species === species).forEach(resident=>{
+    resident.mood = 'proud'
+    resident.bondXP = (Number(resident.bondXP) || 0) + 2
+    resident.trust = Math.min(100,(Number(resident.trust) || 0) + 1)
+  })
   addFarmXP(data,8)
+  recordFarmDaily(data,'care')
   saveFarmData(data); updateFarmInventory(); renderFarmHub()
   showToast(`Collected ${FARM_GOODS[key].name}`,`+${amount} ${FARM_GOODS[key].name} · +8 XP`)
 }
@@ -3248,6 +3537,7 @@ function completeFarmMvpOrder(index) {
   const template = FARM_ORDER_TEMPLATES[Math.floor(Math.random()*FARM_ORDER_TEMPLATES.length)]
   data.farmOrders.push({ ...template, needs:{...template.needs} })
   addFarmXP(data,order.xp); state.coins += order.fc; state.rep += order.rep || 0
+  recordFarmDaily(data,'order')
   if (data.farmGuideStep === 'completeOrder') data.farmGuideStep = 'shipment'
   document.getElementById('statCoins').textContent = state.coins
   document.getElementById('statRep').textContent = state.rep
@@ -3274,6 +3564,7 @@ function startFarmMvpShipment() {
   if (loaded < 3) return
   const shipment = createShipment(loaded,{ rewardFC:loaded*7, rewardXP:loaded*3 })
   if (data.farmGuideStep === 'shipment') data.farmGuideStep = 'upgrade'
+  recordFarmDaily(data,'shipment')
   data.shipmentHistory.unshift({ id:shipment.id, amount:loaded, createdAt:Date.now(), status:'traveling' })
   data.shipmentHistory = data.shipmentHistory.slice(0,10)
   saveFarmData(data); updateFarmInventory(); renderFarmHub()
@@ -3329,6 +3620,10 @@ function handleFarmHubAction(action) {
   else if (type === 'upgrade') upgradeFarmBuilding(a)
   else if (type === 'sell-surplus') sellFarmSurplus()
   else if (type === 'claim-seeds') claimFarmSeeds()
+  else if (type === 'go-tab') {
+    activeFarmTab = a
+    renderFarmHub()
+  }
 }
 
 function farmMvpTick() {
@@ -3352,6 +3647,13 @@ function farmMvpTick() {
         data.readyNotices[key] = true; changed = true
         showToast('Production Ready!',`${FARM_GOODS[Object.keys(FARM_RECIPES[job.recipe].output)[0]].name} is ready.`)
       }
+    }
+  }
+  for (const [type,animal] of Object.entries(data.animals)) {
+    const key = `animal_${type}_${animal.readyAt}`
+    if (animal.fed && animal.readyAt <= now && !data.readyNotices[key]) {
+      data.readyNotices[key] = true; changed = true
+      showToast(type === 'chickens' ? 'Eggs Ready!' : 'Milk Ready!',`${type === 'chickens' ? 'Sunny and the flock' : 'Molly and the herd'} are ready for you.`)
     }
   }
   if (changed) saveFarmData(data)
@@ -7230,6 +7532,20 @@ function setupUI() {
     renderFarmHub()
   })
   document.getElementById('farmHubClose').addEventListener('click', () => document.getElementById('farmHub').classList.add('hidden'))
+  document.getElementById('farmReturnClose').addEventListener('click', () => document.getElementById('farmReturnCard').classList.remove('open'))
+  document.getElementById('farmReturnLater').addEventListener('click', () => document.getElementById('farmReturnCard').classList.remove('open'))
+  document.getElementById('farmReturnPrimary').addEventListener('click', () => {
+    document.getElementById('farmReturnCard').classList.remove('open')
+    if (state.currentRegion === 'farmlands') {
+      activeFarmTab = 'today'
+      document.getElementById('farmHub').classList.remove('hidden')
+      renderFarmHub()
+    } else if (REGIONS[state.currentRegion]?.connections.includes('farmlands')) {
+      startTravel('farmlands')
+    } else {
+      openPanel('worldMapPanel')
+    }
+  })
   document.getElementById('farmTabs').addEventListener('click', event => {
     const tab = event.target.closest('[data-farm-tab]')
     if (!tab) return
@@ -10168,6 +10484,12 @@ function completeTravel(targetRegion) {
     updateFarmInventory()
     spawnFarmLife()
     completeGoalTravelFarm()
+    const farmData = getFarmData()
+    farmData.lastFarmVisitAt = Date.now()
+    saveFarmData(farmData)
+    activeFarmTab = 'today'
+    document.getElementById('farmHub').classList.remove('hidden')
+    renderFarmHub()
     setTimeout(() => {
       showFarmPrompt('Place a Farm Block to start', 'farm')
     }, 1500)
@@ -10284,6 +10606,8 @@ async function init() {
   updateSkillTitleUI()
   loadSignalWire()
   getShipments()
+  await checkShipmentDeliveries()
+  prepareFarmLifeSession()
   updateLogisticsUI()
   applyCityDecay()
   updateCitySupplyUI()
@@ -10294,13 +10618,19 @@ async function init() {
     updateLogisticsUI()
     const wmPanel = document.getElementById('worldMapPanel')
     if (wmPanel && wmPanel.classList.contains('open')) updateWorldMap()
+    if (Date.now()-lastFarmActivityTouch >= 30000) {
+      lastFarmActivityTouch = Date.now()
+      touchFarmActivity()
+    }
   }, 2000)
+  window.addEventListener('pagehide', touchFarmActivity)
 
   if (!state.tutorialSeen) {
     showWelcomeOverlay()
   } else {
     checkHelpPrompt()
     updateGoalHUD()
+    setTimeout(() => showFarmReturnBriefing(), 900)
   }
 
   // Initialize region atmosphere
