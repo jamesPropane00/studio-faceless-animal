@@ -63,6 +63,12 @@
     .tool-btn.cyan { background: linear-gradient(135deg, #0891b2, var(--cyan)); color: #000; border-color: transparent; }
     .tool-btn.pink { background: linear-gradient(135deg, #db2777, var(--pink)); color: #fff; border-color: transparent; }
     .tool-btn:disabled { opacity: 0.4; }
+    .save-video-btn {
+      min-height: 38px; padding: 0.45rem 0.8rem; border-color: #22c55e;
+      background: #16a34a; color: #fff; font-size: 0.74rem; font-weight: 800;
+      box-shadow: 0 0 0 2px rgba(34,197,94,0.16), 0 5px 16px rgba(22,163,74,0.28);
+    }
+    .save-video-btn:hover { background: #15803d; }
 
     /* ── MAIN LAYOUT ── */
     .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; min-height: 0; }
@@ -240,6 +246,10 @@
     .b-btn .icon { font-size: 1.15rem; line-height: 1.2; }
     .b-btn:active { color: var(--bright); transform: scale(0.92); }
     .b-btn.active { color: var(--bright); }
+    .b-btn.save-bottom-btn {
+      color: #fff; background: #16a34a; border-radius: 6px; min-width: 54px;
+      box-shadow: 0 3px 10px rgba(22,163,74,0.28);
+    }
 
     /* ── AI BOTTOM DRAWER ── */
     .drawer-overlay {
@@ -411,7 +421,7 @@
       <span id="tlDuration" style="font-size:0.62rem;color:var(--dim);">00:00</span>
     </div>
     <div style="margin-left:auto;display:flex;gap:0.2rem;">
-      <button class="tool-btn" onclick="saveToMedia()" title="Save">💾</button>
+      <button class="tool-btn save-video-btn" onclick="exportVideo()" title="Save video to your computer">&#8595; Save Video</button>
       <button class="tool-btn green" onclick="postToDirectory()" title="Post">📡</button>
     </div>
   </div>
@@ -464,7 +474,7 @@
       <button class="b-btn" onclick="openSoundDrawer()"><span class="icon">🎵</span>Sound</button>
       <button class="b-btn" onclick="openClipEditor()"><span class="icon">Edit</span>Adjust</button>
       <button class="b-btn" onclick="addTextClip()"><span class="icon">T</span>Text</button>
-      <button class="b-btn" onclick="exportVideo()"><span class="icon">🎬</span>Export</button>
+      <button class="b-btn save-bottom-btn" onclick="exportVideo()"><span class="icon">&#8595;</span>Save</button>
       <button class="b-btn" onclick="postToDirectory()"><span class="icon">📡</span>Post</button>
     </div>
   </div>
@@ -716,8 +726,8 @@
   <!-- ─── EXPORT MODAL ─── -->
   <div class="modal-overlay" id="exportModal">
     <div class="modal">
-      <h2>🎬 Export Video</h2>
-      <p>Render and download your project.</p>
+      <h2>Save Video</h2>
+      <p>Render the project and save it to your computer.</p>
       <label>Format</label>
       <select id="exportFormat">
         <option value="auto">Auto</option>
@@ -742,7 +752,7 @@
       </div>
       <div class="actions">
         <button class="tool-btn" onclick="closeModal('exportModal')">Cancel</button>
-        <button class="tool-btn cyan" id="exportBtn" onclick="startExport()">Export</button>
+        <button class="tool-btn save-video-btn" id="exportBtn" onclick="saveExportToComputer()">Save to Computer</button>
       </div>
     </div>
   </div>
@@ -2428,12 +2438,83 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
+    async function requestSaveDestination(name, mime) {
+      if (typeof window.showSaveFilePicker !== 'function') return { handle: null, cancelled: false };
+      const extension = name.slice(name.lastIndexOf('.'));
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: name,
+          types: [{
+            description: mime.startsWith('image/') ? 'Image file' : 'Video file',
+            accept: { [mime]: [extension] },
+          }],
+        });
+        return { handle, cancelled: false };
+      } catch (error) {
+        if (error && error.name === 'AbortError') return { handle: null, cancelled: true };
+        console.warn('File picker unavailable; using browser download.', error);
+        return { handle: null, cancelled: false };
+      }
+    }
+
+    async function saveBlobToComputer(blob, name, handle) {
+      if (handle) {
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return;
+      }
+      downloadBlob(blob, name);
+    }
+
     function rememberExport(blob, kind, name) {
       if (STATE.exportedVideoURL) URL.revokeObjectURL(STATE.exportedVideoURL);
       STATE.exportedBlob = blob;
       STATE.exportedKind = kind;
       STATE.exportedName = name;
       STATE.exportedVideoURL = URL.createObjectURL(blob);
+    }
+
+    async function saveExportToComputer() {
+      const btn = document.getElementById('exportBtn');
+      const txt = document.getElementById('exportProgressText');
+      const requested = document.getElementById('exportFormat').value || 'auto';
+      const stillFormat = requested === 'png' || requested === 'jpeg'
+        ? requested
+        : (requested === 'auto' && isStillProject() ? 'png' : '');
+      const name = 'canvas-edit-' + Date.now() + (stillFormat === 'jpeg' ? '.jpg' : stillFormat === 'png' ? '.png' : '.webm');
+      const mime = stillFormat === 'jpeg' ? 'image/jpeg' : stillFormat === 'png' ? 'image/png' : 'video/webm';
+      const originalPlayhead = STATE.playhead;
+      let destination = { handle: null, cancelled: false };
+
+      btn.disabled = true;
+      document.getElementById('exportProgress').className = 'export-progress show';
+      try {
+        txt.textContent = 'Choose where to save...';
+        destination = await requestSaveDestination(name, mime);
+        if (destination.cancelled) {
+          txt.textContent = 'Save canceled.';
+          return;
+        }
+
+        const blob = await startExport({ download: false });
+        if (!blob || !blob.size) throw new Error('The rendered file was empty.');
+        const finalName = STATE.exportedName || name;
+        await saveBlobToComputer(blob, finalName, destination.handle);
+        txt.textContent = 'Saved to your computer.';
+        toast('File saved to your computer');
+      } catch (error) {
+        const message = error && error.message ? error.message : 'Could not save this project.';
+        txt.textContent = 'Save failed: ' + message;
+        toast('Save failed: ' + message);
+        console.error('Save to computer failed', error);
+      } finally {
+        STATE.playhead = originalPlayhead;
+        renderFrame();
+        updatePlayhead();
+        updateTimeDisplay();
+        btn.disabled = false;
+      }
     }
 
     async function startExport(options = {}) {
@@ -2478,12 +2559,30 @@
       }
 
       // Setup recorder
-      const stream = canvasEl.captureStream(fps);
-      const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
-      const mr = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: Math.round(quality * 5000000) });
+      const exportCanvas = canvas.lowerCanvasEl || canvasEl;
+      if (!exportCanvas || typeof exportCanvas.captureStream !== 'function') {
+        throw new Error('This browser cannot record canvas video. Use current Chrome or Edge.');
+      }
+      if (typeof window.MediaRecorder !== 'function') {
+        throw new Error('This browser does not support video recording.');
+      }
+      const stream = exportCanvas.captureStream(fps);
+      const mimeCandidates = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+      const mime = mimeCandidates.find(type => MediaRecorder.isTypeSupported(type)) || '';
+      const recorderOptions = { videoBitsPerSecond: Math.round(quality * 5000000) };
+      if (mime) recorderOptions.mimeType = mime;
+      let mr;
+      try {
+        mr = new MediaRecorder(stream, recorderOptions);
+      } catch {
+        mr = new MediaRecorder(stream);
+      }
       const chunks = [];
       mr.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-      const done = new Promise(res => { mr.onstop = () => res(new Blob(chunks, { type: 'video/webm' })); });
+      const done = new Promise((resolve, reject) => {
+        mr.onstop = () => resolve(new Blob(chunks, { type: 'video/webm' }));
+        mr.onerror = event => reject(new Error(event.error?.message || 'The browser video recorder failed.'));
+      });
 
       mr.start();
       const origPH = STATE.playhead;
@@ -2506,6 +2605,7 @@
       txt.textContent = 'Finalizing...';
 
       const videoBlob = await done;
+      if (!videoBlob.size) throw new Error('The browser produced an empty video file.');
       const videoName = 'canvas-edit-' + Date.now() + '.webm';
       rememberExport(videoBlob, 'video', videoName);
 
