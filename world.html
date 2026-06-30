@@ -1106,22 +1106,29 @@
       color: #dfffaa; font-size: 0.58rem; font-weight: 900; cursor: pointer;
     }
     .farm-hub {
-      position: fixed; inset: 4.5rem 5rem 2rem; z-index: 190;
+      position: fixed; left: 1rem; top: 4.75rem; bottom: 1rem;
+      width: min(460px, calc(100vw - 2rem)); z-index: 100;
       display: grid; grid-template-rows: auto auto 1fr;
       overflow: hidden; border: 1px solid rgba(132,204,22,0.35);
       border-radius: 14px; background: rgba(12,16,13,0.97);
-      box-shadow: 0 28px 90px rgba(0,0,0,0.65);
+      box-shadow: 10px 20px 55px rgba(0,0,0,0.52);
       backdrop-filter: blur(18px);
+      animation: farmDrawerIn 0.2s ease-out;
     }
+    @keyframes farmDrawerIn { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:translateX(0); } }
     .farm-hub.hidden { display: none; }
     .farm-hub-head {
       display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-      padding: 0.9rem 1rem; border-bottom: 1px solid rgba(132,204,22,0.18);
+      padding: 0.7rem 0.8rem; border-bottom: 1px solid rgba(132,204,22,0.18);
       background: linear-gradient(90deg, rgba(132,204,22,0.13), rgba(245,196,81,0.05));
     }
-    .farm-hub-title { color: #f4ffe5; font-size: 1rem; font-weight: 950; }
+    .farm-hub-title { color: #f4ffe5; font-size: 0.88rem; font-weight: 950; }
     .farm-hub-sub { color: #9eb08e; font-size: 0.65rem; margin-top: 2px; }
-    .farm-hub-close { border: 0; background: none; color: #c9d4c0; font-size: 1.25rem; cursor: pointer; }
+    .farm-hub-close {
+      width: 30px; height: 30px; display:grid; place-items:center; flex:0 0 auto;
+      border: 1px solid rgba(255,255,255,0.09); border-radius:50%;
+      background: rgba(255,255,255,0.04); color: #c9d4c0; font-size: 1rem; cursor: pointer;
+    }
     .farm-tabs {
       display: flex; gap: 4px; padding: 0.6rem 0.75rem; overflow-x: auto;
       border-bottom: 1px solid rgba(255,255,255,0.07);
@@ -1285,14 +1292,39 @@
     .farm-storage-bar span { display: block; height: 100%; background: #84cc16; }
     .farm-empty { padding: 2rem; color: #84917b; text-align: center; font-size: 0.7rem; }
     @media (max-width: 850px) {
-      .farm-hub { inset: 4rem 0.5rem 0.5rem; }
+      .farm-hub { width:min(420px,calc(100vw - 1rem)); left:.5rem; top:4rem; bottom:.5rem; }
       .farm-card-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
       .farm-today-hero { grid-template-columns: 1fr; }
       .animal-profile-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 520px) {
+      .farm-inventory {
+        top: 6.35rem; left: .5rem; right: auto; width: 150px; max-height: 150px;
+        padding: .4rem; overflow: hidden; background: rgba(12,16,13,.9);
+      }
+      .farm-inventory .farm-deed-row,
+      .farm-inventory .farm-inv-section,
+      .farm-inventory > .farm-inv-row,
+      .farm-inventory > .farm-send-btn,
+      .farm-inventory > .farm-order { display:none; }
+      .farm-inventory .farm-deed { margin:0; padding:0; border:0; }
+      .farm-inventory .farm-deed-title { font-size:.62rem; text-align:center; }
+      .farm-hub-open { margin-top:.35rem; padding:.48rem .35rem; font-size:.56rem; }
+      .farm-hub {
+        left:.4rem; right:.4rem; top:auto; bottom:4.35rem;
+        width:auto; height:min(58vh,500px); max-height:58vh;
+        border-radius:16px 16px 10px 10px;
+        box-shadow:0 -18px 55px rgba(0,0,0,.62);
+        animation:farmSheetIn .2s ease-out;
+      }
+      @keyframes farmSheetIn { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+      .farm-hub-head { padding:.55rem .65rem; }
+      .farm-hub-title { font-size:.78rem; }
+      .farm-hub-sub { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.55rem; }
+      .farm-tabs { padding:.42rem .5rem; gap:3px; scrollbar-width:thin; }
+      .farm-tab { padding:.42rem .55rem; font-size:.57rem; }
+      .farm-hub-body { padding:.55rem; overscroll-behavior:contain; }
       .farm-card-grid { grid-template-columns: 1fr; }
-      .farm-hub-head { padding: 0.7rem; }
       .farm-ready-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
       .farm-return-card { top: 3.8rem; }
       .animal-care-actions { grid-template-columns: repeat(3,minmax(0,1fr)); }
@@ -2664,16 +2696,16 @@
     <div class="farm-order-reward" id="farmOrderReward"></div>
     <button id="farmOrderBtn" type="button">Fill Order</button>
   </div>
-  <button class="farm-hub-open" id="farmHubOpen" type="button">&#x1F33E; Open Farm Hub</button>
+  <button class="farm-hub-open" id="farmHubOpen" type="button" aria-expanded="false">&#x1F33E; Farm Menu</button>
 </div>
 
-<section class="farm-hub hidden" id="farmHub" aria-label="Pine Hollow Farm">
+<section class="farm-hub hidden" id="farmHub" aria-label="Pine Hollow Farm menu" aria-hidden="true">
   <header class="farm-hub-head">
     <div>
       <div class="farm-hub-title">&#x1F3E1; Pine Hollow Farm</div>
       <div class="farm-hub-sub" id="farmHubSummary">Level 1 farm &middot; peaceful production</div>
     </div>
-    <button class="farm-hub-close" id="farmHubClose" type="button" aria-label="Close farm hub">&times;</button>
+    <button class="farm-hub-close" id="farmHubClose" type="button" aria-label="Close farm menu">&times;</button>
   </header>
   <nav class="farm-tabs" id="farmTabs" aria-label="Farm sections">
     <button class="farm-tab active" data-farm-tab="today">Farm Today</button>
@@ -3805,6 +3837,23 @@ function animalProfileHtml(data, animal, now) {
       ${actionButton('treat','⭐','Favorite Treat',!favoriteCrop || data.inventory[favoriteCrop] < 1 || cooldown('treat'))}
     </div>
   </article>`
+}
+
+function openFarmHub(tab = activeFarmTab) {
+  if (state.currentRegion !== 'farmlands') return
+  activeFarmTab = tab || 'today'
+  const hub = document.getElementById('farmHub')
+  hub.classList.remove('hidden')
+  hub.setAttribute('aria-hidden','false')
+  document.getElementById('farmHubOpen').setAttribute('aria-expanded','true')
+  renderFarmHub()
+}
+
+function closeFarmHub() {
+  const hub = document.getElementById('farmHub')
+  hub.classList.add('hidden')
+  hub.setAttribute('aria-hidden','true')
+  document.getElementById('farmHubOpen').setAttribute('aria-expanded','false')
 }
 
 function renderFarmHub() {
@@ -8792,19 +8841,15 @@ function setupUI() {
   document.getElementById('farmSendBtn').addEventListener('click', sendFoodToCity)
   document.getElementById('farmOverlayClose').addEventListener('click', closeFarmOverlay)
   document.getElementById('farmHubOpen').addEventListener('click', () => {
-    if (state.currentRegion !== 'farmlands') return
-    document.getElementById('farmHub').classList.remove('hidden')
-    renderFarmHub()
+    openFarmHub()
   })
-  document.getElementById('farmHubClose').addEventListener('click', () => document.getElementById('farmHub').classList.add('hidden'))
+  document.getElementById('farmHubClose').addEventListener('click', closeFarmHub)
   document.getElementById('farmReturnClose').addEventListener('click', () => document.getElementById('farmReturnCard').classList.remove('open'))
   document.getElementById('farmReturnLater').addEventListener('click', () => document.getElementById('farmReturnCard').classList.remove('open'))
   document.getElementById('farmReturnPrimary').addEventListener('click', () => {
     document.getElementById('farmReturnCard').classList.remove('open')
     if (state.currentRegion === 'farmlands') {
-      activeFarmTab = 'today'
-      document.getElementById('farmHub').classList.remove('hidden')
-      renderFarmHub()
+      openFarmHub('today')
     } else if (REGIONS[state.currentRegion]?.connections.includes('farmlands')) {
       startTravel('farmlands')
     } else {
@@ -10097,9 +10142,7 @@ function onInteractBuildObject(object) {
     return true
   }
   if (farmTabs[typeId]) {
-    activeFarmTab = farmTabs[typeId]
-    document.getElementById('farmHub').classList.remove('hidden')
-    renderFarmHub()
+    openFarmHub(farmTabs[typeId])
     showToast(BUILDING_TYPES[typeId].name,'Production panel opened.')
     return true
   }
@@ -11919,7 +11962,7 @@ function completeTravel(targetRegion) {
 
   document.body.classList.toggle('in-farmlands', targetRegion === 'farmlands')
   document.getElementById('farmInventory').classList.toggle('hidden', targetRegion !== 'farmlands')
-  if (targetRegion !== 'farmlands') document.getElementById('farmHub').classList.add('hidden')
+  closeFarmHub()
   updatePlayerList()
 
   if (targetRegion === 'farmlands') {
@@ -11931,8 +11974,7 @@ function completeTravel(targetRegion) {
     farmData.lastFarmVisitAt = Date.now()
     saveFarmData(farmData)
     activeFarmTab = 'today'
-    document.getElementById('farmHub').classList.remove('hidden')
-    renderFarmHub()
+    showToast('Pine Hollow Farm', 'The farm is ready. Open Farm Menu when you need it.')
     setTimeout(() => {
       showFarmPrompt('Place a Farm Block to start', 'farm')
     }, 1500)
