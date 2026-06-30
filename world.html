@@ -2209,6 +2209,30 @@
     .skill-xp-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; margin-bottom: 0.15rem; }
     .skill-xp-fill { height: 100%; background: linear-gradient(90deg, var(--purple-bright), #c084fc); border-radius: 2px; transition: width 0.3s; }
     .skill-xp-text { font-size: 0.55rem; color: var(--dim); }
+    .city-demand-panel { width:min(760px,calc(100vw - 1rem)); max-width:none; }
+    .city-demand-body { display:grid; gap:.7rem; max-height:72vh; overflow-y:auto; padding:.8rem; }
+    .demand-meter-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.45rem; }
+    .demand-meter { padding:.55rem; border:1px solid rgba(56,189,248,.16); border-radius:8px; background:rgba(14,116,144,.06); }
+    .demand-meter strong { display:flex; justify-content:space-between; color:#dff8ff; font-size:.56rem; }
+    .demand-meter small { color:#78909a; font-size:.47rem; }
+    .demand-bar { height:6px; margin:.35rem 0; overflow:hidden; border-radius:999px; background:rgba(255,255,255,.07); }
+    .demand-bar span { display:block; height:100%; background:linear-gradient(90deg,#ef4444,#facc15,#22c55e); }
+    .business-needs-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.45rem; }
+    .business-need { padding:.6rem; border:1px solid rgba(255,255,255,.075); border-radius:8px; background:rgba(255,255,255,.025); }
+    .business-need h4 { margin:0 0 .25rem; color:#f4f1f6; font-size:.58rem; }
+    .business-need p { margin:0; color:#8d8292; font-size:.49rem; line-height:1.45; }
+    .contract-section-title { margin:.15rem 0; color:#c4b5fd; font-size:.62rem; text-transform:uppercase; letter-spacing:.08em; }
+    .contract-list { display:grid; gap:.4rem; }
+    .contract-row { display:grid; grid-template-columns:1fr auto; gap:.55rem; align-items:center; padding:.6rem; border:1px solid rgba(167,139,250,.14); border-radius:8px; background:rgba(124,58,237,.045); }
+    .contract-row h4 { margin:0; color:#f4edfa; font-size:.61rem; }
+    .contract-row p { margin:.2rem 0 0; color:#8f8396; font-size:.49rem; line-height:1.4; }
+    .contract-row .farm-action { width:auto; min-width:110px; }
+    @media (max-width:650px) {
+      .demand-meter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .business-needs-grid { grid-template-columns:1fr 1fr; }
+      .contract-row { grid-template-columns:1fr; }
+      .contract-row .farm-action { width:100%; }
+    }
   </style>
 </head>
 <body>
@@ -2265,6 +2289,7 @@
   <button class="tool-btn" id="btnCreatures" data-tip="Creatures">&#x1F43E;</button>
   <button class="tool-btn" id="btnSkills" data-tip="Skill Trees">&#x1F331;</button>
   <button class="tool-btn" id="btnSignalWire" data-tip="Signal Wire">&#x1F4F0;</button>
+  <button class="tool-btn" id="btnCityDemand" data-tip="City Demand">&#x1F4E6;</button>
   <button class="tool-btn" id="btnInfluenceView" data-tip="Influence View"><span id="influenceViewIcon">&#x1F5FA;</span></button>
   <button class="tool-btn" id="btnWorldMap" data-tip="World Map">&#x1F30D;</button>
   <button class="tool-btn" id="btnSettings" data-tip="Settings">&#x2699;&#xFE0F;</button>
@@ -2420,6 +2445,14 @@
     <div class="panel-close" id="signalWirePanelClose">&times;</div>
   </div>
   <div id="signalWireList"></div>
+</div>
+
+<div class="city-demand-panel game-panel" id="cityDemandPanel">
+  <div class="panel-header">
+    <div class="panel-title">&#x1F4E6; City Demand &amp; Logistics</div>
+    <div class="panel-close" id="cityDemandPanelClose">&times;</div>
+  </div>
+  <div class="city-demand-body" id="cityDemandBody"></div>
 </div>
 
 <div class="income-panel game-panel" id="incomePanel">
@@ -3611,6 +3644,36 @@ const FARM_GOODS = {
   cheese: { name:'Cheese', icon:'\u{1F9C0}' }
 }
 
+const CITY_DEMAND_ITEMS = {
+  food:{ name:'Food', icon:'🍲', target:60 },
+  eggs:{ name:'Eggs', icon:'🥚', target:24 },
+  milk:{ name:'Milk', icon:'🥛', target:24 },
+  bread:{ name:'Bread', icon:'🍞', target:20 },
+  cheese:{ name:'Cheese', icon:'🧀', target:14 }
+}
+const DELIVERY_CONTRACTS = {
+  crops:{
+    name:'Market Row Crop Run', icon:'🌾', needs:{ wheat:4, corn:3 },
+    delivers:{ food:14 }, rewardFC:72, reputation:2, farmerXP:14, logisticsXP:10, etaMs:20000,
+    story:'Pine Hollow shipment saves Market Row.'
+  },
+  dairy:{
+    name:'Dairy Cold-Chain', icon:'🥛', needs:{ milk:2, cheese:1 },
+    delivers:{ milk:8, cheese:4, food:4 }, rewardFC:110, reputation:3, farmerXP:18, logisticsXP:16, etaMs:30000,
+    story:'Fresh dairy goods reach Faceless City.'
+  },
+  bakery:{
+    name:'City Bakery Supply', icon:'🍞', needs:{ bread:2, eggBread:1 },
+    delivers:{ bread:10, food:6 }, rewardFC:96, reputation:3, farmerXP:16, logisticsXP:14, etaMs:25000,
+    story:'Bakery goods arrive in Faceless City.'
+  },
+  mixed:{
+    name:'Faceless City Mixed Food', icon:'📦', needs:{ wheat:2, eggs:2, milk:1, bread:1 },
+    delivers:{ food:12, eggs:6, milk:4, bread:4 }, rewardFC:135, reputation:4, farmerXP:22, logisticsXP:20, etaMs:40000,
+    story:'Pine Hollow mixed shipment restocks the city.'
+  }
+}
+
 const FARM_BUILDINGS = {
   farmhouse: { name:'Farmhouse', icon:'\u{1F3E1}', req:1, cost:120, desc:'Raises field capacity and farm value.' },
   barn: { name:'Barn', icon:'\u{1F3DA}\uFE0F', req:1, cost:100, desc:'Stores eggs, milk, feed and processed goods.' },
@@ -4319,17 +4382,30 @@ function renderFarmHub() {
     </div>`
   } else if (activeFarmTab === 'shipments') {
     const shipmentData = getShipments()
-    html += '<div class="farm-card-grid">'
+    html += '<h3 class="contract-section-title">Active Contracts</h3><div class="contract-list">'
     if (shipmentData.active.length) {
       shipmentData.active.forEach(shipment => {
         const remaining = Math.max(0, Math.ceil((shipment.etaMs - (now-shipment.createdAt))/1000))
-        html += farmCard('Truck to Faceless City','\u{1F69A}',`${shipment.amount} food units are on the road.`,
-          remaining ? `${remaining}s until delivery` : 'Arriving now','','',false,remaining ? '' : 'ready')
+        const contract=DELIVERY_CONTRACTS[shipment.contractType]
+        html += `<article class="contract-row"><div><h4>🚚 ${contract?.name || 'Truck to Faceless City'}</h4><p>${shipment.amount} units · ${remaining ? `${remaining}s remaining` : 'Arriving now'} · reward ${shipment.rewardFC || 0} FC</p></div><button class="farm-action" disabled>In Transit</button></article>`
       })
+    } else html += '<div class="farm-empty">No trucks are currently on the road.</div>'
+    html += '</div><h3 class="contract-section-title">Ready to Ship</h3><div class="farm-card-grid">'
+    for (const [key,contract] of Object.entries(DELIVERY_CONTRACTS)) {
+      const ready=farmHasIngredients(data,contract.needs)
+      html += farmCard(contract.name,contract.icon,farmFormatNeeds(contract.needs),
+        `${contract.etaMs/1000}s · ${contract.rewardFC} FC · +${contract.reputation} rep · Farmer ${contract.farmerXP} XP · Logistics ${contract.logisticsXP} XP`,
+        `contract-dispatch:${key}`,'Dispatch Contract',!ready || shipmentData.active.length >= 3,ready ? 'ready' : '')
     }
-    const available = farmBarnUsed(data) + Object.values(data.inventory).reduce((sum,n)=>sum+Math.max(0,n-2),0)
-    html += farmCard('Prepare Shipment','\u{1F4E6}','Loads up to 6 available goods. Delivery takes 30 seconds.',
-      'Arrival increases city food supply and posts to Signal Wire.','shipment','Send Truck',available < 3 || shipmentData.active.length >= 2)
+    html += '</div><h3 class="contract-section-title">Arrived — Collect Manually</h3><div class="contract-list">'
+    const readyDeliveries=shipmentData.delivered.filter(item=>item.status === 'ready')
+    html += readyDeliveries.length ? readyDeliveries.map(item=>{
+      const contract=DELIVERY_CONTRACTS[item.contractType]
+      return `<article class="contract-row"><div><h4>${contract?.icon || '📦'} ${contract?.name || 'City Delivery'}</h4><p>Truck arrived · city effects and rewards wait for your confirmation.</p></div><button class="farm-action gold" data-farm-action="contract-collect:${item.id}">Collect ${item.rewardFC || 0} FC</button></article>`
+    }).join('') : '<div class="farm-empty">No contracts are waiting to be collected.</div>'
+    html += '</div><h3 class="contract-section-title">Delivered History</h3><div class="contract-list">'
+    const history=shipmentData.delivered.filter(item=>item.status === 'collected' || !item.manualCollect).slice(0,8)
+    html += history.length ? history.map(item=>`<article class="contract-row"><div><h4>✅ ${DELIVERY_CONTRACTS[item.contractType]?.name || 'Farm Shipment'}</h4><p>${new Date(item.collectedAt || item.deliveredAt).toLocaleString()} · ${item.amount} supply units</p></div></article>`).join('') : '<div class="farm-empty">Completed contracts will appear here.</div>'
     html += '</div>'
   } else if (activeFarmTab === 'upgrades') {
     html += '<div class="farm-card-grid">'
@@ -4695,6 +4771,8 @@ function handleFarmHubAction(action) {
   else if (type === 'sanctuary-care') careForSanctuaryCreature(Number(a))
   else if (type === 'sanctuary-collect') collectSanctuaryTips()
   else if (type === 'sanctuary-upgrade') buySanctuaryUpgrade(a)
+  else if (type === 'contract-dispatch') dispatchDeliveryContract(a)
+  else if (type === 'contract-collect') collectDeliveryContract(a)
   else if (type === 'go-tab') {
     activeFarmTab = a
     renderFarmHub()
@@ -9365,6 +9443,7 @@ const ALL_PANELS = [
   { id: 'creaturesPanel', stateKey: null, btnId: 'btnCreatures' },
   { id: 'skillTreesPanel', stateKey: null, btnId: 'btnSkills' },
   { id: 'signalWirePanel', stateKey: null, btnId: 'btnSignalWire' },
+  { id: 'cityDemandPanel', stateKey: null, btnId: 'btnCityDemand' },
 ]
 
 function closeAllPanels() {
@@ -9494,6 +9573,7 @@ function setupUI() {
   document.getElementById('btnCreatures').addEventListener('click', openCreaturesPanel)
   document.getElementById('btnSkills').addEventListener('click', openSkillsPanel)
   document.getElementById('btnSignalWire').addEventListener('click', openSignalWirePanel)
+  document.getElementById('btnCityDemand').addEventListener('click', openCityDemandPanel)
 
   // Close buttons
   document.getElementById('buildPanelClose').addEventListener('click', closeAllPanels)
@@ -9505,10 +9585,18 @@ function setupUI() {
   document.getElementById('incomePanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('skillTreesPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('signalWirePanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('cityDemandPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('propPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('jobPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('worldMapClose').addEventListener('click', closeAllPanels)
   document.getElementById('creaturesPanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('cityDemandBody').addEventListener('click', event => {
+    const button=event.target.closest('[data-contract-action]')
+    if (!button || button.disabled) return
+    const [action,value]=button.dataset.contractAction.split(':')
+    if (action === 'dispatch') dispatchDeliveryContract(value)
+    else if (action === 'collect') collectDeliveryContract(value)
+  })
 
   // Universal encounter controls
   document.getElementById('encounterActions').addEventListener('click', event => {
@@ -11863,7 +11951,7 @@ function showDistrictTooltip(mouseX, mouseY, district) {
     happiness = Math.max(10, happiness - Math.floor(crimeRate * 0.3))
   }
   const supply = getCitySupply()
-  happiness = Math.min(100, happiness + (supply.cityHappinessBonus || 0))
+  happiness = Math.min(100,Math.max(10,happiness+(supply.cityHappinessBonus || 0)+Math.round(((supply.districtHappiness || 50)-50)*.2)))
   const happinessColor = happiness >= 70 ? '#4ade80' : (happiness >= 40 ? '#facc15' : '#ef4444')
 
   let html = `<div class="district-tooltip-name">${district.name || 'Unknown District'}</div>`
@@ -12047,6 +12135,7 @@ const CREATURES = Object.values(REGIONAL_CREATURES).flat()
 const SKILL_TREES = [
   { id: 'builder', name: 'Builder', icon: '\u{1F3D7}', bonus: { type: 'income', perLevel: 0.01, label: '+1% income/level' } },
   { id: 'farmer', name: 'Farmer', icon: '\u{1F33E}', bonus: { type: 'cropYield', perLevel: 0.01, label: '+1% crop yield/level' } },
+  { id: 'logistics', name: 'Logistics', icon: '\u{1F69A}', bonus: { type: 'deliveryReward', perLevel: 0.01, label: '+1% contract rewards/level' } },
   { id: 'explorer', name: 'Explorer', icon: '\u{1F5FA}', bonus: null },
   { id: 'creatureKeeper', name: 'Creature Keeper', icon: '\u{1F43E}', bonus: { type: 'trustGain', perLevel: 0.01, label: '+1% trust gain/level' } },
   { id: 'developer', name: 'Developer', icon: '\u{1F3D8}', bonus: { type: 'income', perLevel: 0.01, label: '+1% income/level' } },
@@ -12242,11 +12331,23 @@ function updateSignalWire() {
 
 // ── CITY DEMAND + FARM SUPPLY ────────────────────────
 function getCitySupply() {
+  let supply = null
   try {
     const raw = localStorage.getItem('fas_city_supply_v2')
-    if (raw) return JSON.parse(raw)
+    if (raw) supply = JSON.parse(raw)
   } catch {}
-  return { food: 0, lastUpdated: Date.now(), totalShipments: 0, cityHappinessBonus: 0 }
+  supply = supply && typeof supply === 'object' ? supply : {}
+  supply.food = Math.max(0,Number(supply.food) || 0)
+  supply.inventory = supply.inventory || {}
+  for (const key of ['eggs','milk','bread','cheese']) supply.inventory[key]=Math.max(0,Number(supply.inventory[key]) || 0)
+  supply.totalShipments=Math.max(0,Number(supply.totalShipments) || 0)
+  supply.cityHappinessBonus=Math.max(-10,Number(supply.cityHappinessBonus) || 0)
+  supply.businessHealth=Math.max(10,Math.min(100,Number(supply.businessHealth) || 65))
+  supply.businessIncomeBonus=Math.max(0,Math.min(.15,Number(supply.businessIncomeBonus) || 0))
+  supply.districtHappiness=Math.max(10,Math.min(100,Number(supply.districtHappiness) || 60))
+  supply.lastUpdated=Number(supply.lastUpdated) || Date.now()
+  supply.lastShortageAt=Number(supply.lastShortageAt) || 0
+  return supply
 }
 
 function saveCitySupply(data) {
@@ -12264,22 +12365,71 @@ function addCityFood(amount) {
   return supply
 }
 
+function cityStockFor(key,supply=getCitySupply()) {
+  return key === 'food' ? supply.food : (supply.inventory[key] || 0)
+}
+function cityDemandFor(key,supply=getCitySupply()) {
+  return Math.max(0,(CITY_DEMAND_ITEMS[key]?.target || 0)-cityStockFor(key,supply))
+}
+function citySupplyHealth(supply=getCitySupply()) {
+  const ratios=Object.entries(CITY_DEMAND_ITEMS).map(([key,item])=>Math.min(1,cityStockFor(key,supply)/item.target))
+  return ratios.reduce((sum,value)=>sum+value,0)/ratios.length
+}
+function applyBusinessSupplyEffects(supply,contract) {
+  const gain=contract ? 4 : -2
+  supply.businessHealth=Math.max(10,Math.min(100,supply.businessHealth+gain))
+  supply.districtHappiness=Math.max(10,Math.min(100,supply.districtHappiness+(contract ? 3 : -2)))
+  supply.businessIncomeBonus=Math.max(0,Math.min(.15,(supply.businessIncomeBonus || 0)+(contract ? .01 : -.01)))
+  for (const building of state.buildings || []) {
+    if (normalizeRegionId(building.region_id ?? building.region) !== 'city') continue
+    if (!['shop','club','market','restaurant'].includes(building.building_type)) continue
+    building.business_health=Math.max(10,Math.min(100,(building.business_health ?? 75)+gain))
+    building._supplyIncomeBonus=supply.businessIncomeBonus
+  }
+}
+function applyContractCitySupply(shipment) {
+  const supply=getCitySupply(), contract=DELIVERY_CONTRACTS[shipment.contractType]
+  if (!contract) { addCityFood(shipment.amount || 0); return getCitySupply() }
+  for (const [key,amount] of Object.entries(contract.delivers)) {
+    if (key === 'food') supply.food+=amount
+    else supply.inventory[key]=(supply.inventory[key] || 0)+amount
+  }
+  supply.totalShipments++
+  supply.cityHappinessBonus=Math.min(10,Math.floor(supply.food/20))
+  supply.lastUpdated=Date.now()
+  applyBusinessSupplyEffects(supply,contract)
+  saveCitySupply(supply)
+  updateCitySupplyUI()
+  renderCityDemandPanel()
+  return supply
+}
+
 function applyCityDecay() {
   const supply = getCitySupply()
   const elapsed = Date.now() - supply.lastUpdated
   const decay = Math.floor(elapsed / 300000)
   if (decay > 0) {
-    supply.food = Math.max(0, supply.food - decay)
+    supply.food = Math.max(0, supply.food - decay*2)
+    for (const key of ['eggs','milk','bread','cheese']) supply.inventory[key]=Math.max(0,supply.inventory[key]-decay)
     supply.cityHappinessBonus = Math.min(10, Math.floor(supply.food / 20))
-    supply.lastUpdated = Date.now()
+    supply.lastUpdated += decay*300000
+    if (citySupplyHealth(supply)<.28) {
+      applyBusinessSupplyEffects(supply,null)
+      if (Date.now()-supply.lastShortageAt > 10*60*1000) {
+        supply.lastShortageAt=Date.now()
+        showToast('Faceless City Food Shortage','Businesses need a Pine Hollow delivery contract.')
+        createNewsItem('Economy','Food shortage warning in Faceless City.','Markets and nightlife businesses are losing health while shelves run low.','city',5)
+      }
+    }
     saveCitySupply(supply)
     updateCitySupplyUI()
+    renderCityDemandPanel()
   }
 }
 
 function getCityFoodBonus() {
   const supply = getCitySupply()
-  return Math.min(0.05, Math.floor(Math.min(supply.food, 50)) * 0.01)
+  return Math.min(0.2,Math.min(0.05,Math.floor(Math.min(supply.food,50))*.01)+(supply.businessIncomeBonus || 0))
 }
 
 function updateCitySupplyUI() {
@@ -12287,10 +12437,92 @@ function updateCitySupplyUI() {
   const el = document.getElementById('citySupplyReadout')
   if (!el) return
   const bonus = getCityFoodBonus()
-  el.innerHTML = '<div class="stat-row"><span class="stat-icon">\u{1F33E}</span><span class="stat-label">Food Supply</span><span class="stat-value gold" id="citySupplyFood">' + supply.food + '</span></div><div class="stat-row"><span class="stat-icon">\u{1F69A}</span><span class="stat-label">Shipments</span><span class="stat-value" id="citySupplyShipments">' + supply.totalShipments + '</span></div><div class="stat-row"><span class="stat-icon">\u{1F4C8}</span><span class="stat-label">City Bonus</span><span class="stat-value green" id="citySupplyBonus">+' + Math.floor(bonus * 100) + '% income / +' + supply.cityHappinessBonus + ' happiness</span></div>'
+  el.innerHTML = '<div class="stat-row"><span class="stat-icon">\u{1F33E}</span><span class="stat-label">Food Supply</span><span class="stat-value gold" id="citySupplyFood">' + supply.food + '</span></div><div class="stat-row"><span class="stat-icon">\u{1F69A}</span><span class="stat-label">Shipments</span><span class="stat-value" id="citySupplyShipments">' + supply.totalShipments + '</span></div><div class="stat-row"><span class="stat-icon">\u{1F4C8}</span><span class="stat-label">City Bonus</span><span class="stat-value green" id="citySupplyBonus">+' + Math.floor(bonus * 100) + '% income / ' + supply.businessHealth + '% business health</span></div>'
 }
 
 // ── LOGISTICS: SHIPMENTS ─────────────────────────────
+function cityBusinessNeeds() {
+  return [
+    { icon:'🏪', name:'Shops', need:'General farm goods keep shelves and foot traffic moving.' },
+    { icon:'🎵', name:'Clubs', need:'Food, drinks, and entertainment supply protect club income.' },
+    { icon:'🧺', name:'Markets', need:'Crops, eggs, and milk are their daily foundation.' },
+    { icon:'🍽️', name:'Restaurants', need:'Processed bread, cheese, dairy, and mixed food contracts.' }
+  ]
+}
+function openCityDemandPanel() {
+  applyCityDecay()
+  openPanel('cityDemandPanel')
+  renderCityDemandPanel()
+}
+function renderCityDemandPanel() {
+  const body=document.getElementById('cityDemandBody')
+  if (!body) return
+  const supply=getCitySupply(), shipments=getShipments(), farm=getFarmData(), now=Date.now()
+  const active=shipments.active.filter(item=>item.manualCollect)
+  const ready=shipments.delivered.filter(item=>item.manualCollect && item.status === 'ready')
+  const history=shipments.delivered.filter(item=>item.manualCollect && item.status === 'collected').slice(0,8)
+  body.innerHTML=`
+    <div class="demand-meter-grid">${Object.entries(CITY_DEMAND_ITEMS).map(([key,item])=>{
+      const stock=cityStockFor(key,supply), pct=Math.min(100,stock/item.target*100), demand=cityDemandFor(key,supply)
+      return `<article class="demand-meter"><strong><span>${item.icon} ${item.name}</span><span>${stock}/${item.target}</span></strong><div class="demand-bar"><span style="width:${pct}%"></span></div><small>${demand ? `City requests ${demand}` : 'Demand currently covered'}</small></article>`
+    }).join('')}</div>
+    <div class="demand-meter"><strong><span>🏙️ City Economy</span><span>${supply.businessHealth}% health</span></strong><div class="demand-bar"><span style="width:${supply.businessHealth}%"></span></div><small>${supply.districtHappiness}% district happiness · +${Math.round((supply.businessIncomeBonus || 0)*100)}% business income</small></div>
+    <h3 class="contract-section-title">Business Needs</h3>
+    <div class="business-needs-grid">${cityBusinessNeeds().map(item=>`<article class="business-need"><h4>${item.icon} ${item.name}</h4><p>${item.need}</p></article>`).join('')}</div>
+    <h3 class="contract-section-title">Ready to Ship from Pine Hollow</h3>
+    <div class="contract-list">${Object.entries(DELIVERY_CONTRACTS).map(([key,contract])=>{
+      const canShip=farmHasIngredients(farm,contract.needs) && active.length < 3
+      return `<article class="contract-row"><div><h4>${contract.icon} ${contract.name}</h4><p>${farmFormatNeeds(contract.needs)} · ${contract.etaMs/1000}s · ${contract.rewardFC} FC · +${contract.reputation} rep</p></div><button class="farm-action" data-contract-action="dispatch:${key}" ${canShip ? '' : 'disabled'}>${canShip ? 'Dispatch' : 'Missing Goods'}</button></article>`
+    }).join('')}</div>
+    <h3 class="contract-section-title">Active Contracts</h3>
+    <div class="contract-list">${active.length ? active.map(item=>`<article class="contract-row"><div><h4>🚚 ${DELIVERY_CONTRACTS[item.contractType]?.name || 'Delivery'}</h4><p>${Math.max(0,Math.ceil((item.etaMs-(now-item.createdAt))/1000))}s remaining · ${item.amount} supply units</p></div><button class="farm-action" disabled>In Transit</button></article>`).join('') : '<div class="farm-empty">No active delivery contracts.</div>'}</div>
+    <h3 class="contract-section-title">Arrived — Manual Collection</h3>
+    <div class="contract-list">${ready.length ? ready.map(item=>`<article class="contract-row"><div><h4>📦 ${DELIVERY_CONTRACTS[item.contractType]?.name || 'Delivery'}</h4><p>Ready to apply city supply effects and rewards.</p></div><button class="farm-action gold" data-contract-action="collect:${item.id}">Collect ${item.rewardFC || 0} FC</button></article>`).join('') : '<div class="farm-empty">No contracts are waiting.</div>'}</div>
+    <h3 class="contract-section-title">Delivered History</h3>
+    <div class="contract-list">${history.length ? history.map(item=>`<article class="contract-row"><div><h4>✅ ${DELIVERY_CONTRACTS[item.contractType]?.name || 'Delivery'}</h4><p>${new Date(item.collectedAt || item.deliveredAt).toLocaleString()} · ${item.amount} units delivered</p></div></article>`).join('') : '<div class="farm-empty">Collected deliveries will appear here.</div>'}</div>`
+}
+function dispatchDeliveryContract(contractType) {
+  const contract=DELIVERY_CONTRACTS[contractType], farm=getFarmData(), shipments=getShipments()
+  if (!contract || shipments.active.filter(item=>item.manualCollect).length >= 3 || !farmHasIngredients(farm,contract.needs)) return
+  farmTakeIngredients(farm,contract.needs)
+  const amount=Object.values(contract.delivers).reduce((sum,value)=>sum+value,0)
+  const rewardMultiplier=1+getSkillBonus('logistics','deliveryReward')
+  const shipment=createShipment(amount,{
+    rewardFC:Math.floor(contract.rewardFC*rewardMultiplier), rewardXP:contract.farmerXP,
+    reputation:contract.reputation, logisticsXP:contract.logisticsXP,
+    contractType, delivers:{...contract.delivers}, etaMs:contract.etaMs, manualCollect:true
+  })
+  farm.shipmentHistory.unshift({ id:shipment.id, contractType, amount, createdAt:Date.now(), status:'traveling' })
+  farm.shipmentHistory=farm.shipmentHistory.slice(0,20)
+  recordFarmDaily(farm,'shipment')
+  saveFarmData(farm); updateFarmInventory(); renderFarmHub(); renderCityDemandPanel()
+  createNewsItem('Farm',`${contract.name} departed Pine Hollow Farm.`,`${farmFormatNeeds(contract.needs)} is traveling to Faceless City.`,'farmlands',2)
+  showToast('Delivery Contract Dispatched',`${contract.etaMs/1000} seconds to Faceless City.`)
+}
+function collectDeliveryContract(shipmentId) {
+  const shipments=getShipments(), shipment=shipments.delivered.find(item=>item.id === shipmentId && item.manualCollect && item.status === 'ready')
+  if (!shipment) return
+  const contract=DELIVERY_CONTRACTS[shipment.contractType]
+  shipment.status='collected'
+  shipment.collectedAt=Date.now()
+  saveShipments()
+  applyContractCitySupply(shipment)
+  const farm=getFarmData()
+  state.coins+=shipment.rewardFC || 0
+  state.rep+=shipment.reputation || 0
+  addFarmXP(farm,shipment.rewardXP || 0)
+  const history=farm.shipmentHistory.find(item=>item.id === shipment.id)
+  if (history) { history.status='collected'; history.collectedAt=shipment.collectedAt }
+  saveFarmData(farm)
+  document.getElementById('statCoins').textContent=state.coins
+  document.getElementById('statRep').textContent=state.rep
+  awardSkillXP('farmer',shipment.rewardXP || 8)
+  awardSkillXP('logistics',shipment.logisticsXP || 12)
+  createNewsItem('Economy',contract?.story || 'Pine Hollow shipment reaches Faceless City.',`Business health rose to ${getCitySupply().businessHealth}% after the delivery.`,'city',4)
+  showToast('Contract Collected',`+${shipment.rewardFC || 0} FC · +${shipment.reputation || 0} reputation`)
+  updateFarmInventory(); updateLogisticsUI(); renderFarmHub(); renderCityDemandPanel()
+}
+
 function getShipments() {
   if (state.shipments && state.shipments.active) return state.shipments
   try {
@@ -12311,9 +12543,14 @@ function createShipment(amount, rewards = {}) {
     id: Date.now() + '_' + Math.random().toString(36).slice(2, 6),
     fromRegion: 'farmlands', toRegion: 'city',
     amount, status: 'traveling',
-    createdAt: Date.now(), etaMs: 30000,
+    createdAt: Date.now(), etaMs: rewards.etaMs || 30000,
     rewardFC: rewards.rewardFC || amount * 6,
     rewardXP: rewards.rewardXP || amount * 2,
+    reputation: rewards.reputation || 0,
+    logisticsXP: rewards.logisticsXP || 0,
+    contractType: rewards.contractType || null,
+    delivers: rewards.delivers || null,
+    manualCollect: !!rewards.manualCollect,
   })
   saveShipments()
   updateLogisticsUI()
@@ -12348,8 +12585,16 @@ function processShipmentDeliveries() {
       s.status = 'delivered'; s.deliveredAt = Date.now()
       deliveredIds.add(s.id)
       data.delivered.unshift(s)
-      if (data.delivered.length > 10) data.delivered.length = 10
+      if (data.delivered.length > 30) data.delivered.length = 30
       saveShipments()
+      if (s.manualCollect) {
+        s.status='ready'
+        saveShipments()
+        createNewsItem('Economy',`${DELIVERY_CONTRACTS[s.contractType]?.name || 'Farm contract'} arrived in Faceless City.`,'Rewards and city supply effects are ready for manual collection.','city',3)
+        showToast('Delivery Contract Arrived','Open City Demand or Farm Shipments to collect it.')
+        changed=true
+        continue
+      }
       addCityFood(s.amount)
       const farmData = getFarmData()
       state.coins += s.rewardFC || 0
@@ -12367,6 +12612,7 @@ function processShipmentDeliveries() {
     updateLogisticsUI()
     updateFarmInventory()
     renderFarmHub()
+    renderCityDemandPanel()
   }
 }
 
