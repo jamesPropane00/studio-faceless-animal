@@ -17,9 +17,10 @@ const GOD_POWERS = {
 }
 
 const CROP_TYPES = {
-  corn: { name: 'Corn', icon: '\u{1F33D}', growthTime: 45000, stages: 3, yield: 2, color: '#fbbf24' },
-  wheat: { name: 'Wheat', icon: '\u{1F33E}', growthTime: 30000, stages: 3, yield: 1, color: '#eab308' },
-  veggies: { name: 'Vegetables', icon: '\u{1F955}', growthTime: 60000, stages: 4, yield: 3, color: '#4ade80' },
+  wheat: { name: 'Wheat', icon: '\u{1F33E}', growthTime: 10000, stages: 3, yield: 3, sellValue: 2, xp: 2, color: '#eab308' },
+  corn: { name: 'Corn', icon: '\u{1F33D}', growthTime: 15000, stages: 3, yield: 3, sellValue: 3, xp: 3, color: '#fbbf24' },
+  carrots: { name: 'Carrots', icon: '\u{1F955}', growthTime: 20000, stages: 4, yield: 3, sellValue: 4, xp: 4, color: '#f97316' },
+  tomatoes: { name: 'Tomatoes', icon: '\u{1F345}', growthTime: 30000, stages: 4, yield: 3, sellValue: 5, xp: 5, color: '#ef4444' },
 }
 
 function getItem(id) { return items.find(i => i.id === id) || null }
