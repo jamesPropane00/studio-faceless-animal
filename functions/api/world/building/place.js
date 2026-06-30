@@ -65,6 +65,7 @@ export async function onRequestPost(context) {
 
     const body = await context.request.json();
     const { x, y, type, userId } = body;
+    const regionId = typeof body.region_id === 'string' && body.region_id ? body.region_id : 'city';
     
     if (x === undefined || y === undefined || !type) {
       return json({ ok: false, error: 'Missing x, y, or type.' }, 400);
@@ -89,7 +90,7 @@ export async function onRequestPost(context) {
     }
 
     // Check if tile is already occupied
-    const checkQuery = `select=id&tile_x=eq.${tileX}&tile_y=eq.${tileY}`;
+    const checkQuery = `select=id&tile_x=eq.${tileX}&tile_y=eq.${tileY}&region_id=eq.${encodeURIComponent(regionId)}`;
     const checkResult = await supabaseFetch(context.env, `/rest/v1/world_building_states?${checkQuery}`);
     
     if (!checkResult.ok) {
@@ -126,7 +127,8 @@ export async function onRequestPost(context) {
       income_rate: BUILDING_TYPES[type].income,
       last_collected_at: new Date().toISOString(),
       in_district: false,
-      status: 'active'
+      status: 'active',
+      region_id: regionId
     };
 
     const insertResult = await supabaseFetch(context.env, `/rest/v1/world_building_states`, {
@@ -182,7 +184,8 @@ export async function onRequestPost(context) {
         owner_id: userId || null,
         condition: 100,
         income_rate: BUILDING_TYPES[type].income,
-        status: 'active'
+        status: 'active',
+        region_id: regionId
       }
     });
   } catch (error) {

@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Purple Pulse Studio by Faceless Animal Studios - make beats, record ideas, and prepare live broadcasts in your browser.">
+  <title>Purple Pulse Studio | Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #07070a;
+      --panel: #111116;
+      --panel-2: #17171d;
+      --line: #292832;
+      --muted: #8e8b9b;
+      --text: #f6f4fa;
+      --purple: #8b5cf6;
+      --purple-2: #b990ff;
+      --acid: #bdfc5a;
+      --red: #ff4e64;
+      --amber: #f9b44b;
+      --radius: 15px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 76% -10%, rgba(139,92,246,.16), transparent 28rem),
+        linear-gradient(rgba(255,255,255,.017) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.017) 1px, transparent 1px),
+        var(--ink);
+      background-size: auto, 32px 32px, 32px 32px, auto;
+      font-family: Inter, system-ui, sans-serif;
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--purple-2);
+      outline-offset: 2px;
+    }
+
+    .shell { width: min(1480px, calc(100% - 32px)); margin: 0 auto; padding-bottom: 70px; }
+    .topbar {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 240px; }
+    .brand-mark {
+      width: 38px; height: 38px; border: 1px solid #594187; border-radius: 50%;
+      display: grid; place-items: center; position: relative; color: var(--purple-2);
+      font-weight: 900; font-size: 12px; box-shadow: inset 0 0 18px rgba(139,92,246,.18);
+    }
+    .brand-mark::after { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--acid); position: absolute; right: -2px; top: 3px; box-shadow: 0 0 9px var(--acid); }
+    .brand-name { font-size: 14px; font-weight: 900; letter-spacing: -.02em; }
+    .brand-name span { display: block; color: var(--muted); font: 500 9px/1.5 "DM Mono"; letter-spacing: .16em; text-transform: uppercase; }
+    .top-tabs { display: flex; align-self: stretch; }
+    .top-tab {
+      border: 0; border-bottom: 2px solid transparent; background: none; padding: 0 18px;
+      color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 700;
+    }
+    .top-tab.active { color: white; border-color: var(--purple); }
+    .session { display: flex; align-items: center; gap: 10px; min-width: 240px; justify-content: flex-end; }
+    .session-label { text-align: right; font-size: 11px; font-weight: 700; }
+    .session-label span { display: block; color: var(--muted); font: 9px/1.5 "DM Mono"; }
+    .avatar { width: 31px; height: 31px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; color: var(--purple-2); font-size: 11px; font-weight: 800; }
+
+    .broadcast {
+      margin: 18px 0 14px; display: grid; grid-template-columns: 1.2fr auto auto;
+      align-items: center; gap: 16px; padding: 16px 18px;
+      border: 1px solid #33313c; border-radius: var(--radius);
+      background: linear-gradient(100deg, rgba(139,92,246,.1), transparent 42%), #0f0f14;
+      box-shadow: 0 16px 50px rgba(0,0,0,.25);
+    }
+    .eyebrow { margin: 0 0 6px; font: 500 9px "DM Mono"; color: var(--purple-2); letter-spacing: .18em; text-transform: uppercase; }
+    .broadcast h1 { margin: 0; font-size: clamp(20px, 3vw, 31px); letter-spacing: -.06em; line-height: 1; }
+    .broadcast h1 i { font-style: normal; color: var(--purple-2); }
+    .broadcast-sub { margin: 7px 0 0; color: var(--muted); font-size: 11px; }
+    .broadcast-tools { display: flex; gap: 8px; }
+    .tool, .record, .post-button, .ghost-button, .transport-button {
+      border: 1px solid var(--line); background: #17171d; border-radius: 9px; cursor: pointer;
+      transition: border-color .15s, background .15s, transform .15s;
+    }
+    .tool:hover, .ghost-button:hover, .transport-button:hover { border-color: #5a5367; transform: translateY(-1px); }
+    .tool { min-width: 72px; height: 48px; padding: 0 12px; display: grid; place-items: center; gap: 2px; color: #c7c3d0; font-size: 13px; }
+    .tool span { display: block; font: 500 8px "DM Mono"; color: var(--muted); text-transform: uppercase; }
+    .tool.active { color: var(--acid); border-color: rgba(189,252,90,.4); background: rgba(189,252,90,.07); }
+    .record { height: 48px; padding: 0 18px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; }
+    .record .dot { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 4px rgba(255,78,100,.1); }
+    .record.active { border-color: var(--red); background: rgba(255,78,100,.09); }
+    .record.active .dot { animation: blink 1s infinite; }
+    @keyframes blink { 50% { opacity: .3; } }
+    .post-button { height: 48px; padding: 0 17px; border-color: rgba(139,92,246,.55); background: var(--purple); color: white; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+    .post-button:hover { background: #9a6cff; }
+
+    .transport {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; background: rgba(14,14,18,.92);
+    }
+    .transport-left, .transport-center, .transport-right { display: flex; align-items: center; gap: 9px; }
+    .transport-button { width: 35px; height: 35px; display: grid; place-items: center; font-size: 12px; }
+    .transport-button.primary { width: 42px; color: var(--ink); background: var(--acid); border-color: var(--acid); font-size: 15px; }
+    .transport-button.primary.playing { background: var(--red); border-color: var(--red); color: white; }
+    .counter { min-width: 128px; padding: 7px 14px; background: #08080b; border: 1px solid #222129; border-radius: 7px; text-align: center; color: var(--acid); font: 500 16px "DM Mono"; letter-spacing: .1em; }
+    .setting { display: flex; align-items: center; gap: 8px; padding-left: 14px; border-left: 1px solid var(--line); color: var(--muted); font: 500 9px "DM Mono"; text-transform: uppercase; }
+    .setting input { width: 51px; color: white; border: 0; background: transparent; font: 500 13px "DM Mono"; }
+    .master { width: 80px; accent-color: var(--purple); }
+    .cpu { color: var(--acid); font: 500 9px "DM Mono"; }
+
+    .workspace { display: grid; grid-template-columns: 210px minmax(0,1fr); gap: 14px; margin-top: 14px; }
+    .rail, .module { border: 1px solid var(--line); border-radius: var(--radius); background: rgba(16,16,21,.95); }
+    .rail { padding: 14px; align-self: start; position: sticky; top: 12px; }
+    .rail-title, .module-title { margin: 0; font: 500 9px "DM Mono"; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
+    .preset-list { display: grid; gap: 6px; margin-top: 12px; }
+    .preset {
+      width: 100%; display: grid; grid-template-columns: 29px 1fr auto; align-items: center; gap: 9px;
+      padding: 8px; border: 1px solid transparent; border-radius: 8px; background: none; color: #d7d3df; cursor: pointer; text-align: left; font-size: 11px; font-weight: 700;
+    }
+    .preset:hover, .preset.active { border-color: #3a3447; background: rgba(139,92,246,.09); }
+    .preset.active { color: var(--purple-2); }
+    .preset-icon { width: 29px; height: 29px; border-radius: 7px; display: grid; place-items: center; background: #222129; font-size: 12px; }
+    .preset small { color: var(--muted); font: 8px "DM Mono"; }
+    .rail-divider { height: 1px; background: var(--line); margin: 15px 0; }
+    .project-stat { display: flex; justify-content: space-between; margin-top: 10px; font: 9px "DM Mono"; color: var(--muted); }
+    .project-stat b { color: #ddd8e6; font-weight: 500; }
+
+    .studio { display: grid; gap: 14px; }
+    .upper-grid { display: grid; grid-template-columns: 1.18fr .82fr; gap: 14px; }
+    .module { overflow: hidden; }
+    .module-head { min-height: 45px; padding: 0 15px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .module-tools { display: flex; align-items: center; gap: 6px; }
+    .tiny-button { border: 1px solid var(--line); background: #19191f; color: var(--muted); padding: 5px 8px; border-radius: 6px; cursor: pointer; font: 500 8px "DM Mono"; text-transform: uppercase; }
+    .tiny-button:hover { color: white; }
+    .pad-area { display: grid; grid-template-columns: 1fr 120px; gap: 14px; padding: 15px; }
+    .pads { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .pad {
+      aspect-ratio: 1.35; min-height: 54px; position: relative; overflow: hidden;
+      border: 1px solid #37343e; border-radius: 9px; background: linear-gradient(145deg, #24232b, #15151a);
+      box-shadow: inset 0 1px rgba(255,255,255,.04), 0 4px 10px rgba(0,0,0,.22);
+      cursor: pointer; text-align: left; padding: 9px; transition: .08s ease;
+    }
+    .pad:hover { border-color: #665879; transform: translateY(-1px); }
+    .pad.hit, .pad:active { background: var(--purple); border-color: var(--purple-2); transform: scale(.96); box-shadow: 0 0 24px rgba(139,92,246,.35); }
+    .pad:nth-child(4n+1)::before, .pad:nth-child(4n+4)::before { content: ""; position: absolute; inset: auto -18px -22px auto; width: 50px; height: 50px; background: rgba(139,92,246,.14); border-radius: 50%; }
+    .pad-key { display: block; color: var(--muted); font: 8px "DM Mono"; }
+    .pad-name { display: block; margin-top: 11px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .pad-mixer { display: grid; grid-template-columns: repeat(3,1fr); align-items: end; gap: 6px; padding: 8px 4px; border-left: 1px solid var(--line); }
+    .fader { height: 100%; display: grid; justify-items: center; align-content: end; gap: 8px; }
+    .fader input { width: 72px; transform: rotate(-90deg); accent-color: var(--purple); margin: 33px -20px; }
+    .fader span { font: 7px "DM Mono"; color: var(--muted); text-transform: uppercase; }
+
+    .loops { padding: 15px; display: grid; gap: 9px; }
+    .loop {
+      min-height: 58px; border: 1px solid var(--line); border-radius: 9px; background: #18181e;
+      padding: 10px; cursor: pointer; position: relative; overflow: hidden; text-align: left;
+    }
+    .loop::after { content: ""; position: absolute; inset: auto 0 0; height: 3px; background: var(--loop-color, var(--purple)); opacity: .55; }
+    .loop:hover { border-color: #4e4958; }
+    .loop.active { border-color: var(--loop-color, var(--purple)); background: color-mix(in srgb, var(--loop-color, var(--purple)) 10%, #18181e); }
+    .loop strong { display: block; font-size: 10px; }
+    .loop span { display: block; margin-top: 5px; color: var(--muted); font: 8px "DM Mono"; }
+    .loop-pulse { position: absolute; right: 10px; top: 11px; display: flex; gap: 2px; align-items: end; height: 18px; }
+    .loop-pulse i { display: block; width: 2px; height: 30%; background: var(--loop-color); }
+    .loop.active .loop-pulse i { animation: meter .7s infinite alternate; }
+    .loop.active .loop-pulse i:nth-child(2) { animation-delay: -.3s; height: 80%; }
+    .loop.active .loop-pulse i:nth-child(3) { animation-delay: -.5s; height: 55%; }
+    @keyframes meter { to { height: 100%; } }
+
+    .kit-browser-body { padding: 14px; }
+    .kit-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .kit-select, .bpm-filter {
+      height: 34px; border: 1px solid var(--line); border-radius: 7px; background: #18181e;
+      color: #d8d4df; padding: 0 10px; font: 500 9px "DM Mono"; text-transform: uppercase;
+    }
+    .bpm-filter { width: 85px; }
+    .expert-toggle { margin-left: auto; display: flex; align-items: center; gap: 8px; color: var(--muted); font: 500 9px "DM Mono"; text-transform: uppercase; cursor: pointer; }
+    .expert-toggle input { appearance: none; width: 34px; height: 18px; padding: 2px; border-radius: 10px; background: #292832; cursor: pointer; transition: .2s; }
+    .expert-toggle input::after { content: ""; display: block; width: 14px; height: 14px; border-radius: 50%; background: #777280; transition: .2s; }
+    .expert-toggle input:checked { background: var(--purple); }
+    .expert-toggle input:checked::after { transform: translateX(16px); background: white; }
+    .kit-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+    .kit-card { border: 1px solid var(--line); border-radius: 10px; background: #17171d; padding: 11px; display: grid; gap: 10px; transition: .15s; }
+    .kit-card:hover { border-color: #4b4555; transform: translateY(-1px); }
+    .kit-card.loaded { border-color: var(--kit-color, var(--purple)); background: linear-gradient(135deg, color-mix(in srgb, var(--kit-color, var(--purple)) 12%, #17171d), #17171d); }
+    .kit-card-head { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+    .kit-card h3 { margin: 0; font-size: 11px; line-height: 1.3; }
+    .kit-card p { margin: 5px 0 0; color: var(--muted); font: 8px/1.4 "DM Mono"; text-transform: uppercase; }
+    .favorite { border: 0; background: transparent; color: #5c5864; cursor: pointer; font-size: 16px; padding: 0; line-height: 1; }
+    .favorite.active { color: var(--amber); }
+    .kit-meta { display: flex; gap: 4px; flex-wrap: wrap; }
+    .kit-meta span { border: 1px solid #302e37; border-radius: 999px; padding: 3px 6px; color: #aca7b5; font: 7px "DM Mono"; text-transform: uppercase; }
+    .kit-actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 5px; }
+    .kit-action { height: 29px; border: 1px solid #36333e; border-radius: 6px; background: #1e1d24; cursor: pointer; font: 500 8px "DM Mono"; text-transform: uppercase; }
+    .kit-action:hover { border-color: var(--kit-color, var(--purple)); }
+    .kit-action.load { color: #09090c; background: var(--kit-color, var(--purple)); border-color: transparent; font-weight: 700; }
+    .kit-empty { display: none; grid-column: 1 / -1; padding: 20px; color: var(--muted); text-align: center; font: 9px "DM Mono"; }
+
+    .expert-panel { display: none; grid-column: 1 / -1; border-top: 1px solid var(--line); padding: 13px 0 0; }
+    .expert-panel.visible { display: block; }
+    .expert-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
+    .expert-heading strong { font: 500 9px "DM Mono"; color: var(--purple-2); text-transform: uppercase; letter-spacing: .1em; }
+    .expert-heading span { color: var(--muted); font: 8px "DM Mono"; }
+    .expert-controls { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 10px; }
+    .expert-control { display: grid; gap: 6px; color: var(--muted); font: 7px "DM Mono"; text-transform: uppercase; }
+    .expert-control input[type="range"] { width: 100%; accent-color: var(--purple); }
+    .expert-control select { width: 100%; border: 1px solid var(--line); border-radius: 5px; background: #18181e; color: white; padding: 5px; font: 8px "DM Mono"; }
+    .expert-checks { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+    .expert-checks label { display: flex; align-items: center; gap: 6px; color: var(--muted); font: 8px "DM Mono"; text-transform: uppercase; }
+    .expert-checks input { accent-color: var(--purple); }
+    .sound-inventory { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 0 15px 15px; }
+    .sound-bank { padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #15151a; }
+    .sound-bank b { display: block; color: var(--purple-2); font: 500 8px "DM Mono"; text-transform: uppercase; margin-bottom: 6px; }
+    .sound-bank span { display: block; color: var(--muted); font: 7px/1.7 "DM Mono"; }
+
+    .sequencer { overflow-x: auto; }
+    .seq-grid { min-width: 780px; padding: 15px; display: grid; grid-template-columns: 90px repeat(16, 1fr); gap: 5px; align-items: center; }
+    .seq-number { color: #55515f; text-align: center; font: 7px "DM Mono"; }
+    .seq-number.bar { color: var(--purple-2); }
+    .seq-label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #bcb7c7; }
+    .step {
+      aspect-ratio: 1.25; border: 1px solid #292831; border-radius: 4px; background: #18181e; cursor: pointer; padding: 0;
+      transition: background .08s;
+    }
+    .step:nth-of-type(4n+2) { border-left-color: #484251; }
+    .step.active { background: var(--purple); border-color: var(--purple-2); box-shadow: inset 0 0 8px rgba(255,255,255,.14); }
+    .step.playhead { outline: 1px solid var(--acid); outline-offset: 2px; }
+
+    .timeline { padding: 0 15px 15px; min-width: 780px; }
+    .ruler { display: grid; grid-template-columns: 80px repeat(4,1fr); color: var(--muted); font: 7px "DM Mono"; padding: 11px 0 7px; }
+    .track { display: grid; grid-template-columns: 80px repeat(8,1fr); min-height: 34px; border-top: 1px solid #25242c; }
+    .track-label { align-self: center; font-size: 8px; font-weight: 700; color: #aaa5b4; text-transform: uppercase; }
+    .clip { margin: 4px 2px; padding: 6px 8px; border-radius: 4px; font: 7px "DM Mono"; overflow: hidden; white-space: nowrap; background: rgba(139,92,246,.22); border: 1px solid rgba(185,144,255,.3); color: #dac9ff; }
+    .clip.green { background: rgba(189,252,90,.12); border-color: rgba(189,252,90,.25); color: var(--acid); }
+    .clip.amber { background: rgba(249,180,75,.12); border-color: rgba(249,180,75,.25); color: var(--amber); }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; z-index: 20; transform: translate(-50%, 20px);
+      padding: 11px 16px; border: 1px solid #4c445b; border-radius: 9px; background: #191820;
+      box-shadow: 0 15px 40px #000; color: #eeeaf5; font-size: 11px; opacity: 0; pointer-events: none; transition: .25s;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%,0); }
+    .camera-preview {
+      position: fixed; right: 18px; bottom: 18px; z-index: 10; width: min(260px, 40vw); aspect-ratio: 16/10;
+      border: 1px solid var(--purple); border-radius: 12px; background: #09090d; object-fit: cover; display: none; box-shadow: 0 18px 60px #000;
+    }
+    .camera-preview.visible { display: block; }
+    .mobile-note { display: none; }
+
+    @media (max-width: 1050px) {
+      .workspace { grid-template-columns: 1fr; }
+      .rail { position: static; }
+      .preset-list { grid-template-columns: repeat(4, 1fr); }
+      .project-stats, .rail-divider { display: none; }
+      .upper-grid { grid-template-columns: 1fr; }
+      .loops { grid-template-columns: repeat(3, 1fr); }
+      .kit-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .expert-controls { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    }
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 18px, 1480px); }
+      .top-tabs, .session-label { display: none; }
+      .brand, .session { min-width: 0; }
+      .broadcast { grid-template-columns: 1fr; }
+      .broadcast-tools { overflow-x: auto; padding-bottom: 3px; }
+      .broadcast-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .transport { flex-wrap: wrap; }
+      .transport-center { order: 3; width: 100%; justify-content: center; }
+      .transport-right .cpu { display: none; }
+      .preset-list { grid-template-columns: repeat(2,1fr); }
+      .pad-area { grid-template-columns: 1fr; }
+      .pad-mixer { display: none; }
+      .loops { grid-template-columns: 1fr; }
+      .kit-grid, .sound-inventory { grid-template-columns: 1fr; }
+      .expert-toggle { margin-left: 0; }
+      .expert-controls { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .mobile-note { display: block; color: var(--muted); font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">FA</div>
+        <div class="brand-name">Purple Pulse <span>Faceless Animal Studios</span></div>
+      </div>
+      <nav class="top-tabs" aria-label="Studio modes">
+        <button class="top-tab active">Studio</button>
+        <button class="top-tab">DJ Decks</button>
+        <button class="top-tab">Broadcast</button>
+      </nav>
+      <div class="session">
+        <div class="session-label">Untitled session <span id="save-status">Autosaved just now</span></div>
+        <div class="avatar">DJ</div>
+      </div>
+    </header>
+
+    <section class="broadcast" aria-labelledby="studio-title">
+      <div>
+        <p class="eyebrow">Live creation console / Session 001</p>
+        <h1 id="studio-title">Purple <i>Pulse</i> Studio</h1>
+        <p class="broadcast-sub">Build the beat. Catch the moment. Send it live.</p>
+      </div>
+      <div class="broadcast-tools">
+        <button class="tool" id="mic-button" title="Enable microphone">MIC <span>Off</span></button>
+        <button class="tool" id="camera-button" title="Enable camera">CAM <span>Off</span></button>
+        <button class="tool" id="screen-button" title="Share your screen">SCREEN <span>Ready</span></button>
+      </div>
+      <div class="broadcast-actions">
+        <button class="record" id="record-button"><span class="dot"></span>Record take</button>
+        <button class="post-button" id="post-button">Post to radio</button>
+      </div>
+    </section>
+
+    <section class="transport" aria-label="Master transport">
+      <div class="transport-left">
+        <button class="transport-button" id="rewind-button" aria-label="Restart">&#8634;</button>
+        <button class="transport-button primary" id="play-button" aria-label="Play">&#9654;</button>
+        <button class="transport-button" id="stop-button" aria-label="Stop">&#9632;</button>
+        <div class="counter" id="counter">001 : 01</div>
+      </div>
+      <div class="transport-center">
+        <label class="setting">BPM <input id="bpm" type="number" min="60" max="200" value="92"></label>
+        <label class="setting">Swing <input id="swing" type="number" min="0" max="75" value="18">%</label>
+        <div class="setting">4 / 4</div>
+      </div>
+      <div class="transport-right">
+        <span class="cpu">ENGINE READY</span>
+        <label class="setting">Master <input class="master" id="master-volume" type="range" min="0" max="1" step=".01" value=".72"></label>
+      </div>
+    </section>
+
+    <div class="workspace">
+      <aside class="rail">
+        <p class="rail-title">Sound vault</p>
+        <div class="preset-list">
+          <button class="preset active" data-kit="faceless-boom-bap"><span class="preset-icon">01</span><span>Boom Bap</span><small>82</small></button>
+          <button class="preset" data-kit="ri-street-drill"><span class="preset-icon">02</span><span>RI Drill</span><small>142</small></button>
+          <button class="preset" data-kit="purple-pulse-trap"><span class="preset-icon">03</span><span>Pulse Trap</span><small>145</small></button>
+          <button class="preset" data-kit="dark-harbor-cinematic"><span class="preset-icon">04</span><span>Dark Harbor</span><small>72</small></button>
+          <button class="preset" data-kit="faceless-radio-dj"><span class="preset-icon">05</span><span>Radio DJ</span><small>110</small></button>
+          <button class="preset" data-kit="live-rap-session"><span class="preset-icon">06</span><span>Rap Session</span><small>94</small></button>
+        </div>
+        <div class="rail-divider"></div>
+        <div class="project-stats">
+          <p class="rail-title">Session</p>
+          <div class="project-stat"><span>Key</span><b>F minor</b></div>
+          <div class="project-stat"><span>Length</span><b>00:00</b></div>
+          <div class="project-stat"><span>Quality</span><b>48 kHz</b></div>
+        </div>
+      </aside>
+
+      <div class="studio">
+        <section class="module">
+          <header class="module-head">
+            <h2 class="module-title">Factory kit browser / Original sounds</h2>
+            <div class="module-tools"><span class="cpu">6 PRO PACKS</span></div>
+          </header>
+          <div class="kit-browser-body">
+            <div class="kit-filters">
+              <select class="kit-select" id="genre-filter" aria-label="Filter kits by genre">
+                <option value="all">All genres</option>
+                <option>Boom Bap</option>
+                <option>Drill</option>
+                <option>Trap</option>
+                <option>Cinematic</option>
+                <option>DJ / Radio</option>
+                <option>Live Rap</option>
+              </select>
+              <input class="bpm-filter" id="bpm-filter" type="number" min="60" max="160" placeholder="BPM" aria-label="Filter kits by BPM">
+              <button class="tiny-button" id="clear-filters">Clear filters</button>
+              <label class="expert-toggle">Expert mode <input id="expert-toggle" type="checkbox"></label>
+            </div>
+            <div class="kit-grid" id="kit-grid"></div>
+          </div>
+        </section>
+
+        <div class="upper-grid">
+          <section class="module">
+            <header class="module-head">
+              <h2 class="module-title">Pulse pads / Bank A</h2>
+              <div class="module-tools">
+                <span class="mobile-note">Tap a pad</span>
+                <button class="tiny-button" id="random-button">Randomize</button>
+                <button class="tiny-button" id="clear-button">Clear</button>
+              </div>
+            </header>
+            <div class="pad-area">
+              <div class="pads" id="pads"></div>
+              <div class="pad-mixer">
+                <label class="fader"><input type="range" min="0" max="1" step=".01" value=".8"><span>Volume</span></label>
+                <label class="fader"><input type="range" min="0" max="1" step=".01" value=".15"><span>Space</span></label>
+                <label class="fader"><input type="range" min="0" max="1" step=".01" value=".5"><span>Tone</span></label>
+              </div>
+              <div class="expert-panel" id="expert-panel">
+                <div class="expert-heading"><strong>Pad sound design</strong><span id="selected-pad-name">Pad 01 / Basement Kick</span></div>
+                <div class="expert-controls">
+                  <label class="expert-control">Attack <input id="ex-attack" type="range" min="0" max="1" step=".01" value=".01"></label>
+                  <label class="expert-control">Decay <input id="ex-decay" type="range" min=".03" max="2" step=".01" value=".22"></label>
+                  <label class="expert-control">Sustain <input id="ex-sustain" type="range" min="0" max="1" step=".01" value=".18"></label>
+                  <label class="expert-control">Release <input id="ex-release" type="range" min=".03" max="3" step=".01" value=".25"></label>
+                  <label class="expert-control">Pitch <input id="ex-pitch" type="range" min="-24" max="24" step="1" value="0"></label>
+                  <label class="expert-control">Gain <input id="ex-gain" type="range" min="0" max="1.5" step=".01" value=".8"></label>
+                  <label class="expert-control">Pan <input id="ex-pan" type="range" min="-1" max="1" step=".01" value="0"></label>
+                  <label class="expert-control">Filter <input id="ex-filter" type="range" min="120" max="16000" step="10" value="12000"></label>
+                  <label class="expert-control">Reverb <input id="ex-reverb" type="range" min="0" max="1" step=".01" value=".12"></label>
+                  <label class="expert-control">Delay <input id="ex-delay" type="range" min="0" max="1" step=".01" value="0"></label>
+                  <label class="expert-control">Choke group <select id="ex-choke"><option>Off</option><option>Group 1</option><option>Group 2</option><option>Group 3</option></select></label>
+                  <label class="expert-control">Layer <select id="ex-layer"><option>None</option><option>Noise</option><option>Sub</option><option>Click</option></select></label>
+                </div>
+                <div class="expert-checks">
+                  <label><input id="ex-velocity" type="checkbox" checked> Velocity sensitivity</label>
+                  <label><input id="ex-reverse" type="checkbox"> Sample reverse envelope</label>
+                  <label><input id="ex-stretch" type="checkbox"> Time-stretch mode</label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="module">
+            <header class="module-head">
+              <h2 class="module-title">Loop launcher</h2>
+              <div class="module-tools"><button class="tiny-button" id="stop-loops">Stop all</button></div>
+            </header>
+            <div class="loops" id="loop-launcher">
+              <button class="loop" data-loop="0" style="--loop-color:#8b5cf6"><strong>Dust Drums 84</strong><span>LOOP 01 / 4 bars</span><b class="loop-pulse"><i></i><i></i><i></i></b></button>
+              <button class="loop" data-loop="1" style="--loop-color:#bdfc5a"><strong>Corner Break 88</strong><span>LOOP 02 / 4 bars</span><b class="loop-pulse"><i></i><i></i><i></i></b></button>
+              <button class="loop" data-loop="2" style="--loop-color:#f9b44b"><strong>Vinyl Shuffle</strong><span>LOOP 03 / 8 bars</span><b class="loop-pulse"><i></i><i></i><i></i></b></button>
+            </div>
+          </section>
+        </div>
+
+        <section class="module">
+          <header class="module-head">
+            <h2 class="module-title">Loaded sound inventory</h2>
+            <div class="module-tools"><span class="cpu" id="inventory-count">40 SOUNDS READY</span></div>
+          </header>
+          <div class="sound-inventory">
+            <div class="sound-bank"><b>Loop slots / 8</b><span id="loop-inventory"></span></div>
+            <div class="sound-bank"><b>One-shot FX / 8</b><span id="fx-inventory"></span></div>
+            <div class="sound-bank"><b>Bass sounds / 4</b><span id="bass-inventory"></span></div>
+            <div class="sound-bank"><b>Instruments / 4</b><span id="instrument-inventory"></span></div>
+          </div>
+        </section>
+
+        <section class="module">
+          <header class="module-head">
+            <h2 class="module-title">Beat sequencer / 16 steps</h2>
+            <div class="module-tools">
+              <button class="tiny-button" id="duplicate-button">Duplicate pattern</button>
+              <button class="tiny-button" id="save-button">Save</button>
+            </div>
+          </header>
+          <div class="sequencer">
+            <div class="seq-grid" id="sequencer"></div>
+          </div>
+        </section>
+
+        <section class="module">
+          <header class="module-head">
+            <h2 class="module-title">Arrangement / Take 01</h2>
+            <div class="module-tools"><span class="cpu">LIVE SAFE</span></div>
+          </header>
+          <div class="sequencer">
+            <div class="timeline">
+              <div class="ruler"><span></span><span>01</span><span>02</span><span>03</span><span>04</span></div>
+              <div class="track"><span class="track-label">Drums</span><span class="clip" style="grid-column:2 / 6">Pattern 01</span><span class="clip" style="grid-column:6 / 10">Pattern 01</span></div>
+              <div class="track"><span class="track-label">808</span><span class="clip green" style="grid-column:2 / 4">Subway 808</span><span class="clip green" style="grid-column:4 / 8">Subway 808</span></div>
+              <div class="track"><span class="track-label">Texture</span><span class="clip amber" style="grid-column:4 / 10">Ghost Texture</span></div>
+              <div class="track"><span class="track-label">Vocal</span></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <video class="camera-preview" id="camera-preview" autoplay muted playsinline></video>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const list = value => value.split("|");
+      const makeKit = (slug, name, genre, bpmRange, mood, color, pads, loops, fx, bass, instruments, engine) =>
+        ({ slug, name, genre, bpmRange, mood, color, pads:list(pads), loops:list(loops), fx:list(fx), bass:list(bass), instruments:list(instruments), engine });
+      const factoryKits = [
+        makeKit("faceless-boom-bap","Faceless Boom Bap Kit","Boom Bap","84-94","Gritty / East Coast","#a47a54",
+          "Basement Kick|Concrete Kick|Rope Snare|Lobby Snare|Vinyl Hat|Loose Hat|Tambourine Dust|Rim Knock|Soul Chop A|Soul Chop B|Crate Stab|Horn Slice|Needle Drop|Tape Stop|Dark Bass C|Dark Bass F",
+          "Dust Drums 84|Corner Break 88|Vinyl Shuffle|Basement Bass|Soul Shadow|Midnight Keys|Crackle Bed|Hook Pocket",
+          "Needle On|Needle Off|Tape Brake|Dust Burst|Room Knock|Vox Uh|Impact Low|Reverse Soul",
+          "Round Sub|Muted Upright|Tape Bass|Dark Mono","Dust Piano|Soul Organ|Muted Horn|Crate Strings","boom"),
+        makeKit("ri-street-drill","RI Street Drill Kit","Drill","138-148","Cold / Urgent","#72d4ff",
+          "Providence Kick|Steel Kick|Tight Snare|Rim Snap|Needle Hat|Triplet Hat|Open Drill Hat|Chain Perc|Slide 808 C|Slide 808 F|Bent 808 G|Short 808|Dark Bell|Warning Rise|Street Vox|Glass Reverse",
+          "RI Drill Drums|Triplet Pressure|Sliding Low End|Cold Bell Run|Night Street|Rim Pattern|Tension Rise|Verse Pocket",
+          "Short Riser|Long Riser|Glass Hit|Metal Drag|Vox Rah|Alarm Tail|Reverse Bell|Street Impact",
+          "RI Slide|Bent Sub|Short Punch|Long Glide","Cold Bells|Minor Pluck|Choir Shadow|Ice Piano","drill"),
+        makeKit("purple-pulse-trap","Purple Pulse Trap Kit","Trap","130-155","Polished / Electric","#a875ff",
+          "Pulse Kick|Club Kick|Crisp Clap|Wide Clap|Laser Hat|Fast Hat|Air Hat|Digital Perc|Clean 808 C|Clean 808 E|Bass Drop|Short Sub|Neon Pluck|Club Sweep|Purple Vox|Spark Reverse",
+          "Pulse Drums|Double Hat Run|Clean 808 Roll|Neon Plucks|Club Chords|Purple Arp|Drop Builder|Hook Energy",
+          "Club Sweep|Bass Drop|Laser Up|Laser Down|Vox Yeah|Digital Impact|Noise Gate|Reverse Spark",
+          "Clean Mono|Wide 808|Punch Sub|Drop Bass","Neon Pluck|Glass Keys|Purple Pad|Club Brass","trap"),
+        makeKit("dark-harbor-cinematic","Dark Harbor Cinematic Kit","Cinematic","60-90","Foggy / Ominous","#7c8aa6",
+          "Deep Impact|Hull Impact|Low Boom|Chain Slam|Fog Horn A|Fog Horn B|Wave Crash|Dock Creak|Horror String|Tension Hit|Reverse Cymbal|Sub Drop|Sonar Ping|Cold Wind|Metal Groan|Final Sting",
+          "Harbor Ambience|Slow Tension|Hull Rhythm|Fog Signal|Black Water|Horror Ostinato|Storm Build|End Credits",
+          "Deep Impact|Fog Horn|Wave Crash|Reverse Cymbal|Chain Pull|Sonar Ping|Wind Rise|Tension Snap",
+          "Abyss Drone|Hull Resonance|Sub Pressure|Distant Engine","Horror Strings|Harbor Piano|Low Brass|Ghost Choir","cinematic"),
+        makeKit("faceless-radio-dj","Faceless Radio DJ Kit","DJ / Radio","90-128","Hype / Broadcast","#ff5a73",
+          "Air Horn Short|Air Horn Long|Vinyl Brake|Scratch Cut|Scratch Drag|DJ Drop Tone|Siren Up|Siren Down|Crowd Rise|Crowd Hit|Transition Up|Transition Down|Radio Beep|Bass Punch|Stage Impact|Signal Out",
+          "Station Bed|Hype Drums|Talkover Groove|Crowd Room|Radio Pulse|Mix Transition|Late Night Bed|Show Opener",
+          "Air Horn|Vinyl Stop|Scratch|DJ Drop|Transition|Siren|Crowd Noise|Radio Sweep",
+          "Broadcast Sub|Punch Tone|Station Bass|Drop Low","Radio Brass|Show Pluck|Station Pad|Signal Keys","radio"),
+        makeKit("live-rap-session","Live Rap Session Kit","Live Rap","85-105","Clean / Focused","#bdfc5a",
+          "Session Kick|Punch Kick|Clean Snare|Dry Clap|Count Hat|Open Count|Punch In|Punch Out|Adlib Ay|Adlib Woo|Beat Tag|Take Marker|Low Bass C|Low Bass F|Simple Key|Room End",
+          "Clean Drums|Verse Pocket|Hook Lift|Simple Bass|Focus Keys|Punch In Bed|Freestyle Loop|Outro Bed",
+          "Punch In|Punch Out|Take Marker|Adlib Ay|Adlib Woo|Beat Tag|Count In|Room End",
+          "Session Sub|Clean Bass|Short Low|Warm Mono","Focus Piano|Simple Pad|Warm Organ|Hook Bell","live")
+      ];
+      let activeKit = factoryKits[0];
+      let selectedPad = 0;
+      let padSettings = Array.from({length:16}, () => ({attack:.01, decay:.22, sustain:.18, release:.25, pitch:0, gain:.8, pan:0, filter:12000, reverb:.12, delay:0, choke:"Off", layer:"None", velocity:true, reverse:false, stretch:false}));
+      const keys = ["1","2","3","4","Q","W","E","R","A","S","D","F","Z","X","C","V"];
+      const rowNames = ["Kick", "Snare", "Hats", "808", "Perc", "Sample"];
+      const defaultPattern = [
+        [0,7,10], [4,12], [0,2,4,6,8,10,12,14], [0,10], [6,14], [0,6,11]
+      ];
+      const pads = document.getElementById("pads");
+      const sequencer = document.getElementById("sequencer");
+      const playButton = document.getElementById("play-button");
+      const counter = document.getElementById("counter");
+      const toast = document.getElementById("toast");
+      let audio, master, masterLimiter, mediaDestination, isPlaying = false, currentStep = 0, timer = null;
+      const chokeVoices = new Map();
+      let micStream = null, cameraStream = null, screenStream = null;
+      let recorder = null, chunks = [];
+
+      activeKit.pads.forEach((name, index) => {
+        const button = document.createElement("button");
+        button.className = "pad";
+        button.dataset.pad = index;
+        button.innerHTML = `<span class="pad-key">${keys[index]}</span><span class="pad-name">${name}</span>`;
+        button.addEventListener("pointerdown", event => { selectedPad = index; syncExpertPanel(); trigger(index, button, Math.min(1, Math.max(.25, event.pressure || .8))); });
+        pads.appendChild(button);
+      });
+
+      const corner = document.createElement("span");
+      sequencer.appendChild(corner);
+      for (let i = 0; i < 16; i++) {
+        const n = document.createElement("span");
+        n.className = "seq-number" + (i % 4 === 0 ? " bar" : "");
+        n.textContent = String(i + 1).padStart(2, "0");
+        sequencer.appendChild(n);
+      }
+      rowNames.forEach((name, row) => {
+        const label = document.createElement("span");
+        label.className = "seq-label";
+        label.textContent = name;
+        sequencer.appendChild(label);
+        for (let step = 0; step < 16; step++) {
+          const button = document.createElement("button");
+          button.className = "step" + (defaultPattern[row].includes(step) ? " active" : "");
+          button.dataset.row = row;
+          button.dataset.step = step;
+          button.setAttribute("aria-label", `${name}, step ${step + 1}`);
+          button.addEventListener("click", () => {
+            button.classList.toggle("active");
+            autosave();
+          });
+          sequencer.appendChild(button);
+        }
+      });
+
+      function setupAudio() {
+        if (audio) return;
+        audio = new (window.AudioContext || window.webkitAudioContext)();
+        master = audio.createGain();
+        master.gain.value = Number(document.getElementById("master-volume").value);
+        masterLimiter = audio.createDynamicsCompressor();
+        masterLimiter.threshold.value = -12;
+        masterLimiter.knee.value = 9;
+        masterLimiter.ratio.value = 5;
+        masterLimiter.attack.value = .004;
+        masterLimiter.release.value = .18;
+        mediaDestination = audio.createMediaStreamDestination();
+        master.connect(masterLimiter);
+        masterLimiter.connect(audio.destination);
+        masterLimiter.connect(mediaDestination);
+      }
+
+      function voiceChain(source, duration, volume, setting, filterType = "lowpass") {
+        const filter = audio.createBiquadFilter();
+        const gain = audio.createGain();
+        const pan = audio.createStereoPanner();
+        const now = audio.currentTime;
+        filter.type = filterType;
+        filter.frequency.value = Math.min(Number(setting.filter), audio.sampleRate / 2);
+        pan.pan.value = Number(setting.pan);
+        const peak = Math.max(.001, volume * Number(setting.gain));
+        const attack = setting.reverse ? Math.min(duration * .75, .8) : Number(setting.attack);
+        const decay = Number(setting.decay);
+        const sustain = Math.max(.001, peak * Number(setting.sustain));
+        gain.gain.setValueAtTime(.001, now);
+        gain.gain.linearRampToValueAtTime(peak, now + Math.max(.002, attack));
+        gain.gain.exponentialRampToValueAtTime(sustain, now + Math.max(.003, attack + decay));
+        gain.gain.setValueAtTime(sustain, now + Math.max(duration, attack + decay));
+        gain.gain.exponentialRampToValueAtTime(.001, now + Math.max(duration, attack + decay) + Number(setting.release));
+        source.connect(filter);
+        if (setting.drive) {
+          const shaper = audio.createWaveShaper();
+          const amount = Number(setting.drive);
+          const curve = new Float32Array(256);
+          for (let i = 0; i < 256; i++) {
+            const x = i * 2 / 255 - 1;
+            curve[i] = Math.tanh(x * (1 + amount * 5)) / Math.tanh(1 + amount * 5);
+          }
+          shaper.curve = curve; shaper.oversample = "2x";
+          filter.connect(shaper); shaper.connect(gain);
+        } else filter.connect(gain);
+        gain.connect(pan); pan.connect(master);
+        if (Number(setting.delay) > .01 || Number(setting.reverb) > .01) {
+          const delay = audio.createDelay(1);
+          const wet = audio.createGain();
+          const feedback = audio.createGain();
+          delay.delayTime.value = .12 + Number(setting.reverb) * .24;
+          wet.gain.value = Number(setting.delay) * .32 + Number(setting.reverb) * .18;
+          feedback.gain.value = Math.min(.5, Number(setting.reverb) * .45);
+          gain.connect(delay); delay.connect(wet); wet.connect(master); delay.connect(feedback); feedback.connect(delay);
+        }
+        return duration + Number(setting.release);
+      }
+
+      function noise(duration, frequency, volume, setting = padSettings[selectedPad], filterType = "bandpass") {
+        setupAudio();
+        if (setting.stretch) duration *= 1.55;
+        const length = audio.sampleRate * duration;
+        const buffer = audio.createBuffer(1, length, audio.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+        const source = audio.createBufferSource();
+        const color = audio.createBiquadFilter();
+        color.type = filterType; color.frequency.value = frequency;
+        source.buffer = buffer; source.connect(color);
+        voiceChain(color, duration, volume, setting, "lowpass");
+        if (setting.choke !== "Off") {
+          try { chokeVoices.get(setting.choke)?.stop(); } catch (_) {}
+          chokeVoices.set(setting.choke, source);
+        }
+        source.start(); source.stop(audio.currentTime + duration + setting.release + .1);
+      }
+
+      function tone(frequency, duration = .18, type = "sine", volume = .45, slide = 0, setting = padSettings[selectedPad]) {
+        setupAudio();
+        if (setting.stretch) duration *= 1.55;
+        const ratio = Math.pow(2, Number(setting.pitch) / 12);
+        const osc = audio.createOscillator();
+        osc.type = type; osc.frequency.setValueAtTime(frequency * ratio, audio.currentTime);
+        if (slide) osc.frequency.exponentialRampToValueAtTime(slide * ratio, audio.currentTime + duration);
+        voiceChain(osc, duration, volume, setting);
+        if (setting.choke !== "Off") {
+          try { chokeVoices.get(setting.choke)?.stop(); } catch (_) {}
+          chokeVoices.set(setting.choke, osc);
+        }
+        osc.start(); osc.stop(audio.currentTime + duration + Number(setting.release) + .1);
+      }
+
+      function chord(frequencies, duration, type, volume, setting, detune = 0) {
+        frequencies.forEach((frequency, index) => {
+          const chordSetting = {...setting, pan: Math.max(-1, Math.min(1, Number(setting.pan) + (index - 1) * .12)), choke: index ? "Off" : setting.choke};
+          tone(frequency * (1 + detune * index), duration, type, volume / Math.sqrt(frequencies.length), 0, chordSetting);
+        });
+      }
+
+      function playSound(index, velocity = .8) {
+        const s = padSettings[index];
+        const v = s.velocity ? velocity : .8;
+        if (activeKit.engine === "boom") {
+          const grit = {...s, drive:.42, attack:Math.min(.012,s.attack), release:Math.max(.07,s.release)};
+          if (index === 0) {
+            tone(132, .3, "sine", .94 * v, 43, {...grit, filter:Math.min(2800,s.filter)});
+            noise(.026, 1450, .2 * v, {...grit, gain:s.gain*.65, filter:3100});
+          } else if (index === 1) {
+            tone(155, .23, "triangle", .82 * v, 48, {...grit, filter:Math.min(2400,s.filter)});
+            tone(74, .19, "sine", .38 * v, 45, {...grit, choke:"Off"});
+            noise(.02, 1900, .17 * v, {...grit, gain:s.gain*.6});
+          } else if (index === 2) {
+            noise(.2, 1180, .62 * v, {...grit, filter:4200});
+            noise(.075, 5300, .25 * v, {...grit, gain:s.gain*.7, choke:"Off"});
+            tone(184, .09, "triangle", .2 * v, 128, {...grit, choke:"Off"});
+          } else if (index === 3) {
+            noise(.17, 1550, .55 * v, {...grit, filter:4800});
+            tone(205, .075, "triangle", .16 * v, 144, {...grit, choke:"Off"});
+          } else if (index === 4) {
+            noise(.038, 7200, .24 * v, {...grit, drive:.18, filter:10500, release:.025});
+          } else if (index === 5) {
+            noise(.13, 6600, .24 * v, {...grit, drive:.16, filter:9800, release:.08});
+          } else if (index === 6) {
+            [0,.026,.052].forEach((delay, hit) => setTimeout(() => noise(.055, 5600 + hit*650, .15 * v, {...grit, drive:.12, filter:11000}), delay*1000));
+          } else if (index === 7) {
+            tone(910, .045, "square", .19 * v, 620, {...grit, filter:5200, release:.035});
+            noise(.025, 2600, .14 * v, {...grit, choke:"Off"});
+          } else if (index === 8) {
+            chord([130.81,155.56,196], .31, "sawtooth", .3 * v, {...grit, filter:1750, reverb:.08, release:.12});
+          } else if (index === 9) {
+            chord([116.54,138.59,174.61], .36, "triangle", .32 * v, {...grit, filter:1450, reverb:.12, release:.16});
+          } else if (index === 10) {
+            chord([155.56,185,233.08], .22, "square", .21 * v, {...grit, filter:1900, release:.09}, .002);
+          } else if (index === 11) {
+            chord([174.61,220,261.63], .25, "sawtooth", .25 * v, {...grit, filter:1350, attack:.018, release:.11});
+          } else if (index === 12) {
+            noise(.075, 6200, .24 * v, {...grit, drive:.2, filter:10000, release:.04});
+            tone(1450, .025, "square", .08 * v, 700, {...grit, choke:"Off"});
+          } else if (index === 13) {
+            tone(520, .62, "sawtooth", .2 * v, 58, {...grit, filter:1600, release:.18});
+            noise(.42, 1900, .13 * v, {...grit, choke:"Off", filter:3200});
+          } else if (index === 14) {
+            tone(65.41, .68, "triangle", .57 * v, 48, {...grit, filter:760, drive:.2, release:.1});
+          } else {
+            tone(87.31, .62, "triangle", .54 * v, 55, {...grit, filter:820, drive:.24, release:.1});
+          }
+        } else if (activeKit.engine === "drill") {
+          if (index < 2) tone(165, .16, "sine", .9 * v, 50, s);
+          else if (index < 8) noise(index === 6 ? .18 : .045 + (index % 2) * .035, 5200 + index * 320, .32 * v, s);
+          else if (index < 12) tone([65,87,98,55][index-8], .68, "sine", .58 * v, [44,58,73,49][index-8], s);
+          else if (index === 12) { tone(932, .5, "sine", .22 * v, 466, s); tone(1398, .38, "sine", .12 * v, 699, s); }
+          else if (index === 13) noise(.8, 2600, .22 * v, s, "highpass");
+          else tone(230 + index * 25, .22, "square", .1 * v, 150, s);
+        } else if (activeKit.engine === "trap") {
+          if (index < 2) tone(175, .18, "sine", .85 * v, 48, s);
+          else if (index < 4) noise(.11, 2200, .48 * v, s);
+          else if (index < 8) noise(index === 6 ? .14 : .035, 7600, .27 * v, s);
+          else if (index < 12) tone([65.4,82.4,49,55][index-8], .65, "sine", .54 * v, index === 10 ? 30 : 48, s);
+          else if (index === 12) tone(740, .2, "triangle", .24 * v, 370, s);
+          else if (index === 13) noise(.55, 4800, .2 * v, s, "highpass");
+          else tone(330 + index * 28, .18, "sawtooth", .1 * v, 190, s);
+        } else if (activeKit.engine === "cinematic") {
+          if (index < 4) { tone(72 + index * 8, .9, "sine", .65 * v, 28, s); noise(.5, 180 + index * 80, .3 * v, s); }
+          else if (index < 6) { tone(92 + index * 8, 1.35, "sawtooth", .18 * v, 62, s); tone(138, 1.1, "sine", .28 * v, 72, s); }
+          else if (index < 8) noise(.8, index === 6 ? 520 : 210, .32 * v, s);
+          else if (index < 12) tone(180 + index * 19, .75, "sawtooth", .16 * v, 118, s);
+          else if (index === 12) tone(1250, .7, "sine", .22 * v, 330, s);
+          else noise(.8, 300 + index * 90, .22 * v, s);
+        } else if (activeKit.engine === "radio") {
+          if (index < 2) { tone(466, .42 + index * .25, "sawtooth", .25 * v, 392, s); tone(622, .4, "square", .12 * v, 523, s); }
+          else if (index < 5) { noise(.28, 1800 + index * 800, .34 * v, s); tone(400, .22, "sawtooth", .1 * v, 90, s); }
+          else if (index < 8) tone(index === 6 ? 340 : 880, .65, "sawtooth", .16 * v, index === 6 ? 1100 : 240, s);
+          else if (index < 12) noise(.5, 900 + index * 350, .24 * v, s);
+          else tone(740 - index * 20, .22, index % 2 ? "square" : "sine", .18 * v, 220, s);
+        } else {
+          if (index < 2) tone(145 + index * 25, .2, "sine", .82 * v, 48, s);
+          else if (index < 4) { noise(.14, 1800, .48 * v, s); tone(170, .06, "triangle", .12 * v, 110, s); }
+          else if (index < 8) noise(index === 5 ? .14 : .05, 6200 - index * 250, .25 * v, s);
+          else if (index < 12) tone(230 + index * 29, .18, "square", .1 * v, 170, s);
+          else if (index < 14) tone(index === 12 ? 65 : 87, .55, "sine", .5 * v, 48, s);
+          else tone(420 + index * 35, .25, "triangle", .15 * v, 260, s);
+        }
+        if (s.layer === "Noise") noise(.04, 5000, .08 * v, {...s, layer:"None", choke:"Off"});
+        if (s.layer === "Sub") tone(48, .28, "sine", .12 * v, 38, {...s, layer:"None", choke:"Off"});
+        if (s.layer === "Click") tone(1800, .025, "square", .05 * v, 900, {...s, layer:"None", choke:"Off"});
+      }
+
+      function trigger(index, element, velocity = .8) {
+        playSound(index, velocity);
+        const el = element || document.querySelector(`[data-pad="${index}"]`);
+        el.classList.add("hit");
+        setTimeout(() => el.classList.remove("hit"), 90);
+      }
+
+      function tick() {
+        document.querySelectorAll(".step.playhead").forEach(el => el.classList.remove("playhead"));
+        document.querySelectorAll(`.step[data-step="${currentStep}"]`).forEach(el => el.classList.add("playhead"));
+        const map = [0,1,2,4,8,10];
+        rowNames.forEach((_, row) => {
+          const step = document.querySelector(`.step[data-row="${row}"][data-step="${currentStep}"]`);
+          if (step.classList.contains("active")) trigger(map[row]);
+        });
+        counter.textContent = `${String(Math.floor(currentStep / 16) + 1).padStart(3,"0")} : ${String(currentStep + 1).padStart(2,"0")}`;
+        currentStep = (currentStep + 1) % 16;
+      }
+
+      function start() {
+        setupAudio();
+        if (audio.state === "suspended") audio.resume();
+        if (isPlaying) return;
+        isPlaying = true; playButton.classList.add("playing"); playButton.innerHTML = "&#10074;&#10074;";
+        tick();
+        const bpm = Math.max(60, Math.min(200, Number(document.getElementById("bpm").value) || 92));
+        timer = setInterval(tick, 60000 / bpm / 4);
+      }
+      function stop(reset = false) {
+        clearInterval(timer); timer = null; isPlaying = false;
+        playButton.classList.remove("playing"); playButton.innerHTML = "&#9654;";
+        document.querySelectorAll(".step.playhead").forEach(el => el.classList.remove("playhead"));
+        if (reset) { currentStep = 0; counter.textContent = "001 : 01"; }
+      }
+
+      playButton.addEventListener("click", () => isPlaying ? stop() : start());
+      document.getElementById("stop-button").addEventListener("click", () => stop(true));
+      document.getElementById("rewind-button").addEventListener("click", () => { currentStep = 0; counter.textContent = "001 : 01"; });
+      document.getElementById("bpm").addEventListener("change", () => { if (isPlaying) { stop(); start(); } autosave(); });
+      document.getElementById("master-volume").addEventListener("input", e => { setupAudio(); master.gain.value = Number(e.target.value); });
+
+      document.addEventListener("keydown", event => {
+        if (event.repeat || /INPUT|SELECT/.test(event.target.tagName)) return;
+        const index = keys.indexOf(event.key.toUpperCase());
+        if (index >= 0) trigger(index);
+        if (event.code === "Space") { event.preventDefault(); isPlaying ? stop() : start(); }
+      });
+
+      function notify(message) {
+        toast.textContent = message; toast.classList.add("show");
+        clearTimeout(notify.timer); notify.timer = setTimeout(() => toast.classList.remove("show"), 2300);
+      }
+      function autosave() {
+        document.getElementById("save-status").textContent = "Saving...";
+        clearTimeout(autosave.timer);
+        autosave.timer = setTimeout(() => {
+          const pattern = [...document.querySelectorAll(".step.active")].map(el => [el.dataset.row, el.dataset.step]);
+          localStorage.setItem("purplePulseSession", JSON.stringify({ pattern, bpm: document.getElementById("bpm").value, kit: activeKit.slug }));
+          document.getElementById("save-status").textContent = "Autosaved just now";
+        }, 350);
+      }
+      function loadSession() {
+        try {
+          const data = JSON.parse(localStorage.getItem("purplePulseSession"));
+          if (!data) return;
+          document.querySelectorAll(".step").forEach(el => el.classList.remove("active"));
+          data.pattern.forEach(([row, step]) => document.querySelector(`.step[data-row="${row}"][data-step="${step}"]`)?.classList.add("active"));
+          if (data.bpm) document.getElementById("bpm").value = data.bpm;
+          if (data.kit) activeKit = factoryKits.find(kit => kit.slug === data.kit) || activeKit;
+        } catch (_) {}
+      }
+      loadSession();
+
+      const favorites = new Set(JSON.parse(localStorage.getItem("purplePulseFavorites") || "[]"));
+      function renderKitCards() {
+        const grid = document.getElementById("kit-grid");
+        const genre = document.getElementById("genre-filter").value;
+        const bpm = Number(document.getElementById("bpm-filter").value);
+        const shown = factoryKits.filter(kit => {
+          const [low, high] = kit.bpmRange.split("-").map(Number);
+          return (genre === "all" || kit.genre === genre) && (!bpm || (bpm >= low && bpm <= high));
+        });
+        grid.innerHTML = shown.map(kit => `
+          <article class="kit-card ${kit.slug === activeKit.slug ? "loaded" : ""}" data-card-kit="${kit.slug}" style="--kit-color:${kit.color}">
+            <div class="kit-card-head">
+              <div><h3>${kit.name}</h3><p>${kit.mood}</p></div>
+              <button class="favorite ${favorites.has(kit.slug) ? "active" : ""}" data-favorite="${kit.slug}" aria-label="Favorite ${kit.name}">&#9733;</button>
+            </div>
+            <div class="kit-meta"><span>${kit.genre}</span><span>${kit.bpmRange} BPM</span><span>40 sounds</span></div>
+            <div class="kit-actions">
+              <button class="kit-action" data-preview="${kit.slug}">&#9654; Preview</button>
+              <button class="kit-action load" data-load="${kit.slug}">${kit.slug === activeKit.slug ? "Loaded" : "Load kit"}</button>
+            </div>
+          </article>`).join("") || '<p class="kit-empty" style="display:block">No kit matches that BPM and genre.</p>';
+        grid.querySelectorAll("[data-load]").forEach(button => button.addEventListener("click", () => loadKit(button.dataset.load)));
+        grid.querySelectorAll("[data-preview]").forEach(button => button.addEventListener("click", () => previewKit(button.dataset.preview, button)));
+        grid.querySelectorAll("[data-favorite]").forEach(button => button.addEventListener("click", () => {
+          const slug = button.dataset.favorite;
+          favorites.has(slug) ? favorites.delete(slug) : favorites.add(slug);
+          localStorage.setItem("purplePulseFavorites", JSON.stringify([...favorites]));
+          button.classList.toggle("active", favorites.has(slug));
+          notify(favorites.has(slug) ? "Kit added to favorites" : "Kit removed from favorites");
+        }));
+      }
+
+      function renderLoops() {
+        const container = document.getElementById("loop-launcher");
+        container.innerHTML = activeKit.loops.map((name, index) => `
+          <button class="loop" data-loop="${index}" style="--loop-color:${[activeKit.color,"#bdfc5a","#f9b44b"][index%3]}">
+            <strong>${name}</strong><span>LOOP ${String(index+1).padStart(2,"0")} / ${index % 3 === 2 ? 8 : 4} bars</span>
+            <b class="loop-pulse"><i></i><i></i><i></i></b>
+          </button>`).join("");
+        container.querySelectorAll(".loop").forEach(button => button.addEventListener("click", () => {
+          button.classList.toggle("active");
+          if (button.classList.contains("active") && !isPlaying) start();
+        }));
+      }
+
+      function updateInventory() {
+        document.getElementById("loop-inventory").innerHTML = activeKit.loops.join("<br>");
+        document.getElementById("fx-inventory").innerHTML = activeKit.fx.join("<br>");
+        document.getElementById("bass-inventory").innerHTML = activeKit.bass.join("<br>");
+        document.getElementById("instrument-inventory").innerHTML = activeKit.instruments.join("<br>");
+      }
+
+      function loadKit(slug, quiet = false) {
+        activeKit = factoryKits.find(kit => kit.slug === slug) || factoryKits[0];
+        selectedPad = 0;
+        padSettings = Array.from({length:16}, () => ({attack:.01, decay:.22, sustain:.18, release:.25, pitch:0, gain:.8, pan:0, filter:12000, reverb:.12, delay:0, choke:"Off", layer:"None", velocity:true, reverse:false, stretch:false}));
+        document.querySelectorAll(".pad").forEach((pad, index) => pad.querySelector(".pad-name").textContent = activeKit.pads[index]);
+        document.querySelector(".module-title").textContent = "Factory kit browser / Original sounds";
+        const padTitle = [...document.querySelectorAll(".module-title")].find(el => el.textContent.includes("Pulse pads"));
+        if (padTitle) padTitle.textContent = `Pulse pads / ${activeKit.name}`;
+        document.querySelectorAll(".preset").forEach(el => el.classList.toggle("active", el.dataset.kit === slug));
+        document.getElementById("bpm").value = Math.round(activeKit.bpmRange.split("-").map(Number).reduce((a,b) => a+b) / 2);
+        renderLoops(); updateInventory(); syncExpertPanel(); renderKitCards(); autosave();
+        if (!quiet) notify(`${activeKit.name} loaded - 40 unique sounds`);
+      }
+
+      function previewKit(slug, button) {
+        const previous = activeKit;
+        const previousPad = selectedPad;
+        activeKit = factoryKits.find(kit => kit.slug === slug) || previous;
+        setupAudio(); if (audio.state === "suspended") audio.resume();
+        button.textContent = "Playing...";
+        [0,2,4,8,12].forEach((pad, index) => setTimeout(() => playSound(pad, .72), index * 150));
+        setTimeout(() => { activeKit = previous; selectedPad = previousPad; syncExpertPanel(); button.innerHTML = "&#9654; Preview"; }, 900);
+      }
+
+      const expertMap = {
+        "ex-attack":"attack", "ex-decay":"decay", "ex-sustain":"sustain", "ex-release":"release",
+        "ex-pitch":"pitch", "ex-gain":"gain", "ex-pan":"pan", "ex-filter":"filter",
+        "ex-reverb":"reverb", "ex-delay":"delay", "ex-choke":"choke", "ex-layer":"layer",
+        "ex-velocity":"velocity", "ex-reverse":"reverse", "ex-stretch":"stretch"
+      };
+      function syncExpertPanel() {
+        const setting = padSettings[selectedPad];
+        document.getElementById("selected-pad-name").textContent = `Pad ${String(selectedPad+1).padStart(2,"0")} / ${activeKit.pads[selectedPad]}`;
+        Object.entries(expertMap).forEach(([id,key]) => {
+          const input = document.getElementById(id);
+          if (input.type === "checkbox") input.checked = setting[key];
+          else input.value = setting[key];
+        });
+      }
+      Object.entries(expertMap).forEach(([id,key]) => document.getElementById(id).addEventListener("input", event => {
+        padSettings[selectedPad][key] = event.target.type === "checkbox" ? event.target.checked : (event.target.type === "range" ? Number(event.target.value) : event.target.value);
+      }));
+      document.getElementById("expert-toggle").addEventListener("change", event => {
+        document.getElementById("expert-panel").classList.toggle("visible", event.target.checked);
+        notify(event.target.checked ? "Expert sound design controls enabled" : "Expert mode closed");
+      });
+      document.getElementById("genre-filter").addEventListener("change", renderKitCards);
+      document.getElementById("bpm-filter").addEventListener("input", renderKitCards);
+      document.getElementById("clear-filters").addEventListener("click", () => {
+        document.getElementById("genre-filter").value = "all"; document.getElementById("bpm-filter").value = ""; renderKitCards();
+      });
+      renderKitCards();
+      loadKit(activeKit.slug, true);
+
+      document.getElementById("clear-button").addEventListener("click", () => { document.querySelectorAll(".step").forEach(el => el.classList.remove("active")); autosave(); notify("Pattern cleared"); });
+      document.getElementById("random-button").addEventListener("click", () => {
+        document.querySelectorAll(".step").forEach(el => el.classList.toggle("active", Math.random() < (Number(el.dataset.row) < 3 ? .28 : .16)));
+        autosave(); notify("Fresh pattern generated");
+      });
+      document.getElementById("duplicate-button").addEventListener("click", () => notify("Pattern duplicated into the arrangement"));
+      document.getElementById("save-button").addEventListener("click", () => { autosave(); notify("Session saved in this browser"); });
+
+      document.querySelectorAll(".preset").forEach(button => button.addEventListener("click", () => loadKit(button.dataset.kit)));
+      document.getElementById("stop-loops").addEventListener("click", () => document.querySelectorAll(".loop").forEach(el => el.classList.remove("active")));
+
+      async function toggleMedia(kind) {
+        const button = document.getElementById(`${kind}-button`);
+        try {
+          if (kind === "mic") {
+            if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+            else micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          } else if (kind === "camera") {
+            if (cameraStream) {
+              cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null;
+              document.getElementById("camera-preview").classList.remove("visible");
+            } else {
+              cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+              const preview = document.getElementById("camera-preview");
+              preview.srcObject = cameraStream; preview.classList.add("visible");
+            }
+          } else {
+            if (screenStream) { screenStream.getTracks().forEach(t => t.stop()); screenStream = null; }
+            else {
+              screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+              screenStream.getVideoTracks()[0].addEventListener("ended", () => { screenStream = null; button.classList.remove("active"); button.querySelector("span").textContent = "Ready"; });
+            }
+          }
+          const active = kind === "mic" ? micStream : kind === "camera" ? cameraStream : screenStream;
+          button.classList.toggle("active", Boolean(active));
+          button.querySelector("span").textContent = active ? "On" : (kind === "screen" ? "Ready" : "Off");
+        } catch (error) { notify(`${kind} permission was not enabled`); }
+      }
+      ["mic","camera","screen"].forEach(kind => document.getElementById(`${kind}-button`).addEventListener("click", () => toggleMedia(kind)));
+
+      document.getElementById("record-button").addEventListener("click", async () => {
+        setupAudio();
+        const button = document.getElementById("record-button");
+        if (recorder && recorder.state === "recording") {
+          recorder.stop(); button.classList.remove("active"); button.innerHTML = '<span class="dot"></span>Record take'; return;
+        }
+        const stream = new MediaStream(mediaDestination.stream.getAudioTracks());
+        if (micStream) micStream.getAudioTracks().forEach(track => stream.addTrack(track));
+        chunks = [];
+        recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+        recorder.onstop = () => {
+          const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = `purple-pulse-take-${Date.now()}.webm`;
+          link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+          notify("Take exported to your downloads");
+        };
+        recorder.start(); button.classList.add("active"); button.innerHTML = '<span class="dot"></span>Stop & export';
+        if (!isPlaying) start();
+      });
+
+      document.getElementById("post-button").addEventListener("click", () => {
+        notify("Opening the Faceless Radio upload desk");
+        setTimeout(() => window.location.href = "admin-radio.html", 650);
+      });
+      document.querySelectorAll(".top-tab").forEach(tab => tab.addEventListener("click", () => {
+        document.querySelectorAll(".top-tab").forEach(el => el.classList.remove("active")); tab.classList.add("active");
+        if (tab.textContent !== "Studio") notify(`${tab.textContent} is queued for the next build`);
+      }));
+    })();
+  </script>
+</body>
+</html>

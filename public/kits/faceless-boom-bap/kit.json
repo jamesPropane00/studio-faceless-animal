@@ -1,0 +1,13 @@
+{
+  "name": "Faceless Boom Bap Kit",
+  "slug": "faceless-boom-bap",
+  "genre": "Boom Bap",
+  "bpmRange": "84-94",
+  "mood": "Gritty / East Coast",
+  "license": "Original procedural synthesis - Faceless Animal Studios",
+  "pads": ["Basement Kick", "Concrete Kick", "Rope Snare", "Lobby Snare", "Vinyl Hat", "Loose Hat", "Tambourine Dust", "Rim Knock", "Soul Chop A", "Soul Chop B", "Crate Stab", "Horn Slice", "Needle Drop", "Tape Stop", "Dark Bass C", "Dark Bass F"],
+  "loops": ["Dust Drums 84", "Corner Break 88", "Vinyl Shuffle", "Basement Bass", "Soul Shadow", "Midnight Keys", "Crackle Bed", "Hook Pocket"],
+  "fx": ["Needle On", "Needle Off", "Tape Brake", "Dust Burst", "Room Knock", "Vox Uh", "Impact Low", "Reverse Soul"],
+  "bass": ["Round Sub", "Muted Upright", "Tape Bass", "Dark Mono"],
+  "instruments": ["Dust Piano", "Soul Organ", "Muted Horn", "Crate Strings"]
+}

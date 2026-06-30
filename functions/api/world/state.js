@@ -55,7 +55,7 @@ export async function onRequestGet(context) {
     // Fetch all buildings
     const buildingsResult = await supabaseFetch(
       context.env, 
-      `/rest/v1/world_building_states?select=id,owner_id,building_type,tile_x,tile_y,condition,income_rate,last_collected_at,in_district,business_health,status,pending_income&order=id.asc`
+      `/rest/v1/world_building_states?select=*&order=id.asc`
     );
 
     if (!buildingsResult.ok) {

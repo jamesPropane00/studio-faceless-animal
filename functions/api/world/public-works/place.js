@@ -57,6 +57,7 @@ export async function onRequestPost(context) {
 
     const body = await context.request.json()
     const { type, tileX, tileY, userId } = body
+    const regionId = typeof body.region_id === 'string' && body.region_id ? body.region_id : 'city'
 
     if (!type || tileX === undefined || tileY === undefined) {
       return json({ ok: false, error: 'Missing type, tileX, or tileY' }, 400)
@@ -73,7 +74,7 @@ export async function onRequestPost(context) {
     // Check tile is not occupied by a building
     const bldCheck = await supabaseFetch(
       context.env,
-      `/rest/v1/world_building_states?select=id&tile_x=eq.${cx}&tile_y=eq.${cy}`
+      `/rest/v1/world_building_states?select=id&tile_x=eq.${cx}&tile_y=eq.${cy}&region_id=eq.${encodeURIComponent(regionId)}`
     )
     if (bldCheck.ok && Array.isArray(bldCheck.data) && bldCheck.data.length > 0) {
       return json({ ok: false, error: 'Tile occupied by a building' }, 400)
@@ -82,7 +83,7 @@ export async function onRequestPost(context) {
     // Check tile is not already infrastructure (only for non-road types)
     const infraCheck = await supabaseFetch(
       context.env,
-      `/rest/v1/world_infrastructure?select=id&tile_x=eq.${cx}&tile_y=eq.${cy}`
+      `/rest/v1/world_infrastructure?select=id&tile_x=eq.${cx}&tile_y=eq.${cy}&region_id=eq.${encodeURIComponent(regionId)}`
     )
     if (infraCheck.ok && Array.isArray(infraCheck.data) && infraCheck.data.length > 0) {
       return json({ ok: false, error: 'Tile already has infrastructure' }, 400)
@@ -122,7 +123,8 @@ export async function onRequestPost(context) {
       infra_type: type,
       tile_x: cx,
       tile_y: cy,
-      owner_id: userId || null
+      owner_id: userId || null,
+      region_id: regionId
     }
 
     const insertResult = await supabaseFetch(
@@ -144,7 +146,7 @@ export async function onRequestPost(context) {
 
     return json({
       ok: true,
-      item: { id: inserted?.id || 0, infra_type: type, tile_x: cx, tile_y: cy, owner_id: userId || null }
+      item: { id: inserted?.id || 0, infra_type: type, tile_x: cx, tile_y: cy, owner_id: userId || null, region_id: regionId }
     })
 
   } catch (error) {

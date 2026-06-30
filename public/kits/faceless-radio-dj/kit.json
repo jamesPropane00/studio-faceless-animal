@@ -1,0 +1,13 @@
+{
+  "name": "Faceless Radio DJ Kit",
+  "slug": "faceless-radio-dj",
+  "genre": "DJ / Radio",
+  "bpmRange": "90-128",
+  "mood": "Hype / Broadcast",
+  "license": "Original procedural synthesis - Faceless Animal Studios",
+  "pads": ["Air Horn Short", "Air Horn Long", "Vinyl Brake", "Scratch Cut", "Scratch Drag", "DJ Drop Tone", "Siren Up", "Siren Down", "Crowd Rise", "Crowd Hit", "Transition Up", "Transition Down", "Radio Beep", "Bass Punch", "Stager Impact", "Signal Out"],
+  "loops": ["Station Bed", "Hype Drums", "Talkover Groove", "Crowd Room", "Radio Pulse", "Mix Transition", "Late Night Bed", "Show Opener"],
+  "fx": ["Air Horn", "Vinyl Stop", "Scratch", "DJ Drop", "Transition", "Siren", "Crowd Noise", "Radio Sweep"],
+  "bass": ["Broadcast Sub", "Punch Tone", "Station Bass", "Drop Low"],
+  "instruments": ["Radio Brass", "Show Pluck", "Station Pad", "Signal Keys"]
+}

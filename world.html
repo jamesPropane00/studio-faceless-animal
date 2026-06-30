@@ -936,7 +936,7 @@
     }
 
     /* ── FARM SYSTEM ── */
-    .region-farmlands { display: none; }
+    body:not(.in-farmlands) .region-farmlands { display: none; }
     body.in-farmlands .region-farmlands { display: block; }
 
     /* Farm atmosphere overlay */
@@ -2412,8 +2412,8 @@ const state = {
 }
 
 // ── RENDER CACHE (offscreen canvases) ──────────────────────
-const tileCache = { canvas: null, ctx: null, cameraX: NaN, cameraY: NaN, zoom: NaN, time: NaN }
-const minimapCache = { canvas: null, ctx: null, playerX: NaN, playerY: NaN }
+const tileCache = { canvas: null, ctx: null, cameraX: NaN, cameraY: NaN, zoom: NaN, time: NaN, region: null }
+const minimapCache = { canvas: null, ctx: null, playerX: NaN, playerY: NaN, region: null }
 let renderFrame = 0
 
 // Road tile sprite
@@ -2422,7 +2422,9 @@ roadTileImg.src = 'assets/images/road-tile.png'
 
 function invalidateTileCache() {
   tileCache.cameraX = NaN
+  tileCache.region = null
   minimapCache.playerX = NaN
+  minimapCache.region = null
 }
 
 // BUILDING_TYPES, DISTRICT_TYPE_COLORS, CROP_TYPES — imported from /world/js/data/
@@ -3948,12 +3950,12 @@ function generateChunk(cx, cy, regionId) {
   const key = `${r}:${cx},${cy}`
   if (state.chunks.has(key)) return state.chunks.get(key)
   const tiles = []
-  const terrainFn = regionId === 'farmlands' ? getFarmlandTerrain
-    : regionId === 'whisper-woods' ? getForestTerrain
-    : regionId === 'mountains' ? getMountainTerrain
-    : regionId === 'iron-district' ? getIndustrialTerrain
-    : regionId === 'coast' ? getCoastTerrain
-    : regionId === 'purple-pulse' ? getPurplePulseTerrain
+  const terrainFn = r === 'farmlands' ? getFarmlandTerrain
+    : r === 'whisper-woods' ? getForestTerrain
+    : r === 'mountains' ? getMountainTerrain
+    : r === 'iron-district' ? getIndustrialTerrain
+    : r === 'coast' ? getCoastTerrain
+    : r === 'purple-pulse' ? getPurplePulseTerrain
     : getCityTerrain
   for (let ly = 0; ly < CHUNK_SIZE; ly++) {
     const row = []
@@ -5166,7 +5168,7 @@ function drawFarmDecorations() {
       if (!s || s.x < -TILE_W * z || s.x > w + TILE_W * z || s.y < -TILE_W * z || s.y > h + TILE_W * z) continue
       
       // Skip if a building occupies this tile
-      const occupied = state.buildings && state.buildings.some(b => isInCurrentRegion(b) && b.tile_x === dec.wx && b.tile_y === dec.ty)
+      const occupied = state.buildings && state.buildings.some(b => isInCurrentRegion(b) && b.tile_x === dec.wx && b.tile_y === dec.wy)
       if (occupied) continue
 
       const hw = (TILE_W / 2) * z
@@ -5756,7 +5758,8 @@ function drawMinimap() {
   // ── MINIMAP TERRAIN CACHE ─────────────────────────────────
   // Render the full terrain once to an offscreen canvas.
   // Only re-render when player moves 10+ tiles (static terrain).
-  const playerMoved = Math.abs(state.player.x - minimapCache.playerX) > 10 ||
+  const playerMoved = minimapCache.region !== state.currentRegion ||
+                      Math.abs(state.player.x - minimapCache.playerX) > 10 ||
                       Math.abs(state.player.y - minimapCache.playerY) > 10 ||
                       isNaN(minimapCache.playerX)
 
@@ -5779,6 +5782,7 @@ function drawMinimap() {
     }
     minimapCache.playerX = state.player.x
     minimapCache.playerY = state.player.y
+    minimapCache.region = state.currentRegion
   }
 
   // Blit cached terrain
@@ -5789,7 +5793,7 @@ function drawMinimap() {
     for (const di of state.districtInfluences) {
       if (!di.influences || di.influences.length === 0) continue
       const district = state.districts.find(d => d.id === di.district_id)
-      if (!district) continue
+      if (!district || !isInCurrentRegion(district)) continue
 
       const centerX = district.center_x * scale
       const centerY = district.center_y * scale
@@ -5819,6 +5823,7 @@ function drawMinimap() {
   }
 
   for (const [, p] of state.otherPlayers) {
+    if (!isInCurrentRegion(p)) continue
     miniCtx.fillStyle = '#a78bfa'
     miniCtx.fillRect(p.x * scale - 2, p.y * scale - 2, 4, 4)
   }
@@ -5868,6 +5873,7 @@ function render() {
   const zoomCacheThreshold = 0.005
   const tileCacheDirty =
     isNaN(tileCache.cameraX) ||
+    tileCache.region !== state.currentRegion ||
     Math.abs(state.camera.x - tileCache.cameraX) > tileCacheThreshold ||
     Math.abs(state.camera.y - tileCache.cameraY) > tileCacheThreshold ||
     Math.abs(state.camera.zoom - tileCache.zoom) > zoomCacheThreshold
@@ -5902,6 +5908,7 @@ function render() {
     tc.cameraY = state.camera.y
     tc.zoom = state.camera.zoom
     tc.time = state.time
+    tc.region = state.currentRegion
   }
 
   // Blit cached tile layer (1:1 pixel copy)
@@ -5914,6 +5921,7 @@ function render() {
   const drawOrder = []
   drawOrder.push({ type: 'player', x: state.player.x, y: state.player.y, sort: state.player.x + state.player.y, sx: worldToScreen(state.player.x, state.player.y) })
   for (const [, p] of state.otherPlayers) {
+    if (!isInCurrentRegion(p)) continue
     const s = worldToScreen(p.x, p.y)
     if (s.x < -50 || s.x > w + 50 || s.y < -80 || s.y > h + 50) continue
     drawOrder.push({ type: 'other', x: p.x, y: p.y, sort: p.x + p.y, data: p, sx: s })
@@ -6153,6 +6161,7 @@ function update(dt) {
   }
 
   for (const [, p] of state.otherPlayers) {
+    if (!isInCurrentRegion(p)) continue
     if (p._interp) {
       const elapsed = (performance.now() - p._interpStart) / (p._interpDuration || 200)
       if (elapsed < 1) {
@@ -7971,7 +7980,8 @@ function addChatMessage(author, text, isSystem) {
 function updatePlayerList() {
   const body = document.getElementById('playerListBody')
   const count = document.getElementById('playerCount')
-  const total = 1 + state.otherPlayers.size
+  const regionalPlayers = [...state.otherPlayers.values()].filter(p => isInCurrentRegion(p))
+  const total = 1 + regionalPlayers.length
   count.textContent = total
   document.getElementById('statOnline').textContent = total
 
@@ -7981,7 +7991,7 @@ function updatePlayerList() {
   me.innerHTML = `<span class="player-dot" style="background:#a78bfa"></span><span class="player-name">${state.username} (you)</span>`
   body.appendChild(me)
 
-  for (const [, p] of state.otherPlayers) {
+  for (const p of regionalPlayers) {
     const div = document.createElement('div')
     div.className = 'player-entry'
     div.innerHTML = `<span class="player-dot" style="background:#8b5cf6"></span><span class="player-name">${p.name}</span>`
@@ -8047,6 +8057,7 @@ async function setupMultiplayer() {
         const existing = state.otherPlayers.get(id)
         newPlayers.set(id, {
           ...entry,
+          region_id: normalizeRegionId(entry.region_id),
           _interp: existing ? true : false,
           _fromX: existing?.x ?? entry.x,
           _fromY: existing?.y ?? entry.y,
@@ -8081,6 +8092,7 @@ async function setupMultiplayer() {
         x: state.player.x,
         y: state.player.y,
         color: state.player.color,
+        region_id: state.currentRegion,
         online_at: new Date().toISOString()
       })
     }
@@ -8120,12 +8132,13 @@ async function setupMultiplayer() {
         if (b.last_collected_at && !b.last_collected) {
           b.last_collected = new Date(b.last_collected_at).getTime()
         }
+        b.region_id = normalizeRegionId(b.region_id)
         return b
       })
       state.themesDirty = true
     }
     if (payload.districts) {
-      state.districts = payload.districts.map(d => { d.region_id = d.region_id || 'city'; return d })
+      state.districts = payload.districts.map(d => { d.region_id = normalizeRegionId(d.region_id); return d })
       state.themesDirty = true
       if (payload.districts.length > 0) completeGoal('formFirstDistrict')
     }
@@ -8177,6 +8190,7 @@ async function setupMultiplayer() {
       x: state.player.x,
       y: state.player.y,
       color: state.player.color,
+      region_id: state.currentRegion,
       online_at: new Date().toISOString()
     })
   }, 1000)
@@ -8256,15 +8270,15 @@ async function fetchWorldState() {
         if (b.last_collected_at && !b.last_collected) {
           b.last_collected = new Date(b.last_collected_at).getTime()
         }
-        if (b.region_id === undefined) b.region_id = 'city'
+        b.region_id = normalizeRegionId(b.region_id)
         return b
       })
-      state.districts = (data.districts || []).map(d => { d.region_id = d.region_id || 'city'; return d })
+      state.districts = (data.districts || []).map(d => { d.region_id = normalizeRegionId(d.region_id); return d })
       state.themesDirty = true
-      state.infrastructure = (data.infrastructure || []).map(i => { i.region_id = i.region_id || 'city'; return i })
+      state.infrastructure = (data.infrastructure || []).map(i => { i.region_id = normalizeRegionId(i.region_id); return i })
       state.walkableDirty = true
-      state.blocks = (data.blocks || []).map(b => { b.region_id = b.region_id || 'city'; return b })
-      state.lots = (data.lots || []).map(l => { l.region_id = l.region_id || 'city'; return l })
+      state.blocks = (data.blocks || []).map(b => { b.region_id = normalizeRegionId(b.region_id); return b })
+      state.lots = (data.lots || []).map(l => { l.region_id = normalizeRegionId(l.region_id); return l })
       assignNPCBuildings()
       console.log('[WORLD] Loaded', state.buildings.length, 'buildings,', state.districts.length, 'districts,', state.infrastructure.length, 'infra')
 
@@ -9430,6 +9444,7 @@ function completeTravel(targetRegion) {
 
   document.body.classList.toggle('in-farmlands', targetRegion === 'farmlands')
   document.getElementById('farmInventory').classList.toggle('hidden', targetRegion !== 'farmlands')
+  updatePlayerList()
 
   if (targetRegion === 'farmlands') {
     showToast('Arrived at Farmlands', 'Build your farm, grow food, supply the city.')
@@ -9463,12 +9478,15 @@ function completeTravel(targetRegion) {
 }
 
 // ── REGION ISOLATION ───────────────────────────────────────────
+function normalizeRegionId(regionId) {
+  const aliases = { farmland: 'farmlands', farm: 'farmlands', woods: 'whisper-woods', city: 'city' }
+  const normalized = aliases[regionId] || regionId
+  return normalized && REGIONS[normalized] ? normalized : 'city'
+}
+
 function isInCurrentRegion(obj) {
   if (obj == null) return false
-  if (obj.region_id === undefined || obj.region_id === null) {
-    return state.currentRegion === 'city'
-  }
-  return obj.region_id === state.currentRegion
+  return normalizeRegionId(obj.region_id ?? obj.region) === state.currentRegion
 }
 
 let _initDone = false

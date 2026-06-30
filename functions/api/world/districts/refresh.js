@@ -237,7 +237,7 @@ async function refreshDistricts(context) {
     // Fetch all buildings
     const buildingsResult = await supabaseFetch(
       context.env,
-      '/rest/v1/world_building_states?select=id,building_type,tile_x,tile_y'
+      '/rest/v1/world_building_states?select=id,building_type,tile_x,tile_y,condition,region_id&region_id=eq.city'
     );
 
     if (!buildingsResult.ok || !Array.isArray(buildingsResult.data)) {
@@ -253,7 +253,7 @@ async function refreshDistricts(context) {
     // Fetch existing districts to detect new ones + preserve crime_rate for decay
     const existingResult = await supabaseFetch(
       context.env,
-      '/rest/v1/world_districts?select=id,name,center_x,center_y,district_type,crime_rate'
+      '/rest/v1/world_districts?select=id,name,center_x,center_y,district_type,crime_rate,region_id&region_id=eq.city'
     );
     const existingKeys = new Set();
     const oldCrimeMap = new Map(); // key -> crime_rate (for gradual decay)
@@ -289,6 +289,7 @@ async function refreshDistricts(context) {
       }
       // Remove target_crime (not a DB column)
       delete d.target_crime;
+      d.region_id = 'city';
     }
 
     // Delete old districts and insert new ones (simpler than diffing)
@@ -299,7 +300,7 @@ async function refreshDistricts(context) {
       // Delete all existing districts using neq filter (always true)
       const deleteResult = await supabaseFetch(
         context.env,
-        '/rest/v1/world_districts?id=neq.00000000-0000-0000-0000-000000000000',
+        '/rest/v1/world_districts?region_id=eq.city',
         {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' }
@@ -396,7 +397,7 @@ async function refreshDistricts(context) {
         // Delete old auto-roads (with return=minimal to avoid large response body)
         const delResult = await supabaseFetch(
           context.env,
-          '/rest/v1/world_infrastructure?infra_type=eq.road&owner_id=is.null',
+          '/rest/v1/world_infrastructure?infra_type=eq.road&owner_id=is.null&region_id=eq.city',
           { method: 'DELETE', headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' } }
         );
         if (!delResult.ok) {
@@ -406,7 +407,7 @@ async function refreshDistricts(context) {
           console.log('[WORLD] auto-road DELETE succeeded');
         }
         // Generate new roads
-        roadItems = generateAutoRoads(newDistricts, buildingsResult.data);
+        roadItems = generateAutoRoads(newDistricts, buildingsResult.data).map(item => ({ ...item, region_id: 'city' }));
         console.log('[WORLD] auto-road generated', roadItems.length, 'road tiles across', newDistricts.length, 'districts');
         if (roadItems.length > 0) {
           for (let i = 0; i < roadItems.length; i += 500) {
@@ -437,7 +438,7 @@ async function refreshDistricts(context) {
       // No districts, clear all using neq filter
       await supabaseFetch(
         context.env,
-        '/rest/v1/world_districts?id=neq.00000000-0000-0000-0000-000000000000',
+        '/rest/v1/world_districts?region_id=eq.city',
         {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' }
@@ -474,7 +475,7 @@ async function refreshDistricts(context) {
       try {
         const delResult = await supabaseFetch(
           context.env,
-          '/rest/v1/world_infrastructure?infra_type=eq.road&owner_id=is.null',
+          '/rest/v1/world_infrastructure?infra_type=eq.road&owner_id=is.null&region_id=eq.city',
           { method: 'DELETE', headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' } }
         );
         if (!delResult.ok) {

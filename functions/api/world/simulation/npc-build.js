@@ -80,7 +80,7 @@ export async function onRequestPost(context) {
     if (expectedLotType) {
       const lotResult = await supabaseFetch(
         context.env,
-        `/rest/v1/world_block_lots?select=id,tile_x,tile_y,block_id&lot_type=eq.${expectedLotType}&occupied_building_id=is.null&limit=1`
+        `/rest/v1/world_block_lots?select=id,tile_x,tile_y,block_id,region_id&lot_type=eq.${expectedLotType}&occupied_building_id=is.null&region_id=eq.city&limit=1`
       )
       if (lotResult.ok && Array.isArray(lotResult.data) && lotResult.data.length > 0) {
         const lot = lotResult.data[0]
@@ -91,7 +91,7 @@ export async function onRequestPost(context) {
         // Check if that specific tile is free
         const occCheck = await supabaseFetch(
           context.env,
-          `/rest/v1/world_building_states?select=id&tile_x=eq.${targetX}&tile_y=eq.${targetY}`
+          `/rest/v1/world_building_states?select=id&tile_x=eq.${targetX}&tile_y=eq.${targetY}&region_id=eq.city`
         )
         if (occCheck.ok && Array.isArray(occCheck.data) && occCheck.data.length > 0) {
           // Lot tile somehow occupied, fall back to random placement
@@ -106,7 +106,7 @@ export async function onRequestPost(context) {
     if (!occupiedLotId) {
       const checkResult = await supabaseFetch(
         context.env,
-        `/rest/v1/world_building_states?select=id&tile_x=eq.${targetX}&tile_y=eq.${targetY}`
+        `/rest/v1/world_building_states?select=id&tile_x=eq.${targetX}&tile_y=eq.${targetY}&region_id=eq.city`
       )
       if (checkResult.ok && Array.isArray(checkResult.data) && checkResult.data.length > 0) {
         return json({ ok: false, error: 'Tile occupied', occupied: true })
@@ -134,7 +134,8 @@ export async function onRequestPost(context) {
       income_rate: NPC_BUILDING_TYPES[buildingType].income,
       last_collected_at: new Date().toISOString(),
       in_district: false,
-      status: 'active'
+      status: 'active',
+      region_id: 'city'
     }
 
     const insertResult = await supabaseFetch(

@@ -1,0 +1,13 @@
+{
+  "name": "Live Rap Session Kit",
+  "slug": "live-rap-session",
+  "genre": "Live Rap",
+  "bpmRange": "85-105",
+  "mood": "Clean / Focused",
+  "license": "Original procedural synthesis - Faceless Animal Studios",
+  "pads": ["Session Kick", "Punch Kick", "Clean Snare", "Dry Clap", "Count Hat", "Open Count", "Punch In", "Punch Out", "Adlib Ay", "Adlib Woo", "Beat Tag", "Take Marker", "Low Bass C", "Low Bass F", "Simple Key", "Room End"],
+  "loops": ["Clean Drums", "Verse Pocket", "Hook Lift", "Simple Bass", "Focus Keys", "Punch In Bed", "Freestyle Loop", "Outro Bed"],
+  "fx": ["Punch In", "Punch Out", "Take Marker", "Adlib Ay", "Adlib Woo", "Beat Tag", "Count In", "Room End"],
+  "bass": ["Session Sub", "Clean Bass", "Short Low", "Warm Mono"],
+  "instruments": ["Focus Piano", "Simple Pad", "Warm Organ", "Hook Bell"]
+}

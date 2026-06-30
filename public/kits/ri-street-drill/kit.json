@@ -1,0 +1,13 @@
+{
+  "name": "RI Street Drill Kit",
+  "slug": "ri-street-drill",
+  "genre": "Drill",
+  "bpmRange": "138-148",
+  "mood": "Cold / Urgent",
+  "license": "Original procedural synthesis - Faceless Animal Studios",
+  "pads": ["Providence Kick", "Steel Kick", "Tight Snare", "Rim Snap", "Needle Hat", "Triplet Hat", "Open Drill Hat", "Chain Perc", "Slide 808 C", "Slide 808 F", "Bent 808 G", "Short 808", "Dark Bell", "Warning Rise", "Street Vox", "Glass Reverse"],
+  "loops": ["RI Drill Drums", "Triplet Pressure", "Sliding Low End", "Cold Bell Run", "Night Street", "Rim Pattern", "Tension Rise", "Verse Pocket"],
+  "fx": ["Short Riser", "Long Riser", "Glass Hit", "Metal Drag", "Vox Rah", "Alarm Tail", "Reverse Bell", "Street Impact"],
+  "bass": ["RI Slide", "Bent Sub", "Short Punch", "Long Glide"],
+  "instruments": ["Cold Bells", "Minor Pluck", "Choir Shadow", "Ice Piano"]
+}

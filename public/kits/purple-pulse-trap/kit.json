@@ -1,0 +1,13 @@
+{
+  "name": "Purple Pulse Trap Kit",
+  "slug": "purple-pulse-trap",
+  "genre": "Trap",
+  "bpmRange": "130-155",
+  "mood": "Polished / Electric",
+  "license": "Original procedural synthesis - Faceless Animal Studios",
+  "pads": ["Pulse Kick", "Club Kick", "Crisp Clap", "Wide Clap", "Laser Hat", "Fast Hat", "Air Hat", "Digital Perc", "Clean 808 C", "Clean 808 E", "Bass Drop", "Short Sub", "Neon Pluck", "Club Sweep", "Purple Vox", "Spark Reverse"],
+  "loops": ["Pulse Drums", "Double Hat Run", "Clean 808 Roll", "Neon Plucks", "Club Chords", "Purple Arp", "Drop Builder", "Hook Energy"],
+  "fx": ["Club Sweep", "Bass Drop", "Laser Up", "Laser Down", "Vox Yeah", "Digital Impact", "Noise Gate", "Reverse Spark"],
+  "bass": ["Clean Mono", "Wide 808", "Punch Sub", "Drop Bass"],
+  "instruments": ["Neon Pluck", "Glass Keys", "Purple Pad", "Club Brass"]
+}

@@ -74,6 +74,7 @@ export async function onRequestPost(context) {
 
     const body = await context.request.json()
     const { blockType, tileX, tileY, userId } = body
+    const regionId = typeof body.region_id === 'string' && body.region_id ? body.region_id : 'city'
 
     if (!blockType || tileX === undefined || tileY === undefined) {
       return json({ ok: false, error: 'Missing blockType, tileX, or tileY' }, 400)
@@ -97,7 +98,7 @@ export async function onRequestPost(context) {
     // Check no overlap with existing blocks
     const overlapCheck = await supabaseFetch(
       context.env,
-      `/rest/v1/world_blocks?select=id&tile_x=lte.${cx + bw - 1}&tile_x=gte.${cx}&tile_y=lte.${cy + bh - 1}&tile_y=gte.${cy}`
+      `/rest/v1/world_blocks?select=id&tile_x=lte.${cx + bw - 1}&tile_x=gte.${cx}&tile_y=lte.${cy + bh - 1}&tile_y=gte.${cy}&region_id=eq.${encodeURIComponent(regionId)}`
     )
     if (overlapCheck.ok && Array.isArray(overlapCheck.data) && overlapCheck.data.length > 0) {
       return json({ ok: false, error: 'Overlaps an existing block' }, 400)
@@ -142,6 +143,7 @@ export async function onRequestPost(context) {
           width: bw,
           height: bh,
           owner_id: userId || null,
+          region_id: regionId,
         }])
       }
     )
@@ -168,7 +170,8 @@ export async function onRequestPost(context) {
         tile_x: cx + x,
         tile_y: cy + y,
         lot_type: blockType === 'industrial' ? 'industrial' : (blockType === 'residential' ? 'residential' : (blockType === 'farm' ? 'field' : 'commercial')),
-        occupied_building_id: null
+        occupied_building_id: null,
+        region_id: regionId
       })
           lotIndex++
         }
@@ -194,19 +197,19 @@ export async function onRequestPost(context) {
     const roadTiles = []
     // Top edge
     for (let x = cx - 1; x < cx + bw + 1; x++) {
-      roadTiles.push({ infra_type: blockType + '_road', tile_x: x, tile_y: cy - 1, owner_id: null })
+      roadTiles.push({ infra_type: blockType + '_road', tile_x: x, tile_y: cy - 1, owner_id: null, region_id: regionId })
     }
     // Bottom edge
     for (let x = cx - 1; x < cx + bw + 1; x++) {
-      roadTiles.push({ infra_type: blockType + '_road', tile_x: x, tile_y: cy + bh, owner_id: null })
+      roadTiles.push({ infra_type: blockType + '_road', tile_x: x, tile_y: cy + bh, owner_id: null, region_id: regionId })
     }
     // Left edge
     for (let y = cy - 1; y < cy + bh + 1; y++) {
-      roadTiles.push({ infra_type: blockType + '_road', tile_x: cx - 1, tile_y: y, owner_id: null })
+      roadTiles.push({ infra_type: blockType + '_road', tile_x: cx - 1, tile_y: y, owner_id: null, region_id: regionId })
     }
     // Right edge
     for (let y = cy - 1; y < cy + bh + 1; y++) {
-      roadTiles.push({ infra_type: blockType + '_road', tile_x: cx + bw, tile_y: y, owner_id: null })
+      roadTiles.push({ infra_type: blockType + '_road', tile_x: cx + bw, tile_y: y, owner_id: null, region_id: regionId })
     }
 
     if (roadTiles.length > 0) {
@@ -227,12 +230,12 @@ export async function onRequestPost(context) {
     // Also add a sidewalk ring as infrastructure (using block_type + '_sidewalk')
     const sidewalkTiles = []
     for (let y = cy; y < cy + bh; y++) {
-      sidewalkTiles.push({ infra_type: blockType + '_sidewalk', tile_x: cx, tile_y: y, owner_id: null })
-      sidewalkTiles.push({ infra_type: blockType + '_sidewalk', tile_x: cx + bw - 1, tile_y: y, owner_id: null })
+      sidewalkTiles.push({ infra_type: blockType + '_sidewalk', tile_x: cx, tile_y: y, owner_id: null, region_id: regionId })
+      sidewalkTiles.push({ infra_type: blockType + '_sidewalk', tile_x: cx + bw - 1, tile_y: y, owner_id: null, region_id: regionId })
     }
     for (let x = cx + 1; x < cx + bw - 1; x++) {
-      sidewalkTiles.push({ infra_type: blockType + '_sidewalk', tile_x: x, tile_y: cy, owner_id: null })
-      sidewalkTiles.push({ infra_type: blockType + '_sidewalk', tile_x: x, tile_y: cy + bh - 1, owner_id: null })
+      sidewalkTiles.push({ infra_type: blockType + '_sidewalk', tile_x: x, tile_y: cy, owner_id: null, region_id: regionId })
+      sidewalkTiles.push({ infra_type: blockType + '_sidewalk', tile_x: x, tile_y: cy + bh - 1, owner_id: null, region_id: regionId })
     }
 
     if (sidewalkTiles.length > 0) {
@@ -252,7 +255,7 @@ export async function onRequestPost(context) {
 
     return json({
       ok: true,
-      block: { id: blockId, block_type: blockType, tile_x: cx, tile_y: cy, width: bw, height: bh, owner_id: userId || null },
+      block: { id: blockId, block_type: blockType, tile_x: cx, tile_y: cy, width: bw, height: bh, owner_id: userId || null, region_id: regionId },
       lotCount: lots.length
     })
 

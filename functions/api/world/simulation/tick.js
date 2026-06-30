@@ -224,7 +224,7 @@ export async function onRequestPost(context) {
     // 1. Fetch all buildings
     const buildingsResult = await supabaseFetch(
       context.env,
-      '/rest/v1/world_building_states?select=id,building_type,tile_x,tile_y,condition,business_health,pending_income,status,in_district'
+      '/rest/v1/world_building_states?select=id,building_type,tile_x,tile_y,condition,business_health,pending_income,status,in_district,region_id&region_id=eq.city'
     )
 
     if (!buildingsResult.ok || !Array.isArray(buildingsResult.data)) {
@@ -240,7 +240,7 @@ export async function onRequestPost(context) {
     // 2. Fetch all districts
     const districtsResult = await supabaseFetch(
       context.env,
-      '/rest/v1/world_districts?select=*'
+      '/rest/v1/world_districts?select=*&region_id=eq.city'
     )
     const districts = (districtsResult.ok && Array.isArray(districtsResult.data)) ? districtsResult.data : []
 
@@ -249,7 +249,7 @@ export async function onRequestPost(context) {
     try {
       const infraResult = await supabaseFetch(
         context.env,
-        '/rest/v1/world_infrastructure?select=infra_type,tile_x,tile_y'
+        '/rest/v1/world_infrastructure?select=infra_type,tile_x,tile_y,region_id&region_id=eq.city'
       )
       if (infraResult.ok && Array.isArray(infraResult.data)) {
         infrastructure = infraResult.data

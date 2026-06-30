@@ -851,6 +851,18 @@
       padding: 0.95rem;
     }
 
+    .stage-room-card--studio {
+      grid-column: span 2;
+      background:
+        radial-gradient(circle at 90% 10%, rgba(139,92,246,0.24), transparent 42%),
+        linear-gradient(135deg, rgba(139,92,246,0.12), rgba(33,244,208,0.045)),
+        rgba(8,9,13,0.94);
+      border-color: rgba(185,144,255,0.38);
+    }
+
+    .stage-room-card--studio .stage-tag { color: #b990ff; }
+    .stage-room-card--studio .btn { justify-self: start; margin-top: 0.8rem; }
+
     .stage-room-card p,
     .stage-step p {
       margin: 0;
@@ -1223,6 +1235,8 @@
         grid-template-columns: 1fr;
       }
 
+      .stage-room-card--studio { grid-column: auto; }
+
       .stage-buttons {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -1318,6 +1332,7 @@
             A dark-room performance layer for DJ sets, open mics, cyphers, producer sessions, podcasts, video panels, and the Faceless crowd. Signal rooms carry the chat and identity now; the next engines bring real low-latency stages and DJ decks into the same universe.
           </p>
           <div class="stage-actions">
+            <a href="purple-pulse-studio.html" class="btn btn-primary">Open Purple Pulse Studio</a>
             <a href="chat.html#video-room-lobby" class="btn btn-gold">Open Rooms</a>
             <a href="radio.html" class="btn btn-primary">Radio</a>
             <a href="#pulse-app" class="btn btn-ghost">Visualizer</a>
@@ -1351,6 +1366,12 @@
       </div>
 
       <div class="stage-room-grid" aria-label="Pulse Stage room types">
+        <article class="stage-room-card stage-room-card--studio">
+          <div class="stage-tag">Purple Pulse Studio / Live now</div>
+          <strong>Build the beat, record the take, and send it to the stage.</strong>
+          <p>The working production room inside Pulse Stage: six original sound packs, 16 pads, step sequencing, loop launching, Expert Mode sound design, mic/camera capture, and radio export.</p>
+          <a href="purple-pulse-studio.html" class="btn btn-primary">Enter the Studio</a>
+        </article>
         <article class="stage-room-card">
           <div class="stage-tag">DJ Live</div>
           <strong>Broadcast the room like your own station.</strong>

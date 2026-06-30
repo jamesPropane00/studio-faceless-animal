@@ -1,0 +1,13 @@
+{
+  "name": "Dark Harbor Cinematic Kit",
+  "slug": "dark-harbor-cinematic",
+  "genre": "Cinematic",
+  "bpmRange": "60-90",
+  "mood": "Foggy / Ominous",
+  "license": "Original procedural synthesis - Faceless Animal Studios",
+  "pads": ["Deep Impact", "Hull Impact", "Low Boom", "Chain Slam", "Fog Horn A", "Fog Horn B", "Wave Crash", "Dock Creak", "Horror String", "Tension Hit", "Reverse Cymbal", "Sub Drop", "Sonar Ping", "Cold Wind", "Metal Groan", "Final Sting"],
+  "loops": ["Harbor Ambience", "Slow Tension", "Hull Rhythm", "Fog Signal", "Black Water", "Horror Ostinato", "Storm Build", "End Credits"],
+  "fx": ["Deep Impact", "Fog Horn", "Wave Crash", "Reverse Cymbal", "Chain Pull", "Sonar Ping", "Wind Rise", "Tension Snap"],
+  "bass": ["Abyss Drone", "Hull Resonance", "Sub Pressure", "Distant Engine"],
+  "instruments": ["Horror Strings", "Harbor Piano", "Low Brass", "Ghost Choir"]
+}
