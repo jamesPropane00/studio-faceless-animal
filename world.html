@@ -6208,35 +6208,92 @@ function generateRoads() {
   state.generatedRoads = true
 }
 
+function pavementConnections(roadSet,x,y,z) {
+  const qx = TILE_W*z*.25
+  const qy = TILE_H*z*.25
+  const links = []
+  if (roadSet.has(`${x},${y-1}`)) links.push({ dx:qx, dy:-qy })
+  if (roadSet.has(`${x},${y+1}`)) links.push({ dx:-qx, dy:qy })
+  if (roadSet.has(`${x-1},${y}`)) links.push({ dx:-qx, dy:-qy })
+  if (roadSet.has(`${x+1},${y}`)) links.push({ dx:qx, dy:qy })
+  return links
+}
+
+function drawBlackPavementTile(s,x,y,links,z) {
+  const width = Math.max(7,TILE_H*z*.38)
+  const halfWidth = width*.5
+  ctx.fillStyle = '#111216'
+
+  // Each arm ends exactly at the shared isometric tile boundary. Adjacent
+  // pavement tiles meet at that same boundary, so streets cannot drift apart.
+  for (const link of links) {
+    const length = Math.hypot(link.dx,link.dy) || 1
+    const px = -link.dy/length*halfWidth
+    const py = link.dx/length*halfWidth
+    ctx.beginPath()
+    ctx.moveTo(s.x+px,s.y+py)
+    ctx.lineTo(s.x+link.dx+px,s.y+link.dy+py)
+    ctx.lineTo(s.x+link.dx-px,s.y+link.dy-py)
+    ctx.lineTo(s.x-px,s.y-py)
+    ctx.closePath()
+    ctx.fill()
+  }
+  ctx.beginPath()
+  ctx.arc(s.x,s.y,width*.56,0,Math.PI*2)
+  ctx.fill()
+
+  // Raised aggregate gives the surface a bumpy pavement texture. Every mark is
+  // an individual stone—not a lane, curb, edge, dash, or stripe.
+  const bumps = []
+  const pavementNoise = n => {
+    const value=Math.sin((x*127.1+y*311.7+n*74.7))*43758.5453
+    return value-Math.floor(value)
+  }
+  links.forEach((link,linkIndex) => {
+    for (let i=0;i<6;i++) {
+      const t=.08+pavementNoise(linkIndex*20+i)*.84
+      const length=Math.hypot(link.dx,link.dy) || 1
+      const nx=-link.dy/length, ny=link.dx/length
+      const jitter=(pavementNoise(linkIndex*20+i+9)-.5)*width*.72
+      bumps.push({
+        x:s.x+link.dx*t+nx*jitter,
+        y:s.y+link.dy*t+ny*jitter,
+        r:(.5+pavementNoise(linkIndex*20+i+14)*.55)*z
+      })
+    }
+  })
+  for (let i=0;i<7;i++) {
+    const angle=pavementNoise(100+i)*Math.PI*2
+    const radius=width*(.08+pavementNoise(120+i)*.38)
+    bumps.push({
+      x:s.x+Math.cos(angle)*radius,
+      y:s.y+Math.sin(angle)*radius*.55,
+      r:(.5+pavementNoise(140+i)*.5)*z
+    })
+  }
+  for (const bump of bumps) {
+    const radius=Math.max(.45,bump.r)
+    ctx.beginPath(); ctx.arc(bump.x+.55*z,bump.y+.55*z,radius,0,Math.PI*2)
+    ctx.fillStyle='rgba(0,0,0,.48)'; ctx.fill()
+    ctx.beginPath(); ctx.arc(bump.x,bump.y,radius,0,Math.PI*2)
+    ctx.fillStyle='#292a2f'; ctx.fill()
+    ctx.beginPath(); ctx.arc(bump.x-radius*.3,bump.y-radius*.35,Math.max(.25,radius*.25),0,Math.PI*2)
+    ctx.fillStyle='rgba(128,130,136,.32)'; ctx.fill()
+  }
+}
+
 function drawRegionalBasePaths() {
   if (state.currentRegion !== 'city' || !state.generatedRoads) return
   const center = Math.floor(WORLD_SIZE/2)
-  const segments = [
-    [worldToScreen(center-20,center),worldToScreen(center+20,center)],
-    [worldToScreen(center,center-20),worldToScreen(center,center+20)]
-  ]
-  ctx.save()
-  ctx.lineCap = 'round'
-  for (const [from,to] of segments) {
-    ctx.strokeStyle = '#0b0c0f'
-    ctx.lineWidth = Math.max(5,TILE_H*state.camera.zoom*0.42)
-    ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); ctx.stroke()
-    ctx.strokeStyle = '#18191d'
-    ctx.lineWidth = Math.max(3,TILE_H*state.camera.zoom*0.34)
-    ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); ctx.stroke()
-    const dx = to.x-from.x, dy = to.y-from.y
-    const length = Math.hypot(dx,dy)
-    const nx = length ? -dy/length : 0, ny = length ? dx/length : 0
-    for (let i=1;i<Math.floor(length/15);i++) {
-      const t = i/(Math.floor(length/15) || 1)
-      const jitter = ((i*17)%9-4)*state.camera.zoom*0.35
-      ctx.beginPath()
-      ctx.arc(from.x+dx*t+nx*jitter,from.y+dy*t+ny*jitter,Math.max(.35,.55*state.camera.zoom),0,Math.PI*2)
-      ctx.fillStyle = i%3 === 0 ? 'rgba(90,92,98,.28)' : 'rgba(0,0,0,.28)'
-      ctx.fill()
-    }
+  const roadSet = new Set()
+  for (let i=-20;i<=20;i++) {
+    roadSet.add(`${center+i},${center}`)
+    roadSet.add(`${center},${center+i}`)
   }
-  ctx.restore()
+  for (const key of roadSet) {
+    const [x,y]=key.split(',').map(Number)
+    drawBlackPavementTile(worldToScreen(x,y),x,y,pavementConnections(roadSet,x,y,state.camera.zoom),state.camera.zoom)
+  }
 }
 
 function chunkKey(wx, wy, regionId) {
@@ -7657,6 +7714,13 @@ function drawRoads() {
     const hasE = roadSet.has(`${x + 1},${y}`)
     const horizontal = hasW || hasE
     const vertical = hasN || hasS
+
+    // Asphalt streets use the same isometric boundary math as the base city
+    // grid. This bypasses every legacy screen-space rectangle and marking.
+    if (!isFarm && !isTrail) {
+      drawBlackPavementTile(s,x,y,pavementConnections(roadSet,x,y,z),z)
+      continue
+    }
 
     const tilePx = TILE_W * z
     const cx = s.x
