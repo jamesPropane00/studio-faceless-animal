@@ -297,6 +297,7 @@
       .skill-title-display{margin:0;font-size:.48rem;max-width:92px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .time-indicator{top:max(10px,env(safe-area-inset-top,0px));z-index:75}
       .time-badge{padding:.2rem .42rem;font-size:.52rem;background:rgba(18,20,30,.72)}
+      .season-hud-badge .season-name{display:none}
       .account-btn,#btnAccount{top:49px!important;left:6px!important}
       .mobile-map-button{
         display:block;position:fixed;right:6px;top:50px;z-index:82;width:38px;height:34px;
@@ -305,6 +306,7 @@
       }
       .coord-display{display:none}
       .game-panel{bottom:64px;max-height:calc(72vh - 64px)}
+      .world-map-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important}
       .woods-hud{display:none!important}
       .help-prompt{bottom:70px;width:calc(100vw - 12px)}
       .help-prompt-inner{padding:.35rem .45rem;gap:.3rem;flex-wrap:nowrap}
@@ -875,6 +877,18 @@
       background:rgba(255,255,255,.04);font-size:.52rem;font-weight:800;
     }
     .living-world-summary { color:var(--dim);font-size:.54rem;line-height:1.45; }
+    .living-world-recommend {
+      padding:.58rem;border:1px solid rgba(245,196,81,.28);border-radius:9px;
+      background:rgba(245,196,81,.07);color:#fde68a;font-size:.54rem;line-height:1.45;
+    }
+    .living-world-recommend b { color:#fff7d6; }
+    .living-world-effects {
+      display:flex;flex-wrap:wrap;gap:.28rem;color:var(--dim);font-size:.48rem;
+    }
+    .living-world-effects span {
+      padding:.24rem .36rem;border:1px solid rgba(255,255,255,.07);border-radius:999px;
+      background:rgba(255,255,255,.025);
+    }
     .living-world-event {
       padding:.55rem;border:1px solid rgba(167,139,250,.18);border-radius:9px;
       background:rgba(124,58,237,.07);font-size:.55rem;color:#ddd6fe;
@@ -891,11 +905,18 @@
       padding:.48rem;border:1px solid rgba(56,189,248,.14);border-radius:8px;background:rgba(14,116,144,.05);
     }
     .living-world-route span { min-width:0;color:#bae6fd;font-size:.5rem;line-height:1.35; }
+    .living-world-route span b { display:block;color:#f5f3ff;font-size:.48rem;letter-spacing:.03em; }
     .living-world-route button {
       flex:0 0 auto;padding:.35rem .48rem;border:1px solid rgba(167,139,250,.35);border-radius:7px;
       background:rgba(124,58,237,.16);color:#ddd6fe;font-size:.48rem;font-weight:850;
     }
     .living-world-route button:disabled { opacity:.4; }
+    .living-world-progress { height:5px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.07); }
+    .living-world-progress span { display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#c084fc);transition:width .25s; }
+    .world-map-lines.cargo { stroke:#38bdf8;stroke-width:2.6;opacity:.85;stroke-dasharray:3 2;animation:cargoRoute 1.3s linear infinite; }
+    .world-map-lines.cargo-complete { stroke:#a78bfa;stroke-width:2.8;opacity:1; }
+    @keyframes cargoRoute { to { stroke-dashoffset:-10; } }
+    .season-hud-badge { margin-left:.3rem;color:#fde68a;font-size:.54rem;font-weight:850;white-space:nowrap; }
 
     /* ── Vehicle Marker ── */
     .wm-vehicle {
@@ -1831,6 +1852,9 @@
       .help-prompt{width:calc(100vw - 16px)}
       .help-prompt-inner{flex-wrap:nowrap;justify-content:center}
       .living-world-flows{grid-template-columns:1fr}
+      .living-world-route{align-items:stretch;flex-direction:column}
+      .living-world-route button{width:100%;min-height:34px}
+      .living-world-summary,.living-world-event,.living-world-recommend{font-size:.58rem}
       body.testing-joystick .action-btn{width:52px;height:52px;font-size:1.2rem}
       body.testing-joystick .joystick-zone{width:130px;height:130px}
     }
@@ -2345,6 +2369,7 @@
     <div class="skill-title-display" id="skillTitleDisplay"></div>
     <div id="citySupplyReadout"></div>
     <div id="logisticsReadout"></div>
+    <div class="stat-row" id="cityPopulationReadout"><span class="stat-icon">🏘️</span><span class="stat-label">Population</span><span class="stat-value cyan" id="statPopulation">0</span></div>
     <div class="stat-row"><span class="stat-icon">&#x1F30D;</span><span class="stat-label">Online</span><span class="stat-value green" id="statOnline">1</span></div>
   </div>
 </div>
@@ -2354,6 +2379,7 @@
     <span class="time-icon" id="timeIcon">&#x2600;&#xFE0F;</span>
     <span class="time-text" id="timeText">12:00</span>
     <span style="margin-left:0.3rem;color:var(--dim);font-size:0.6rem" id="weatherIcon"></span>
+    <span class="season-hud-badge" id="seasonHudBadge"></span>
   </div>
 </div>
 
@@ -2578,6 +2604,7 @@
     <div class="prop-deed-row"><span class="label">Income Rate</span><span class="val green" id="propIncome">0.5/min</span></div>
     <div class="prop-deed-row"><span class="label">Upgrades</span><span class="val" id="propUpgradeCount">0</span></div>
     <div class="prop-deed-row"><span class="label">District Bonus</span><span class="val" id="propDistrictBonus">None</span></div>
+    <div class="prop-deed-row" id="propPlotStatusRow"><span class="label">City Plot</span><span class="val" id="propPlotStatus">Complete</span></div>
   </div>
   <div class="prop-section">
     <div class="prop-section-title">&#x1F4CB; Daily Tasks</div>
@@ -2805,6 +2832,11 @@
   <button class="debug-btn" id="debugReturnCity">Return to City</button>
   <button class="debug-btn" id="debugGiveFC">Give 500 FC</button>
   <button class="debug-btn" id="debugClearPanel">Clear Stuck Panels</button>
+  <div class="debug-title" style="margin-top:5px">Living World</div>
+  <button class="debug-btn" id="debugWorldResetShortages">Reset Shortages</button>
+  <button class="debug-btn" id="debugWorldResetCargo">Reset Cargo Route</button>
+  <button class="debug-btn" id="debugWorldAdvanceSeason">Advance Season</button>
+  <button class="debug-btn" id="debugWorldTick">Run Director Tick</button>
   <button class="debug-btn" id="debugDoneBtn" style="background:var(--red);margin-top:4px;">Close Debug</button>
 </div>
 
@@ -2996,6 +3028,7 @@ const state = {
   nextEvent: 60,
   coins: 100,
   rep: 0,
+  cityPopulation: 0,
   currentJob: null,
   jobStartTime: null,
   repLevel: 'Nobody',
@@ -3056,6 +3089,9 @@ const regionalRuntime = {
 }
 
 const LIVING_WORLD_KEY = 'fas_living_world_v1'
+const LIVING_WORLD_HISTORY_CAP = 40
+const LIVING_WORLD_DELIVERY_CAP = 20
+const LIVING_WORLD_OFFLINE_TICK_CAP = 6
 let livingWorldCache = null
 let livingWorldDirectorTimer = null
 
@@ -3067,11 +3103,13 @@ function getLivingWorldData() {
   if (livingWorldCache) return livingWorldCache
   try { livingWorldCache=JSON.parse(localStorage.getItem(LIVING_WORLD_KEY) || 'null') } catch {}
   if (!livingWorldCache || typeof livingWorldCache !== 'object') {
-    livingWorldCache={ version:1, season:getCalendarSeason(), lastTick:0, tickCount:0, regions:{}, activeRoute:null, history:[] }
+    livingWorldCache={ version:2, season:getCalendarSeason(), lastTick:0, tickCount:0, regions:{}, activeRoute:null, history:[], deliveries:[] }
   }
+  livingWorldCache.version=2
   livingWorldCache.regions=livingWorldCache.regions || {}
-  livingWorldCache.history=Array.isArray(livingWorldCache.history) ? livingWorldCache.history : []
-  livingWorldCache.season=getCalendarSeason()
+  livingWorldCache.history=(Array.isArray(livingWorldCache.history) ? livingWorldCache.history : []).slice(0,LIVING_WORLD_HISTORY_CAP)
+  livingWorldCache.deliveries=(Array.isArray(livingWorldCache.deliveries) ? livingWorldCache.deliveries : []).slice(0,LIVING_WORLD_DELIVERY_CAP)
+  livingWorldCache.season=livingWorldCache.seasonOverride || getCalendarSeason()
   for (const [regionId,profile] of Object.entries(REGION_WORLD_PROFILES)) {
     const region=livingWorldCache.regions[regionId] || { reserves:{}, condition:65, lastEvent:null }
     region.reserves=region.reserves || {}
@@ -3093,6 +3131,15 @@ function saveLivingWorldData() {
 
 function currentSeasonData() {
   return SEASONS[getLivingWorldData().season] || SEASONS.spring
+}
+
+function updateSeasonHUD() {
+  const badge=document.getElementById('seasonHudBadge'),season=currentSeasonData()
+  if (badge) {
+    badge.style.color=season.color
+    badge.innerHTML=`${season.icon}<span class="season-name"> ${season.name}</span>`
+    badge.title=`${season.name}: ${season.summary}`
+  }
 }
 
 function resourceLabel(resource) {
@@ -3138,10 +3185,11 @@ function applyRegionalDirectorEvent(regionId,event,silent=false) {
 }
 
 function runRegionalDirector({silent=false}={}) {
-  const world=getLivingWorldData(),season=currentSeasonData()
-  world.season=getCalendarSeason()
+  const world=getLivingWorldData()
+  world.season=world.seasonOverride || getCalendarSeason()
   document.body.classList.remove('season-spring','season-summer','season-fall','season-winter')
   document.body.classList.add(`season-${world.season}`)
+  updateSeasonHUD()
   world.tickCount=(world.tickCount || 0)+1
   for (const [regionId,profile] of Object.entries(REGION_WORLD_PROFILES)) {
     const region=world.regions[regionId]
@@ -3166,11 +3214,12 @@ function runRegionalDirector({silent=false}={}) {
     const shortageCount=profile.economyRules.needs.filter(resource=>(region.reserves[resource] || 0)<=1).length
     region.condition=Math.max(10,Math.min(100,region.condition+(shortageCount ? -1 : 1)))
   }
-  world.history=world.history.slice(0,40)
+  world.history=world.history.slice(0,LIVING_WORLD_HISTORY_CAP)
+  world.deliveries=(world.deliveries || []).slice(0,LIVING_WORLD_DELIVERY_CAP)
   world.lastTick=Date.now()
   saveLivingWorldData()
   if (state.worldMapOpen) updateWorldMap()
-  return season
+  return currentSeasonData()
 }
 
 function getLivingWorldRequests() {
@@ -3191,6 +3240,40 @@ function getLivingWorldRequests() {
   return requests
 }
 
+function findRegionRoute(from,to) {
+  if (from === to) return [from]
+  const queue=[[from]],seen=new Set([from])
+  while (queue.length) {
+    const path=queue.shift(),current=path[path.length-1]
+    for (const next of REGIONS[current]?.connections || []) {
+      if (seen.has(next)) continue
+      const nextPath=[...path,next]
+      if (next === to) return nextPath
+      seen.add(next);queue.push(nextPath)
+    }
+  }
+  return [from,to]
+}
+
+function livingWorldRouteProgress(route) {
+  const path=Array.isArray(route?.path) && route.path.length ? route.path : findRegionRoute(route?.from,route?.to)
+  const visited=Array.isArray(route?.visited) ? route.visited : [route?.from]
+  let step=0
+  for (let index=0;index<path.length;index++) if (visited.includes(path[index])) step=Math.max(step,index)
+  const pct=path.length<=1 ? 100 : Math.round(step/(path.length-1)*100)
+  return { path,visited,step,pct,next:path[Math.min(path.length-1,step+1)] }
+}
+
+function recommendLivingWorldRoute(requests=getLivingWorldRequests()) {
+  if (!requests.length) return null
+  const local=requests.find(route=>route.from === state.currentRegion)
+  if (local) return { ...local,reason:`Load ${resourceLabel(local.resource)} here and take it to ${REGIONS[local.to].name}.` }
+  const ranked=requests.map(route=>({ ...route,pathToSource:findRegionRoute(state.currentRegion,route.from) }))
+    .sort((a,b)=>a.pathToSource.length-b.pathToSource.length)
+  const best=ranked[0]
+  return best ? { ...best,reason:`Travel to ${REGIONS[best.from].name} first, then deliver ${resourceLabel(best.resource)} to ${REGIONS[best.to].name}.` } : null
+}
+
 function acceptLivingWorldRoute(routeKey) {
   const [resource,from,to]=String(routeKey || '').split('|'),world=getLivingWorldData()
   if (!resource || !REGION_WORLD_PROFILES[from] || !REGION_WORLD_PROFILES[to] || world.activeRoute) return
@@ -3200,24 +3283,41 @@ function acceptLivingWorldRoute(routeKey) {
   }
   if ((world.regions[from].reserves[resource] || 0)<1) return
   world.regions[from].reserves[resource]=clampWorldStock(world.regions[from].reserves[resource]-1)
-  world.activeRoute={ resource,from,to,reward:35,status:'in-transit',acceptedAt:Date.now() }
+  world.activeRoute={
+    id:`cargo_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+    resource,from,to,reward:35,status:'in-transit',acceptedAt:Date.now(),
+    path:findRegionRoute(from,to),visited:[from],rewarded:false
+  }
   saveLivingWorldData()
-  showToast('Regional Route Accepted',`Carry ${resourceLabel(resource)} to ${REGIONS[to].name}.`)
+  const progress=livingWorldRouteProgress(world.activeRoute)
+  showToast('Cargo Loaded · Route Started',`${resourceLabel(resource)} for ${REGIONS[to].name}. Next stop: ${REGIONS[progress.next].name}.`)
   updateWorldMap()
 }
 
 function markLivingWorldArrival(regionId) {
   const route=getLivingWorldData().activeRoute
-  if (!route || route.to !== regionId || route.status === 'ready') return
+  if (!route) return
+  route.path=Array.isArray(route.path) && route.path.length ? route.path : findRegionRoute(route.from,route.to)
+  route.visited=Array.isArray(route.visited) ? route.visited : [route.from]
+  if (route.path.includes(regionId) && !route.visited.includes(regionId)) route.visited.push(regionId)
+  if (route.to !== regionId || route.status === 'ready') { saveLivingWorldData(); return }
   route.status='ready'
   route.arrivedAt=Date.now()
   saveLivingWorldData()
-  showToast('Cargo Ready to Deliver',`Open the globe and deliver ${resourceLabel(route.resource)}.`)
+  showToast('Destination Reached · Cargo Ready',`Open the globe and tap Deliver Cargo for ${REGIONS[route.to].name}.`)
 }
 
 function completeLivingWorldRoute() {
   const world=getLivingWorldData(),route=world.activeRoute
-  if (!route || route.status !== 'ready' || state.currentRegion !== route.to) return
+  if (!route || route.rewarded || route.status !== 'ready' || state.currentRegion !== route.to) return
+  const receiptId=route.id || `${route.from}_${route.to}_${route.acceptedAt}`
+  if ((world.deliveries || []).some(delivery=>delivery.id === receiptId)) {
+    world.activeRoute=null
+    saveLivingWorldData()
+    updateWorldMap()
+    return
+  }
+  route.rewarded=true
   world.regions[route.to].reserves[route.resource]=clampWorldStock((world.regions[route.to].reserves[route.resource] || 0)+4)
   world.regions[route.to].condition=Math.min(100,world.regions[route.to].condition+4)
   state.coins+=route.reward
@@ -3225,9 +3325,11 @@ function completeLivingWorldRoute() {
   awardSkillXP('logistics',12)
   createNewsItem('Economy',`${resourceLabel(route.resource)} reaches ${REGIONS[route.to].name}.`,`${REGIONS[route.from].name} answered a regional shortage.`,route.to,4)
   world.history.unshift({ regionId:route.to,eventId:'player-route',title:`${resourceLabel(route.resource)} delivered`,icon:'🚚',at:Date.now() })
+  world.deliveries.unshift({ id:receiptId,resource:route.resource,from:route.from,to:route.to,reward:route.reward,deliveredAt:Date.now() })
+  world.deliveries=world.deliveries.slice(0,LIVING_WORLD_DELIVERY_CAP)
   world.activeRoute=null
   saveLivingWorldData()
-  showToast(`+${route.reward} FC · Delivery Complete`,`${REGIONS[route.to].name} is supplied again.`)
+  showToast(`Delivery Complete · +${route.reward} FC`,`${REGIONS[route.to].name} received ${resourceLabel(route.resource)}. Logistics XP +12.`)
   updateWorldMap()
 }
 
@@ -3236,29 +3338,82 @@ function renderLivingWorldPanel() {
   if (!panel) return
   const world=getLivingWorldData(),season=currentSeasonData(),profile=REGION_WORLD_PROFILES[state.currentRegion],region=world.regions[state.currentRegion]
   const exports=profile.economyRules.exports.map(resource=>`${resourceLabel(resource)} ${region.reserves[resource] || 0}`).join(' · ')
-  const needs=profile.economyRules.needs.map(resource=>`${resourceLabel(resource)} ${region.reserves[resource] || 0}`).join(' · ')
-  const active=world.activeRoute
-  const activeHtml=active ? `<div class="living-world-route"><span><b>ACTIVE ROUTE</b>${resourceLabel(active.resource)} · ${REGIONS[active.from].name} → ${REGIONS[active.to].name}</span>${active.status === 'ready' && state.currentRegion === active.to ? '<button data-lw-deliver>Deliver Cargo</button>' : `<button disabled>${active.status === 'ready' ? `Travel to ${REGIONS[active.to].name}` : 'In Transit'}</button>`}</div>` : ''
-  const routes=getLivingWorldRequests()
+  const needs=profile.economyRules.needs.map(resource=>{
+    const stock=region.reserves[resource] || 0,shortage=stock<=2
+    return `${shortage ? '🔴' : '🟢'} ${resourceLabel(resource)} ${stock}/3${shortage ? ' · SHORTAGE' : ' · covered'}`
+  }).join('<br>')
+  const active=world.activeRoute,routes=getLivingWorldRequests(),recommendation=recommendLivingWorldRoute(routes)
+  const activeProgress=active ? livingWorldRouteProgress(active) : null
+  const activeHtml=active ? `<div class="living-world-route"><span><b>ACTIVE CARGO · ${activeProgress.pct}%</b>${resourceLabel(active.resource)} · ${REGIONS[active.from].name} → ${REGIONS[active.to].name}<br>${active.status === 'ready' ? 'Destination reached. Deliver manually to collect rewards.' : `Current stop: ${REGIONS[state.currentRegion].name} · next: ${REGIONS[activeProgress.next].name}`}</span>${active.status === 'ready' && state.currentRegion === active.to ? '<button data-lw-deliver>Deliver Cargo</button>' : `<button disabled>${active.status === 'ready' ? `Travel to ${REGIONS[active.to].name}` : 'Cargo In Transit'}</button>`}</div><div class="living-world-progress"><span style="width:${activeProgress.pct}%"></span></div>` : ''
+  const secondsToTick=Math.max(0,Math.ceil((DIRECTOR_TICK_MS-(Date.now()-(world.lastTick || Date.now())))/1000))
+  const recentDeliveries=(world.deliveries || []).slice(0,3)
   panel.innerHTML=`
     <div class="living-world-head"><div class="living-world-title">🌍 REGIONAL DIRECTOR</div><div class="living-world-season" style="color:${season.color}">${season.icon} ${season.name}</div></div>
-    <div class="living-world-summary">${season.summary} Director tick ${world.tickCount || 0} · ${REGIONS[state.currentRegion].name} condition ${Math.round(region.condition)}%.</div>
-    ${region.lastEvent ? `<div class="living-world-event"><b>${region.lastEvent.icon} ${region.lastEvent.title}</b><br>${region.lastEvent.text}</div>` : ''}
-    <div class="living-world-flows"><div class="living-world-flow"><b>Exports</b>${exports || 'Local services'}</div><div class="living-world-flow"><b>Needs</b>${needs || 'No shortages'}</div></div>
-    <div class="living-world-routes">${activeHtml}${!active ? routes.map(route=>`<div class="living-world-route"><span>${resourceLabel(route.resource)} · ${REGIONS[route.from].name} → ${REGIONS[route.to].name}</span><button data-lw-accept="${route.resource}|${route.from}|${route.to}" ${state.currentRegion === route.from ? '' : 'disabled'}>${state.currentRegion === route.from ? 'Accept Run' : `Start in ${REGIONS[route.from].name}`}</button></div>`).join('') : ''}</div>`
+    <div class="living-world-summary"><b>${season.name} now:</b> ${season.summary}<br>Regional checks happen once every 2 minutes · next check in ${secondsToTick}s · ${REGIONS[state.currentRegion].name} condition ${Math.round(region.condition)}%.</div>
+    <div class="living-world-effects"><span>🌱 Crop speed ${Math.round(season.cropGrowth*100)}%</span><span>🧺 Crop yield ${Math.round(season.cropYield*100)}%</span><span>🐾 Wildlife activity ${Math.round(season.wildlife*100)}%</span><span>🌦 Regional weather active</span></div>
+    ${region.lastEvent ? `<div class="living-world-event"><b>${region.lastEvent.icon} Current regional event · ${region.lastEvent.title}</b><br>${region.lastEvent.text}</div>` : ''}
+    <div class="living-world-flows"><div class="living-world-flow"><b>What this region exports</b>${exports || 'Local services'}</div><div class="living-world-flow"><b>What this region needs</b>${needs || '🟢 No active needs'}</div></div>
+    ${!active && recommendation ? `<div class="living-world-recommend"><b>What should I deliver?</b><br>${recommendation.reason}</div>` : ''}
+    <div class="living-world-routes">${activeHtml}${!active ? routes.map(route=>`<div class="living-world-route"><span><b>${(world.regions[route.to].reserves[route.resource] || 0)<=1 ? 'URGENT SHORTAGE' : 'SUPPLY REQUEST'}</b>${resourceLabel(route.resource)} · ${REGIONS[route.from].name} → ${REGIONS[route.to].name}</span><button data-lw-accept="${route.resource}|${route.from}|${route.to}" ${state.currentRegion === route.from ? '' : 'disabled'}>${state.currentRegion === route.from ? 'Load Cargo' : `Start in ${REGIONS[route.from].name}`}</button></div>`).join('') : ''}</div>
+    ${recentDeliveries.length ? `<div class="living-world-summary"><b>Recent deliveries (${world.deliveries.length}/${LIVING_WORLD_DELIVERY_CAP})</b><br>${recentDeliveries.map(item=>`🚚 ${resourceLabel(item.resource)} · ${REGIONS[item.from].name} → ${REGIONS[item.to].name}`).join('<br>')}</div>` : ''}`
 }
 
 function initLivingWorld() {
   const world=getLivingWorldData(),now=Date.now()
   document.body.classList.remove('season-spring','season-summer','season-fall','season-winter')
   document.body.classList.add(`season-${world.season}`)
+  updateSeasonHUD()
   const elapsed=now-(world.lastTick || 0)
   if (!world.lastTick) runRegionalDirector()
   else if (elapsed>=DIRECTOR_TICK_MS) {
-    const catchup=Math.min(6,Math.floor(elapsed/DIRECTOR_TICK_MS))
+    const catchup=Math.min(LIVING_WORLD_OFFLINE_TICK_CAP,Math.floor(elapsed/DIRECTOR_TICK_MS))
     for (let index=0;index<catchup;index++) runRegionalDirector({silent:index<catchup-1})
   }
-  if (!livingWorldDirectorTimer) livingWorldDirectorTimer=setInterval(()=>runRegionalDirector(),DIRECTOR_TICK_MS)
+  if (!livingWorldDirectorTimer) {
+    if (window.__facelessLivingWorldDirectorTimer) clearInterval(window.__facelessLivingWorldDirectorTimer)
+    livingWorldDirectorTimer=setInterval(()=>runRegionalDirector(),DIRECTOR_TICK_MS)
+    window.__facelessLivingWorldDirectorTimer=livingWorldDirectorTimer
+    document.documentElement.dataset.livingWorldDirector='one-active-timer'
+  }
+}
+
+function resetLivingWorldShortages() {
+  const world=getLivingWorldData()
+  for (const [regionId,profile] of Object.entries(REGION_WORLD_PROFILES)) {
+    const region=world.regions[regionId]
+    for (const resource of new Set([...profile.economyRules.exports,...profile.economyRules.needs])) region.reserves[resource]=5
+    region.condition=65
+    region.lastEvent=null
+  }
+  world.history=[]
+  world.lastTick=Date.now()
+  saveLivingWorldData()
+  updateWorldMap()
+  showToast('Living World Reset','Regional reserves and shortages returned to a stable baseline.')
+}
+
+function resetLivingWorldCargo() {
+  const world=getLivingWorldData(),route=world.activeRoute
+  if (route && !route.rewarded && world.regions[route.from]) {
+    world.regions[route.from].reserves[route.resource]=clampWorldStock((world.regions[route.from].reserves[route.resource] || 0)+1)
+  }
+  world.activeRoute=null
+  saveLivingWorldData()
+  updateWorldMap()
+  showToast('Cargo Route Reset','Active Living World cargo was safely returned to its source.')
+}
+
+function advanceLivingWorldSeason() {
+  const world=getLivingWorldData(),order=['spring','summer','fall','winter']
+  const next=order[(order.indexOf(world.season)+1)%order.length]
+  world.seasonOverride=next
+  world.season=next
+  saveLivingWorldData()
+  document.body.classList.remove('season-spring','season-summer','season-fall','season-winter')
+  document.body.classList.add(`season-${next}`)
+  updateSeasonHUD()
+  updateWorldMap()
+  showToast(`${SEASONS[next].icon} ${SEASONS[next].name}`,SEASONS[next].summary)
 }
 
 // ── RENDER CACHE (offscreen canvases) ──────────────────────
@@ -8237,10 +8392,170 @@ function drawFarmPlacedObject(building,s) {
   return true
 }
 
+const CITY_PLOT_KEY='fas_city_plot_progress_v1'
+const CITY_PLOT_TYPES=new Set(['house','shop','club','warehouse','hide','development-block'])
+const CITY_PLOT_META={
+  house:{ duration:60000,population:6 },
+  shop:{ duration:50000,population:0 },
+  club:{ duration:70000,population:0 },
+  warehouse:{ duration:55000,population:0 },
+  hide:{ duration:45000,population:0 },
+  'development-block':{ duration:90000,population:14 }
+}
+const cityPlotRuntime={ accumulator:0,initialized:false,completed:null }
+
+function getCityPlotCompleted() {
+  if (cityPlotRuntime.completed) return cityPlotRuntime.completed
+  try { cityPlotRuntime.completed=new Set(JSON.parse(localStorage.getItem(CITY_PLOT_KEY) || '[]')) } catch { cityPlotRuntime.completed=new Set() }
+  return cityPlotRuntime.completed
+}
+
+function saveCityPlotCompleted() {
+  try { localStorage.setItem(CITY_PLOT_KEY,JSON.stringify([...getCityPlotCompleted()].slice(-200))) } catch {}
+}
+
+function cityPlotTimestamp(building) {
+  const raw=building.placed_at ?? building.created_at ?? building.createdAt
+  if (typeof raw === 'number') return raw
+  const parsed=raw ? Date.parse(raw) : NaN
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function getCityPlotStage(building) {
+  const typeId=building.object_type || building.building_type,meta=CITY_PLOT_META[typeId]
+  if (!meta) return { stage:3,progress:1,meta:null }
+  const timestamp=cityPlotTimestamp(building)
+  if (!timestamp) return { stage:3,progress:1,meta }
+  const progress=Math.max(0,Math.min(1,(Date.now()-timestamp)/meta.duration))
+  const stage=progress<.18 ? 0 : progress<.48 ? 1 : progress<.78 ? 2 : 3
+  return { stage,progress,meta }
+}
+
+function cityPlotPopulation(building) {
+  const progress=getCityPlotStage(building)
+  return progress.stage>=3 ? (progress.meta?.population || 0) : 0
+}
+
+function updateCityPlotProgress(dt,initial=false) {
+  cityPlotRuntime.accumulator+=dt
+  if (!initial && cityPlotRuntime.accumulator<1) return
+  cityPlotRuntime.accumulator=0
+  const cityBuildings=state.buildings.filter(building=>normalizeRegionId(building.region_id ?? building.region) === 'city' && CITY_PLOT_TYPES.has(building.object_type || building.building_type))
+  const completed=getCityPlotCompleted(),firstRun=!cityPlotRuntime.initialized
+  let plotPopulation=0,changed=false
+  const districtAdds=new Map()
+  for (const building of cityBuildings) {
+    const population=cityPlotPopulation(building)
+    plotPopulation+=population
+    if (population) {
+      const plotId=building.id || `${building.building_type}_${building.tile_x}_${building.tile_y}`
+      const bx=building.tile_x || building.x,by=building.tile_y || building.y
+      const district=state.districts.find(item=>{
+        if (normalizeRegionId(item.region_id ?? item.region) !== 'city') return false
+        const dx=bx-item.center_x,dy=by-item.center_y
+        return dx*dx+dy*dy<=(item.radius || 0)*(item.radius || 0)
+      })
+      if (district) districtAdds.set(district.id,(districtAdds.get(district.id) || 0)+population)
+      if (!completed.has(plotId)) {
+        completed.add(plotId);changed=true
+        if (!firstRun) {
+          const typeId=building.object_type || building.building_type
+          createNewsItem('City',typeId === 'house' ? 'New residents move into a finished city plot.' : 'A city development plot is complete.',`${CITY_PLOT_META[typeId]?.population || 0} residents added near the completed ${BUILDING_TYPES[typeId]?.name || 'development'}.`,'city',3)
+          showToast('🏘️ City Plot Complete',typeId === 'house' ? '+6 population · residents are moving in.' : `${BUILDING_TYPES[typeId]?.name || 'Development'} opened.`)
+        }
+      }
+    }
+  }
+  for (const district of state.districts.filter(item=>normalizeRegionId(item.region_id ?? item.region) === 'city')) {
+    if (!Number.isFinite(district._populationBase)) district._populationBase=Math.max(0,Number(district.population) || 0)
+    district.population=district._populationBase+(districtAdds.get(district.id) || 0)
+  }
+  state.cityPopulation=state.npcs.filter(npc=>normalizeRegionId(npc.region_id ?? npc.region) === 'city').length+plotPopulation
+  const output=document.getElementById('statPopulation')
+  if (output) output.textContent=state.cityPopulation
+  cityPlotRuntime.initialized=true
+  if (changed) {
+    while (completed.size>200) completed.delete(completed.values().next().value)
+    saveCityPlotCompleted()
+  }
+}
+
+function drawCityPlotBuilding(building,s) {
+  const typeId=building.object_type || building.building_type
+  const regionId=normalizeRegionId(building.region_id ?? building.region ?? state.currentRegion)
+  if (regionId !== 'city' || !CITY_PLOT_TYPES.has(typeId)) return false
+  const z=state.camera.zoom,hw=TILE_W*z*.46,hh=TILE_H*z*.46
+  const {stage,progress}=getCityPlotStage(building)
+  const diamond=(cx,cy,rx,ry,fill,stroke='rgba(255,255,255,.1)')=>{
+    ctx.beginPath();ctx.moveTo(cx,cy-ry);ctx.lineTo(cx+rx,cy);ctx.lineTo(cx,cy+ry);ctx.lineTo(cx-rx,cy);ctx.closePath()
+    ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(.6,z);ctx.stroke()}
+  }
+  const prism=(cx,cy,rx,ry,height,top,left,right)=>{
+    ctx.beginPath();ctx.moveTo(cx-rx,cy);ctx.lineTo(cx,cy+ry);ctx.lineTo(cx,cy+ry-height);ctx.lineTo(cx-rx,cy-height);ctx.closePath();ctx.fillStyle=left;ctx.fill()
+    ctx.beginPath();ctx.moveTo(cx+rx,cy);ctx.lineTo(cx,cy+ry);ctx.lineTo(cx,cy+ry-height);ctx.lineTo(cx+rx,cy-height);ctx.closePath();ctx.fillStyle=right;ctx.fill()
+    diamond(cx,cy-height,rx,ry,top,'rgba(0,0,0,.14)')
+  }
+  const tinyHouse=(cx,cy,scale=1,roof='#7c2d12',wall='#e7d7c6')=>{
+    const rx=7*z*scale,ry=3.8*z*scale,height=8*z*scale
+    prism(cx,cy,rx,ry,height,roof,'#b8a28d',wall)
+    ctx.fillStyle='rgba(125,211,252,.7)';ctx.fillRect(cx+1*z*scale,cy-height*.58,2.2*z*scale,2.6*z*scale)
+    ctx.fillStyle='#5b3a29';ctx.fillRect(cx-3*z*scale,cy-height*.38,2.2*z*scale,3.5*z*scale)
+  }
+  ctx.save()
+  diamond(s.x,s.y,hw,hh,typeId === 'club' ? '#21122f' : typeId === 'warehouse' ? '#343942' : typeId === 'shop' ? '#3d4650' : '#355c3a','rgba(255,255,255,.13)')
+  if (typeId === 'house' || typeId === 'development-block') {
+    ctx.strokeStyle='rgba(226,232,240,.5)';ctx.lineWidth=Math.max(.6,z)
+    ctx.beginPath();ctx.moveTo(s.x-hw*.65,s.y+hh*.18);ctx.lineTo(s.x-hw*.08,s.y+hh*.72);ctx.stroke()
+    if (stage>=0) diamond(s.x-7*z,s.y+2*z,8*z,4*z,'#8b8b82',null)
+    if (stage>=1) {
+      prism(s.x-7*z,s.y+2*z,7*z,3.5*z,2*z,'#b7b0a5','#77736c','#918b81')
+      if(typeId==='development-block') prism(s.x+9*z,s.y-2*z,6*z,3*z,2*z,'#b7b0a5','#77736c','#918b81')
+    }
+    if(stage===2) {
+      ctx.strokeStyle='#d6c7a8';ctx.lineWidth=Math.max(1,1.2*z)
+      for(const [ox,oy] of [[-7,2],[9,-2]]){ctx.strokeRect(s.x+(ox-6)*z,s.y+(oy-12)*z,12*z,10*z);ctx.beginPath();ctx.moveTo(s.x+(ox-6)*z,s.y+(oy-12)*z);ctx.lineTo(s.x+(ox+6)*z,s.y+oy*z);ctx.stroke()}
+    } else if(stage>=3) {
+      tinyHouse(s.x-8*z,s.y+3*z,1,typeId==='development-block'?'#334155':'#9a3412')
+      tinyHouse(s.x+8*z,s.y-2*z,.82,typeId==='development-block'?'#475569':'#7f1d1d','#d8c7b2')
+      if(typeId==='development-block') tinyHouse(s.x+1*z,s.y-8*z,.68,'#1e3a8a','#cbd5e1')
+      ctx.fillStyle='#5b4633';ctx.fillRect(s.x+16*z,s.y-9*z,1.5*z,8*z)
+      ctx.beginPath();ctx.arc(s.x+16.5*z,s.y-11*z,4.2*z,0,Math.PI*2);ctx.fillStyle='#2f855a';ctx.fill()
+    }
+  } else if (typeId === 'shop') {
+    if(stage>=1) prism(s.x,s.y+3*z,16*z,7*z,Math.max(3,11*z*(stage===1?.25:stage===2?.65:1)),'#2563eb','#1e3a5f','#3b82f6')
+    if(stage>=2){ctx.fillStyle='rgba(186,230,253,.72)';ctx.fillRect(s.x-8*z,s.y-7*z,16*z,6*z)}
+    if(stage>=3){ctx.fillStyle='#ef4444';for(let x=-13;x<13;x+=5)ctx.fillRect(s.x+x*z,s.y-12*z,3*z,3*z);ctx.fillStyle='#f8fafc';ctx.fillRect(s.x-2*z,s.y-5*z,4*z,6*z)}
+  } else if (typeId === 'club') {
+    if(stage>=1) prism(s.x,s.y+3*z,17*z,7*z,Math.max(3,13*z*(stage===1?.25:stage===2?.65:1)),'#581c87','#2e1065','#7e22ce')
+    if(stage>=2){const pulse=.45+.35*Math.sin(performance.now()*.004);ctx.shadowColor='#d946ef';ctx.shadowBlur=12*z;ctx.fillStyle=`rgba(232,121,249,${pulse})`;ctx.fillRect(s.x-10*z,s.y-10*z,20*z,2*z)}
+    if(stage>=3){ctx.font=`${Math.max(8,10*z)}px sans-serif`;ctx.textAlign='center';ctx.fillText('♫',s.x,s.y-15*z)}
+  } else if (typeId === 'warehouse') {
+    if(stage>=1) prism(s.x,s.y+4*z,21*z,9*z,Math.max(3,9*z*(stage===1?.3:stage===2?.7:1)),'#64748b','#374151','#6b7280')
+    if(stage>=2){ctx.fillStyle='#1f2937';ctx.fillRect(s.x-10*z,s.y-5*z,20*z,7*z);ctx.strokeStyle='#94a3b8';for(let y=-4;y<2;y+=2){ctx.beginPath();ctx.moveTo(s.x-10*z,s.y+y*z);ctx.lineTo(s.x+10*z,s.y+y*z);ctx.stroke()}}
+    if(stage>=3){ctx.fillStyle='#a16207';ctx.fillRect(s.x+14*z,s.y-1*z,5*z,5*z);ctx.fillRect(s.x+9*z,s.y+2*z,5*z,5*z)}
+  } else if (typeId === 'hide') {
+    if(stage>=1) prism(s.x,s.y+2*z,12*z,6*z,Math.max(3,7*z*(stage===1?.35:stage===2?.7:1)),'#312e3f','#1f1b29','#46394f')
+    if(stage>=2){ctx.strokeStyle='#7c4a2d';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(s.x-7*z,s.y-5*z);ctx.lineTo(s.x+7*z,s.y+2*z);ctx.moveTo(s.x+7*z,s.y-5*z);ctx.lineTo(s.x-7*z,s.y+2*z);ctx.stroke()}
+  }
+  if(stage<3) {
+    const craneX=s.x+hw*.58,craneTop=s.y-hh-13*z
+    ctx.strokeStyle='#facc15';ctx.lineWidth=Math.max(1,1.2*z)
+    ctx.beginPath();ctx.moveTo(craneX,s.y);ctx.lineTo(craneX,craneTop);ctx.lineTo(craneX-14*z,craneTop);ctx.stroke()
+    ctx.beginPath();ctx.moveTo(craneX-8*z,craneTop);ctx.lineTo(craneX-8*z,craneTop+6*z+Math.sin(performance.now()*.003)*2*z);ctx.stroke()
+    const barW=34*z,barY=s.y+hh+6*z
+    ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(s.x-barW/2,barY,barW,3*z)
+    ctx.fillStyle='#a78bfa';ctx.fillRect(s.x-barW/2,barY,barW*progress,3*z)
+    if(z>.55){ctx.font=`700 ${Math.max(7,8*z)}px Inter`;ctx.textAlign='center';ctx.fillStyle='#ddd6fe';ctx.fillText(`BUILDING ${Math.round(progress*100)}%`,s.x,barY+11*z)}
+  }
+  ctx.restore()
+  return true
+}
+
 function drawBuildingAt(building, s) {
   const type = BUILDING_TYPES[building.building_type]
   if (!type) return
   if (drawFarmPlacedObject(building,s)) return
+  if (drawCityPlotBuilding(building,s)) return
   
   const hw = (TILE_W / 2) * state.camera.zoom
   const hh = (TILE_H / 2) * state.camera.zoom
@@ -9603,6 +9918,7 @@ function update(dt) {
   updateFarmAudio()
   updateFarmAtmosphere()
   farmMvpTick()
+  updateCityPlotProgress(dt)
 
   // Creature and woodland exploration updates
   updateWoodsExploration(dt)
@@ -10346,6 +10662,13 @@ function setupUI() {
   document.getElementById('debugClearPanel').addEventListener('click', () => {
     closeAllPanels()
     showToast('Debug', 'All panels closed')
+  })
+  document.getElementById('debugWorldResetShortages').addEventListener('click', resetLivingWorldShortages)
+  document.getElementById('debugWorldResetCargo').addEventListener('click', resetLivingWorldCargo)
+  document.getElementById('debugWorldAdvanceSeason').addEventListener('click', advanceLivingWorldSeason)
+  document.getElementById('debugWorldTick').addEventListener('click', () => {
+    runRegionalDirector()
+    showToast('Director Tick Complete','One Living World check ran. No player rewards were generated.')
   })
   document.getElementById('debugDoneBtn').addEventListener('click', () => {
     document.getElementById('debugPanel').style.display = 'none'
@@ -11097,6 +11420,13 @@ function openPropertyPanel(buildingId) {
   document.getElementById('propIncome').textContent = getEffectiveIncome(building).toFixed(1) + '/min'
   document.getElementById('propUpgradeCount').textContent = prop.upgrades.length + ' / 3'
   document.getElementById('propDistrictBonus').textContent = building.in_district ? 'Yes (+20%)' : 'None'
+  const plotStatusRow=document.getElementById('propPlotStatusRow')
+  const cityPlot=CITY_PLOT_TYPES.has(building.object_type || building.building_type) && normalizeRegionId(building.region_id ?? building.region) === 'city'
+  plotStatusRow.style.display=cityPlot ? 'flex' : 'none'
+  if (cityPlot) {
+    const plot=getCityPlotStage(building),population=cityPlotPopulation(building)
+    document.getElementById('propPlotStatus').textContent=plot.stage>=3 ? `Complete · +${population} population` : `Building · ${Math.round(plot.progress*100)}%`
+  }
   // Tasks
   const tasks = PROPERTY_TASKS[building.building_type] || []
   const tContainer = document.getElementById('propTasks')
@@ -13396,6 +13726,14 @@ function updateWorldMap() {
   const drawn = new Set()
   let lineHtml = ''
   const regionIds = Object.keys(REGIONS)
+  const cargoRoute=getLivingWorldData().activeRoute
+  const cargoProgress=cargoRoute ? livingWorldRouteProgress(cargoRoute) : null
+  const cargoEdges=new Map()
+  if (cargoProgress) {
+    for (let index=0;index<cargoProgress.path.length-1;index++) {
+      cargoEdges.set([cargoProgress.path[index],cargoProgress.path[index+1]].sort().join('-'),index)
+    }
+  }
   for (const id of regionIds) {
     const from = getNodePos(id)
     for (const connId of REGIONS[id].connections) {
@@ -13404,7 +13742,9 @@ function updateWorldMap() {
       drawn.add(key)
       const to = getNodePos(connId)
       const active = id === state.currentRegion || connId === state.currentRegion
-      lineHtml += `<line class="world-map-lines${active ? ' active' : ''}" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" data-from="${id}" data-to="${connId}"/>`
+      const cargoIndex=cargoEdges.get(key)
+      const cargoClass=cargoIndex == null ? '' : (cargoIndex<cargoProgress.step ? ' cargo-complete' : ' cargo')
+      lineHtml += `<line class="world-map-lines${active ? ' active' : ''}${cargoClass}" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" data-from="${id}" data-to="${connId}"/>`
     }
   }
   linesGroup.innerHTML = lineHtml
@@ -13723,6 +14063,7 @@ async function init() {
     loadRegionalObjects()
     await refreshDistricts()
     await fetchVisualData()
+    updateCityPlotProgress(1,true)
   } catch (err) {
     console.error('[INIT] Error during initialization:', err)
     text.textContent = 'Error loading — continuing anyway'
