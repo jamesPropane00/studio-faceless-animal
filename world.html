@@ -864,6 +864,38 @@
       opacity: 0.3;
       cursor: not-allowed;
     }
+    .living-world-panel {
+      display:grid;gap:.55rem;margin-top:.7rem;padding-top:.7rem;
+      border-top:1px solid var(--border);
+    }
+    .living-world-head { display:flex;align-items:center;justify-content:space-between;gap:.5rem; }
+    .living-world-title { color:#f5f3ff;font-size:.7rem;font-weight:900;letter-spacing:.04em; }
+    .living-world-season {
+      padding:.28rem .45rem;border:1px solid var(--border);border-radius:999px;
+      background:rgba(255,255,255,.04);font-size:.52rem;font-weight:800;
+    }
+    .living-world-summary { color:var(--dim);font-size:.54rem;line-height:1.45; }
+    .living-world-event {
+      padding:.55rem;border:1px solid rgba(167,139,250,.18);border-radius:9px;
+      background:rgba(124,58,237,.07);font-size:.55rem;color:#ddd6fe;
+    }
+    .living-world-flows { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.4rem; }
+    .living-world-flow {
+      min-width:0;padding:.48rem;border:1px solid rgba(255,255,255,.07);border-radius:8px;
+      background:rgba(255,255,255,.025);font-size:.5rem;color:var(--dim);
+    }
+    .living-world-flow b { display:block;margin-bottom:.18rem;color:#f5f3ff;font-size:.54rem; }
+    .living-world-routes { display:grid;gap:.35rem; }
+    .living-world-route {
+      display:flex;align-items:center;justify-content:space-between;gap:.45rem;
+      padding:.48rem;border:1px solid rgba(56,189,248,.14);border-radius:8px;background:rgba(14,116,144,.05);
+    }
+    .living-world-route span { min-width:0;color:#bae6fd;font-size:.5rem;line-height:1.35; }
+    .living-world-route button {
+      flex:0 0 auto;padding:.35rem .48rem;border:1px solid rgba(167,139,250,.35);border-radius:7px;
+      background:rgba(124,58,237,.16);color:#ddd6fe;font-size:.48rem;font-weight:850;
+    }
+    .living-world-route button:disabled { opacity:.4; }
 
     /* ── Vehicle Marker ── */
     .wm-vehicle {
@@ -1798,6 +1830,7 @@
       .welcome-start{padding:0.65rem;font-size:0.8rem}
       .help-prompt{width:calc(100vw - 16px)}
       .help-prompt-inner{flex-wrap:nowrap;justify-content:center}
+      .living-world-flows{grid-template-columns:1fr}
       body.testing-joystick .action-btn{width:52px;height:52px;font-size:1.2rem}
       body.testing-joystick .joystick-zone{width:130px;height:130px}
     }
@@ -2680,6 +2713,7 @@
     </div>
     <div class="wm-shipment" id="wmShipment" style="display:none">\u{1F69A}</div>
   </div>
+  <section class="living-world-panel" id="livingWorldPanel" aria-label="Living World Director"></section>
 </div>
 
 <div class="settings-panel game-panel" id="settingsPanel">
@@ -2889,6 +2923,7 @@ import { BUILDING_TYPES, DISTRICT_TYPE_COLORS, DISTRICT_TYPE_ICONS, DISTRICT_TYP
 import { REGIONS, NEIGHBORHOOD_THEMES } from '/world/js/data/regions.js'
 import { GOD_POWERS, CROP_TYPES } from '/world/js/data/items.js?v=20260630-balance'
 import { WEATHER_TYPES, WEATHER_COLORS } from '/world/js/core/weather.js'
+import { DIRECTOR_TICK_MS, SEASONS, REGION_WORLD_PROFILES, getCalendarSeason } from '/world/js/data/living-world.js?v=20260630-engine'
 
 const canvas = document.getElementById('gameCanvas')
 const ctx = canvas.getContext('2d')
@@ -3018,6 +3053,212 @@ const regionalRuntime = {
   health: {},
   natureAccumulator: 0,
   natureLastTick: 0
+}
+
+const LIVING_WORLD_KEY = 'fas_living_world_v1'
+let livingWorldCache = null
+let livingWorldDirectorTimer = null
+
+function clampWorldStock(value) {
+  return Math.max(0,Math.min(20,Number(value) || 0))
+}
+
+function getLivingWorldData() {
+  if (livingWorldCache) return livingWorldCache
+  try { livingWorldCache=JSON.parse(localStorage.getItem(LIVING_WORLD_KEY) || 'null') } catch {}
+  if (!livingWorldCache || typeof livingWorldCache !== 'object') {
+    livingWorldCache={ version:1, season:getCalendarSeason(), lastTick:0, tickCount:0, regions:{}, activeRoute:null, history:[] }
+  }
+  livingWorldCache.regions=livingWorldCache.regions || {}
+  livingWorldCache.history=Array.isArray(livingWorldCache.history) ? livingWorldCache.history : []
+  livingWorldCache.season=getCalendarSeason()
+  for (const [regionId,profile] of Object.entries(REGION_WORLD_PROFILES)) {
+    const region=livingWorldCache.regions[regionId] || { reserves:{}, condition:65, lastEvent:null }
+    region.reserves=region.reserves || {}
+    for (const resource of profile.economyRules.exports) {
+      if (!Number.isFinite(region.reserves[resource])) region.reserves[resource]=5
+    }
+    for (const resource of profile.economyRules.needs) {
+      if (!Number.isFinite(region.reserves[resource])) region.reserves[resource]=1
+    }
+    region.condition=Math.max(10,Math.min(100,Number(region.condition) || 65))
+    livingWorldCache.regions[regionId]=region
+  }
+  return livingWorldCache
+}
+
+function saveLivingWorldData() {
+  try { localStorage.setItem(LIVING_WORLD_KEY,JSON.stringify(getLivingWorldData())) } catch {}
+}
+
+function currentSeasonData() {
+  return SEASONS[getLivingWorldData().season] || SEASONS.spring
+}
+
+function resourceLabel(resource) {
+  return String(resource || '').replace(/(^|[-_])\w/g,match=>match.replace(/[-_]/,' ').toUpperCase())
+}
+
+function weightedWorldChoice(weights) {
+  const entries=Object.entries(weights || {}),total=entries.reduce((sum,[,weight])=>sum+Math.max(0,weight),0)
+  let roll=Math.random()*(total || 1)
+  for (const [key,weight] of entries) {
+    roll-=Math.max(0,weight)
+    if (roll<=0) return key
+  }
+  return entries[0]?.[0] || 'clear'
+}
+
+function regionWeatherProfile(regionId=state.currentRegion) {
+  const base={...(REGION_WORLD_PROFILES[regionId]?.weatherProfile || {})}
+  const season=getLivingWorldData().season
+  if (season === 'spring') base.rain=(base.rain || 0)+.1
+  else if (season === 'summer') base.clear=(base.clear || 0)+.12
+  else if (season === 'fall') { base.cloudy=(base.cloudy || 0)+.08;base.fog=(base.fog || 0)+.04 }
+  else if (season === 'winter') { base.cloudy=(base.cloudy || 0)+.12;base.storm=(base.storm || 0)+.06 }
+  return base
+}
+
+function applyRegionalDirectorEvent(regionId,event,silent=false) {
+  if (silent || !event) return
+  if (regionId === state.currentRegion && event.weather) {
+    state.weather.type=event.weather
+    state.weather.targetIntensity=event.weather === 'rain' ? .65 : .8
+  }
+  if (regionId === 'whisper-woods' && event.id === 'sapling-spread') regionalRuntime.natureAccumulator=Math.max(regionalRuntime.natureAccumulator,43)
+  if (regionId === 'farmlands' && event.id === 'rain-soil') {
+    const health=getRegionalHealth('farmlands')
+    health['Soil quality']=Math.min(100,(health['Soil quality'] || 50)+2)
+  }
+  if (regionId === 'purple-pulse' && event.id === 'dj-set') {
+    const pulse=getRegionIdentity('purple-pulse')
+    pulse.crowdEnergy=(pulse.crowdEnergy || 0)+3
+    saveRegionIdentity()
+  }
+}
+
+function runRegionalDirector({silent=false}={}) {
+  const world=getLivingWorldData(),season=currentSeasonData()
+  world.season=getCalendarSeason()
+  document.body.classList.remove('season-spring','season-summer','season-fall','season-winter')
+  document.body.classList.add(`season-${world.season}`)
+  world.tickCount=(world.tickCount || 0)+1
+  for (const [regionId,profile] of Object.entries(REGION_WORLD_PROFILES)) {
+    const region=world.regions[regionId]
+    for (const resource of profile.economyRules.needs) {
+      region.reserves[resource]=clampWorldStock((region.reserves[resource] || 0)-1)
+    }
+    const seasonalEvents=profile.events.filter(event=>{
+      if (world.season === 'winter' && event.id.includes('crop')) return false
+      return true
+    })
+    const event=seasonalEvents[Math.floor(Math.random()*seasonalEvents.length)]
+    if (event) {
+      region.reserves[event.resource]=clampWorldStock((region.reserves[event.resource] || 0)+event.amount)
+      region.lastEvent={ ...event, at:Date.now() }
+      world.history.unshift({ regionId,eventId:event.id,title:event.title,icon:event.icon,at:Date.now() })
+      applyRegionalDirectorEvent(regionId,event,silent)
+      if (!silent && regionId === state.currentRegion) {
+        createNewsItem(event.weather ? 'Weather' : (regionId === 'farmlands' ? 'Farm' : regionId === 'whisper-woods' ? 'Wildlife' : 'Economy'),event.title,event.text,regionId,3)
+        showToast(`${event.icon} ${event.title}`,event.text)
+      }
+    }
+    const shortageCount=profile.economyRules.needs.filter(resource=>(region.reserves[resource] || 0)<=1).length
+    region.condition=Math.max(10,Math.min(100,region.condition+(shortageCount ? -1 : 1)))
+  }
+  world.history=world.history.slice(0,40)
+  world.lastTick=Date.now()
+  saveLivingWorldData()
+  if (state.worldMapOpen) updateWorldMap()
+  return season
+}
+
+function getLivingWorldRequests() {
+  const world=getLivingWorldData(),requests=[]
+  for (const [targetId,profile] of Object.entries(REGION_WORLD_PROFILES)) {
+    const needs=[...profile.economyRules.needs].sort((a,b)=>(world.regions[targetId].reserves[a] || 0)-(world.regions[targetId].reserves[b] || 0))
+    for (const resource of needs) {
+      if ((world.regions[targetId].reserves[resource] || 0)>2) continue
+      const candidates=Object.entries(REGION_WORLD_PROFILES)
+        .filter(([sourceId,source])=>sourceId !== targetId && source.economyRules.exports.includes(resource) && (world.regions[sourceId].reserves[resource] || 0)>=2)
+        .sort((a,b)=>(world.regions[b[0]].reserves[resource] || 0)-(world.regions[a[0]].reserves[resource] || 0))
+      if (candidates[0]) {
+        requests.push({ resource,from:candidates[0][0],to:targetId,reward:35 })
+        break
+      }
+    }
+  }
+  return requests
+}
+
+function acceptLivingWorldRoute(routeKey) {
+  const [resource,from,to]=String(routeKey || '').split('|'),world=getLivingWorldData()
+  if (!resource || !REGION_WORLD_PROFILES[from] || !REGION_WORLD_PROFILES[to] || world.activeRoute) return
+  if (state.currentRegion !== from) {
+    showToast('Start at the Exporting Region',`Travel to ${REGIONS[from].name} to load ${resourceLabel(resource)}.`)
+    return
+  }
+  if ((world.regions[from].reserves[resource] || 0)<1) return
+  world.regions[from].reserves[resource]=clampWorldStock(world.regions[from].reserves[resource]-1)
+  world.activeRoute={ resource,from,to,reward:35,status:'in-transit',acceptedAt:Date.now() }
+  saveLivingWorldData()
+  showToast('Regional Route Accepted',`Carry ${resourceLabel(resource)} to ${REGIONS[to].name}.`)
+  updateWorldMap()
+}
+
+function markLivingWorldArrival(regionId) {
+  const route=getLivingWorldData().activeRoute
+  if (!route || route.to !== regionId || route.status === 'ready') return
+  route.status='ready'
+  route.arrivedAt=Date.now()
+  saveLivingWorldData()
+  showToast('Cargo Ready to Deliver',`Open the globe and deliver ${resourceLabel(route.resource)}.`)
+}
+
+function completeLivingWorldRoute() {
+  const world=getLivingWorldData(),route=world.activeRoute
+  if (!route || route.status !== 'ready' || state.currentRegion !== route.to) return
+  world.regions[route.to].reserves[route.resource]=clampWorldStock((world.regions[route.to].reserves[route.resource] || 0)+4)
+  world.regions[route.to].condition=Math.min(100,world.regions[route.to].condition+4)
+  state.coins+=route.reward
+  document.getElementById('statCoins').textContent=state.coins
+  awardSkillXP('logistics',12)
+  createNewsItem('Economy',`${resourceLabel(route.resource)} reaches ${REGIONS[route.to].name}.`,`${REGIONS[route.from].name} answered a regional shortage.`,route.to,4)
+  world.history.unshift({ regionId:route.to,eventId:'player-route',title:`${resourceLabel(route.resource)} delivered`,icon:'🚚',at:Date.now() })
+  world.activeRoute=null
+  saveLivingWorldData()
+  showToast(`+${route.reward} FC · Delivery Complete`,`${REGIONS[route.to].name} is supplied again.`)
+  updateWorldMap()
+}
+
+function renderLivingWorldPanel() {
+  const panel=document.getElementById('livingWorldPanel')
+  if (!panel) return
+  const world=getLivingWorldData(),season=currentSeasonData(),profile=REGION_WORLD_PROFILES[state.currentRegion],region=world.regions[state.currentRegion]
+  const exports=profile.economyRules.exports.map(resource=>`${resourceLabel(resource)} ${region.reserves[resource] || 0}`).join(' · ')
+  const needs=profile.economyRules.needs.map(resource=>`${resourceLabel(resource)} ${region.reserves[resource] || 0}`).join(' · ')
+  const active=world.activeRoute
+  const activeHtml=active ? `<div class="living-world-route"><span><b>ACTIVE ROUTE</b>${resourceLabel(active.resource)} · ${REGIONS[active.from].name} → ${REGIONS[active.to].name}</span>${active.status === 'ready' && state.currentRegion === active.to ? '<button data-lw-deliver>Deliver Cargo</button>' : `<button disabled>${active.status === 'ready' ? `Travel to ${REGIONS[active.to].name}` : 'In Transit'}</button>`}</div>` : ''
+  const routes=getLivingWorldRequests()
+  panel.innerHTML=`
+    <div class="living-world-head"><div class="living-world-title">🌍 REGIONAL DIRECTOR</div><div class="living-world-season" style="color:${season.color}">${season.icon} ${season.name}</div></div>
+    <div class="living-world-summary">${season.summary} Director tick ${world.tickCount || 0} · ${REGIONS[state.currentRegion].name} condition ${Math.round(region.condition)}%.</div>
+    ${region.lastEvent ? `<div class="living-world-event"><b>${region.lastEvent.icon} ${region.lastEvent.title}</b><br>${region.lastEvent.text}</div>` : ''}
+    <div class="living-world-flows"><div class="living-world-flow"><b>Exports</b>${exports || 'Local services'}</div><div class="living-world-flow"><b>Needs</b>${needs || 'No shortages'}</div></div>
+    <div class="living-world-routes">${activeHtml}${!active ? routes.map(route=>`<div class="living-world-route"><span>${resourceLabel(route.resource)} · ${REGIONS[route.from].name} → ${REGIONS[route.to].name}</span><button data-lw-accept="${route.resource}|${route.from}|${route.to}" ${state.currentRegion === route.from ? '' : 'disabled'}>${state.currentRegion === route.from ? 'Accept Run' : `Start in ${REGIONS[route.from].name}`}</button></div>`).join('') : ''}</div>`
+}
+
+function initLivingWorld() {
+  const world=getLivingWorldData(),now=Date.now()
+  document.body.classList.remove('season-spring','season-summer','season-fall','season-winter')
+  document.body.classList.add(`season-${world.season}`)
+  const elapsed=now-(world.lastTick || 0)
+  if (!world.lastTick) runRegionalDirector()
+  else if (elapsed>=DIRECTOR_TICK_MS) {
+    const catchup=Math.min(6,Math.floor(elapsed/DIRECTOR_TICK_MS))
+    for (let index=0;index<catchup;index++) runRegionalDirector({silent:index<catchup-1})
+  }
+  if (!livingWorldDirectorTimer) livingWorldDirectorTimer=setInterval(()=>runRegionalDirector(),DIRECTOR_TICK_MS)
 }
 
 // ── RENDER CACHE (offscreen canvases) ──────────────────────
@@ -3349,8 +3590,9 @@ function getCropGrowth(elapsed, info) {
 }
 
 function getCropStageInfo(crop) {
-  const info = CROP_TYPES[crop.type]
-  if (!info) return null
+  const baseInfo = CROP_TYPES[crop.type]
+  if (!baseInfo) return null
+  const info = { ...baseInfo, growthTime:Math.max(1000,Number(crop.growthTime) || baseInfo.growthTime) }
   const planted = crop.plantedAt || 0
   const elapsed = Date.now() - planted
   const stage = getCropGrowth(elapsed, info)
@@ -3396,7 +3638,7 @@ function updateFarmInventory() {
     const info = CROP_TYPES[crop.type]
     if (!info) continue
     const elapsed = now - crop.plantedAt
-    if (elapsed >= info.growthTime) ready++
+    if (elapsed >= (crop.growthTime || info.growthTime)) ready++
   }
   document.getElementById('farmReadyCount').textContent = ready
 
@@ -3509,8 +3751,10 @@ function showFarmPlantOverlay(tx, ty) {
   } else {
     // Show planting options
     title.textContent = 'Plant a Crop'
+    const season=currentSeasonData()
     for (const [key, info] of Object.entries(CROP_TYPES)) {
       const owned = getFarmData().inventory[key] || 0
+      const seasonalGrowth=Math.max(1000,Math.round(info.growthTime/season.cropGrowth))
       const item = document.createElement('div')
       item.className = 'farm-crop-item' + (owned < 1 ? ' unavailable' : '')
       item.innerHTML = `<div class="farm-crop-icon">${info.icon}</div>
@@ -3518,7 +3762,7 @@ function showFarmPlantOverlay(tx, ty) {
           <div class="farm-crop-name">${info.name}</div>
           <div class="farm-crop-detail">Plant 1 &middot; harvest ${info.yield} &middot; owned ${owned}</div>
         </div>
-        <div class="farm-crop-time">${info.growthTime / 1000}s</div>`
+        <div class="farm-crop-time">${Math.ceil(seasonalGrowth / 1000)}s · ${season.icon}</div>`
       if (owned > 0) item.onclick = () => plantCrop(tx, ty, key)
       list.appendChild(item)
     }
@@ -3577,7 +3821,7 @@ function checkCropsReady() {
   for (const crop of data.crops) {
     const info = CROP_TYPES[crop.type]
     if (!info) continue
-    if (now - crop.plantedAt >= info.growthTime) {
+    if (now - crop.plantedAt >= (crop.growthTime || info.growthTime)) {
       showToast('Crops Ready!', 'Harvest your ' + info.name + ' in the farmlands!')
       break
     }
@@ -3592,7 +3836,8 @@ function plantCrop(tx, ty, cropType) {
     return
   }
   data.inventory[cropType]--
-  data.crops.push({ tx, ty, type: cropType, plantedAt: Date.now() })
+  const season=currentSeasonData()
+  data.crops.push({ tx, ty, type: cropType, plantedAt: Date.now(), growthTime:Math.max(1000,Math.round(CROP_TYPES[cropType].growthTime/season.cropGrowth)), plantedSeason:getLivingWorldData().season })
   saveFarmData(data)
   closeFarmOverlay()
   updateFarmInventory()
@@ -3612,6 +3857,7 @@ function harvestCrop(tx, ty, bonusYield=0) {
   const info = CROP_TYPES[crop.type]
   let yield_ = info.yield || 1
   yield_ = Math.floor(yield_ * (1 + getSkillBonus('farmer', 'cropYield')))
+  yield_ = Math.max(1,Math.round(yield_*currentSeasonData().cropYield))
   const soilQuality = getRegionalHealth('farmlands')['Soil quality'] || 50
   if (soilQuality >= 75) yield_ += 1
   yield_ += Math.max(0,Number(bonusYield) || 0)
@@ -6280,7 +6526,8 @@ function spawnCreatureSighting() {
   const healthValues = Object.values(regionHealth).filter(Number.isFinite)
   const healthyHabitat = healthValues.length ? healthValues.reduce((a,b)=>a+b,0)/healthValues.length : 50
   const rarePool = regionalPool.filter(item => item.rarity === 'rare')
-  const creaturePool = healthyHabitat >= 72 && Math.random() < 0.42 ? rarePool : regionalPool
+  const seasonalWildlife=currentSeasonData().wildlife || 1
+  const creaturePool = healthyHabitat >= 72 && Math.random() < Math.min(.55,0.42*seasonalWildlife) ? rarePool : regionalPool
   const creature = creaturePool[Math.floor(Math.random() * creaturePool.length)]
   if (!creature) return
 
@@ -6333,7 +6580,8 @@ function updateCreatureSightings(dt) {
   _creatureSpawnTimer -= dt
   if (_creatureSpawnTimer <= 0 && !state.creatureSighting && !_creatureEncounterId) {
     const tower = state.currentRegion === 'whisper-woods' && getWoodsData().campsites.tower
-    _creatureSpawnTimer = (tower ? 12 : 25) + Math.random() * (tower ? 20 : 35)
+    const wildlifePace=Math.max(.65,currentSeasonData().wildlife || 1)
+    _creatureSpawnTimer = ((tower ? 12 : 25) + Math.random() * (tower ? 20 : 35))/wildlifePace
     spawnCreatureSighting()
   }
 }
@@ -7507,12 +7755,7 @@ function updateWeather(dt) {
     w.timer = 0
     w.nextChange = 20 + Math.random() * 40
     
-    const roll = Math.random()
-    if (roll < 0.4) w.type = 'clear'
-    else if (roll < 0.65) w.type = 'cloudy'
-    else if (roll < 0.85) w.type = 'rain'
-    else if (roll < 0.95) w.type = 'storm'
-    else w.type = 'fog'
+    w.type = weightedWorldChoice(regionWeatherProfile())
     
     w.targetIntensity = w.type === 'clear' ? 0 : (w.type === 'cloudy' ? 0.3 : (w.type === 'fog' ? 0.5 : 0.7 + Math.random() * 0.3))
     
@@ -10066,6 +10309,11 @@ function setupUI() {
     if (target && target !== state.currentRegion) {
       startTravel(target)
     }
+  })
+  document.getElementById('livingWorldPanel').addEventListener('click',event=>{
+    const accept=event.target.closest('[data-lw-accept]')
+    if (accept && !accept.disabled) { acceptLivingWorldRoute(accept.dataset.lwAccept); return }
+    if (event.target.closest('[data-lw-deliver]')) completeLivingWorldRoute()
   })
 
   // Debug panel (Ctrl+Shift+D to toggle)
@@ -13201,6 +13449,7 @@ function updateWorldMap() {
   } else {
     shipmentEl.style.display = 'none'
   }
+  renderLivingWorldPanel()
 }
 
 function startTravel(targetRegion) {
@@ -13360,6 +13609,7 @@ function completeTravel(targetRegion) {
   updateWoodsHUD()
   updateMobileActionBar()
   prepareRegionIdentity(targetRegion)
+  markLivingWorldArrival(targetRegion)
 
   if (targetRegion === 'farmlands') {
     showToast('Arrived at Farmlands', 'Build your farm, grow food, supply the city.')
@@ -13493,6 +13743,7 @@ async function init() {
   loadSkills()
   updateSkillTitleUI()
   loadSignalWire()
+  initLivingWorld()
   postDailyWoodsSignal()
   getShipments()
   await checkShipmentDeliveries()
