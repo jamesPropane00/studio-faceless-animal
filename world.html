@@ -304,10 +304,16 @@
         border:1px solid rgba(167,139,250,.28);border-radius:10px;background:rgba(10,11,16,.9);
         color:#ddd6fe;font-size:1rem;box-shadow:0 5px 18px rgba(0,0,0,.25)
       }
+      .mobile-portfolio-button{display:block!important;position:fixed;right:50px;top:50px;z-index:82;width:38px;height:34px;border:1px solid rgba(167,139,250,.28);border-radius:10px;background:rgba(10,11,16,.9);color:#ddd6fe;font-size:1rem;box-shadow:0 5px 18px rgba(0,0,0,.25)}
       .coord-display{display:none}
       .game-panel{bottom:64px;max-height:calc(72vh - 64px)}
       .world-map-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important}
       .construction-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important}
+      .portfolio-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important;width:100%!important}
+      .portfolio-body{max-height:none}
+      .portfolio-card{grid-template-columns:1fr}
+      .portfolio-actions button{flex:1}
+      .selection-card{bottom:72px;width:calc(100vw - 12px)}
       .construction-hud{left:6px;bottom:72px;width:165px;padding:.42rem}
       .city-health-hud{left:177px;bottom:72px;width:calc(100vw - 183px);max-width:210px;padding:.42rem}
       .city-health-hud.solo{left:6px;width:210px}
@@ -969,6 +975,34 @@
     .district-health-row strong{color:#f5f3ff;font-size:.58rem}
     .district-health-row p{margin:.2rem 0 0;color:#9d92a4;font-size:.47rem;line-height:1.45}
     .lifecycle-warning{color:#fca5a5!important}
+    .portfolio-panel{width:min(760px,calc(100vw - 1rem))!important;max-width:none}
+    .portfolio-body{display:grid;gap:.75rem;max-height:74vh;overflow-y:auto;padding:.8rem}
+    .portfolio-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem}
+    .portfolio-region{display:grid;gap:.42rem}
+    .portfolio-region-title{display:flex;align-items:center;justify-content:space-between;color:#e9d5ff;font-size:.65rem;font-weight:900}
+    .portfolio-region-title span{color:#8f8198;font-size:.48rem}
+    .portfolio-card{display:grid;grid-template-columns:1fr auto;gap:.65rem;align-items:center;padding:.65rem;border:1px solid rgba(167,139,250,.14);border-radius:9px;background:rgba(124,58,237,.045)}
+    .portfolio-card h4{margin:0;color:#f5f3ff;font-size:.62rem}
+    .portfolio-card p{margin:.2rem 0 0;color:#9f93a7;font-size:.48rem;line-height:1.45}
+    .portfolio-actions{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:flex-end}
+    .portfolio-actions button,.selection-actions button{padding:.36rem .52rem;border:1px solid rgba(167,139,250,.25);border-radius:6px;background:rgba(124,58,237,.09);color:#ddd6fe;font-size:.48rem;font-weight:850;cursor:pointer}
+    .selection-card{
+      position:fixed;left:50%;bottom:18px;z-index:115;width:min(430px,calc(100vw - 1rem));transform:translateX(-50%);
+      border:1px solid rgba(167,139,250,.28);border-radius:12px;background:rgba(10,11,16,.96);backdrop-filter:blur(16px);
+      box-shadow:0 18px 55px rgba(0,0,0,.48),0 0 25px rgba(124,58,237,.08);overflow:hidden
+    }
+    .selection-card.panel-hidden{display:none}
+    .selection-body{padding:.75rem}
+    .selection-kicker{color:#a78bfa;font-size:.46rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+    .selection-body h3{margin:.18rem 0;color:#faf5ff;font-size:.8rem}
+    .selection-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.35rem;margin:.55rem 0}
+    .selection-detail{padding:.42rem;border:1px solid rgba(255,255,255,.06);border-radius:7px;background:rgba(255,255,255,.025)}
+    .selection-detail b{display:block;color:#f3e8ff;font-size:.55rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .selection-detail span{color:#8f8198;font-size:.43rem}
+    .selection-actions{display:flex;gap:.35rem;flex-wrap:wrap}
+    .selection-actions button{flex:1;min-width:85px}
+    .selection-hint{margin:.45rem 0 0;color:#746b79;font-size:.43rem;text-align:center}
+    .mobile-portfolio-button{display:none}
 
     /* ── Vehicle Marker ── */
     .wm-vehicle {
@@ -1916,6 +1950,14 @@
       .city-health-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .construction-row{grid-template-columns:1fr}
       .construction-row button{width:100%}
+      .portfolio-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important;width:100%!important}
+      .portfolio-body{max-height:none}
+      .portfolio-summary{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .portfolio-card{grid-template-columns:1fr}
+      .portfolio-actions{justify-content:stretch}
+      .portfolio-actions button{flex:1}
+      .selection-card{bottom:72px;width:calc(100vw - 12px)}
+      .mobile-portfolio-button{display:block;position:fixed;right:50px;top:50px;z-index:82;width:38px;height:34px;border:1px solid rgba(167,139,250,.28);border-radius:10px;background:rgba(10,11,16,.9);color:#ddd6fe;font-size:1rem;box-shadow:0 5px 18px rgba(0,0,0,.25)}
       body.testing-joystick .action-btn{width:52px;height:52px;font-size:1.2rem}
       body.testing-joystick .joystick-zone{width:130px;height:130px}
     }
@@ -2453,6 +2495,7 @@
   <button class="tool-btn" id="btnPW" data-tip="Public Works">&#x1F3F0;</button>
   <button class="tool-btn" id="btnBlock" data-tip="Urban DNA">&#x1F3D8;&#xFE0F;</button>
   <button class="tool-btn" id="btnProperty" data-tip="Properties">&#x1F3E1;</button>
+  <button class="tool-btn" id="btnPortfolio" data-tip="Portfolio">📁</button>
   <button class="tool-btn" id="btnGang" data-tip="Gangs">&#x1F46A;</button>
   <button class="tool-btn" id="btnCreatures" data-tip="Creatures">&#x1F43E;</button>
   <button class="tool-btn" id="btnSkills" data-tip="Skill Trees">&#x1F331;</button>
@@ -2464,6 +2507,7 @@
 </div>
 
 <nav class="mobile-action-bar" id="mobileActionBar" aria-label="Regional actions"></nav>
+<button class="mobile-portfolio-button" id="mobilePortfolioButton" type="button" aria-label="Open property portfolio">📁</button>
 <button class="mobile-map-button" id="mobileMapButton" type="button" aria-label="Open world map">🌐</button>
 
 <div class="mode-indicator" id="modeIndicator">Build Mode: Click to place</div>
@@ -2658,6 +2702,9 @@
   <div class="prop-deed" id="propDeed">
     <div class="prop-deed-title" id="propDeedTitle">Property Deed</div>
     <div class="prop-deed-sub" id="propDeedSub">Certificate of Ownership</div>
+    <div class="prop-deed-row"><span class="label">Owner</span><span class="val" id="propOwnerName">Unknown</span></div>
+    <div class="prop-deed-row"><span class="label">Region</span><span class="val" id="propOwnerRegion">Unknown</span></div>
+    <div class="prop-deed-row"><span class="label">Deed</span><span class="val" id="propOwnerDeed">#0000</span></div>
     <div class="prop-deed-row"><span class="label">Type</span><span class="val" id="propDeedType">House</span></div>
     <div class="prop-deed-row"><span class="label">Level</span><span class="val"><span class="prop-level-badge" id="propLevelBadge">Lv.1</span></span></div>
     <div class="prop-level-bar"><div class="prop-level-fill" id="propLevelFill" style="width:0%"></div></div>
@@ -2818,12 +2865,28 @@
   <button id="cityHealthOpen" type="button">View City Health</button>
 </aside>
 
+<section class="portfolio-panel game-panel panel-hidden" id="portfolioPanel" aria-label="Property Portfolio">
+  <div class="panel-header">
+    <div class="panel-title">📁 Property Portfolio</div>
+    <div class="panel-close" id="portfolioPanelClose">&times;</div>
+  </div>
+  <div class="portfolio-body" id="portfolioBody"></div>
+</section>
+
 <section class="construction-panel game-panel panel-hidden" id="constructionPanel" aria-label="City Construction">
   <div class="panel-header">
     <div class="panel-title">🏗️ City Growth & Construction</div>
     <div class="panel-close" id="constructionPanelClose">&times;</div>
   </div>
   <div class="construction-body" id="constructionBody"></div>
+</section>
+
+<section class="selection-card panel-hidden" id="selectionCard" aria-label="World selection">
+  <div class="panel-header">
+    <div class="panel-title" id="selectionCardTitle">Selected Property</div>
+    <div class="panel-close" id="selectionCardClose">&times;</div>
+  </div>
+  <div class="selection-body" id="selectionCardBody"></div>
 </section>
 
 <div class="settings-panel game-panel" id="settingsPanel">
@@ -3161,6 +3224,10 @@ const state = {
   ownBuildingsCount: 0,
   settingsPanelOpen: false,
   constructionFocusId: null,
+  selectedWorldTarget: null,
+  selectionHighlightUntil: 0,
+  lastWorldTap: { id:null, at:0 },
+  portfolioTravel: null,
   settings: {
     farmAmbience: true
   },
@@ -3634,6 +3701,368 @@ for (const [regionId, entries] of Object.entries(REGIONAL_BUILD_CATALOGS)) {
 Object.assign(BUILDING_TYPES, REGIONAL_BUILD_TYPES)
 
 const REGIONAL_OBJECTS_KEY = 'fas_regional_build_objects_v1'
+const OWNERSHIP_META_KEY = 'fas_ownership_metadata_v1'
+const PORTFOLIO_REGION_ORDER=['city','farmlands','whisper-woods','purple-pulse','iron-district','coast','mountains']
+let ownershipMetaCache=null
+
+function safeText(value) {
+  return String(value ?? '').replace(/[&<>"']/g,char=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[char]))
+}
+
+function currentPlayerOwnerName() {
+  const playerName=String(state.player?.name || '').trim()
+  const username=String(state.username || '').trim()
+  if (playerName && playerName.toLowerCase()!=='anon') return playerName
+  if (username && username.toLowerCase()!=='anon') return username
+  return 'Guest Resident'
+}
+
+function getOwnershipMetaStore() {
+  if (ownershipMetaCache) return ownershipMetaCache
+  try { ownershipMetaCache=JSON.parse(localStorage.getItem(OWNERSHIP_META_KEY) || '{}') } catch { ownershipMetaCache={} }
+  if (!ownershipMetaCache || typeof ownershipMetaCache!=='object') ownershipMetaCache={}
+  return ownershipMetaCache
+}
+
+function ownershipDeedNumber(item) {
+  const source=String(item?.id || `${item?.region_id}_${item?.tile_x}_${item?.tile_y}`)
+  let hash=0
+  for (let index=0;index<source.length;index++) hash=(Math.imul(hash,31)+source.charCodeAt(index))|0
+  return String(1000+(Math.abs(hash)%9000))
+}
+
+function isPlayerOwnedObject(item) {
+  if (!item || item.owner_id==='world-nature' || item.natural) return false
+  return Boolean(item._regionalLocal || item.owner_id==='local-player' || (state.userId && item.owner_id===state.userId))
+}
+
+function ownerNameFor(item) {
+  if (!item) return 'Unowned'
+  if (item.owner_name) return item.owner_name
+  if (isPlayerOwnedObject(item)) return currentPlayerOwnerName()
+  const raw=String(item.owner_id || 'Unowned')
+  return raw.length>18 ? `${raw.slice(0,8)}…` : raw
+}
+
+function normalizeOwnershipMetadata(item) {
+  if (!item) return null
+  const id=String(item.id || `${item.object_type || item.building_type}_${item.region_id}_${item.tile_x}_${item.tile_y}`)
+  item.id=item.id || id
+  const saved=getOwnershipMetaStore()[id]
+  if (saved) Object.assign(item,saved)
+  item.region_id=normalizeRegionId(item.region_id ?? item.region)
+  item.owner_id=item.owner_id || (item._regionalLocal ? (state.userId || 'local-player') : null)
+  if (isPlayerOwnedObject(item) && (item._regionalLocal || item.owner_id==='local-player' || !item.owner_name || ['anon','guest resident'].includes(String(item.owner_name).toLowerCase()))) item.owner_name=currentPlayerOwnerName()
+  item.property_type=item.property_type || item.object_type || item.building_type || item.infra_type || 'property'
+  item.property_name=item.property_name || BUILDING_TYPES[item.property_type]?.name || String(item.property_type).replace(/-/g,' ').replace(/\b\w/g,char=>char.toUpperCase())
+  item.tile_x=Number(item.tile_x) || 0
+  item.tile_y=Number(item.tile_y) || 0
+  item.value=Math.max(0,Number(item.value) || Number(BUILDING_TYPES[item.property_type]?.cost) || 0)
+  item.status=item.status || 'active'
+  item.lastVisitedAt=Number(item.lastVisitedAt) || Number(item.placed_at) || 0
+  item.deed_number=item.deed_number || ownershipDeedNumber(item)
+  return item
+}
+
+function saveOwnershipMetadata(item) {
+  normalizeOwnershipMetadata(item)
+  const store=getOwnershipMetaStore()
+  store[String(item.id)]={
+    owner_id:item.owner_id,owner_name:item.owner_name,region_id:item.region_id,
+    property_name:item.property_name,property_type:item.property_type,
+    tile_x:item.tile_x,tile_y:item.tile_y,value:item.value,status:item.status,
+    lastVisitedAt:item.lastVisitedAt,deed_number:item.deed_number
+  }
+  const keys=Object.keys(store)
+  for (const key of keys.slice(0,Math.max(0,keys.length-500))) delete store[key]
+  try { localStorage.setItem(OWNERSHIP_META_KEY,JSON.stringify(store)) } catch {}
+}
+
+function normalizeAllOwnership() {
+  let regionalChanged=false
+  for (const item of [...state.buildings,...state.infrastructure]) {
+    const before=item.owner_name
+    normalizeOwnershipMetadata(item)
+    if (isPlayerOwnedObject(item) && !item._ownershipIndexed) {
+      item._ownershipIndexed=true
+      saveOwnershipMetadata(item)
+    }
+    if (item._regionalLocal && item.owner_name!==before) regionalChanged=true
+  }
+  if (regionalChanged) saveRegionalObjects()
+}
+
+function portfolioEligible(item) {
+  if (!isPlayerOwnedObject(item) || item.natural) return false
+  const type=item.object_type || item.building_type || item.infra_type
+  return !['roads','road','street','tree','light','bench','fence'].includes(type)
+}
+
+function portfolioObjectStatus(item) {
+  const construction=getCityPlotStage(item)
+  if (construction.meta && construction.stage<6) return `${construction.label} · ${Math.round(construction.progress*100)}%`
+  if (construction.meta) return lifecycleStatusLabel(item)
+  if (item.status && item.status!=='active') return String(item.status).replace(/\b\w/g,char=>char.toUpperCase())
+  return 'Active'
+}
+
+function getPortfolioEntries() {
+  normalizeAllOwnership()
+  const entries=[...state.buildings,...state.infrastructure].filter(portfolioEligible).map(item=>{
+    normalizeOwnershipMetadata(item)
+    const type=item.property_type
+    const income=Number(item.income_rate ?? BUILDING_TYPES[type]?.income) || 0
+    const value=normalizeRegionId(item.region_id)==='city' ? calcPropertyValue(item) : item.value
+    const lastCollected=Number(item.last_collected) || (item.last_collected_at ? Date.parse(item.last_collected_at) : 0)
+    const readyText=Number(item.pending_income)>0 ? `${Math.floor(item.pending_income)} FC ready to collect` : lastCollected ? `Last collected ${formatPortfolioVisit(lastCollected).replace('Visited','').trim().toLowerCase()}` : item.object_category==='crop' ? 'Open Farm to check crop readiness' : 'No collection recorded'
+    return {
+      id:String(item.id),source:item,synthetic:false,region_id:item.region_id,
+      property_name:item.property_name,property_type:type,owner_name:ownerNameFor(item),
+      value,status:portfolioObjectStatus(item),level:state.properties[item.id]?.level || 1,
+      incomeText:income ? `${getEffectiveIncome(item).toFixed(1)} FC/min` : (item.object_category==='crop' ? 'Crop production plot' : 'No passive income'),
+      readyText,lastVisitedAt:item.lastVisitedAt || 0,tile_x:item.tile_x,tile_y:item.tile_y
+    }
+  })
+  const farm=getFarmData(),owner=currentPlayerOwnerName(),farmReady=getFarmReadyCounts(farm)
+  const farmReadyCount=Number(farmReady.crops || 0)+Number(farmReady.machines || 0)+Number(farmReady.animals || 0)+Number(farmReady.trucks || farmReady.activeTrucks || 0)
+  entries.push({
+    id:'portfolio_pine_hollow',synthetic:true,syntheticType:'farm',region_id:'farmlands',
+    property_name:'Pine Hollow Farm',property_type:'farm-estate',owner_name:owner,
+    value:Number(farm.propertyValue) || 45000,status:`Farm Level ${farm.farmLevel}`,
+    level:farm.farmLevel,incomeText:`${farmReadyCount} ready farm tasks`,
+      readyText:farmReadyCount ? `${farmReadyCount} actions ready` : 'Farm routine caught up',lastVisitedAt:Number(farm.lastFarmVisitAt) || 0,tile_x:WORLD_SIZE/2,tile_y:WORLD_SIZE/2
+  })
+  entries.push({
+    id:'portfolio_sanctuary',synthetic:true,syntheticType:'sanctuary',region_id:'farmlands',
+    property_name:'Pine Hollow Creature Sanctuary',property_type:'sanctuary',owner_name:owner,
+    value:Number(farm.sanctuary.propertyBonus) || 0,status:farm.sanctuary.status==='unlocked' ? `Level ${farm.sanctuary.level} · Open` : 'Locked',
+    level:farm.sanctuary.level,incomeText:farm.sanctuary.status==='unlocked' ? `${Math.floor(farm.sanctuary.tipsPending || 0)} FC tips ready` : 'Unlock at Farm Level 3 or 2 trusted creatures',
+    readyText:farm.sanctuary.status==='unlocked' ? `${Math.floor(farm.sanctuary.tipsPending || 0)} FC tips ready` : 'Sanctuary not unlocked',lastVisitedAt:Number(farm.lastFarmVisitAt) || 0,tile_x:WORLD_SIZE/2+4,tile_y:WORLD_SIZE/2+4
+  })
+  return entries
+}
+
+function portfolioEntryById(id) {
+  return getPortfolioEntries().find(entry=>entry.id===String(id)) || null
+}
+
+function formatPortfolioVisit(timestamp) {
+  if (!timestamp) return 'Not visited yet'
+  const elapsed=Math.max(0,Date.now()-timestamp)
+  if (elapsed<60000) return 'Visited just now'
+  if (elapsed<3600000) return `Visited ${Math.floor(elapsed/60000)}m ago`
+  if (elapsed<86400000) return `Visited ${Math.floor(elapsed/3600000)}h ago`
+  return `Visited ${Math.floor(elapsed/86400000)}d ago`
+}
+
+function renderPortfolio() {
+  const body=document.getElementById('portfolioBody')
+  if (!body) return
+  const entries=getPortfolioEntries(),totalValue=entries.reduce((sum,item)=>sum+Number(item.value || 0),0)
+  const groups=PORTFOLIO_REGION_ORDER.map(regionId=>({ regionId,entries:entries.filter(item=>item.region_id===regionId) })).filter(group=>group.entries.length)
+  body.innerHTML=`<div class="portfolio-summary"><div class="construction-stat"><b>${entries.length}</b><span>owned properties</span></div><div class="construction-stat"><b>${totalValue.toLocaleString()} FC</b><span>portfolio value</span></div><div class="construction-stat"><b>${groups.length}</b><span>regions represented</span></div></div>${groups.map(group=>`<section class="portfolio-region"><div class="portfolio-region-title">${safeText(REGIONS[group.regionId]?.label || '📍')} ${safeText(group.regionId==='farmlands'?'Pine Hollow Farm / Farmlands':REGIONS[group.regionId]?.name || group.regionId)}<span>${group.entries.length} owned</span></div>${group.entries.map(item=>`<article class="portfolio-card"><div><h4>${safeText(BUILDING_TYPES[item.property_type]?.icon || (item.syntheticType==='farm'?'🌾':item.syntheticType==='sanctuary'?'🐾':'🏷️'))} ${safeText(item.property_name)}</h4><p>${safeText(String(item.property_type).replace(/-/g,' '))} · ${safeText(item.status)} · Level ${item.level}<br>${Number(item.value || 0).toLocaleString()} FC · ${safeText(item.incomeText)}<br>${safeText(item.readyText || 'No collection recorded')}<br>Owner: ${safeText(item.owner_name)} · ${safeText(formatPortfolioVisit(item.lastVisitedAt))}</p></div><div class="portfolio-actions"><button data-portfolio-action="view" data-property-id="${safeText(item.id)}">View</button><button data-portfolio-action="travel" data-property-id="${safeText(item.id)}">Travel</button><button data-portfolio-action="deed" data-property-id="${safeText(item.id)}">Open Deed</button></div></article>`).join('')}</section>`).join('')}`
+}
+
+function openPortfolio() {
+  openPanel('portfolioPanel')
+  renderPortfolio()
+}
+
+function markPortfolioVisited(entry) {
+  entry.lastVisitedAt=Date.now()
+  if (entry.source) {
+    entry.source.lastVisitedAt=entry.lastVisitedAt
+    saveOwnershipMetadata(entry.source)
+    if (entry.source._regionalLocal) saveRegionalObjects()
+  } else {
+    const farm=getFarmData()
+    farm.lastFarmVisitAt=entry.lastVisitedAt
+    saveFarmData(farm)
+  }
+}
+
+function openPortfolioDeed(entry) {
+  if (!entry) return
+  if (entry.syntheticType==='farm') { openFarmHub('today');return }
+  if (entry.syntheticType==='sanctuary') { openFarmHub('sanctuary');return }
+  if (entry.source && state.buildings.includes(entry.source)) openPropertyPanel(entry.source.id)
+  else if (entry.source) openSelectionCard({kind:'infrastructure',data:entry.source,x:entry.tile_x,y:entry.tile_y,range:1.1})
+}
+
+function focusPortfolioEntry(entry,{openDeed=false}={}) {
+  if (!entry) return
+  state.player.x=Math.max(1,Math.min(WORLD_SIZE-2,Number(entry.tile_x)-1.5))
+  state.player.y=Math.max(1,Math.min(WORLD_SIZE-2,Number(entry.tile_y)-1.5))
+  state.player.tx=state.player.x
+  state.player.ty=state.player.y
+  state.selectionHighlightUntil=Date.now()+5000
+  if (entry.source) {
+    const target={kind:'building',data:entry.source,x:entry.tile_x,y:entry.tile_y,range:1.2}
+    selectWorldTarget(target)
+    const focusId=worldTargetId(target)
+    setTimeout(()=>{ if (worldTargetId(state.selectedWorldTarget)===focusId && Date.now()>=state.selectionHighlightUntil) state.selectedWorldTarget=null },5100)
+  }
+  markPortfolioVisited(entry)
+  showToast('📍 Property Located',`${entry.property_name} highlighted for 5 seconds.`)
+  if (openDeed) setTimeout(()=>openPortfolioDeed(entry),250)
+}
+
+function travelToPortfolioEntry(entry,{openDeed=false}={}) {
+  if (!entry || state.travel.active) return
+  if (entry.region_id===state.currentRegion) { closeAllPanels();focusPortfolioEntry(entry,{openDeed});return }
+  state.portfolioTravel={ id:entry.id,openDeed }
+  startTravel(entry.region_id)
+}
+
+function finishPortfolioTravel() {
+  const pending=state.portfolioTravel
+  if (!pending) return
+  state.portfolioTravel=null
+  const entry=portfolioEntryById(pending.id)
+  if (entry && entry.region_id===state.currentRegion) setTimeout(()=>focusPortfolioEntry(entry,{openDeed:pending.openDeed}),350)
+}
+
+function worldTargetId(target) {
+  if (!target) return null
+  const data=target.data
+  return `${target.kind}:${typeof data==='string' ? data : data?.id || data?.tile_x+'_'+data?.tile_y || target.x+'_'+target.y}`
+}
+
+function detectDoubleTap(targetId,timestamp=Date.now()) {
+  const previous=state.lastWorldTap || { id:null,at:0 }
+  const isDouble=Boolean(targetId && previous.id===targetId && timestamp-previous.at>=40 && timestamp-previous.at<=380)
+  state.lastWorldTap=isDouble ? { id:null,at:0 } : { id:targetId,at:timestamp }
+  return isDouble
+}
+
+function selectWorldTarget(target,{open=false}={}) {
+  if (!target) return
+  state.selectedWorldTarget=target
+  state.selectionHighlightUntil=Math.max(state.selectionHighlightUntil || 0,Date.now()+5000)
+  if (target.data && typeof target.data==='object' && isPlayerOwnedObject(target.data) && Date.now()-(target.data.lastVisitedAt || 0)>30000) {
+    target.data.lastVisitedAt=Date.now()
+    saveOwnershipMetadata(target.data)
+    if (target.data._regionalLocal) saveRegionalObjects()
+  }
+  if (open) openSelectionCard(target)
+}
+
+function closeSelectionCard() {
+  document.getElementById('selectionCard')?.classList.add('panel-hidden')
+}
+
+function selectionDescriptor(target) {
+  const regionId=normalizeRegionId(target?.data?.region_id ?? target?.data?.region ?? state.currentRegion)
+  if (target?.kind==='building' || target?.kind==='infrastructure') {
+    const item=normalizeOwnershipMetadata(target.data),type=item.property_type
+    const construction=getCityPlotStage(item)
+    const status=construction.meta && construction.stage<6 ? `${construction.label} · ${Math.round(construction.progress*100)}%` : construction.meta ? lifecycleStatusLabel(item) : String(item.status || 'active').replace(/\b\w/g,char=>char.toUpperCase())
+    return {
+      kicker:`${REGIONS[regionId]?.name || regionId} · ${String(type).replace(/-/g,' ')}`,
+      name:item.property_name,owner:ownerNameFor(item),region:REGIONS[regionId]?.name || regionId,
+      status,value:`${(construction.meta ? calcPropertyValue(item) : item.value || 0).toLocaleString()} FC`,
+      deed:`#${item.deed_number}`,organization:item.owner_org || item.gang_name || 'Independent',
+      actions:['interact',...(isPlayerOwnedObject(item) && (state.buildings.includes(item) || target.portfolioEntry)?['deed']:[]),'portfolio']
+    }
+  }
+  if (target?.kind==='district') {
+    const district=target.data
+    const metrics=regionId==='city' ? calculateCityAreaMetrics(district) : null
+    const influence=state.districtInfluences.find(item=>String(item.district_id)===String(district.id))
+    const dominant=influence?.influences?.[0]
+    const ownedCount=state.buildings.filter(item=>isPlayerOwnedObject(item) && normalizeRegionId(item.region_id ?? item.region)===regionId && Math.hypot(Number(item.tile_x)-district.center_x,Number(item.tile_y)-district.center_y)<=district.radius).length
+    return {
+      kicker:`${REGIONS[regionId]?.name || regionId} · Territory`,
+      name:district.name || 'Unnamed District',owner:dominant ? `${dominant.tag} · ${dominant.percent}% influence` : 'No dominant organization',
+      region:REGIONS[regionId]?.name || regionId,status:metrics?.status || 'Stable',
+      value:`${metrics?.population ?? district.population ?? 0} population`,
+      deed:`${ownedCount} of your properties`,organization:dominant?.tag || 'Unclaimed',
+      extra:metrics ? `Happiness ${metrics.happiness}% · Food ${metrics.food}% · Safety ${metrics.safety}% · Business ${metrics.businessHealth}%` : 'Regional territory overview',
+      actions:[]
+    }
+  }
+  if (target?.kind==='npc') return { kicker:`${REGIONS[regionId]?.name || regionId} · NPC`,name:target.data.name || 'Resident',owner:'Independent resident',region:REGIONS[regionId]?.name || regionId,status:target.data.state || 'Available',value:target.data.type || 'NPC',deed:'Conversation',organization:target.data.gang || 'None',actions:['interact'] }
+  if (target?.kind==='farm-animal') return { kicker:'Pine Hollow Farm · Animal',name:target.data.name || target.data.species || 'Farm Animal',owner:currentPlayerOwnerName(),region:'Farmlands',status:target.data.mood || 'Happy',value:`Trust ${target.data.trust || 0}%`,deed:'Farm resident',organization:'Pine Hollow Farm',actions:['interact','portfolio'] }
+  if (target?.kind==='sanctuary-slot') {
+    const resident=target.data.resident,slot=target.data.slot
+    return { kicker:'Pine Hollow Creature Sanctuary · Habitat Slot',name:resident?.name || 'Open Habitat Slot',owner:currentPlayerOwnerName(),region:'Farmlands',status:resident ? `${slot.mood || 0}% mood` : 'Available',value:resident ? `Trust ${resident.trust || 100}%` : 'No resident',deed:`Sanctuary Slot ${target.data.index+1}`,organization:'Pine Hollow Sanctuary',actions:['interact','portfolio'] }
+  }
+  if (target?.kind==='farm-lot') return { kicker:'Pine Hollow Farm · Crop Plot',name:'Pine Hollow Crop Row',owner:currentPlayerOwnerName(),region:'Farmlands',status:'Ready for farm work',value:'Production plot',deed:`#${ownershipDeedNumber(target.data)}`,organization:'Pine Hollow Farm',actions:['interact','portfolio'] }
+  if (target?.kind==='creature') {
+    const creature=getCreature(target.data) || state.creatureCollection[target.data] || {}
+    return { kicker:`${REGIONS[state.currentRegion]?.name || state.currentRegion} · Creature`,name:creature.name || 'Unknown Creature',owner:'Wild / unclaimed',region:REGIONS[state.currentRegion]?.name || state.currentRegion,status:'Encounter available',value:`Trust ${creature.trust || 0}%`,deed:'Trail Journal sighting',organization:'Wildlife',actions:['interact'] }
+  }
+  if (target?.kind==='discovery' || target?.kind==='region-discovery') return { kicker:`${REGIONS[state.currentRegion]?.name || state.currentRegion} · Discovery`,name:target.data?.name || 'Regional Discovery',owner:'The living world',region:REGIONS[state.currentRegion]?.name || state.currentRegion,status:'Uncollected',value:'Trail Journal item',deed:'Discovery',organization:'None',actions:['interact'] }
+  return { kicker:REGIONS[regionId]?.name || regionId,name:'World Object',owner:'Unowned',region:REGIONS[regionId]?.name || regionId,status:'Available',value:'—',deed:'—',organization:'Independent',actions:[] }
+}
+
+function openSelectionCard(target=state.selectedWorldTarget) {
+  if (!target) return
+  selectWorldTarget(target)
+  closeAllPanels()
+  const descriptor=selectionDescriptor(target),card=document.getElementById('selectionCard')
+  document.getElementById('selectionCardTitle').textContent=target.kind==='district' ? '🗺️ District Card' : '🏷️ Selection Card'
+  const detail=(label,value)=>`<div class="selection-detail"><b>${safeText(value)}</b><span>${safeText(label)}</span></div>`
+  const actionLabels={ interact:'Interact',deed:'Open Deed',portfolio:'Portfolio' }
+  document.getElementById('selectionCardBody').innerHTML=`<div class="selection-kicker">${safeText(descriptor.kicker)}</div><h3>${safeText(descriptor.name)}</h3><div class="selection-details">${detail('Owner',descriptor.owner)}${detail('Region',descriptor.region)}${detail('Status',descriptor.status)}${detail('Value / Population',descriptor.value)}${detail('Deed / Holdings',descriptor.deed)}${detail('Organization',descriptor.organization)}</div>${descriptor.extra?`<p style="color:#a99bb1;font-size:.5rem">${safeText(descriptor.extra)}</p>`:''}<div class="selection-actions">${descriptor.actions.map(action=>`<button data-selection-action="${action}">${actionLabels[action]}</button>`).join('')}</div><p class="selection-hint">Single tap selects · double tap opens details</p>`
+  card.classList.remove('panel-hidden')
+}
+
+function openPortfolioEntrySelection(entry) {
+  if (!entry) return
+  if (entry.source) {
+    openSelectionCard({kind:'building',data:entry.source,x:entry.tile_x,y:entry.tile_y,range:1.2})
+    return
+  }
+  const synthetic={
+    id:entry.id,region_id:entry.region_id,owner_id:state.userId || 'local-player',owner_name:entry.owner_name,
+    property_name:entry.property_name,property_type:entry.property_type,tile_x:entry.tile_x,tile_y:entry.tile_y,
+    value:entry.value,status:entry.status,deed_number:ownershipDeedNumber(entry),_regionalLocal:true
+  }
+  openSelectionCard({kind:'building',data:synthetic,x:entry.tile_x,y:entry.tile_y,range:1.2,portfolioEntry:entry})
+}
+
+function activateWorldTarget(target) {
+  if (!target) return
+  if (target.kind==='creature') startCreatureEncounter(target.data)
+  else if (target.kind==='discovery') collectWoodsDiscovery(target.data?.id || target.data)
+  else if (target.kind==='region-discovery') collectRegionSeedDiscovery(target.data?.id || target.data)
+  else if (target.kind==='npc') beginEncounter('npc',target.data)
+  else if (target.kind==='farm-animal') openFarmHub('animals')
+  else if (target.kind==='sanctuary-slot') openFarmHub('sanctuary')
+  else if (target.kind==='farm-lot') showFarmPlantOverlay(target.data.tile_x,target.data.tile_y)
+  else if (target.kind==='building' || target.kind==='infrastructure') {
+    const building=target.data
+    if (onInteractBuildObject(building)) return
+    if (isPlayerOwnedObject(building)) openPropertyPanel(building.id)
+    else if ({shop:1,club:1,warehouse:1,hide:1}[building.building_type]) openJobPanel(building.id)
+  }
+}
+
+function worldTargetAt(world) {
+  const sighting=state.creatureSighting
+  if (sighting?.phase>=2 && Math.hypot(sighting.x-world.x,sighting.y-world.y)<4) return {kind:'creature',data:sighting.creatureId,x:sighting.x,y:sighting.y,range:1.5}
+  const discovery=state.currentRegion==='whisper-woods' && woodsRuntime.discoveries.find(item=>Math.hypot(item.x-world.x,item.y-world.y)<2.4)
+  if (discovery) return {kind:'discovery',data:discovery,x:discovery.x,y:discovery.y,range:1.2}
+  const regionDiscovery=REGION_IDENTITY_SEEDS[state.currentRegion] && regionIdentityRuntime.discoveries.find(item=>Math.hypot(item.x-world.x,item.y-world.y)<2.4)
+  if (regionDiscovery) return {kind:'region-discovery',data:regionDiscovery,x:regionDiscovery.x,y:regionDiscovery.y,range:1.2}
+  const building=state.buildings.find(item=>isInCurrentRegion(item) && Math.abs(item.tile_x-world.x)<1.4 && Math.abs(item.tile_y-world.y)<1.4)
+  if (building) return {kind:'building',data:building,x:building.tile_x+.35,y:building.tile_y+.35,range:1.2}
+  const infrastructure=state.infrastructure.find(item=>isInCurrentRegion(item) && !['road','roads'].includes(item.infra_type) && Math.abs(item.tile_x-world.x)<1.3 && Math.abs(item.tile_y-world.y)<1.3)
+  if (infrastructure) return {kind:'infrastructure',data:infrastructure,x:infrastructure.tile_x+.25,y:infrastructure.tile_y+.25,range:1.1}
+  const npc=state.npcs.find(item=>isInCurrentRegion(item) && Math.hypot(item.x-world.x,item.y-world.y)<2.2)
+  if (npc) return {kind:'npc',data:npc,x:npc.x,y:npc.y,range:1.3}
+  const farmAnimal=state.currentRegion==='farmlands' && state.farmAnimals?.find(item=>Math.hypot(item.x-world.x,item.y-world.y)<2)
+  if (farmAnimal) return {kind:'farm-animal',data:farmAnimal,x:farmAnimal.x,y:farmAnimal.y,range:1.1}
+  if (state.currentRegion==='farmlands') {
+    const tx=Math.round(world.x),ty=Math.round(world.y)
+    const lot=state.lots.find(item=>item.tile_x===tx && item.tile_y===ty && item.lot_type==='field')
+    if (lot) return {kind:'farm-lot',data:lot,x:tx+.3,y:ty+.3,range:1}
+  }
+  const district=state.influenceViewEnabled && state.districts.find(item=>isInCurrentRegion(item) && Math.hypot(world.x-item.center_x,world.y-item.center_y)<item.radius)
+  if (district) return {kind:'district',data:district,x:district.center_x,y:district.center_y,range:2}
+  return null
+}
 
 function getFarmData() {
   let data = null
@@ -3642,6 +4071,16 @@ function getFarmData() {
     if (raw) data = JSON.parse(raw)
   } catch {}
   if (!data || typeof data !== 'object') data = {}
+  data.owner_id=data.owner_id || state.userId || 'local-player'
+  data.owner_name=currentPlayerOwnerName()
+  data.region_id='farmlands'
+  data.property_name='Pine Hollow Farm'
+  data.property_type='farm-estate'
+  data.tile_x=Number(data.tile_x) || WORLD_SIZE/2
+  data.tile_y=Number(data.tile_y) || WORLD_SIZE/2
+  data.value=Math.max(0,Number(data.propertyValue) || Number(data.value) || 45000)
+  data.status=data.status || 'active'
+  data.lastVisitedAt=Number(data.lastFarmVisitAt) || Number(data.lastVisitedAt) || 0
   data.crops = Array.isArray(data.crops) ? data.crops : []
   data.inventory = data.inventory || {}
   if (data.inventory.veggies && !data.inventory.carrots) data.inventory.carrots = data.inventory.veggies
@@ -3741,6 +4180,12 @@ function getFarmData() {
   data.sanctuary.lastTickAt = Number(data.sanctuary.lastTickAt) || Date.now()
   data.sanctuary.lastStoryAt = Number(data.sanctuary.lastStoryAt) || 0
   data.sanctuary.propertyBonus = Math.max(0,Number(data.sanctuary.propertyBonus) || 0)
+  Object.assign(data.sanctuary,{
+    owner_id:data.owner_id,owner_name:data.owner_name,region_id:'farmlands',
+    property_name:'Pine Hollow Creature Sanctuary',property_type:'sanctuary',
+    tile_x:data.tile_x+4,tile_y:data.tile_y+4,value:data.sanctuary.propertyBonus,
+    lastVisitedAt:data.lastVisitedAt
+  })
   data.buildings = data.buildings || {}
   const buildingDefaults = { farmhouse:1, barn:1, silo:1, chickenCoop:1, cowPasture:0, feedMill:1, bakery:0, dairy:0, roadsideStand:0 }
   for (const [key, value] of Object.entries(buildingDefaults)) {
@@ -5007,11 +5452,11 @@ function renderFarmHub() {
         <button class="farm-action gold" data-farm-action="sanctuary-collect" ${summary.tips < 1 && data.sanctuary.keeperXPPending < 1 ? 'disabled' : ''}>Collect Tips · ${summary.tips} FC</button>
         <div class="sanctuary-grid">${data.sanctuary.slots.map((slot,index)=>{
           const resident=sanctuaryCreatureForSlot(slot)
-          if (!resident) return `<article class="sanctuary-slot empty"><div><div class="sanctuary-creature-icon">＋</div><b>Open Habitat Slot</b><br><small>Assign a trusted creature below.</small></div></article>`
+          if (!resident) return `<article class="sanctuary-slot empty" data-sanctuary-slot="${index}"><div><div class="sanctuary-creature-icon">＋</div><b>Open Habitat Slot</b><br><small>Assign a trusted creature below.</small></div></article>`
           const profile=getCreature(resident.creatureId || resident.id) || resident
           const preferred=sanctuaryPreferredHabitat(resident)
           const matched=sanctuaryHabitatMatches(slot.habitat,preferred)
-          return `<article class="sanctuary-slot">
+          return `<article class="sanctuary-slot" data-sanctuary-slot="${index}">
             <div class="sanctuary-creature-head"><div class="sanctuary-creature-icon">${resident.icon || '🐾'}</div><div><h3>${resident.name}</h3><small>${resident.rarity} · ${matched ? 'habitat matched' : 'habitat mismatch'}</small></div></div>
             <div class="sanctuary-meter"><span style="width:${slot.mood || 0}%"></span></div>
             <div class="sanctuary-details">
@@ -8325,8 +8770,36 @@ function drawTileCtx(c, x, y, terrain, s) {
   c.stroke()
 }
 
+function drawOwnershipPlaque(item,s) {
+  if (!item || item.owner_id==='world-nature' || item.natural) return
+  const selectedId=worldTargetId(state.selectedWorldTarget)
+  const itemId=`${state.selectedWorldTarget?.kind || 'building'}:${item.id}`
+  const selected=selectedId===itemId || state.selectedWorldTarget?.data===item
+  const closeEnough=Math.hypot(Number(item.tile_x)-state.player.x,Number(item.tile_y)-state.player.y)<14
+  if (!selected && (state.camera.zoom<1.05 || !closeEnough)) return
+  normalizeOwnershipMetadata(item)
+  const z=state.camera.zoom,name=ownerNameFor(item),label=`⌂ ${name.length>12?name.slice(0,11)+'…':name}`
+  const y=s.y-26*z
+  ctx.save()
+  if (selected || Date.now()<state.selectionHighlightUntil && state.selectedWorldTarget?.data===item) {
+    const pulse=.55+.25*Math.sin(performance.now()*.008)
+    ctx.beginPath();ctx.ellipse(s.x,s.y,25*z,12*z,0,0,Math.PI*2)
+    ctx.strokeStyle=`rgba(192,132,252,${pulse})`;ctx.lineWidth=Math.max(1.3,2*z);ctx.stroke()
+  }
+  ctx.font=`800 ${Math.max(7,7.5*z)}px Inter`
+  const width=ctx.measureText(label).width+10*z,height=13*z
+  ctx.fillStyle='rgba(8,9,14,.82)'
+  ctx.beginPath();ctx.roundRect(s.x-width/2,y-height,width,height,4*z);ctx.fill()
+  ctx.strokeStyle=selected?'rgba(216,180,254,.78)':'rgba(167,139,250,.32)';ctx.lineWidth=Math.max(.6,z*.7);ctx.stroke()
+  ctx.fillStyle=selected?'#f3e8ff':'#c4b5fd';ctx.textAlign='center';ctx.textBaseline='middle'
+  ctx.fillText(label,s.x,y-height/2)
+  ctx.restore()
+}
+
 function drawBuilding(building) {
-  drawBuildingAt(building, worldToScreen(building.tile_x, building.tile_y))
+  const s=worldToScreen(building.tile_x,building.tile_y)
+  drawBuildingAt(building,s)
+  drawOwnershipPlaque(building,s)
 }
 
 function drawBuildPreview() {
@@ -9207,6 +9680,7 @@ function drawCityPlotBuilding(building,s) {
 function drawBuildingAt(building, s) {
   const type = BUILDING_TYPES[building.building_type]
   if (!type) return
+  normalizeOwnershipMetadata(building)
   if (drawFarmPlacedObject(building,s)) return
   if (drawCityPlotBuilding(building,s)) return
   
@@ -9810,6 +10284,7 @@ function drawInfrastructure() {
         ctx.fillText(spec.icon,s.x,s.y)
       }
     }
+    if (!['road','roads'].includes(type)) drawOwnershipPlaque(item,s)
   }
   drawRoads()
 }
@@ -10425,7 +10900,10 @@ function render() {
   }
 
   for (const item of drawOrder) {
-    if (item.type === 'building') drawBuildingAt(item.data, item.sx)
+    if (item.type === 'building') {
+      drawBuildingAt(item.data,item.sx)
+      drawOwnershipPlaque(item.data,item.sx)
+    }
     else if (item.type === 'player') drawEntityAt(item.x, item.y, state.player.color, state.player.name, true, item.sx)
     else if (item.type === 'other') drawEntityAt(item.x, item.y, '#8b5cf6', item.data.name, false, item.sx)
     else if (item.type === 'npc') {
@@ -10729,33 +11207,11 @@ function initMobileUX() {
     if (button) handleMobileAction(button.dataset.mobileAction)
   })
   document.getElementById('mobileMapButton')?.addEventListener('click',()=>openPanel('worldMapPanel'))
+  document.getElementById('mobilePortfolioButton')?.addEventListener('click',openPortfolio)
 }
 
 function mobileTargetAt(world) {
-  const sighting=state.creatureSighting
-  if (sighting?.phase >= 2 && Math.hypot(sighting.x-world.x,sighting.y-world.y)<4) return { kind:'creature', data:sighting.creatureId, x:sighting.x, y:sighting.y, range:1.5 }
-  const discovery=state.currentRegion === 'whisper-woods' && woodsRuntime.discoveries.find(item=>Math.hypot(item.x-world.x,item.y-world.y)<2.4)
-  if (discovery) return { kind:'discovery', data:discovery.id, x:discovery.x, y:discovery.y, range:1.2 }
-  const regionDiscovery=REGION_IDENTITY_SEEDS[state.currentRegion] && regionIdentityRuntime.discoveries.find(item=>Math.hypot(item.x-world.x,item.y-world.y)<2.4)
-  if (regionDiscovery) return { kind:'region-discovery', data:regionDiscovery.id, x:regionDiscovery.x, y:regionDiscovery.y, range:1.2 }
-  const constructionSite=state.buildings.find(item=>{
-    if (!isInCurrentRegion(item) || Math.abs(item.tile_x-world.x)>=1.4 || Math.abs(item.tile_y-world.y)>=1.4) return false
-    const construction=getCityPlotStage(item)
-    return construction.meta && construction.stage<6
-  })
-  if (constructionSite) return { kind:'building', data:constructionSite, x:constructionSite.tile_x+.35, y:constructionSite.tile_y+.35, range:1.2 }
-  const npc=state.npcs.find(item=>isInCurrentRegion(item) && Math.hypot(item.x-world.x,item.y-world.y)<2.2)
-  if (npc) return { kind:'npc', data:npc, x:npc.x, y:npc.y, range:1.3 }
-  const farmAnimal=state.currentRegion === 'farmlands' && state.farmAnimals?.find(item=>Math.hypot(item.x-world.x,item.y-world.y)<2)
-  if (farmAnimal) return { kind:'farm-animal', data:farmAnimal, x:farmAnimal.x, y:farmAnimal.y, range:1.1 }
-  const building=state.buildings.find(item=>isInCurrentRegion(item) && Math.abs(item.tile_x-world.x)<1.4 && Math.abs(item.tile_y-world.y)<1.4)
-  if (building) return { kind:'building', data:building, x:building.tile_x+.35, y:building.tile_y+.35, range:1.2 }
-  if (state.currentRegion === 'farmlands') {
-    const tx=Math.round(world.x),ty=Math.round(world.y)
-    const lot=state.lots.find(item=>item.tile_x === tx && item.tile_y === ty && item.lot_type === 'field')
-    if (lot) return { kind:'farm-lot', data:lot, x:tx+.3, y:ty+.3, range:1 }
-  }
-  return null
+  return worldTargetAt(world)
 }
 
 function queueTouchDestination(world,target=null) {
@@ -10780,18 +11236,8 @@ function queueTouchDestination(world,target=null) {
 
 function performTouchInteraction(target) {
   if (!target) return
-  if (target.kind === 'creature') startCreatureEncounter(target.data)
-  else if (target.kind === 'discovery') collectWoodsDiscovery(target.data)
-  else if (target.kind === 'region-discovery') collectRegionSeedDiscovery(target.data)
-  else if (target.kind === 'npc') beginEncounter('npc',target.data)
-  else if (target.kind === 'farm-animal') openFarmHub('animals')
-  else if (target.kind === 'farm-lot') showFarmPlantOverlay(target.data.tile_x,target.data.tile_y)
-  else if (target.kind === 'building') {
-    const building=target.data
-    if (onInteractBuildObject(building)) return
-    if (building.owner_id === state.userId || building._regionalLocal) openPropertyPanel(building.id)
-    else if ({shop:1,club:1,warehouse:1,hide:1}[building.building_type]) openJobPanel(building.id)
-  }
+  if (target.kind==='open-selection') openSelectionCard(target.data)
+  else activateWorldTarget(target)
 }
 
 function updateTouchNavigation(dt) {
@@ -10898,7 +11344,13 @@ function setupMouse() {
   }, { passive: false })
 
   canvas.addEventListener('dblclick', e => {
+    if (isMobileUX() || state.buildMode || state.godMode || state.pwMode || state.blockMode) return
     const world = screenToWorld(e.clientX, e.clientY)
+    const target=worldTargetAt(world)
+    if (target) {
+      selectWorldTarget(target,{open:true})
+      return
+    }
     state.player.tx = Math.max(0, Math.min(WORLD_SIZE - 1, world.x))
     state.player.ty = Math.max(0, Math.min(WORLD_SIZE - 1, world.y))
   })
@@ -10918,57 +11370,25 @@ function setupMouse() {
       placeBlock(world.x, world.y, state.blockType)
     } else {
       if (isMobileUX()) {
-        queueTouchDestination(world,mobileTargetAt(world))
+        const target=mobileTargetAt(world)
+        if (!target) {
+          state.lastWorldTap={id:null,at:0}
+          queueTouchDestination(world,null)
+          return
+        }
+        const targetId=worldTargetId(target),doubleTap=detectDoubleTap(targetId,Date.now())
+        selectWorldTarget(target)
+        if (target.kind==='district') {
+          state.touchNav.active=false
+          if (doubleTap) openSelectionCard(target)
+          return
+        }
+        queueTouchDestination(world,target)
+        state.touchNav.pending=doubleTap ? {kind:'open-selection',data:target} : null
         return
       }
-      const clickedConstruction = state.buildings.find(b => {
-        if (!isInCurrentRegion(b)) return false
-        const construction=getCityPlotStage(b)
-        return construction.meta && construction.stage<6 &&
-          Math.abs(b.tile_x-world.x)<1.4 && Math.abs(b.tile_y-world.y)<1.4
-      })
-      const clickedNPC = state.npcs.find(npc =>
-        isInCurrentRegion(npc) && Math.hypot(npc.x-world.x,npc.y-world.y) < 1.8
-      )
-      const clickedBuilding = state.buildings.find(b => {
-        if (!isInCurrentRegion(b)) return false
-        const dx = Math.abs(b.tile_x - world.x)
-        const dy = Math.abs(b.tile_y - world.y)
-        return dx < 1 && dy < 1
-      })
-      
-      if (clickedConstruction) {
-        onInteractBuildObject(clickedConstruction)
-      } else if (clickedNPC) {
-        beginEncounter('npc',clickedNPC)
-      } else if (clickedBuilding) {
-        if (onInteractBuildObject(clickedBuilding)) {
-          // Region gameplay hook handled this object.
-        } else if (clickedBuilding.owner_id === state.userId || clickedBuilding._regionalLocal) {
-          openPropertyPanel(clickedBuilding.id)
-        } else {
-          const payRates = { shop: 2, club: 3, warehouse: 1, hide: 5 }
-          if (payRates[clickedBuilding.building_type]) {
-            openJobPanel(clickedBuilding.id)
-          }
-        }
-      } else if (state.currentRegion === 'whisper-woods' && handleWoodsDiscoveryClick(world.x, world.y)) {
-        // Small woodland discovery collected
-      } else if (handleSightingClick(world.x, world.y)) {
-        // Creature sighting handled
-      } else if (handleRegionSeedClick(world.x,world.y)) {
-        // Lightweight regional identity discovery collected
-      } else if (state.currentRegion === 'farmlands') {
-        // Check farm lot click
-        const tx = Math.round(world.x)
-        const ty = Math.round(world.y)
-        const clickedLot = state.lots.find(l =>
-          l.tile_x === tx && l.tile_y === ty && l.lot_type === 'field'
-        )
-        if (clickedLot) {
-          showFarmPlantOverlay(tx, ty)
-        }
-      }
+      const target=worldTargetAt(world)
+      if (target) selectWorldTarget(target)
     }
   })
 }
@@ -11061,6 +11481,8 @@ const ALL_PANELS = [
   { id: 'jobPanel', stateKey: null, btnId: null },
   { id: 'worldMapPanel', stateKey: 'worldMapOpen', btnId: 'btnWorldMap' },
   { id: 'constructionPanel', stateKey: null, btnId: null },
+  { id: 'portfolioPanel', stateKey: null, btnId: 'btnPortfolio' },
+  { id: 'selectionCard', stateKey: null, btnId: null },
   { id: 'settingsPanel', stateKey: 'settingsPanelOpen', btnId: 'btnSettings' },
   { id: 'creaturesPanel', stateKey: null, btnId: 'btnCreatures' },
   { id: 'skillTreesPanel', stateKey: null, btnId: 'btnSkills' },
@@ -11182,6 +11604,7 @@ function setupUI() {
   document.getElementById('btnGod').addEventListener('click', () => openPanel('godPanel'))
   document.getElementById('btnPW').addEventListener('click', () => openPanel('pwPanel'))
   document.getElementById('btnBlock').addEventListener('click', () => openPanel('blockPanel'))
+  document.getElementById('btnPortfolio').addEventListener('click', openPortfolio)
   document.getElementById('btnGang').addEventListener('click', () => openPanel('gangPanel'))
   document.getElementById('btnProperty').addEventListener('click', () => {
     if (state.propertyPanelOpen) { closeAllPanels(); return }
@@ -11216,6 +11639,8 @@ function setupUI() {
   document.getElementById('jobPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('worldMapClose').addEventListener('click', closeAllPanels)
   document.getElementById('constructionPanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('portfolioPanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('selectionCardClose').addEventListener('click', closeSelectionCard)
   document.getElementById('constructionHudOpen').addEventListener('click', () => openConstructionPanel())
   document.getElementById('cityHealthOpen').addEventListener('click', () => openConstructionPanel())
   document.getElementById('constructionBody').addEventListener('click', event => {
@@ -11223,6 +11648,27 @@ function setupUI() {
     if (!button) return
     state.constructionFocusId=button.dataset.constructionFocus
     renderConstructionPanel()
+  })
+  document.getElementById('portfolioBody').addEventListener('click',event=>{
+    const button=event.target.closest('[data-portfolio-action]')
+    if (!button) return
+    const entry=portfolioEntryById(button.dataset.propertyId)
+    if (!entry) return
+    if (button.dataset.portfolioAction==='view') openPortfolioEntrySelection(entry)
+    else if (button.dataset.portfolioAction==='travel') travelToPortfolioEntry(entry)
+    else if (button.dataset.portfolioAction==='deed') travelToPortfolioEntry(entry,{openDeed:true})
+  })
+  document.getElementById('selectionCardBody').addEventListener('click',event=>{
+    const button=event.target.closest('[data-selection-action]')
+    if (!button || !state.selectedWorldTarget) return
+    const target=state.selectedWorldTarget
+    closeSelectionCard()
+    if (button.dataset.selectionAction==='interact') activateWorldTarget(target)
+    else if (button.dataset.selectionAction==='portfolio') openPortfolio()
+    else if (button.dataset.selectionAction==='deed') {
+      if (target.portfolioEntry) openPortfolioDeed(target.portfolioEntry)
+      else if (target.data && isPlayerOwnedObject(target.data)) openPropertyPanel(target.data.id)
+    }
   })
   document.getElementById('creaturesPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('cityDemandBody').addEventListener('click', event => {
@@ -11288,6 +11734,14 @@ function setupUI() {
   })
   document.getElementById('farmHubBody').addEventListener('click', event => {
     const button = event.target.closest('[data-farm-action]')
+    const sanctuaryCard=!button && event.target.closest('[data-sanctuary-slot]')
+    if (sanctuaryCard) {
+      const index=Number(sanctuaryCard.dataset.sanctuarySlot),farm=getFarmData(),slot=farm.sanctuary.slots[index]
+      const target={kind:'sanctuary-slot',data:{index,slot:slot || {},resident:sanctuaryCreatureForSlot(slot)},x:state.player.x,y:state.player.y}
+      selectWorldTarget(target)
+      if (detectDoubleTap(`sanctuary-slot:${index}`,Date.now())) openSelectionCard(target)
+      return
+    }
     if (!button || button.disabled) return
     handleFarmHubAction(button.dataset.farmAction)
   })
@@ -11457,6 +11911,7 @@ function mergeRegionalObjects(target, saved) {
       tile_y: Number(raw.tile_y),
       owner_id: raw.owner_id || state.userId || 'local-player'
     }
+    normalizeOwnershipMetadata(item)
     if (!byId.has(String(item.id))) {
       target.push(item)
       byId.set(String(item.id), item)
@@ -11469,12 +11924,13 @@ function loadRegionalObjects() {
   const saved = getRegionalSavedObjects()
   mergeRegionalObjects(state.buildings, saved.buildings)
   mergeRegionalObjects(state.infrastructure, saved.infrastructure)
+  normalizeAllOwnership()
 }
 
 function saveRegionalObjects() {
   try {
     localStorage.setItem(REGIONAL_OBJECTS_KEY, JSON.stringify({
-      version: 1,
+      version: 2,
       buildings: state.buildings.filter(item => item._regionalLocal),
       infrastructure: state.infrastructure.filter(item => item._regionalLocal)
     }))
@@ -12111,6 +12567,9 @@ function openPropertyPanel(buildingId) {
   closeAllPanels()
   document.getElementById('propDeedTitle').textContent = type.name + ' Deed'
   document.getElementById('propDeedSub').textContent = 'Property #' + String(buildingId).slice(-6)
+  document.getElementById('propOwnerName').textContent=ownerNameFor(building)
+  document.getElementById('propOwnerRegion').textContent=REGIONS[building.region_id]?.name || building.region_id
+  document.getElementById('propOwnerDeed').textContent=`#${building.deed_number}`
   document.getElementById('propDeedType').textContent = type.name
   document.getElementById('propLevelBadge').textContent = 'Lv.' + prop.level
   const pct = prop.xpToNext ? Math.min(100, (prop.xp % prop.xpToNext) / prop.xpToNext * 100) : 0
@@ -12708,6 +13167,11 @@ async function placeBuildingAt(x, y) {
     tile_x:placement.tileX,
     tile_y:placement.tileY,
     owner_id:state.userId || 'local-player',
+    owner_name:currentPlayerOwnerName(),
+    property_name:type.name,
+    property_type:typeId,
+    value:type.cost || 0,
+    lastVisitedAt:Date.now(),
     object_type:typeId,
     object_category:type.category,
     building_type:typeId,
@@ -12721,6 +13185,7 @@ async function placeBuildingAt(x, y) {
     condition:100,
     status:'active'
   }
+  normalizeOwnershipMetadata(object)
   const stagedCityBuild=state.currentRegion === 'city' && CITY_PLOT_TYPES.has(typeId)
   if (stagedCityBuild) {
     ensureConstructionData(object,{newBuild:true})
@@ -13135,6 +13600,7 @@ async function setupMultiplayer() {
           b.last_collected = new Date(b.last_collected_at).getTime()
         }
         b.region_id = normalizeRegionId(b.region_id)
+        normalizeOwnershipMetadata(b)
         return b
       })
       loadRegionalObjects()
@@ -13274,11 +13740,12 @@ async function fetchWorldState() {
           b.last_collected = new Date(b.last_collected_at).getTime()
         }
         b.region_id = normalizeRegionId(b.region_id)
+        normalizeOwnershipMetadata(b)
         return b
       })
       state.districts = (data.districts || []).map(d => { d.region_id = normalizeRegionId(d.region_id); return d })
       state.themesDirty = true
-      state.infrastructure = (data.infrastructure || []).map(i => { i.region_id = normalizeRegionId(i.region_id); return i })
+      state.infrastructure = (data.infrastructure || []).map(i => { i.region_id = normalizeRegionId(i.region_id); normalizeOwnershipMetadata(i); return i })
       state.walkableDirty = true
       state.blocks = (data.blocks || []).map(b => { b.region_id = normalizeRegionId(b.region_id); return b })
       state.lots = (data.lots || []).map(l => { l.region_id = normalizeRegionId(l.region_id); return l })
@@ -14771,6 +15238,7 @@ function completeTravel(targetRegion) {
       document.getElementById('encounterPanel').classList.remove('open')
     }
   }
+  finishPortfolioTravel()
 }
 
 // ── REGION ISOLATION ───────────────────────────────────────────
