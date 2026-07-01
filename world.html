@@ -307,6 +307,8 @@
       .coord-display{display:none}
       .game-panel{bottom:64px;max-height:calc(72vh - 64px)}
       .world-map-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important}
+      .construction-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important}
+      .construction-hud{left:6px;bottom:72px;width:165px;padding:.42rem}
       .woods-hud{display:none!important}
       .help-prompt{bottom:70px;width:calc(100vw - 12px)}
       .help-prompt-inner{padding:.35rem .45rem;gap:.3rem;flex-wrap:nowrap}
@@ -917,6 +919,32 @@
     .world-map-lines.cargo-complete { stroke:#a78bfa;stroke-width:2.8;opacity:1; }
     @keyframes cargoRoute { to { stroke-dashoffset:-10; } }
     .season-hud-badge { margin-left:.3rem;color:#fde68a;font-size:.54rem;font-weight:850;white-space:nowrap; }
+    .construction-hud {
+      position:fixed;left:170px;bottom:max(14px,env(safe-area-inset-bottom,0px));z-index:76;
+      width:190px;padding:.55rem;border:1px solid rgba(250,204,21,.24);border-radius:10px;
+      background:rgba(10,11,16,.9);backdrop-filter:blur(12px);box-shadow:0 8px 28px rgba(0,0,0,.28);
+    }
+    .construction-hud.hidden{display:none}
+    .construction-hud strong{display:block;color:#fef3c7;font-size:.58rem}
+    .construction-hud span{display:block;margin:.15rem 0 .42rem;color:#a99ea8;font-size:.49rem}
+    .construction-hud button,.construction-action{
+      width:100%;padding:.34rem;border:1px solid rgba(250,204,21,.28);border-radius:6px;
+      background:rgba(250,204,21,.08);color:#fde68a;font-size:.5rem;font-weight:850;cursor:pointer;
+    }
+    .construction-panel{width:min(560px,calc(100vw - 1rem));max-width:none}
+    .construction-body{display:grid;gap:.65rem;max-height:72vh;overflow-y:auto;padding:.75rem}
+    .construction-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.4rem}
+    .construction-stat{padding:.52rem;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:rgba(255,255,255,.025);text-align:center}
+    .construction-stat b{display:block;color:#f8fafc;font-size:.85rem}
+    .construction-stat span{color:#8f8396;font-size:.46rem}
+    .construction-detail,.construction-row{padding:.62rem;border:1px solid rgba(167,139,250,.14);border-radius:9px;background:rgba(124,58,237,.05)}
+    .construction-detail h3,.construction-row h4{margin:0;color:#f5f3ff;font-size:.64rem}
+    .construction-detail p,.construction-row p{margin:.25rem 0 0;color:#9d92a4;font-size:.5rem;line-height:1.45}
+    .construction-progress{height:6px;margin:.42rem 0;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.07)}
+    .construction-progress span{display:block;height:100%;background:linear-gradient(90deg,#facc15,#a855f7);transition:width .25s}
+    .construction-list{display:grid;gap:.4rem}
+    .construction-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:.55rem}
+    .construction-row button{width:auto;min-width:76px}
 
     /* ── Vehicle Marker ── */
     .wm-vehicle {
@@ -1855,6 +1883,11 @@
       .living-world-route{align-items:stretch;flex-direction:column}
       .living-world-route button{width:100%;min-height:34px}
       .living-world-summary,.living-world-event,.living-world-recommend{font-size:.58rem}
+      .construction-hud{left:6px;bottom:72px;width:165px;padding:.42rem}
+      .construction-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important}
+      .construction-summary{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .construction-row{grid-template-columns:1fr}
+      .construction-row button{width:100%}
       body.testing-joystick .action-btn{width:52px;height:52px;font-size:1.2rem}
       body.testing-joystick .joystick-zone{width:130px;height:130px}
     }
@@ -2743,6 +2776,20 @@
   <section class="living-world-panel" id="livingWorldPanel" aria-label="Living World Director"></section>
 </div>
 
+<aside class="construction-hud hidden" id="constructionHud" aria-live="polite">
+  <strong id="constructionHudTitle">🏗️ City Construction</strong>
+  <span id="constructionHudText">No active construction.</span>
+  <button id="constructionHudOpen" type="button">View All</button>
+</aside>
+
+<section class="construction-panel game-panel panel-hidden" id="constructionPanel" aria-label="City Construction">
+  <div class="panel-header">
+    <div class="panel-title">🏗️ City Construction</div>
+    <div class="panel-close" id="constructionPanelClose">&times;</div>
+  </div>
+  <div class="construction-body" id="constructionBody"></div>
+</section>
+
 <div class="settings-panel game-panel" id="settingsPanel">
   <div class="panel-header">
     <div class="panel-title">&#x2699;&#xFE0F; Settings</div>
@@ -2837,6 +2884,7 @@
   <button class="debug-btn" id="debugWorldResetCargo">Reset Cargo Route</button>
   <button class="debug-btn" id="debugWorldAdvanceSeason">Advance Season</button>
   <button class="debug-btn" id="debugWorldTick">Run Director Tick</button>
+  <button class="debug-btn" id="debugConvertCityPlots">Convert Old Buildings to Staged Plots</button>
   <button class="debug-btn" id="debugDoneBtn" style="background:var(--red);margin-top:4px;">Close Debug</button>
 </div>
 
@@ -3072,6 +3120,7 @@ const state = {
   },
   ownBuildingsCount: 0,
   settingsPanelOpen: false,
+  constructionFocusId: null,
   settings: {
     farmAmbience: true
   },
@@ -4551,6 +4600,10 @@ function touchFarmActivity() {
 
 function showFarmReturnBriefing(force = false) {
   if (farmReturnShown && !force) return
+  if (document.querySelector('.game-panel.open')) {
+    farmReturnShown = true
+    return
+  }
   const data = getFarmData()
   const summary = farmSessionSummary || { awayMs:0, ...getFarmReadyCounts(data) }
   const name = state.player?.name || state.username || 'Farmer'
@@ -7416,8 +7469,8 @@ function pavementConnections(roadSet,x,y,z) {
 }
 
 function drawBlackPavementTile(s,x,y,links,z) {
-  const halfW = TILE_W*z*.39
-  const halfH = TILE_H*z*.39
+  const halfW = TILE_W*z*.34
+  const halfH = TILE_H*z*.34
   ctx.fillStyle = '#111216'
   // A simple black pavement block is visibly smaller than a building lot.
   // Wide under-connectors meet neighboring blocks without lane lines.
@@ -8392,48 +8445,154 @@ function drawFarmPlacedObject(building,s) {
   return true
 }
 
-const CITY_PLOT_KEY='fas_city_plot_progress_v1'
+const CITY_CONSTRUCTION_KEY='fas_city_construction_v2'
 const CITY_PLOT_TYPES=new Set(['house','shop','club','warehouse','hide','development-block'])
 const CITY_PLOT_META={
   house:{ duration:60000,population:6 },
-  shop:{ duration:50000,population:0 },
-  club:{ duration:70000,population:0 },
-  warehouse:{ duration:55000,population:0 },
-  hide:{ duration:45000,population:0 },
-  'development-block':{ duration:90000,population:14 }
+  shop:{ duration:90000,population:0 },
+  club:{ duration:120000,population:0 },
+  warehouse:{ duration:120000,population:0 },
+  hide:{ duration:90000,population:0 },
+  'development-block':{ duration:180000,population:14 }
 }
-const cityPlotRuntime={ accumulator:0,initialized:false,completed:null }
+const CONSTRUCTION_STAGE_LABELS=['Preparing Plot','Laying Foundation','Framing','Building Up','Exterior Work','Finishing','Complete']
+const cityPlotRuntime={ accumulator:0,initialized:false,overrides:null }
 
-function getCityPlotCompleted() {
-  if (cityPlotRuntime.completed) return cityPlotRuntime.completed
-  try { cityPlotRuntime.completed=new Set(JSON.parse(localStorage.getItem(CITY_PLOT_KEY) || '[]')) } catch { cityPlotRuntime.completed=new Set() }
-  return cityPlotRuntime.completed
-}
-
-function saveCityPlotCompleted() {
-  try { localStorage.setItem(CITY_PLOT_KEY,JSON.stringify([...getCityPlotCompleted()].slice(-200))) } catch {}
+function constructionBuildingId(building) {
+  return String(building.id || `${building.building_type}_${building.tile_x}_${building.tile_y}`)
 }
 
-function cityPlotTimestamp(building) {
-  const raw=building.placed_at ?? building.created_at ?? building.createdAt
-  if (typeof raw === 'number') return raw
-  const parsed=raw ? Date.parse(raw) : NaN
-  return Number.isFinite(parsed) ? parsed : 0
+function getConstructionOverrides() {
+  if (cityPlotRuntime.overrides) return cityPlotRuntime.overrides
+  try { cityPlotRuntime.overrides=JSON.parse(localStorage.getItem(CITY_CONSTRUCTION_KEY) || '{}') } catch { cityPlotRuntime.overrides={} }
+  if (!cityPlotRuntime.overrides || typeof cityPlotRuntime.overrides !== 'object') cityPlotRuntime.overrides={}
+  return cityPlotRuntime.overrides
 }
 
-function getCityPlotStage(building) {
+function constructionSnapshot(building) {
+  return {
+    constructionStage:building.constructionStage,
+    constructionStartedAt:building.constructionStartedAt,
+    constructionDuration:building.constructionDuration,
+    constructionCompleteAt:building.constructionCompleteAt,
+    isComplete:building.isComplete,
+    populationAdded:building.populationAdded,
+    incomeUnlocked:building.incomeUnlocked,
+    constructionAnnounced:building.constructionAnnounced
+  }
+}
+
+function saveConstructionBuilding(building) {
+  const overrides=getConstructionOverrides()
+  overrides[constructionBuildingId(building)]=constructionSnapshot(building)
+  const keys=Object.keys(overrides)
+  for (const key of keys.slice(0,Math.max(0,keys.length-250))) delete overrides[key]
+  try { localStorage.setItem(CITY_CONSTRUCTION_KEY,JSON.stringify(overrides)) } catch {}
+  if (building._regionalLocal) saveRegionalObjects()
+}
+
+function ensureConstructionData(building,{newBuild=false}={}) {
   const typeId=building.object_type || building.building_type,meta=CITY_PLOT_META[typeId]
-  if (!meta) return { stage:3,progress:1,meta:null }
-  const timestamp=cityPlotTimestamp(building)
-  if (!timestamp) return { stage:3,progress:1,meta }
-  const progress=Math.max(0,Math.min(1,(Date.now()-timestamp)/meta.duration))
-  const stage=progress<.18 ? 0 : progress<.48 ? 1 : progress<.78 ? 2 : 3
-  return { stage,progress,meta }
+  const regionId=normalizeRegionId(building.region_id ?? building.region ?? state.currentRegion)
+  if (regionId !== 'city' || !meta) return null
+  const override=getConstructionOverrides()[constructionBuildingId(building)]
+  if (!Number.isFinite(Number(building.constructionStage)) && override) Object.assign(building,override)
+  if (!Number.isFinite(Number(building.constructionStage))) {
+    const duration=meta.duration
+    if (newBuild) {
+      const now=Date.now()
+      Object.assign(building,{
+        constructionStage:0,constructionStartedAt:now,constructionDuration:duration,
+        constructionCompleteAt:now+duration,isComplete:false,populationAdded:0,
+        incomeUnlocked:false,constructionAnnounced:false
+      })
+    } else {
+      const completeAt=Date.now()-1
+      Object.assign(building,{
+        constructionStage:6,constructionStartedAt:completeAt-duration,constructionDuration:duration,
+        constructionCompleteAt:completeAt,isComplete:true,populationAdded:meta.population,
+        incomeUnlocked:true,constructionAnnounced:true
+      })
+      building._constructionBackfilled=true
+    }
+  }
+  building.constructionDuration=Math.max(1000,Number(building.constructionDuration) || meta.duration)
+  building.constructionStartedAt=Number(building.constructionStartedAt) || (Date.now()-building.constructionDuration)
+  building.constructionCompleteAt=Number(building.constructionCompleteAt) || (building.constructionStartedAt+building.constructionDuration)
+  return building
+}
+
+function getCityPlotStage(building,now=Date.now()) {
+  const normalized=ensureConstructionData(building)
+  if (!normalized) return { stage:6,progress:1,meta:null,label:'Complete',remaining:0 }
+  const typeId=building.object_type || building.building_type,meta=CITY_PLOT_META[typeId]
+  const elapsed=Math.max(0,now-building.constructionStartedAt)
+  const progress=Math.max(0,Math.min(1,elapsed/building.constructionDuration))
+  const stage=progress>=1 ? 6 : Math.min(5,Math.floor(progress*6))
+  return { stage,progress,meta,label:CONSTRUCTION_STAGE_LABELS[stage],remaining:Math.max(0,building.constructionCompleteAt-now) }
+}
+
+function constructionIncomeMultiplier(building) {
+  const construction=getCityPlotStage(building)
+  if (construction.stage<=3) return 0
+  if (construction.stage<=5) return .25
+  return 1
 }
 
 function cityPlotPopulation(building) {
-  const progress=getCityPlotStage(building)
-  return progress.stage>=3 ? (progress.meta?.population || 0) : 0
+  const construction=getCityPlotStage(building)
+  return construction.stage>=6 ? (Number(building.populationAdded) || construction.meta?.population || 0) : 0
+}
+
+function formatConstructionTime(ms) {
+  const seconds=Math.max(0,Math.ceil(ms/1000))
+  return seconds>=60 ? `${Math.floor(seconds/60)}m ${seconds%60}s` : `${seconds}s`
+}
+
+function cityConstructionBuildings() {
+  return state.buildings.filter(building=>{
+    const construction=ensureConstructionData(building)
+    return construction && getCityPlotStage(building).stage<6
+  })
+}
+
+function constructionCompletionStory(building) {
+  const typeId=building.object_type || building.building_type,type=BUILDING_TYPES[typeId]?.name || 'building'
+  if (typeId === 'house' || typeId === 'development-block') {
+    return { headline:'New residents move into Faceless City.',body:`${building.populationAdded || 0} residents arrived after a ${type.toLowerCase()} finished construction.` }
+  }
+  if (typeId === 'club') return { headline:'Neon club opens in Purple Pulse.',body:'Finishing crews switched on the signs and opened the doors to the city music circuit.' }
+  return { headline:`New ${type.toLowerCase()} opens in Faceless City.`,body:'Construction finished and the property is now fully operational.' }
+}
+
+function updateConstructionHUD() {
+  const hud=document.getElementById('constructionHud')
+  if (!hud) return
+  const active=state.buildings.map(building=>({ building,construction:getCityPlotStage(building) }))
+    .filter(item=>item.construction.meta && item.construction.stage<6)
+    .sort((a,b)=>a.construction.remaining-b.construction.remaining)
+  hud.classList.toggle('hidden',state.currentRegion !== 'city' || active.length===0)
+  document.getElementById('constructionHudTitle').textContent=`🏗️ ${active.length} Building${active.length===1?'':'s'} Under Construction`
+  document.getElementById('constructionHudText').textContent=active.length ? `Next: ${BUILDING_TYPES[active[0].building.building_type]?.name || 'Building'} in ${formatConstructionTime(active[0].construction.remaining)}` : 'No active construction.'
+}
+
+function renderConstructionPanel(focusId=state.constructionFocusId) {
+  const body=document.getElementById('constructionBody')
+  if (!body) return
+  const all=state.buildings.map(building=>({ building,construction:getCityPlotStage(building) })).filter(item=>item.construction.meta)
+  const active=all.filter(item=>item.construction.stage<6).sort((a,b)=>a.construction.remaining-b.construction.remaining)
+  const focus=all.find(item=>constructionBuildingId(item.building)===String(focusId)) || active[0] || null
+  state.constructionFocusId=focus ? constructionBuildingId(focus.building) : null
+  const partial=active.filter(item=>item.construction.stage>=4).length
+  const next=active[0]?.construction.remaining || 0
+  const detail=focus ? `<article class="construction-detail"><h3>${BUILDING_TYPES[focus.building.building_type]?.icon || '🏗️'} ${BUILDING_TYPES[focus.building.building_type]?.name || 'City Building'} · ${focus.construction.label}</h3><div class="construction-progress"><span style="width:${Math.round(focus.construction.progress*100)}%"></span></div><p>${Math.round(focus.construction.progress*100)}% complete · ${formatConstructionTime(focus.construction.remaining)} remaining<br>Expected population: +${focus.construction.meta.population} · income when complete: ${(focus.building.income_rate || BUILDING_TYPES[focus.building.building_type]?.income || 0).toFixed(1)}/min<br>${focus.construction.stage>=4 && focus.construction.stage<6 ? 'Partially open: 25% income active.' : focus.construction.stage<4 ? 'Income locked during construction.' : 'Construction complete.'}</p></article>` : '<article class="construction-detail"><h3>City construction is quiet.</h3><p>Place a house, shop, club, warehouse, hideout, or development block to begin.</p></article>'
+  body.innerHTML=`<div class="construction-summary"><div class="construction-stat"><b>${active.length}</b><span>active sites</span></div><div class="construction-stat"><b>${partial}</b><span>partially open</span></div><div class="construction-stat"><b>${next ? formatConstructionTime(next) : '—'}</b><span>next completion</span></div></div>${detail}<div class="construction-list">${active.map(item=>`<article class="construction-row"><div><h4>${BUILDING_TYPES[item.building.building_type]?.icon || '🏗️'} ${BUILDING_TYPES[item.building.building_type]?.name || 'Building'} · ${item.construction.label}</h4><div class="construction-progress"><span style="width:${Math.round(item.construction.progress*100)}%"></span></div><p>${formatConstructionTime(item.construction.remaining)} remaining</p></div><button class="construction-action" data-construction-focus="${constructionBuildingId(item.building)}">View Site</button></article>`).join('') || '<p style="color:var(--dim);font-size:.55rem">No buildings are currently under construction.</p>'}</div>`
+}
+
+function openConstructionPanel(buildingId=null) {
+  state.constructionFocusId=buildingId || state.constructionFocusId
+  openPanel('constructionPanel')
+  renderConstructionPanel()
 }
 
 function updateCityPlotProgress(dt,initial=false) {
@@ -8441,14 +8600,36 @@ function updateCityPlotProgress(dt,initial=false) {
   if (!initial && cityPlotRuntime.accumulator<1) return
   cityPlotRuntime.accumulator=0
   const cityBuildings=state.buildings.filter(building=>normalizeRegionId(building.region_id ?? building.region) === 'city' && CITY_PLOT_TYPES.has(building.object_type || building.building_type))
-  const completed=getCityPlotCompleted(),firstRun=!cityPlotRuntime.initialized
-  let plotPopulation=0,changed=false
+  const firstRun=!cityPlotRuntime.initialized
+  let plotPopulation=0
   const districtAdds=new Map()
   for (const building of cityBuildings) {
+    ensureConstructionData(building)
+    const construction=getCityPlotStage(building),previousStage=Number(building.constructionStage)
+    let changed=construction.stage!==previousStage || building._constructionBackfilled===true
+    delete building._constructionBackfilled
+    building.constructionStage=construction.stage
+    if (construction.stage>=6 && !building.isComplete) {
+      building.isComplete=true
+      building.populationAdded=construction.meta?.population || 0
+      building.incomeUnlocked=true
+      changed=true
+      if (!firstRun && !building.constructionAnnounced) {
+        const story=constructionCompletionStory(building)
+        createNewsItem('City',story.headline,story.body,'city',4)
+        showToast('🏗️ Construction Complete',story.headline)
+      }
+      building.constructionAnnounced=true
+    }
+    if (construction.stage<6) {
+      building.isComplete=false
+      building.populationAdded=0
+      building.incomeUnlocked=false
+    }
+    if (changed) saveConstructionBuilding(building)
     const population=cityPlotPopulation(building)
     plotPopulation+=population
     if (population) {
-      const plotId=building.id || `${building.building_type}_${building.tile_x}_${building.tile_y}`
       const bx=building.tile_x || building.x,by=building.tile_y || building.y
       const district=state.districts.find(item=>{
         if (normalizeRegionId(item.region_id ?? item.region) !== 'city') return false
@@ -8456,14 +8637,6 @@ function updateCityPlotProgress(dt,initial=false) {
         return dx*dx+dy*dy<=(item.radius || 0)*(item.radius || 0)
       })
       if (district) districtAdds.set(district.id,(districtAdds.get(district.id) || 0)+population)
-      if (!completed.has(plotId)) {
-        completed.add(plotId);changed=true
-        if (!firstRun) {
-          const typeId=building.object_type || building.building_type
-          createNewsItem('City',typeId === 'house' ? 'New residents move into a finished city plot.' : 'A city development plot is complete.',`${CITY_PLOT_META[typeId]?.population || 0} residents added near the completed ${BUILDING_TYPES[typeId]?.name || 'development'}.`,'city',3)
-          showToast('🏘️ City Plot Complete',typeId === 'house' ? '+6 population · residents are moving in.' : `${BUILDING_TYPES[typeId]?.name || 'Development'} opened.`)
-        }
-      }
     }
   }
   for (const district of state.districts.filter(item=>normalizeRegionId(item.region_id ?? item.region) === 'city')) {
@@ -8474,10 +8647,30 @@ function updateCityPlotProgress(dt,initial=false) {
   const output=document.getElementById('statPopulation')
   if (output) output.textContent=state.cityPopulation
   cityPlotRuntime.initialized=true
-  if (changed) {
-    while (completed.size>200) completed.delete(completed.values().next().value)
-    saveCityPlotCompleted()
+  updateConstructionHUD()
+  const panel=document.getElementById('constructionPanel')
+  if (panel?.classList.contains('open')) renderConstructionPanel()
+}
+
+function convertLegacyCityBuildingsToStaged() {
+  const candidates=state.buildings.filter(building=>normalizeRegionId(building.region_id ?? building.region) === 'city' && CITY_PLOT_TYPES.has(building.object_type || building.building_type))
+  const now=Date.now(),overrides=getConstructionOverrides()
+  for (const [index,building] of candidates.entries()) {
+    const meta=CITY_PLOT_META[building.object_type || building.building_type]
+    Object.assign(building,{
+      constructionStage:0,constructionStartedAt:now-index*500,constructionDuration:meta.duration,
+      constructionCompleteAt:now-index*500+meta.duration,isComplete:false,populationAdded:0,
+      incomeUnlocked:false,constructionAnnounced:false
+    })
+    overrides[constructionBuildingId(building)]=constructionSnapshot(building)
   }
+  const keys=Object.keys(overrides)
+  for (const key of keys.slice(0,Math.max(0,keys.length-250))) delete overrides[key]
+  try { localStorage.setItem(CITY_CONSTRUCTION_KEY,JSON.stringify(overrides)) } catch {}
+  saveRegionalObjects()
+  cityPlotRuntime.initialized=true
+  updateCityPlotProgress(1,true)
+  showToast('City Plots Converted',`${candidates.length} legacy buildings restarted as staged construction sites.`)
 }
 
 function drawCityPlotBuilding(building,s) {
@@ -8495,57 +8688,111 @@ function drawCityPlotBuilding(building,s) {
     ctx.beginPath();ctx.moveTo(cx+rx,cy);ctx.lineTo(cx,cy+ry);ctx.lineTo(cx,cy+ry-height);ctx.lineTo(cx+rx,cy-height);ctx.closePath();ctx.fillStyle=right;ctx.fill()
     diamond(cx,cy-height,rx,ry,top,'rgba(0,0,0,.14)')
   }
-  const tinyHouse=(cx,cy,scale=1,roof='#7c2d12',wall='#e7d7c6')=>{
+  const tinyHouse=(cx,cy,scale=1,roof='#7c2d12',wall='#e7d7c6',finished=true)=>{
     const rx=7*z*scale,ry=3.8*z*scale,height=8*z*scale
     prism(cx,cy,rx,ry,height,roof,'#b8a28d',wall)
-    ctx.fillStyle='rgba(125,211,252,.7)';ctx.fillRect(cx+1*z*scale,cy-height*.58,2.2*z*scale,2.6*z*scale)
-    ctx.fillStyle='#5b3a29';ctx.fillRect(cx-3*z*scale,cy-height*.38,2.2*z*scale,3.5*z*scale)
+    if(finished){
+      ctx.fillStyle='rgba(125,211,252,.7)';ctx.fillRect(cx+1*z*scale,cy-height*.58,2.2*z*scale,2.6*z*scale)
+      ctx.fillStyle='#5b3a29';ctx.fillRect(cx-3*z*scale,cy-height*.38,2.2*z*scale,3.5*z*scale)
+      ctx.fillStyle='#8b5e3c';ctx.fillRect(cx-6*z*scale,cy+1*z*scale,7*z*scale,1.2*z*scale)
+    }
+  }
+  const frame=(cx,cy,rx,height,color='#d6c7a8')=>{
+    ctx.strokeStyle=color;ctx.lineWidth=Math.max(1,1.15*z)
+    for(const x of [-rx,0,rx]){
+      ctx.beginPath();ctx.moveTo(cx+x,cy);ctx.lineTo(cx+x,cy-height);ctx.stroke()
+    }
+    ctx.beginPath();ctx.moveTo(cx-rx,cy-height);ctx.lineTo(cx+rx,cy-height);ctx.stroke()
+    ctx.beginPath();ctx.moveTo(cx-rx,cy);ctx.lineTo(cx+rx,cy-height);ctx.stroke()
   }
   ctx.save()
-  diamond(s.x,s.y,hw,hh,typeId === 'club' ? '#21122f' : typeId === 'warehouse' ? '#343942' : typeId === 'shop' ? '#3d4650' : '#355c3a','rgba(255,255,255,.13)')
+  const plotFill=stage===0 ? '#513827' : (typeId === 'club' ? '#21122f' : typeId === 'warehouse' ? '#343942' : typeId === 'shop' ? '#3d4650' : '#355c3a')
+  diamond(s.x,s.y,hw,hh,plotFill,stage<6 ? (stage===0 ? '#facc15' : '#a855f7') : 'rgba(255,255,255,.13)')
+  if(stage===0){
+    ctx.strokeStyle='#facc15';ctx.lineWidth=Math.max(1,z);ctx.setLineDash([3*z,3*z])
+    ctx.beginPath();ctx.moveTo(s.x-hw*.72,s.y);ctx.lineTo(s.x,s.y-hh*.72);ctx.lineTo(s.x+hw*.72,s.y);ctx.stroke();ctx.setLineDash([])
+    for(const [ox,oy] of [[-.65,0],[0,-.65],[.65,0],[0,.65]]){ctx.fillStyle='#d6a85f';ctx.fillRect(s.x+ox*hw-1*z,s.y+oy*hh-5*z,2*z,7*z)}
+  }
   if (typeId === 'house' || typeId === 'development-block') {
     ctx.strokeStyle='rgba(226,232,240,.5)';ctx.lineWidth=Math.max(.6,z)
     ctx.beginPath();ctx.moveTo(s.x-hw*.65,s.y+hh*.18);ctx.lineTo(s.x-hw*.08,s.y+hh*.72);ctx.stroke()
-    if (stage>=0) diamond(s.x-7*z,s.y+2*z,8*z,4*z,'#8b8b82',null)
     if (stage>=1) {
       prism(s.x-7*z,s.y+2*z,7*z,3.5*z,2*z,'#b7b0a5','#77736c','#918b81')
       if(typeId==='development-block') prism(s.x+9*z,s.y-2*z,6*z,3*z,2*z,'#b7b0a5','#77736c','#918b81')
+      ctx.strokeStyle='#b91c1c';ctx.lineWidth=Math.max(.8,z)
+      for(const ox of [-10,-5,7]){ctx.beginPath();ctx.moveTo(s.x+ox*z,s.y);ctx.lineTo(s.x+ox*z,s.y-4*z);ctx.stroke()}
     }
     if(stage===2) {
-      ctx.strokeStyle='#d6c7a8';ctx.lineWidth=Math.max(1,1.2*z)
-      for(const [ox,oy] of [[-7,2],[9,-2]]){ctx.strokeRect(s.x+(ox-6)*z,s.y+(oy-12)*z,12*z,10*z);ctx.beginPath();ctx.moveTo(s.x+(ox-6)*z,s.y+(oy-12)*z);ctx.lineTo(s.x+(ox+6)*z,s.y+oy*z);ctx.stroke()}
-    } else if(stage>=3) {
-      tinyHouse(s.x-8*z,s.y+3*z,1,typeId==='development-block'?'#334155':'#9a3412')
-      tinyHouse(s.x+8*z,s.y-2*z,.82,typeId==='development-block'?'#475569':'#7f1d1d','#d8c7b2')
-      if(typeId==='development-block') tinyHouse(s.x+1*z,s.y-8*z,.68,'#1e3a8a','#cbd5e1')
+      frame(s.x-7*z,s.y+1*z,7*z,11*z)
+      if(typeId==='development-block') frame(s.x+8*z,s.y-2*z,6*z,9*z,'#cbd5e1')
+    } else if(stage===3) {
+      prism(s.x-7*z,s.y+2*z,7*z,3.5*z,5*z,'#a8a29e','#8c7f70','#b7a896')
+      frame(s.x-7*z,s.y-3*z,7*z,6*z)
+      if(typeId==='development-block') prism(s.x+8*z,s.y-2*z,6*z,3*z,4*z,'#94a3b8','#64748b','#94a3b8')
+    } else if(stage>=4) {
+      tinyHouse(s.x-8*z,s.y+3*z,1,typeId==='development-block'?'#334155':'#9a3412','#d8c7b2',stage>=5)
+      if(stage>=5) tinyHouse(s.x+8*z,s.y-2*z,.82,typeId==='development-block'?'#475569':'#7f1d1d','#d8c7b2',stage>=6)
+      if(typeId==='development-block' && stage>=6) tinyHouse(s.x+1*z,s.y-8*z,.68,'#1e3a8a','#cbd5e1',true)
+    }
+    if(stage>=6) {
       ctx.fillStyle='#5b4633';ctx.fillRect(s.x+16*z,s.y-9*z,1.5*z,8*z)
       ctx.beginPath();ctx.arc(s.x+16.5*z,s.y-11*z,4.2*z,0,Math.PI*2);ctx.fillStyle='#2f855a';ctx.fill()
     }
   } else if (typeId === 'shop') {
-    if(stage>=1) prism(s.x,s.y+3*z,16*z,7*z,Math.max(3,11*z*(stage===1?.25:stage===2?.65:1)),'#2563eb','#1e3a5f','#3b82f6')
-    if(stage>=2){ctx.fillStyle='rgba(186,230,253,.72)';ctx.fillRect(s.x-8*z,s.y-7*z,16*z,6*z)}
-    if(stage>=3){ctx.fillStyle='#ef4444';for(let x=-13;x<13;x+=5)ctx.fillRect(s.x+x*z,s.y-12*z,3*z,3*z);ctx.fillStyle='#f8fafc';ctx.fillRect(s.x-2*z,s.y-5*z,4*z,6*z)}
+    if(stage===1) prism(s.x,s.y+3*z,16*z,7*z,2*z,'#9ca3af','#6b7280','#9ca3af')
+    else if(stage===2) frame(s.x,s.y+3*z,15*z,13*z,'#cbd5e1')
+    else if(stage===3) prism(s.x,s.y+3*z,16*z,7*z,6*z,'#64748b','#334155','#64748b')
+    else if(stage>=4) prism(s.x,s.y+3*z,16*z,7*z,11*z,'#2563eb','#1e3a5f','#3b82f6')
+    if(stage>=5){ctx.fillStyle='rgba(186,230,253,.72)';ctx.fillRect(s.x-8*z,s.y-7*z,16*z,6*z)}
+    if(stage>=6){ctx.fillStyle='#ef4444';for(let x=-13;x<13;x+=5)ctx.fillRect(s.x+x*z,s.y-12*z,3*z,3*z);ctx.fillStyle='#f8fafc';ctx.fillRect(s.x-2*z,s.y-5*z,4*z,6*z)}
   } else if (typeId === 'club') {
-    if(stage>=1) prism(s.x,s.y+3*z,17*z,7*z,Math.max(3,13*z*(stage===1?.25:stage===2?.65:1)),'#581c87','#2e1065','#7e22ce')
-    if(stage>=2){const pulse=.45+.35*Math.sin(performance.now()*.004);ctx.shadowColor='#d946ef';ctx.shadowBlur=12*z;ctx.fillStyle=`rgba(232,121,249,${pulse})`;ctx.fillRect(s.x-10*z,s.y-10*z,20*z,2*z)}
-    if(stage>=3){ctx.font=`${Math.max(8,10*z)}px sans-serif`;ctx.textAlign='center';ctx.fillText('♫',s.x,s.y-15*z)}
+    if(stage===1) prism(s.x,s.y+3*z,17*z,7*z,2*z,'#71717a','#3f3f46','#52525b')
+    else if(stage===2) frame(s.x,s.y+3*z,16*z,15*z,'#a78bfa')
+    else if(stage===3) prism(s.x,s.y+3*z,17*z,7*z,7*z,'#3b0764','#2e1065','#581c87')
+    else if(stage>=4) prism(s.x,s.y+3*z,17*z,7*z,13*z,'#581c87','#2e1065','#7e22ce')
+    if(stage>=5){const pulse=.45+.35*Math.sin(performance.now()*.004);ctx.shadowColor='#d946ef';ctx.shadowBlur=12*z;ctx.fillStyle=`rgba(232,121,249,${pulse})`;ctx.fillRect(s.x-10*z,s.y-10*z,20*z,2*z)}
+    if(stage>=6){ctx.font=`${Math.max(8,10*z)}px sans-serif`;ctx.textAlign='center';ctx.fillText('♫',s.x,s.y-15*z)}
   } else if (typeId === 'warehouse') {
-    if(stage>=1) prism(s.x,s.y+4*z,21*z,9*z,Math.max(3,9*z*(stage===1?.3:stage===2?.7:1)),'#64748b','#374151','#6b7280')
-    if(stage>=2){ctx.fillStyle='#1f2937';ctx.fillRect(s.x-10*z,s.y-5*z,20*z,7*z);ctx.strokeStyle='#94a3b8';for(let y=-4;y<2;y+=2){ctx.beginPath();ctx.moveTo(s.x-10*z,s.y+y*z);ctx.lineTo(s.x+10*z,s.y+y*z);ctx.stroke()}}
-    if(stage>=3){ctx.fillStyle='#a16207';ctx.fillRect(s.x+14*z,s.y-1*z,5*z,5*z);ctx.fillRect(s.x+9*z,s.y+2*z,5*z,5*z)}
+    if(stage===1) prism(s.x,s.y+4*z,21*z,9*z,2*z,'#9ca3af','#6b7280','#9ca3af')
+    else if(stage===2) frame(s.x,s.y+4*z,20*z,12*z,'#94a3b8')
+    else if(stage===3) prism(s.x,s.y+4*z,21*z,9*z,5*z,'#475569','#374151','#64748b')
+    else if(stage>=4) prism(s.x,s.y+4*z,21*z,9*z,9*z,'#64748b','#374151','#6b7280')
+    if(stage>=5){ctx.fillStyle='#1f2937';ctx.fillRect(s.x-10*z,s.y-5*z,20*z,7*z);ctx.strokeStyle='#94a3b8';for(let y=-4;y<2;y+=2){ctx.beginPath();ctx.moveTo(s.x-10*z,s.y+y*z);ctx.lineTo(s.x+10*z,s.y+y*z);ctx.stroke()}}
+    if(stage>=6){ctx.fillStyle='#a16207';ctx.fillRect(s.x+14*z,s.y-1*z,5*z,5*z);ctx.fillRect(s.x+9*z,s.y+2*z,5*z,5*z)}
   } else if (typeId === 'hide') {
-    if(stage>=1) prism(s.x,s.y+2*z,12*z,6*z,Math.max(3,7*z*(stage===1?.35:stage===2?.7:1)),'#312e3f','#1f1b29','#46394f')
-    if(stage>=2){ctx.strokeStyle='#7c4a2d';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(s.x-7*z,s.y-5*z);ctx.lineTo(s.x+7*z,s.y+2*z);ctx.moveTo(s.x+7*z,s.y-5*z);ctx.lineTo(s.x-7*z,s.y+2*z);ctx.stroke()}
+    if(stage===1) prism(s.x,s.y+2*z,12*z,6*z,2*z,'#71717a','#3f3f46','#52525b')
+    else if(stage===2) frame(s.x,s.y+2*z,11*z,9*z,'#7c4a2d')
+    else if(stage===3) prism(s.x,s.y+2*z,12*z,6*z,4*z,'#292330','#1f1b29','#382c40')
+    else if(stage>=4) prism(s.x,s.y+2*z,12*z,6*z,7*z,'#312e3f','#1f1b29','#46394f')
+    if(stage>=5){ctx.strokeStyle='#7c4a2d';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(s.x-7*z,s.y-5*z);ctx.lineTo(s.x+7*z,s.y+2*z);ctx.moveTo(s.x+7*z,s.y-5*z);ctx.lineTo(s.x-7*z,s.y+2*z);ctx.stroke()}
+    if(stage>=6){ctx.strokeStyle='#475569';ctx.lineWidth=z;ctx.strokeRect(s.x-15*z,s.y-5*z,30*z,7*z);ctx.fillStyle='#a855f7';ctx.fillRect(s.x+6*z,s.y-4*z,5*z,1.5*z)}
   }
-  if(stage<3) {
-    const craneX=s.x+hw*.58,craneTop=s.y-hh-13*z
-    ctx.strokeStyle='#facc15';ctx.lineWidth=Math.max(1,1.2*z)
-    ctx.beginPath();ctx.moveTo(craneX,s.y);ctx.lineTo(craneX,craneTop);ctx.lineTo(craneX-14*z,craneTop);ctx.stroke()
-    ctx.beginPath();ctx.moveTo(craneX-8*z,craneTop);ctx.lineTo(craneX-8*z,craneTop+6*z+Math.sin(performance.now()*.003)*2*z);ctx.stroke()
+  if(stage<6) {
+    const anim=performance.now()*.002
+    if(['club','warehouse','development-block'].includes(typeId) && stage>=2){
+      const craneX=s.x+hw*.58,craneTop=s.y-hh-13*z
+      ctx.strokeStyle='#facc15';ctx.lineWidth=Math.max(1,1.2*z)
+      ctx.beginPath();ctx.moveTo(craneX,s.y);ctx.lineTo(craneX,craneTop);ctx.lineTo(craneX-14*z,craneTop);ctx.stroke()
+      ctx.beginPath();ctx.moveTo(craneX-8*z,craneTop);ctx.lineTo(craneX-8*z,craneTop+6*z+Math.sin(anim)*2*z);ctx.stroke()
+    }
+    for(let worker=0;worker<2;worker++){
+      const wx=s.x+Math.sin(anim+worker*2.4)*12*z,wy=s.y+5*z+Math.cos(anim*.8+worker)*3*z
+      ctx.beginPath();ctx.arc(wx,wy-4*z,1.5*z,0,Math.PI*2);ctx.fillStyle=worker ? '#f97316' : '#facc15';ctx.fill()
+      ctx.fillStyle='#334155';ctx.fillRect(wx-1.2*z,wy-2.5*z,2.4*z,4*z)
+    }
+    for(let puff=0;puff<3;puff++){
+      const phase=(anim*.45+puff*.31)%1
+      ctx.beginPath();ctx.arc(s.x+(puff-1)*7*z,s.y-2*z-phase*9*z,(1.5+phase*2)*z,0,Math.PI*2)
+      ctx.fillStyle=`rgba(203,213,225,${.2*(1-phase)})`;ctx.fill()
+    }
+    if(stage>=2 && stage<=5){
+      ctx.fillStyle=`rgba(250,204,21,${.45+.35*Math.sin(anim*5)})`
+      ctx.fillRect(s.x-2*z,s.y-12*z,1.5*z,1.5*z)
+    }
     const barW=34*z,barY=s.y+hh+6*z
     ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(s.x-barW/2,barY,barW,3*z)
     ctx.fillStyle='#a78bfa';ctx.fillRect(s.x-barW/2,barY,barW*progress,3*z)
-    if(z>.55){ctx.font=`700 ${Math.max(7,8*z)}px Inter`;ctx.textAlign='center';ctx.fillStyle='#ddd6fe';ctx.fillText(`BUILDING ${Math.round(progress*100)}%`,s.x,barY+11*z)}
+    if(z>.55){ctx.font=`700 ${Math.max(7,8*z)}px Inter`;ctx.textAlign='center';ctx.fillStyle='#ddd6fe';ctx.fillText(CONSTRUCTION_STAGE_LABELS[stage].toUpperCase(),s.x,barY+11*z)}
   }
   ctx.restore()
   return true
@@ -8717,6 +8964,9 @@ function drawBuildingAt(building, s) {
       ctx.strokeStyle = 'rgba(100, 180, 100, 0.3)'
       ctx.lineWidth = 1
       ctx.stroke()
+      const flame=.65+.25*Math.sin(performance.now()*.006)
+      ctx.beginPath();ctx.arc(s.x+hw*.42,s.y+hh*.15,2.2*z,0,Math.PI*2);ctx.fillStyle='#4b3621';ctx.fill()
+      ctx.beginPath();ctx.arc(s.x+hw*.42,s.y+hh*.1,1.6*z*flame,0,Math.PI*2);ctx.fillStyle='#fb923c';ctx.fill()
     }
   }
 
@@ -10079,6 +10329,12 @@ function mobileTargetAt(world) {
   if (discovery) return { kind:'discovery', data:discovery.id, x:discovery.x, y:discovery.y, range:1.2 }
   const regionDiscovery=REGION_IDENTITY_SEEDS[state.currentRegion] && regionIdentityRuntime.discoveries.find(item=>Math.hypot(item.x-world.x,item.y-world.y)<2.4)
   if (regionDiscovery) return { kind:'region-discovery', data:regionDiscovery.id, x:regionDiscovery.x, y:regionDiscovery.y, range:1.2 }
+  const constructionSite=state.buildings.find(item=>{
+    if (!isInCurrentRegion(item) || Math.abs(item.tile_x-world.x)>=1.4 || Math.abs(item.tile_y-world.y)>=1.4) return false
+    const construction=getCityPlotStage(item)
+    return construction.meta && construction.stage<6
+  })
+  if (constructionSite) return { kind:'building', data:constructionSite, x:constructionSite.tile_x+.35, y:constructionSite.tile_y+.35, range:1.2 }
   const npc=state.npcs.find(item=>isInCurrentRegion(item) && Math.hypot(item.x-world.x,item.y-world.y)<2.2)
   if (npc) return { kind:'npc', data:npc, x:npc.x, y:npc.y, range:1.3 }
   const farmAnimal=state.currentRegion === 'farmlands' && state.farmAnimals?.find(item=>Math.hypot(item.x-world.x,item.y-world.y)<2)
@@ -10256,6 +10512,12 @@ function setupMouse() {
         queueTouchDestination(world,mobileTargetAt(world))
         return
       }
+      const clickedConstruction = state.buildings.find(b => {
+        if (!isInCurrentRegion(b)) return false
+        const construction=getCityPlotStage(b)
+        return construction.meta && construction.stage<6 &&
+          Math.abs(b.tile_x-world.x)<1.4 && Math.abs(b.tile_y-world.y)<1.4
+      })
       const clickedNPC = state.npcs.find(npc =>
         isInCurrentRegion(npc) && Math.hypot(npc.x-world.x,npc.y-world.y) < 1.8
       )
@@ -10266,7 +10528,9 @@ function setupMouse() {
         return dx < 1 && dy < 1
       })
       
-      if (clickedNPC) {
+      if (clickedConstruction) {
+        onInteractBuildObject(clickedConstruction)
+      } else if (clickedNPC) {
         beginEncounter('npc',clickedNPC)
       } else if (clickedBuilding) {
         if (onInteractBuildObject(clickedBuilding)) {
@@ -10387,6 +10651,7 @@ const ALL_PANELS = [
   { id: 'propertyPanel', stateKey: 'propertyPanelOpen', btnId: 'btnProperty' },
   { id: 'jobPanel', stateKey: null, btnId: null },
   { id: 'worldMapPanel', stateKey: 'worldMapOpen', btnId: 'btnWorldMap' },
+  { id: 'constructionPanel', stateKey: null, btnId: null },
   { id: 'settingsPanel', stateKey: 'settingsPanelOpen', btnId: 'btnSettings' },
   { id: 'creaturesPanel', stateKey: null, btnId: 'btnCreatures' },
   { id: 'skillTreesPanel', stateKey: null, btnId: 'btnSkills' },
@@ -10426,6 +10691,9 @@ function openPanel(panelId, extra) {
   // Toggle: if already open, just close it
   const el = document.getElementById(panelId)
   if (!el) return
+  // The daily farm card is a lightweight prompt, never a permanent modal.
+  // Yield its screen space as soon as the player opens a real game panel.
+  document.getElementById('farmReturnCard')?.classList.remove('open')
   if (!el.classList.contains('panel-hidden') && el.classList.contains('open')) {
   closeAllPanels()
 
@@ -10537,6 +10805,14 @@ function setupUI() {
   document.getElementById('propPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('jobPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('worldMapClose').addEventListener('click', closeAllPanels)
+  document.getElementById('constructionPanelClose').addEventListener('click', closeAllPanels)
+  document.getElementById('constructionHudOpen').addEventListener('click', () => openConstructionPanel())
+  document.getElementById('constructionBody').addEventListener('click', event => {
+    const button=event.target.closest('[data-construction-focus]')
+    if (!button) return
+    state.constructionFocusId=button.dataset.constructionFocus
+    renderConstructionPanel()
+  })
   document.getElementById('creaturesPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('cityDemandBody').addEventListener('click', event => {
     const button=event.target.closest('[data-contract-action]')
@@ -10670,6 +10946,7 @@ function setupUI() {
     runRegionalDirector()
     showToast('Director Tick Complete','One Living World check ran. No player rewards were generated.')
   })
+  document.getElementById('debugConvertCityPlots').addEventListener('click', convertLegacyCityBuildingsToStaged)
   document.getElementById('debugDoneBtn').addEventListener('click', () => {
     document.getElementById('debugPanel').style.display = 'none'
   })
@@ -11381,7 +11658,8 @@ function calcPropertyValue(building) {
 
 function getEffectiveIncome(building) {
   const prop = state.properties[building.id]
-  if (!prop) return building.income_rate || 0
+  const constructionMult=constructionIncomeMultiplier(building)
+  if (!prop) return (building.income_rate || BUILDING_TYPES[building.building_type]?.income || 0)*constructionMult
   let mult = 1, bonus = 0
   for (const key of prop.upgrades) {
     const list = PROPERTY_UPGRADES[building.building_type] || []
@@ -11397,7 +11675,7 @@ function getEffectiveIncome(building) {
     if (key === 'logistics') bonus += 0.3
   }
   const levelMult = 1 + (prop.level - 1) * 0.05
-  return ((building.income_rate || 0) * mult + bonus) * levelMult
+  return ((building.income_rate || BUILDING_TYPES[building.building_type]?.income || 0) * mult + bonus) * levelMult*constructionMult
 }
 
 function openPropertyPanel(buildingId) {
@@ -11425,7 +11703,7 @@ function openPropertyPanel(buildingId) {
   plotStatusRow.style.display=cityPlot ? 'flex' : 'none'
   if (cityPlot) {
     const plot=getCityPlotStage(building),population=cityPlotPopulation(building)
-    document.getElementById('propPlotStatus').textContent=plot.stage>=3 ? `Complete · +${population} population` : `Building · ${Math.round(plot.progress*100)}%`
+    document.getElementById('propPlotStatus').textContent=plot.stage>=6 ? `Complete · +${population} population` : `${plot.label} · ${Math.round(plot.progress*100)}% · ${formatConstructionTime(plot.remaining)}`
   }
   // Tasks
   const tasks = PROPERTY_TASKS[building.building_type] || []
@@ -11629,10 +11907,22 @@ function stopIncomeCounter() {
   }
 }
 
+function constructionWeightedIncomeMs(building,lastCollected,now) {
+  const construction=getCityPlotStage(building,now)
+  if (!construction.meta) return Math.max(0,now-lastCollected)
+  const partialStart=building.constructionStartedAt+building.constructionDuration*(4/6)
+  const completeAt=building.constructionCompleteAt
+  const partialFrom=Math.max(lastCollected,partialStart)
+  const partialTo=Math.min(now,completeAt)
+  const partialMs=Math.max(0,partialTo-partialFrom)*.25
+  const fullMs=Math.max(0,now-Math.max(lastCollected,completeAt))
+  return partialMs+fullMs
+}
+
 function calculateAccumulatedIncome(building) {
   // Phase 5A: Use pending_income if available (from simulation tick)
   const pending = parseFloat(building.pending_income) || 0
-  if (pending > 0) return Math.floor(pending)
+  if (pending > 0) return Math.floor(pending*constructionIncomeMultiplier(building))
 
   // Fallback: old time-based calculation (backward compat)
   let lastCollected = null
@@ -11643,13 +11933,13 @@ function calculateAccumulatedIncome(building) {
   }
   if (!lastCollected || isNaN(lastCollected)) return 0
   const now = Date.now()
-  const elapsed = now - lastCollected
+  const elapsed = constructionWeightedIncomeMs(building,lastCollected,now)
   if (isNaN(elapsed) || elapsed < 0) return 0
   const maxMs = 24 * 60 * 60 * 1000
   const cappedElapsed = Math.min(elapsed, maxMs)
   const minutes = cappedElapsed / 60000
   const healthMultiplier = (building.business_health || 100) / 100
-  let income = building.income_rate * minutes * healthMultiplier
+  let income = (building.income_rate || BUILDING_TYPES[building.building_type]?.income || 0) * minutes * healthMultiplier
   const skillMult = 1 + getSkillBonus('builder', 'income') + getSkillBonus('developer', 'income')
   income *= skillMult
   income *= 1 + getCityFoodBonus()
@@ -11661,6 +11951,33 @@ function calculateAccumulatedIncome(building) {
 
 async function collectIncome() {
   if (!currentIncomeBuilding) return
+  const constructionMult=constructionIncomeMultiplier(currentIncomeBuilding)
+  if (constructionMult<=0) {
+    showToast('Income Locked','This property must reach Exterior Work before partial income begins.')
+    return
+  }
+  if (constructionMult<1 && !currentIncomeBuilding._regionalLocal) {
+    showToast('Property Still Opening','Legacy server properties unlock collection when construction is complete.')
+    return
+  }
+  if (currentIncomeBuilding._regionalLocal) {
+    const collected=calculateAccumulatedIncome(currentIncomeBuilding)
+    if (collected<=0) { showToast('No Income','Nothing to collect yet.');return }
+    state.coins+=collected
+    currentIncomeBuilding.last_collected=Date.now()
+    currentIncomeBuilding.last_collected_at=new Date().toISOString()
+    currentIncomeBuilding.pending_income=0
+    document.getElementById('statCoins').textContent=state.coins
+    const prop=state.properties[currentIncomeBuilding.id]
+    if(prop) addPropertyXP(prop,10)
+    awardSkillXP('entertainer',currentIncomeBuilding.building_type==='club'?15:5)
+    createNewsItem('Economy',`Income flows from ${BUILDING_TYPES[currentIncomeBuilding.building_type]?.name || currentIncomeBuilding.building_type}.`,`+${collected} coins collected.`,'city',2)
+    saveRegionalObjects()
+    showToast('Income Collected',`+${collected} coins${constructionMult<1?' · partial opening rate':''}`)
+    closeIncomePanel()
+    completeGoalCollectIncome()
+    return
+  }
   
   try {
     const res = await fetch('/api/world/income/collect', {
@@ -11669,7 +11986,8 @@ async function collectIncome() {
       body: JSON.stringify({
         userId: state.userId,
         buildingId: currentIncomeBuilding.id,
-        currentCoins: state.coins
+        currentCoins: state.coins,
+        constructionMultiplier:constructionMult
       })
     })
     
@@ -11888,6 +12206,11 @@ function connectFarmBuildToGameplay(typeId) {
 function onInteractBuildObject(object) {
   if (!object) return false
   const typeId = object.object_type || object.building_type
+  const construction=getCityPlotStage(object)
+  if (construction.meta && construction.stage<6) {
+    openConstructionPanel(constructionBuildingId(object))
+    return true
+  }
   const farmTabs = {
     'chicken-coop':'animals', 'cow-pasture':'animals', 'feed-mill':'machines',
     bakery:'machines', dairy:'machines', barn:'storage', silo:'storage',
@@ -11947,11 +12270,16 @@ async function placeBuildingAt(x, y) {
     building_type:typeId,
     footprint:type.footprint || 1,
     placed_at:Date.now(),
+    income_rate:type.income || 0,
+    last_collected:Date.now(),
+    last_collected_at:new Date().toISOString(),
     sync_status:'local',
     _regionalLocal:true,
     condition:100,
     status:'active'
   }
+  const stagedCityBuild=state.currentRegion === 'city' && CITY_PLOT_TYPES.has(typeId)
+  if (stagedCityBuild) ensureConstructionData(object,{newBuild:true})
   if (type.infrastructure) {
     object.infra_type = regionalInfraType(typeId)
     state.infrastructure.push(object)
@@ -11965,12 +12293,13 @@ async function placeBuildingAt(x, y) {
   document.getElementById('statCoins').textContent = state.coins
   connectFarmBuildToGameplay(typeId)
   saveRegionalObjects()
-  showToast(`${type.icon} ${type.name} Built`,`${REGIONS[state.currentRegion].name} · ${type.footprint}×${type.footprint}`)
+  showToast(stagedCityBuild ? `${type.icon} ${type.name} Construction Started` : `${type.icon} ${type.name} Built`,stagedCityBuild ? `${Math.ceil(object.constructionDuration/1000)} seconds · begins as an empty plot.` : `${REGIONS[state.currentRegion].name} · ${type.footprint}×${type.footprint}`)
   addChatMessage('',`${state.username} built a ${type.name} in ${REGIONS[state.currentRegion].name}`,true)
   if (typeId === 'house') completeGoal('placeFirstHouse')
   if (typeId === 'shop') completeGoal('placeFirstShop')
   awardSkillXP(state.currentRegion === 'farmlands' ? 'farmer' : (state.currentRegion === 'whisper-woods' ? 'explorer' : 'builder'),12)
-  createNewsItem(state.currentRegion === 'whisper-woods' ? 'Wildlife' : (state.currentRegion === 'farmlands' ? 'Farm' : 'Property'),`New ${type.name} placed in ${REGIONS[state.currentRegion].name}.`,type.desc,state.currentRegion,2)
+  createNewsItem(stagedCityBuild ? 'City' : (state.currentRegion === 'whisper-woods' ? 'Wildlife' : (state.currentRegion === 'farmlands' ? 'Farm' : 'Property')),stagedCityBuild ? `New ${type.name.toLowerCase()} construction begins in Faceless City.` : `New ${type.name} placed in ${REGIONS[state.currentRegion].name}.`,stagedCityBuild ? 'Crews marked the plot and started the first construction stage.' : type.desc,state.currentRegion,stagedCityBuild ? 3 : 2)
+  if (stagedCityBuild) updateCityPlotProgress(1,true)
   state.buildType = null
   state.buildPreview.visible = false
   state.buildPreview.visible = false
