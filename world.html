@@ -309,6 +309,9 @@
       .world-map-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important}
       .construction-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important}
       .construction-hud{left:6px;bottom:72px;width:165px;padding:.42rem}
+      .city-health-hud{left:177px;bottom:72px;width:calc(100vw - 183px);max-width:210px;padding:.42rem}
+      .city-health-hud.solo{left:6px;width:210px}
+      .city-health-hud p{display:none}
       .woods-hud{display:none!important}
       .help-prompt{bottom:70px;width:calc(100vw - 12px)}
       .help-prompt-inner{padding:.35rem .45rem;gap:.3rem;flex-wrap:nowrap}
@@ -945,6 +948,27 @@
     .construction-list{display:grid;gap:.4rem}
     .construction-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:.55rem}
     .construction-row button{width:auto;min-width:76px}
+    .city-health-hud{
+      position:fixed;left:370px;bottom:max(14px,env(safe-area-inset-bottom,0px));z-index:75;
+      width:210px;padding:.55rem;border:1px solid rgba(74,222,128,.22);border-radius:10px;
+      background:rgba(10,11,16,.9);backdrop-filter:blur(12px);box-shadow:0 8px 28px rgba(0,0,0,.28);
+    }
+    .city-health-hud.hidden{display:none}
+    .city-health-hud.solo{left:170px}
+    .city-health-head{display:flex;align-items:center;justify-content:space-between;gap:.4rem}
+    .city-health-head strong{color:#dcfce7;font-size:.58rem}
+    .city-health-status{padding:.12rem .3rem;border-radius:999px;background:rgba(74,222,128,.1);color:#86efac;font-size:.43rem;font-weight:900;text-transform:uppercase}
+    .city-health-hud p{margin:.22rem 0 .4rem;color:#a99ea8;font-size:.47rem;line-height:1.4}
+    .city-health-hud button{width:100%;padding:.34rem;border:1px solid rgba(74,222,128,.24);border-radius:6px;background:rgba(74,222,128,.07);color:#bbf7d0;font-size:.5rem;font-weight:850;cursor:pointer}
+    .city-health-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.35rem}
+    .city-health-metric{padding:.45rem;border:1px solid rgba(255,255,255,.06);border-radius:7px;background:rgba(255,255,255,.02)}
+    .city-health-metric b{display:block;color:#f8fafc;font-size:.64rem}
+    .city-health-metric span{color:#908594;font-size:.43rem}
+    .district-health-list{display:grid;gap:.4rem}
+    .district-health-row{padding:.55rem;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:rgba(255,255,255,.025)}
+    .district-health-row strong{color:#f5f3ff;font-size:.58rem}
+    .district-health-row p{margin:.2rem 0 0;color:#9d92a4;font-size:.47rem;line-height:1.45}
+    .lifecycle-warning{color:#fca5a5!important}
 
     /* ── Vehicle Marker ── */
     .wm-vehicle {
@@ -1884,8 +1908,12 @@
       .living-world-route button{width:100%;min-height:34px}
       .living-world-summary,.living-world-event,.living-world-recommend{font-size:.58rem}
       .construction-hud{left:6px;bottom:72px;width:165px;padding:.42rem}
+      .city-health-hud{left:177px;bottom:72px;width:calc(100vw - 183px);max-width:210px;padding:.42rem}
+      .city-health-hud.solo{left:6px;width:210px}
+      .city-health-hud p{display:none}
       .construction-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important}
       .construction-summary{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .city-health-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .construction-row{grid-template-columns:1fr}
       .construction-row button{width:100%}
       body.testing-joystick .action-btn{width:52px;height:52px;font-size:1.2rem}
@@ -2638,7 +2666,9 @@
     <div class="prop-deed-row"><span class="label">Upgrades</span><span class="val" id="propUpgradeCount">0</span></div>
     <div class="prop-deed-row"><span class="label">District Bonus</span><span class="val" id="propDistrictBonus">None</span></div>
     <div class="prop-deed-row" id="propPlotStatusRow"><span class="label">City Plot</span><span class="val" id="propPlotStatus">Complete</span></div>
+    <div class="prop-deed-row" id="propLifecycleRow"><span class="label">Condition</span><span class="val" id="propLifecycleStatus">Stable · 100%</span></div>
   </div>
+  <button class="income-collect-btn" id="propRenovateBtn" style="margin:0 0 0.7rem;width:100%;display:none;background:linear-gradient(135deg,#f59e0b,#a855f7)">Renovate Property</button>
   <div class="prop-section">
     <div class="prop-section-title">&#x1F4CB; Daily Tasks</div>
     <div id="propTasks"></div>
@@ -2782,9 +2812,15 @@
   <button id="constructionHudOpen" type="button">View All</button>
 </aside>
 
+<aside class="city-health-hud hidden" id="cityHealthHud" aria-live="polite">
+  <div class="city-health-head"><strong>🏙️ City Health</strong><span class="city-health-status" id="cityHealthStatus">Stable</span></div>
+  <p id="cityHealthSummary">Supply, safety, jobs, and property conditions are balanced.</p>
+  <button id="cityHealthOpen" type="button">View City Health</button>
+</aside>
+
 <section class="construction-panel game-panel panel-hidden" id="constructionPanel" aria-label="City Construction">
   <div class="panel-header">
-    <div class="panel-title">🏗️ City Construction</div>
+    <div class="panel-title">🏗️ City Growth & Construction</div>
     <div class="panel-close" id="constructionPanelClose">&times;</div>
   </div>
   <div class="construction-body" id="constructionBody"></div>
@@ -2885,6 +2921,10 @@
   <button class="debug-btn" id="debugWorldAdvanceSeason">Advance Season</button>
   <button class="debug-btn" id="debugWorldTick">Run Director Tick</button>
   <button class="debug-btn" id="debugConvertCityPlots">Convert Old Buildings to Staged Plots</button>
+  <div class="debug-title" style="margin-top:5px">City Lifecycle</div>
+  <button class="debug-btn" id="debugCityHealthy">Test Healthy City Tick</button>
+  <button class="debug-btn" id="debugCityShortage">Test Shortage Tick</button>
+  <button class="debug-btn" id="debugCityLifecycleReset">Reset City Lifecycle</button>
   <button class="debug-btn" id="debugDoneBtn" style="background:var(--red);margin-top:4px;">Close Debug</button>
 </div>
 
@@ -3263,6 +3303,7 @@ function runRegionalDirector({silent=false}={}) {
     const shortageCount=profile.economyRules.needs.filter(resource=>(region.reserves[resource] || 0)<=1).length
     region.condition=Math.max(10,Math.min(100,region.condition+(shortageCount ? -1 : 1)))
   }
+  runCityGrowthDeclineTick({silent})
   world.history=world.history.slice(0,LIVING_WORLD_HISTORY_CAP)
   world.deliveries=(world.deliveries || []).slice(0,LIVING_WORLD_DELIVERY_CAP)
   world.lastTick=Date.now()
@@ -7530,6 +7571,18 @@ function drawBlackPavementTile(s,x,y,links,z) {
     ctx.beginPath(); ctx.arc(bump.x-radius*.3,bump.y-radius*.35,Math.max(.25,radius*.25),0,Math.PI*2)
     ctx.fillStyle='rgba(128,130,136,.32)'; ctx.fill()
   }
+  const cityStatus=cityLifecycleRuntime.summary?.status
+  if(cityStatus==='Declining' || cityStatus==='Blighted') {
+    ctx.strokeStyle=cityStatus==='Blighted' ? 'rgba(2,6,23,.9)' : 'rgba(2,6,23,.62)'
+    ctx.lineWidth=Math.max(.7,z)
+    ctx.beginPath()
+    ctx.moveTo(s.x-halfW*.32,s.y-halfH*.18)
+    ctx.lineTo(s.x-halfW*.08,s.y+halfH*.08)
+    ctx.lineTo(s.x+halfW*.12,s.y-halfH*.03)
+    ctx.lineTo(s.x+halfW*.34,s.y+halfH*.22)
+    ctx.stroke()
+    if((x+y)%4===0){ctx.fillStyle='#44403c';ctx.fillRect(s.x+halfW*.18,s.y-halfH*.05,2*z,1.5*z)}
+  }
 }
 
 function drawRegionalBasePaths() {
@@ -8457,6 +8510,289 @@ const CITY_PLOT_META={
 }
 const CONSTRUCTION_STAGE_LABELS=['Preparing Plot','Laying Foundation','Framing','Building Up','Exterior Work','Finishing','Complete']
 const cityPlotRuntime={ accumulator:0,initialized:false,overrides:null }
+const CITY_LIFECYCLE_KEY='fas_city_lifecycle_v1'
+const CITY_LIFECYCLE_GRACE_MS=10*60*1000
+const cityLifecycleRuntime={ data:null,summary:null,districts:[] }
+
+function getCityLifecycleStore() {
+  if (cityLifecycleRuntime.data) return cityLifecycleRuntime.data
+  try { cityLifecycleRuntime.data=JSON.parse(localStorage.getItem(CITY_LIFECYCLE_KEY) || '{}') } catch { cityLifecycleRuntime.data={} }
+  const data=cityLifecycleRuntime.data && typeof cityLifecycleRuntime.data === 'object' ? cityLifecycleRuntime.data : {}
+  data.lastTick=Number(data.lastTick) || 0
+  data.districtStatuses=data.districtStatuses || {}
+  cityLifecycleRuntime.data=data
+  return data
+}
+
+function saveCityLifecycleStore() {
+  const data=getCityLifecycleStore()
+  data.lastTick=Date.now()
+  try { localStorage.setItem(CITY_LIFECYCLE_KEY,JSON.stringify(data)) } catch {}
+}
+
+function ensureCityLifecycleData(building,{newBuild=false}={}) {
+  const typeId=building.object_type || building.building_type
+  const regionId=normalizeRegionId(building.region_id ?? building.region ?? state.currentRegion)
+  const meta=CITY_PLOT_META[typeId]
+  if (regionId !== 'city' || !meta) return null
+  const override=getConstructionOverrides()[constructionBuildingId(building)]
+  const lifecycleFields=['condition','lifecycleStatus','business_health','residentPopulation','declineTicks','recoveryTicks','lifecycleStartedAt','declineGraceUntil','lastLifecycleTick','businessClosed']
+  if (override) for (const field of lifecycleFields) if (building[field] == null && override[field] != null) building[field]=override[field]
+  const now=Date.now(),construction=getCityPlotStage(building,now)
+  building.condition=Math.max(0,Math.min(100,Number(building.condition) || 100))
+  building.lifecycleStatus=building.lifecycleStatus || 'active'
+  building.business_health=Math.max(0,Math.min(100,Number(building.business_health ?? 82)))
+  building.declineTicks=Math.max(0,Number(building.declineTicks) || 0)
+  building.recoveryTicks=Math.max(0,Number(building.recoveryTicks) || 0)
+  building.lifecycleStartedAt=Number(building.lifecycleStartedAt) || now
+  building.declineGraceUntil=Number(building.declineGraceUntil) || ((newBuild ? building.constructionCompleteAt : now)+CITY_LIFECYCLE_GRACE_MS)
+  building.lastLifecycleTick=Number(building.lastLifecycleTick) || now
+  const intended=meta.population || 0
+  if (!Number.isFinite(Number(building.residentPopulation))) building.residentPopulation=construction.stage>=6 ? intended : 0
+  building.residentPopulation=Math.max(0,Math.min(intended,Number(building.residentPopulation) || 0))
+  building.businessClosed=Boolean(building.businessClosed)
+  return building
+}
+
+function cityLifecycleIncomeMultiplier(building) {
+  const lifecycle=ensureCityLifecycleData(building)
+  if (!lifecycle) return 1
+  if (building.lifecycleStatus === 'abandoned' || building.businessClosed) return 0
+  if (building.lifecycleStatus === 'declining') return .35
+  if (building.lifecycleStatus === 'struggling') return .65
+  return Math.max(.8,Math.min(1.1,.8+building.condition/333))
+}
+
+function cityRoadAccess(building) {
+  const x=Number(building.tile_x ?? building.x),y=Number(building.tile_y ?? building.y)
+  const center=Math.floor(WORLD_SIZE/2)
+  if (Math.abs(x-center)<=3 || Math.abs(y-center)<=3) return true
+  return state.buildings.some(item=>{
+    const type=item.object_type || item.building_type
+    return normalizeRegionId(item.region_id ?? item.region) === 'city' && ['roads','road','street'].includes(type) &&
+      Math.hypot(Number(item.tile_x)-x,Number(item.tile_y)-y)<=3.2
+  })
+}
+
+function cityBuildingsForDistrict(district=null) {
+  return state.buildings.filter(building=>{
+    if (normalizeRegionId(building.region_id ?? building.region) !== 'city' || !CITY_PLOT_TYPES.has(building.object_type || building.building_type)) return false
+    if (!district) return true
+    const dx=Number(building.tile_x)-Number(district.center_x),dy=Number(building.tile_y)-Number(district.center_y)
+    return dx*dx+dy*dy<=Number(district.radius || 0)*Number(district.radius || 0)
+  })
+}
+
+function cityDistrictAtTile(tx,ty) {
+  return state.districts.find(district=>{
+    if (normalizeRegionId(district.region_id ?? district.region) !== 'city') return false
+    const dx=tx-Number(district.center_x),dy=ty-Number(district.center_y)
+    return dx*dx+dy*dy<=Number(district.radius || 0)*Number(district.radius || 0)
+  }) || null
+}
+
+function cityStatusFromScore(score,abandonedRatio=0) {
+  if (abandonedRatio>=.6 || score<25) return 'Blighted'
+  if (score<40) return 'Declining'
+  if (score<52) return 'Struggling'
+  if (score>=72) return 'Growing'
+  return 'Stable'
+}
+
+function calculateCityAreaMetrics(district=null,testMode=null) {
+  const buildings=cityBuildingsForDistrict(district)
+  const complete=buildings.filter(building=>getCityPlotStage(building).stage>=6)
+  complete.forEach(building=>ensureCityLifecycleData(building))
+  const supply=getCitySupply()
+  const food=testMode==='healthy' ? 100 : testMode==='shortage' ? 5 : Math.round(citySupplyHealth(supply)*100)
+  const crime=district ? Number(district.crime_rate || 0) : (() => {
+    const cityDistricts=state.districts.filter(item=>normalizeRegionId(item.region_id ?? item.region) === 'city')
+    return cityDistricts.length ? cityDistricts.reduce((sum,item)=>sum+Number(item.crime_rate || 0),0)/cityDistricts.length : 24
+  })()
+  const safety=testMode==='healthy' ? 95 : testMode==='shortage' ? 22 : Math.max(0,100-crime)
+  const businesses=complete.filter(building=>!['house','development-block'].includes(building.building_type))
+  const businessHealth=testMode==='healthy' ? 92 : testMode==='shortage' ? 18 : Math.round(businesses.length ? businesses.reduce((sum,item)=>sum+Number(item.business_health || 0),0)/businesses.length : supply.businessHealth)
+  const buildingResidents=complete.reduce((sum,item)=>sum+Math.max(0,Number(item.residentPopulation) || 0),0)
+  const localNpcs=state.npcs.filter(npc=>{
+    if (normalizeRegionId(npc.region_id ?? npc.region) !== 'city') return false
+    if (!district) return true
+    const dx=Number(npc.x)-Number(district.center_x),dy=Number(npc.y)-Number(district.center_y)
+    return dx*dx+dy*dy<=Number(district.radius || 0)*Number(district.radius || 0)
+  }).length
+  const population=buildingResidents+localNpcs
+  const activeBusinesses=businesses.filter(item=>item.lifecycleStatus !== 'abandoned' && !item.businessClosed).length
+  const jobs=activeBusinesses*4
+  const jobAvailability=testMode==='healthy' ? 90 : testMode==='shortage' ? 18 : Math.max(15,Math.min(100,55+(jobs-population)*4))
+  const roadAccess=testMode==='healthy' ? 100 : testMode==='shortage' ? 20 : Math.round(complete.length ? complete.filter(cityRoadAccess).length/complete.length*100 : 70)
+  const happiness=testMode==='healthy' ? 92 : testMode==='shortage' ? 20 : Math.max(10,Math.min(100,Math.round((supply.districtHappiness || 60)+(supply.cityHappinessBonus || 0)-crime*.18)))
+  const averageCondition=Math.round(complete.length ? complete.reduce((sum,item)=>sum+Number(item.condition || 0),0)/complete.length : 100)
+  const abandoned=complete.filter(item=>item.lifecycleStatus === 'abandoned').length
+  const propertyValue=Math.round(complete.length ? complete.reduce((sum,item)=>sum+calcPropertyValue(item),0)/complete.length : 0)
+  const score=Math.round(food*.19+happiness*.18+safety*.15+businessHealth*.2+roadAccess*.1+jobAvailability*.1+averageCondition*.08)
+  const abandonedRatio=complete.length ? abandoned/complete.length : 0
+  return {
+    id:district?.id || 'city',name:district?.name || 'Faceless City',population,
+    housingDemand:Math.max(0,Math.min(100,55+Math.max(0,localNpcs-buildingResidents)*3)),
+    customerDemand:Math.max(0,Math.min(100,35+population*2-activeBusinesses*6)),
+    jobDemand:Math.max(0,Math.min(100,50+population*2-jobs*3)),
+    jobs,food,safety,happiness,businessHealth,roadAccess,propertyValue,
+    averageCondition,abandoned,buildingCount:complete.length,score,
+    status:cityStatusFromScore(score,abandonedRatio)
+  }
+}
+
+function refreshCityHealthMetrics(testMode=null) {
+  cityLifecycleRuntime.summary=calculateCityAreaMetrics(null,testMode)
+  cityLifecycleRuntime.districts=state.districts
+    .filter(item=>normalizeRegionId(item.region_id ?? item.region) === 'city')
+    .map(item=>calculateCityAreaMetrics(item,testMode))
+  updateCityHealthHUD()
+  return cityLifecycleRuntime.summary
+}
+
+function lifecycleStatusLabel(building) {
+  const status=building.lifecycleStatus || 'active'
+  if (status === 'abandoned') return 'Abandoned'
+  if (building.businessClosed) return 'Temporarily Closed'
+  return status.charAt(0).toUpperCase()+status.slice(1)
+}
+
+function cityLifecycleStory(building,previous,next) {
+  const name=BUILDING_TYPES[building.building_type]?.name || 'property'
+  if (next === 'abandoned') return { headline:`A ${name.toLowerCase()} is abandoned in Faceless City.`,body:'Long-running shortages and declining conditions forced the property to close.' }
+  if (next === 'declining') return { headline:`Warning signs appear at a city ${name.toLowerCase()}.`,body:'Lower demand, supply, or safety is beginning to affect the property.' }
+  if (next === 'active' && previous !== 'active') return { headline:`A city ${name.toLowerCase()} is recovering.`,body:'Improved conditions brought lights, residents, and business activity back.' }
+  return null
+}
+
+function persistCityLifecycleBuildings(buildings) {
+  const overrides=getConstructionOverrides()
+  for (const building of buildings) overrides[constructionBuildingId(building)]=constructionSnapshot(building)
+  const keys=Object.keys(overrides)
+  for (const key of keys.slice(0,Math.max(0,keys.length-250))) delete overrides[key]
+  try { localStorage.setItem(CITY_CONSTRUCTION_KEY,JSON.stringify(overrides)) } catch {}
+  if (buildings.some(building=>building._regionalLocal)) saveRegionalObjects()
+  saveCityLifecycleStore()
+}
+
+function runCityGrowthDeclineTick({silent=false,testMode=null}={}) {
+  const buildings=cityBuildingsForDistrict()
+  if (!buildings.length) { refreshCityHealthMetrics(testMode);return cityLifecycleRuntime.summary }
+  const areaMetrics=new Map()
+  for (const district of state.districts.filter(item=>normalizeRegionId(item.region_id ?? item.region) === 'city')) areaMetrics.set(String(district.id),calculateCityAreaMetrics(district,testMode))
+  const cityMetrics=calculateCityAreaMetrics(null,testMode),now=Date.now()
+  for (const building of buildings) {
+    ensureCityLifecycleData(building)
+    const construction=getCityPlotStage(building)
+    if (construction.stage<6) continue
+    const district=cityDistrictAtTile(Number(building.tile_x),Number(building.tile_y))
+    const metrics=areaMetrics.get(String(district?.id)) || cityMetrics
+    let delta=metrics.status==='Growing' ? 1.5 : metrics.status==='Stable' ? .35 : metrics.status==='Struggling' ? -.6 : metrics.status==='Declining' ? -1.2 : -2
+    if (testMode === 'healthy') delta=12
+    if (testMode === 'shortage') delta=-12
+    if (!testMode && now<building.declineGraceUntil && delta<0) delta=0
+    const previous=building.lifecycleStatus
+    building.condition=Math.max(0,Math.min(100,building.condition+delta))
+    building.lastLifecycleTick=now
+    if (delta<0) {
+      building.declineTicks+=1
+      building.recoveryTicks=0
+    } else if (delta>0) {
+      building.recoveryTicks+=1
+      building.declineTicks=Math.max(0,building.declineTicks-1)
+    }
+    if (!['house','development-block'].includes(building.building_type)) {
+      building.business_health=Math.max(0,Math.min(100,building.business_health+delta*(testMode ? 1 : .75)))
+      building.businessClosed=building.condition<30 || building.business_health<25
+    }
+    if (previous==='abandoned') building.lifecycleStatus='abandoned'
+    else if (building.condition<=15 && building.declineTicks>=8) building.lifecycleStatus='abandoned'
+    else if (building.condition<38 || building.businessClosed) building.lifecycleStatus='declining'
+    else if (building.condition<62 || building.business_health<55) building.lifecycleStatus='struggling'
+    else building.lifecycleStatus='active'
+    const intended=construction.meta?.population || 0
+    if (intended) {
+      if (building.lifecycleStatus === 'abandoned') building.residentPopulation=0
+      else if (delta<0 && building.condition<55) building.residentPopulation=Math.max(0,building.residentPopulation-1)
+      else if (delta>0) building.residentPopulation=Math.min(intended,building.residentPopulation+1)
+    }
+    const story=previous!==building.lifecycleStatus ? cityLifecycleStory(building,previous,building.lifecycleStatus) : null
+    if (story && !silent && (!building.lastLifecycleStory || building.lastLifecycleStory!==building.lifecycleStatus)) {
+      createNewsItem('City',story.headline,story.body,'city',building.lifecycleStatus==='abandoned'?5:3)
+      if (building.lifecycleStatus==='abandoned') showToast('⚠️ Property Abandoned',story.headline)
+      building.lastLifecycleStory=building.lifecycleStatus
+    }
+  }
+  persistCityLifecycleBuildings(buildings)
+  const summary=refreshCityHealthMetrics(testMode),store=getCityLifecycleStore()
+  const previousCityStatus=store.districtStatuses.city
+  if (!silent && previousCityStatus && previousCityStatus!==summary.status && ['Growing','Declining','Blighted'].includes(summary.status)) {
+    createNewsItem('City',summary.status==='Growing'?'Faceless City enters a new growth cycle.':'Faceless City shows signs of prolonged decline.',`City health is now ${summary.score}% · ${summary.status}.`,'city',4)
+  }
+  store.districtStatuses.city=summary.status
+  for (const district of cityLifecycleRuntime.districts) {
+    const key=String(district.id),previousStatus=store.districtStatuses[key]
+    if (!silent && previousStatus && previousStatus!==district.status && ['Growing','Declining','Blighted'].includes(district.status)) {
+      createNewsItem('City',district.status==='Growing'?`${district.name} begins to grow.`:`${district.name} enters ${district.status.toLowerCase()} conditions.`,`Food ${district.food}% · safety ${district.safety}% · business health ${district.businessHealth}%.`,'city',4)
+    }
+    store.districtStatuses[key]=district.status
+  }
+  saveCityLifecycleStore()
+  updateCityPlotProgress(1,true)
+  return summary
+}
+
+function renovationCost(building) {
+  const base=BUILDING_TYPES[building.building_type]?.cost || 50
+  return Math.max(25,Math.round(base*.35+(100-building.condition)*1.25))
+}
+
+function renovateCityBuilding(building) {
+  ensureCityLifecycleData(building)
+  const cost=renovationCost(building)
+  if (state.coins<cost) { showToast('Not Enough FC',`Renovation requires ${cost} FC.`);return false }
+  state.coins-=cost
+  document.getElementById('statCoins').textContent=state.coins
+  building.condition=85
+  building.business_health=Math.max(80,building.business_health)
+  building.lifecycleStatus='active'
+  building.businessClosed=false
+  building.declineTicks=0
+  building.recoveryTicks=2
+  building.declineGraceUntil=Date.now()+CITY_LIFECYCLE_GRACE_MS
+  building.lastLifecycleStory='renovated'
+  if (CITY_PLOT_META[building.building_type]?.population) building.residentPopulation=Math.max(1,building.residentPopulation)
+  saveConstructionBuilding(building)
+  refreshCityHealthMetrics()
+  updateCityPlotProgress(1,true)
+  createNewsItem('Property',`${BUILDING_TYPES[building.building_type]?.name || 'City property'} renovated in Faceless City.`,'Fresh repairs restored the property to active service.','city',4)
+  awardSkillXP('developer',20)
+  showToast('🔨 Renovation Complete',`${cost} FC invested · property restored.`)
+  return true
+}
+
+function resetCityLifecycle() {
+  const buildings=cityBuildingsForDistrict(),now=Date.now()
+  for (const building of buildings) {
+    ensureCityLifecycleData(building)
+    const construction=getCityPlotStage(building)
+    building.condition=100
+    building.business_health=90
+    building.lifecycleStatus='active'
+    building.businessClosed=false
+    building.declineTicks=0
+    building.recoveryTicks=0
+    building.declineGraceUntil=now+CITY_LIFECYCLE_GRACE_MS
+    building.lastLifecycleStory='reset'
+    building.residentPopulation=construction.stage>=6 ? (construction.meta?.population || 0) : 0
+  }
+  const store=getCityLifecycleStore()
+  store.districtStatuses={}
+  persistCityLifecycleBuildings(buildings)
+  refreshCityHealthMetrics()
+  updateCityPlotProgress(1,true)
+  showToast('City Lifecycle Reset','Building condition, occupancy, and operations returned to a stable baseline.')
+}
 
 function constructionBuildingId(building) {
   return String(building.id || `${building.building_type}_${building.tile_x}_${building.tile_y}`)
@@ -8478,7 +8814,18 @@ function constructionSnapshot(building) {
     isComplete:building.isComplete,
     populationAdded:building.populationAdded,
     incomeUnlocked:building.incomeUnlocked,
-    constructionAnnounced:building.constructionAnnounced
+    constructionAnnounced:building.constructionAnnounced,
+    condition:building.condition,
+    lifecycleStatus:building.lifecycleStatus,
+    business_health:building.business_health,
+    residentPopulation:building.residentPopulation,
+    declineTicks:building.declineTicks,
+    recoveryTicks:building.recoveryTicks,
+    lifecycleStartedAt:building.lifecycleStartedAt,
+    declineGraceUntil:building.declineGraceUntil,
+    lastLifecycleTick:building.lastLifecycleTick,
+    lastLifecycleStory:building.lastLifecycleStory,
+    businessClosed:building.businessClosed
   }
 }
 
@@ -8541,7 +8888,10 @@ function constructionIncomeMultiplier(building) {
 
 function cityPlotPopulation(building) {
   const construction=getCityPlotStage(building)
-  return construction.stage>=6 ? (Number(building.populationAdded) || construction.meta?.population || 0) : 0
+  if (construction.stage<6) return 0
+  ensureCityLifecycleData(building)
+  if (building.lifecycleStatus === 'abandoned') return 0
+  return Math.max(0,Math.round(Number(building.residentPopulation) || 0))
 }
 
 function formatConstructionTime(ms) {
@@ -8574,6 +8924,28 @@ function updateConstructionHUD() {
   hud.classList.toggle('hidden',state.currentRegion !== 'city' || active.length===0)
   document.getElementById('constructionHudTitle').textContent=`🏗️ ${active.length} Building${active.length===1?'':'s'} Under Construction`
   document.getElementById('constructionHudText').textContent=active.length ? `Next: ${BUILDING_TYPES[active[0].building.building_type]?.name || 'Building'} in ${formatConstructionTime(active[0].construction.remaining)}` : 'No active construction.'
+  updateCityHealthHUD()
+}
+
+function updateCityHealthHUD() {
+  const hud=document.getElementById('cityHealthHud')
+  if (!hud) return
+  const summary=cityLifecycleRuntime.summary || calculateCityAreaMetrics()
+  hud.classList.toggle('hidden',state.currentRegion!=='city')
+  hud.classList.toggle('solo',document.getElementById('constructionHud')?.classList.contains('hidden'))
+  const status=document.getElementById('cityHealthStatus')
+  const palette={Growing:'#86efac',Stable:'#c4b5fd',Struggling:'#fde68a',Declining:'#fdba74',Blighted:'#fca5a5'}
+  status.textContent=summary.status
+  status.style.color=palette[summary.status] || '#c4b5fd'
+  status.style.borderColor=palette[summary.status] || '#c4b5fd'
+  document.getElementById('cityHealthSummary').textContent=`Health ${summary.score}% · ${summary.population} residents · ${summary.abandoned} abandoned`
+}
+
+function renderCityHealthReadout() {
+  const summary=cityLifecycleRuntime.summary || refreshCityHealthMetrics()
+  const districts=cityLifecycleRuntime.districts || []
+  const metric=(label,value)=>`<div class="city-health-metric"><b>${value}</b><span>${label}</span></div>`
+  return `<section class="construction-detail"><h3>🏙️ City Health · ${summary.status}</h3><div class="city-health-grid">${metric('Population',summary.population)}${metric('Happiness',`${summary.happiness}%`)}${metric('Food Supply',`${summary.food}%`)}${metric('Safety',`${summary.safety}%`)}${metric('Business Health',`${summary.businessHealth}%`)}${metric('Property Value',`${summary.propertyValue} FC`)}${metric('Jobs',summary.jobs)}${metric('Road Access',`${summary.roadAccess}%`)}</div><p>Housing demand ${summary.housingDemand}% · customer demand ${summary.customerDemand}% · job demand ${summary.jobDemand}%.</p></section><section class="district-health-list">${districts.length ? districts.map(item=>`<article class="district-health-row"><strong>${item.name} · ${item.status}</strong><p>Population ${item.population} · happiness ${item.happiness}% · safety ${item.safety}% · business ${item.businessHealth}% · property ${item.propertyValue} FC<br>${item.abandoned ? `⚠ ${item.abandoned} abandoned propert${item.abandoned===1?'y':'ies'}` : 'No abandoned properties'}</p></article>`).join('') : '<article class="district-health-row"><strong>Faceless City · Citywide</strong><p>District-level health appears here as neighborhoods form.</p></article>'}</section>`
 }
 
 function renderConstructionPanel(focusId=state.constructionFocusId) {
@@ -8586,7 +8958,7 @@ function renderConstructionPanel(focusId=state.constructionFocusId) {
   const partial=active.filter(item=>item.construction.stage>=4).length
   const next=active[0]?.construction.remaining || 0
   const detail=focus ? `<article class="construction-detail"><h3>${BUILDING_TYPES[focus.building.building_type]?.icon || '🏗️'} ${BUILDING_TYPES[focus.building.building_type]?.name || 'City Building'} · ${focus.construction.label}</h3><div class="construction-progress"><span style="width:${Math.round(focus.construction.progress*100)}%"></span></div><p>${Math.round(focus.construction.progress*100)}% complete · ${formatConstructionTime(focus.construction.remaining)} remaining<br>Expected population: +${focus.construction.meta.population} · income when complete: ${(focus.building.income_rate || BUILDING_TYPES[focus.building.building_type]?.income || 0).toFixed(1)}/min<br>${focus.construction.stage>=4 && focus.construction.stage<6 ? 'Partially open: 25% income active.' : focus.construction.stage<4 ? 'Income locked during construction.' : 'Construction complete.'}</p></article>` : '<article class="construction-detail"><h3>City construction is quiet.</h3><p>Place a house, shop, club, warehouse, hideout, or development block to begin.</p></article>'
-  body.innerHTML=`<div class="construction-summary"><div class="construction-stat"><b>${active.length}</b><span>active sites</span></div><div class="construction-stat"><b>${partial}</b><span>partially open</span></div><div class="construction-stat"><b>${next ? formatConstructionTime(next) : '—'}</b><span>next completion</span></div></div>${detail}<div class="construction-list">${active.map(item=>`<article class="construction-row"><div><h4>${BUILDING_TYPES[item.building.building_type]?.icon || '🏗️'} ${BUILDING_TYPES[item.building.building_type]?.name || 'Building'} · ${item.construction.label}</h4><div class="construction-progress"><span style="width:${Math.round(item.construction.progress*100)}%"></span></div><p>${formatConstructionTime(item.construction.remaining)} remaining</p></div><button class="construction-action" data-construction-focus="${constructionBuildingId(item.building)}">View Site</button></article>`).join('') || '<p style="color:var(--dim);font-size:.55rem">No buildings are currently under construction.</p>'}</div>`
+  body.innerHTML=`${renderCityHealthReadout()}<div class="construction-summary"><div class="construction-stat"><b>${active.length}</b><span>active sites</span></div><div class="construction-stat"><b>${partial}</b><span>partially open</span></div><div class="construction-stat"><b>${next ? formatConstructionTime(next) : '—'}</b><span>next completion</span></div></div>${detail}<div class="construction-list">${active.map(item=>`<article class="construction-row"><div><h4>${BUILDING_TYPES[item.building.building_type]?.icon || '🏗️'} ${BUILDING_TYPES[item.building.building_type]?.name || 'Building'} · ${item.construction.label}</h4><div class="construction-progress"><span style="width:${Math.round(item.construction.progress*100)}%"></span></div><p>${formatConstructionTime(item.construction.remaining)} remaining</p></div><button class="construction-action" data-construction-focus="${constructionBuildingId(item.building)}">View Site</button></article>`).join('') || '<p style="color:var(--dim);font-size:.55rem">No buildings are currently under construction.</p>'}</div>`
 }
 
 function openConstructionPanel(buildingId=null) {
@@ -8612,6 +8984,7 @@ function updateCityPlotProgress(dt,initial=false) {
     if (construction.stage>=6 && !building.isComplete) {
       building.isComplete=true
       building.populationAdded=construction.meta?.population || 0
+      building.residentPopulation=construction.meta?.population || 0
       building.incomeUnlocked=true
       changed=true
       if (!firstRun && !building.constructionAnnounced) {
@@ -8624,6 +8997,7 @@ function updateCityPlotProgress(dt,initial=false) {
     if (construction.stage<6) {
       building.isComplete=false
       building.populationAdded=0
+      building.residentPopulation=0
       building.incomeUnlocked=false
     }
     if (changed) saveConstructionBuilding(building)
@@ -8767,6 +9141,38 @@ function drawCityPlotBuilding(building,s) {
     if(stage>=5){ctx.strokeStyle='#7c4a2d';ctx.lineWidth=2*z;ctx.beginPath();ctx.moveTo(s.x-7*z,s.y-5*z);ctx.lineTo(s.x+7*z,s.y+2*z);ctx.moveTo(s.x+7*z,s.y-5*z);ctx.lineTo(s.x-7*z,s.y+2*z);ctx.stroke()}
     if(stage>=6){ctx.strokeStyle='#475569';ctx.lineWidth=z;ctx.strokeRect(s.x-15*z,s.y-5*z,30*z,7*z);ctx.fillStyle='#a855f7';ctx.fillRect(s.x+6*z,s.y-4*z,5*z,1.5*z)}
   }
+  if(stage>=6) {
+    ensureCityLifecycleData(building)
+    const condition=building.condition,lifecycle=building.lifecycleStatus
+    if(condition<75) {
+      const decayAlpha=Math.min(.48,(75-condition)/105)
+      diamond(s.x,s.y,hw,hh,`rgba(55,58,64,${decayAlpha})`,null)
+      ctx.strokeStyle=`rgba(17,24,39,${.35+decayAlpha})`;ctx.lineWidth=Math.max(.8,z)
+      for(let crack=0;crack<3;crack++){
+        const ox=(crack-1)*9*z
+        ctx.beginPath();ctx.moveTo(s.x+ox,s.y-3*z);ctx.lineTo(s.x+ox+3*z,s.y+1*z);ctx.lineTo(s.x+ox,z*4+s.y);ctx.stroke()
+      }
+    }
+    if(condition<50) {
+      ctx.strokeStyle='rgba(217,70,239,.65)';ctx.lineWidth=Math.max(1,1.4*z)
+      ctx.beginPath();ctx.moveTo(s.x-10*z,s.y-4*z);ctx.lineTo(s.x-5*z,s.y-7*z);ctx.lineTo(s.x-1*z,s.y-4*z);ctx.stroke()
+      for(let trash=0;trash<3;trash++){ctx.beginPath();ctx.arc(s.x+(trash-1)*8*z,s.y+7*z,(1+trash*.3)*z,0,Math.PI*2);ctx.fillStyle='#57534e';ctx.fill()}
+    }
+    if(lifecycle==='abandoned') {
+      diamond(s.x,s.y,hw,hh,'rgba(71,75,82,.42)','rgba(239,68,68,.48)')
+      ctx.strokeStyle='#6b4423';ctx.lineWidth=Math.max(2,2.2*z)
+      ctx.beginPath();ctx.moveTo(s.x-10*z,s.y-8*z);ctx.lineTo(s.x+10*z,s.y+2*z);ctx.moveTo(s.x+10*z,s.y-8*z);ctx.lineTo(s.x-10*z,s.y+2*z);ctx.stroke()
+      ctx.fillStyle='#365314'
+      for(let weed=-2;weed<=2;weed++){ctx.fillRect(s.x+weed*7*z,s.y+5*z-Math.abs(weed)*z,1.5*z,(5+Math.abs(weed))*z)}
+      ctx.font=`900 ${Math.max(10,12*z)}px Inter`;ctx.textAlign='center';ctx.fillStyle='#f87171';ctx.fillText('⚠',s.x,s.y-hh-15*z)
+      if(z>.55){ctx.font=`800 ${Math.max(7,8*z)}px Inter`;ctx.fillText('ABANDONED',s.x,s.y+hh+12*z)}
+    } else if(building.businessClosed) {
+      ctx.font=`800 ${Math.max(7,8*z)}px Inter`;ctx.textAlign='center';ctx.fillStyle='#fb923c';ctx.fillText('CLOSED',s.x,s.y-hh-9*z)
+    } else if(cityLifecycleRuntime.summary?.status==='Growing' && condition>=80) {
+      const glow=.45+.35*Math.sin(performance.now()*.004)
+      ctx.font=`${Math.max(8,10*z)}px sans-serif`;ctx.textAlign='center';ctx.globalAlpha=glow;ctx.fillText('✨',s.x+hw*.55,s.y-hh-8*z);ctx.globalAlpha=1
+    }
+  }
   if(stage<6) {
     const anim=performance.now()*.002
     if(['club','warehouse','development-block'].includes(typeId) && stage>=2){
@@ -8820,7 +9226,8 @@ function drawBuildingAt(building, s) {
   let b = Math.floor((rc & 0xff) * conditionMult)
   
   // Phase 5A: Status-based visual tint
-  const status = building.status || 'active'
+  ensureCityLifecycleData(building)
+  const status = building.lifecycleStatus === 'abandoned' ? 'abandoned' : building.businessClosed ? 'closed' : (building.lifecycleStatus || building.status || 'active')
   let statusIcon = null
   if (status === 'struggling') {
     r = Math.floor(r * 0.85)
@@ -9098,6 +9505,7 @@ function drawDistrict(district) {
   if (s.x < -radius || s.x > canvas.width + radius || s.y < -radius || s.y > canvas.height + radius) return
 
   const typeColor = DISTRICT_TYPE_COLORS[district.district_type] || '#a78bfa'
+  const lifecycleDistrict=cityLifecycleRuntime.districts.find(item=>String(item.id)===String(district.id))
 
   // Phase 6F: Get neighborhood theme
   const theme = NEIGHBORHOOD_THEMES[district._theme] || null
@@ -9155,6 +9563,7 @@ function drawDistrict(district) {
     const icon = DISTRICT_TYPE_ICONS[district.district_type] || ''
     const themeEmoji = theme ? theme.emoji + ' ' : ''
     let labelText = themeEmoji + (icon ? icon + ' ' : '') + (district.name || 'District')
+    if (lifecycleDistrict) labelText += ` · ${lifecycleDistrict.status}`
     if (crimeRate > 70) {
       labelText = '⚠ ' + labelText
     }
@@ -10285,7 +10694,7 @@ function handleMobileAction(action) {
     if (tab) openFarmHub(tab)
   } else if (action === 'build') openPanel('buildPanel')
   else if (action === 'property') {
-    const owned=state.buildings.find(building=>building.owner_id === state.userId && isInCurrentRegion(building))
+    const owned=state.buildings.find(building=>(building.owner_id === state.userId || building._regionalLocal) && isInCurrentRegion(building))
     if (owned) openPropertyPanel(owned.id); else showToast('No City Property','Build or purchase a property first.')
   } else if (action === 'jobs') {
     const jobBuilding=state.buildings.find(building=>isInCurrentRegion(building) && ['shop','club','warehouse','hide'].includes(building.building_type))
@@ -10380,7 +10789,7 @@ function performTouchInteraction(target) {
   else if (target.kind === 'building') {
     const building=target.data
     if (onInteractBuildObject(building)) return
-    if (building.owner_id === state.userId && !building._regionalLocal) openPropertyPanel(building.id)
+    if (building.owner_id === state.userId || building._regionalLocal) openPropertyPanel(building.id)
     else if ({shop:1,club:1,warehouse:1,hide:1}[building.building_type]) openJobPanel(building.id)
   }
 }
@@ -10535,7 +10944,7 @@ function setupMouse() {
       } else if (clickedBuilding) {
         if (onInteractBuildObject(clickedBuilding)) {
           // Region gameplay hook handled this object.
-        } else if (clickedBuilding.owner_id === state.userId && !clickedBuilding._regionalLocal) {
+        } else if (clickedBuilding.owner_id === state.userId || clickedBuilding._regionalLocal) {
           openPropertyPanel(clickedBuilding.id)
         } else {
           const payRates = { shop: 2, club: 3, warehouse: 1, hide: 5 }
@@ -10776,7 +11185,8 @@ function setupUI() {
   document.getElementById('btnGang').addEventListener('click', () => openPanel('gangPanel'))
   document.getElementById('btnProperty').addEventListener('click', () => {
     if (state.propertyPanelOpen) { closeAllPanels(); return }
-    const owned = state.currentProperty || state.buildings.find(b => b.owner_id === state.userId)
+    const current=state.currentProperty && isInCurrentRegion(state.currentProperty) ? state.currentProperty : null
+    const owned = current || state.buildings.find(b => (b.owner_id === state.userId || b._regionalLocal) && isInCurrentRegion(b))
     if (owned) {
       openPropertyPanel(owned.id)
     } else {
@@ -10807,6 +11217,7 @@ function setupUI() {
   document.getElementById('worldMapClose').addEventListener('click', closeAllPanels)
   document.getElementById('constructionPanelClose').addEventListener('click', closeAllPanels)
   document.getElementById('constructionHudOpen').addEventListener('click', () => openConstructionPanel())
+  document.getElementById('cityHealthOpen').addEventListener('click', () => openConstructionPanel())
   document.getElementById('constructionBody').addEventListener('click', event => {
     const button=event.target.closest('[data-construction-focus]')
     if (!button) return
@@ -10947,6 +11358,15 @@ function setupUI() {
     showToast('Director Tick Complete','One Living World check ran. No player rewards were generated.')
   })
   document.getElementById('debugConvertCityPlots').addEventListener('click', convertLegacyCityBuildingsToStaged)
+  document.getElementById('debugCityHealthy').addEventListener('click', () => {
+    const result=runCityGrowthDeclineTick({testMode:'healthy'})
+    showToast('Healthy City Test',`Condition improved · city status ${result.status}.`)
+  })
+  document.getElementById('debugCityShortage').addEventListener('click', () => {
+    const result=runCityGrowthDeclineTick({testMode:'shortage'})
+    showToast('Shortage Test',`Condition declined · city status ${result.status}.`)
+  })
+  document.getElementById('debugCityLifecycleReset').addEventListener('click', resetCityLifecycle)
   document.getElementById('debugDoneBtn').addEventListener('click', () => {
     document.getElementById('debugPanel').style.display = 'none'
   })
@@ -11642,23 +12062,24 @@ function addPropertyXP(prop, amount) {
 
 function calcPropertyValue(building) {
   const prop = state.properties[building.id]
-  if (!prop) return BUILDING_TYPES[building.building_type]?.cost || 50
   const type = BUILDING_TYPES[building.building_type]
-  let base = type.cost || 50
+  let base = type?.cost || 50
   let mult = 1
-  for (const key of prop.upgrades) {
+  for (const key of prop?.upgrades || []) {
     const list = PROPERTY_UPGRADES[building.building_type] || []
     const u = list.find(x => x.key === key)
     if (key === 'renovation' || key === 'garden' || key === 'cold_storage' || key === 'shelter') mult += 0.05
     if (key === 'renovation') mult += 0.05
   }
-  const levelMult = 1 + (prop.level - 1) * 0.1
-  return Math.floor(base * mult * levelMult)
+  const levelMult = 1 + ((prop?.level || 1) - 1) * 0.1
+  const lifecycle=ensureCityLifecycleData(building)
+  const conditionMult=lifecycle ? (building.lifecycleStatus==='abandoned' ? .25 : Math.max(.45,.55+building.condition/220)) : 1
+  return Math.floor(base * mult * levelMult * conditionMult)
 }
 
 function getEffectiveIncome(building) {
   const prop = state.properties[building.id]
-  const constructionMult=constructionIncomeMultiplier(building)
+  const constructionMult=constructionIncomeMultiplier(building)*cityLifecycleIncomeMultiplier(building)
   if (!prop) return (building.income_rate || BUILDING_TYPES[building.building_type]?.income || 0)*constructionMult
   let mult = 1, bonus = 0
   for (const key of prop.upgrades) {
@@ -11699,11 +12120,17 @@ function openPropertyPanel(buildingId) {
   document.getElementById('propUpgradeCount').textContent = prop.upgrades.length + ' / 3'
   document.getElementById('propDistrictBonus').textContent = building.in_district ? 'Yes (+20%)' : 'None'
   const plotStatusRow=document.getElementById('propPlotStatusRow')
+  const lifecycleRow=document.getElementById('propLifecycleRow')
   const cityPlot=CITY_PLOT_TYPES.has(building.object_type || building.building_type) && normalizeRegionId(building.region_id ?? building.region) === 'city'
   plotStatusRow.style.display=cityPlot ? 'flex' : 'none'
+  lifecycleRow.style.display=cityPlot ? 'flex' : 'none'
   if (cityPlot) {
+    ensureCityLifecycleData(building)
     const plot=getCityPlotStage(building),population=cityPlotPopulation(building)
     document.getElementById('propPlotStatus').textContent=plot.stage>=6 ? `Complete · +${population} population` : `${plot.label} · ${Math.round(plot.progress*100)}% · ${formatConstructionTime(plot.remaining)}`
+    const lifecycleText=document.getElementById('propLifecycleStatus')
+    lifecycleText.textContent=`${lifecycleStatusLabel(building)} · ${Math.round(building.condition)}%`
+    lifecycleText.classList.toggle('lifecycle-warning',building.lifecycleStatus==='abandoned' || building.condition<40)
   }
   // Tasks
   const tasks = PROPERTY_TASKS[building.building_type] || []
@@ -11752,7 +12179,17 @@ function openPropertyPanel(buildingId) {
     }
     uContainer.appendChild(item)
   }
-  document.getElementById('propCollectBtn').onclick = () => { closeAllPanels(); setTimeout(() => openIncomePanel(buildingId), 200) }
+  const renovateBtn=document.getElementById('propRenovateBtn')
+  const canRenovate=cityPlot && getCityPlotStage(building).stage>=6 && (building.condition<85 || building.lifecycleStatus!=='active' || building.businessClosed)
+  renovateBtn.style.display=canRenovate ? 'block' : 'none'
+  if (canRenovate) {
+    const cost=renovationCost(building)
+    renovateBtn.textContent=`Renovate Property · ${cost} FC`
+    renovateBtn.onclick=()=>{ if (renovateCityBuilding(building)) openPropertyPanel(buildingId) }
+  }
+  const collectBtn=document.getElementById('propCollectBtn')
+  collectBtn.disabled=cityPlot && cityLifecycleIncomeMultiplier(building)<=0
+  collectBtn.onclick = () => { closeAllPanels(); setTimeout(() => openIncomePanel(buildingId), 200) }
   document.getElementById('propertyPanel').classList.remove('panel-hidden')
   document.getElementById('propertyPanel').classList.add('open')
   document.getElementById('panelBackdrop').classList.add('open')
@@ -11810,12 +12247,13 @@ function openIncomePanel(buildingId) {
   document.getElementById('incomeRate').textContent = building.income_rate
 
   // Phase 5A: Building status
-  const status = building.status || 'active'
+  ensureCityLifecycleData(building)
+  const status = building.lifecycleStatus === 'abandoned' ? 'abandoned' : building.businessClosed ? 'closed' : (building.lifecycleStatus || building.status || 'active')
   const statusEl = document.getElementById('incomeStatus')
   const statusTextEl = document.getElementById('incomeStatusText')
   if (status !== 'active') {
-    const statusColors = { struggling: '#facc15', closing: '#f97316', closed: '#ef4444' }
-    const statusLabels = { struggling: '⚠ Struggling', closing: '🔻 Closing', closed: '✕ Closed' }
+    const statusColors = { struggling: '#facc15', declining:'#f97316', closing: '#f97316', closed: '#ef4444', abandoned:'#ef4444' }
+    const statusLabels = { struggling: '⚠ Struggling', declining:'🔻 Declining', closing: '🔻 Closing', closed: '✕ Temporarily Closed', abandoned:'⚠ Abandoned' }
     statusTextEl.textContent = statusLabels[status] || status
     statusTextEl.style.color = statusColors[status] || '#facc15'
     statusEl.style.display = 'block'
@@ -11922,7 +12360,7 @@ function constructionWeightedIncomeMs(building,lastCollected,now) {
 function calculateAccumulatedIncome(building) {
   // Phase 5A: Use pending_income if available (from simulation tick)
   const pending = parseFloat(building.pending_income) || 0
-  if (pending > 0) return Math.floor(pending*constructionIncomeMultiplier(building))
+  if (pending > 0) return Math.floor(pending*constructionIncomeMultiplier(building)*cityLifecycleIncomeMultiplier(building))
 
   // Fallback: old time-based calculation (backward compat)
   let lastCollected = null
@@ -11939,7 +12377,7 @@ function calculateAccumulatedIncome(building) {
   const cappedElapsed = Math.min(elapsed, maxMs)
   const minutes = cappedElapsed / 60000
   const healthMultiplier = (building.business_health || 100) / 100
-  let income = (building.income_rate || BUILDING_TYPES[building.building_type]?.income || 0) * minutes * healthMultiplier
+  let income = (building.income_rate || BUILDING_TYPES[building.building_type]?.income || 0) * minutes * healthMultiplier * cityLifecycleIncomeMultiplier(building)
   const skillMult = 1 + getSkillBonus('builder', 'income') + getSkillBonus('developer', 'income')
   income *= skillMult
   income *= 1 + getCityFoodBonus()
@@ -11952,6 +12390,11 @@ function calculateAccumulatedIncome(building) {
 async function collectIncome() {
   if (!currentIncomeBuilding) return
   const constructionMult=constructionIncomeMultiplier(currentIncomeBuilding)
+  const lifecycleMult=cityLifecycleIncomeMultiplier(currentIncomeBuilding)
+  if (lifecycleMult<=0) {
+    showToast('Property Not Operating','Renovate this abandoned or closed property before collecting income.')
+    return
+  }
   if (constructionMult<=0) {
     showToast('Income Locked','This property must reach Exterior Work before partial income begins.')
     return
@@ -12279,7 +12722,10 @@ async function placeBuildingAt(x, y) {
     status:'active'
   }
   const stagedCityBuild=state.currentRegion === 'city' && CITY_PLOT_TYPES.has(typeId)
-  if (stagedCityBuild) ensureConstructionData(object,{newBuild:true})
+  if (stagedCityBuild) {
+    ensureConstructionData(object,{newBuild:true})
+    ensureCityLifecycleData(object,{newBuild:true})
+  }
   if (type.infrastructure) {
     object.infra_type = regionalInfraType(typeId)
     state.infrastructure.push(object)
@@ -13267,6 +13713,11 @@ function showDistrictTooltip(mouseX, mouseY, district) {
   html += `<div class="district-tooltip-stat">Crime: <span style="color:${crimeColor}">${crimeRate}/100</span> <span style="color:${crimeColor};font-size:11px;">(${crimeLabel})</span></div>`
 
   html += `<div class="district-tooltip-stat">Happiness: <span style="color:${happinessColor}">${happiness}%</span></div>`
+  const lifecycleMetrics=cityLifecycleRuntime.districts.find(item=>String(item.id)===String(district.id))
+  if (lifecycleMetrics) {
+    html += `<div class="district-tooltip-stat">City Health: <span style="color:${lifecycleMetrics.status==='Growing'?'#4ade80':lifecycleMetrics.status==='Stable'?'#c4b5fd':'#f87171'}">${lifecycleMetrics.status} · ${lifecycleMetrics.score}%</span></div>`
+    html += `<div class="district-tooltip-stat">Food ${lifecycleMetrics.food}% · Safety ${lifecycleMetrics.safety}% · Business ${lifecycleMetrics.businessHealth}%</div>`
+  }
   html += `<div class="district-tooltip-bonus">+20% income inside</div>`
 
   if (!influence || !influence.influences || influence.influences.length === 0) {
@@ -13684,6 +14135,7 @@ function applyBusinessSupplyEffects(supply,contract) {
     building.business_health=Math.max(10,Math.min(100,(building.business_health ?? 75)+gain))
     building._supplyIncomeBonus=supply.businessIncomeBonus
   }
+  if (state.loaded) refreshCityHealthMetrics()
 }
 function applyContractCitySupply(shipment) {
   const supply=getCitySupply(), contract=DELIVERY_CONTRACTS[shipment.contractType]
@@ -14414,6 +14866,7 @@ async function init() {
   updateSkillTitleUI()
   loadSignalWire()
   initLivingWorld()
+  refreshCityHealthMetrics()
   postDailyWoodsSignal()
   getShipments()
   await checkShipmentDeliveries()
