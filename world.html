@@ -312,6 +312,7 @@
       .portfolio-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important;width:100%!important}
       .portfolio-body{max-height:none}
       .portfolio-card{grid-template-columns:1fr}
+      .portfolio-tools{grid-template-columns:1fr}
       .portfolio-actions button{flex:1}
       .selection-card{bottom:72px;width:calc(100vw - 12px)}
       .construction-hud{left:6px;bottom:72px;width:165px;padding:.42rem}
@@ -978,12 +979,22 @@
     .portfolio-panel{width:min(760px,calc(100vw - 1rem))!important;max-width:none}
     .portfolio-body{display:grid;gap:.75rem;max-height:74vh;overflow-y:auto;padding:.8rem}
     .portfolio-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem}
+    .portfolio-tools{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:.45rem}
+    .portfolio-tools input,.portfolio-tools select{width:100%;padding:.52rem .6rem;border:1px solid rgba(167,139,250,.18);border-radius:8px;background:rgba(8,9,14,.76);color:#eee7f4;font-size:.55rem;outline:none}
+    .portfolio-tools input:focus,.portfolio-tools select:focus{border-color:rgba(192,132,252,.55);box-shadow:0 0 0 2px rgba(124,58,237,.08)}
+    .portfolio-filter-count{color:#877b8e;font-size:.46rem}
     .portfolio-region{display:grid;gap:.42rem}
     .portfolio-region-title{display:flex;align-items:center;justify-content:space-between;color:#e9d5ff;font-size:.65rem;font-weight:900}
     .portfolio-region-title span{color:#8f8198;font-size:.48rem}
     .portfolio-card{display:grid;grid-template-columns:1fr auto;gap:.65rem;align-items:center;padding:.65rem;border:1px solid rgba(167,139,250,.14);border-radius:9px;background:rgba(124,58,237,.045)}
+    .portfolio-card[hidden],.portfolio-region[hidden]{display:none!important}
     .portfolio-card h4{margin:0;color:#f5f3ff;font-size:.62rem}
     .portfolio-card p{margin:.2rem 0 0;color:#9f93a7;font-size:.48rem;line-height:1.45}
+    .portfolio-badges{display:flex;gap:.28rem;flex-wrap:wrap;margin-top:.35rem}
+    .portfolio-badge{padding:.14rem .35rem;border:1px solid rgba(255,255,255,.09);border-radius:999px;font-size:.42rem;font-weight:900;text-transform:uppercase;letter-spacing:.03em}
+    .portfolio-badge.ready{border-color:rgba(74,222,128,.3);background:rgba(34,197,94,.09);color:#86efac}
+    .portfolio-badge.attention{border-color:rgba(251,191,36,.32);background:rgba(245,158,11,.09);color:#fde68a}
+    .portfolio-empty{padding:1rem;border:1px dashed rgba(167,139,250,.18);border-radius:9px;color:#8f8198;font-size:.55rem;text-align:center}
     .portfolio-actions{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:flex-end}
     .portfolio-actions button,.selection-actions button{padding:.36rem .52rem;border:1px solid rgba(167,139,250,.25);border-radius:6px;background:rgba(124,58,237,.09);color:#ddd6fe;font-size:.48rem;font-weight:850;cursor:pointer}
     .selection-card{
@@ -1953,6 +1964,7 @@
       .portfolio-panel{top:50px!important;bottom:72px!important;height:auto!important;max-height:none!important;transform:none!important;width:100%!important}
       .portfolio-body{max-height:none}
       .portfolio-summary{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .portfolio-tools{grid-template-columns:1fr}
       .portfolio-card{grid-template-columns:1fr}
       .portfolio-actions{justify-content:stretch}
       .portfolio-actions button{flex:1}
@@ -2495,7 +2507,7 @@
   <button class="tool-btn" id="btnPW" data-tip="Public Works">&#x1F3F0;</button>
   <button class="tool-btn" id="btnBlock" data-tip="Urban DNA">&#x1F3D8;&#xFE0F;</button>
   <button class="tool-btn" id="btnProperty" data-tip="Properties">&#x1F3E1;</button>
-  <button class="tool-btn" id="btnPortfolio" data-tip="Portfolio">📁</button>
+  <button class="tool-btn" id="btnPortfolio" data-tip="My Properties" aria-label="My Properties">📁</button>
   <button class="tool-btn" id="btnGang" data-tip="Gangs">&#x1F46A;</button>
   <button class="tool-btn" id="btnCreatures" data-tip="Creatures">&#x1F43E;</button>
   <button class="tool-btn" id="btnSkills" data-tip="Skill Trees">&#x1F331;</button>
@@ -2507,7 +2519,7 @@
 </div>
 
 <nav class="mobile-action-bar" id="mobileActionBar" aria-label="Regional actions"></nav>
-<button class="mobile-portfolio-button" id="mobilePortfolioButton" type="button" aria-label="Open property portfolio">📁</button>
+<button class="mobile-portfolio-button" id="mobilePortfolioButton" type="button" aria-label="My Properties">📁</button>
 <button class="mobile-map-button" id="mobileMapButton" type="button" aria-label="Open world map">🌐</button>
 
 <div class="mode-indicator" id="modeIndicator">Build Mode: Click to place</div>
@@ -2867,7 +2879,7 @@
 
 <section class="portfolio-panel game-panel panel-hidden" id="portfolioPanel" aria-label="Property Portfolio">
   <div class="panel-header">
-    <div class="panel-title">📁 Property Portfolio</div>
+    <div class="panel-title">📁 My Properties</div>
     <div class="panel-close" id="portfolioPanelClose">&times;</div>
   </div>
   <div class="portfolio-body" id="portfolioBody"></div>
@@ -3228,6 +3240,7 @@ const state = {
   selectionHighlightUntil: 0,
   lastWorldTap: { id:null, at:0 },
   portfolioTravel: null,
+  portfolioFilters: { search:'', region:'all' },
   settings: {
     farmAmbience: true
   },
@@ -3808,28 +3821,34 @@ function portfolioObjectStatus(item) {
 
 function getPortfolioEntries() {
   normalizeAllOwnership()
+  const farm=getFarmData(),owner=currentPlayerOwnerName(),farmReady=getFarmReadyCounts(farm)
+  const farmReadyCount=Number(farmReady.crops || 0)+Number(farmReady.machines || 0)+Number(farmReady.animals || 0)+Number(farmReady.trucks || farmReady.activeTrucks || 0)
   const entries=[...state.buildings,...state.infrastructure].filter(portfolioEligible).map(item=>{
     normalizeOwnershipMetadata(item)
     const type=item.property_type
     const income=Number(item.income_rate ?? BUILDING_TYPES[type]?.income) || 0
     const value=normalizeRegionId(item.region_id)==='city' ? calcPropertyValue(item) : item.value
     const lastCollected=Number(item.last_collected) || (item.last_collected_at ? Date.parse(item.last_collected_at) : 0)
-    const readyText=Number(item.pending_income)>0 ? `${Math.floor(item.pending_income)} FC ready to collect` : lastCollected ? `Last collected ${formatPortfolioVisit(lastCollected).replace('Visited','').trim().toLowerCase()}` : item.object_category==='crop' ? 'Open Farm to check crop readiness' : 'No collection recorded'
+    const crop=farm.crops.find(planted=>planted.tx===item.tile_x && planted.ty===item.tile_y)
+    const cropReady=Boolean(crop && getCropStageInfo(crop).done)
+    const ready=Number(item.pending_income)>0 || cropReady
+    const readyText=Number(item.pending_income)>0 ? `${Math.floor(item.pending_income)} FC ready to collect` : cropReady ? 'Crop ready to harvest' : lastCollected ? `Last collected ${formatPortfolioVisit(lastCollected).replace('Visited','').trim().toLowerCase()}` : item.object_category==='crop' ? 'Open Farm to check crop readiness' : 'No collection recorded'
+    const status=portfolioObjectStatus(item)
     return {
       id:String(item.id),source:item,synthetic:false,region_id:item.region_id,
       property_name:item.property_name,property_type:type,owner_name:ownerNameFor(item),
-      value,status:portfolioObjectStatus(item),level:state.properties[item.id]?.level || 1,
+      value,status,level:state.properties[item.id]?.level || 1,
       incomeText:income ? `${getEffectiveIncome(item).toFixed(1)} FC/min` : (item.object_category==='crop' ? 'Crop production plot' : 'No passive income'),
+      ready,needsAttention:['Abandoned','Declining','Struggling'].includes(status) || Number(item.condition)<45,
       readyText,lastVisitedAt:item.lastVisitedAt || 0,tile_x:item.tile_x,tile_y:item.tile_y
     }
   })
-  const farm=getFarmData(),owner=currentPlayerOwnerName(),farmReady=getFarmReadyCounts(farm)
-  const farmReadyCount=Number(farmReady.crops || 0)+Number(farmReady.machines || 0)+Number(farmReady.animals || 0)+Number(farmReady.trucks || farmReady.activeTrucks || 0)
+  const animalAttention=(farm.animalResidents || []).some(animal=>['Hungry','Lonely','Sick'].includes(animal.mood) || Number(animal.cleanliness)<45)
   entries.push({
     id:'portfolio_pine_hollow',synthetic:true,syntheticType:'farm',region_id:'farmlands',
     property_name:'Pine Hollow Farm',property_type:'farm-estate',owner_name:owner,
     value:Number(farm.propertyValue) || 45000,status:`Farm Level ${farm.farmLevel}`,
-    level:farm.farmLevel,incomeText:`${farmReadyCount} ready farm tasks`,
+    level:farm.farmLevel,incomeText:`${farmReadyCount} ready farm tasks`,ready:farmReadyCount>0,needsAttention:animalAttention || farmReadyCount>0,
       readyText:farmReadyCount ? `${farmReadyCount} actions ready` : 'Farm routine caught up',lastVisitedAt:Number(farm.lastFarmVisitAt) || 0,tile_x:WORLD_SIZE/2,tile_y:WORLD_SIZE/2
   })
   entries.push({
@@ -3837,6 +3856,7 @@ function getPortfolioEntries() {
     property_name:'Pine Hollow Creature Sanctuary',property_type:'sanctuary',owner_name:owner,
     value:Number(farm.sanctuary.propertyBonus) || 0,status:farm.sanctuary.status==='unlocked' ? `Level ${farm.sanctuary.level} · Open` : 'Locked',
     level:farm.sanctuary.level,incomeText:farm.sanctuary.status==='unlocked' ? `${Math.floor(farm.sanctuary.tipsPending || 0)} FC tips ready` : 'Unlock at Farm Level 3 or 2 trusted creatures',
+    ready:Number(farm.sanctuary.tipsPending)>0,needsAttention:farm.sanctuary.status!=='unlocked' || farm.sanctuary.slots.some(slot=>slot && Number(slot.mood)<55),
     readyText:farm.sanctuary.status==='unlocked' ? `${Math.floor(farm.sanctuary.tipsPending || 0)} FC tips ready` : 'Sanctuary not unlocked',lastVisitedAt:Number(farm.lastFarmVisitAt) || 0,tile_x:WORLD_SIZE/2+4,tile_y:WORLD_SIZE/2+4
   })
   return entries
@@ -3860,7 +3880,28 @@ function renderPortfolio() {
   if (!body) return
   const entries=getPortfolioEntries(),totalValue=entries.reduce((sum,item)=>sum+Number(item.value || 0),0)
   const groups=PORTFOLIO_REGION_ORDER.map(regionId=>({ regionId,entries:entries.filter(item=>item.region_id===regionId) })).filter(group=>group.entries.length)
-  body.innerHTML=`<div class="portfolio-summary"><div class="construction-stat"><b>${entries.length}</b><span>owned properties</span></div><div class="construction-stat"><b>${totalValue.toLocaleString()} FC</b><span>portfolio value</span></div><div class="construction-stat"><b>${groups.length}</b><span>regions represented</span></div></div>${groups.map(group=>`<section class="portfolio-region"><div class="portfolio-region-title">${safeText(REGIONS[group.regionId]?.label || '📍')} ${safeText(group.regionId==='farmlands'?'Pine Hollow Farm / Farmlands':REGIONS[group.regionId]?.name || group.regionId)}<span>${group.entries.length} owned</span></div>${group.entries.map(item=>`<article class="portfolio-card"><div><h4>${safeText(BUILDING_TYPES[item.property_type]?.icon || (item.syntheticType==='farm'?'🌾':item.syntheticType==='sanctuary'?'🐾':'🏷️'))} ${safeText(item.property_name)}</h4><p>${safeText(String(item.property_type).replace(/-/g,' '))} · ${safeText(item.status)} · Level ${item.level}<br>${Number(item.value || 0).toLocaleString()} FC · ${safeText(item.incomeText)}<br>${safeText(item.readyText || 'No collection recorded')}<br>Owner: ${safeText(item.owner_name)} · ${safeText(formatPortfolioVisit(item.lastVisitedAt))}</p></div><div class="portfolio-actions"><button data-portfolio-action="view" data-property-id="${safeText(item.id)}">View</button><button data-portfolio-action="travel" data-property-id="${safeText(item.id)}">Travel</button><button data-portfolio-action="deed" data-property-id="${safeText(item.id)}">Open Deed</button></div></article>`).join('')}</section>`).join('')}`
+  const regionOptions=PORTFOLIO_REGION_ORDER.map(regionId=>`<option value="${regionId}" ${state.portfolioFilters.region===regionId?'selected':''}>${safeText(regionId==='farmlands'?'Pine Hollow / Farmlands':REGIONS[regionId]?.name || regionId)}</option>`).join('')
+  const badges=item=>`<div class="portfolio-badges">${item.ready?'<span class="portfolio-badge ready">Ready to collect</span>':''}${item.needsAttention?'<span class="portfolio-badge attention">Needs attention</span>':''}</div>`
+  body.innerHTML=`<div class="portfolio-tools"><input id="portfolioSearch" type="search" placeholder="Search my properties…" value="${safeText(state.portfolioFilters.search)}" aria-label="Search my properties"><select id="portfolioRegionFilter" aria-label="Filter properties by region"><option value="all">All regions</option>${regionOptions}</select></div><div class="portfolio-filter-count" id="portfolioFilterCount">Showing ${entries.length} of ${entries.length}</div><div class="portfolio-summary"><div class="construction-stat"><b>${entries.length}</b><span>owned properties</span></div><div class="construction-stat"><b>${totalValue.toLocaleString()} FC</b><span>portfolio value</span></div><div class="construction-stat"><b>${groups.length}</b><span>regions represented</span></div></div>${groups.map(group=>`<section class="portfolio-region" data-portfolio-region="${group.regionId}"><div class="portfolio-region-title">${safeText(REGIONS[group.regionId]?.label || '📍')} ${safeText(group.regionId==='farmlands'?'Pine Hollow Farm / Farmlands':REGIONS[group.regionId]?.name || group.regionId)}<span>${group.entries.length} owned</span></div>${group.entries.map(item=>`<article class="portfolio-card" data-region="${item.region_id}" data-search="${safeText(`${item.property_name} ${item.property_type} ${item.owner_name} ${REGIONS[item.region_id]?.name || item.region_id}`.toLowerCase())}"><div><h4>${safeText(BUILDING_TYPES[item.property_type]?.icon || (item.syntheticType==='farm'?'🌾':item.syntheticType==='sanctuary'?'🐾':'🏷️'))} ${safeText(item.property_name)}</h4>${badges(item)}<p>${safeText(String(item.property_type).replace(/-/g,' '))} · ${safeText(item.status)} · Level ${item.level}<br>${Number(item.value || 0).toLocaleString()} FC · ${safeText(item.incomeText)}<br>${safeText(item.readyText || 'No collection recorded')}<br>Owner: ${safeText(item.owner_name)} · ${safeText(formatPortfolioVisit(item.lastVisitedAt))}</p></div><div class="portfolio-actions"><button data-portfolio-action="view" data-property-id="${safeText(item.id)}">View</button><button data-portfolio-action="travel" data-property-id="${safeText(item.id)}">Travel</button><button data-portfolio-action="deed" data-property-id="${safeText(item.id)}">Open Deed</button></div></article>`).join('')}</section>`).join('')}<div class="portfolio-empty" id="portfolioEmpty" hidden>No owned properties match this search.</div>`
+  updatePortfolioVisibility()
+}
+
+function updatePortfolioVisibility() {
+  const body=document.getElementById('portfolioBody')
+  if (!body) return
+  const search=String(state.portfolioFilters.search || '').trim().toLowerCase(),region=state.portfolioFilters.region || 'all'
+  const cards=[...body.querySelectorAll('.portfolio-card')]
+  let shown=0
+  for (const card of cards) {
+    const visible=(!search || String(card.dataset.search || '').includes(search)) && (region==='all' || card.dataset.region===region)
+    card.hidden=!visible
+    if (visible) shown++
+  }
+  for (const section of body.querySelectorAll('.portfolio-region')) section.hidden=![...section.querySelectorAll('.portfolio-card')].some(card=>!card.hidden)
+  const count=document.getElementById('portfolioFilterCount')
+  if (count) count.textContent=`Showing ${shown} of ${cards.length}`
+  const empty=document.getElementById('portfolioEmpty')
+  if (empty) empty.hidden=shown!==0
 }
 
 function openPortfolio() {
@@ -8772,6 +8813,7 @@ function drawTileCtx(c, x, y, terrain, s) {
 
 function drawOwnershipPlaque(item,s) {
   if (!item || item.owner_id==='world-nature' || item.natural) return
+  if (state.camera.zoom<.72) return
   const selectedId=worldTargetId(state.selectedWorldTarget)
   const itemId=`${state.selectedWorldTarget?.kind || 'building'}:${item.id}`
   const selected=selectedId===itemId || state.selectedWorldTarget?.data===item
@@ -11383,8 +11425,14 @@ function setupMouse() {
           if (doubleTap) openSelectionCard(target)
           return
         }
+        if (doubleTap) {
+          state.touchNav.active=false
+          state.touchNav.pending=null
+          openSelectionCard(target)
+          return
+        }
         queueTouchDestination(world,target)
-        state.touchNav.pending=doubleTap ? {kind:'open-selection',data:target} : null
+        state.touchNav.pending=null
         return
       }
       const target=worldTargetAt(world)
@@ -11657,6 +11705,16 @@ function setupUI() {
     if (button.dataset.portfolioAction==='view') openPortfolioEntrySelection(entry)
     else if (button.dataset.portfolioAction==='travel') travelToPortfolioEntry(entry)
     else if (button.dataset.portfolioAction==='deed') travelToPortfolioEntry(entry,{openDeed:true})
+  })
+  document.getElementById('portfolioBody').addEventListener('input',event=>{
+    if (event.target.id!=='portfolioSearch') return
+    state.portfolioFilters.search=event.target.value
+    updatePortfolioVisibility()
+  })
+  document.getElementById('portfolioBody').addEventListener('change',event=>{
+    if (event.target.id!=='portfolioRegionFilter') return
+    state.portfolioFilters.region=event.target.value
+    updatePortfolioVisibility()
   })
   document.getElementById('selectionCardBody').addEventListener('click',event=>{
     const button=event.target.closest('[data-selection-action]')
