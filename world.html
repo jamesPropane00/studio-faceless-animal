@@ -1147,6 +1147,7 @@
     }
     .farm-next b { color: #f5c451; font-size: 0.68rem; }
     .farm-next span { color: #cbd5c3; font-size: 0.65rem; }
+    .farm-next button { flex:0 0 auto; padding:.38rem .55rem; border:1px solid rgba(245,196,81,.4); border-radius:6px; background:rgba(245,196,81,.1); color:#f5c451; font-size:.53rem; font-weight:900; cursor:pointer; }
     .farm-today-hero {
       display: grid; grid-template-columns: 1.4fr 1fr; gap: 0.75rem;
       margin-bottom: 0.8rem;
@@ -2836,7 +2837,7 @@ import { mountWorldAccount } from '/assets/js/world-account.js'
 
 import { BUILDING_TYPES, DISTRICT_TYPE_COLORS, DISTRICT_TYPE_ICONS, DISTRICT_TYPE_LABELS } from '/world/js/data/buildings.js'
 import { REGIONS, NEIGHBORHOOD_THEMES } from '/world/js/data/regions.js'
-import { GOD_POWERS, CROP_TYPES } from '/world/js/data/items.js?v=20260630-farm-reset'
+import { GOD_POWERS, CROP_TYPES } from '/world/js/data/items.js?v=20260630-balance'
 import { WEATHER_TYPES, WEATHER_COLORS } from '/world/js/core/weather.js'
 
 const canvas = document.getElementById('gameCanvas')
@@ -3654,22 +3655,22 @@ const CITY_DEMAND_ITEMS = {
 const DELIVERY_CONTRACTS = {
   crops:{
     name:'Market Row Crop Run', icon:'🌾', needs:{ wheat:4, corn:3 },
-    delivers:{ food:14 }, rewardFC:72, reputation:2, farmerXP:14, logisticsXP:10, etaMs:20000,
+    delivers:{ food:14 }, rewardFC:72, reputation:2, farmerXP:14, logisticsXP:10, etaMs:30000,
     story:'Pine Hollow shipment saves Market Row.'
   },
   dairy:{
     name:'Dairy Cold-Chain', icon:'🥛', needs:{ milk:2, cheese:1 },
-    delivers:{ milk:8, cheese:4, food:4 }, rewardFC:110, reputation:3, farmerXP:18, logisticsXP:16, etaMs:30000,
+    delivers:{ milk:8, cheese:4, food:4 }, rewardFC:110, reputation:3, farmerXP:18, logisticsXP:16, etaMs:45000,
     story:'Fresh dairy goods reach Faceless City.'
   },
   bakery:{
     name:'City Bakery Supply', icon:'🍞', needs:{ bread:2, eggBread:1 },
-    delivers:{ bread:10, food:6 }, rewardFC:96, reputation:3, farmerXP:16, logisticsXP:14, etaMs:25000,
+    delivers:{ bread:10, food:6 }, rewardFC:96, reputation:3, farmerXP:16, logisticsXP:14, etaMs:40000,
     story:'Bakery goods arrive in Faceless City.'
   },
   mixed:{
     name:'Faceless City Mixed Food', icon:'📦', needs:{ wheat:2, eggs:2, milk:1, bread:1 },
-    delivers:{ food:12, eggs:6, milk:4, bread:4 }, rewardFC:135, reputation:4, farmerXP:22, logisticsXP:20, etaMs:40000,
+    delivers:{ food:12, eggs:6, milk:4, bread:4 }, rewardFC:135, reputation:4, farmerXP:22, logisticsXP:20, etaMs:60000,
     story:'Pine Hollow mixed shipment restocks the city.'
   }
 }
@@ -3687,12 +3688,12 @@ const FARM_BUILDINGS = {
 }
 
 const FARM_RECIPES = {
-  chickenFeed: { machine:'feedMill', time:8000, ingredients:{ wheat:2, corn:1 }, output:{ chickenFeed:2 } },
-  cowFeed: { machine:'feedMill', time:10000, ingredients:{ corn:2, carrots:1 }, output:{ cowFeed:2 } },
-  bread: { machine:'bakery', time:12000, ingredients:{ wheat:2 }, output:{ bread:1 } },
-  eggBread: { machine:'bakery', time:15000, ingredients:{ eggs:1, wheat:2 }, output:{ eggBread:1 } },
-  cream: { machine:'dairy', time:12000, ingredients:{ milk:1 }, output:{ cream:1 } },
-  cheese: { machine:'dairy', time:18000, ingredients:{ milk:2, cream:1 }, output:{ cheese:1 } }
+  chickenFeed: { machine:'feedMill', time:12000, ingredients:{ wheat:2, corn:1 }, output:{ chickenFeed:2 } },
+  cowFeed: { machine:'feedMill', time:15000, ingredients:{ corn:2, carrots:1 }, output:{ cowFeed:2 } },
+  bread: { machine:'bakery', time:20000, ingredients:{ wheat:2 }, output:{ bread:1 } },
+  eggBread: { machine:'bakery', time:25000, ingredients:{ eggs:1, wheat:2 }, output:{ eggBread:1 } },
+  cream: { machine:'dairy', time:22000, ingredients:{ milk:1 }, output:{ cream:1 } },
+  cheese: { machine:'dairy', time:30000, ingredients:{ milk:2, cream:1 }, output:{ cheese:1 } }
 }
 
 const FARM_ORDER_TEMPLATES = [
@@ -3917,14 +3918,14 @@ function updateSanctuaryState(data,now=Date.now()) {
       if (!creature) continue
       occupied++
       const matched=sanctuaryHabitatMatches(slot.habitat,sanctuaryPreferredHabitat(creature))
-      const delta=matched ? Math.ceil(minutes/3) : -Math.ceil(minutes/2)
-      const feedingBonus=sanctuary.upgrades.feeding ? Math.ceil(minutes/4) : 0
+      const delta=matched ? minutes*.2 : -minutes*.125
+      const feedingBonus=sanctuary.upgrades.feeding ? minutes*.08 : 0
       slot.mood=Math.max(20,Math.min(100,(Number(slot.mood) || 70)+delta+feedingBonus))
       slot.lastUpdatedAt=now
     }
     if (occupied) {
       const appeal=sanctuaryVisitorAppeal(data)
-      sanctuary.tipsPending=Math.min(500,sanctuary.tipsPending+Math.max(1,Math.floor(minutes*appeal/25)))
+      sanctuary.tipsPending=Math.min(500,sanctuary.tipsPending+Math.max(1,Math.floor(minutes*appeal/40)))
       sanctuary.keeperXPPending=Math.min(250,sanctuary.keeperXPPending+minutes*occupied)
       if (now-sanctuary.lastStoryAt > 5*60*1000 && Math.random() < .18) {
         const featured=sanctuary.slots.map(sanctuaryCreatureForSlot).find(Boolean)
@@ -4006,7 +4007,7 @@ function cycleSanctuaryHabitat(index) {
 }
 function careForSanctuaryCreature(index) {
   const data=getFarmData(), slot=data.sanctuary.slots[index], creature=sanctuaryCreatureForSlot(slot), now=Date.now()
-  if (!creature || now-(slot.lastCaredAt || 0)<30000) return
+  if (!creature || now-(slot.lastCaredAt || 0)<5*60*1000) return
   const crop=Object.keys(CROP_TYPES).find(key=>(data.inventory[key] || 0)>0)
   if (!crop && !data.sanctuary.upgrades.feeding) { showToast('Sanctuary Needs Food','Harvest a crop or build the Feeding Station.'); return }
   if (crop) data.inventory[crop]--
@@ -4155,19 +4156,26 @@ function ensureFarmMvpOrders(data) {
   }
 }
 
+function farmNextTask(data) {
+  const now=Date.now()
+  if (data.crops.some(crop=>getCropStageInfo(crop)?.done)) return { text:'Harvest crops', action:'go-tab:crops', label:'Harvest' }
+  const animalReady=Object.values(data.animals).some(animal=>animal.fed && animal.readyAt <= now)
+  if (animalReady) return { text:'Collect eggs or milk', action:'go-tab:animals', label:'Animals' }
+  const machineReady=Object.values(data.machineQueues).flat().some(job=>job.readyAt <= now)
+  if (machineReady) return { text:'Collect finished machine goods', action:'go-tab:machines', label:'Machines' }
+  const arrived=getShipments().delivered.some(item=>item.manualCollect && item.status === 'ready')
+  if (arrived) return { text:'Collect an arrived city contract', action:'go-tab:shipments', label:'Collect' }
+  const supply=getCitySupply()
+  const contract=Object.entries(DELIVERY_CONTRACTS).find(([,item])=>
+    farmHasIngredients(data,item.needs) && Object.keys(item.delivers).some(key=>cityDemandFor(key,supply)>0)
+  )
+  if (contract) return { text:`Send ${contract[1].name}`, action:'go-tab:shipments', label:'Ship' }
+  const sanctuary=sanctuaryReadySummary(data)
+  if (sanctuary.tips > 0) return { text:'Collect Sanctuary visitor tips', action:'go-tab:sanctuary', label:'Tips' }
+  return { text:'Explore Whisper Woods for discoveries', action:'farm-explore', label:'Explore' }
+}
 function farmNextAction(data) {
-  const now = Date.now()
-  if (data.crops.some(crop => getCropStageInfo(crop)?.done)) return 'Harvest a ready crop row'
-  const guide = {
-    plant:'Plant Wheat', harvest:'Wait for Wheat, then harvest it',
-    makeFeed:'Make Chicken Feed', feedChickens:'Feed Chickens',
-    collectEggs:'Collect Eggs', completeOrder:'Complete a City Order',
-    shipment:'Send a Truck Shipment', upgrade:'Upgrade Pine Hollow Farm'
-  }
-  if (guide[data.farmGuideStep]) return guide[data.farmGuideStep]
-  ensureFarmMvpOrders(data)
-  if (data.farmOrders.some(order => farmHasIngredients(data, order.needs))) return 'Complete an Order'
-  return 'Keep growing and fill the delivery truck'
+  return farmNextTask(data).text
 }
 
 function farmCard(title, icon, description, meta, action, label, disabled = false, extraClass = '') {
@@ -4255,7 +4263,8 @@ function renderFarmHub() {
   if (sanctuaryTab) sanctuaryTab.textContent=`${data.sanctuary.status === 'unlocked' ? '🦊' : '🔒'} Sanctuary`
   document.querySelectorAll('.farm-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.farmTab === activeFarmTab))
   const body = document.getElementById('farmHubBody')
-  let html = `<div class="farm-next"><b>WHAT TO DO NEXT</b><span>${farmNextAction(data)}</span></div>`
+  const nextTask=farmNextTask(data)
+  let html = `<div class="farm-next"><b>WHAT SHOULD I DO NOW?</b><span>${nextTask.text}</span><button data-farm-action="${nextTask.action}">${nextTask.label}</button></div>`
 
   if (activeFarmTab === 'today') {
     const ready = getFarmReadyCounts(data,farmSessionStartedAt)
@@ -4468,7 +4477,7 @@ function renderFarmHub() {
               <span>Visitor appeal: ${(resident.rarity === 'rare' ? 35 : resident.rarity === 'uncommon' ? 22 : 12)+Math.round((slot.mood || 60)/5)}</span>
             </div>
             <div class="sanctuary-actions">
-              <button class="farm-action" data-farm-action="sanctuary-care:${index}" ${now-(slot.lastCaredAt || 0)<30000 ? 'disabled' : ''}>Care</button>
+              <button class="farm-action" data-farm-action="sanctuary-care:${index}" ${now-(slot.lastCaredAt || 0)<5*60*1000 ? 'disabled' : ''}>Care</button>
               <button class="farm-action" data-farm-action="sanctuary-habitat:${index}">Change Habitat</button>
               <button class="farm-action" data-farm-action="sanctuary-remove:${index}">Release Slot</button>
             </div>
@@ -4554,7 +4563,7 @@ function handleAnimalCare(animalId, action) {
     if ((animal.species === 'cow' && data.buildings.cowPasture < 1) || group.fed || data.goods[feedKey] < 1) return
     data.goods[feedKey]--
     group.fed = true
-    const baseTime = animal.species === 'chicken' ? 12000 : 18000
+  const baseTime = animal.species === 'chicken' ? 25000 : 40000
     group.readyAt = now+baseTime
     refreshAnimalMoods(data)
     const multiplier = animalMoodMultiplier(data,animal.species)
@@ -4744,10 +4753,18 @@ function sellFarmSurplus() {
 function claimFarmSeeds() {
   const data = getFarmData(), now = Date.now()
   if (now-data.lastSeedCrateAt < 60000) return
-  for (const key of Object.keys(CROP_TYPES)) data.inventory[key] += 2
+  let space=Math.max(0,data.siloCapacity-farmSiloUsed(data)), added=0
+  for (const key of Object.keys(CROP_TYPES)) {
+    const amount=Math.min(2,space)
+    data.inventory[key]+=amount
+    added+=amount
+    space-=amount
+    if (space <= 0) break
+  }
+  if (!added) { showToast('Silo Full','Use crops before opening the seed crate.'); return }
   data.lastSeedCrateAt = now
   saveFarmData(data); updateFarmInventory(); renderFarmHub()
-  showToast('Seed Crate Opened','Two of every crop were added to the Silo.')
+  showToast('Seed Crate Opened',`${added} seeds were added without overflowing the Silo.`)
 }
 
 function handleFarmHubAction(action) {
@@ -4773,6 +4790,11 @@ function handleFarmHubAction(action) {
   else if (type === 'sanctuary-upgrade') buySanctuaryUpgrade(a)
   else if (type === 'contract-dispatch') dispatchDeliveryContract(a)
   else if (type === 'contract-collect') collectDeliveryContract(a)
+  else if (type === 'farm-explore') {
+    closeFarmHub()
+    if (REGIONS[state.currentRegion]?.connections.includes('whisper-woods')) startTravel('whisper-woods')
+    else openPanel('worldMapPanel')
+  }
   else if (type === 'go-tab') {
     activeFarmTab = a
     renderFarmHub()
@@ -12523,13 +12545,23 @@ function collectDeliveryContract(shipmentId) {
   updateFarmInventory(); updateLogisticsUI(); renderFarmHub(); renderCityDemandPanel()
 }
 
+let shipmentsLoaded=false
 function getShipments() {
-  if (state.shipments && state.shipments.active) return state.shipments
-  try {
-    const raw = localStorage.getItem('fas_shipments_v2')
-    if (raw) state.shipments = JSON.parse(raw)
-  } catch {}
-  if (!state.shipments || !state.shipments.active) state.shipments = { active: [], delivered: [] }
+  if (!shipmentsLoaded) {
+    try {
+      const raw=localStorage.getItem('fas_shipments_v2')
+      if (raw) state.shipments=JSON.parse(raw)
+    } catch {}
+    shipmentsLoaded=true
+  }
+  if (!state.shipments || typeof state.shipments !== 'object') state.shipments = { active: [], delivered: [] }
+  state.shipments.active=Array.isArray(state.shipments.active) ? state.shipments.active : []
+  state.shipments.delivered=Array.isArray(state.shipments.delivered) ? state.shipments.delivered : []
+  for (const shipment of state.shipments.active) {
+    shipment.createdAt=Number(shipment.createdAt) || Date.now()
+    shipment.etaMs=Math.max(1000,Number(shipment.etaMs) || 30000)
+    shipment.status='traveling'
+  }
   return state.shipments
 }
 
