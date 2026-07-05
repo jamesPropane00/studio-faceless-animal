@@ -2100,6 +2100,42 @@
       margin-top: -0.3rem;
       padding-bottom: 0.3rem;
     }
+    .settings-section {
+      margin-top: .65rem;
+      padding-top: .65rem;
+      border-top: 1px solid rgba(167,139,250,.14);
+    }
+    .settings-section-title {
+      color: #ddd6fe;
+      font-size: .7rem;
+      font-weight: 850;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .settings-maintenance-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .4rem;
+      margin-top: .55rem;
+    }
+    .settings-maintenance-btn {
+      padding: .52rem .6rem;
+      border: 1px solid rgba(167,139,250,.26);
+      border-radius: 7px;
+      background: rgba(124,58,237,.09);
+      color: #e9d5ff;
+      font-size: .58rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .settings-maintenance-btn.danger {
+      border-color: rgba(248,113,113,.34);
+      background: rgba(127,29,29,.14);
+      color: #fecaca;
+    }
+    @media(max-width:520px) {
+      .settings-maintenance-actions { grid-template-columns: 1fr; }
+    }
 
     /* Toggle switch */
     .toggle-wrap {
@@ -2916,6 +2952,18 @@
       </span>
     </label>
     <div class="settings-hint">Animals, workers, particles, ambient audio</div>
+    <section class="settings-section">
+      <div class="settings-section-title">Persistent World</div>
+      <div class="settings-hint" style="margin-top:.25rem">NPC growth: stewardship pace · maximum one build every 72 hours and eight per month.</div>
+    </section>
+    <section class="settings-section">
+      <div class="settings-section-title">World Maintenance</div>
+      <div class="settings-hint" style="margin-top:.25rem">A reset backs up every local Faceless World save first. It does not delete account or hosted server data.</div>
+      <div class="settings-maintenance-actions">
+        <button class="settings-maintenance-btn danger" id="resetLocalWorldBtn" type="button">Reset Local World</button>
+        <button class="settings-maintenance-btn" id="restoreLocalWorldBtn" type="button">Restore Last Backup</button>
+      </div>
+    </section>
   </div>
 </div>
 
@@ -3724,6 +3772,86 @@ let ownershipMetaCache=null
 
 function safeText(value) {
   return String(value ?? '').replace(/[&<>"']/g,char=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[char]))
+}
+
+const LOCAL_WORLD_BACKUP_KEY='faceless_world_backup_latest'
+let localWorldResetArmedUntil=0
+let localWorldRestoreArmedUntil=0
+
+function localWorldSaveKeys() {
+  const keys=[]
+  for (let index=0;index<localStorage.length;index++) {
+    const key=localStorage.key(index)
+    if (key?.startsWith('fas_')) keys.push(key)
+  }
+  return keys
+}
+
+function createLocalWorldBackup() {
+  const snapshot={}
+  for (const key of localWorldSaveKeys()) snapshot[key]=localStorage.getItem(key)
+  const backup={ version:1,createdAt:Date.now(),keys:snapshot }
+  localStorage.setItem(LOCAL_WORLD_BACKUP_KEY,JSON.stringify(backup))
+  return backup
+}
+
+function resetLocalWorldButtonLabel() {
+  const button=document.getElementById('resetLocalWorldBtn')
+  if (button) button.textContent='Reset Local World'
+}
+
+function restoreLocalWorldButtonLabel() {
+  const button=document.getElementById('restoreLocalWorldBtn')
+  if (button) button.textContent='Restore Last Backup'
+}
+
+function requestLocalWorldReset() {
+  const now=Date.now(),button=document.getElementById('resetLocalWorldBtn')
+  if (now>localWorldResetArmedUntil) {
+    localWorldResetArmedUntil=now+10000
+    if (button) button.textContent='Click Again: Backup & Reset'
+    showToast('Reset Armed','Click again within 10 seconds. A local backup will be created before anything is cleared.')
+    setTimeout(()=>{ if (Date.now()>localWorldResetArmedUntil) resetLocalWorldButtonLabel() },10100)
+    return
+  }
+  try {
+    const backup=createLocalWorldBackup()
+    for (const key of Object.keys(backup.keys)) localStorage.removeItem(key)
+    localStorage.setItem('faceless_world_last_reset_at',String(Date.now()))
+    showToast('Local World Reset','Backup created. Reloading a clean local world.')
+    setTimeout(()=>window.location.reload(),450)
+  } catch {
+    localWorldResetArmedUntil=0
+    resetLocalWorldButtonLabel()
+    showToast('Reset Cancelled','The backup could not be saved, so no world data was deleted.')
+  }
+}
+
+function requestLocalWorldRestore() {
+  const now=Date.now(),button=document.getElementById('restoreLocalWorldBtn')
+  let backup
+  try { backup=JSON.parse(localStorage.getItem(LOCAL_WORLD_BACKUP_KEY) || 'null') } catch {}
+  if (!backup?.keys || typeof backup.keys!=='object') {
+    showToast('No Backup Found','Reset Local World once to create a restorable backup.')
+    return
+  }
+  if (now>localWorldRestoreArmedUntil) {
+    localWorldRestoreArmedUntil=now+10000
+    if (button) button.textContent='Click Again: Restore Backup'
+    showToast('Restore Armed',`Backup from ${new Date(backup.createdAt).toLocaleString()} is ready. Click again within 10 seconds.`)
+    setTimeout(()=>{ if (Date.now()>localWorldRestoreArmedUntil) restoreLocalWorldButtonLabel() },10100)
+    return
+  }
+  try {
+    for (const key of localWorldSaveKeys()) localStorage.removeItem(key)
+    for (const [key,value] of Object.entries(backup.keys)) if (typeof value==='string') localStorage.setItem(key,value)
+    showToast('World Restored','Reloading the most recent local backup.')
+    setTimeout(()=>window.location.reload(),450)
+  } catch {
+    localWorldRestoreArmedUntil=0
+    restoreLocalWorldButtonLabel()
+    showToast('Restore Failed','The backup remains untouched. No further changes were made.')
+  }
 }
 
 function currentPlayerOwnerName() {
@@ -12028,6 +12156,8 @@ function setupUI() {
       stopFarmAudio()
     }
   })
+  document.getElementById('resetLocalWorldBtn').addEventListener('click',requestLocalWorldReset)
+  document.getElementById('restoreLocalWorldBtn').addEventListener('click',requestLocalWorldRestore)
 
   // World map travel buttons
   document.getElementById('worldMapNodes').addEventListener('click', (e) => {
@@ -14104,12 +14234,30 @@ async function runSimulationTick() {
 
 // -- NPC AUTO-BUILDING --
 
-let lastNPCBuildTime = 0
-const NPC_BUILD_COOLDOWN = 270000
+const NPC_GROWTH_KEY='fas_npc_growth_v1'
+const NPC_BUILD_COOLDOWN=72*60*60*1000
+const NPC_MONTHLY_BUILD_CAP=8
+const NPC_CITY_BUILDING_CAP=320
+let npcGrowthCache=null
+
+function getNPCGrowthState() {
+  if (npcGrowthCache) return npcGrowthCache
+  try { npcGrowthCache=JSON.parse(localStorage.getItem(NPC_GROWTH_KEY) || '{}') } catch { npcGrowthCache={} }
+  npcGrowthCache=npcGrowthCache && typeof npcGrowthCache==='object' ? npcGrowthCache : {}
+  npcGrowthCache.lastBuildAt=Math.max(0,Number(npcGrowthCache.lastBuildAt) || 0)
+  npcGrowthCache.totalBuilds=Math.max(0,Number(npcGrowthCache.totalBuilds) || 0)
+  npcGrowthCache.monthKey=String(npcGrowthCache.monthKey || '')
+  npcGrowthCache.monthBuilds=Math.max(0,Number(npcGrowthCache.monthBuilds) || 0)
+  return npcGrowthCache
+}
+
+function saveNPCGrowthState() {
+  try { localStorage.setItem(NPC_GROWTH_KEY,JSON.stringify(getNPCGrowthState())) } catch {}
+}
 
 const NPC_BUILDER_WEIGHTS = {
-  wanderer: 0.08, worker: 0.06, vendor: 0.05,
-  walker: 0.02, guard: 0.01, merchant: 0.01
+  wanderer: 0.018, worker: 0.014, vendor: 0.012,
+  walker: 0.005, guard: 0.003, merchant: 0.004
 }
 
 function findNearestDistrict(wx, wy, districts) {
@@ -14185,9 +14333,22 @@ function findNPCBuildTile(baseX, baseY, buildingType, buildings) {
 
 async function evaluateNPCBuildDesire() {
   const now = Date.now()
-  if (now - lastNPCBuildTime < NPC_BUILD_COOLDOWN) return
+  if (state.currentRegion!=='city') return
+  const growth=getNPCGrowthState(),monthKey=new Date(now).toISOString().slice(0,7)
+  if (growth.monthKey!==monthKey) {
+    growth.monthKey=monthKey
+    growth.monthBuilds=0
+    saveNPCGrowthState()
+  }
+  if (now-growth.lastBuildAt<NPC_BUILD_COOLDOWN || growth.monthBuilds>=NPC_MONTHLY_BUILD_CAP) return
   if (!state.npcs || state.npcs.length === 0) return
   if (!state.buildings || !state.districts) return
+  const cityBuildings=state.buildings.filter(building=>normalizeRegionId(building.region_id ?? building.region)==='city')
+  if (cityBuildings.length>=NPC_CITY_BUILDING_CAP) return
+  const cityStatus=cityLifecycleRuntime.summary?.status || 'Stable'
+  if (['Struggling','Declining','Blighted','Abandoned'].includes(cityStatus)) return
+  const supply=getCitySupply()
+  if (Number(supply.food)<10 || Number(supply.businessHealth)<45) return
 
   const candidates = state.npcs.filter(npc => {
     const weight = NPC_BUILDER_WEIGHTS[npc.type] || 0.01
@@ -14223,11 +14384,15 @@ async function evaluateNPCBuildDesire() {
     if (!contentType || !contentType.includes('application/json')) return
     const data = await res.json()
     if (data.ok) {
-      lastNPCBuildTime = now
+      growth.lastBuildAt=now
+      growth.monthBuilds++
+      growth.totalBuilds++
+      saveNPCGrowthState()
       console.log('[NPC-BUILD] Success:', buildingType, 'placed at', tile.tileX, tile.tileY)
       if (data.building) {
         state.buildings.push({
           ...data.building,
+          built_by_npc:true,
           condition: 100,
           income_rate: 0,
           last_collected_at: new Date().toISOString(),
