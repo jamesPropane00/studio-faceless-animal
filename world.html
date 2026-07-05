@@ -718,6 +718,7 @@
       font-size: 0.75rem;
       color: var(--gold);
     }
+    .block-item[hidden]{display:none!important}
     .build-panel { max-height: min(78vh, 720px); overflow-y: auto; }
     .build-region-summary {
       margin-bottom: 0.65rem; padding: 0.65rem 0.75rem;
@@ -2810,25 +2811,25 @@
   <div class="block-grid" id="blockGrid">
     <div class="block-item" data-type="residential">
       <div class="block-icon">&#x1F3E0;</div>
-      <div class="block-name">Residential Block</div>
+      <div class="block-name">Residential Zone</div>
       <div class="block-cost">200</div>
       <div class="block-desc">8x8 — houses, yards, trees</div>
     </div>
     <div class="block-item" data-type="commercial">
       <div class="block-icon">&#x1F3EA;</div>
-      <div class="block-name">Commercial Block</div>
+      <div class="block-name">Commercial Zone</div>
       <div class="block-cost">300</div>
       <div class="block-desc">6x6 — shops, parking, sidewalks</div>
     </div>
     <div class="block-item" data-type="industrial">
       <div class="block-icon">&#x1F3ED;</div>
-      <div class="block-name">Industrial Block</div>
+      <div class="block-name">Industrial Zone</div>
       <div class="block-cost">250</div>
       <div class="block-desc">10x8 — warehouses, docks, fences</div>
     </div>
     <div class="block-item" data-type="entertainment">
       <div class="block-icon">&#x1F3B5;</div>
-      <div class="block-name">Entertainment Block</div>
+      <div class="block-name">Entertainment Zone</div>
       <div class="block-cost">400</div>
       <div class="block-desc">8x6 — clubs, neon, crowd zones</div>
     </div>
@@ -2840,8 +2841,8 @@
     </div>
     <div class="block-item region-farmlands" data-type="farm">
       <div class="block-icon">&#x1F33E;</div>
-      <div class="block-name">Farm Block</div>
-      <div class="block-cost">100</div>
+      <div class="block-name">Expand Farm Land</div>
+      <div class="block-cost">500+</div>
       <div class="block-desc">10x10 — fields for planting crops</div>
     </div>
   </div>
@@ -2981,7 +2982,7 @@
 <div class="farm-prompt" id="farmPrompt">
   <div class="farm-prompt-title">&#x1F33E; Farmlands</div>
   <div class="farm-prompt-desc" id="farmPromptDesc">Place a Farm Block to start growing crops</div>
-  <button class="farm-prompt-btn" id="farmPromptBtn">Build Farm Block</button>
+  <button class="farm-prompt-btn" id="farmPromptBtn">Expand Farm Land</button>
 </div>
 
 <div class="debug-panel" id="debugPanel" style="display:none;">
@@ -3609,10 +3610,10 @@ function invalidateTileCache() {
 // the shared persistence contract used by localStorage and future server sync.
 const REGIONAL_BUILD_CATALOGS = {
   city: [
-    ['house','House','🏠',50,'A home lot for city residents.','property'],
-    ['shop','Shop','🏪',100,'A storefront that supports local business.','business'],
-    ['club','Club','🎵',150,'Nightlife, culture, and entertainment.','business'],
-    ['warehouse','Warehouse','📦',75,'Storage and distribution for city goods.','industry'],
+    ['house','Residential Plot','🏠',50,'Zone a home lot; construction and residents arrive over time.','property'],
+    ['shop','Commercial Plot','🏪',100,'Zone a storefront that opens when the neighborhood supports it.','business'],
+    ['club','Entertainment Plot','🎵',150,'Zone nightlife, culture, and entertainment.','business'],
+    ['warehouse','Industrial Plot','📦',75,'Zone storage, distribution, and industrial jobs.','industry'],
     ['hide','Hideout','🕶️',200,'A discreet city property.','special'],
     ['development-block','Development Block','🏘️',180,'A planned block for future growth.','planning'],
     ['road','Roads','🛣️',8,'Narrow asphalt streets between city lots.','infrastructure'],
@@ -3697,7 +3698,10 @@ const REGIONAL_BUILD_TYPES = {}
 for (const [regionId, entries] of Object.entries(REGIONAL_BUILD_CATALOGS)) {
   for (const [id,name,icon,cost,desc,category] of entries) {
     const infrastructure = category === 'infrastructure'
-    const footprint = ['development-block','field-plot','cow-pasture','orchard-row','freight-yard','factory'].includes(id) ? 2 : 1
+    const footprint = ({
+      'crop-row':3, 'field-plot':4, 'orchard-row':4, pond:3,
+      'cow-pasture':3, 'development-block':2, 'freight-yard':2, factory:2
+    })[id] || 1
     const palette = {
       city:'#6B5B8A', farmlands:'#84a94b', 'whisper-woods':'#237a46',
       'purple-pulse':'#a855f7', 'iron-district':'#64748b', coast:'#38bdf8', mountains:'#78716c'
@@ -4105,7 +4109,17 @@ function worldTargetAt(world) {
   return null
 }
 
+const FARM_LAND_PARCEL_SIZE=10
+const FARM_LAND_COSTS=[500,750,1100,1600,2300]
+const FARM_LAND_MAX_PARCELS=24
+let farmDataCache=null
+
 function getFarmData() {
+  if (farmDataCache) {
+    farmDataCache.owner_id=farmDataCache.owner_id || state.userId || 'local-player'
+    farmDataCache.owner_name=currentPlayerOwnerName()
+    return farmDataCache
+  }
   let data = null
   try {
     const raw = localStorage.getItem('fas_farm_data')
@@ -4122,7 +4136,7 @@ function getFarmData() {
   data.value=Math.max(0,Number(data.propertyValue) || Number(data.value) || 45000)
   data.status=data.status || 'active'
   data.lastVisitedAt=Number(data.lastFarmVisitAt) || Number(data.lastVisitedAt) || 0
-  data.crops = Array.isArray(data.crops) ? data.crops : []
+  data.crops = Array.isArray(data.crops) ? data.crops.slice(-120) : []
   data.inventory = data.inventory || {}
   if (data.inventory.veggies && !data.inventory.carrots) data.inventory.carrots = data.inventory.veggies
   delete data.inventory.veggies
@@ -4149,7 +4163,7 @@ function getFarmData() {
   data.fields = Array.isArray(data.fields) ? data.fields : []
   data.machineQueues = data.machineQueues || { feedMill: [], bakery: [], dairy: [] }
   for (const machine of ['feedMill','bakery','dairy']) {
-    data.machineQueues[machine] = Array.isArray(data.machineQueues[machine]) ? data.machineQueues[machine] : []
+    data.machineQueues[machine] = Array.isArray(data.machineQueues[machine]) ? data.machineQueues[machine].slice(-24) : []
   }
   data.animals = data.animals || {
     chickens: { count: 2, readyAt: 0, fed: false },
@@ -4235,17 +4249,132 @@ function getFarmData() {
   data.farmOrders = Array.isArray(data.farmOrders) ? data.farmOrders : []
   data.shipmentHistory = Array.isArray(data.shipmentHistory) ? data.shipmentHistory : []
   data.readyNotices = data.readyNotices || {}
+  const noticeEntries=Object.entries(data.readyNotices)
+  if (noticeEntries.length>160) data.readyNotices=Object.fromEntries(noticeEntries.slice(-160))
   data.lastSeedCrateAt = Number(data.lastSeedCrateAt) || 0
   data.farmGuideStep = data.farmGuideStep || 'plant'
   data.lastActiveAt = Number(data.lastActiveAt) || Date.now()
   data.lastFarmVisitAt = Number(data.lastFarmVisitAt) || 0
   data.daily = data.daily && typeof data.daily === 'object' ? data.daily : {}
-  localStorage.setItem('fas_farm_data', JSON.stringify(data))
+  data.landOrigin = data.landOrigin && Number.isFinite(Number(data.landOrigin.x)) && Number.isFinite(Number(data.landOrigin.y))
+    ? { x:Number(data.landOrigin.x), y:Number(data.landOrigin.y) }
+    : { x:Math.round(data.tile_x)-FARM_LAND_PARCEL_SIZE/2, y:Math.round(data.tile_y)-FARM_LAND_PARCEL_SIZE/2 }
+  data.landParcels = Array.isArray(data.landParcels) ? data.landParcels.slice(0,FARM_LAND_MAX_PARCELS) : []
+  data.landParcels=data.landParcels.filter(parcel=>Number.isFinite(Number(parcel.x)) && Number.isFinite(Number(parcel.y))).map(parcel=>({
+    ...parcel,x:Number(parcel.x),y:Number(parcel.y),
+    width:Math.max(1,Number(parcel.width) || FARM_LAND_PARCEL_SIZE),
+    height:Math.max(1,Number(parcel.height) || FARM_LAND_PARCEL_SIZE)
+  }))
+  if (!data.landParcels.length) {
+    data.landParcels.push({
+      id:'pine-hollow-home-parcel',x:data.landOrigin.x,y:data.landOrigin.y,
+      width:FARM_LAND_PARCEL_SIZE,height:FARM_LAND_PARCEL_SIZE,purchasedAt:Date.now(),starter:true
+    })
+  }
+  farmDataCache=data
+  try { localStorage.setItem('fas_farm_data', JSON.stringify(data)) } catch {}
   return data
 }
 
 function saveFarmData(data) {
-  localStorage.setItem('fas_farm_data', JSON.stringify(data))
+  farmDataCache=data
+  try { localStorage.setItem('fas_farm_data', JSON.stringify(data)) } catch {}
+}
+
+function farmLandExpansionCost(data=getFarmData()) {
+  const expansionIndex=Math.max(0,data.landParcels.length-1)
+  if (expansionIndex<FARM_LAND_COSTS.length) return FARM_LAND_COSTS[expansionIndex]
+  return Math.round(FARM_LAND_COSTS.at(-1)*Math.pow(1.35,expansionIndex-FARM_LAND_COSTS.length+1)/50)*50
+}
+
+function farmLandParcelKey(parcel) {
+  return `${Number(parcel.x)},${Number(parcel.y)}`
+}
+
+function getFarmLandParcels() {
+  const data=getFarmData(),known=new Set(data.landParcels.map(farmLandParcelKey))
+  let migrated=false
+  for (const block of state.blocks || []) {
+    if (normalizeRegionId(block.region_id ?? block.region)!=='farmlands' || block.block_type!=='farm') continue
+    const x=Number(block.tile_x),y=Number(block.tile_y)
+    const key=`${x},${y}`
+    if (!Number.isFinite(x) || !Number.isFinite(y) || known.has(key)) continue
+    data.landParcels.push({
+      id:`legacy-farm-land-${block.id || key}`,x,y,
+      width:Number(block.width) || FARM_LAND_PARCEL_SIZE,
+      height:Number(block.height) || FARM_LAND_PARCEL_SIZE,
+      purchasedAt:Date.now(),legacy:true
+    })
+    known.add(key)
+    migrated=true
+  }
+  data.landParcels=data.landParcels.slice(0,FARM_LAND_MAX_PARCELS)
+  if (migrated) saveFarmData(data)
+  return data.landParcels
+}
+
+function isFarmLandTileOwned(x,y) {
+  return getFarmLandParcels().some(parcel=>
+    x>=parcel.x && x<parcel.x+(parcel.width || FARM_LAND_PARCEL_SIZE) &&
+    y>=parcel.y && y<parcel.y+(parcel.height || FARM_LAND_PARCEL_SIZE)
+  )
+}
+
+function farmLandCandidateAt(x,y) {
+  const data=getFarmData(),origin=data.landOrigin,size=FARM_LAND_PARCEL_SIZE
+  return {
+    x:origin.x+Math.round((x-origin.x)/size)*size,
+    y:origin.y+Math.round((y-origin.y)/size)*size,
+    width:size,height:size
+  }
+}
+
+function isAdjacentFarmLand(candidate,parcels=getFarmLandParcels()) {
+  return parcels.some(parcel=>{
+    const width=parcel.width || FARM_LAND_PARCEL_SIZE,height=parcel.height || FARM_LAND_PARCEL_SIZE
+    const horizontalTouch=(candidate.x===parcel.x+width || candidate.x+candidate.width===parcel.x) &&
+      candidate.y<parcel.y+height && candidate.y+candidate.height>parcel.y
+    const verticalTouch=(candidate.y===parcel.y+height || candidate.y+candidate.height===parcel.y) &&
+      candidate.x<parcel.x+width && candidate.x+candidate.width>parcel.x
+    return horizontalTouch || verticalTouch
+  })
+}
+
+function buyFarmLandParcel(x,y) {
+  if (state.currentRegion!=='farmlands') return
+  const data=getFarmData(),parcels=getFarmLandParcels()
+  if (parcels.length>=FARM_LAND_MAX_PARCELS) {
+    showToast('Pine Hollow Is Fully Expanded',`The current ${FARM_LAND_MAX_PARCELS}-parcel land cap has been reached.`)
+    return
+  }
+  const candidate=farmLandCandidateAt(x,y),key=farmLandParcelKey(candidate)
+  if (parcels.some(parcel=>farmLandParcelKey(parcel)===key)) {
+    showToast('Land Already Owned','Choose a highlighted parcel touching Pine Hollow Farm.')
+    return
+  }
+  if (!isAdjacentFarmLand(candidate,parcels)) {
+    showToast('Expansion Must Be Adjacent','Buy land that shares an edge with land you already own.')
+    return
+  }
+  const cost=farmLandExpansionCost(data)
+  if (state.coins<cost) {
+    showToast('Not Enough FC',`The next Pine Hollow parcel costs ${cost.toLocaleString()} FC.`)
+    return
+  }
+  data.landParcels.push({
+    id:`pine-hollow-land-${Date.now()}`, ...candidate,
+    purchasedAt:Date.now(),owner_id:state.userId || 'local-player',owner_name:currentPlayerOwnerName()
+  })
+  data.propertyValue=Math.max(Number(data.propertyValue) || 45000,45000)+cost
+  state.coins-=cost
+  document.getElementById('statCoins').textContent=state.coins
+  saveFarmData(data)
+  state.blockType=null
+  state.blockMode=false
+  document.getElementById('modeIndicator').classList.remove('open')
+  document.querySelectorAll('.block-item').forEach(item=>item.classList.remove('selected'))
+  showToast('🌾 Pine Hollow Expanded',`Adjacent land purchased for ${cost.toLocaleString()} FC. Only owned land can hold farm builds.`)
+  createNewsItem('Farm','Pine Hollow Farm expands.',`A new ${FARM_LAND_PARCEL_SIZE}×${FARM_LAND_PARCEL_SIZE} parcel is now under cultivation.`,'farmlands',3)
 }
 
 function farmXPNeeded(level) {
@@ -4514,9 +4643,10 @@ function showFarmPrompt(desc, action) {
   document.getElementById('farmPromptDesc').textContent = desc
   const btn = document.getElementById('farmPromptBtn')
   if (action === 'farm') {
-    btn.textContent = 'Build Farm Block'
+    btn.textContent = 'Expand Farm Land'
     btn.onclick = () => {
       el.classList.remove('show')
+      prepareRegionalBlockPanel()
       openPanel('blockPanel')
       setTimeout(() => {
         const farmItem = document.querySelector('.block-item[data-type="farm"]')
@@ -4539,6 +4669,14 @@ function showFarmPrompt(desc, action) {
 
 function hideFarmPrompt() {
   document.getElementById('farmPrompt').classList.remove('show')
+}
+
+function prepareRegionalBlockPanel() {
+  const cityTypes=new Set(['residential','commercial','industrial','entertainment'])
+  const allowed=state.currentRegion==='city' ? cityTypes : state.currentRegion==='farmlands' ? new Set(['farm']) : new Set()
+  document.querySelectorAll('.block-item').forEach(item=>{ item.hidden=!allowed.has(item.dataset.type) })
+  const title=document.querySelector('#blockPanel .panel-title')
+  if (title) title.textContent=state.currentRegion==='farmlands' ? 'Pine Hollow — Land Expansion' : 'Urban DNA — City Zoning'
 }
 
 // ── CROP HARVEST NOTIFICATION ──
@@ -5839,6 +5977,7 @@ function farmMvpTick() {
   if (now-lastFarmMvpTick < 1000) return
   lastFarmMvpTick = now
   const data = getFarmData()
+  refreshAnimalMoods(data)
   let changed = false
   if (updateSanctuaryState(data,now)) changed=true
   for (const field of data.crops) {
@@ -5868,8 +6007,12 @@ function farmMvpTick() {
   renderFarmHub()
 }
 
+let lastFarmAtmosphereUpdate=0
 function updateFarmAtmosphere() {
   if (state.currentRegion !== 'farmlands') return
+  const now=performance.now()
+  if (now-lastFarmAtmosphereUpdate<250) return
+  lastFarmAtmosphereUpdate=now
   const el = document.getElementById('farmAtmosphere')
   if (!el) return
   const t = state.time
@@ -7996,8 +8139,8 @@ function pavementConnections(roadSet,x,y,z) {
 }
 
 function drawBlackPavementTile(s,x,y,links,z) {
-  const halfW = TILE_W*z*.34
-  const halfH = TILE_H*z*.34
+  const halfW = TILE_W*z*.27
+  const halfH = TILE_H*z*.27
   ctx.fillStyle = '#111216'
   // A simple black pavement block is visibly smaller than a building lot.
   // Wide under-connectors meet neighboring blocks without lane lines.
@@ -8907,7 +9050,7 @@ function drawFarmPlacedObject(building,s) {
   ctx.save()
 
   if (typeId === 'crop-row' || typeId === 'field-plot') {
-    const footprint=typeId === 'field-plot' ? 2 : 1
+    const footprint=Math.max(1,Number(building.footprint) || Number(BUILDING_TYPES[typeId]?.footprint) || 1)
     for (let ox=0;ox<footprint;ox++) {
       for (let oy=0;oy<footprint;oy++) {
         const cell=building.tile_x == null ? s : worldToScreen(building.tile_x+ox,building.tile_y+oy)
@@ -8928,14 +9071,14 @@ function drawFarmPlacedObject(building,s) {
     if (cropState) {
       const maturity=Math.max(.2,cropState.progress)
       const cropColor=cropState.done ? cropState.info.color : '#65a30d'
-      const plantRows=typeId === 'field-plot' ? 4 : 3
-      const plantsPerRow=typeId === 'field-plot' ? 5 : 4
-      for (let row=0;row<plantRows;row++) {
-        for (let col=0;col<plantsPerRow;col++) {
-          const u=(col/(plantsPerRow-1)-.5)*(typeId === 'field-plot' ? 1.35 : .72)
-          const v=(row/(plantRows-1)-.5)*(typeId === 'field-plot' ? 1.35 : .58)
-          const px=s.x+(u-v)*(TILE_W*.27*z)
-          const py=s.y+(u+v)*(TILE_H*.27*z)
+      for (let ox=0;ox<footprint;ox++) {
+        for (let oy=0;oy<footprint;oy++) {
+          const cell=building.tile_x == null ? s : worldToScreen(building.tile_x+ox,building.tile_y+oy)
+          for (let row=0;row<2;row++) for (let col=0;col<3;col++) {
+          const u=(col/2-.5)*.7
+          const v=(row-.5)*.52
+          const px=cell.x+(u-v)*(TILE_W*.27*z)
+          const py=cell.y+(u+v)*(TILE_H*.27*z)
           const stem=Math.max(2,7*z*maturity)
           ctx.strokeStyle='#3f6212'; ctx.lineWidth=Math.max(1,1.2*z)
           ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,py-stem); ctx.stroke()
@@ -8944,6 +9087,7 @@ function drawFarmPlacedObject(building,s) {
           if (cropState.done) {
             ctx.beginPath(); ctx.arc(px-0.5*z,py-stem-0.5*z,Math.max(.4,.65*z),0,Math.PI*2)
             ctx.fillStyle='rgba(255,244,180,.72)'; ctx.fill()
+          }
           }
         }
       }
@@ -8976,17 +9120,17 @@ function drawFarmPlacedObject(building,s) {
     ctx.fillStyle='rgba(103,232,249,.2)'; ctx.fill()
     ctx.font=`${Math.max(8,10*z)}px sans-serif`; ctx.textAlign='center'; ctx.fillText('🌿',s.x+hw*.45,s.y)
   } else if (typeId === 'orchard' || typeId === 'orchard-row') {
-    const cells=typeId === 'orchard-row' ? 2 : 1
+    const cells=Math.max(1,Number(building.footprint) || Number(BUILDING_TYPES[typeId]?.footprint) || 1)
     for (let ox=0;ox<cells;ox++) for (let oy=0;oy<cells;oy++) {
       const cell=building.tile_x == null ? s : worldToScreen(building.tile_x+ox,building.tile_y+oy)
       diamond(cell,'rgba(77,124,15,.25)',null)
     }
-    // Two straight, evenly spaced tree rows make this read as an orchard,
-    // never as a house or an irregular decorative grove.
+    // A planted tree in every cell creates legible, evenly spaced orchard rows.
     const orchardTrees=[]
-    for (let row=-1;row<=1;row+=2) for (let col=-2;col<=2;col++) orchardTrees.push([col*.34,row*.34])
-    orchardTrees.forEach(([u,v],i)=>{
-      const px=s.x+(u-v)*TILE_W*.31*z, py=s.y+(u+v)*TILE_H*.31*z
+    for (let ox=0;ox<cells;ox++) for (let oy=0;oy<cells;oy++) {
+      orchardTrees.push(worldToScreen(building.tile_x+ox,building.tile_y+oy))
+    }
+    orchardTrees.forEach(({x:px,y:py},i)=>{
       ctx.fillStyle='#6b4423'; ctx.fillRect(px-1.4*z,py-8*z,2.8*z,9*z)
       ctx.beginPath(); ctx.arc(px,py-10*z,5.7*z,0,Math.PI*2); ctx.fillStyle=i%2 ? '#3f7d20' : '#4d8b26'; ctx.fill()
       ctx.beginPath(); ctx.arc(px+(i%3-1)*2*z,py-11*z,1.15*z,0,Math.PI*2); ctx.fillStyle='#ef4444'; ctx.fill()
@@ -9619,9 +9763,13 @@ function drawCityPlotBuilding(building,s) {
       frame(s.x-7*z,s.y-3*z,7*z,6*z)
       if(typeId==='development-block') prism(s.x+8*z,s.y-2*z,6*z,3*z,4*z,'#94a3b8','#64748b','#94a3b8')
     } else if(stage>=4) {
-      tinyHouse(s.x-8*z,s.y+3*z,1,typeId==='development-block'?'#334155':'#9a3412','#d8c7b2',stage>=5)
-      if(stage>=5) tinyHouse(s.x+8*z,s.y-2*z,.82,typeId==='development-block'?'#475569':'#7f1d1d','#d8c7b2',stage>=6)
-      if(typeId==='development-block' && stage>=6) tinyHouse(s.x+1*z,s.y-8*z,.68,'#1e3a8a','#cbd5e1',true)
+      if(typeId==='development-block') {
+        tinyHouse(s.x-8*z,s.y+3*z,1,'#334155','#d8c7b2',stage>=5)
+        if(stage>=5) tinyHouse(s.x+8*z,s.y-2*z,.82,'#475569','#d8c7b2',stage>=6)
+        if(stage>=6) tinyHouse(s.x+1*z,s.y-8*z,.68,'#1e3a8a','#cbd5e1',true)
+      } else {
+        tinyHouse(s.x,s.y+4*z,1.45,'#9a3412','#e4d3bd',stage>=5)
+      }
     }
     if(stage>=6) {
       ctx.fillStyle='#5b4633';ctx.fillRect(s.x+16*z,s.y-9*z,1.5*z,8*z)
@@ -10469,8 +10617,60 @@ function drawRoads() {
   }
 }
 
+function drawFarmLandParcels() {
+  if (state.currentRegion!=='farmlands') return
+  const parcels=getFarmLandParcels(),z=state.camera.zoom
+  const polygon=(parcel,fill,stroke,lineWidth=1)=>{
+    const points=[
+      worldToScreen(parcel.x,parcel.y),
+      worldToScreen(parcel.x+parcel.width,parcel.y),
+      worldToScreen(parcel.x+parcel.width,parcel.y+parcel.height),
+      worldToScreen(parcel.x,parcel.y+parcel.height)
+    ]
+    ctx.beginPath()
+    points.forEach((point,index)=>index ? ctx.lineTo(point.x,point.y) : ctx.moveTo(point.x,point.y))
+    ctx.closePath()
+    ctx.fillStyle=fill;ctx.fill()
+    ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(.7,lineWidth*z);ctx.stroke()
+  }
+  for (const parcel of parcels) {
+    polygon(parcel,'rgba(101,126,46,.2)','rgba(190,242,100,.42)',1.2)
+    if (z>.5) {
+      ctx.save()
+      ctx.strokeStyle='rgba(217,249,157,.1)'
+      ctx.lineWidth=Math.max(.45,.55*z)
+      for (let offset=2;offset<parcel.width;offset+=2) {
+        const a=worldToScreen(parcel.x+offset,parcel.y),b=worldToScreen(parcel.x+offset,parcel.y+parcel.height)
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()
+      }
+      for (let offset=2;offset<parcel.height;offset+=2) {
+        const a=worldToScreen(parcel.x,parcel.y+offset),b=worldToScreen(parcel.x+parcel.width,parcel.y+offset)
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()
+      }
+      ctx.restore()
+    }
+  }
+  if (!state.blockMode || state.blockType!=='farm' || z<.38) return
+  const owned=new Set(parcels.map(farmLandParcelKey)),candidates=new Map()
+  for (const parcel of parcels) {
+    const width=parcel.width || FARM_LAND_PARCEL_SIZE,height=parcel.height || FARM_LAND_PARCEL_SIZE
+    for (const candidate of [
+      {x:parcel.x-width,y:parcel.y,width,height},{x:parcel.x+width,y:parcel.y,width,height},
+      {x:parcel.x,y:parcel.y-height,width,height},{x:parcel.x,y:parcel.y+height,width,height}
+    ]) if (!owned.has(farmLandParcelKey(candidate))) candidates.set(farmLandParcelKey(candidate),candidate)
+  }
+  const price=farmLandExpansionCost()
+  for (const candidate of [...candidates.values()].slice(0,16)) {
+    polygon(candidate,'rgba(250,204,21,.035)','rgba(250,204,21,.5)',1.2)
+    const center=worldToScreen(candidate.x+candidate.width/2,candidate.y+candidate.height/2)
+    ctx.font=`800 ${Math.max(8,9*z)}px Inter`;ctx.textAlign='center';ctx.fillStyle='rgba(254,240,138,.85)'
+    ctx.fillText(`EXPAND · ${price.toLocaleString()} FC`,center.x,center.y)
+  }
+}
+
 // Phase 6: Draw development blocks (sidewalks, interior fill, lot outlines)
 function drawBlocks() {
+  drawFarmLandParcels()
   if (!state.blocks || state.blocks.length === 0) return
   const w = canvas.width / (Math.min(window.devicePixelRatio || 1, 2))
   const h = canvas.height / (Math.min(window.devicePixelRatio || 1, 2))
@@ -10486,6 +10686,7 @@ function drawBlocks() {
 
   for (const block of state.blocks) {
     if (!isInCurrentRegion(block)) continue
+    if (block.block_type==='farm') continue
     const cx = block.tile_x
     const cy = block.tile_y
     const bw = block.width
@@ -11129,18 +11330,22 @@ function update(dt) {
     }
   }
 
-  const maxDist = (WORLD_SIZE / CHUNK_SIZE) * TILE_W
-  const pruneKeys = []
-  for (const [key] of state.chunks) {
-    if (!key.startsWith(state.currentRegion + ':')) continue
-    const coords = key.split(':')[1]
-    const [cx, cy] = coords.split(',').map(Number)
-    const chunkCenterX = (cx + 0.5) * CHUNK_SIZE
-    const chunkCenterY = (cy + 0.5) * CHUNK_SIZE
-    const dist = Math.sqrt((chunkCenterX - state.player.x) ** 2 + (chunkCenterY - state.player.y) ** 2)
-    if (dist > maxDist * 0.7) pruneKeys.push(key)
+  const now=performance.now()
+  if (now-lastChunkPruneAt>=2000) {
+    lastChunkPruneAt=now
+    const maxDist = (WORLD_SIZE / CHUNK_SIZE) * TILE_W
+    const pruneKeys = []
+    for (const [key] of state.chunks) {
+      if (!key.startsWith(state.currentRegion + ':')) continue
+      const coords = key.split(':')[1]
+      const [cx, cy] = coords.split(',').map(Number)
+      const chunkCenterX = (cx + 0.5) * CHUNK_SIZE
+      const chunkCenterY = (cy + 0.5) * CHUNK_SIZE
+      const dist = Math.sqrt((chunkCenterX - state.player.x) ** 2 + (chunkCenterY - state.player.y) ** 2)
+      if (dist > maxDist * 0.7) pruneKeys.push(key)
+    }
+    for (const key of pruneKeys) state.chunks.delete(key)
   }
-  for (const key of pruneKeys) state.chunks.delete(key)
 
   // Check for ready crops
   if (state.currentRegion !== 'farmlands' && state.loaded) {
@@ -11149,6 +11354,7 @@ function update(dt) {
 }
 
 let lastTime = performance.now()
+let lastChunkPruneAt=0
 function gameLoop(now) {
   const dt = Math.min((now - lastTime) / 1000, 0.1)
   lastTime = now
@@ -11651,7 +11857,14 @@ function setupUI() {
   document.getElementById('btnBuild').addEventListener('click', () => openPanel('buildPanel'))
   document.getElementById('btnGod').addEventListener('click', () => openPanel('godPanel'))
   document.getElementById('btnPW').addEventListener('click', () => openPanel('pwPanel'))
-  document.getElementById('btnBlock').addEventListener('click', () => openPanel('blockPanel'))
+  document.getElementById('btnBlock').addEventListener('click', () => {
+    prepareRegionalBlockPanel()
+    if (!['city','farmlands'].includes(state.currentRegion)) {
+      showToast('Regional Planning',`${REGIONS[state.currentRegion]?.name || 'This region'} uses its own Build catalog.`)
+      return
+    }
+    openPanel('blockPanel')
+  })
   document.getElementById('btnPortfolio').addEventListener('click', openPortfolio)
   document.getElementById('btnGang').addEventListener('click', () => openPanel('gangPanel'))
   document.getElementById('btnProperty').addEventListener('click', () => {
@@ -11940,7 +12153,10 @@ document.addEventListener('click', (e) => {
   document.querySelectorAll('.block-item').forEach(i => i.classList.remove('selected'))
   blockItem.classList.add('selected')
   state.blockType = type
-  showToast('Urban DNA', `Click on the map to place a ${type} block`)
+  showToast(type==='farm' ? 'Pine Hollow Expansion' : 'Urban DNA',
+    type==='farm'
+      ? `Choose a highlighted parcel touching your land · ${farmLandExpansionCost().toLocaleString()} FC`
+      : `Click on the map to zone a ${type} block`)
   document.getElementById('blockPanel').classList.add('panel-hidden')
   document.getElementById('blockPanel').classList.remove('open')
   document.getElementById('panelBackdrop').classList.remove('open')
@@ -13127,6 +13343,9 @@ function validateRegionalPlacement(typeId, x, y) {
     for (let oy = 0; oy < footprint; oy++) {
       const tx = tileX + ox, ty = tileY + oy
       if (tx < 0 || ty < 0 || tx >= WORLD_SIZE || ty >= WORLD_SIZE) return { valid:false, reason:'Outside the region boundary' }
+      if (state.currentRegion==='farmlands' && !isFarmLandTileOwned(tx,ty)) {
+        return { valid:false, reason:'Expand Pine Hollow first — farm builds must stay on owned land' }
+      }
       const terrain = getTerrainAt(tx,ty,state.currentRegion)
       const water = terrain === TERRAIN.WATER || terrain === TERRAIN.DEEP_WATER
       if (water !== waterBuilds.has(typeId)) return { valid:false, reason:water ? 'Choose dry land' : 'Place this on the water' }
@@ -13416,6 +13635,11 @@ async function placeInfrastructure(x, y, type) {
 async function placeBlock(x, y, blockType) {
   const cx = Math.max(0, Math.min(200, Math.floor(x)))
   const cy = Math.max(0, Math.min(200, Math.floor(y)))
+
+  if (blockType==='farm') {
+    buyFarmLandParcel(cx,cy)
+    return
+  }
 
   const dims = { residential: { w: 8, h: 8, c: 200 }, commercial: { w: 6, h: 6, c: 300 },
     industrial: { w: 10, h: 8, c: 250 }, entertainment: { w: 8, h: 6, c: 400 }, park: { w: 6, h: 6, c: 150 }, farm: { w: 10, h: 10, c: 100 } }
@@ -15268,7 +15492,7 @@ function completeTravel(targetRegion) {
     activeFarmTab = 'today'
     showToast('Pine Hollow Farm', 'The farm is ready. Open Farm Menu when you need it.')
     setTimeout(() => {
-      showFarmPrompt('Place a Farm Block to start', 'farm')
+      showFarmPrompt('Your starter land is owned. Expand only into parcels touching Pine Hollow.', 'farm')
     }, 1500)
   } else if (targetRegion === 'whisper-woods') {
     showToast('Entered Whisper Woods', 'Old Oak Trail is quiet. Look for small discoveries and signs.')
@@ -15400,7 +15624,8 @@ async function init() {
   updateLogisticsUI()
   applyCityDecay()
   updateCitySupplyUI()
-  setInterval(() => {
+  if (window.__facelessLogisticsTimer) clearInterval(window.__facelessLogisticsTimer)
+  window.__facelessLogisticsTimer=setInterval(() => {
     checkShipmentDeliveries()
     applyCityDecay()
     updateCitySupplyUI()
@@ -15430,7 +15655,10 @@ async function init() {
   document.getElementById('farmInventory').classList.add('hidden')
   closeFarmOverlay()
 
-  requestAnimationFrame(gameLoop)
+  if (!window.__facelessWorldLoopStarted) {
+    window.__facelessWorldLoopStarted=true
+    requestAnimationFrame(gameLoop)
+  }
 }
 
 mountWorldAccount({ state, showToast, fetchPlayerState })
