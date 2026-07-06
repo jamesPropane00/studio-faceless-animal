@@ -11822,8 +11822,7 @@ function update(dt) {
     const isoDy = (dx + dy) * 0.707
     const nx = state.player.x + isoDx * state.player.speed * dt
     const ny = state.player.y + isoDy * state.player.speed * dt
-    const t = getTerrainAt(Math.floor(nx), Math.floor(ny))
-    if (t !== TERRAIN.DEEP_WATER && t !== TERRAIN.WATER && nx >= 0 && ny >= 0 && nx < WORLD_SIZE && ny < WORLD_SIZE) {
+    if (canPlayerEnter(nx,ny)) {
       state.player.x = nx
       state.player.y = ny
     }
@@ -12021,12 +12020,17 @@ function mobileTargetAt(world) {
   return worldTargetAt(world)
 }
 
+function canPlayerEnter(x,y) {
+  if (x < 0 || y < 0 || x >= WORLD_SIZE || y >= WORLD_SIZE) return false
+  const terrain=getTerrainAt(Math.floor(x),Math.floor(y),state.currentRegion)
+  return ![TERRAIN.WATER,TERRAIN.DEEP_WATER,TERRAIN.BUILDING].includes(terrain)
+}
+
 function queueTouchDestination(world,target=null) {
   const nav=state.touchNav
   state.cameraFreeUntil=0
   let x=target?.x ?? world.x, y=target?.y ?? world.y
-  const terrain=getTerrainAt(Math.floor(x),Math.floor(y))
-  if (!target && [TERRAIN.WATER,TERRAIN.DEEP_WATER,TERRAIN.BUILDING].includes(terrain)) {
+  if (!target && !canPlayerEnter(x,y)) {
     showToast('Cannot Walk There','Tap a clear ground tile.')
     return
   }
@@ -12036,10 +12040,6 @@ function queueTouchDestination(world,target=null) {
   }
   nav.active=true;nav.x=Math.max(1,Math.min(WORLD_SIZE-2,x));nav.y=Math.max(1,Math.min(WORLD_SIZE-2,y))
   nav.pending=target;nav.pulse=0;nav.path=null;nav.pathIndex=0
-  if (state.walkableGraph?.size) {
-    const path=findPath(state.walkableGraph,state.player.x,state.player.y,nav.x,nav.y)
-    if (path?.length) nav.path=path
-  }
 }
 
 function performTouchInteraction(target) {
@@ -12068,9 +12068,12 @@ function updateTouchNavigation(dt) {
   }
   const step=Math.min(d,state.player.speed*dt)
   const nx=state.player.x+dx/d*step,ny=state.player.y+dy/d*step
-  const terrain=getTerrainAt(Math.floor(nx),Math.floor(ny))
-  if (![TERRAIN.WATER,TERRAIN.DEEP_WATER,TERRAIN.BUILDING].includes(terrain)) {
+  if (canPlayerEnter(nx,ny)) {
     state.player.x=nx;state.player.y=ny
+  } else if (canPlayerEnter(nx,state.player.y)) {
+    state.player.x=nx
+  } else if (canPlayerEnter(state.player.x,ny)) {
+    state.player.y=ny
   } else {
     nav.active=false;nav.pending=null
     showToast('Path Blocked','Tap another route around the obstacle.')
@@ -12173,11 +12176,9 @@ function setupMouse() {
     state.player.ty = Math.max(0, Math.min(WORLD_SIZE - 1, world.y))
   })
 
-  canvas.addEventListener('click', e => {
-    if (state.mouse.dragging || Date.now()<state.suppressCanvasClickUntil) return
-    
-    const world = screenToWorld(e.clientX, e.clientY)
-    
+  function handleCanvasWorldAction(clientX,clientY) {
+    const world = screenToWorld(clientX,clientY)
+
     if (state.buildMode && state.buildType) {
       placeBuildingAt(world.x, world.y)
     } else if (state.godMode && state.godPower) {
@@ -12214,7 +12215,14 @@ function setupMouse() {
       const target=worldTargetAt(world)
       if (target) selectWorldTarget(target)
     }
+  }
+
+  canvas.addEventListener('click', e => {
+    if (state.mouse.dragging || Date.now()<state.suppressCanvasClickUntil) return
+    handleCanvasWorldAction(e.clientX,e.clientY)
   })
+
+  state.handleCanvasWorldAction=handleCanvasWorldAction
 }
 
 function setupTouch() {
@@ -12313,7 +12321,15 @@ function setupTouch() {
   const endCanvasPan=e=>{
     for (const touch of e.changedTouches) {
       if (touch.identifier!==panTouchId) continue
-      if (panMoved) state.suppressCanvasClickUntil=Date.now()+450
+      if (panMoved) {
+        state.suppressCanvasClickUntil=Date.now()+450
+      } else if (isMobileUX() && typeof state.handleCanvasWorldAction==='function') {
+        // Handle the tap directly. Some mobile browsers suppress their
+        // synthetic click after a touch listener, which previously made the
+        // Farmlands appear frozen even though the game loop was still alive.
+        state.suppressCanvasClickUntil=Date.now()+450
+        state.handleCanvasWorldAction(touch.clientX,touch.clientY)
+      }
       panTouchId=null
       state.isPanning=false
       panMoved=false
