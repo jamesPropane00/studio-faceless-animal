@@ -3005,9 +3005,10 @@
     </section>
     <section class="settings-section">
       <div class="settings-section-title">World Maintenance</div>
-      <div class="settings-hint" style="margin-top:.25rem">A reset backs up every local Faceless World save first. It does not delete account or hosted server data.</div>
+      <div class="settings-hint" style="margin-top:.25rem">Day One reset backs up and clears local world progress, then creates one clean Pine Hollow starter parcel.</div>
+      <div class="settings-hint" style="margin-top:.35rem;color:#fbbf24">Shared data is not deleted: city buildings come from <code>/api/world/state</code> / <code>world_building_states</code>; account FC/Rep comes from <code>world_player_states</code>.</div>
       <div class="settings-maintenance-actions">
-        <button class="settings-maintenance-btn danger" id="resetLocalWorldBtn" type="button">Reset Local World</button>
+        <button class="settings-maintenance-btn danger" id="resetLocalWorldBtn" type="button">Reset World to Day One</button>
         <button class="settings-maintenance-btn" id="restoreLocalWorldBtn" type="button">Restore Last Backup</button>
       </div>
     </section>
@@ -3301,6 +3302,7 @@ const state = {
   buildMode: false,
   buildType: null,
   buildPreview: { x: 0, y: 0, visible: false, valid: false, reason: '' },
+  farmLandPreview: { x: 0, y: 0, width: 10, height: 10, visible: false, valid: false, reason: '' },
   godMode: false,
   pwMode: false,
   pwType: null,
@@ -3820,19 +3822,34 @@ function safeText(value) {
 }
 
 const LOCAL_WORLD_BACKUP_KEY='faceless_world_backup_latest'
+const DAY_ONE_RESET_KEY='faceless_world_day_one_reset_at'
 let localWorldResetArmedUntil=0
 let localWorldRestoreArmedUntil=0
 
 function localWorldSaveKeys() {
-  const keys=[]
+  const keys=new Set([
+    'fas_farm_data','fas_properties','fas_regional_build_objects_v1',
+    'fas_ownership_metadata_v1','fas_city_construction_v2','fas_city_lifecycle_v1',
+    'fas_shipments_v2','fas_shipment_claims_v2','fas_city_supply_v2',
+    'fas_signal_wire_news','fas_world_skills','fas_world_goals',
+    'fas_world_creatures','fas_encounter_history_v1','fas_regional_trail_journals_v1',
+    'fas_region_identity_v1','fas_whisper_woods_v1','fas_living_world_v1',
+    'fas_npc_growth_v1','fas_world_tutorial'
+  ])
   for (let index=0;index<localStorage.length;index++) {
     const key=localStorage.key(index)
-    if (key?.startsWith('fas_')) keys.push(key)
+    if (key?.startsWith('fas_')) keys.add(key)
   }
-  return keys
+  return [...keys]
 }
 
 function createLocalWorldBackup() {
+  if (localStorage.getItem(DAY_ONE_RESET_KEY)) {
+    try {
+      const existing=JSON.parse(localStorage.getItem(LOCAL_WORLD_BACKUP_KEY) || 'null')
+      if (existing?.keys && typeof existing.keys==='object') return existing
+    } catch {}
+  }
   const snapshot={}
   for (const key of localWorldSaveKeys()) snapshot[key]=localStorage.getItem(key)
   const backup={ version:1,createdAt:Date.now(),keys:snapshot }
@@ -3842,7 +3859,7 @@ function createLocalWorldBackup() {
 
 function resetLocalWorldButtonLabel() {
   const button=document.getElementById('resetLocalWorldBtn')
-  if (button) button.textContent='Reset Local World'
+  if (button) button.textContent='Reset World to Day One'
 }
 
 function restoreLocalWorldButtonLabel() {
@@ -3854,18 +3871,34 @@ function requestLocalWorldReset() {
   const now=Date.now(),button=document.getElementById('resetLocalWorldBtn')
   if (now>localWorldResetArmedUntil) {
     localWorldResetArmedUntil=now+10000
-    if (button) button.textContent='Click Again: Backup & Reset'
-    showToast('Reset Armed','Click again within 10 seconds. A local backup will be created before anything is cleared.')
+    if (button) button.textContent='Confirm: Reset to Day One'
+    showToast('Day One Reset Armed','Click again within 10 seconds. Local progress will be backed up; shared server data will not be deleted.')
     setTimeout(()=>{ if (Date.now()>localWorldResetArmedUntil) resetLocalWorldButtonLabel() },10100)
     return
   }
   try {
+    window.__facelessDayOneResetting=true
     const backup=createLocalWorldBackup()
     for (const key of Object.keys(backup.keys)) localStorage.removeItem(key)
+    const center=Math.round(WORLD_SIZE/2),origin=center-FARM_LAND_PARCEL_SIZE/2
+    const starterFarm={
+      dayOneResetVersion:1,tile_x:center,tile_y:center,farmLevel:1,farmXP:0,
+      landOrigin:{x:origin,y:origin},
+      landParcels:[{
+        id:'pine-hollow-home-parcel',x:origin,y:origin,
+        width:FARM_LAND_PARCEL_SIZE,height:FARM_LAND_PARCEL_SIZE,
+        purchasedAt:Date.now(),starter:true,
+        owner_id:state.userId || 'local-player',owner_name:currentPlayerOwnerName()
+      }]
+    }
+    localStorage.setItem('fas_farm_data',JSON.stringify(starterFarm))
+    localStorage.setItem(REGIONAL_OBJECTS_KEY,JSON.stringify({version:2,buildings:[],infrastructure:[]}))
+    localStorage.setItem(DAY_ONE_RESET_KEY,String(Date.now()))
     localStorage.setItem('faceless_world_last_reset_at',String(Date.now()))
-    showToast('Local World Reset','Backup created. Reloading a clean local world.')
-    setTimeout(()=>window.location.reload(),450)
+    showToast('Day One Ready','Backup created. Reloading with one clean Pine Hollow parcel and fresh local progress.')
+    window.location.reload()
   } catch {
+    window.__facelessDayOneResetting=false
     localWorldResetArmedUntil=0
     resetLocalWorldButtonLabel()
     showToast('Reset Cancelled','The backup could not be saved, so no world data was deleted.')
@@ -3890,6 +3923,7 @@ function requestLocalWorldRestore() {
   try {
     for (const key of localWorldSaveKeys()) localStorage.removeItem(key)
     for (const [key,value] of Object.entries(backup.keys)) if (typeof value==='string') localStorage.setItem(key,value)
+    localStorage.removeItem(DAY_ONE_RESET_KEY)
     showToast('World Restored','Reloading the most recent local backup.')
     setTimeout(()=>window.location.reload(),450)
   } catch {
@@ -4432,12 +4466,14 @@ function getFarmData() {
   data.landOrigin = data.landOrigin && Number.isFinite(Number(data.landOrigin.x)) && Number.isFinite(Number(data.landOrigin.y))
     ? { x:Number(data.landOrigin.x), y:Number(data.landOrigin.y) }
     : { x:Math.round(data.tile_x)-FARM_LAND_PARCEL_SIZE/2, y:Math.round(data.tile_y)-FARM_LAND_PARCEL_SIZE/2 }
-  data.landParcels = Array.isArray(data.landParcels) ? data.landParcels.slice(0,FARM_LAND_MAX_PARCELS) : []
-  data.landParcels=data.landParcels.filter(parcel=>Number.isFinite(Number(parcel.x)) && Number.isFinite(Number(parcel.y))).map(parcel=>({
-    ...parcel,x:Number(parcel.x),y:Number(parcel.y),
-    width:Math.max(1,Number(parcel.width) || FARM_LAND_PARCEL_SIZE),
-    height:Math.max(1,Number(parcel.height) || FARM_LAND_PARCEL_SIZE)
-  }))
+  const rawLandParcels=Array.isArray(data.landParcels) ? data.landParcels.slice(0,FARM_LAND_MAX_PARCELS) : []
+  data.landParcels=[]
+  for (const rawParcel of rawLandParcels) {
+    if (!Number.isFinite(Number(rawParcel.x)) || !Number.isFinite(Number(rawParcel.y))) continue
+    const parcel={...rawParcel,x:Number(rawParcel.x),y:Number(rawParcel.y),width:FARM_LAND_PARCEL_SIZE,height:FARM_LAND_PARCEL_SIZE}
+    if (data.landParcels.some(existing=>farmRectanglesOverlap(parcel,existing))) continue
+    data.landParcels.push(parcel)
+  }
   if (!data.landParcels.length) {
     data.landParcels.push({
       id:'pine-hollow-home-parcel',x:data.landOrigin.x,y:data.landOrigin.y,
@@ -4450,6 +4486,7 @@ function getFarmData() {
 }
 
 function saveFarmData(data) {
+  if (window.__facelessDayOneResetting) return
   farmDataCache=data
   try { localStorage.setItem('fas_farm_data', JSON.stringify(data)) } catch {}
 }
@@ -4464,20 +4501,37 @@ function farmLandParcelKey(parcel) {
   return `${Number(parcel.x)},${Number(parcel.y)}`
 }
 
+function farmRectanglesOverlap(a,b) {
+  return Number(a.x)<Number(b.x)+Number(b.width || 1) &&
+    Number(a.x)+Number(a.width || 1)>Number(b.x) &&
+    Number(a.y)<Number(b.y)+Number(b.height || 1) &&
+    Number(a.y)+Number(a.height || 1)>Number(b.y)
+}
+
+function farmObjectRect(item) {
+  const typeId=item.object_type || item.building_type
+  const footprint=Math.max(1,Number(item.footprint) || Number(BUILDING_TYPES[typeId]?.footprint) || 1)
+  return {x:Number(item.tile_x),y:Number(item.tile_y),width:footprint,height:footprint}
+}
+
 function getFarmLandParcels() {
   const data=getFarmData(),known=new Set(data.landParcels.map(farmLandParcelKey))
   let migrated=false
+  const dayOneReset=Boolean(localStorage.getItem(DAY_ONE_RESET_KEY))
   for (const block of state.blocks || []) {
     if (normalizeRegionId(block.region_id ?? block.region)!=='farmlands' || block.block_type!=='farm') continue
+    if (dayOneReset) continue
     const x=Number(block.tile_x),y=Number(block.tile_y)
     const key=`${x},${y}`
     if (!Number.isFinite(x) || !Number.isFinite(y) || known.has(key)) continue
-    data.landParcels.push({
+    const legacyParcel={
       id:`legacy-farm-land-${block.id || key}`,x,y,
-      width:Number(block.width) || FARM_LAND_PARCEL_SIZE,
-      height:Number(block.height) || FARM_LAND_PARCEL_SIZE,
+      width:FARM_LAND_PARCEL_SIZE,
+      height:FARM_LAND_PARCEL_SIZE,
       purchasedAt:Date.now(),legacy:true
-    })
+    }
+    if (data.landParcels.some(parcel=>farmRectanglesOverlap(legacyParcel,parcel))) continue
+    data.landParcels.push(legacyParcel)
     known.add(key)
     migrated=true
   }
@@ -4513,6 +4567,38 @@ function isAdjacentFarmLand(candidate,parcels=getFarmLandParcels()) {
   })
 }
 
+function validateFarmLandCandidate(x,y) {
+  const candidate=farmLandCandidateAt(x,y),parcels=getFarmLandParcels()
+  if (candidate.x<0 || candidate.y<0 || candidate.x+candidate.width>WORLD_SIZE || candidate.y+candidate.height>WORLD_SIZE) {
+    return {...candidate,valid:false,reason:'Expansion crosses the Farmlands boundary'}
+  }
+  if (parcels.some(parcel=>farmRectanglesOverlap(candidate,parcel))) {
+    return {...candidate,valid:false,reason:'Farm land cannot overlap an owned parcel'}
+  }
+  if (!isAdjacentFarmLand(candidate,parcels)) {
+    return {...candidate,valid:false,reason:'Expansion must share an edge with owned land'}
+  }
+  const blockingObject=[...state.buildings,...state.infrastructure].find(item=>
+    normalizeRegionId(item.region_id ?? item.region)==='farmlands' &&
+    Number.isFinite(Number(item.tile_x)) && Number.isFinite(Number(item.tile_y)) &&
+    farmRectanglesOverlap(candidate,farmObjectRect(item))
+  )
+  if (blockingObject) {
+    const name=BUILDING_TYPES[blockingObject.object_type || blockingObject.building_type]?.name || 'farm object'
+    return {...candidate,valid:false,reason:`Blocked by ${name}`}
+  }
+  const blockingBlock=(state.blocks || []).find(block=>
+    normalizeRegionId(block.region_id ?? block.region)==='farmlands' &&
+    block.block_type!=='farm' &&
+    farmRectanglesOverlap(candidate,{
+      x:Number(block.tile_x),y:Number(block.tile_y),
+      width:Number(block.width) || 1,height:Number(block.height) || 1
+    })
+  )
+  if (blockingBlock) return {...candidate,valid:false,reason:'Blocked by an existing regional plot'}
+  return {...candidate,valid:true,reason:'Valid adjacent 10×10 expansion'}
+}
+
 function buyFarmLandParcel(x,y) {
   if (state.currentRegion!=='farmlands') return
   const data=getFarmData(),parcels=getFarmLandParcels()
@@ -4520,13 +4606,9 @@ function buyFarmLandParcel(x,y) {
     showToast('Pine Hollow Is Fully Expanded',`The current ${FARM_LAND_MAX_PARCELS}-parcel land cap has been reached.`)
     return
   }
-  const candidate=farmLandCandidateAt(x,y),key=farmLandParcelKey(candidate)
-  if (parcels.some(parcel=>farmLandParcelKey(parcel)===key)) {
-    showToast('Land Already Owned','Choose a highlighted parcel touching Pine Hollow Farm.')
-    return
-  }
-  if (!isAdjacentFarmLand(candidate,parcels)) {
-    showToast('Expansion Must Be Adjacent','Buy land that shares an edge with land you already own.')
+  const candidate=validateFarmLandCandidate(x,y)
+  if (!candidate.valid) {
+    showToast('Invalid Farm Expansion',candidate.reason)
     return
   }
   const cost=farmLandExpansionCost(data)
@@ -4542,6 +4624,7 @@ function buyFarmLandParcel(x,y) {
   state.coins-=cost
   document.getElementById('statCoins').textContent=state.coins
   saveFarmData(data)
+  state.farmLandPreview.visible=false
   state.blockType=null
   state.blockMode=false
   document.getElementById('modeIndicator').classList.remove('open')
@@ -10932,6 +11015,17 @@ function drawFarmLandParcels() {
     ctx.font=`800 ${Math.max(8,9*z)}px Inter`;ctx.textAlign='center';ctx.fillStyle='rgba(254,240,138,.85)'
     ctx.fillText(`EXPAND · ${price.toLocaleString()} FC`,center.x,center.y)
   }
+  const preview=state.farmLandPreview
+  if (preview?.visible) {
+    const color=preview.valid ? 'rgba(74,222,128,.28)' : 'rgba(248,113,113,.3)'
+    const border=preview.valid ? '#4ade80' : '#f87171'
+    polygon(preview,color,border,2.2)
+    const center=worldToScreen(preview.x+preview.width/2,preview.y+preview.height/2)
+    ctx.font=`900 ${Math.max(9,10*z)}px Inter`;ctx.textAlign='center';ctx.fillStyle=preview.valid ? '#bbf7d0' : '#fecaca'
+    ctx.strokeStyle='rgba(0,0,0,.82)';ctx.lineWidth=3
+    const label=preview.valid ? `VALID · ${price.toLocaleString()} FC` : preview.reason
+    ctx.strokeText(label,center.x,center.y-8*z);ctx.fillText(label,center.x,center.y-8*z)
+  }
 }
 
 // Phase 6: Draw development blocks (sidewalks, interior fill, lot outlines)
@@ -11825,6 +11919,15 @@ function setupMouse() {
       document.getElementById('modeIndicator').textContent =
         `${BUILDING_TYPES[state.buildType].icon} ${BUILDING_TYPES[state.buildType].name} · ${result.valid ? 'Valid tile' : result.reason}`
     }
+    if (state.blockMode && state.blockType==='farm' && !state.mouse.dragging) {
+      const world=screenToWorld(e.clientX,e.clientY)
+      const result=validateFarmLandCandidate(world.x,world.y)
+      state.farmLandPreview={...result,visible:true}
+      document.getElementById('modeIndicator').textContent=
+        `🌾 Pine Hollow 10×10 · ${result.valid ? `Valid · ${farmLandExpansionCost().toLocaleString()} FC` : result.reason}`
+    } else if (!state.blockMode || state.blockType!=='farm') {
+      state.farmLandPreview.visible=false
+    }
 
     // District hover tooltip
     if (state.influenceViewEnabled && state.districts && state.districts.length > 0) {
@@ -11849,6 +11952,7 @@ function setupMouse() {
     state.mouse.down = false
     state.mouse.dragging = false
   })
+  canvas.addEventListener('mouseleave',()=>{ state.farmLandPreview.visible=false })
   canvas.addEventListener('contextmenu', e => e.preventDefault())
 
   canvas.addEventListener('wheel', e => {
@@ -12470,6 +12574,7 @@ function loadRegionalObjects() {
 }
 
 function saveRegionalObjects() {
+  if (window.__facelessDayOneResetting) return
   try {
     localStorage.setItem(REGIONAL_OBJECTS_KEY, JSON.stringify({
       version: 2,
