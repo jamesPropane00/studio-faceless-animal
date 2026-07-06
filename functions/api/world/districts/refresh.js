@@ -34,6 +34,7 @@ async function supabaseFetch(env, path, options = {}) {
 
 const CLUSTER_RADIUS = 15;
 const MIN_BUILDINGS = 3;
+const WORLD_INSTANCE_ID = 'day-one-reset-v1';
 
 const DISTRICT_NAMES = {
   shop: ['Market District', 'The Block', 'Commerce Row', 'Trade Center'],
@@ -221,11 +222,25 @@ export async function onRequestOptions() {
 }
 
 export async function onRequestPost(context) {
-  return await refreshDistricts(context);
+  return json({
+    ok: true,
+    worldInstanceId: WORLD_INSTANCE_ID,
+    resetProtected: true,
+    count: 0,
+    newlyFormed: [],
+    roadCount: 0,
+  });
 }
 
 export async function onRequestGet(context) {
-  return await refreshDistricts(context);
+  return json({
+    ok: true,
+    worldInstanceId: WORLD_INSTANCE_ID,
+    resetProtected: true,
+    count: 0,
+    newlyFormed: [],
+    roadCount: 0,
+  });
 }
 
 async function refreshDistricts(context) {

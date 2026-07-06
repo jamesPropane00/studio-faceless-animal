@@ -20,7 +20,7 @@ const WORLD_INSTANCE_ID = 'day-one-reset-v1';
 const WORLD_RESET_AT = '2026-07-06T00:00:00.000Z';
 const LEGACY_ID_FLOORS = {
   buildings: 1000,
-  infrastructure: 21266595,
+  infrastructure: 21278964,
   blocks: 1,
   lots: 4,
 };
