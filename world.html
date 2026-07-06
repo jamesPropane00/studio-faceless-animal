@@ -3156,6 +3156,7 @@
     <button id="farmOrderBtn" type="button">Fill Order</button>
   </div>
   <button class="farm-hub-open" id="farmHubOpen" type="button" aria-expanded="false">&#x1F33E; Farm Menu</button>
+  <button class="farm-hub-open" id="farmReturnCityBtn" type="button">&#x1F3D9;&#xFE0F; Return to Faceless City</button>
 </div>
 
 <section class="farm-hub hidden" id="farmHub" aria-label="Pine Hollow Farm menu" aria-hidden="true">
@@ -3250,7 +3251,7 @@ const TERRAIN_COLORS = {
 // ── REGION DEFINITIONS ── (imported from /world/js/data/regions.js)
 const state = {
   camera: { x: 0, y: 0, zoom: 1, targetZoom: 1 },
-  player: { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, tx: WORLD_SIZE / 2, ty: WORLD_SIZE / 2, speed: 3.5, color: '#a78bfa', name: '' },
+  player: { x: WORLD_SIZE / 2, y: WORLD_SIZE / 2, tx: WORLD_SIZE / 2, ty: WORLD_SIZE / 2, speed: 3.5, color: '#a78bfa', name: '', visible:true },
   otherPlayers: new Map(),
   chunks: new Map(),
   currentRegion: 'city',
@@ -11420,7 +11421,9 @@ function render() {
 
   // ── BUILD DRAW ORDER (entities only — tiles done via cache) ──
   const drawOrder = []
-  drawOrder.push({ type: 'player', x: state.player.x, y: state.player.y, sort: state.player.x + state.player.y, sx: worldToScreen(state.player.x, state.player.y) })
+  if (state.player.visible!==false) {
+    drawOrder.push({ type: 'player', x: state.player.x, y: state.player.y, sort: state.player.x + state.player.y, sx: worldToScreen(state.player.x, state.player.y) })
+  }
   for (const [, p] of state.otherPlayers) {
     if (!isInCurrentRegion(p)) continue
     const s = worldToScreen(p.x, p.y)
@@ -11752,7 +11755,7 @@ function isMobileUX() {
 const MOBILE_REGION_ACTIONS = {
   farmlands:[
     ['🌾','Farm','farm-today'],['🐓','Animals','farm-animals'],['🚚','Orders','farm-orders'],
-    ['📦','Storage','farm-storage'],['🌳','Sanctuary','farm-sanctuary'],['📰','Signal','signal']
+    ['📦','Storage','farm-storage'],['🌳','Sanctuary','farm-sanctuary'],['🏙️','City','travel-city']
   ],
   city:[
     ['🏗️','Build','build'],['🏡','Property','property'],['💼','Jobs','jobs'],['📰','Signal','signal']
@@ -11786,6 +11789,7 @@ function handleMobileAction(action) {
     const jobBuilding=state.buildings.find(building=>isInCurrentRegion(building) && ['shop','club','warehouse','hide'].includes(building.building_type))
     if (jobBuilding) openJobPanel(jobBuilding.id); else showToast('No Jobs Nearby','Explore the city and tap a business.')
   } else if (action === 'signal') openSignalWirePanel()
+  else if (action === 'travel-city') startTravel('city')
   else if (action === 'map') openPanel('worldMapPanel')
   else if (action === 'journal') {
     document.getElementById('woodsHub').classList.remove('hidden'); renderWoodsHub()
@@ -12354,6 +12358,7 @@ function setupUI() {
   document.getElementById('farmHubOpen').addEventListener('click', () => {
     openFarmHub()
   })
+  document.getElementById('farmReturnCityBtn').addEventListener('click',()=>startTravel('city'))
   document.getElementById('farmHubClose').addEventListener('click', closeFarmHub)
   document.getElementById('farmReturnClose').addEventListener('click', () => document.getElementById('farmReturnCard').classList.remove('open'))
   document.getElementById('farmReturnLater').addEventListener('click', () => document.getElementById('farmReturnCard').classList.remove('open'))
@@ -14967,7 +14972,10 @@ function showWelcomeOverlay() {
   document.getElementById('welcomeStartBtn').onclick = dismiss
   document.getElementById('startCityBtn').onclick = () => {
     dismiss()
-    setTimeout(() => openPanel('buildPanel'), 300)
+    setTimeout(() => {
+      if (state.currentRegion!=='city') startTravel('city')
+      else openPanel('buildPanel')
+    }, 300)
   }
   document.getElementById('startFarmBtn').onclick = () => {
     dismiss()
@@ -15755,7 +15763,60 @@ function updateWorldMap() {
   renderLivingWorldPanel()
 }
 
+function isValidRegionPlayerPosition(position,regionId) {
+  const x=Number(position?.x),y=Number(position?.y)
+  if (!Number.isFinite(x) || !Number.isFinite(y) || x<1 || y<1 || x>=WORLD_SIZE-1 || y>=WORLD_SIZE-1) return false
+  const terrain=getTerrainAt(Math.floor(x),Math.floor(y),regionId)
+  return ![TERRAIN.WATER,TERRAIN.DEEP_WATER,TERRAIN.BUILDING].includes(terrain)
+}
+
+function findRegionSpawn(regionId) {
+  let preferred={x:WORLD_SIZE/2,y:WORLD_SIZE/2}
+  if (regionId==='farmlands') {
+    const starter=getFarmLandParcels()[0]
+    if (starter) preferred={
+      x:Number(starter.x)+(Number(starter.width) || FARM_LAND_PARCEL_SIZE)/2,
+      y:Number(starter.y)+(Number(starter.height) || FARM_LAND_PARCEL_SIZE)/2
+    }
+  }
+  if (isValidRegionPlayerPosition(preferred,regionId)) return preferred
+  for (let radius=1;radius<=14;radius++) {
+    for (let dx=-radius;dx<=radius;dx++) for (let dy=-radius;dy<=radius;dy++) {
+      if (Math.max(Math.abs(dx),Math.abs(dy))!==radius) continue
+      const candidate={x:preferred.x+dx,y:preferred.y+dy}
+      if (isValidRegionPlayerPosition(candidate,regionId)) return candidate
+    }
+  }
+  return {x:WORLD_SIZE/2,y:WORLD_SIZE/2}
+}
+
+function centerCameraOnPlayer() {
+  state.camera.x=(state.player.x-state.player.y)*(TILE_W/2)
+  state.camera.y=(state.player.x+state.player.y)*(TILE_H/2)
+  tileCache.cameraX=NaN
+  minimapCache.region=null
+}
+
+function clearTravelInteractionState() {
+  state.touchNav.active=false
+  state.touchNav.pending=null
+  state.touchNav.path=[]
+  state.joystick.active=false
+  state.joystick.dx=0
+  state.joystick.dy=0
+  state.mouse.down=false
+  state.mouse.dragging=false
+  state.buildPreview.visible=false
+  state.farmLandPreview.visible=false
+  state.lastWorldTap={id:null,at:0}
+  document.getElementById('farmReturnCard')?.classList.remove('open')
+  document.getElementById('farmPlantOverlay')?.classList.add('hidden')
+  document.getElementById('encounterPanel')?.classList.remove('open')
+  closeAllPanels()
+}
+
 function startTravel(targetRegion) {
+  targetRegion=normalizeRegionId(targetRegion)
   const region = REGIONS[targetRegion]
   if (!region || targetRegion === state.currentRegion || state.travel.active) return
 
@@ -15769,6 +15830,8 @@ function startTravel(targetRegion) {
   state.travel.target = targetRegion
   state.travel.fromRegion = from
   state.travel.progress = 0
+  state.travel.token=`${Date.now()}-${Math.random().toString(36).slice(2,7)}`
+  const travelToken=state.travel.token
 
   // Show travel overlay
   const overlay = document.getElementById('travelOverlay')
@@ -15784,17 +15847,19 @@ function startTravel(targetRegion) {
   document.getElementById('travelStatus').textContent = 'Departing...'
   state.travel.statusText = 'Departing...'
 
-  closeAllPanels()
+  clearTravelInteractionState()
 
-  // Animate both the panel vehicle and overlay route over ~8 seconds
+  // A short animation plus a timeout fallback keeps travel reliable when
+  // mobile browsers throttle requestAnimationFrame.
   const startTime = performance.now()
-  const duration = 8000
+  const duration = 3200
   const statuses = ['Departing...', 'Leaving...', 'En route...', 'Almost there...', 'Arriving...']
 
   const fromPos = getNodePos(from)
   const toPos = getNodePos(targetRegion)
 
   function animateTravel(now) {
+    if (!state.travel.active || state.travel.token!==travelToken) return
     const elapsed = now - startTime
     const pct = Math.min(1, elapsed / duration)
     state.travel.progress = pct
@@ -15822,14 +15887,23 @@ function startTravel(targetRegion) {
       completeTravel(targetRegion)
     }
   }
+  clearTimeout(state.travel.fallbackTimer)
+  state.travel.fallbackTimer=setTimeout(()=>{
+    if (state.travel.active && state.travel.token===travelToken) completeTravel(targetRegion)
+  },duration+500)
   requestAnimationFrame(animateTravel)
 }
 
 function completeTravel(targetRegion) {
+  targetRegion=normalizeRegionId(targetRegion)
+  if (!REGIONS[targetRegion]) return
+  if (!state.travel.active && state.currentRegion===targetRegion) return
+  const fromRegion=normalizeRegionId(state.travel.fromRegion || state.currentRegion)
+  clearTimeout(state.travel.fallbackTimer)
   state.currentRegion = targetRegion
-  state.touchNav.active = false
-  state.touchNav.pending = null
   state.travel.active = false
+  state.travel.target=null
+  state.travel.token=null
   state.worldMapOpen = false
 
   document.getElementById('travelOverlay').style.display = 'none'
@@ -15846,11 +15920,11 @@ function completeTravel(targetRegion) {
   vehicle.style.top = curPos.y + '%'
   vehicle.classList.remove('travel')
 
-  closeAllPanels()
+  clearTravelInteractionState()
 
   // Save non-city chunks for when we return
-  if (state.travel.fromRegion !== 'city') {
-    state.regionChunks.set(state.travel.fromRegion, new Map(state.chunks))
+  if (fromRegion !== 'city') {
+    state.regionChunks.set(fromRegion, new Map(state.chunks))
   }
 
   // Clear chunks for the new region (terrain differs per region)
@@ -15862,18 +15936,15 @@ function completeTravel(targetRegion) {
   // they persist in memory and are filtered at render time by region_id.
 
   // Restore or set default position for this region
-  const saved = state.regionPlayerPos[targetRegion]
-  if (saved) {
-    state.player.x = saved.x
-    state.player.y = saved.y
-    state.player.tx = saved.x
-    state.player.ty = saved.y
-  } else {
-    state.player.x = WORLD_SIZE / 2
-    state.player.y = WORLD_SIZE / 2
-    state.player.tx = WORLD_SIZE / 2
-    state.player.ty = WORLD_SIZE / 2
-  }
+  const saved=state.regionPlayerPos[targetRegion]
+  const spawn=isValidRegionPlayerPosition(saved,targetRegion) ? saved : findRegionSpawn(targetRegion)
+  state.player.x=spawn.x
+  state.player.y=spawn.y
+  state.player.tx=spawn.x
+  state.player.ty=spawn.y
+  state.player.visible=true
+  state.regionPlayerPos[targetRegion]={x:spawn.x,y:spawn.y}
+  centerCameraOnPlayer()
 
   // Generate initial chunks around player
   const startCX = Math.floor(state.player.x / CHUNK_SIZE)
@@ -15911,6 +15982,7 @@ function completeTravel(targetRegion) {
   updatePlayerList()
   updateWoodsHUD()
   updateMobileActionBar()
+  updateWorldMap()
   prepareRegionIdentity(targetRegion)
   markLivingWorldArrival(targetRegion)
 
@@ -15939,8 +16011,8 @@ function completeTravel(targetRegion) {
   awardSkillXP('explorer', targetRegion === 'city' ? 10 : 25)
   createNewsItem('Culture', 'Explorer arrives in ' + (REGIONS[targetRegion]?.name || targetRegion) + '.', '', targetRegion, 2)
   // Clean up region-specific systems when leaving
-  if (state.travel.fromRegion === 'farmlands') clearFarmLife()
-  if (state.travel.fromRegion === 'whisper-woods') {
+  if (fromRegion === 'farmlands') clearFarmLife()
+  if (fromRegion === 'whisper-woods') {
     clearWWLife()
     woodsRuntime.discoveries = []
     woodsRuntime.activeEvent = null
@@ -15953,6 +16025,7 @@ function completeTravel(targetRegion) {
       document.getElementById('encounterPanel').classList.remove('open')
     }
   }
+  console.info('[TRAVEL]',{from:fromRegion,to:targetRegion,player:{x:state.player.x,y:state.player.y},camera:{x:state.camera.x,y:state.camera.y},visible:state.player.visible})
   finishPortfolioTravel()
 }
 
