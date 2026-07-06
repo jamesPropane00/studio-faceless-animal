@@ -2931,7 +2931,7 @@
     </div>
     <div class="block-item region-farmlands" data-type="farm">
       <div class="block-icon">&#x1F33E;</div>
-      <div class="block-name">Expand Farm Land</div>
+      <div class="block-name">Claim Farm Plot</div>
       <div class="block-cost">500+</div>
       <div class="block-desc">10x10 — fields for planting crops</div>
     </div>
@@ -3080,7 +3080,7 @@
 <div class="farm-prompt" id="farmPrompt">
   <div class="farm-prompt-title">&#x1F33E; Farmlands</div>
   <div class="farm-prompt-desc" id="farmPromptDesc">Place a Farm Block to start growing crops</div>
-  <button class="farm-prompt-btn" id="farmPromptBtn">Expand Farm Land</button>
+  <button class="farm-prompt-btn" id="farmPromptBtn">Claim Farm Plot</button>
 </div>
 
 <div class="debug-panel" id="debugPanel" style="display:none;">
@@ -3171,9 +3171,12 @@
   </header>
   <nav class="farm-tabs" id="farmTabs" aria-label="Farm sections">
     <button class="farm-tab active" data-farm-tab="today">Farm Today</button>
+    <button class="farm-tab" data-farm-tab="build">Build</button>
+    <button class="farm-tab" data-farm-tab="land">Land</button>
     <button class="farm-tab" data-farm-tab="crops">Crops</button>
     <button class="farm-tab" data-farm-tab="animals">Animals</button>
-    <button class="farm-tab" data-farm-tab="machines">Machines</button>
+    <button class="farm-tab" data-farm-tab="habitats">Habitats</button>
+    <button class="farm-tab" data-farm-tab="machines">Production</button>
     <button class="farm-tab" data-farm-tab="orders">Orders</button>
     <button class="farm-tab" data-farm-tab="storage">Storage</button>
     <button class="farm-tab" data-farm-tab="shipments">Shipments</button>
@@ -3722,19 +3725,31 @@ const REGIONAL_BUILD_CATALOGS = {
     ['public-works','Public Works','⛲',60,'A civic improvement for the neighborhood.','infrastructure']
   ],
   farmlands: [
+    ['farm-plot','Claim Farm Plot','🗺️',500,'Claim a 10×10 deeded plot anywhere valid in Farmlands.','land'],
+    ['woodland-habitat','Woodland Habitat','🌲',180,'A shaded home for woodland creatures.','sanctuary'],
+    ['wetland-habitat','Wetland Habitat','💧',170,'A calm wet habitat for water-loving creatures.','sanctuary'],
+    ['night-habitat','Night Habitat','🌙',190,'A sheltered habitat for nocturnal creatures.','sanctuary'],
+    ['meadow-habitat','Meadow Habitat','🌿',160,'Open grass and wildflowers for meadow creatures.','sanctuary'],
+    ['cave-habitat','Cave Habitat','🪨',210,'A cool stone shelter for cave-preferring creatures.','sanctuary'],
+    ['neon-habitat','Neon Habitat','🟣',220,'A gentle signal-lit habitat for neon creatures.','sanctuary'],
+    ['breeding-pen','Breeding Pen','🤝',260,'Foundation for two compatible trusted creatures. Full breeding comes later.','sanctuary'],
+    ['quarantine-pen','Quarantine Pen','🩺',145,'A quiet temporary space for observation and recovery.','sanctuary'],
+    ['farm-feed-station','Feed Station','🥕',80,'Keeps habitat residents fed and comfortable.','sanctuary'],
+    ['workshop','Workshop','🧰',140,'Repairs farm equipment and supports production.','machine'],
+    ['tree-row','Tree Row','🌳',42,'A clean row of trees that can shelter birds and Static Crows.','decoration'],
     ['crop-row','Crop Row','🌱',12,'Plant and harvest a working crop row.','crop'],
     ['field-plot','Field Plot','🌾',24,'A larger piece of productive soil.','crop'],
     ['greenhouse','Greenhouse','🏡',140,'Protected crops with steadier seasonal growth.','crop'],
     ['berry-field','Berry Bushes','🫐',45,'Low berry rows that attract birds and pollinators.','crop'],
     ['vineyard','Vineyard','🍇',85,'Orderly vine rows for future processing recipes.','crop'],
-    ['flower-field','Flower Field','🌸',40,'Flowers improve pollination and bee production.','crop'],
+    ['flower-field','Flower Patch','🌸',40,'Flowers improve pollination and bee production.','crop'],
     ['orchard-row','Orchard Row','🍎',80,'Even rows of fruit trees that grow as a real orchard.','crop'],
     ['chicken-coop','Chicken Coop','🐔',70,'Feed chickens and collect eggs.','animal'],
     ['duck-pond','Duck Pond','🦆',90,'A fenced wet habitat for ducks, frogs, and dragonflies.','animal'],
     ['cow-pasture','Cow Pasture','🐄',110,'Feed cows and collect milk.','animal'],
-    ['sheep-meadow','Sheep Meadow','🐑',120,'A grassy fenced habitat for a small flock.','animal'],
+    ['sheep-meadow','Sheep Pen','🐑',120,'A grassy fenced habitat for a small flock.','animal'],
     ['pig-pen','Pig Pen','🐖',105,'A shaded pen with room for pigs to roam.','animal'],
-    ['goat-hillside','Goat Hillside','🐐',115,'Rocky pasture that keeps goats active.','animal'],
+    ['goat-hillside','Goat Pen','🐐',115,'A rocky fenced pasture that keeps goats active.','animal'],
     ['horse-stable','Horse Stable','🐎',180,'A stable and paddock for working horses.','animal'],
     ['bee-box','Bee Yard','🐝',45,'Pollinators support orchards, flowers, and crop yield.','animal'],
     ['rabbit-hutch','Rabbit Hutch','🐇',75,'A quiet fenced habitat for rabbits.','animal'],
@@ -3820,7 +3835,10 @@ for (const [regionId, entries] of Object.entries(REGIONAL_BUILD_CATALOGS)) {
     const footprint = ({
       'crop-row':3, 'field-plot':4, 'orchard-row':4, greenhouse:3,'berry-field':3,vineyard:4,'flower-field':3,pond:3,
       'cow-pasture':3,'duck-pond':3,'sheep-meadow':3,'pig-pen':2,'goat-hillside':3,'horse-stable':3,'bee-box':2,
-      'rabbit-hutch':2,'farmers-market':2,'development-block':2,'freight-yard':2,factory:2
+      'rabbit-hutch':2,'farmers-market':2,'development-block':2,'freight-yard':2,factory:2,
+      'farm-plot':10,'woodland-habitat':3,'wetland-habitat':3,'night-habitat':3,'meadow-habitat':3,
+      'cave-habitat':3,'neon-habitat':3,'breeding-pen':3,'quarantine-pen':2,'farm-feed-station':2,
+      workshop:2,'tree-row':3
     })[id] || 1
     const palette = {
       city:'#6B5B8A', farmlands:'#84a94b', 'whisper-woods':'#237a46',
@@ -3894,6 +3912,7 @@ function createDayOneStarterFarm() {
     landParcels:[{
       id:'pine-hollow-home-parcel',x:origin,y:origin,
       width:FARM_LAND_PARCEL_SIZE,height:FARM_LAND_PARCEL_SIZE,
+      plotNumber:1,value:45000,region_id:'farmlands',
       purchasedAt:Date.now(),starter:true,world_instance_id:WORLD_INSTANCE_ID,
       owner_id:'local-player',owner_name:'Guest Resident'
     }]
@@ -4322,6 +4341,16 @@ function selectionDescriptor(target) {
   }
   if (target?.kind==='npc') return { kicker:`${REGIONS[regionId]?.name || regionId} · NPC`,name:target.data.name || 'Resident',owner:'Independent resident',region:REGIONS[regionId]?.name || regionId,status:target.data.state || 'Available',value:target.data.type || 'NPC',deed:'Conversation',organization:target.data.gang || 'None',actions:['interact'] }
   if (target?.kind==='farm-animal') return { kicker:'Pine Hollow Farm · Animal',name:target.data.name || target.data.species || 'Farm Animal',owner:currentPlayerOwnerName(),region:'Farmlands',status:target.data.mood || 'Happy',value:`Trust ${target.data.trust || 0}%`,deed:'Farm resident',organization:'Pine Hollow Farm',actions:['interact','portfolio'] }
+  if (target?.kind==='farm-parcel') {
+    const parcel=target.data
+    const placed=state.buildings.filter(item=>isInCurrentRegion(item) && Number(item.tile_x)>=parcel.x && Number(item.tile_x)<parcel.x+parcel.width && Number(item.tile_y)>=parcel.y && Number(item.tile_y)<parcel.y+parcel.height).length
+    return {
+      kicker:'Farmlands · Deeded Farm Plot',name:`${parcel.owner_name || currentPlayerOwnerName()} Farm`,
+      owner:parcel.owner_name || currentPlayerOwnerName(),region:'Farmlands',status:parcel.starter ? 'Starter Land' : 'Owned',
+      value:`${Number(parcel.value || 500).toLocaleString()} FC`,deed:`Plot ${parcel.plotNumber || 1} · ${parcel.width}×${parcel.height}`,
+      organization:'Pine Hollow Farm',extra:`${placed} placed build${placed===1?'':'s'} on this plot.`,actions:['portfolio']
+    }
+  }
   if (target?.kind==='sanctuary-slot') {
     const resident=target.data.resident,slot=target.data.slot
     return { kicker:'Pine Hollow Creature Sanctuary · Habitat Slot',name:resident?.name || 'Open Habitat Slot',owner:currentPlayerOwnerName(),region:'Farmlands',status:resident ? `${slot.mood || 0}% mood` : 'Available',value:resident ? `Trust ${resident.trust || 100}%` : 'No resident',deed:`Sanctuary Slot ${target.data.index+1}`,organization:'Pine Hollow Sanctuary',actions:['interact','portfolio'] }
@@ -4397,6 +4426,8 @@ function worldTargetAt(world) {
     const tx=Math.round(world.x),ty=Math.round(world.y)
     const lot=state.lots.find(item=>item.tile_x===tx && item.tile_y===ty && item.lot_type==='field')
     if (lot) return {kind:'farm-lot',data:lot,x:tx+.3,y:ty+.3,range:1}
+    const parcel=getFarmLandParcels().find(item=>world.x>=item.x && world.x<item.x+item.width && world.y>=item.y && world.y<item.y+item.height)
+    if (parcel) return {kind:'farm-parcel',data:parcel,x:world.x,y:world.y,range:.6}
   }
   const district=state.influenceViewEnabled && state.districts.find(item=>isInCurrentRegion(item) && Math.hypot(world.x-item.center_x,world.y-item.center_y)<item.radius)
   if (district) return {kind:'district',data:district,x:district.center_x,y:district.center_y,range:2}
@@ -4555,16 +4586,25 @@ function getFarmData() {
     : { x:Math.round(data.tile_x)-FARM_LAND_PARCEL_SIZE/2, y:Math.round(data.tile_y)-FARM_LAND_PARCEL_SIZE/2 }
   const rawLandParcels=Array.isArray(data.landParcels) ? data.landParcels.slice(0,FARM_LAND_MAX_PARCELS) : []
   data.landParcels=[]
-  for (const rawParcel of rawLandParcels) {
+  for (const [parcelIndex,rawParcel] of rawLandParcels.entries()) {
     if (!Number.isFinite(Number(rawParcel.x)) || !Number.isFinite(Number(rawParcel.y))) continue
-    const parcel={...rawParcel,x:Number(rawParcel.x),y:Number(rawParcel.y),width:FARM_LAND_PARCEL_SIZE,height:FARM_LAND_PARCEL_SIZE}
+    const parcel={
+      ...rawParcel,x:Number(rawParcel.x),y:Number(rawParcel.y),
+      width:FARM_LAND_PARCEL_SIZE,height:FARM_LAND_PARCEL_SIZE,
+      plotNumber:Number(rawParcel.plotNumber) || parcelIndex+1,
+      value:Number(rawParcel.value) || (rawParcel.starter ? 45000 : 500),
+      region_id:'farmlands',owner_id:rawParcel.owner_id || data.owner_id,
+      owner_name:rawParcel.owner_id==='local-player' ? data.owner_name : (rawParcel.owner_name || data.owner_name)
+    }
     if (data.landParcels.some(existing=>farmRectanglesOverlap(parcel,existing))) continue
     data.landParcels.push(parcel)
   }
   if (!data.landParcels.length) {
     data.landParcels.push({
       id:'pine-hollow-home-parcel',x:data.landOrigin.x,y:data.landOrigin.y,
-      width:FARM_LAND_PARCEL_SIZE,height:FARM_LAND_PARCEL_SIZE,purchasedAt:Date.now(),starter:true
+      width:FARM_LAND_PARCEL_SIZE,height:FARM_LAND_PARCEL_SIZE,
+      plotNumber:1,value:45000,region_id:'farmlands',owner_id:data.owner_id,owner_name:data.owner_name,
+      purchasedAt:Date.now(),starter:true
     })
   }
   farmDataCache=data
@@ -4579,9 +4619,8 @@ function saveFarmData(data) {
 }
 
 function farmLandExpansionCost(data=getFarmData()) {
-  const expansionIndex=Math.max(0,data.landParcels.length-1)
-  if (expansionIndex<FARM_LAND_COSTS.length) return FARM_LAND_COSTS[expansionIndex]
-  return Math.round(FARM_LAND_COSTS.at(-1)*Math.pow(1.35,expansionIndex-FARM_LAND_COSTS.length+1)/50)*50
+  const purchasedPlotCount=Math.max(0,data.landParcels.filter(parcel=>!parcel.starter).length)
+  return Math.round((500*Math.pow(1.35,purchasedPlotCount))/5)*5
 }
 
 function farmLandParcelKey(parcel) {
@@ -4662,8 +4701,13 @@ function validateFarmLandCandidate(x,y) {
   if (parcels.some(parcel=>farmRectanglesOverlap(candidate,parcel))) {
     return {...candidate,valid:false,reason:'Farm land cannot overlap an owned parcel'}
   }
-  if (!isAdjacentFarmLand(candidate,parcels)) {
-    return {...candidate,valid:false,reason:'Expansion must share an edge with owned land'}
+  for (let tx=candidate.x;tx<candidate.x+candidate.width;tx++) {
+    for (let ty=candidate.y;ty<candidate.y+candidate.height;ty++) {
+      const terrain=getTerrainAt(tx,ty,'farmlands')
+      if ([TERRAIN.WATER,TERRAIN.DEEP_WATER,TERRAIN.BUILDING].includes(terrain)) {
+        return {...candidate,valid:false,reason:'Farm plots require clear, dry ground'}
+      }
+    }
   }
   const blockingObject=[...state.buildings,...state.infrastructure].find(item=>
     normalizeRegionId(item.region_id ?? item.region)==='farmlands' &&
@@ -4683,7 +4727,7 @@ function validateFarmLandCandidate(x,y) {
     })
   )
   if (blockingBlock) return {...candidate,valid:false,reason:'Blocked by an existing regional plot'}
-  return {...candidate,valid:true,reason:'Valid adjacent 10×10 expansion'}
+  return {...candidate,valid:true,reason:'Valid claimable 10×10 farm plot'}
 }
 
 function buyFarmLandParcel(x,y) {
@@ -4703,8 +4747,10 @@ function buyFarmLandParcel(x,y) {
     showToast('Not Enough FC',`The next Pine Hollow parcel costs ${cost.toLocaleString()} FC.`)
     return
   }
+  const plotNumber=parcels.length+1
   data.landParcels.push({
     id:`pine-hollow-land-${Date.now()}`, ...candidate,
+    plotNumber,value:cost,region_id:'farmlands',world_instance_id:WORLD_INSTANCE_ID,
     purchasedAt:Date.now(),owner_id:state.userId || 'local-player',owner_name:currentPlayerOwnerName()
   })
   data.propertyValue=Math.max(Number(data.propertyValue) || 45000,45000)+cost
@@ -4716,8 +4762,22 @@ function buyFarmLandParcel(x,y) {
   state.blockMode=false
   document.getElementById('modeIndicator').classList.remove('open')
   document.querySelectorAll('.block-item').forEach(item=>item.classList.remove('selected'))
-  showToast('🌾 Pine Hollow Expanded',`Adjacent land purchased for ${cost.toLocaleString()} FC. Only owned land can hold farm builds.`)
-  createNewsItem('Farm','Pine Hollow Farm expands.',`A new ${FARM_LAND_PARCEL_SIZE}×${FARM_LAND_PARCEL_SIZE} parcel is now under cultivation.`,'farmlands',3)
+  showToast('🌾 Farm Plot Claimed',`Plot ${plotNumber} purchased for ${cost.toLocaleString()} FC. Farm builds must be placed on land you own.`)
+  createNewsItem('Farm','A new Farmlands deed is recorded.',`${currentPlayerOwnerName()} claimed a ${FARM_LAND_PARCEL_SIZE}×${FARM_LAND_PARCEL_SIZE} farm plot.`,'farmlands',3)
+}
+
+function beginFarmLandClaim() {
+  if (state.currentRegion!=='farmlands') return
+  closeAllPanels()
+  state.buildMode=false
+  state.buildType=null
+  state.blockMode=true
+  state.blockType='farm'
+  state.farmLandPreview.visible=false
+  const price=farmLandExpansionCost()
+  document.getElementById('modeIndicator').textContent=`🗺️ Claim 10×10 Farm Plot · ${price.toLocaleString()} FC · choose any clear Farmlands ground`
+  document.getElementById('modeIndicator').classList.add('open')
+  showToast('Claim Farm Land',`Choose any clear 10×10 area in Farmlands. Next deed: ${price.toLocaleString()} FC.`)
 }
 
 function farmXPNeeded(level) {
@@ -4986,15 +5046,10 @@ function showFarmPrompt(desc, action) {
   document.getElementById('farmPromptDesc').textContent = desc
   const btn = document.getElementById('farmPromptBtn')
   if (action === 'farm') {
-    btn.textContent = 'Expand Farm Land'
+    btn.textContent = 'Claim Farm Plot'
     btn.onclick = () => {
       el.classList.remove('show')
-      prepareRegionalBlockPanel()
-      openPanel('blockPanel')
-      setTimeout(() => {
-        const farmItem = document.querySelector('.block-item[data-type="farm"]')
-        if (farmItem) farmItem.click()
-      }, 200)
+      beginFarmLandClaim()
     }
   } else if (action === 'plant') {
     btn.textContent = 'Plant a Crop'
@@ -5370,6 +5425,139 @@ const SANCTUARY_UPGRADES = {
   neon:{ name:'Neon Shelter', icon:'🟣', cost:220, desc:'Matches city, nightlife, and industrial creatures.', habitat:'neon' },
   feeding:{ name:'Feeding Station', icon:'🥕', cost:140, desc:'Slows mood loss and makes care more effective.' },
   visitorPath:{ name:'Visitor Path', icon:'🥾', cost:200, desc:'Adds visitor appeal and improves tip income.' }
+}
+
+const FARM_CREATURE_HABITATS={
+  'woodland-habitat':['woodland'],'wetland-habitat':['wetland','coast'],
+  'night-habitat':['night'],'meadow-habitat':['meadow','farm'],
+  'cave-habitat':['cave','mountain'],'neon-habitat':['neon','city','industrial'],
+  'quarantine-pen':['quarantine'],'tree-row':['tree','woodland']
+}
+
+const CREATURE_HABITAT_PREFERENCES={
+  'neon-fox':['woodland','night'],'echo-owl':['woodland','night'],
+  'lantern-deer':['meadow','woodland'],'static-crow':['tree','city','woodland'],
+  'moss-hound':['woodland','cave']
+}
+
+const CREATURE_PRODUCT_TYPES={
+  'neon-fox':'glowDust','echo-owl':'feathers','lantern-deer':'glowDust',
+  'static-crow':'feathers','moss-hound':'mushrooms'
+}
+
+function creatureHabitatPreferences(creature) {
+  const id=creature?.creatureId || creature?.id
+  if (CREATURE_HABITAT_PREFERENCES[id]) return CREATURE_HABITAT_PREFERENCES[id]
+  return {
+    'whisper-woods':['woodland','meadow'],city:['city','neon'],farmlands:['farm','meadow'],
+    coast:['wetland','coast'],mountains:['mountain','cave'],
+    'purple-pulse':['neon','night'],'iron-district':['industrial','neon']
+  }[creature?.region] || ['meadow']
+}
+
+function farmCreatureHabitats() {
+  return state.buildings.filter(item=>isInCurrentRegion(item) && FARM_CREATURE_HABITATS[item.object_type || item.building_type])
+}
+
+function farmHabitatMatchesCreature(habitat,creature) {
+  const tags=FARM_CREATURE_HABITATS[habitat?.object_type || habitat?.building_type] || []
+  return creatureHabitatPreferences(creature).some(tag=>tags.includes(tag))
+}
+
+function farmHabitatResident(habitat) {
+  return habitat?.residentCreatureId ? state.creatureCollection?.[habitat.residentCreatureId] : null
+}
+
+function assignCreatureToFarmHabitat(creatureId,habitatId=null) {
+  const creature=state.creatureCollection?.[creatureId]
+  if (!creature || !(creature.trusted || creature.trust>=100)) return false
+  const habitats=farmCreatureHabitats()
+  const habitat=habitatId
+    ? habitats.find(item=>String(item.id)===String(habitatId) && !item.residentCreatureId && farmHabitatMatchesCreature(item,creature))
+    : habitats.find(item=>!item.residentCreatureId && farmHabitatMatchesCreature(item,creature))
+  if (!habitat) return false
+  if (creature.farmHabitatId) {
+    const old=habitats.find(item=>String(item.id)===String(creature.farmHabitatId))
+    if (old) old.residentCreatureId=null
+  }
+  habitat.residentCreatureId=creatureId
+  creature.farmHabitatId=habitat.id
+  creature.farmResident=true
+  creature.farmOfferPending=false
+  creature.habitatMood=farmHabitatMatchesCreature(habitat,creature) ? 82 : 55
+  creature.lastFarmCareAt=Date.now()
+  creature.productReadyAt=Date.now()+60000
+  saveCreatureCollection()
+  saveRegionalObjects()
+  return true
+}
+
+function offerCreatureFarmHome(creatureId) {
+  const creature=state.creatureCollection?.[creatureId]
+  if (!creature) return
+  if (assignCreatureToFarmHabitat(creatureId)) {
+    showToast(`${creature.icon || '🐾'} ${creature.name} Comes Home`,'A matching farm habitat is ready.')
+    createNewsItem('Wildlife',`${creature.name} arrives at Pine Hollow Farm.`,'A trusted creature accepted a peaceful matching habitat.','farmlands',4)
+  } else {
+    creature.farmOfferPending=true
+    saveCreatureCollection()
+    showToast('Collection Updated','Build a matching habitat on your farm to bring this creature home.')
+  }
+  if (encounterEngine.completed) renderEncounterUI()
+}
+
+function careForFarmCreature(creatureId,action) {
+  const creature=state.creatureCollection?.[creatureId]
+  const habitat=farmCreatureHabitats().find(item=>String(item.id)===String(creature?.farmHabitatId))
+  if (!creature || !habitat) return
+  const farm=getFarmData()
+  if (action==='feed') {
+    const crop=Object.keys(CROP_TYPES).find(key=>(farm.inventory[key] || 0)>0)
+    if (!crop) { showToast('No Feed Available','Grow crops before feeding this habitat resident.');return }
+    farm.inventory[crop]--
+    creature.habitatMood=Math.min(100,(creature.habitatMood || 70)+12)
+    creature.trust=Math.min(100,(creature.trust || 100)+1)
+    creature.productReadyAt=Math.min(creature.productReadyAt || Infinity,Date.now()+45000)
+    showToast('Creature Fed',`${creature.name} enjoyed ${CROP_TYPES[crop].name.toLowerCase()}.`)
+  } else if (action==='care') {
+    creature.habitatMood=Math.min(100,(creature.habitatMood || 70)+9)
+    creature.lastFarmCareAt=Date.now()
+    awardSkillXP('creatureKeeper',5)
+    showToast('Creature Cared For',`${creature.name} looks more comfortable.`)
+  } else if (action==='observe') {
+    creature.bondXP=(creature.bondXP || 0)+4
+    awardSkillXP('explorer',3)
+    showToast('Quiet Observation',`${creature.name} showed you something new.`)
+  } else if (action==='move') {
+    const next=farmCreatureHabitats().find(item=>!item.residentCreatureId && String(item.id)!==String(habitat.id) && farmHabitatMatchesCreature(item,creature))
+    if (!next) { showToast('No Open Match','Build another matching habitat first.');return }
+    habitat.residentCreatureId=null
+    assignCreatureToFarmHabitat(creatureId,next.id)
+    showToast('Habitat Changed',`${creature.name} moved safely.`)
+  } else if (action==='release') {
+    habitat.residentCreatureId=null
+    creature.farmResident=false
+    creature.farmHabitatId=null
+    creature.releasedAt=Date.now()
+    showToast('Creature Released',`${creature.name} returned peacefully to the wild and remains in your Trail Journal.`)
+  } else if (action==='collect-product') {
+    if ((creature.productReadyAt || Infinity)>Date.now()) return
+    farm.creatureProducts=farm.creatureProducts || {}
+    const product=CREATURE_PRODUCT_TYPES[creatureId] || 'visitorTips'
+    if (product==='visitorTips') {
+      state.coins+=8
+      document.getElementById('statCoins').textContent=state.coins
+      showToast('Visitor Tips Collected','+8 FC')
+    } else {
+      farm.creatureProducts[product]=(farm.creatureProducts[product] || 0)+1
+      showToast('Creature Product Collected',`+1 ${product.replace(/([A-Z])/g,' $1').toLowerCase()}`)
+    }
+    creature.productReadyAt=Date.now()+5*60*1000
+  }
+  saveFarmData(farm)
+  saveCreatureCollection()
+  saveRegionalObjects()
+  renderFarmHub()
 }
 
 function trustedSanctuaryCreatures() {
@@ -5752,6 +5940,7 @@ function animalProfileHtml(data, animal, now) {
 
 function openFarmHub(tab = activeFarmTab) {
   if (state.currentRegion !== 'farmlands') return
+  closeAllPanels()
   activeFarmTab = tab || 'today'
   const hub = document.getElementById('farmHub')
   hub.classList.remove('hidden')
@@ -5781,9 +5970,36 @@ function renderFarmHub() {
   document.querySelectorAll('.farm-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.farmTab === activeFarmTab))
   const body = document.getElementById('farmHubBody')
   const nextTask=farmNextTask(data)
-  let html = `<div class="farm-next"><b>WHAT SHOULD I DO NOW?</b><span>${nextTask.text}</span><button data-farm-action="${nextTask.action}">${nextTask.label}</button></div>`
+  let html = `<div class="farm-next"><b>WHAT SHOULD I DO NOW?</b><span>${nextTask.text}</span><button data-farm-action="${nextTask.action}">${nextTask.label}</button></div>
+    <div class="farm-next"><b>OWNED LAND RULE</b><span>Farm builds must be placed on land you own.</span></div>`
 
-  if (activeFarmTab === 'today') {
+  if (activeFarmTab === 'build') {
+    html += `<div class="farm-today-hero">
+      <section class="farm-morning-card"><div class="farm-morning-kicker">FARMLANDS BUILD MENU</div><h2>Shape the farm you own.</h2><p>Claim land first, then place crops, animal areas, production buildings, sanctuary habitats, and useful decorations.</p><button class="farm-action gold" data-farm-action="open-farm-build">Open Build Menu</button></section>
+      <section class="farm-daily-card"><div class="farm-daily-kicker">NEXT LAND DEED</div><h2 style="color:#f4ffe5">${farmLandExpansionCost(data).toLocaleString()} FC</h2><p>10×10 tiles · may be claimed anywhere on clear Farmlands ground.</p><button class="farm-action" data-farm-action="claim-land">Claim Farm Plot</button></section>
+    </div>`
+  } else if (activeFarmTab === 'land') {
+    const parcels=getFarmLandParcels()
+    html += `<div class="farm-today-hero"><section class="farm-morning-card"><div class="farm-morning-kicker">MY FARM LAND</div><h2>${parcels.length} owned plot${parcels.length===1?'':'s'}</h2><p>Plots never overlap. New deeds may be claimed anywhere valid in Farmlands.</p><button class="farm-action gold" data-farm-action="claim-land">Claim 10×10 Plot · ${farmLandExpansionCost(data).toLocaleString()} FC</button></section></div><div class="farm-card-grid">${parcels.map((parcel,index)=>{
+      const placed=state.buildings.filter(item=>isInCurrentRegion(item) && Number(item.tile_x)>=parcel.x && Number(item.tile_x)<parcel.x+parcel.width && Number(item.tile_y)>=parcel.y && Number(item.tile_y)<parcel.y+parcel.height).length
+      return `<article class="farm-card"><div><div class="farm-card-icon">🗺️</div><h3>${safeText(parcel.owner_name || currentPlayerOwnerName())} Farm</h3><p>Plot ${parcel.plotNumber || index+1} · ${parcel.width}×${parcel.height} · ${placed} placed builds</p></div><div class="farm-card-meta">${Number(parcel.value || 500).toLocaleString()} FC · ${parcel.starter?'Starter land':'Owned deed'}</div></article>`
+    }).join('')}</div>`
+  } else if (activeFarmTab === 'habitats') {
+    const habitats=farmCreatureHabitats()
+    const trusted=trustedSanctuaryCreatures()
+    const unassigned=trusted.filter(creature=>!creature.farmResident)
+    const breedingPen=state.buildings.find(item=>isInCurrentRegion(item) && (item.object_type || item.building_type)==='breeding-pen')
+    html += `<div class="farm-today-hero"><section class="farm-morning-card"><div class="farm-morning-kicker">CREATURE RANCHING</div><h2>${habitats.length} built habitat${habitats.length===1?'':'s'}</h2><p>Feed, care, observe, move, release, and collect products or visitor tips.</p><button class="farm-action gold" data-farm-action="open-farm-build">Build Habitat</button></section>
+      <section class="farm-daily-card"><div class="farm-daily-kicker">BREEDING FOUNDATION</div><h2 style="color:#f4ffe5">${breedingPen?'Pen built':'Coming soon'}</h2><p>${breedingPen?'Requires two compatible trusted creatures. Compatibility hooks are ready; genetics remain locked.':'Build a Breeding Pen now to prepare for the later system.'}</p></section></div>
+      <div class="sanctuary-grid">${habitats.length ? habitats.map(habitat=>{
+        const resident=farmHabitatResident(habitat),type=BUILDING_TYPES[habitat.object_type || habitat.building_type]
+        if (!resident) return `<article class="sanctuary-slot empty"><div><div class="sanctuary-creature-icon">${type?.icon || '🌿'}</div><b>${safeText(type?.name || 'Habitat')}</b><br><small>Open · accepts ${FARM_CREATURE_HABITATS[habitat.object_type || habitat.building_type].join(' / ')}</small></div></article>`
+        const ready=(resident.productReadyAt || Infinity)<=now
+        const matched=farmHabitatMatchesCreature(habitat,resident)
+        return `<article class="sanctuary-slot"><div class="sanctuary-creature-head"><div class="sanctuary-creature-icon">${resident.icon || '🐾'}</div><div><h3>${safeText(resident.name)}</h3><small>${safeText(type?.name || 'Habitat')} · ${matched?'matched':'mismatch'}</small></div></div><div class="sanctuary-meter"><span style="width:${Math.round(resident.habitatMood || 70)}%"></span></div><div class="sanctuary-details"><span>Mood ${Math.round(resident.habitatMood || 70)}%</span><span>Trust ${Math.round(resident.trust || 100)}%</span><span>Prefers ${creatureHabitatPreferences(resident).join(' / ')}</span></div><div class="sanctuary-actions"><button class="farm-action" data-farm-action="creature-feed:${resident.creatureId}">Feed</button><button class="farm-action" data-farm-action="creature-care:${resident.creatureId}">Care</button><button class="farm-action" data-farm-action="creature-observe:${resident.creatureId}">Observe</button><button class="farm-action" data-farm-action="creature-move:${resident.creatureId}">Move Habitat</button><button class="farm-action" data-farm-action="creature-release:${resident.creatureId}">Release</button><button class="farm-action gold" data-farm-action="creature-product:${resident.creatureId}" ${ready?'':'disabled'}>${ready?'Collect Product':'Product Resting'}</button></div></article>`
+      }).join('') : '<div class="farm-empty">No creature habitats built yet. Open Build and choose Sanctuary Habitats.</div>'}</div>
+      <h3 style="color:#e9d5ff;margin:.35rem 0 0">Trusted Creatures Waiting for a Home</h3><div class="farm-card-grid">${unassigned.length ? unassigned.map(creature=>farmCard(creature.name,creature.icon || '🐾',`Prefers ${creatureHabitatPreferences(creature).join(' / ')}`,'Stored safely in collection',`habitat-assign:${creature.creatureId || creature.id}`,'Bring to Matching Habitat',!farmCreatureHabitats().some(h=>!h.residentCreatureId && farmHabitatMatchesCreature(h,creature)),'ready')).join('') : '<div class="farm-empty">No trusted creatures are waiting.</div>'}</div>`
+  } else if (activeFarmTab === 'today') {
     const ready = getFarmReadyCounts(data,farmSessionStartedAt)
     const goals = ensureFarmDaily(data)
     const eco=farmEcosystemBonuses()
@@ -6287,7 +6503,16 @@ function claimFarmSeeds() {
 
 function handleFarmHubAction(action) {
   const [type,a,b] = action.split(':')
-  if (type === 'plant') plantFarmField(a)
+  if (type === 'open-farm-build') { closeFarmHub();openPanel('buildPanel') }
+  else if (type === 'claim-land') { closeFarmHub();beginFarmLandClaim() }
+  else if (type === 'habitat-assign') { if (assignCreatureToFarmHabitat(a)) { showToast('Creature Comes Home','Assigned to a matching habitat.');renderFarmHub() } }
+  else if (type === 'creature-feed') careForFarmCreature(a,'feed')
+  else if (type === 'creature-care') careForFarmCreature(a,'care')
+  else if (type === 'creature-observe') careForFarmCreature(a,'observe')
+  else if (type === 'creature-move') careForFarmCreature(a,'move')
+  else if (type === 'creature-release') careForFarmCreature(a,'release')
+  else if (type === 'creature-product') careForFarmCreature(a,'collect-product')
+  else if (type === 'plant') plantFarmField(a)
   else if (type === 'harvest') harvestFarmField(a)
   else if (type === 'produce') startFarmProduction(a)
   else if (type === 'collect-machine') collectFarmProduction(a,b)
@@ -7691,8 +7916,10 @@ function renderEncounterUI() {
     : `Turn ${encounterEngine.turn} · Choose an action`
   document.getElementById('encounterOutcomeLog').innerHTML = encounterEngine.log.map(entry=>
     `<div class="ue-log-line">${entry.strong ? `<strong>${entry.strong}:</strong> ` : ''}${entry.message}</div>`).join('')
+  const trustedCreature=encounterEngine.type==='creature' && encounterEngine.completed && encounterEngine.status>=100
+  const collected=trustedCreature ? state.creatureCollection?.[encounterEngine.targetId] : null
   const actions = encounterEngine.completed
-    ? [{ id:'close', icon:'✓', label:'Close' }]
+    ? [...(trustedCreature && !collected?.farmResident ? [{ id:'bring-home', icon:'🏡', label:'Offer Farm Home' }] : []),{ id:'close', icon:'✓', label:'Close' }]
     : ENCOUNTER_ACTIONS[encounterEngine.type]
   document.getElementById('encounterActions').innerHTML = actions.map(action=>
     `<button class="encounter-btn ${action.back ? 'back' : ''}" data-encounter-action="${action.id}">${action.icon}<br>${action.label}</button>`).join('')
@@ -7700,6 +7927,7 @@ function renderEncounterUI() {
 
 function chooseEncounterAction(action) {
   if (action === 'close') { closeEncounterPanel(); return }
+  if (action === 'bring-home') { offerCreatureFarmHome(encounterEngine.targetId); return }
   if (!encounterEngine.active || encounterEngine.completed) return
   resolveEncounterTurn(action)
 }
@@ -7749,8 +7977,8 @@ function resolveCreatureEncounterAction(action) {
   awardSkillXP('explorer',2)
   checkTrustMilestone(encounterEngine.targetId,encounterEngine.status)
   if (encounterEngine.status >= 100 && !encounterEngine.completed) {
-    encounterDialogue(`${creature.name} chooses trust. This relationship can continue beyond one encounter.`)
-    endEncounter({ status:'trusted', major:true, message:`${creature.name} now trusts you.` })
+    encounterDialogue(`${creature.name} chooses trust. It has been added to your collection; you may offer it a matching home at Pine Hollow Farm.`)
+    endEncounter({ status:'trusted', major:true, message:`${creature.name} joined your collection and may be invited to the farm.` })
   }
 }
 function resolveNpcEncounterAction(action) {
@@ -8165,12 +8393,13 @@ function checkTrustMilestone(creatureId, trust) {
   }
   const prevTrust = state.creatureCollection[creatureId].trust || 0
   state.creatureCollection[creatureId].trust = trust
+  state.creatureCollection[creatureId].habitatPreferences=creatureHabitatPreferences(state.creatureCollection[creatureId])
   awardSkillXP('creatureKeeper', Math.max(0, trust - prevTrust))
   // Check if trust reached 100
   if (trust >= 100 && !state.creatureCollection[creatureId].trusted) {
     state.creatureCollection[creatureId].trusted = true
     state.creatureCollection[creatureId].sanctuaryEligible = true
-    showToast(creature.name + ' trusts you!', 'It may follow you home when the Sanctuary opens')
+    showToast(creature.name + ' trusts you!', 'Added to collection. Offer a matching farm habitat when ready.')
     if (!encounterEngine.active) {
       const regionId=creature.region || state.currentRegion
       createNewsItem('Wildlife', creature.name + ' trusts a Faceless Animal resident.', `The bond began in ${REGIONS[regionId]?.name || 'the world'}; the creature may be ready for a future Sanctuary home.`, regionId, 4)
@@ -8233,17 +8462,18 @@ function initWWAudio() {
     src.start()
     wwAudioNodes.push({ src, gain, type: 'wind' })
   } catch {}
-  // Crickets (high-pitched pulse)
+  // Soft crickets. Keep this sine-based and extremely quiet; the previous
+  // 3 kHz sawtooth produced a harsh tone on phone speakers.
   try {
     const osc = wwAudioCtx.createOscillator()
-    osc.type = 'sawtooth'
-    osc.frequency.value = 3000
+    osc.type = 'sine'
+    osc.frequency.value = 1450
     const gain = wwAudioCtx.createGain()
-    gain.gain.value = 0.008
+    gain.gain.value = 0.0012
     const lfo = wwAudioCtx.createOscillator()
-    lfo.frequency.value = 2.5
+    lfo.frequency.value = 0.7
     const lfoGain = wwAudioCtx.createGain()
-    lfoGain.gain.value = 0.006
+    lfoGain.gain.value = 0.0007
     lfo.connect(lfoGain).connect(gain.gain)
     osc.connect(gain).connect(wwAudioCtx.destination)
     osc.start()
@@ -9510,8 +9740,12 @@ function drawBuildPreview() {
 function drawFarmPlacedObject(building,s) {
   const typeId=building.object_type || building.building_type
   const farmRowTypes=new Set(['crop-row','field-plot','berry-field','vineyard','flower-field'])
-  const farmHabitatTypes=new Set(['duck-pond','cow-pasture','sheep-meadow','pig-pen','goat-hillside','horse-stable','bee-box','rabbit-hutch'])
-  const groundTypes=new Set([...farmRowTypes,...farmHabitatTypes,'fence','pond','orchard','orchard-row','farm-decoration','flower-garden','bird-house','stone-wall','windmill'])
+  const farmHabitatTypes=new Set([
+    'duck-pond','cow-pasture','sheep-meadow','pig-pen','goat-hillside','horse-stable','bee-box','rabbit-hutch',
+    'woodland-habitat','wetland-habitat','night-habitat','meadow-habitat','cave-habitat','neon-habitat',
+    'breeding-pen','quarantine-pen','farm-feed-station'
+  ])
+  const groundTypes=new Set([...farmRowTypes,...farmHabitatTypes,'fence','pond','orchard','orchard-row','tree-row','farm-decoration','flower-garden','bird-house','stone-wall','windmill'])
   if (!groundTypes.has(typeId)) return false
   const z=state.camera.zoom
   const hw=TILE_W*z*.44
@@ -9600,6 +9834,11 @@ function drawFarmPlacedObject(building,s) {
     const icon=BUILDING_TYPES[typeId]?.icon || '🐾'
     ctx.font=`${Math.max(12,16*z)}px sans-serif`;ctx.textAlign='center'
     ctx.fillText(icon,s.x-4*z,s.y-4*z);ctx.fillText(icon,s.x+7*z,s.y+3*z)
+    const resident=farmHabitatResident(building)
+    if (resident) {
+      ctx.font=`${Math.max(14,20*z)}px sans-serif`
+      ctx.fillText(resident.icon || '🐾',s.x,s.y-16*z)
+    }
   } else if (typeId === 'fence') {
     const points=[[-hw*.72,hh*.18],[0,-hh*.18],[hw*.72,-hh*.54]]
     ctx.strokeStyle='#8b5e34'; ctx.lineWidth=Math.max(2,2.6*z)
@@ -9616,7 +9855,7 @@ function drawFarmPlacedObject(building,s) {
     ctx.beginPath(); ctx.ellipse(s.x-3*z,s.y-2*z,hw*.42,hh*.24,-.1,0,Math.PI*2)
     ctx.fillStyle='rgba(103,232,249,.2)'; ctx.fill()
     ctx.font=`${Math.max(8,10*z)}px sans-serif`; ctx.textAlign='center'; ctx.fillText('🌿',s.x+hw*.45,s.y)
-  } else if (typeId === 'orchard' || typeId === 'orchard-row') {
+  } else if (typeId === 'orchard' || typeId === 'orchard-row' || typeId === 'tree-row') {
     const cells=Math.max(1,Number(building.footprint) || Number(BUILDING_TYPES[typeId]?.footprint) || 1)
     for (let ox=0;ox<cells;ox++) for (let oy=0;oy<cells;oy++) {
       const cell=building.tile_x == null ? s : worldToScreen(building.tile_x+ox,building.tile_y+oy)
@@ -9630,7 +9869,9 @@ function drawFarmPlacedObject(building,s) {
     orchardTrees.forEach(({x:px,y:py},i)=>{
       ctx.fillStyle='#6b4423'; ctx.fillRect(px-1.4*z,py-8*z,2.8*z,9*z)
       ctx.beginPath(); ctx.arc(px,py-10*z,5.7*z,0,Math.PI*2); ctx.fillStyle=i%2 ? '#3f7d20' : '#4d8b26'; ctx.fill()
-      ctx.beginPath(); ctx.arc(px+(i%3-1)*2*z,py-11*z,1.15*z,0,Math.PI*2); ctx.fillStyle='#ef4444'; ctx.fill()
+      if (typeId!=='tree-row') {
+        ctx.beginPath(); ctx.arc(px+(i%3-1)*2*z,py-11*z,1.15*z,0,Math.PI*2); ctx.fillStyle='#ef4444'; ctx.fill()
+      }
     })
   } else if (typeId === 'bee-box') {
     diamond(s,'rgba(101,126,46,.15)',null)
@@ -11241,25 +11482,22 @@ function drawFarmLandParcels() {
         ctx.beginPath();ctx.moveTo(corner.x,corner.y+2*z);ctx.lineTo(corner.x,corner.y-7*z);ctx.stroke()
         ctx.fillStyle='rgba(223,181,116,.78)';ctx.fillRect(corner.x-1.4*z,corner.y-8*z,2.8*z,2*z)
       }
+      const parcelCenter={x:parcel.x+parcel.width/2,y:parcel.y+parcel.height/2}
+      const selected=state.selectedWorldTarget?.kind==='farm-parcel' && state.selectedWorldTarget.data.id===parcel.id
+      if ((z>.72 && Math.hypot(state.player.x-parcelCenter.x,state.player.y-parcelCenter.y)<24) || selected) {
+        const sign=worldToScreen(parcel.x+.7,parcel.y+.7)
+        const owner=`${parcel.owner_name || currentPlayerOwnerName()} Farm`
+        ctx.font=`800 ${Math.max(7,8*z)}px Inter`;ctx.textAlign='left'
+        const width=ctx.measureText(owner).width+12*z
+        ctx.fillStyle='rgba(8,8,12,.82)';ctx.fillRect(sign.x-3*z,sign.y-18*z,width,12*z)
+        ctx.strokeStyle='rgba(192,132,252,.8)';ctx.strokeRect(sign.x-3*z,sign.y-18*z,width,12*z)
+        ctx.fillStyle='#e9d5ff';ctx.fillText(`⌂ ${owner}`,sign.x+2*z,sign.y-9*z)
+      }
       ctx.restore()
     }
   }
   if (!state.blockMode || state.blockType!=='farm' || z<.38) return
-  const owned=new Set(parcels.map(farmLandParcelKey)),candidates=new Map()
-  for (const parcel of parcels) {
-    const width=parcel.width || FARM_LAND_PARCEL_SIZE,height=parcel.height || FARM_LAND_PARCEL_SIZE
-    for (const candidate of [
-      {x:parcel.x-width,y:parcel.y,width,height},{x:parcel.x+width,y:parcel.y,width,height},
-      {x:parcel.x,y:parcel.y-height,width,height},{x:parcel.x,y:parcel.y+height,width,height}
-    ]) if (!owned.has(farmLandParcelKey(candidate))) candidates.set(farmLandParcelKey(candidate),candidate)
-  }
   const price=farmLandExpansionCost()
-  for (const candidate of [...candidates.values()].slice(0,16)) {
-    polygon(candidate,'rgba(250,204,21,.035)','rgba(250,204,21,.5)',1.2)
-    const center=worldToScreen(candidate.x+candidate.width/2,candidate.y+candidate.height/2)
-    ctx.font=`800 ${Math.max(8,9*z)}px Inter`;ctx.textAlign='center';ctx.fillStyle='rgba(254,240,138,.85)'
-    ctx.fillText(`EXPAND · ${price.toLocaleString()} FC`,center.x,center.y)
-  }
   const preview=state.farmLandPreview
   if (preview?.visible) {
     const color=preview.valid ? 'rgba(74,222,128,.28)' : 'rgba(248,113,113,.3)'
@@ -11999,8 +12237,9 @@ function isMobileUX() {
 
 const MOBILE_REGION_ACTIONS = {
   farmlands:[
-    ['🌾','Farm','farm-today'],['🐓','Animals','farm-animals'],['🚚','Orders','farm-orders'],
-    ['📦','Storage','farm-storage'],['🌳','Sanctuary','farm-sanctuary'],['🏙️','City','travel-city']
+    ['🛠️','Build','farm-build'],['🗺️','Land','farm-land'],['🐓','Animals','farm-animals'],
+    ['🌿','Habitats','farm-habitats'],['📦','Storage','farm-storage'],['🚚','Orders','farm-orders'],
+    ['🌳','Sanctuary','farm-sanctuary']
   ],
   city:[
     ['🏗️','Build','build'],['🏡','Property','property'],['💼','Jobs','jobs'],['📰','Signal','signal']
@@ -12024,8 +12263,9 @@ function updateMobileActionBar() {
 
 function handleMobileAction(action) {
   if (action.startsWith('farm-')) {
-    const tab={ 'farm-today':'today','farm-animals':'animals','farm-orders':'orders','farm-storage':'storage','farm-sanctuary':'sanctuary' }[action]
-    if (tab) openFarmHub(tab)
+    const tab={ 'farm-today':'today','farm-land':'land','farm-animals':'animals','farm-habitats':'habitats','farm-orders':'orders','farm-storage':'storage','farm-sanctuary':'sanctuary' }[action]
+    if (action==='farm-build') { closeFarmHub();openPanel('buildPanel') }
+    else if (tab) openFarmHub(tab)
   } else if (action === 'build') openPanel('buildPanel')
   else if (action === 'property') {
     const owned=state.buildings.find(building=>(building.owner_id === state.userId || building._regionalLocal) && isInCurrentRegion(building))
@@ -12835,7 +13075,7 @@ document.addEventListener('click', (e) => {
   state.blockType = type
   showToast(type==='farm' ? 'Pine Hollow Expansion' : 'Urban DNA',
     type==='farm'
-      ? `Choose a highlighted parcel touching your land · ${farmLandExpansionCost().toLocaleString()} FC`
+      ? `Choose any clear 10×10 Farmlands area · ${farmLandExpansionCost().toLocaleString()} FC`
       : `Click on the map to zone a ${type} block`)
   document.getElementById('blockPanel').classList.add('panel-hidden')
   document.getElementById('blockPanel').classList.remove('open')
@@ -12939,7 +13179,11 @@ function getRegionalHealth(regionId = state.currentRegion) {
 
 function populateBuildGrid() {
   const grid = document.getElementById('buildGrid')
-  const catalog = REGIONAL_BUILD_CATALOGS[state.currentRegion] || []
+  const sourceCatalog = REGIONAL_BUILD_CATALOGS[state.currentRegion] || []
+  const farmCategoryOrder=['land','crop','animal','machine','storage','business','sanctuary','decoration','infrastructure']
+  const catalog=state.currentRegion==='farmlands'
+    ? [...sourceCatalog].sort((a,b)=>farmCategoryOrder.indexOf(a[5])-farmCategoryOrder.indexOf(b[5]))
+    : sourceCatalog
   const region = REGIONS[state.currentRegion]
   const meta = REGIONAL_BUILD_META[state.currentRegion] || { rule:'Region-specific development.', health:[] }
   const health = getRegionalHealth()
@@ -12950,7 +13194,7 @@ function populateBuildGrid() {
     <div class="build-health-row">${Object.entries(health).map(([name,value]) => `<span class="build-health-chip">${name} ${Math.round(value)}%</span>`).join('')}</div>
   `
   grid.innerHTML = ''
-  const farmCategoryLabels={crop:'🌾 Crops & Growing',animal:'🐓 Animal Habitats',storage:'📦 Storage',machine:'⚙️ Production Buildings',business:'🧺 Farm Commerce',decoration:'🌻 Useful Decorations',infrastructure:'🟫 Paths'}
+  const farmCategoryLabels={land:'🗺️ Land',crop:'🌾 Crops',animal:'🐓 Animals',storage:'📦 Storage',machine:'⚙️ Production',business:'🧺 Farm Commerce',sanctuary:'🌿 Sanctuary Habitats',decoration:'🌻 Decorations',infrastructure:'🟫 Paths'}
   let previousCategory=null
   for (const [type] of catalog) {
     const info = BUILDING_TYPES[type]
@@ -12966,23 +13210,28 @@ function populateBuildGrid() {
     const item = document.createElement('div')
     item.className = 'build-item'
     item.dataset.footprint = `${info.footprint}×${info.footprint}`
+    const displayCost=type==='farm-plot' ? farmLandExpansionCost() : info.cost
     const incomeText = zoneInfo ? 'Zoned land · income locked until active' : (info.income > 0 ? `Income: ${info.income}/min` : 'No Income')
     const incomeClass = zoneInfo ? 'build-income-none' : (info.income > 0 ? 'build-income' : 'build-income-none')
     item.innerHTML = `
       <div class="build-icon" style="color:${info.color}">${info.icon}</div>
       <div class="build-name">${info.name}</div>
-      <div class="build-cost">${info.cost} coins</div>
+      <div class="build-cost">${displayCost} FC</div>
       <div class="${incomeClass}">${incomeText}</div>
       <div class="build-desc">${info.desc}</div>
       ${zoneInfo ? `<div class="build-desc"><b>${zoneInfo.zone}</b><br>Needs: ${zoneInfo.needs}<br>${zoneInfo.result}</div>` : ''}
       <div class="build-requirement">${region?.name || state.currentRegion} only</div>
     `
     item.addEventListener('click', () => {
+      if (type==='farm-plot') {
+        beginFarmLandClaim()
+        return
+      }
       document.querySelectorAll('.build-item').forEach(i => i.classList.remove('selected'))
       item.classList.add('selected')
       state.buildType = type
       state.buildPreview.visible = false
-      showToast('Build Mode', `${info.name} · ${info.footprint}×${info.footprint} · ${info.cost} FC`)
+      showToast('Build Mode', `${info.name} · ${info.footprint}×${info.footprint} · ${displayCost} FC`)
       document.getElementById('buildPanel').classList.add('panel-hidden')
       document.getElementById('buildPanel').classList.remove('open')
       document.getElementById('panelBackdrop').classList.remove('open')
@@ -14107,6 +14356,10 @@ function onInteractBuildObject(object) {
     showFarmPlantOverlay(object.tile_x,object.tile_y)
     return true
   }
+  if (FARM_CREATURE_HABITATS[typeId] || typeId==='breeding-pen' || typeId==='farm-feed-station') {
+    openFarmHub('habitats')
+    return true
+  }
   if (farmTabs[typeId]) {
     openFarmHub(farmTabs[typeId])
     showToast(BUILDING_TYPES[typeId].name,'Production panel opened.')
@@ -14171,6 +14424,9 @@ async function placeBuildingAt(x, y) {
     condition:100,
     status:'active'
   }
+  if (typeId==='breeding-pen') {
+    object.compatibilityHook={requiresTrustedCreatures:2,compatibleSpeciesRequired:true,geneticsEnabled:false}
+  }
   normalizeOwnershipMetadata(object)
   const stagedCityBuild=state.currentRegion === 'city' && PLAYER_CITY_ZONE_TYPES.has(typeId)
   if (stagedCityBuild) {
@@ -14191,6 +14447,14 @@ async function placeBuildingAt(x, y) {
   document.getElementById('statCoins').textContent = state.coins
   connectFarmBuildToGameplay(typeId)
   saveRegionalObjects()
+  if (state.currentRegion==='farmlands' && FARM_CREATURE_HABITATS[typeId]) {
+    const waiting=Object.values(state.creatureCollection || {}).find(creature=>creature.farmOfferPending && !creature.farmResident && farmHabitatMatchesCreature(object,creature))
+    if (waiting && assignCreatureToFarmHabitat(waiting.creatureId || waiting.id,object.id)) {
+      waiting.farmOfferPending=false
+      saveCreatureCollection()
+      showToast(`${waiting.icon || '🐾'} ${waiting.name} Comes Home`,'The new habitat is a match.')
+    }
+  }
   showToast(
     cityConstructionStarted ? `${type.icon} ${type.name} Construction Started` : stagedCityBuild ? `${type.icon} ${type.name} Zoned` : `${type.icon} ${type.name} Built`,
     cityConstructionStarted
@@ -16344,7 +16608,7 @@ function completeTravel(targetRegion) {
     activeFarmTab = 'today'
     showToast('Pine Hollow Farm', 'The farm is ready. Open Farm Menu when you need it.')
     setTimeout(() => {
-      showFarmPrompt('Your starter land is owned. Expand only into parcels touching Pine Hollow.', 'farm')
+      showFarmPrompt('Your starter land is owned. Claim another clear 10×10 plot anywhere in Farmlands.', 'farm')
     }, 1500)
   } else if (targetRegion === 'whisper-woods') {
     showToast('Entered Whisper Woods', 'Old Oak Trail is quiet. Look for small discoveries and signs.')
