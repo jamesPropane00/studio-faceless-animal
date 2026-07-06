@@ -129,7 +129,7 @@
     }
     .action-btn:active{transform:scale(0.9);background:rgba(124,58,237,0.3)}
     .action-btn.primary-action{border-color:rgba(167,139,250,0.5)}
-    .mobile-action-bar,.mobile-map-button{display:none}
+    .mobile-action-bar,.mobile-map-button,.mobile-center-button{display:none}
     body.testing-joystick .joystick-zone{display:block!important}
     body.testing-joystick .action-buttons{display:flex!important}
     body.testing-joystick .mobile-action-bar,body.testing-joystick .mobile-map-button{display:none!important}
@@ -303,6 +303,11 @@
         display:block;position:fixed;right:6px;top:50px;z-index:82;width:38px;height:34px;
         border:1px solid rgba(167,139,250,.28);border-radius:10px;background:rgba(10,11,16,.9);
         color:#ddd6fe;font-size:1rem;box-shadow:0 5px 18px rgba(0,0,0,.25)
+      }
+      .mobile-center-button{
+        display:block;position:fixed;right:94px;top:50px;z-index:82;width:38px;height:34px;
+        border:1px solid rgba(167,139,250,.28);border-radius:10px;background:rgba(10,11,16,.9);
+        color:#ddd6fe;font-size:.9rem;box-shadow:0 5px 18px rgba(0,0,0,.25)
       }
       .mobile-portfolio-button{display:block!important;position:fixed;right:50px;top:50px;z-index:82;width:38px;height:34px;border:1px solid rgba(167,139,250,.28);border-radius:10px;background:rgba(10,11,16,.9);color:#ddd6fe;font-size:1rem;box-shadow:0 5px 18px rgba(0,0,0,.25)}
       .coord-display{display:none}
@@ -2605,6 +2610,7 @@
 <nav class="mobile-action-bar" id="mobileActionBar" aria-label="Regional actions"></nav>
 <button class="mobile-portfolio-button" id="mobilePortfolioButton" type="button" aria-label="My Properties">📁</button>
 <button class="mobile-map-button" id="mobileMapButton" type="button" aria-label="Open world map">🌐</button>
+<button class="mobile-center-button" id="mobileCenterButton" type="button" aria-label="Center on player">🎯</button>
 
 <div class="mode-indicator" id="modeIndicator">Build Mode: Click to place</div>
 
@@ -2729,6 +2735,7 @@
     <button class="woods-tab active" data-woods-tab="discoveries">Discoveries</button>
     <button class="woods-tab" data-woods-tab="tracking">Tracking</button>
     <button class="woods-tab" data-woods-tab="campsites">Campsites</button>
+    <button class="woods-tab" data-woods-tab="ecosystem">Ecosystem</button>
     <button class="woods-tab" data-woods-tab="events">Rare Events</button>
   </nav>
   <div class="woods-hub-body" id="woodsHubBody"></div>
@@ -3318,6 +3325,9 @@ const state = {
   gangMode: false,
   joystick: { active: false, dx: 0, dy: 0 },
   touchNav: { active:false, x:0, y:0, path:null, pathIndex:0, pending:null, pulse:0 },
+  isPanning:false,
+  cameraFreeUntil:0,
+  suppressCanvasClickUntil:0,
   keys: new Set(),
   mouse: { down: false, lastX: 0, lastY: 0, dragging: false },
   loaded: false,
@@ -3482,6 +3492,7 @@ function runRegionalDirector({silent=false}={}) {
     const shortageCount=profile.economyRules.needs.filter(resource=>(region.reserves[resource] || 0)<=1).length
     region.condition=Math.max(10,Math.min(100,region.condition+(shortageCount ? -1 : 1)))
   }
+  runWoodsEcosystemTick({silent})
   runCityGrowthDeclineTick({silent})
   world.history=world.history.slice(0,LIVING_WORLD_HISTORY_CAP)
   world.deliveries=(world.deliveries || []).slice(0,LIVING_WORLD_DELIVERY_CAP)
@@ -3718,20 +3729,37 @@ const REGIONAL_BUILD_CATALOGS = {
   farmlands: [
     ['crop-row','Crop Row','🌱',12,'Plant and harvest a working crop row.','crop'],
     ['field-plot','Field Plot','🌾',24,'A larger piece of productive soil.','crop'],
+    ['greenhouse','Greenhouse','🏡',140,'Protected crops with steadier seasonal growth.','crop'],
+    ['berry-field','Berry Bushes','🫐',45,'Low berry rows that attract birds and pollinators.','crop'],
+    ['vineyard','Vineyard','🍇',85,'Orderly vine rows for future processing recipes.','crop'],
+    ['flower-field','Flower Field','🌸',40,'Flowers improve pollination and bee production.','crop'],
+    ['orchard-row','Orchard Row','🍎',80,'Even rows of fruit trees that grow as a real orchard.','crop'],
+    ['chicken-coop','Chicken Coop','🐔',70,'Feed chickens and collect eggs.','animal'],
+    ['duck-pond','Duck Pond','🦆',90,'A fenced wet habitat for ducks, frogs, and dragonflies.','animal'],
+    ['cow-pasture','Cow Pasture','🐄',110,'Feed cows and collect milk.','animal'],
+    ['sheep-meadow','Sheep Meadow','🐑',120,'A grassy fenced habitat for a small flock.','animal'],
+    ['pig-pen','Pig Pen','🐖',105,'A shaded pen with room for pigs to roam.','animal'],
+    ['goat-hillside','Goat Hillside','🐐',115,'Rocky pasture that keeps goats active.','animal'],
+    ['horse-stable','Horse Stable','🐎',180,'A stable and paddock for working horses.','animal'],
+    ['bee-box','Bee Yard','🐝',45,'Pollinators support orchards, flowers, and crop yield.','animal'],
+    ['rabbit-hutch','Rabbit Hutch','🐇',75,'A quiet fenced habitat for rabbits.','animal'],
     ['barn','Barn','🏚️',90,'Stores processed farm goods.','storage'],
     ['silo','Silo','🛢️',85,'Stores harvested crops.','storage'],
-    ['chicken-coop','Chicken Coop','🐔',70,'Feed chickens and collect eggs.','animal'],
-    ['cow-pasture','Cow Pasture','🐄',110,'Feed cows and collect milk.','animal'],
     ['feed-mill','Feed Mill','⚙️',95,'Turn crops into animal feed.','machine'],
     ['bakery','Bakery','🥖',120,'Bake bread and egg bread.','machine'],
     ['dairy','Dairy','🥛',130,'Make cream and cheese.','machine'],
+    ['smokehouse','Smokehouse','🔥',145,'Preserves farm goods for longer delivery contracts.','machine'],
+    ['jam-kitchen','Jam Kitchen','🫙',125,'Turns berries and fruit into preserves.','machine'],
+    ['cheese-house','Cheese House','🧀',155,'A dedicated space for aged dairy goods.','machine'],
+    ['farmers-market','Farmers Market','🧺',170,'A local outlet connecting production to visitors.','business'],
     ['roadside-stand','Roadside Stand','🛒',75,'Sell surplus goods for FC.','business'],
     ['fence','Fence','🪵',6,'Organize fields and animal areas.','decoration'],
-    ['pond','Pond','🎣',55,'A calm fishing spot with a future mini-game.','nature'],
-    ['orchard-row','Orchard Row','🍎',80,'Even rows of fruit trees that grow as a real orchard.','crop'],
+    ['pond','Pond','🎣',55,'Attracts frogs, ducks, and dragonflies.','decoration'],
+    ['stone-wall','Stone Wall','🪨',12,'Raises farm property value and defines habitats.','decoration'],
+    ['bird-house','Bird House','🐦',28,'Encourages birds and natural pest control.','decoration'],
+    ['flower-garden','Flower Garden','🌺',32,'Improves bee production and pollinator activity.','decoration'],
     ['farm-road','Dirt Path','🟫',5,'A narrow dirt path between farm lots.','infrastructure'],
-    ['windmill','Windmill','🌬️',95,'A working farm landmark that supports production.','machine'],
-    ['bee-box','Bee Box','🐝',45,'A pollinator home that supports crops and orchards.','animal'],
+    ['windmill','Windmill','🌬️',95,'A working landmark that slightly improves crop speed.','decoration'],
     ['farm-decoration','Farm Decoration','🌻',10,'Warm details that improve farm character.','decoration']
   ],
   'whisper-woods': [
@@ -3795,8 +3823,9 @@ for (const [regionId, entries] of Object.entries(REGIONAL_BUILD_CATALOGS)) {
   for (const [id,name,icon,cost,desc,category] of entries) {
     const infrastructure = category === 'infrastructure'
     const footprint = ({
-      'crop-row':3, 'field-plot':4, 'orchard-row':4, pond:3,
-      'cow-pasture':3, 'development-block':2, 'freight-yard':2, factory:2
+      'crop-row':3, 'field-plot':4, 'orchard-row':4, greenhouse:3,'berry-field':3,vineyard:4,'flower-field':3,pond:3,
+      'cow-pasture':3,'duck-pond':3,'sheep-meadow':3,'pig-pen':2,'goat-hillside':3,'horse-stable':3,'bee-box':2,
+      'rabbit-hutch':2,'farmers-market':2,'development-block':2,'freight-yard':2,factory:2
     })[id] || 1
     const palette = {
       city:'#6B5B8A', farmlands:'#84a94b', 'whisper-woods':'#237a46',
@@ -5522,6 +5551,10 @@ function touchFarmActivity() {
 
 function showFarmReturnBriefing(force = false) {
   if (farmReturnShown && !force) return
+  if (state.currentRegion!=='farmlands' || isMobileUX()) {
+    document.getElementById('farmReturnCard')?.classList.remove('open')
+    return
+  }
   if (document.querySelector('.game-panel.open')) {
     farmReturnShown = true
     return
@@ -5696,12 +5729,13 @@ function renderFarmHub() {
   if (activeFarmTab === 'today') {
     const ready = getFarmReadyCounts(data,farmSessionStartedAt)
     const goals = ensureFarmDaily(data)
+    const eco=farmEcosystemBonuses()
     const residents = data.animalResidents || []
     const animalNames = residents.slice(0,4).map(animal=>animal.name).join(', ')
     const awayText = farmSessionSummary?.awayMs >= 60000
       ? `Welcome back. You were away for ${formatFarmAwayTime(farmSessionSummary.awayMs)}.`
       : 'Everything important on Pine Hollow is gathered here.'
-    html += `<div class="farm-today-hero">
+    html += `<div class="farm-next"><b>FARM ECOSYSTEM</b><span>🌬 Crop speed +${eco.cropSpeed}% · 🐝 Pollination +${eco.pollination}% · 🐦 Wildlife +${eco.wildlife}% · 🏡 Property value +${eco.propertyValue} FC</span></div><div class="farm-today-hero">
       <section class="farm-morning-card">
         <div class="farm-morning-kicker">FARM TODAY</div>
         <h2>${farmGreeting()}, ${state.player?.name || state.username || 'Farmer'}.</h2>
@@ -6895,6 +6929,29 @@ const WOODS_RARE_EVENTS = [
   { id:'lost-camper', name:'Lost Camper', icon:'🥾', desc:'A worried voice calls from beyond the creek.', duration:35 },
   { id:'radio-signal', name:'Broken Radio Signal', icon:'📻', desc:'A half-finished message repeats through static.', duration:30 }
 ]
+const WOODS_ECOSYSTEM_STEP_MS=6*60*60*1000
+const WOODS_ECOSYSTEM_OFFLINE_CAP=3
+const WOODS_HABITATS={
+  'sapling-grove':{name:'Sapling Grove',icon:'🌱',stages:['Seed Cluster','Small Saplings','Young Grove','Dense Grove','Ancient Grove'],metric:'canopy'},
+  'wildflower-meadow':{name:'Wildflower Meadow',icon:'🌼',stages:['Bare Meadow','New Shoots','Wildflowers','Pollinator Meadow','Heritage Meadow'],metric:'biodiversity'},
+  'pine-grove':{name:'Pine Grove',icon:'🌲',stages:['Pine Seeds','Small Pines','Pine Grove','Dense Forest','Ancient Pines'],metric:'canopy'},
+  marsh:{name:'Marsh',icon:'🌾',stages:['Wet Ground','Reeds','Young Marsh','Living Wetland','Old Wetland'],metric:'water'},
+  creek:{name:'Creek',icon:'💧',stages:['Spring','Small Run','Creek','Clear Stream','Living Watershed'],metric:'water'},
+  'fern-patch':{name:'Fern Patch',icon:'🌿',stages:['Spores','Fern Shoots','Fern Patch','Fern Bank','Old Fern Floor'],metric:'fungal'},
+  'berry-thicket':{name:'Berry Thicket',icon:'🫐',stages:['Seeds','Small Bushes','Berry Patch','Berry Thicket','Wildlife Thicket'],metric:'wildlife'},
+  'fallen-log':{name:'Fallen Log Habitat',icon:'🪵',stages:['Fresh Log','Softening Bark','Mossy Log','Fungal Nursery','Old-Growth Habitat'],metric:'fungal'},
+  'mushroom-circle':{name:'Mushroom Circle',icon:'🍄',stages:['Hidden Mycelium','First Caps','Mushroom Patch','Mushroom Circle','Ancient Ring'],metric:'fungal'}
+}
+const WOODS_GROWTH_SPIRITS=[
+  {id:'mosskeeper',name:'Mosskeeper',icon:'🌿',influence:'fungal'},
+  {id:'seed-carrier',name:'Seed Carrier',icon:'🌰',influence:'canopy'},
+  {id:'owl-guardian',name:'Owl Guardian',icon:'🦉',influence:'wildlife'},
+  {id:'fox-wanderer',name:'Fox Wanderer',icon:'🦊',influence:'biodiversity'},
+  {id:'beaver',name:'Beaver',icon:'🦫',influence:'water'},
+  {id:'deer-herd',name:'Deer Herd',icon:'🦌',influence:'biodiversity'},
+  {id:'ravens',name:'Ravens',icon:'🐦‍⬛',influence:'wildlife'},
+  {id:'wind-spirit',name:'Wind Spirit',icon:'💨',influence:'canopy'}
+]
 let woodsDataCache = null
 let activeWoodsTab = 'discoveries'
 const woodsRuntime = { discoveries:[], spawnTimer:0, eventTimer:30, activeEvent:null, ambience:0, growthAgents:[], wildlife:[] }
@@ -7065,11 +7122,92 @@ function getWoodsData() {
   data.events = Array.isArray(data.events) ? data.events : []
   data.campsites = data.campsites || {}
   data.campsitePositions = data.campsitePositions || {}
+  data.ecosystem=data.ecosystem && typeof data.ecosystem==='object' ? data.ecosystem : {}
+  data.ecosystem.metrics=data.ecosystem.metrics || {biodiversity:45,canopy:48,water:52,wildlife:42,fungal:38}
+  for (const key of ['biodiversity','canopy','water','wildlife','fungal']) {
+    data.ecosystem.metrics[key]=Math.max(5,Math.min(100,Number(data.ecosystem.metrics[key]) || 40))
+  }
+  data.ecosystem.habitats=Array.isArray(data.ecosystem.habitats) ? data.ecosystem.habitats.slice(0,48) : []
+  data.ecosystem.milestones=Array.isArray(data.ecosystem.milestones) ? data.ecosystem.milestones.slice(0,40) : []
+  data.ecosystem.lastTick=Number(data.ecosystem.lastTick) || Date.now()
+  data.ecosystem.tickCount=Math.max(0,Number(data.ecosystem.tickCount) || 0)
+  if (!data.ecosystem.seeded) {
+    data.ecosystem.seeded=true
+    for (let index=0;index<3;index++) {
+      data.ecosystem.tickCount++
+      seedWoodsHabitatPatch(data,Date.now()-index*60000)
+    }
+  }
   return data
 }
 function saveWoodsData(data = getWoodsData()) {
   woodsDataCache = data
   try { localStorage.setItem('fas_whisper_woods_v1',JSON.stringify(data)) } catch {}
+}
+
+function woodsEcosystemMilestone(data,patch,stage) {
+  const habitat=WOODS_HABITATS[patch.type],name=habitat?.stages?.[stage]
+  if (!habitat || !name) return
+  const id=`${patch.id}:${stage}`
+  if (data.ecosystem.milestones.some(item=>item.id===id)) return
+  const milestone={id,name:`${habitat.name}: ${name}`,icon:habitat.icon,at:Date.now(),x:patch.x,y:patch.y}
+  data.ecosystem.milestones.unshift(milestone)
+  data.ecosystem.milestones=data.ecosystem.milestones.slice(0,40)
+  const journal=getRegionalJournal('whisper-woods')
+  journal.landmarks=[...new Set([milestone.name,...journal.landmarks])].slice(0,40)
+  saveRegionalJournals()
+  if (stage>=3) createNewsItem('Wildlife',`${milestone.name} recorded in Whisper Woods.`,'The Trail Journal marked a slow ecological change.','whisper-woods',3)
+}
+
+function seedWoodsHabitatPatch(data,stepTime) {
+  if (data.ecosystem.habitats.length>=48) return null
+  const types=Object.keys(WOODS_HABITATS),type=types[data.ecosystem.tickCount%types.length]
+  const angle=(data.ecosystem.tickCount*.91)%6.28,distance=8+(data.ecosystem.tickCount%12)
+  const patch={
+    id:`eco_${stepTime}_${data.ecosystem.tickCount}`,type,stage:0,
+    x:Math.round(Math.max(3,Math.min(WORLD_SIZE-4,WORLD_SIZE/2+Math.cos(angle)*distance))),
+    y:Math.round(Math.max(3,Math.min(WORLD_SIZE-4,WORLD_SIZE/2+Math.sin(angle)*distance))),
+    stageChangedAt:stepTime,createdAt:stepTime,
+    caretaker:WOODS_GROWTH_SPIRITS[data.ecosystem.tickCount%WOODS_GROWTH_SPIRITS.length].name
+  }
+  data.ecosystem.habitats.push(patch)
+  woodsEcosystemMilestone(data,patch,0)
+  return patch
+}
+
+function runWoodsEcosystemTick({silent=false,now=Date.now()}={}) {
+  const data=getWoodsData(),ecosystem=data.ecosystem
+  const elapsed=Math.max(0,now-ecosystem.lastTick)
+  const steps=Math.min(WOODS_ECOSYSTEM_OFFLINE_CAP,Math.floor(elapsed/WOODS_ECOSYSTEM_STEP_MS))
+  if (!steps) return ecosystem
+  let changed=0
+  for (let step=0;step<steps;step++) {
+    const stepTime=ecosystem.lastTick+WOODS_ECOSYSTEM_STEP_MS
+    ecosystem.tickCount++
+    const spirit=WOODS_GROWTH_SPIRITS[ecosystem.tickCount%WOODS_GROWTH_SPIRITS.length]
+    ecosystem.metrics[spirit.influence]=Math.min(100,ecosystem.metrics[spirit.influence]+1)
+    const eligible=ecosystem.habitats
+      .filter(patch=>patch.stage<4 && stepTime-(patch.stageChangedAt || patch.createdAt)>=WOODS_ECOSYSTEM_STEP_MS)
+      .sort((a,b)=>(a.stageChangedAt || 0)-(b.stageChangedAt || 0))
+      .slice(0,2)
+    for (const patch of eligible) {
+      patch.stage++
+      patch.stageChangedAt=stepTime
+      patch.caretaker=spirit.name
+      const metric=WOODS_HABITATS[patch.type]?.metric
+      if (metric) ecosystem.metrics[metric]=Math.min(100,ecosystem.metrics[metric]+2)
+      woodsEcosystemMilestone(data,patch,patch.stage)
+      changed++
+    }
+    if (!ecosystem.habitats.length || ecosystem.tickCount%2===0) seedWoodsHabitatPatch(data,stepTime)
+    ecosystem.metrics.wildlife=Math.min(100,ecosystem.metrics.wildlife+(ecosystem.metrics.biodiversity>55 ? 1 : 0))
+    ecosystem.lastTick=stepTime
+  }
+  saveWoodsData(data)
+  if (!silent && changed && state.currentRegion==='whisper-woods') {
+    showToast('🌲 Whisper Woods Changed',`${changed} habitat ${changed===1?'patch has':'patches have'} quietly matured.`)
+  }
+  return ecosystem
 }
 function woodsHasCost(data,cost) { return Object.entries(cost).every(([key,amount])=>(data.inventory[key] || 0) >= amount) }
 function woodsCostText(cost) { return Object.entries(cost).map(([key,amount])=>`${WOODS_DISCOVERY_TYPES[key]?.icon || ''} ${amount}`).join(' + ') }
@@ -7166,11 +7304,12 @@ function updateRegionalNature(dt) {
   if (state.currentRegion !== 'whisper-woods') return
   if (!woodsRuntime.growthAgents.length) {
     const saved = getWoodsData().growthAgents
-    woodsRuntime.growthAgents = Array.isArray(saved) && saved.length ? saved : [
-      { id:'mosskeeper', name:'Mosskeeper', icon:'🌿', x:state.player.x-6, y:state.player.y+3, tx:state.player.x+4, ty:state.player.y-2 },
-      { id:'hollow-hare', name:'Hollow Hare', icon:'🐇', x:state.player.x+5, y:state.player.y+5, tx:state.player.x-3, ty:state.player.y+1 },
-      { id:'grove-warden', name:'Grove Warden', icon:'🦌', x:state.player.x+2, y:state.player.y-7, tx:state.player.x-4, ty:state.player.y+4 }
-    ]
+    woodsRuntime.growthAgents = Array.isArray(saved) && saved.length>=5 ? saved : WOODS_GROWTH_SPIRITS.map((spirit,index)=>({
+      ...spirit,
+      x:state.player.x+Math.cos(index/WOODS_GROWTH_SPIRITS.length*Math.PI*2)*7,
+      y:state.player.y+Math.sin(index/WOODS_GROWTH_SPIRITS.length*Math.PI*2)*7,
+      tx:state.player.x+(Math.random()-.5)*12,ty:state.player.y+(Math.random()-.5)*12
+    }))
   }
   for (const agent of woodsRuntime.growthAgents) {
     if (Math.hypot(agent.tx-agent.x,agent.ty-agent.y)<1) {
@@ -7189,7 +7328,7 @@ function updateRegionalNature(dt) {
     }))
   }
   regionalRuntime.natureAccumulator += dt
-  if (regionalRuntime.natureAccumulator < 45) return
+  if (regionalRuntime.natureAccumulator < 21600) return
   regionalRuntime.natureAccumulator = 0
   const existing = state.infrastructure.filter(item => isInCurrentRegion(item) && item.natural)
   if (existing.length >= 36) return
@@ -7256,6 +7395,23 @@ function drawWoodsExploration() {
     const p=worldToScreen(agent.x,agent.y), z=state.camera.zoom
     ctx.font=`${Math.max(11,15*z)}px sans-serif`;ctx.textAlign='center';ctx.fillText(agent.icon,p.x,p.y)
     if (z>.6) { ctx.font=`700 ${Math.max(7,8*z)}px Inter`;ctx.fillStyle='#d9f99d';ctx.fillText(agent.name,p.x,p.y-13*z) }
+  }
+  for (const patch of getWoodsData().ecosystem.habitats) {
+    const habitat=WOODS_HABITATS[patch.type]
+    if (!habitat) continue
+    const p=worldToScreen(patch.x,patch.y),z=state.camera.zoom,stage=Math.max(0,Math.min(4,Number(patch.stage) || 0))
+    ctx.save()
+    ctx.globalAlpha=.58+stage*.09
+    ctx.font=`${Math.max(12,(15+stage*2)*z)}px sans-serif`;ctx.textAlign='center'
+    ctx.fillText(habitat.icon,p.x,p.y)
+    if (stage>=2 && ['pine-grove','sapling-grove'].includes(patch.type)) {
+      ctx.fillText('🌲',p.x-7*z,p.y+3*z);ctx.fillText('🌲',p.x+7*z,p.y+3*z)
+    }
+    if (z>.72) {
+      ctx.font=`700 ${Math.max(7,7.5*z)}px Inter`;ctx.fillStyle='#dcfce7'
+      ctx.fillText(habitat.stages[stage],p.x,p.y-17*z)
+    }
+    ctx.restore()
   }
   for (const item of woodsRuntime.discoveries) {
     const info = WOODS_DISCOVERY_TYPES[item.type], s = worldToScreen(item.x,item.y), z = state.camera.zoom
@@ -7338,6 +7494,13 @@ function renderWoodsHub() {
       const built = !!data.campsites[key]
       return `<article class="woods-card ${built ? 'rare' : ''}"><div><div class="woods-card-icon">${site.icon}</div><h3>${site.name}</h3><p>${site.desc}</p></div><div class="woods-card-meta">${built ? site.bonus : woodsCostText(site.cost)}</div><button class="woods-build-btn" data-woods-build="${key}" ${built || !woodsHasCost(data,site.cost) ? 'disabled' : ''}>${built ? 'Built' : 'Build Here'}</button></article>`
     }).join('')}</div>`
+  } else if (activeWoodsTab === 'ecosystem') {
+    const eco=data.ecosystem
+    const metricLabels={biodiversity:'🌱 Biodiversity',canopy:'🌳 Canopy Coverage',water:'💧 Water Quality',wildlife:'🐾 Wildlife Population',fungal:'🍄 Fungal Growth'}
+    html += `<div class="woods-event-banner"><b>Living Forest Health</b><br>${Object.entries(metricLabels).map(([key,label])=>`${label}: ${Math.round(eco.metrics[key])}%`).join(' · ')}<br><span style="color:var(--dim)">Habitat changes are capped and mature in six-hour steps. Offline catch-up is limited to three steps.</span></div>
+      <div class="woods-card-grid">${eco.habitats.map(patch=>{const habitat=WOODS_HABITATS[patch.type],stage=Math.max(0,Math.min(4,patch.stage || 0));return `<article class="woods-card ${stage>=3?'rare':''}"><div><div class="woods-card-icon">${habitat.icon}</div><h3>${habitat.name}</h3><p>${habitat.stages[stage]} · guided by ${safeText(patch.caretaker || 'the forest')}</p></div><div class="woods-card-meta">Stage ${stage+1}/5</div></article>`}).join('')}</div>
+      <div class="woods-event-banner"><b>Growth Spirits</b><br>${WOODS_GROWTH_SPIRITS.map(spirit=>`${spirit.icon} ${spirit.name}`).join(' · ')}</div>
+      <div class="woods-event-banner"><b>Recent ecological milestones</b><br>${eco.milestones.slice(0,8).map(item=>`${item.icon} ${safeText(item.name)}`).join('<br>') || 'The forest is settling into its first season.'}</div>`
   } else {
     html += data.events.length ? `<div class="woods-card-grid">${data.events.map(event=>`<article class="woods-card rare"><div><div class="woods-card-icon">${event.icon}</div><h3>${event.name}</h3><p>${event.desc}</p></div><div class="woods-card-meta">${new Date(event.at).toLocaleString()}</div></article>`).join('')}</div>` : '<div class="farm-empty">No rare events recorded yet. Sometimes the woods are simply quiet.</div>'
   }
@@ -9289,7 +9452,9 @@ function drawBuildPreview() {
 
 function drawFarmPlacedObject(building,s) {
   const typeId=building.object_type || building.building_type
-  const groundTypes=new Set(['crop-row','field-plot','fence','pond','orchard','orchard-row','farm-decoration','windmill','bee-box'])
+  const farmRowTypes=new Set(['crop-row','field-plot','berry-field','vineyard','flower-field'])
+  const farmHabitatTypes=new Set(['duck-pond','cow-pasture','sheep-meadow','pig-pen','goat-hillside','horse-stable','bee-box','rabbit-hutch'])
+  const groundTypes=new Set([...farmRowTypes,...farmHabitatTypes,'fence','pond','orchard','orchard-row','farm-decoration','flower-garden','bird-house','stone-wall','windmill'])
   if (!groundTypes.has(typeId)) return false
   const z=state.camera.zoom
   const hw=TILE_W*z*.44
@@ -9306,7 +9471,7 @@ function drawFarmPlacedObject(building,s) {
   }
   ctx.save()
 
-  if (typeId === 'crop-row' || typeId === 'field-plot') {
+  if (farmRowTypes.has(typeId)) {
     const footprint=Math.max(1,Number(building.footprint) || Number(BUILDING_TYPES[typeId]?.footprint) || 1)
     for (let ox=0;ox<footprint;ox++) {
       for (let oy=0;oy<footprint;oy++) {
@@ -9354,12 +9519,30 @@ function drawFarmPlacedObject(building,s) {
         ctx.fillText('✨',s.x,s.y-hh-8*z)
       }
     } else {
+      const idleIcon={ 'berry-field':'🫐',vineyard:'🍇','flower-field':'🌸' }[typeId] || '🌱'
       ctx.font=`${Math.max(9,11*z)}px sans-serif`
       ctx.textAlign='center'
       ctx.globalAlpha=.7
-      ctx.fillText('🌱',s.x,s.y-2*z)
+      ctx.fillText(idleIcon,s.x,s.y-2*z)
       ctx.globalAlpha=1
     }
+  } else if (farmHabitatTypes.has(typeId)) {
+    const footprint=Math.max(1,Number(building.footprint) || Number(BUILDING_TYPES[typeId]?.footprint) || 1)
+    for(let ox=0;ox<footprint;ox++) for(let oy=0;oy<footprint;oy++) {
+      const cell=worldToScreen(building.tile_x+ox,building.tile_y+oy)
+      diamond(cell,typeId==='duck-pond'?'rgba(14,116,144,.35)':'rgba(101,126,46,.3)',null)
+    }
+    const corners=[
+      worldToScreen(building.tile_x,building.tile_y),
+      worldToScreen(building.tile_x+footprint-1,building.tile_y),
+      worldToScreen(building.tile_x+footprint-1,building.tile_y+footprint-1),
+      worldToScreen(building.tile_x,building.tile_y+footprint-1)
+    ]
+    ctx.strokeStyle='#9a6b3f';ctx.lineWidth=Math.max(1.2,1.8*z)
+    ctx.beginPath();corners.forEach((point,index)=>index?ctx.lineTo(point.x,point.y):ctx.moveTo(point.x,point.y));ctx.closePath();ctx.stroke()
+    const icon=BUILDING_TYPES[typeId]?.icon || '🐾'
+    ctx.font=`${Math.max(12,16*z)}px sans-serif`;ctx.textAlign='center'
+    ctx.fillText(icon,s.x-4*z,s.y-4*z);ctx.fillText(icon,s.x+7*z,s.y+3*z)
   } else if (typeId === 'fence') {
     const points=[[-hw*.72,hh*.18],[0,-hh*.18],[hw*.72,-hh*.54]]
     ctx.strokeStyle='#8b5e34'; ctx.lineWidth=Math.max(2,2.6*z)
@@ -9404,6 +9587,10 @@ function drawFarmPlacedObject(building,s) {
     ctx.beginPath();ctx.moveTo(s.x-5*z,s.y);ctx.lineTo(s.x,s.y-22*z);ctx.lineTo(s.x+5*z,s.y);ctx.stroke()
     ctx.translate(s.x,s.y-22*z); ctx.rotate(performance.now()*.0004)
     for (let blade=0;blade<4;blade++){ctx.rotate(Math.PI/2);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-11*z);ctx.stroke()}
+  } else if (['flower-garden','bird-house','stone-wall'].includes(typeId)) {
+    diamond(s,'rgba(101,126,46,.18)',null)
+    const icon={ 'flower-garden':'🌺','bird-house':'🐦','stone-wall':'🪨' }[typeId]
+    ctx.font=`${Math.max(11,15*z)}px sans-serif`;ctx.textAlign='center';ctx.fillText(icon,s.x,s.y-2*z)
   } else if (typeId === 'farm-decoration') {
     diamond(s,'rgba(101,126,46,.16)',null)
     const flowers=['🌻','🌼','🌷']
@@ -11646,8 +11833,10 @@ function update(dt) {
 
   const targetIsoX = (state.player.x - state.player.y) * (TILE_W / 2)
   const targetIsoY = (state.player.x + state.player.y) * (TILE_H / 2)
-  state.camera.x += (targetIsoX - state.camera.x) * 0.15
-  state.camera.y += (targetIsoY - state.camera.y) * 0.15
+  if (Date.now()>=state.cameraFreeUntil) {
+    state.camera.x += (targetIsoX - state.camera.x) * 0.15
+    state.camera.y += (targetIsoY - state.camera.y) * 0.15
+  }
   state.camera.zoom += (state.camera.targetZoom - state.camera.zoom) * 0.1
 
   updateNPCs(dt)
@@ -11820,6 +12009,12 @@ function initMobileUX() {
   })
   document.getElementById('mobileMapButton')?.addEventListener('click',()=>openPanel('worldMapPanel'))
   document.getElementById('mobilePortfolioButton')?.addEventListener('click',openPortfolio)
+  document.getElementById('mobileCenterButton')?.addEventListener('click',()=>{
+    state.player.visible=true
+    state.cameraFreeUntil=0
+    centerCameraOnPlayer()
+    showToast('Centered on Player',REGIONS[state.currentRegion]?.name || 'Current region')
+  })
 }
 
 function mobileTargetAt(world) {
@@ -11828,6 +12023,7 @@ function mobileTargetAt(world) {
 
 function queueTouchDestination(world,target=null) {
   const nav=state.touchNav
+  state.cameraFreeUntil=0
   let x=target?.x ?? world.x, y=target?.y ?? world.y
   const terrain=getTerrainAt(Math.floor(x),Math.floor(y))
   if (!target && [TERRAIN.WATER,TERRAIN.DEEP_WATER,TERRAIN.BUILDING].includes(terrain)) {
@@ -11978,7 +12174,7 @@ function setupMouse() {
   })
 
   canvas.addEventListener('click', e => {
-    if (state.mouse.dragging) return
+    if (state.mouse.dragging || Date.now()<state.suppressCanvasClickUntil) return
     
     const world = screenToWorld(e.clientX, e.clientY)
     
@@ -12072,11 +12268,20 @@ function setupTouch() {
   window.addEventListener('touchcancel', endJoystick)
 
   let pinchDist = 0
+  let panTouchId=null,panStartX=0,panStartY=0,panLastX=0,panLastY=0,panMoved=false
   canvas.addEventListener('touchstart', e => {
     if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX
       const dy = e.touches[0].clientY - e.touches[1].clientY
       pinchDist = Math.sqrt(dx * dx + dy * dy)
+      panTouchId=null
+    } else if (e.touches.length===1) {
+      const touch=e.touches[0]
+      panTouchId=touch.identifier
+      panStartX=panLastX=touch.clientX
+      panStartY=panLastY=touch.clientY
+      panMoved=false
+      state.isPanning=false
     }
   }, { passive: true })
   canvas.addEventListener('touchmove', e => {
@@ -12090,8 +12295,33 @@ function setupTouch() {
       }
       pinchDist = newDist
       e.preventDefault()
+    } else if (e.touches.length===1 && e.touches[0].identifier===panTouchId) {
+      const touch=e.touches[0]
+      const total=Math.hypot(touch.clientX-panStartX,touch.clientY-panStartY)
+      if (total>10) {
+        panMoved=true
+        state.isPanning=true
+        state.cameraFreeUntil=Date.now()+15000
+        state.camera.x-=touch.clientX-panLastX
+        state.camera.y-=touch.clientY-panLastY
+        panLastX=touch.clientX
+        panLastY=touch.clientY
+        e.preventDefault()
+      }
     }
   }, { passive: false })
+  const endCanvasPan=e=>{
+    for (const touch of e.changedTouches) {
+      if (touch.identifier!==panTouchId) continue
+      if (panMoved) state.suppressCanvasClickUntil=Date.now()+450
+      panTouchId=null
+      state.isPanning=false
+      panMoved=false
+      break
+    }
+  }
+  canvas.addEventListener('touchend',endCanvasPan,{passive:true})
+  canvas.addEventListener('touchcancel',endCanvasPan,{passive:true})
 }
 
 // ── PANEL MANAGER ─────────────────────────────────────
@@ -12589,6 +12819,17 @@ function saveRegionalObjects() {
   } catch {}
 }
 
+function farmEcosystemBonuses() {
+  const placed=state.buildings.filter(item=>normalizeRegionId(item.region_id ?? item.region)==='farmlands')
+  const count=type=>placed.filter(item=>(item.object_type || item.building_type)===type).length
+  return {
+    cropSpeed:Math.min(10,count('windmill')*2),
+    pollination:Math.min(20,count('flower-field')*3+count('flower-garden')*4+count('bee-box')*5),
+    wildlife:Math.min(20,count('pond')*4+count('duck-pond')*5+count('bird-house')*3),
+    propertyValue:count('stone-wall')*25+count('flower-garden')*15+count('pond')*30
+  }
+}
+
 function getRegionalHealth(regionId = state.currentRegion) {
   const objects = [
     ...state.buildings.filter(item => normalizeRegionId(item.region_id) === regionId),
@@ -12597,22 +12838,22 @@ function getRegionalHealth(regionId = state.currentRegion) {
   const categories = new Set(objects.map(item => item.object_category).filter(Boolean))
   const base = Math.min(95, 45 + objects.length * 3 + categories.size * 4)
   if (regionId === 'farmlands') {
-    const farm = getFarmData()
+    const farm = getFarmData(),bonuses=farmEcosystemBonuses()
     return {
-      'Soil quality': Math.min(100, base + (farm.crops?.length || 0) * 2),
+      'Soil quality': Math.min(100, base + (farm.crops?.length || 0) * 2+bonuses.pollination/2),
       Production: Math.min(100, 40 + objects.filter(o => ['crop','machine'].includes(o.object_category)).length * 8),
-      'Animal happiness': Math.round((typeof getAverageAnimalHappiness === 'function' && getAverageAnimalHappiness()) || 72),
+      'Animal happiness': Math.min(100,Math.round((typeof getAverageAnimalHappiness === 'function' && getAverageAnimalHappiness()) || 72)+bonuses.wildlife/3),
       'Storage efficiency': Math.min(100, 48 + objects.filter(o => o.object_category === 'storage').length * 14)
     }
   }
   if (regionId === 'whisper-woods') {
-    const habitat = objects.filter(o => o.object_category === 'habitat').length
-    const ponds = objects.filter(o => o.object_type === 'wildlife-pond').length
+    const metrics=getWoodsData().ecosystem.metrics
     return {
-      'Forest density': Math.min(100, 55 + objects.filter(o => o.object_type === 'tree-grove' || o.natural).length * 4),
-      Biodiversity: Math.min(100, 42 + habitat * 7),
-      'Water quality': Math.min(100, 55 + ponds * 14),
-      'Mystery level': Math.min(100, 60 + habitat * 3)
+      'Canopy coverage':metrics.canopy,
+      Biodiversity:metrics.biodiversity,
+      'Water quality':metrics.water,
+      'Wildlife population':metrics.wildlife,
+      'Fungal growth':metrics.fungal
     }
   }
   const labels = REGIONAL_BUILD_META[regionId]?.health || ['Quality']
@@ -12632,8 +12873,18 @@ function populateBuildGrid() {
     <div class="build-health-row">${Object.entries(health).map(([name,value]) => `<span class="build-health-chip">${name} ${Math.round(value)}%</span>`).join('')}</div>
   `
   grid.innerHTML = ''
+  const farmCategoryLabels={crop:'🌾 Crops & Growing',animal:'🐓 Animal Habitats',storage:'📦 Storage',machine:'⚙️ Production Buildings',business:'🧺 Farm Commerce',decoration:'🌻 Useful Decorations',infrastructure:'🟫 Paths'}
+  let previousCategory=null
   for (const [type] of catalog) {
     const info = BUILDING_TYPES[type]
+    if (state.currentRegion==='farmlands' && info.category!==previousCategory) {
+      const heading=document.createElement('div')
+      heading.className='build-category-heading'
+      heading.style.cssText='grid-column:1/-1;color:#d9f99d;font-weight:900;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;padding:.45rem .25rem .1rem'
+      heading.textContent=farmCategoryLabels[info.category] || info.category
+      grid.appendChild(heading)
+      previousCategory=info.category
+    }
     const zoneInfo=state.currentRegion==='city' ? CITY_ZONE_BUILD_INFO[type] : null
     const item = document.createElement('div')
     item.className = 'build-item'
@@ -15791,6 +16042,7 @@ function findRegionSpawn(regionId) {
 }
 
 function centerCameraOnPlayer() {
+  state.cameraFreeUntil=0
   state.camera.x=(state.player.x-state.player.y)*(TILE_W/2)
   state.camera.y=(state.player.x+state.player.y)*(TILE_H/2)
   tileCache.cameraX=NaN
@@ -15806,6 +16058,9 @@ function clearTravelInteractionState() {
   state.joystick.dy=0
   state.mouse.down=false
   state.mouse.dragging=false
+  state.isPanning=false
+  state.cameraFreeUntil=0
+  state.suppressCanvasClickUntil=0
   state.buildPreview.visible=false
   state.farmLandPreview.visible=false
   state.lastWorldTap={id:null,at:0}
