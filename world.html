@@ -3011,13 +3011,8 @@
       <div class="settings-hint" style="margin-top:.25rem">NPC growth: stewardship pace · maximum one build every 72 hours and eight per month.</div>
     </section>
     <section class="settings-section">
-      <div class="settings-section-title">World Maintenance</div>
-      <div class="settings-hint" style="margin-top:.25rem">Day One reset backs up and clears local world progress, then creates one clean Pine Hollow starter parcel.</div>
-      <div class="settings-hint" style="margin-top:.35rem;color:#fbbf24">Shared data is not deleted: city buildings come from <code>/api/world/state</code> / <code>world_building_states</code>; account FC/Rep comes from <code>world_player_states</code>.</div>
-      <div class="settings-maintenance-actions">
-        <button class="settings-maintenance-btn danger" id="resetLocalWorldBtn" type="button">Reset World to Day One</button>
-        <button class="settings-maintenance-btn" id="restoreLocalWorldBtn" type="button">Restore Last Backup</button>
-      </div>
+      <div class="settings-section-title">World Instance</div>
+      <div class="settings-hint" style="margin-top:.25rem">Day One world · clean persistent timeline</div>
     </section>
   </div>
 </div>
@@ -3853,24 +3848,97 @@ function safeText(value) {
 
 const LOCAL_WORLD_BACKUP_KEY='faceless_world_backup_latest'
 const DAY_ONE_RESET_KEY='faceless_world_day_one_reset_at'
+const WORLD_SAVE_VERSION='day-one-reset-v1'
+const WORLD_INSTANCE_ID='day-one-reset-v1'
+const WORLD_SAVE_VERSION_KEY='fas_world_save_version'
+const WORLD_PLAYER_PROGRESS_KEY='fas_world_player_day_one_v1'
 let localWorldResetArmedUntil=0
 let localWorldRestoreArmedUntil=0
 
-function localWorldSaveKeys() {
-  const keys=new Set([
+function isWorldProgressStorageKey(key) {
+  if (!key || key===WORLD_SAVE_VERSION_KEY || key===LOCAL_WORLD_BACKUP_KEY) return false
+  const exact=new Set([
     'fas_farm_data','fas_properties','fas_regional_build_objects_v1',
     'fas_ownership_metadata_v1','fas_city_construction_v2','fas_city_lifecycle_v1',
     'fas_shipments_v2','fas_shipment_claims_v2','fas_city_supply_v2',
     'fas_signal_wire_news','fas_world_skills','fas_world_goals',
     'fas_world_creatures','fas_encounter_history_v1','fas_regional_trail_journals_v1',
     'fas_region_identity_v1','fas_whisper_woods_v1','fas_living_world_v1',
-    'fas_npc_growth_v1','fas_world_tutorial'
+    'fas_npc_growth_v1','fas_world_tutorial',WORLD_PLAYER_PROGRESS_KEY,
+    DAY_ONE_RESET_KEY,'faceless_world_last_reset_at'
   ])
+  if (exact.has(key)) return true
+  return [
+    'farm_','world_','city_','region_','signal_','trail_','creature_',
+    'property_','sanctuary_','shipment_','fas_farm_','fas_city_',
+    'fas_region_','fas_signal_','fas_trail_','fas_creature_',
+    'fas_property_','fas_sanctuary_','fas_shipment_'
+  ].some(prefix=>key.startsWith(prefix))
+}
+
+function localWorldSaveKeys() {
+  const keys=new Set()
   for (let index=0;index<localStorage.length;index++) {
     const key=localStorage.key(index)
-    if (key?.startsWith('fas_')) keys.add(key)
+    if (isWorldProgressStorageKey(key)) keys.add(key)
   }
   return [...keys]
+}
+
+function createDayOneStarterFarm() {
+  const center=Math.round(WORLD_SIZE/2),origin=center-FARM_LAND_PARCEL_SIZE/2
+  return {
+    worldInstanceId:WORLD_INSTANCE_ID,dayOneResetVersion:1,
+    tile_x:center,tile_y:center,farmLevel:1,farmXP:0,
+    landOrigin:{x:origin,y:origin},
+    landParcels:[{
+      id:'pine-hollow-home-parcel',x:origin,y:origin,
+      width:FARM_LAND_PARCEL_SIZE,height:FARM_LAND_PARCEL_SIZE,
+      purchasedAt:Date.now(),starter:true,world_instance_id:WORLD_INSTANCE_ID,
+      owner_id:'local-player',owner_name:'Guest Resident'
+    }]
+  }
+}
+
+function seedDayOneLocalWorld() {
+  localStorage.setItem('fas_farm_data',JSON.stringify(createDayOneStarterFarm()))
+  localStorage.setItem(REGIONAL_OBJECTS_KEY,JSON.stringify({
+    version:3,worldInstanceId:WORLD_INSTANCE_ID,buildings:[],infrastructure:[]
+  }))
+  localStorage.setItem(WORLD_PLAYER_PROGRESS_KEY,JSON.stringify({
+    worldInstanceId:WORLD_INSTANCE_ID,coins:100,rep:0,updatedAt:Date.now()
+  }))
+}
+
+function ensureWorldSaveVersion() {
+  if (localStorage.getItem(WORLD_SAVE_VERSION_KEY)===WORLD_SAVE_VERSION) return false
+  for (const key of localWorldSaveKeys()) localStorage.removeItem(key)
+  seedDayOneLocalWorld()
+  localStorage.setItem(WORLD_SAVE_VERSION_KEY,WORLD_SAVE_VERSION)
+  localStorage.setItem(DAY_ONE_RESET_KEY,String(Date.now()))
+  console.info('[WORLD] Automatic Day One migration applied:',WORLD_SAVE_VERSION)
+  return true
+}
+
+function loadWorldPlayerProgress() {
+  try {
+    const saved=JSON.parse(localStorage.getItem(WORLD_PLAYER_PROGRESS_KEY) || 'null')
+    if (saved?.worldInstanceId!==WORLD_INSTANCE_ID) return
+    state.coins=Math.max(0,Number(saved.coins) || 0)
+    state.rep=Math.max(0,Number(saved.rep) || 0)
+  } catch {}
+}
+
+function saveWorldPlayerProgress() {
+  if (window.__facelessDayOneResetting) return
+  try {
+    localStorage.setItem(WORLD_PLAYER_PROGRESS_KEY,JSON.stringify({
+      worldInstanceId:WORLD_INSTANCE_ID,
+      coins:Math.max(0,Number(state.coins) || 0),
+      rep:Math.max(0,Number(state.rep) || 0),
+      updatedAt:Date.now()
+    }))
+  } catch {}
 }
 
 function createLocalWorldBackup() {
@@ -3910,19 +3978,8 @@ function requestLocalWorldReset() {
     window.__facelessDayOneResetting=true
     const backup=createLocalWorldBackup()
     for (const key of Object.keys(backup.keys)) localStorage.removeItem(key)
-    const center=Math.round(WORLD_SIZE/2),origin=center-FARM_LAND_PARCEL_SIZE/2
-    const starterFarm={
-      dayOneResetVersion:1,tile_x:center,tile_y:center,farmLevel:1,farmXP:0,
-      landOrigin:{x:origin,y:origin},
-      landParcels:[{
-        id:'pine-hollow-home-parcel',x:origin,y:origin,
-        width:FARM_LAND_PARCEL_SIZE,height:FARM_LAND_PARCEL_SIZE,
-        purchasedAt:Date.now(),starter:true,
-        owner_id:state.userId || 'local-player',owner_name:currentPlayerOwnerName()
-      }]
-    }
-    localStorage.setItem('fas_farm_data',JSON.stringify(starterFarm))
-    localStorage.setItem(REGIONAL_OBJECTS_KEY,JSON.stringify({version:2,buildings:[],infrastructure:[]}))
+    seedDayOneLocalWorld()
+    localStorage.setItem(WORLD_SAVE_VERSION_KEY,WORLD_SAVE_VERSION)
     localStorage.setItem(DAY_ONE_RESET_KEY,String(Date.now()))
     localStorage.setItem('faceless_world_last_reset_at',String(Date.now()))
     showToast('Day One Ready','Backup created. Reloading with one clean Pine Hollow parcel and fresh local progress.')
@@ -12649,8 +12706,8 @@ function setupUI() {
       stopFarmAudio()
     }
   })
-  document.getElementById('resetLocalWorldBtn').addEventListener('click',requestLocalWorldReset)
-  document.getElementById('restoreLocalWorldBtn').addEventListener('click',requestLocalWorldRestore)
+  document.getElementById('resetLocalWorldBtn')?.addEventListener('click',requestLocalWorldReset)
+  document.getElementById('restoreLocalWorldBtn')?.addEventListener('click',requestLocalWorldRestore)
 
   // World map travel buttons
   document.getElementById('worldMapNodes').addEventListener('click', (e) => {
@@ -12788,10 +12845,13 @@ document.addEventListener('click', (e) => {
 function getRegionalSavedObjects() {
   try {
     const parsed = JSON.parse(localStorage.getItem(REGIONAL_OBJECTS_KEY) || '{}')
+    if (parsed.worldInstanceId && parsed.worldInstanceId!==WORLD_INSTANCE_ID) {
+      return { buildings: [], infrastructure: [], version: 3 }
+    }
     return {
       buildings: Array.isArray(parsed.buildings) ? parsed.buildings : [],
       infrastructure: Array.isArray(parsed.infrastructure) ? parsed.infrastructure : [],
-      version: 1
+      version: 3
     }
   } catch {
     return { buildings: [], infrastructure: [], version: 1 }
@@ -12828,7 +12888,8 @@ function saveRegionalObjects() {
   if (window.__facelessDayOneResetting) return
   try {
     localStorage.setItem(REGIONAL_OBJECTS_KEY, JSON.stringify({
-      version: 2,
+      version: 3,
+      worldInstanceId:WORLD_INSTANCE_ID,
       buildings: state.buildings.filter(item => item._regionalLocal),
       infrastructure: state.infrastructure.filter(item => item._regionalLocal)
     }))
@@ -14101,6 +14162,7 @@ async function placeBuildingAt(x, y) {
     building_type:typeId,
     footprint:type.footprint || 1,
     placed_at:Date.now(),
+    world_instance_id:WORLD_INSTANCE_ID,
     income_rate:type.income || 0,
     last_collected:Date.now(),
     last_collected_at:new Date().toISOString(),
@@ -14641,6 +14703,15 @@ async function setupMultiplayer() {
 }
 
 async function fetchPlayerState() {
+  // This timeline starts with a clean profile instead of inheriting currency
+  // and reputation from the legacy shared world.
+  if (WORLD_INSTANCE_ID==='day-one-reset-v1') {
+    loadWorldPlayerProgress()
+    document.getElementById('statCoins').textContent=state.coins
+    document.getElementById('statRep').textContent=state.rep
+    updateRepBarUI()
+    return
+  }
   if (!state.userId) return
   try {
     const res = await fetch(`/api/world/player/state?userId=${encodeURIComponent(state.userId)}`)
@@ -14686,8 +14757,9 @@ async function fetchWorldState() {
 
     const data = await res.json()
     if (data.ok) {
+      const currentObject=item=>item?.world_instance_id===WORLD_INSTANCE_ID || item?._dayOneCurrent===true
       // Normalize last_collected_at -> last_collected for client calculations
-      state.buildings = (data.buildings || []).map(b => {
+      state.buildings = (data.buildings || []).filter(currentObject).map(b => {
         if (b.last_collected_at && !b.last_collected) {
           b.last_collected = new Date(b.last_collected_at).getTime()
         }
@@ -14695,12 +14767,14 @@ async function fetchWorldState() {
         normalizeOwnershipMetadata(b)
         return b
       })
-      state.districts = (data.districts || []).map(d => { d.region_id = normalizeRegionId(d.region_id); return d })
+      state.districts = data.worldInstanceId===WORLD_INSTANCE_ID
+        ? (data.districts || []).map(d => { d.region_id = normalizeRegionId(d.region_id); return d })
+        : []
       state.themesDirty = true
-      state.infrastructure = (data.infrastructure || []).map(i => { i.region_id = normalizeRegionId(i.region_id); normalizeOwnershipMetadata(i); return i })
+      state.infrastructure = (data.infrastructure || []).filter(currentObject).map(i => { i.region_id = normalizeRegionId(i.region_id); normalizeOwnershipMetadata(i); return i })
       state.walkableDirty = true
-      state.blocks = (data.blocks || []).map(b => { b.region_id = normalizeRegionId(b.region_id); return b })
-      state.lots = (data.lots || []).map(l => { l.region_id = normalizeRegionId(l.region_id); return l })
+      state.blocks = (data.blocks || []).filter(currentObject).map(b => { b.region_id = normalizeRegionId(b.region_id); return b })
+      state.lots = (data.lots || []).filter(currentObject).map(l => { l.region_id = normalizeRegionId(l.region_id); return l })
       loadRegionalObjects()
       assignNPCBuildings()
       console.log('[WORLD] Loaded', state.buildings.length, 'buildings,', state.districts.length, 'districts,', state.infrastructure.length, 'infra')
@@ -14727,6 +14801,7 @@ async function fetchWorldState() {
 }
 
 async function refreshDistricts() {
+  if (WORLD_INSTANCE_ID==='day-one-reset-v1') return
   try {
     const res = await fetch('/api/world/districts/refresh', { method: 'POST' })
     const contentType = res.headers.get('content-type')
@@ -14757,6 +14832,7 @@ async function refreshDistricts() {
 // Phase 5A: Simulation tick — runs economy/resource calculations
 // Guarded with rate limiting (tickInProgress flag in interval) and safe failure
 async function runSimulationTick() {
+  if (WORLD_INSTANCE_ID==='day-one-reset-v1') return
   try {
     const res = await fetch('/api/world/simulation/tick', { method: 'POST' })
     if (!res.ok) return
@@ -16316,6 +16392,8 @@ let _initDone = false
 async function init() {
   if (_initDone) return
   _initDone = true
+  ensureWorldSaveVersion()
+  loadWorldPlayerProgress()
   initCreatureSystem()
   const bar = document.getElementById('loadingBar')
   const text = document.getElementById('loadingText')
@@ -16403,6 +16481,7 @@ async function init() {
   updateCitySupplyUI()
   if (window.__facelessLogisticsTimer) clearInterval(window.__facelessLogisticsTimer)
   window.__facelessLogisticsTimer=setInterval(() => {
+    saveWorldPlayerProgress()
     checkShipmentDeliveries()
     applyCityDecay()
     updateCitySupplyUI()
@@ -16414,6 +16493,7 @@ async function init() {
       touchFarmActivity()
     }
   }, 2000)
+  window.addEventListener('pagehide',saveWorldPlayerProgress)
   window.addEventListener('pagehide', touchFarmActivity)
 
   if (!state.tutorialSeen) {

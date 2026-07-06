@@ -16,6 +16,21 @@ function json(body, status = 200) {
   });
 }
 
+const WORLD_INSTANCE_ID = 'day-one-reset-v1';
+const WORLD_RESET_AT = '2026-07-06T00:00:00.000Z';
+const LEGACY_ID_FLOORS = {
+  buildings: 1000,
+  infrastructure: 21266595,
+  blocks: 1,
+  lots: 4,
+};
+
+function currentRows(rows, floor) {
+  return (Array.isArray(rows) ? rows : [])
+    .filter((row) => row?.world_instance_id === WORLD_INSTANCE_ID || Number(row?.id) > floor)
+    .map((row) => ({ ...row, world_instance_id: WORLD_INSTANCE_ID, _dayOneCurrent: true }));
+}
+
 async function supabaseFetch(env, path, options = {}) {
   const url = String(env.SUPABASE_URL || '').replace(/\/+$/, '');
   const key = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -116,14 +131,24 @@ export async function onRequestGet(context) {
       `/rest/v1/world_events?select=*&order=created_at.desc&limit=20`
     );
 
+    const buildings = currentRows(buildingsResult.data, LEGACY_ID_FLOORS.buildings);
+    const infrastructure = currentRows(infraData, LEGACY_ID_FLOORS.infrastructure);
+    const blocks = currentRows(blocksData, LEGACY_ID_FLOORS.blocks);
+    const lots = currentRows(lotsData, LEGACY_ID_FLOORS.lots);
+    const events = (eventsResult.ok && Array.isArray(eventsResult.data) ? eventsResult.data : [])
+      .filter((event) => Date.parse(event?.created_at || 0) >= Date.parse(WORLD_RESET_AT));
+
     return json({
       ok: true,
-      buildings: Array.isArray(buildingsResult.data) ? buildingsResult.data : [],
-      districts: districtsResult.ok && Array.isArray(districtsResult.data) ? districtsResult.data : [],
-      infrastructure: infraData,
-      blocks: blocksData,
-      lots: lotsData,
-      events: eventsResult.ok && Array.isArray(eventsResult.data) ? eventsResult.data : []
+      worldInstanceId: WORLD_INSTANCE_ID,
+      buildings,
+      // These districts were derived from pre-reset buildings. The district
+      // engine stays intact and can repopulate once it is instance-aware.
+      districts: [],
+      infrastructure,
+      blocks,
+      lots,
+      events
     });
   } catch (error) {
     console.error('[WORLD] state fetch error:', error);
