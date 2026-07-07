@@ -1310,7 +1310,7 @@
       color: #dfffaa; font-size: 0.58rem; font-weight: 900; cursor: pointer;
     }
     .farm-hub {
-      position: fixed; left: 1rem; top: 4.75rem; bottom: 1rem;
+      position: fixed; right: 1rem; left: auto; top: 4.75rem; bottom: 1rem;
       width: min(460px, calc(100vw - 2rem)); z-index: 100;
       display: grid; grid-template-rows: auto auto 1fr;
       overflow: hidden; border: 1px solid rgba(132,204,22,0.35);
@@ -1319,7 +1319,7 @@
       backdrop-filter: blur(18px);
       animation: farmDrawerIn 0.2s ease-out;
     }
-    @keyframes farmDrawerIn { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes farmDrawerIn { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:translateX(0); } }
     .farm-hub.hidden { display: none; }
     .farm-hub-head {
       display: flex; align-items: center; justify-content: space-between; gap: 1rem;
@@ -1327,6 +1327,11 @@
       background: linear-gradient(90deg, rgba(132,204,22,0.13), rgba(245,196,81,0.05));
     }
     .farm-hub-title { color: #f4ffe5; font-size: 0.88rem; font-weight: 950; }
+    .farm-name-btn {
+      margin-left:.4rem; padding:.18rem .35rem; border:1px solid rgba(132,204,22,.28);
+      border-radius:999px; background:rgba(132,204,22,.08); color:#d9ffa0;
+      font-size:.5rem; font-weight:900; cursor:pointer; vertical-align:middle;
+    }
     .farm-hub-sub { color: #9eb08e; font-size: 0.65rem; margin-top: 2px; }
     .farm-hub-close {
       width: 30px; height: 30px; display:grid; place-items:center; flex:0 0 auto;
@@ -1517,7 +1522,7 @@
     .farm-storage-bar span { display: block; height: 100%; background: #84cc16; }
     .farm-empty { padding: 2rem; color: #84917b; text-align: center; font-size: 0.7rem; }
     @media (max-width: 850px) {
-      .farm-hub { width:min(420px,calc(100vw - 1rem)); left:.5rem; top:4rem; bottom:.5rem; }
+      .farm-hub { width:min(420px,calc(100vw - 1rem)); left:auto; right:.5rem; top:4rem; bottom:.5rem; }
       .farm-card-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
       .farm-today-hero { grid-template-columns: 1fr; }
       .animal-profile-grid { grid-template-columns: 1fr; }
@@ -3127,7 +3132,7 @@
 
 <div class="farm-inventory hidden" id="farmInventory">
   <div class="farm-deed">
-    <div class="farm-deed-title">&#x1F3E1; Pine Hollow Farm</div>
+    <div class="farm-deed-title" id="farmDeedTitle">&#x1F3E1; Pine Hollow Farm</div>
     <div class="farm-deed-row"><span class="farm-deed-label">Owner</span><span class="farm-deed-val" id="farmDeedOwner">---</span></div>
     <div class="farm-deed-row"><span class="farm-deed-label">Property Value</span><span class="farm-deed-val gold" id="farmDeedValue">45,000 FC</span></div>
     <div class="farm-deed-row"><span class="farm-deed-label">Region</span><span class="farm-deed-val" style="color:#84cc16">Farmlands</span></div>
@@ -3164,7 +3169,7 @@
 <section class="farm-hub hidden" id="farmHub" aria-label="Pine Hollow Farm menu" aria-hidden="true">
   <header class="farm-hub-head">
     <div>
-      <div class="farm-hub-title">&#x1F3E1; Pine Hollow Farm</div>
+      <div class="farm-hub-title"><span id="farmHubTitleText">&#x1F3E1; Pine Hollow Farm</span><button class="farm-name-btn" id="farmRenameBtn" type="button">Rename</button></div>
       <div class="farm-hub-sub" id="farmHubSummary">Level 1 farm &middot; peaceful production</div>
     </div>
     <button class="farm-hub-close" id="farmHubClose" type="button" aria-label="Close farm menu">&times;</button>
@@ -4240,7 +4245,7 @@ function getPortfolioEntries() {
   const animalAttention=(farm.animalResidents || []).some(animal=>['Hungry','Lonely','Sick'].includes(animal.mood) || Number(animal.cleanliness)<45)
   entries.push({
     id:'portfolio_pine_hollow',synthetic:true,syntheticType:'farm',region_id:'farmlands',
-    property_name:'Pine Hollow Farm',property_type:'farm-estate',owner_name:owner,
+    property_name:farm.farmName || farm.property_name || 'Pine Hollow Farm',property_type:'farm-estate',owner_name:owner,
     value:Number(farm.propertyValue) || 45000,status:`Farm Level ${farm.farmLevel}`,
     level:farm.farmLevel,incomeText:`${farmReadyCount} ready farm tasks`,ready:farmReadyCount>0,needsAttention:animalAttention || farmReadyCount>0,
       readyText:farmReadyCount ? `${farmReadyCount} actions ready` : 'Farm routine caught up',lastVisitedAt:Number(farm.lastFarmVisitAt) || 0,tile_x:WORLD_SIZE/2,tile_y:WORLD_SIZE/2
@@ -4420,12 +4425,14 @@ function selectionDescriptor(target) {
   if (target?.kind==='farm-animal') return { kicker:'Pine Hollow Farm · Animal',name:target.data.name || target.data.species || 'Farm Animal',owner:currentPlayerOwnerName(),region:'Farmlands',status:target.data.mood || 'Happy',value:`Trust ${target.data.trust || 0}%`,deed:'Farm resident',organization:'Pine Hollow Farm',actions:['interact','portfolio'] }
   if (target?.kind==='farm-parcel') {
     const parcel=target.data
+    const farm=getFarmData()
+    const farmName=parcel.farm_name || farm.farmName || farm.property_name || 'Pine Hollow Farm'
     const placed=state.buildings.filter(item=>isInCurrentRegion(item) && Number(item.tile_x)>=parcel.x && Number(item.tile_x)<parcel.x+parcel.width && Number(item.tile_y)>=parcel.y && Number(item.tile_y)<parcel.y+parcel.height).length
     return {
-      kicker:'Farmlands · Deeded Farm Plot',name:`${parcel.owner_name || currentPlayerOwnerName()} Farm`,
+      kicker:'Farmlands · Deeded Farm Plot',name:farmName,
       owner:parcel.owner_name || currentPlayerOwnerName(),region:'Farmlands',status:parcel.starter ? 'Starter Land' : 'Owned',
       value:`${Number(parcel.value || 500).toLocaleString()} FC`,deed:`Plot ${parcel.plotNumber || 1} · ${parcel.width}×${parcel.height}`,
-      organization:'Pine Hollow Farm',extra:`${placed} placed build${placed===1?'':'s'} on this plot.`,actions:['portfolio']
+      organization:farmName,extra:`${placed} placed build${placed===1?'':'s'} on this plot.`,actions:['portfolio']
     }
   }
   if (target?.kind==='sanctuary-slot') {
@@ -4520,6 +4527,8 @@ function getFarmData() {
   if (farmDataCache) {
     farmDataCache.owner_id=farmDataCache.owner_id || state.userId || 'local-player'
     farmDataCache.owner_name=currentPlayerOwnerName()
+    farmDataCache.farmName=String(farmDataCache.farmName || farmDataCache.property_name || 'Pine Hollow Farm').slice(0,42)
+    farmDataCache.property_name=farmDataCache.farmName
     return farmDataCache
   }
   let data = null
@@ -4531,7 +4540,8 @@ function getFarmData() {
   data.owner_id=data.owner_id || state.userId || 'local-player'
   data.owner_name=currentPlayerOwnerName()
   data.region_id='farmlands'
-  data.property_name='Pine Hollow Farm'
+  data.farmName = String(data.farmName || data.property_name || 'Pine Hollow Farm').slice(0,42)
+  data.property_name=data.farmName
   data.property_type='farm-estate'
   data.tile_x=Number(data.tile_x) || WORLD_SIZE/2
   data.tile_y=Number(data.tile_y) || WORLD_SIZE/2
@@ -4678,7 +4688,8 @@ function getFarmData() {
       plotNumber:Number(rawParcel.plotNumber) || parcelIndex+1,
       value:Number(rawParcel.value) || (rawParcel.starter ? 45000 : 500),
       region_id:'farmlands',owner_id:rawParcel.owner_id || data.owner_id,
-      owner_name:rawParcel.owner_id==='local-player' ? data.owner_name : (rawParcel.owner_name || data.owner_name)
+      owner_name:rawParcel.owner_id==='local-player' ? data.owner_name : (rawParcel.owner_name || data.owner_name),
+      farm_name:rawParcel.farm_name || data.farmName
     }
     if (data.landParcels.some(existing=>farmRectanglesOverlap(parcel,existing))) continue
     data.landParcels.push(parcel)
@@ -4688,7 +4699,7 @@ function getFarmData() {
       id:'pine-hollow-home-parcel',x:data.landOrigin.x,y:data.landOrigin.y,
       width:FARM_LAND_PARCEL_SIZE,height:FARM_LAND_PARCEL_SIZE,
       plotNumber:1,value:45000,region_id:'farmlands',owner_id:data.owner_id,owner_name:data.owner_name,
-      purchasedAt:Date.now(),starter:true
+      purchasedAt:Date.now(),starter:true,farm_name:data.farmName
     })
   }
   farmDataCache=data
@@ -4738,7 +4749,8 @@ function getFarmLandParcels() {
       id:`legacy-farm-land-${block.id || key}`,x,y,
       width:FARM_LAND_PARCEL_SIZE,
       height:FARM_LAND_PARCEL_SIZE,
-      purchasedAt:Date.now(),legacy:true
+      purchasedAt:Date.now(),legacy:true,
+      region_id:'farmlands',owner_id:data.owner_id,owner_name:data.owner_name,farm_name:data.farmName || data.property_name || 'Pine Hollow Farm'
     }
     if (data.landParcels.some(parcel=>farmRectanglesOverlap(legacyParcel,parcel))) continue
     data.landParcels.push(legacyParcel)
@@ -4835,7 +4847,7 @@ function buyFarmLandParcel(x,y) {
   data.landParcels.push({
     id:`pine-hollow-land-${Date.now()}`, ...candidate,
     plotNumber,value:cost,region_id:'farmlands',world_instance_id:WORLD_INSTANCE_ID,
-    purchasedAt:Date.now(),owner_id:state.userId || 'local-player',owner_name:currentPlayerOwnerName()
+    purchasedAt:Date.now(),owner_id:state.userId || 'local-player',owner_name:currentPlayerOwnerName(),farm_name:data.farmName || data.property_name || 'Pine Hollow Farm'
   })
   data.propertyValue=Math.max(Number(data.propertyValue) || 45000,45000)+cost
   state.coins-=cost
@@ -4992,6 +5004,9 @@ function updateFarmInventory() {
 
   // Set deed owner
   const name = state.player?.name || state.username || 'Farmer'
+  const farmName = data.farmName || data.property_name || 'Pine Hollow Farm'
+  const deedTitle = document.getElementById('farmDeedTitle')
+  if (deedTitle) deedTitle.textContent = `🏡 ${farmName}`
   document.getElementById('farmDeedOwner').textContent = name
   document.getElementById('farmDeedValue').textContent = `${(data.propertyValue || 45000).toLocaleString()} FC`
 }
@@ -6054,6 +6069,27 @@ function closeFarmHub() {
   document.getElementById('farmHubOpen').setAttribute('aria-expanded','false')
 }
 
+function renameFarm() {
+  const data = getFarmData()
+  const current = data.farmName || data.property_name || 'Pine Hollow Farm'
+  const next = window.prompt('Name your farm', current)
+  if (next === null) return
+  const clean = next.trim().replace(/\s+/g, ' ').slice(0, 42)
+  if (!clean) {
+    showToast('Farm name needed', 'Enter a farm name for your deed.')
+    return
+  }
+  data.farmName = clean
+  data.property_name = clean
+  ;(data.landParcels || []).forEach(parcel => { parcel.farm_name = clean })
+  saveFarmData(data)
+  farmDataCache = null
+  invalidateTileCache()
+  updateFarmInventory()
+  renderFarmHub()
+  showToast('Farm renamed', `${clean} is now on your Pine Hollow deed.`)
+}
+
 function renderFarmHub() {
   const hub = document.getElementById('farmHub')
   if (!hub || hub.classList.contains('hidden')) return
@@ -6061,8 +6097,11 @@ function renderFarmHub() {
   ensureFarmMvpOrders(data)
   saveFarmData(data)
   const now = Date.now()
+  const farmName = data.farmName || data.property_name || 'Pine Hollow Farm'
+  const titleText = document.getElementById('farmHubTitleText')
+  if (titleText) titleText.textContent = `🏡 ${farmName}`
   document.getElementById('farmHubSummary').textContent =
-    `Level ${data.farmLevel} / 20 · ${data.farmXP}/${farmXPNeeded(data.farmLevel)} XP · ${state.coins} FC`
+    `${currentPlayerOwnerName()} · Level ${data.farmLevel} / 20 · ${data.farmXP}/${farmXPNeeded(data.farmLevel)} XP · ${state.coins} FC`
   const sanctuaryTab=document.querySelector('[data-farm-tab="sanctuary"]')
   if (sanctuaryTab) sanctuaryTab.textContent=`${data.sanctuary.status === 'unlocked' ? '🦊' : '🔒'} Sanctuary`
   document.querySelectorAll('.farm-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.farmTab === activeFarmTab))
@@ -6586,10 +6625,11 @@ function sellFarmSurplus() {
   const key = Object.keys(data.goods).find(k=>data.goods[k]>0) || Object.keys(data.inventory).find(k=>data.inventory[k]>2)
   if (!key) return
   if (data.goods[key] !== undefined) data.goods[key]--; else data.inventory[key]--
-  const value = farmCropInfo(key)?.sellValue || 6
+  const profile = cityMarketProfile(key)
+  const value = profile.value
   state.coins += value; document.getElementById('statCoins').textContent = state.coins
   saveFarmData(data); updateFarmInventory(); renderFarmHub()
-  showToast('Roadside Sale',`Sold 1 ${farmCropInfo(key)?.name || FARM_GOODS[key]?.name} for ${value} FC.`)
+  showToast('Roadside Sale',`Sold 1 ${farmCropInfo(key)?.name || FARM_GOODS[key]?.name || key} for ${value} FC · market ${profile.multiplier.toFixed(1)}x.`)
 }
 
 function claimFarmSeeds() {
@@ -10633,6 +10673,33 @@ function updateCityPlotProgress(dt,initial=false) {
   updateConstructionHUD()
   const panel=document.getElementById('constructionPanel')
   if (panel?.classList.contains('open')) renderConstructionPanel()
+  if (initial || !cityPlotRuntime.lastVerificationAt || Date.now()-cityPlotRuntime.lastVerificationAt>60000) verifyCityZoneLoop()
+}
+
+function verifyCityZoneLoop() {
+  cityPlotRuntime.lastVerificationAt=Date.now()
+  const summary={}
+  for (const building of state.buildings || []) {
+    if (normalizeRegionId(building.region_id ?? building.region) !== 'city') continue
+    const typeId=building.object_type || building.building_type
+    if (!CITY_PLOT_TYPES.has(typeId)) continue
+    const meta=CITY_PLOT_META[typeId] || {}
+    const zone=meta.zone || typeId
+    const stage=getCityPlotStage(building).stage
+    if (!summary[zone]) summary[zone]={ plots:0,complete:0,building:0,population:0,income:0 }
+    summary[zone].plots++
+    if (stage>=6) summary[zone].complete++
+    else summary[zone].building++
+    summary[zone].population+=cityPlotPopulation(building)
+    summary[zone].income+=getEffectiveIncome(building)
+  }
+  console.info('[CITY-ZONE] SimCity loop check', {
+    population:cityTotalPopulation(),
+    commercialPlots:cityCompletedCommercialCount(),
+    market:cityAverageMarketPressure().multiplier.toFixed(2),
+    zones:summary
+  })
+  return summary
 }
 
 function convertLegacyCityBuildingsToStaged() {
@@ -11649,7 +11716,10 @@ function drawFarmLandParcels() {
       const selected=state.selectedWorldTarget?.kind==='farm-parcel' && state.selectedWorldTarget.data.id===parcel.id
       if ((z>.72 && Math.hypot(state.player.x-parcelCenter.x,state.player.y-parcelCenter.y)<24) || selected) {
         const sign=worldToScreen(parcel.x+.7,parcel.y+.7)
-        const owner=`${parcel.owner_name || currentPlayerOwnerName()} Farm`
+        const farm=getFarmData()
+        const ownerName=parcel.owner_name || currentPlayerOwnerName()
+        const farmName=parcel.farm_name || farm.farmName || farm.property_name || 'Pine Hollow Farm'
+        const owner=`${ownerName} · ${farmName}`
         ctx.font=`800 ${Math.max(7,8*z)}px Inter`;ctx.textAlign='left'
         const width=ctx.measureText(owner).width+12*z
         ctx.fillStyle='rgba(8,8,12,.82)';ctx.fillRect(sign.x-3*z,sign.y-18*z,width,12*z)
@@ -13064,6 +13134,7 @@ function setupUI() {
   document.getElementById('farmHubOpen').addEventListener('click', () => {
     openFarmHub()
   })
+  document.getElementById('farmRenameBtn')?.addEventListener('click', renameFarm)
   document.getElementById('farmReturnCityBtn').addEventListener('click',()=>startTravel('city'))
   document.getElementById('farmHubClose').addEventListener('click', closeFarmHub)
   document.getElementById('farmReturnClose').addEventListener('click', () => document.getElementById('farmReturnCard').classList.remove('open'))
@@ -13989,6 +14060,7 @@ function cityIncomeFactors(building) {
   const supply=getCitySupply()
   const totalPopulation=cityTotalPopulation()
   const nearbyPopulation=nearbyCityPopulation(building)
+  const marketPressure=cityAverageMarketPressure(supply)
   const businessHealth=Math.max(0,Math.min(1,Number(building.business_health ?? 100)/100))
   const foodSupplyBonus=Math.max(.35,Math.min(1.25,.65+citySupplyHealth(supply)*.6))
   const district=cityDistrictAtTile(Number(building.tile_x),Number(building.tile_y))
@@ -14000,14 +14072,14 @@ function cityIncomeFactors(building) {
   let why='City support is healthy.'
   if (typeId==='shop') {
     customers=nearbyPopulation || totalPopulation
-    demand=Math.max(0,Math.min(1.35,customers/18))
+    demand=Math.max(0,Math.min(1.75,(customers/18)*marketPressure.multiplier))
     why=customers<8 ? 'Commercial income is low because the city needs more nearby residents/customers.' : 'Commercial income is supported by nearby residents and city customers.'
   } else if (typeId==='club') {
     customers=nearbyPopulation || totalPopulation
-    demand=Math.max(0,Math.min(1.45,(customers/28)*(.75+happiness*.5)))
+    demand=Math.max(0,Math.min(1.85,(customers/28)*(.75+happiness*.5)*Math.max(.75,marketPressure.multiplier*.9)))
     why=customers<16 ? 'Entertainment income is low until the city has more people and nightlife demand.' : 'Entertainment income is boosted by population and happiness.'
   } else if (typeId==='warehouse') {
-    const logisticsDemand=Math.max(0.15,Math.min(1.35,(state.shipments?.active?.length || 0)*.18+totalPopulation/35+(Number(supply.food || 0)<30 ? .2 : 0)))
+    const logisticsDemand=Math.max(0.15,Math.min(1.65,((state.shipments?.active?.length || 0)*.18+totalPopulation/35+(Number(supply.food || 0)<30 ? .2 : 0))*Math.max(.75,marketPressure.multiplier*.85)))
     demand=logisticsDemand
     customers=totalPopulation
     why='Industrial income follows logistics demand, shipments, shortages, and city scale.'
@@ -14019,7 +14091,7 @@ function cityIncomeFactors(building) {
   if (construction.stage<4) why='Income is locked while this zone is still a dirt lot/foundation/frame.'
   else if (construction.stage<6) why='This zone is partially opening and earns only 25% until complete.'
   if (building.lifecycleStatus==='abandoned' || building.businessClosed) why='This property is closed or abandoned. Renovation is required before income returns.'
-  return { customers,totalPopulation,businessHealth,foodSupplyBonus,zoneSizeBonus,propertyUpgradeBonus,populationDemand:demand,why }
+  return { customers,totalPopulation,businessHealth,foodSupplyBonus,zoneSizeBonus,propertyUpgradeBonus,populationDemand:demand,marketPressure:marketPressure.multiplier,avgProductValue:marketPressure.avgValue,why }
 }
 
 function cityIncomeMultiplier(building) {
@@ -14074,7 +14146,7 @@ function openPropertyPanel(buildingId) {
   document.getElementById('propIncome').textContent = getEffectiveIncome(building).toFixed(1) + '/min'
   document.getElementById('propUpgradeCount').textContent = prop.upgrades.length + ' / 3'
   document.getElementById('propDistrictBonus').textContent = incomeFactors
-    ? `Customers ${incomeFactors.customers} · City pop ${incomeFactors.totalPopulation} · Business ${Math.round(incomeFactors.businessHealth*100)}% · ${incomeFactors.why}`
+    ? `Customers ${incomeFactors.customers} · City pop ${incomeFactors.totalPopulation} · Market ${incomeFactors.marketPressure.toFixed(1)}x · Avg goods ${Math.round(incomeFactors.avgProductValue)} FC · Business ${Math.round(incomeFactors.businessHealth*100)}% · ${incomeFactors.why}`
     : (building.in_district ? 'Yes (+20%)' : 'None')
   const plotStatusRow=document.getElementById('propPlotStatusRow')
   const lifecycleRow=document.getElementById('propLifecycleRow')
@@ -16206,6 +16278,68 @@ function citySupplyHealth(supply=getCitySupply()) {
   const ratios=Object.entries(CITY_DEMAND_ITEMS).map(([key,item])=>Math.min(1,cityStockFor(key,supply)/item.target))
   return ratios.reduce((sum,value)=>sum+value,0)/ratios.length
 }
+function cityCompletedCommercialCount() {
+  return (state.buildings || []).filter(item=>{
+    if (normalizeRegionId(item.region_id ?? item.region) !== 'city') return false
+    const typeId=item.object_type || item.building_type
+    if (!['shop','club','market','restaurant'].includes(typeId)) return false
+    return getCityPlotStage(item).stage >= 6 && item.lifecycleStatus !== 'abandoned'
+  }).length
+}
+function cityDemandProxyForItem(key) {
+  if (CITY_DEMAND_ITEMS[key]) return key
+  if (['eggs'].includes(key)) return 'eggs'
+  if (['milk','cream'].includes(key)) return 'milk'
+  if (['bread','eggBread'].includes(key)) return 'bread'
+  if (['cheese'].includes(key)) return 'cheese'
+  return 'food'
+}
+function cityBaseMarketValue(key) {
+  const crop=farmCropInfo(key)
+  if (crop?.sellValue) return crop.sellValue
+  const goodsValues={ chickenFeed:5,cowFeed:6,eggs:9,milk:10,bread:13,eggBread:16,cream:12,cheese:22,food:7 }
+  return goodsValues[key] || 6
+}
+function cityMarketProfile(key,supply=getCitySupply()) {
+  const proxy=cityDemandProxyForItem(key)
+  const item=CITY_DEMAND_ITEMS[proxy] || CITY_DEMAND_ITEMS.food
+  const stock=cityStockFor(proxy,supply)
+  const target=Math.max(1,item.target || 20)
+  const shortageRatio=Math.max(0,target-stock)/target
+  const oversupplyRatio=Math.max(0,stock-target)/target
+  const population=Math.max(0,cityTotalPopulation())
+  const commercialCount=cityCompletedCommercialCount()
+  const populationDemand=0.7+Math.min(1.45,population/38)
+  const commercialDemand=0.75+Math.min(1.25,commercialCount/7)
+  const shortagePressure=1+(shortageRatio*1.35)-(oversupplyRatio*.55)
+  const businessPressure=Math.max(.55,Math.min(1.25,(Number(supply.businessHealth) || 65)/75))
+  const multiplier=Math.max(.35,Math.min(3.25,shortagePressure*populationDemand*commercialDemand*businessPressure))
+  const base=cityBaseMarketValue(key)
+  return {
+    key,proxy,base,stock,target,
+    demand:Math.max(0,target-stock),
+    population,commercialCount,
+    populationDemand,commercialDemand,businessPressure,
+    multiplier,
+    value:Math.max(1,Math.round(base*multiplier))
+  }
+}
+function cityMarketValue(key,quantity=1,supply=getCitySupply()) {
+  return cityMarketProfile(key,supply).value*Math.max(0,Number(quantity) || 0)
+}
+function cityAverageMarketPressure(supply=getCitySupply()) {
+  const keys=Object.keys(CITY_DEMAND_ITEMS)
+  const profiles=keys.map(key=>cityMarketProfile(key,supply))
+  const multiplier=profiles.reduce((sum,item)=>sum+item.multiplier,0)/Math.max(1,profiles.length)
+  const value=profiles.reduce((sum,item)=>sum+item.value,0)/Math.max(1,profiles.length)
+  return { multiplier:Math.max(.45,Math.min(2.35,multiplier)), avgValue:value, profiles }
+}
+function contractMarketReward(contract,supply=getCitySupply()) {
+  if (!contract) return 0
+  const outgoingValue=Object.entries(contract.delivers || {}).reduce((sum,[key,amount])=>sum+cityMarketValue(key,amount,supply),0)
+  const consumedValue=Object.entries(contract.needs || {}).reduce((sum,[key,amount])=>sum+cityMarketValue(key,amount,supply)*.25,0)
+  return Math.max(Math.round((contract.rewardFC || 0)*.45),Math.round((contract.rewardFC || 0)*.45+outgoingValue*.75+consumedValue))
+}
 function applyBusinessSupplyEffects(supply,contract) {
   const gain=contract ? 4 : -2
   supply.businessHealth=Math.max(10,Math.min(100,supply.businessHealth+gain))
@@ -16295,8 +16429,8 @@ function renderCityDemandPanel() {
   const history=shipments.delivered.filter(item=>item.manualCollect && item.status === 'collected').slice(0,8)
   body.innerHTML=`
     <div class="demand-meter-grid">${Object.entries(CITY_DEMAND_ITEMS).map(([key,item])=>{
-      const stock=cityStockFor(key,supply), pct=Math.min(100,stock/item.target*100), demand=cityDemandFor(key,supply)
-      return `<article class="demand-meter"><strong><span>${item.icon} ${item.name}</span><span>${stock}/${item.target}</span></strong><div class="demand-bar"><span style="width:${pct}%"></span></div><small>${demand ? `City requests ${demand}` : 'Demand currently covered'}</small></article>`
+      const stock=cityStockFor(key,supply), pct=Math.min(100,stock/item.target*100), demand=cityDemandFor(key,supply), market=cityMarketProfile(key,supply)
+      return `<article class="demand-meter"><strong><span>${item.icon} ${item.name}</span><span>${stock}/${item.target}</span></strong><div class="demand-bar"><span style="width:${pct}%"></span></div><small>${demand ? `City requests ${demand}` : 'Demand currently covered'} · Market ${market.value} FC ea · ${market.multiplier.toFixed(1)}x</small></article>`
     }).join('')}</div>
     <div class="demand-meter"><strong><span>🏙️ City Economy</span><span>${supply.businessHealth}% health</span></strong><div class="demand-bar"><span style="width:${supply.businessHealth}%"></span></div><small>${supply.districtHappiness}% district happiness · +${Math.round((supply.businessIncomeBonus || 0)*100)}% business income</small></div>
     <h3 class="contract-section-title">Business Needs</h3>
@@ -16304,7 +16438,8 @@ function renderCityDemandPanel() {
     <h3 class="contract-section-title">Ready to Ship from Pine Hollow</h3>
     <div class="contract-list">${Object.entries(DELIVERY_CONTRACTS).map(([key,contract])=>{
       const canShip=farmHasIngredients(farm,contract.needs) && active.length < 3
-      return `<article class="contract-row"><div><h4>${contract.icon} ${contract.name}</h4><p>${farmFormatNeeds(contract.needs)} · ${contract.etaMs/1000}s · ${contract.rewardFC} FC · +${contract.reputation} rep</p></div><button class="farm-action" data-contract-action="dispatch:${key}" ${canShip ? '' : 'disabled'}>${canShip ? 'Dispatch' : 'Missing Goods'}</button></article>`
+      const marketReward=contractMarketReward(contract,supply)
+      return `<article class="contract-row"><div><h4>${contract.icon} ${contract.name}</h4><p>${farmFormatNeeds(contract.needs)} · ${contract.etaMs/1000}s · ${marketReward} FC market · +${contract.reputation} rep</p></div><button class="farm-action" data-contract-action="dispatch:${key}" ${canShip ? '' : 'disabled'}>${canShip ? 'Dispatch' : 'Missing Goods'}</button></article>`
     }).join('')}</div>
     <h3 class="contract-section-title">Active Contracts</h3>
     <div class="contract-list">${active.length ? active.map(item=>`<article class="contract-row"><div><h4>🚚 ${DELIVERY_CONTRACTS[item.contractType]?.name || 'Delivery'}</h4><p>${Math.max(0,Math.ceil((item.etaMs-(now-item.createdAt))/1000))}s remaining · ${item.amount} supply units</p></div><button class="farm-action" disabled>In Transit</button></article>`).join('') : '<div class="farm-empty">No active delivery contracts.</div>'}</div>
@@ -16319,8 +16454,9 @@ function dispatchDeliveryContract(contractType) {
   farmTakeIngredients(farm,contract.needs)
   const amount=Object.values(contract.delivers).reduce((sum,value)=>sum+value,0)
   const rewardMultiplier=1+getSkillBonus('logistics','deliveryReward')
+  const marketReward=contractMarketReward(contract,getCitySupply())
   const shipment=createShipment(amount,{
-    rewardFC:Math.floor(contract.rewardFC*rewardMultiplier), rewardXP:contract.farmerXP,
+    rewardFC:Math.floor(marketReward*rewardMultiplier), rewardXP:contract.farmerXP,
     reputation:contract.reputation, logisticsXP:contract.logisticsXP,
     contractType, delivers:{...contract.delivers}, etaMs:contract.etaMs, manualCollect:true
   })
