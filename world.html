@@ -5271,19 +5271,32 @@ function plantCrop(tx, ty, cropType) {
     showToast('Wrong Plant Bed',`${cropInfo.name} cannot be planted in this farm build.`)
     return
   }
-  if (data.crops.some(c => Number(c.tx) === tx && Number(c.ty) === ty)) return
   if ((data.inventory[cropType] || 0) < 1) {
     showToast('No seeds left', 'Harvest or fill orders to keep your crop stock moving.')
     return
   }
+  const cells=farmPlantBedCells(bed)
+  const openCells=cells.filter(cell=>!data.crops.some(c => Number(c.tx) === cell.tx && Number(c.ty) === cell.ty))
+  if (!openCells.length) {
+    showToast('Bed Already Planted','Every square in this farm build is already growing.')
+    return
+  }
+  const plantCount=Math.min(openCells.length,Number(data.inventory[cropType]) || 0)
+  if (plantCount < openCells.length) {
+    showToast('Partial Planting',`You only had ${plantCount} ${cropInfo.name} seed${plantCount===1?'':'s'} available.`)
+  }
   data.inventory[cropType]--
   const season=currentSeasonData()
-  data.crops.push({ tx, ty, type: cropType, plantedAt: Date.now(), growthTime:Math.max(1000,Math.round(cropInfo.growthTime/season.cropGrowth)), plantedSeason:getLivingWorldData().season })
+  const plantedAt=Date.now(),growthTime=Math.max(1000,Math.round(cropInfo.growthTime/season.cropGrowth)),plantedSeason=getLivingWorldData().season
+  data.inventory[cropType]-=(plantCount-1)
+  for (const cell of openCells.slice(0,plantCount)) {
+    data.crops.push({ tx:cell.tx, ty:cell.ty, type: cropType, plantedAt, growthTime, plantedSeason, bedId:bed.id || null })
+  }
   saveFarmData(data)
   closeFarmOverlay()
   updateFarmInventory()
-  showToast('Planted ' + cropInfo.name, 'One crop used from your barn.')
-  awardSkillXP('farmer', 5)
+  showToast('Planted ' + cropInfo.name, `${plantCount} square${plantCount===1?'':'s'} planted across the farm build.`)
+  awardSkillXP('farmer', 3+plantCount)
   invalidateTileCache()
 }
 
@@ -5297,18 +5310,24 @@ function harvestCrop(tx, ty, bonusYield=0) {
   if (!state || !state.done) return
 
   const info = farmCropInfo(crop.type)
-  let yield_ = info.yield || 1
-  yield_ = Math.floor(yield_ * (1 + getSkillBonus('farmer', 'cropYield')))
-  yield_ = Math.max(1,Math.round(yield_*currentSeasonData().cropYield))
+  const bed=farmPlantBedAt(tx,ty)
+  const readyCrops=(bed ? farmPlantBedCells(bed) : [{tx,ty}])
+    .map(cell=>data.crops.find(c=>Number(c.tx)===cell.tx && Number(c.ty)===cell.ty))
+    .filter(item=>item && item.type===crop.type && getCropStageInfo(item)?.done)
+  let perCellYield = info.yield || 1
+  perCellYield = Math.floor(perCellYield * (1 + getSkillBonus('farmer', 'cropYield')))
+  perCellYield = Math.max(1,Math.round(perCellYield*currentSeasonData().cropYield))
   const soilQuality = getRegionalHealth('farmlands')['Soil quality'] || 50
-  if (soilQuality >= 75) yield_ += 1
+  if (soilQuality >= 75) perCellYield += 1
+  let yield_ = perCellYield * Math.max(1,readyCrops.length)
   yield_ += Math.max(0,Number(bonusYield) || 0)
   const siloUsed = farmInventoryCropKeys().reduce((sum, key) => sum + (data.inventory[key] || 0), 0)
   if (siloUsed + yield_ > data.siloCapacity) {
     showToast('Silo Full', 'Fill a delivery order or send crops to the city first.')
     return
   }
-  data.crops.splice(idx, 1)
+  const readyKeys=new Set(readyCrops.map(item=>`${Number(item.tx)},${Number(item.ty)}`))
+  data.crops=data.crops.filter(item=>!(item.type===crop.type && readyKeys.has(`${Number(item.tx)},${Number(item.ty)}`)))
   data.inventory[crop.type] = (data.inventory[crop.type] || 0) + yield_
   addFarmXP(data, 6)
   if (data.farmGuideStep === 'harvest') data.farmGuideStep = 'makeFeed'
@@ -5319,10 +5338,9 @@ function harvestCrop(tx, ty, bonusYield=0) {
   createNewsItem('Farm', 'Crops harvested at the farm.', yield_ + ' ' + info.name + ' brought in.', 'farmlands', 2)
   closeFarmOverlay()
   updateFarmInventory()
-  const bed=farmPlantBedAt(tx,ty)
   const bedType=bed?.object_type || bed?.building_type
   const actionText=['berry-field','vineyard','flower-field','orchard-row'].includes(bedType) ? 'Collected' : 'Harvested'
-  showToast(`${actionText} ${yield_} ${info.name}!`, bonusYield ? `Fast hands bonus: +${bonusYield}` : 'Plant bed cleared and ready again.')
+  showToast(`${actionText} ${yield_} ${info.name}!`, `${readyCrops.length} square${readyCrops.length===1?'':'s'} cleared and ready again.${bonusYield ? ` Fast hands bonus: +${bonusYield}` : ''}`)
   completeGoalHarvest()
   invalidateTileCache()
 }
@@ -6719,11 +6737,33 @@ function saveRoadsideStandStore() {
 
 function roadsideItemInfo(key) {
   const crop=farmCropInfo(key), good=FARM_GOODS[key]
+  const profile=cityMarketProfile(key)
   return {
     key,
     name:crop?.name || good?.name || String(key).replace(/-/g,' ').replace(/\b\w/g,char=>char.toUpperCase()),
     icon:crop?.icon || good?.icon || '📦',
-    price:cityMarketProfile(key).value
+    price:profile.value,
+    basePrice:crop?.sellValue || good?.value || profile.value,
+    marketMultiplier:profile.multiplier || 1
+  }
+}
+
+function roadsidePriceBounds(key) {
+  const info=roadsideItemInfo(key)
+  const base=Math.max(1,Number(info.basePrice) || Number(info.price) || 1)
+  return { min:Math.max(1,Math.floor(base*.5)), max:Math.max(2,Math.ceil(base*4)), suggested:Math.max(1,Number(info.price) || base) }
+}
+
+function normalizeRoadsideItem(key,item={}) {
+  const info=roadsideItemInfo(key),bounds=roadsidePriceBounds(key)
+  const price=Math.max(bounds.min,Math.min(bounds.max,Math.round(Number(item.price) || bounds.suggested)))
+  return {
+    key,name:item.name || info.name,icon:item.icon || info.icon,
+    qty:Math.max(0,Number(item.qty) || 0),
+    price,suggestedPrice:bounds.suggested,basePrice:info.basePrice,marketMultiplier:info.marketMultiplier,
+    priceMode:item.priceMode || 'owner',
+    stockedAt:Number(item.stockedAt) || Date.now(),
+    updatedAt:Date.now()
   }
 }
 
@@ -6731,7 +6771,12 @@ function roadsideStandData(stand) {
   const id=roadsideStandId(stand), store=getRoadsideStandStore()
   const existing=stand?.roadsideStand || store[id] || {}
   existing.stock=existing.stock && typeof existing.stock==='object' ? existing.stock : {}
+  for (const [key,item] of Object.entries(existing.stock)) existing.stock[key]=normalizeRoadsideItem(key,item)
   existing.earnings=Math.max(0,Number(existing.earnings) || 0)
+  existing.sales=Array.isArray(existing.sales) ? existing.sales.slice(-30) : []
+  existing.version=2
+  existing.objectId=id
+  existing.regionId=normalizeRegionId(stand?.region_id ?? stand?.region ?? 'farmlands')
   existing.ownerName=stand?.owner_name || existing.ownerName || ownerNameFor(stand)
   existing.updatedAt=Number(existing.updatedAt) || Date.now()
   store[id]=existing
@@ -6750,6 +6795,55 @@ function saveRoadsideStandData(stand,data=roadsideStandData(stand)) {
     saveOwnershipMetadata(stand)
   }
   saveRoadsideStandStore()
+  syncRoadsideStandToBackend(stand,data)
+}
+
+async function fetchRoadsideStandFromBackend(stand) {
+  const id=roadsideStandId(stand)
+  try {
+    const res=await fetch(`/api/world/farm/stand?standId=${encodeURIComponent(id)}`)
+    const contentType=res.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) return null
+    const payload=await res.json()
+    if (!payload.ok || !payload.stand) return null
+    const remote=payload.stand
+    const data=roadsideStandData(stand)
+    data.stock=remote.stock && typeof remote.stock==='object' ? remote.stock : data.stock
+    data.earnings=Math.max(Number(data.earnings) || 0,Number(remote.earnings) || 0)
+    data.sales=Array.isArray(remote.sales) ? remote.sales.slice(-30) : data.sales
+    data.updatedAt=Date.parse(remote.updated_at || 0) || Date.now()
+    getRoadsideStandStore()[id]=data
+    stand.roadsideStand=data
+    saveRoadsideStandStore()
+    return data
+  } catch (error) {
+    console.warn('[FARM-STAND] Backend load skipped:', error.message)
+    return null
+  }
+}
+
+async function syncRoadsideStandToBackend(stand,data) {
+  if (!stand || !data || window.__facelessDayOneResetting) return
+  try {
+    const res=await fetch('/api/world/farm/stand',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        standId:roadsideStandId(stand),
+        ownerId:stand.owner_id || state.userId || 'local-player',
+        ownerName:stand.owner_name || ownerNameFor(stand),
+        regionId:normalizeRegionId(stand.region_id ?? stand.region ?? 'farmlands'),
+        tileX:stand.tile_x,
+        tileY:stand.tile_y,
+        stock:data.stock || {},
+        earnings:data.earnings || 0,
+        sales:data.sales || []
+      })
+    })
+    if (!res.ok) return
+  } catch (error) {
+    console.warn('[FARM-STAND] Backend sync skipped:', error.message)
+  }
 }
 
 function roadsideInventoryAmount(farm,key) {
@@ -6784,6 +6878,7 @@ function openRoadsideStand(stand) {
   state.currentRoadsideStandObject=stand
   document.getElementById('roadsideStandOverlay')?.classList.remove('hidden')
   renderRoadsideStand()
+  fetchRoadsideStandFromBackend(stand).then(data=>{ if (data && state.currentRoadsideStandId===roadsideStandId(stand)) renderRoadsideStand() })
 }
 
 function closeRoadsideStand() {
@@ -6809,12 +6904,12 @@ function renderRoadsideStand() {
     }
     const sellable=roadsideSellableKeys(farm)
     html+=sellable.length ? sellable.map(key=>{
-      const info=roadsideItemInfo(key), owned=roadsideInventoryAmount(farm,key), price=info.price
-      return `<article class="roadside-stand-row"><div class="roadside-stand-icon">${info.icon}</div><div><h4>${safeText(info.name)}</h4><p>Farm inventory ${owned} · suggested market price ${price} FC</p></div><div class="roadside-stand-actions"><button class="farm-action gold" data-roadside-action="stock:${key}">Stock 1</button></div></article>`
+      const info=roadsideItemInfo(key), owned=roadsideInventoryAmount(farm,key), bounds=roadsidePriceBounds(key)
+      return `<article class="roadside-stand-row"><div class="roadside-stand-icon">${info.icon}</div><div><h4>${safeText(info.name)}</h4><p>Farm inventory ${owned} · demand price ${bounds.suggested} FC · market ${info.marketMultiplier.toFixed(1)}x</p></div><div class="roadside-stand-actions"><button class="farm-action gold" data-roadside-action="stock:${key}">Stock 1</button></div></article>`
     }).join('') : '<div class="farm-empty">No farm goods available to stock yet. Harvest crops or collect products first.</div>'
     html+=stockEntries.length ? `<div class="roadside-note">Current shelf stock</div>${stockEntries.map(([key,item])=>{
-      const info=roadsideItemInfo(key)
-      return `<article class="roadside-stand-row"><div class="roadside-stand-icon">${info.icon}</div><div><h4>${safeText(item.name || info.name)}</h4><p>${item.qty} listed · ${item.price || info.price} FC each</p></div><div class="roadside-stand-actions"><button class="farm-action" data-roadside-action="withdraw:${key}">Withdraw 1</button></div></article>`
+      const info=roadsideItemInfo(key),bounds=roadsidePriceBounds(key),price=Number(item.price) || info.price
+      return `<article class="roadside-stand-row"><div class="roadside-stand-icon">${info.icon}</div><div><h4>${safeText(item.name || info.name)}</h4><p>${item.qty} listed · ${price} FC each · demand suggests ${bounds.suggested} FC</p><label class="roadside-note">Owner price <input class="roadside-price-input" data-roadside-price="${safeText(key)}" type="number" min="${bounds.min}" max="${bounds.max}" value="${price}" style="width:72px;background:rgba(0,0,0,.35);border:1px solid rgba(245,196,81,.25);color:#fff;border-radius:8px;padding:.25rem"></label></div><div class="roadside-stand-actions"><button class="farm-action" data-roadside-action="price:${key}">Set Price</button><button class="farm-action" data-roadside-action="market:${key}">Use Demand</button><button class="farm-action" data-roadside-action="withdraw:${key}">Withdraw 1</button></div></article>`
     }).join('')}` : '<div class="roadside-note">Your shelves are empty. Stock an item to let visitors shop.</div>'
   } else {
     html+=stockEntries.length ? stockEntries.map(([key,item])=>{
@@ -6834,9 +6929,10 @@ function handleRoadsideStandAction(actionString) {
     if (roadsideInventoryAmount(farm,key)<1) { showToast('Nothing to Stock','That item is no longer in your farm inventory.'); renderRoadsideStand(); return }
     const info=roadsideItemInfo(key)
     roadsideTakeFromFarm(farm,key,1)
-    data.stock[key]=data.stock[key] || { key,name:info.name,icon:info.icon,qty:0,price:info.price }
+    data.stock[key]=normalizeRoadsideItem(key,data.stock[key] || { key,name:info.name,icon:info.icon,qty:0,price:info.price,priceMode:'market' })
     data.stock[key].qty=(Number(data.stock[key].qty) || 0)+1
-    data.stock[key].price=info.price
+    if (data.stock[key].priceMode==='market') data.stock[key].price=roadsidePriceBounds(key).suggested
+    data.stock[key].suggestedPrice=roadsidePriceBounds(key).suggested
     data.stock[key].name=info.name
     saveFarmData(farm)
     updateFarmInventory()
@@ -6859,6 +6955,26 @@ function handleRoadsideStandAction(actionString) {
     document.getElementById('statCoins').textContent=state.coins
     saveWorldPlayerProgress()
     showToast('Stand Earnings Collected',`${earnings} FC added to your wallet.`)
+  } else if (action==='price' && isPlayerOwnedObject(stand)) {
+    const item=data.stock[key]
+    if (!item) return
+    const input=[...document.querySelectorAll('[data-roadside-price]')].find(el=>el.dataset.roadsidePrice===key)
+    const bounds=roadsidePriceBounds(key)
+    const requested=Math.round(Number(input?.value) || bounds.suggested)
+    item.price=Math.max(bounds.min,Math.min(bounds.max,requested))
+    item.priceMode='owner'
+    item.suggestedPrice=bounds.suggested
+    item.updatedAt=Date.now()
+    showToast('Stand Price Updated',`${roadsideItemInfo(key).name} is now ${item.price} FC.`)
+  } else if (action==='market' && isPlayerOwnedObject(stand)) {
+    const item=data.stock[key]
+    if (!item) return
+    const bounds=roadsidePriceBounds(key)
+    item.price=bounds.suggested
+    item.priceMode='market'
+    item.suggestedPrice=bounds.suggested
+    item.updatedAt=Date.now()
+    showToast('Demand Price Applied',`${roadsideItemInfo(key).name} follows supply and demand at ${item.price} FC.`)
   } else if (action==='buy' && !isPlayerOwnedObject(stand)) {
     const item=data.stock[key], info=roadsideItemInfo(key), price=Math.max(1,Number(item?.price) || info.price)
     if (!item || Number(item.qty)<1) { showToast('Sold Out','That item is no longer on the shelf.'); renderRoadsideStand(); return }
@@ -6868,6 +6984,7 @@ function handleRoadsideStandAction(actionString) {
     item.qty--
     if (item.qty<=0) delete data.stock[key]
     data.earnings=(Number(data.earnings) || 0)+price
+    data.sales=(Array.isArray(data.sales) ? data.sales : []).concat([{key,price,buyerId:state.userId || 'local-player',buyerName:currentPlayerOwnerName(),soldAt:Date.now()}]).slice(-30)
     roadsideAddToFarm(farm,key,1)
     saveFarmData(farm)
     updateFarmInventory()
@@ -10399,7 +10516,7 @@ function drawOwnershipPlaque(item,s) {
 function drawBuilding(building) {
   const s=worldToScreen(building.tile_x,building.tile_y)
   drawBuildingAt(building,s)
-  drawOwnershipPlaque(building,s)
+  if (!shouldSuppressConnectedZonePlaque(building)) drawOwnershipPlaque(building,s)
 }
 
 function drawBuildPreview() {
@@ -11508,22 +11625,6 @@ function drawCityPlotBuilding(building,s) {
   const plotFill=stage===0 ? '#513827' : (typeId === 'club' ? '#21122f' : typeId === 'warehouse' ? '#343942' : typeId === 'shop' ? '#3d4650' : '#355c3a')
   diamond(s.x,s.y,hw,hh,plotFill,stage<6 ? (stage===0 ? '#facc15' : '#a855f7') : 'rgba(255,255,255,.13)')
   const zoneGroup=cityZoneGroup(building)
-  if (zoneGroup.length>1) {
-    ctx.save()
-    ctx.strokeStyle=plotFill
-    ctx.lineWidth=Math.max(10*z,Math.min(TILE_W,TILE_H)*z*.32)
-    ctx.lineCap='round'
-    zoneGroup.forEach(neighbor=>{
-      if (neighbor===building) return
-      const dx=Math.abs(Number(neighbor.tile_x)-Number(building.tile_x))
-      const dy=Math.abs(Number(neighbor.tile_y)-Number(building.tile_y))
-      const maxFoot=Math.max(Number(neighbor.footprint || 1),Number(building.footprint || 1))
-      if (dx>maxFoot && dy>maxFoot) return
-      const ns=worldToScreen(Number(neighbor.tile_x),Number(neighbor.tile_y))
-      ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(ns.x,ns.y);ctx.stroke()
-    })
-    ctx.restore()
-  }
   if(stage===0){
     ctx.strokeStyle='#facc15';ctx.lineWidth=Math.max(1,z);ctx.setLineDash([3*z,3*z])
     ctx.beginPath();ctx.moveTo(s.x-hw*.72,s.y);ctx.lineTo(s.x,s.y-hh*.72);ctx.lineTo(s.x+hw*.72,s.y);ctx.stroke();ctx.setLineDash([])
@@ -11651,9 +11752,10 @@ function drawCityPlotBuilding(building,s) {
     ctx.fillText('ZONED · WAITING',s.x,barY+8*z)
   }
   if (zoneGroup.length>1) {
-    const anchor=zoneGroup.slice().sort((a,b)=>Number(a.tile_y)-Number(b.tile_y) || Number(a.tile_x)-Number(b.tile_x))[0]
+    const anchor=cityZoneGroupAnchor(zoneGroup)
     if (anchor===building && z>.5) {
-      const label=`${CITY_ZONE_BUILD_INFO[typeId]?.zone || 'Zone'} x${zoneGroup.length}`
+      const sameOwner=zoneGroup.every(item=>ownerNameFor(item)===ownerNameFor(building))
+      const label=`${sameOwner ? `${ownerNameFor(building)} · ` : ''}${CITY_ZONE_BUILD_INFO[typeId]?.zone || 'Zone'} x${zoneGroup.length}`
       ctx.font=`800 ${Math.max(7,8*z)}px Inter`
       ctx.textAlign='center'
       const w=Math.max(72*z,ctx.measureText(label).width+12*z)
@@ -14823,6 +14925,18 @@ function cityZoneGroup(building) {
     all.forEach(item=>{ if(!seen.has(idFor(item)) && touches(next,item)) queue.push(item) })
   }
   return group
+}
+
+function cityZoneGroupAnchor(group) {
+  return (group || []).slice().sort((a,b)=>Number(a.tile_y)-Number(b.tile_y) || Number(a.tile_x)-Number(b.tile_x))[0] || null
+}
+
+function shouldSuppressConnectedZonePlaque(building) {
+  const typeId=building?.object_type || building?.building_type
+  if (!PLAYER_CITY_ZONE_TYPES.has(typeId) || normalizeRegionId(building?.region_id ?? building?.region)!=='city') return false
+  const group=cityZoneGroup(building).filter(item=>ownerNameFor(item)===ownerNameFor(building))
+  if (group.length<=1) return false
+  return cityZoneGroupAnchor(group)!==building
 }
 
 function cityZoneSizeBonus(building) {
