@@ -10050,6 +10050,97 @@ function drawFarmPlacedObject(building,s) {
     }
   } else if (typeId === 'greenhouse') {
     const footprint=Math.max(1,Number(building.footprint) || Number(BUILDING_TYPES[typeId]?.footprint) || 1)
+    let plantedCells=0,readyCells=0
+    const pulse=.55+Math.sin(Date.now()/650)*.18
+    for(let ox=0;ox<footprint;ox++) for(let oy=0;oy<footprint;oy++) {
+      const tx=Number(building.tile_x)+ox,ty=Number(building.tile_y)+oy
+      const cell=worldToScreen(tx,ty)
+      const crop=getCropAtTile(tx,ty)
+      const cropState=crop && getCropStageInfo(crop)
+      if (cropState) plantedCells++
+      if (cropState?.done) readyCells++
+      diamond(cell,'rgba(61,42,27,.72)','rgba(125,211,252,.22)')
+      ctx.strokeStyle='rgba(94,64,42,.7)'
+      ctx.lineWidth=Math.max(.8,1*z)
+      for (let row=-1;row<=1;row++) {
+        const offset=row*3.2*z
+        ctx.beginPath()
+        ctx.moveTo(cell.x-hw*.5,cell.y-hh*.18+offset)
+        ctx.lineTo(cell.x+hw*.5,cell.y+hh*.18+offset)
+        ctx.stroke()
+      }
+      if (cropState) {
+        const maturity=Math.max(.18,cropState.progress)
+        const cropColor=cropState.done ? cropState.info.color : '#22c55e'
+        for (let row=0;row<2;row++) for (let col=0;col<3;col++) {
+          const u=(col/2-.5)*.62
+          const v=(row-.5)*.42
+          const px=cell.x+(u-v)*(TILE_W*.25*z)
+          const py=cell.y+(u+v)*(TILE_H*.25*z)
+          const stem=Math.max(1.5,6*z*maturity)
+          ctx.strokeStyle='#14532d'; ctx.lineWidth=Math.max(.9,1.05*z)
+          ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,py-stem); ctx.stroke()
+          ctx.beginPath(); ctx.arc(px,py-stem,Math.max(1.1,2*z*maturity),0,Math.PI*2)
+          ctx.fillStyle=cropColor; ctx.fill()
+          if (cropState.done) {
+            ctx.beginPath(); ctx.arc(px+.8*z,py-stem-.6*z,Math.max(.45,.75*z),0,Math.PI*2)
+            ctx.fillStyle='rgba(254,240,138,.8)'; ctx.fill()
+          }
+        }
+        if (cropState.done) {
+          ctx.font=`${Math.max(8,10*z)}px sans-serif`
+          ctx.textAlign='center'
+          ctx.fillStyle='#fef08a'
+          ctx.fillText('*',cell.x,cell.y-hh-5*z)
+        }
+      } else {
+        ctx.font=`${Math.max(7,8*z)}px sans-serif`
+        ctx.textAlign='center'
+        ctx.globalAlpha=.58
+        ctx.fillStyle='#bbf7d0'
+        ctx.fillText('...',cell.x,cell.y+1*z)
+        ctx.globalAlpha=1
+      }
+    }
+    const north=worldToScreen(Number(building.tile_x),Number(building.tile_y))
+    const east=worldToScreen(Number(building.tile_x)+footprint-1,Number(building.tile_y))
+    const south=worldToScreen(Number(building.tile_x)+footprint-1,Number(building.tile_y)+footprint-1)
+    const west=worldToScreen(Number(building.tile_x),Number(building.tile_y)+footprint-1)
+    const roofPeak={x:(north.x+south.x)/2,y:Math.min(north.y,east.y,west.y,south.y)-hh*(1.25+.08*pulse)}
+    const baseMid={x:(north.x+south.x)/2,y:(north.y+south.y)/2}
+    ctx.fillStyle='rgba(186,230,253,.22)'
+    ctx.strokeStyle='rgba(224,242,254,.72)'
+    ctx.lineWidth=Math.max(1.1,1.5*z)
+    ctx.beginPath();ctx.moveTo(north.x,north.y-hh*.22);ctx.lineTo(east.x,east.y-hh*.22);ctx.lineTo(roofPeak.x,roofPeak.y);ctx.closePath();ctx.fill();ctx.stroke()
+    ctx.beginPath();ctx.moveTo(west.x,west.y-hh*.22);ctx.lineTo(south.x,south.y-hh*.22);ctx.lineTo(roofPeak.x,roofPeak.y);ctx.closePath();ctx.fill();ctx.stroke()
+    ctx.beginPath()
+    ;[north,east,south,west].forEach((point,index)=>index?ctx.lineTo(point.x,point.y+hh*.12):ctx.moveTo(point.x,point.y+hh*.12))
+    ctx.closePath()
+    ctx.fillStyle='rgba(14,165,233,.11)';ctx.fill()
+    ctx.strokeStyle='rgba(125,211,252,.65)';ctx.stroke()
+    ctx.strokeStyle=`rgba(255,255,255,${.35+pulse*.25})`
+    ctx.lineWidth=Math.max(.7,z)
+    for (let i=1;i<footprint;i++) {
+      const a=worldToScreen(Number(building.tile_x)+i,Number(building.tile_y))
+      const b=worldToScreen(Number(building.tile_x),Number(building.tile_y)+i)
+      ctx.beginPath();ctx.moveTo(a.x,a.y-hh*.2);ctx.lineTo(roofPeak.x,roofPeak.y);ctx.stroke()
+      ctx.beginPath();ctx.moveTo(b.x,b.y-hh*.2);ctx.lineTo(roofPeak.x,roofPeak.y);ctx.stroke()
+    }
+    ctx.beginPath();ctx.moveTo(baseMid.x-hw*.55,baseMid.y-hh*.92);ctx.lineTo(baseMid.x+hw*.55,baseMid.y-hh*1.18);ctx.stroke()
+    ctx.strokeStyle='rgba(224,242,254,.7)'
+    ctx.lineWidth=Math.max(.7,z)
+    ctx.beginPath();ctx.moveTo(s.x-hw*.34,s.y-hh*.95);ctx.lineTo(s.x+hw*.14,s.y-hh*1.09);ctx.stroke()
+    if (readyCells) {
+      ctx.font=`${Math.max(9,11*z)}px sans-serif`
+      ctx.fillStyle='#fef08a'
+      ctx.fillText(`${readyCells}/${footprint*footprint}`,s.x,s.y-hh*1.42)
+    } else if (!plantedCells) {
+      ctx.font=`${Math.max(8,10*z)}px sans-serif`
+      ctx.fillStyle='rgba(224,242,254,.85)'
+      ctx.fillText('greenhouse',s.x,s.y-hh*1.35)
+    }
+    ctx.restore()
+    return true
     for(let ox=0;ox<footprint;ox++) for(let oy=0;oy<footprint;oy++) {
       const cell=worldToScreen(building.tile_x+ox,building.tile_y+oy)
       diamond(cell,'rgba(20,184,166,.16)','rgba(125,211,252,.42)')
