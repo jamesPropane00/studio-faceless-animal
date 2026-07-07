@@ -1575,6 +1575,9 @@
       border-radius: var(--radius);
       padding: 1rem;
       min-width: 240px;
+      max-width: min(560px, calc(100vw - 1.5rem));
+      max-height: 78vh;
+      overflow-y: auto;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
     }
@@ -1613,6 +1616,18 @@
       transition: all 0.15s;
     }
     .farm-crop-item:hover { background: rgba(132,204,22,0.1); border-color: #84cc16; }
+    .farm-crop-item.unavailable { opacity: 0.4; cursor: not-allowed; }
+    .roadside-stand-grid { display:grid; gap:.55rem; width:min(520px,calc(100vw - 3rem)); }
+    .roadside-stand-row {
+      display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:.6rem;
+      padding:.55rem; border:1px solid rgba(245,196,81,.18); border-radius:12px;
+      background:linear-gradient(135deg,rgba(245,196,81,.05),rgba(132,204,22,.04));
+    }
+    .roadside-stand-row h4 { margin:0; color:#f4ffe5; font-size:.72rem; }
+    .roadside-stand-row p { margin:.12rem 0 0; color:#9eb08e; font-size:.56rem; }
+    .roadside-stand-icon { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; background:rgba(245,196,81,.1); font-size:1.15rem; }
+    .roadside-stand-actions { display:flex; gap:.35rem; flex-wrap:wrap; justify-content:flex-end; }
+    .roadside-note { color:#9eb08e; font-size:.58rem; line-height:1.35; margin:.3rem 0 .6rem; }
     .farm-crop-icon { font-size: 1.2rem; width: 28px; text-align: center; }
     .farm-crop-info { flex: 1; }
     .farm-crop-name { font-size: 0.78rem; font-weight: 700; color: var(--text); }
@@ -3215,6 +3230,13 @@
     <div class="farm-harvest-status"><span id="farmHarvestScore">0 / 7 gathered</span><span class="farm-harvest-timer" id="farmHarvestTimer">12.0s</span></div>
     <div class="farm-harvest-grid" id="farmHarvestGrid"></div>
   </div>
+</div>
+
+<div class="farm-plant-overlay hidden" id="roadsideStandOverlay">
+  <div class="farm-overlay-close" id="roadsideStandClose">&times;</div>
+  <div class="farm-plant-title" id="roadsideStandTitle">Roadside Stand</div>
+  <div class="roadside-note" id="roadsideStandNote">Stock farm goods for visitors or buy from this farm stand.</div>
+  <div class="roadside-stand-grid" id="roadsideStandBody"></div>
 </div>
 
 <script type="module">
@@ -5167,6 +5189,7 @@ function closeFarmOverlay() {
   stopFarmHarvestGame()
   document.getElementById('farmHarvestGame').classList.remove('active')
   document.getElementById('farmPlantOverlay').classList.add('hidden')
+  closeRoadsideStand()
 }
 
 // ── FARM PROMPTS ──
@@ -6664,6 +6687,187 @@ function sellFarmSurplus() {
   state.coins += value; document.getElementById('statCoins').textContent = state.coins
   saveFarmData(data); updateFarmInventory(); renderFarmHub()
   showToast('Roadside Sale',`Sold 1 ${farmCropInfo(key)?.name || FARM_GOODS[key]?.name || key} for ${value} FC · market ${profile.multiplier.toFixed(1)}x.`)
+}
+
+const ROADSIDE_STAND_STORE_KEY='fas_roadside_stands_v1'
+let roadsideStandStoreCache=null
+
+function roadsideStandId(stand) {
+  return String(stand?.id || `stand_${stand?.region_id || state.currentRegion}_${stand?.tile_x}_${stand?.tile_y}`)
+}
+
+function getRoadsideStandStore() {
+  if (roadsideStandStoreCache) return roadsideStandStoreCache
+  try { roadsideStandStoreCache=JSON.parse(localStorage.getItem(ROADSIDE_STAND_STORE_KEY) || '{}') } catch { roadsideStandStoreCache={} }
+  if (!roadsideStandStoreCache || typeof roadsideStandStoreCache!=='object') roadsideStandStoreCache={}
+  return roadsideStandStoreCache
+}
+
+function saveRoadsideStandStore() {
+  try { localStorage.setItem(ROADSIDE_STAND_STORE_KEY,JSON.stringify(getRoadsideStandStore())) } catch {}
+}
+
+function roadsideItemInfo(key) {
+  const crop=farmCropInfo(key), good=FARM_GOODS[key]
+  return {
+    key,
+    name:crop?.name || good?.name || String(key).replace(/-/g,' ').replace(/\b\w/g,char=>char.toUpperCase()),
+    icon:crop?.icon || good?.icon || '📦',
+    price:cityMarketProfile(key).value
+  }
+}
+
+function roadsideStandData(stand) {
+  const id=roadsideStandId(stand), store=getRoadsideStandStore()
+  const existing=stand?.roadsideStand || store[id] || {}
+  existing.stock=existing.stock && typeof existing.stock==='object' ? existing.stock : {}
+  existing.earnings=Math.max(0,Number(existing.earnings) || 0)
+  existing.ownerName=stand?.owner_name || existing.ownerName || ownerNameFor(stand)
+  existing.updatedAt=Number(existing.updatedAt) || Date.now()
+  store[id]=existing
+  if (stand) stand.roadsideStand=existing
+  return existing
+}
+
+function saveRoadsideStandData(stand,data=roadsideStandData(stand)) {
+  data.updatedAt=Date.now()
+  const id=roadsideStandId(stand)
+  getRoadsideStandStore()[id]=data
+  if (stand) {
+    stand.roadsideStand=data
+    stand.lastVisitedAt=Date.now()
+    if (stand._regionalLocal || stand.sync_status==='local' || stand.world_instance_id===WORLD_INSTANCE_ID) saveRegionalObjects()
+    saveOwnershipMetadata(stand)
+  }
+  saveRoadsideStandStore()
+}
+
+function roadsideInventoryAmount(farm,key) {
+  return Math.max(0,Number(farm.goods?.[key] ?? farm.inventory?.[key]) || 0)
+}
+
+function roadsideTakeFromFarm(farm,key,amount=1) {
+  if (farm.goods && farm.goods[key] != null) farm.goods[key]=Math.max(0,(Number(farm.goods[key]) || 0)-amount)
+  else farm.inventory[key]=Math.max(0,(Number(farm.inventory[key]) || 0)-amount)
+}
+
+function roadsideAddToFarm(farm,key,amount=1) {
+  if (farm.goods && farm.goods[key] != null) farm.goods[key]=(Number(farm.goods[key]) || 0)+amount
+  else farm.inventory[key]=(Number(farm.inventory[key]) || 0)+amount
+}
+
+function roadsideCanAddToFarm(farm,key,amount=1) {
+  if (farmCropInfo(key)) return farmSiloUsed(farm)+amount <= farm.siloCapacity
+  return farmBarnUsed(farm)+amount <= farm.barnCapacity
+}
+
+function roadsideSellableKeys(farm=getFarmData()) {
+  const keys=new Set([...Object.keys(farm.inventory || {}),...Object.keys(farm.goods || {})])
+  return [...keys].filter(key=>roadsideInventoryAmount(farm,key)>0 && (farmCropInfo(key) || FARM_GOODS[key]))
+}
+
+function openRoadsideStand(stand) {
+  if (!stand) return
+  closeFarmOverlay()
+  closeFarmHub()
+  state.currentRoadsideStandId=roadsideStandId(stand)
+  state.currentRoadsideStandObject=stand
+  document.getElementById('roadsideStandOverlay')?.classList.remove('hidden')
+  renderRoadsideStand()
+}
+
+function closeRoadsideStand() {
+  document.getElementById('roadsideStandOverlay')?.classList.add('hidden')
+  state.currentRoadsideStandObject=null
+  state.currentRoadsideStandId=null
+}
+
+function renderRoadsideStand() {
+  const stand=state.currentRoadsideStandObject
+  const body=document.getElementById('roadsideStandBody')
+  if (!stand || !body) return
+  const data=roadsideStandData(stand), owner=isPlayerOwnedObject(stand), farm=getFarmData()
+  document.getElementById('roadsideStandTitle').textContent=`🛒 ${stand.property_name || 'Roadside Stand'}`
+  document.getElementById('roadsideStandNote').textContent=owner
+    ? 'Owner mode: stock goods from your farm, withdraw stock, and collect FC from visitor purchases.'
+    : `${ownerNameFor(stand)} stocked this stand. Buy listed goods directly from the farm.`
+  const stockEntries=Object.entries(data.stock).filter(([,item])=>Number(item.qty)>0)
+  let html=''
+  if (owner) {
+    if (data.earnings>0) {
+      html+=`<article class="roadside-stand-row"><div class="roadside-stand-icon">💰</div><div><h4>Stand Earnings</h4><p>Visitors spent ${data.earnings} FC here.</p></div><div class="roadside-stand-actions"><button class="farm-action gold" data-roadside-action="collect">Collect ${data.earnings} FC</button></div></article>`
+    }
+    const sellable=roadsideSellableKeys(farm)
+    html+=sellable.length ? sellable.map(key=>{
+      const info=roadsideItemInfo(key), owned=roadsideInventoryAmount(farm,key), price=info.price
+      return `<article class="roadside-stand-row"><div class="roadside-stand-icon">${info.icon}</div><div><h4>${safeText(info.name)}</h4><p>Farm inventory ${owned} · suggested market price ${price} FC</p></div><div class="roadside-stand-actions"><button class="farm-action gold" data-roadside-action="stock:${key}">Stock 1</button></div></article>`
+    }).join('') : '<div class="farm-empty">No farm goods available to stock yet. Harvest crops or collect products first.</div>'
+    html+=stockEntries.length ? `<div class="roadside-note">Current shelf stock</div>${stockEntries.map(([key,item])=>{
+      const info=roadsideItemInfo(key)
+      return `<article class="roadside-stand-row"><div class="roadside-stand-icon">${info.icon}</div><div><h4>${safeText(item.name || info.name)}</h4><p>${item.qty} listed · ${item.price || info.price} FC each</p></div><div class="roadside-stand-actions"><button class="farm-action" data-roadside-action="withdraw:${key}">Withdraw 1</button></div></article>`
+    }).join('')}` : '<div class="roadside-note">Your shelves are empty. Stock an item to let visitors shop.</div>'
+  } else {
+    html+=stockEntries.length ? stockEntries.map(([key,item])=>{
+      const info=roadsideItemInfo(key), price=Number(item.price) || info.price
+      return `<article class="roadside-stand-row"><div class="roadside-stand-icon">${info.icon}</div><div><h4>${safeText(item.name || info.name)}</h4><p>${item.qty} available · ${price} FC each</p></div><div class="roadside-stand-actions"><button class="farm-action gold" data-roadside-action="buy:${key}" ${state.coins<price?'disabled':''}>Buy 1</button></div></article>`
+    }).join('') : '<div class="farm-empty">This stand is empty right now. Check back after the owner stocks goods.</div>'
+  }
+  body.innerHTML=html
+}
+
+function handleRoadsideStandAction(actionString) {
+  const stand=state.currentRoadsideStandObject
+  if (!stand || !actionString) return
+  const [action,key]=actionString.split(':')
+  const data=roadsideStandData(stand), farm=getFarmData()
+  if (action==='stock' && isPlayerOwnedObject(stand)) {
+    if (roadsideInventoryAmount(farm,key)<1) { showToast('Nothing to Stock','That item is no longer in your farm inventory.'); renderRoadsideStand(); return }
+    const info=roadsideItemInfo(key)
+    roadsideTakeFromFarm(farm,key,1)
+    data.stock[key]=data.stock[key] || { key,name:info.name,icon:info.icon,qty:0,price:info.price }
+    data.stock[key].qty=(Number(data.stock[key].qty) || 0)+1
+    data.stock[key].price=info.price
+    data.stock[key].name=info.name
+    saveFarmData(farm)
+    updateFarmInventory()
+    showToast('Stand Stocked',`${info.name} listed for ${info.price} FC.`)
+  } else if (action==='withdraw' && isPlayerOwnedObject(stand)) {
+    const item=data.stock[key]
+    if (!item || Number(item.qty)<1) return
+    if (!roadsideCanAddToFarm(farm,key,1)) { showToast(farmCropInfo(key) ? 'Silo Full' : 'Barn Full','Make storage space before withdrawing stock.'); return }
+    item.qty--
+    if (item.qty<=0) delete data.stock[key]
+    roadsideAddToFarm(farm,key,1)
+    saveFarmData(farm)
+    updateFarmInventory()
+    showToast('Stock Withdrawn',`${roadsideItemInfo(key).name} returned to farm inventory.`)
+  } else if (action==='collect' && isPlayerOwnedObject(stand)) {
+    const earnings=Math.max(0,Number(data.earnings) || 0)
+    if (!earnings) return
+    state.coins+=earnings
+    data.earnings=0
+    document.getElementById('statCoins').textContent=state.coins
+    saveWorldPlayerProgress()
+    showToast('Stand Earnings Collected',`${earnings} FC added to your wallet.`)
+  } else if (action==='buy' && !isPlayerOwnedObject(stand)) {
+    const item=data.stock[key], info=roadsideItemInfo(key), price=Math.max(1,Number(item?.price) || info.price)
+    if (!item || Number(item.qty)<1) { showToast('Sold Out','That item is no longer on the shelf.'); renderRoadsideStand(); return }
+    if (state.coins<price) { showToast('Not Enough FC',`Need ${price} FC to buy ${info.name}.`); return }
+    if (!roadsideCanAddToFarm(farm,key,1)) { showToast(farmCropInfo(key) ? 'Silo Full' : 'Barn Full','Make storage space before buying from this stand.'); return }
+    state.coins-=price
+    item.qty--
+    if (item.qty<=0) delete data.stock[key]
+    data.earnings=(Number(data.earnings) || 0)+price
+    roadsideAddToFarm(farm,key,1)
+    saveFarmData(farm)
+    updateFarmInventory()
+    document.getElementById('statCoins').textContent=state.coins
+    saveWorldPlayerProgress()
+    showToast('Roadside Purchase',`Bought ${info.name} from ${ownerNameFor(stand)} for ${price} FC.`)
+  }
+  saveRoadsideStandData(stand,data)
+  renderFarmHub()
+  renderRoadsideStand()
 }
 
 function claimFarmSeeds() {
@@ -13372,6 +13576,12 @@ function setupUI() {
   // Farm button handlers
   document.getElementById('farmSendBtn').addEventListener('click', sendFoodToCity)
   document.getElementById('farmOverlayClose').addEventListener('click', closeFarmOverlay)
+  document.getElementById('roadsideStandClose')?.addEventListener('click', closeRoadsideStand)
+  document.getElementById('roadsideStandBody')?.addEventListener('click', event=>{
+    const button=event.target.closest('[data-roadside-action]')
+    if (!button || button.disabled) return
+    handleRoadsideStandAction(button.dataset.roadsideAction)
+  })
   document.getElementById('farmHubOpen').addEventListener('click', () => {
     openFarmHub()
   })
@@ -14943,7 +15153,10 @@ function onInteractBuildObject(object) {
   const farmTabs = {
     'chicken-coop':'animals', 'cow-pasture':'animals', 'feed-mill':'machines',
     bakery:'machines', dairy:'machines', barn:'storage', silo:'storage',
-    'roadside-stand':'storage'
+  }
+  if (typeId==='roadside-stand') {
+    openRoadsideStand(object)
+    return true
   }
   if (FARM_PLANT_BED_TYPES.has(typeId)) {
     showFarmPlantOverlay(object.tile_x,object.tile_y)
