@@ -8,8 +8,14 @@ CREATE TABLE IF NOT EXISTS world_live_states (
   state_data JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_by TEXT,
   PRIMARY KEY (user_id, world_instance_id, state_key)
 );
+
+ALTER TABLE world_live_states ADD COLUMN IF NOT EXISTS updated_by TEXT;
+
+COMMENT ON COLUMN world_live_states.user_id IS
+  'Player id for private profile state, or __faceless_shared_world__ for shared live world state visible to all players.';
 
 CREATE INDEX IF NOT EXISTS idx_world_live_states_key ON world_live_states(state_key, world_instance_id);
 CREATE INDEX IF NOT EXISTS idx_world_live_states_updated ON world_live_states(updated_at DESC);

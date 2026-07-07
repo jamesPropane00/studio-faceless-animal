@@ -19,6 +19,7 @@ function json(body, status = 200) {
 }
 
 const WORLD_INSTANCE_ID = 'day-one-reset-v1';
+const SHARED_WORLD_USER_ID = '__faceless_shared_world__';
 const ALLOWED_KEYS = new Set([
   'farm',
   'regional_objects',
@@ -28,6 +29,12 @@ const ALLOWED_KEYS = new Set([
   'skills',
   'shipments',
   'goals',
+  'signal_wire',
+]);
+const SHARED_WORLD_KEYS = new Set([
+  'regional_objects',
+  'city_construction',
+  'living_world',
   'signal_wire',
 ]);
 
@@ -58,9 +65,19 @@ export async function onRequestOptions() {
   });
 }
 
-function validate(userId, key) {
-  if (!userId) return 'Missing userId.';
+function normalizeScope(key, scope) {
+  if (scope === 'world') return 'world';
+  if (scope === 'player') return 'player';
+  return SHARED_WORLD_KEYS.has(key) ? 'world' : 'player';
+}
+
+function validate(userId, key, scope, write = false) {
   if (!key || !ALLOWED_KEYS.has(key)) return 'Invalid state key.';
+  if (scope === 'world') {
+    if (write && (!userId || String(userId).startsWith('local_'))) return 'Login required to change the shared live world.';
+    return '';
+  }
+  if (!userId) return 'Missing userId.';
   if (String(userId).startsWith('local_')) return 'Login required for live cross-device saves.';
   return '';
 }
@@ -70,12 +87,14 @@ export async function onRequestGet(context) {
     const url = new URL(context.request.url);
     const userId = url.searchParams.get('userId');
     const key = url.searchParams.get('key');
-    const invalid = validate(userId, key);
+    const scope = normalizeScope(key, url.searchParams.get('scope'));
+    const ownerId = scope === 'world' ? SHARED_WORLD_USER_ID : userId;
+    const invalid = validate(userId, key, scope, false);
     if (invalid) return json({ ok: false, error: invalid }, 400);
 
     const result = await supabaseFetch(
       context.env,
-      `/rest/v1/world_live_states?select=*&user_id=eq.${encodeURIComponent(userId)}&state_key=eq.${encodeURIComponent(key)}&world_instance_id=eq.${encodeURIComponent(WORLD_INSTANCE_ID)}&limit=1`
+      `/rest/v1/world_live_states?select=*&user_id=eq.${encodeURIComponent(ownerId)}&state_key=eq.${encodeURIComponent(key)}&world_instance_id=eq.${encodeURIComponent(WORLD_INSTANCE_ID)}&limit=1`
     );
     if (!result.ok) return json({ ok: false, error: result.data?.message || 'Live state table unavailable.', status: result.status }, 500);
 
@@ -91,11 +110,13 @@ export async function onRequestPost(context) {
     const body = await context.request.json();
     const userId = String(body.userId || '').trim();
     const key = String(body.key || '').trim();
-    const invalid = validate(userId, key);
+    const scope = normalizeScope(key, body.scope);
+    const ownerId = scope === 'world' ? SHARED_WORLD_USER_ID : userId;
+    const invalid = validate(userId, key, scope, true);
     if (invalid) return json({ ok: false, error: invalid }, 400);
 
     const row = {
-      user_id: userId,
+      user_id: ownerId,
       world_instance_id: WORLD_INSTANCE_ID,
       state_key: key,
       state_data: body.state && typeof body.state === 'object' ? body.state : {},
