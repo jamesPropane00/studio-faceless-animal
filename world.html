@@ -3861,7 +3861,7 @@ for (const [regionId, entries] of Object.entries(REGIONAL_BUILD_CATALOGS)) {
     const infrastructure = category === 'infrastructure'
     const footprint = ({
       'crop-row':3, 'field-plot':4, 'orchard-row':4, greenhouse:3,'berry-field':3,vineyard:4,'flower-field':3,pond:3,
-      'cow-pasture':3,'duck-pond':3,'sheep-meadow':3,'pig-pen':2,'goat-hillside':3,'horse-stable':3,'bee-box':2,
+      'chicken-coop':3,'cow-pasture':3,'duck-pond':3,'sheep-meadow':3,'pig-pen':2,'goat-hillside':3,'horse-stable':3,'bee-box':2,
       'rabbit-hutch':2,'farmers-market':2,'development-block':2,'freight-yard':2,factory:2,
       'farm-plot':10,'woodland-habitat':3,'wetland-habitat':3,'night-habitat':3,'meadow-habitat':3,
       'cave-habitat':3,'neon-habitat':3,'breeding-pen':3,'quarantine-pen':2,'farm-feed-station':2,
@@ -4755,6 +4755,13 @@ function getFarmData() {
     const starterPlantBedSeeds={ blueberries:9,strawberries:9,grapes:6,wildflowers:6,lavender:6,apples:9,peaches:9 }
     for (const [key,amount] of Object.entries(starterPlantBedSeeds)) data.inventory[key]=Math.max(amount,Number(data.inventory[key]) || 0)
     data.plantBedSeedVersion=1
+    try { localStorage.setItem('fas_farm_data',JSON.stringify(data)) } catch {}
+    queueLiveFarmSave(data)
+  }
+  if (!data.farmAnimalStarterFeedVersion) {
+    data.goods.chickenFeed=Math.max(2,Number(data.goods.chickenFeed) || 0)
+    data.goods.cowFeed=Math.max(2,Number(data.goods.cowFeed) || 0)
+    data.farmAnimalStarterFeedVersion=1
     try { localStorage.setItem('fas_farm_data',JSON.stringify(data)) } catch {}
     queueLiveFarmSave(data)
   }
@@ -5910,17 +5917,20 @@ const FARM_CREATURE_HABITATS={
 const CREATURE_HABITAT_PREFERENCES={
   'neon-fox':['woodland','night'],'echo-owl':['woodland','night'],
   'lantern-deer':['meadow','woodland'],'static-crow':['tree','city','woodland'],
-  'moss-hound':['woodland','cave']
+  'moss-hound':['woodland','cave'],'neon-raccoon':['woodland','night','neon'],
+  raccoon:['woodland','night'],'signal-raccoon':['woodland','neon']
 }
 
 const CREATURE_PRODUCT_TYPES={
   'neon-fox':'glowDust','echo-owl':'feathers','lantern-deer':'glowDust',
-  'static-crow':'feathers','moss-hound':'mushrooms'
+  'static-crow':'feathers','moss-hound':'mushrooms','neon-raccoon':'glowDust'
 }
 
 function creatureHabitatPreferences(creature) {
   const id=creature?.creatureId || creature?.id
   if (CREATURE_HABITAT_PREFERENCES[id]) return CREATURE_HABITAT_PREFERENCES[id]
+  const label=String(`${id || ''} ${creature?.name || ''}`).toLowerCase()
+  if (label.includes('raccoon')) return ['woodland','night','neon']
   return {
     'whisper-woods':['woodland','meadow'],city:['city','neon'],farmlands:['farm','meadow'],
     coast:['wetland','coast'],mountains:['mountain','cave'],
@@ -6317,6 +6327,17 @@ function farmTakeIngredients(data, ingredients) {
   }
 }
 
+function ensureAnimalFeedAvailable(data,feedKey) {
+  data.goods[feedKey]=Math.max(0,Number(data.goods[feedKey]) || 0)
+  if (data.goods[feedKey]>0) return true
+  const recipe=FARM_RECIPES[feedKey]
+  if (!recipe || !farmHasIngredients(data,recipe.ingredients)) return false
+  farmTakeIngredients(data,recipe.ingredients)
+  for (const [key,amount] of Object.entries(recipe.output)) data.goods[key]=(Number(data.goods[key]) || 0)+amount
+  showToast('Feed Mixed',`${FARM_GOODS[feedKey].name} made from farm crops.`)
+  return data.goods[feedKey]>0
+}
+
 function farmFormatNeeds(needs) {
   return Object.entries(needs).filter(([,amount]) => amount > 0).map(([key, amount]) => {
     const item = farmCropInfo(key) || FARM_GOODS[key]
@@ -6376,7 +6397,9 @@ function animalProfileHtml(data, animal, now) {
   const ready = !buildingLocked && group.fed && group.readyAt <= now
   const favoriteCrop = animalFavoriteCrop(animal)
   const cooldown = action => now-(Number(animal.careCooldowns[action]) || 0) < ANIMAL_CARE_COOLDOWN
-  const feedDisabled = buildingLocked || group.fed || data.goods[animalFeedKey(animal)] < 1 || cooldown('feed')
+  const feedRecipe=FARM_RECIPES[animalFeedKey(animal)]
+  const canMixFeed=feedRecipe && farmHasIngredients(data,feedRecipe.ingredients)
+  const feedDisabled = buildingLocked || group.fed || (data.goods[animalFeedKey(animal)] < 1 && !canMixFeed) || cooldown('feed')
   const profileClass = ready ? 'ready' : (['Hungry','Lonely','Sick'].includes(animal.mood) ? 'needs-care' : '')
   const status = buildingLocked ? 'Cow Pasture required for milk production' : animalProductionStatus(data,animal,now)
   const collect = ready
@@ -6803,7 +6826,10 @@ function handleAnimalCare(animalId, action) {
 
   if (action === 'feed') {
     const feedKey = animalFeedKey(animal)
-    if ((animal.species === 'cow' && data.buildings.cowPasture < 1) || group.fed || data.goods[feedKey] < 1) return
+    if (animal.species === 'cow' && data.buildings.cowPasture < 1) { showToast('Cow Pasture Needed','Build a Cow Pasture before feeding cows.'); return }
+    if (animal.species === 'chicken' && data.buildings.chickenCoop < 1) { showToast('Chicken Coop Needed','Build a Chicken Coop before feeding chickens.'); return }
+    if (group.fed) { showToast('Already Fed','This animal group is already producing.'); return }
+    if (!ensureAnimalFeedAvailable(data,feedKey)) { showToast('Feed Needed',`Make ${FARM_GOODS[feedKey].name} in the Feed Mill or grow the required crops.`); return }
     data.goods[feedKey]--
     group.fed = true
   const baseTime = animal.species === 'chicken' ? 25000 : 40000
@@ -6865,7 +6891,9 @@ function handleAnimalCare(animalId, action) {
 function feedFarmAnimal(type) {
   const data = getFarmData()
   const config = type === 'chickens' ? { feed:'chickenFeed', time:12000, building:'chickenCoop', name:'Chickens' } : { feed:'cowFeed', time:18000, building:'cowPasture', name:'Cows' }
-  if (data.buildings[config.building] < 1 || data.animals[type].fed || data.goods[config.feed] < 1) return
+  if (data.buildings[config.building] < 1) { showToast(`${config.name} Need Space`,`Build the ${FARM_BUILDINGS[config.building]?.name || config.building} first.`); return }
+  if (data.animals[type].fed) { showToast('Already Fed',`${config.name} are already producing.`); return }
+  if (!ensureAnimalFeedAvailable(data,config.feed)) { showToast('Feed Needed',`Make ${FARM_GOODS[config.feed].name} in the Feed Mill or grow the required crops.`); return }
   const species = type === 'chickens' ? 'chicken' : 'cow'
   data.animals[type].fed = true
   data.animals[type].readyAt = Date.now()+config.time
@@ -6927,7 +6955,13 @@ function completeFarmMvpOrder(index) {
   const data = getFarmData()
   ensureFarmMvpOrders(data)
   const order = data.farmOrders[index]
-  if (!order || !farmHasIngredients(data,order.needs)) return
+  if (!order) { showToast('Order Missing','This order refreshed. Open the board again.'); return }
+  if (!farmHasIngredients(data,order.needs)) {
+    const missing=Object.entries(order.needs).filter(([key,amount])=>farmItemCount(data,key)<amount)
+      .map(([key,amount])=>`${farmCropInfo(key)?.name || FARM_GOODS[key]?.name || key} ${farmItemCount(data,key)}/${amount}`).join(', ')
+    showToast('Order Not Ready',missing || 'Gather the requested goods first.')
+    return
+  }
   farmTakeIngredients(data,order.needs); data.farmOrders.splice(index,1)
   const template = FARM_ORDER_TEMPLATES[Math.floor(Math.random()*FARM_ORDER_TEMPLATES.length)]
   data.farmOrders.push({ ...template, needs:{...template.needs} })
@@ -10936,7 +10970,7 @@ function drawFarmPlacedObject(building,s) {
   const typeId=building.object_type || building.building_type
   const farmRowTypes=new Set(['crop-row','field-plot','berry-field','vineyard','flower-field'])
   const farmHabitatTypes=new Set([
-    'duck-pond','cow-pasture','sheep-meadow','pig-pen','goat-hillside','horse-stable','bee-box','rabbit-hutch',
+    'chicken-coop','duck-pond','cow-pasture','sheep-meadow','pig-pen','goat-hillside','horse-stable','bee-box','rabbit-hutch',
     'woodland-habitat','wetland-habitat','night-habitat','meadow-habitat','cave-habitat','neon-habitat',
     'breeding-pen','quarantine-pen','farm-feed-station'
   ])
