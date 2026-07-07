@@ -4735,6 +4735,13 @@ function getFarmData() {
     data.starterGranted = true
     data.hayDayResetVersion = 1
   }
+  if (!data.plantBedSeedVersion) {
+    const starterPlantBedSeeds={ blueberries:9,strawberries:9,grapes:6,wildflowers:6,lavender:6,apples:9,peaches:9 }
+    for (const [key,amount] of Object.entries(starterPlantBedSeeds)) data.inventory[key]=Math.max(amount,Number(data.inventory[key]) || 0)
+    data.plantBedSeedVersion=1
+    try { localStorage.setItem('fas_farm_data',JSON.stringify(data)) } catch {}
+    queueLiveFarmSave(data)
+  }
   data.farmLevel = Math.max(1, Number(data.farmLevel) || 1)
   data.farmXP = Math.max(0, Number(data.farmXP) || 0)
   data.barnCapacity = Math.max(24, Number(data.barnCapacity) || 24)
@@ -10965,17 +10972,31 @@ function drawFarmPlacedObject(building,s) {
     // A planted tree in every cell creates legible, evenly spaced orchard rows.
     const orchardTrees=[]
     for (let ox=0;ox<cells;ox++) for (let oy=0;oy<cells;oy++) {
-      orchardTrees.push(worldToScreen(building.tile_x+ox,building.tile_y+oy))
+      const tx=Number(building.tile_x)+ox,ty=Number(building.tile_y)+oy
+      const crop=getCropAtTile(tx,ty)
+      const cropState=crop && getCropStageInfo(crop)
+      orchardTrees.push({ ...worldToScreen(tx,ty), cropState })
     }
-    orchardTrees.forEach(({x:px,y:py},i)=>{
-      ctx.fillStyle='#6b4423'; ctx.fillRect(px-1.4*z,py-8*z,2.8*z,9*z)
-      ctx.beginPath(); ctx.arc(px,py-10*z,5.7*z,0,Math.PI*2); ctx.fillStyle=i%2 ? '#3f7d20' : '#4d8b26'; ctx.fill()
-      if (typeId!=='tree-row') {
-        ctx.beginPath(); ctx.arc(px+(i%3-1)*2*z,py-11*z,1.15*z,0,Math.PI*2); ctx.fillStyle='#ef4444'; ctx.fill()
+    let readyFruit=0
+    orchardTrees.forEach(({x:px,y:py,cropState},i)=>{
+      const maturity=cropState ? Math.max(.25,cropState.progress) : .55
+      const trunkHeight=(6+5*maturity)*z
+      const canopy=4.2*z+4.2*z*maturity
+      ctx.fillStyle='#6b4423'; ctx.fillRect(px-1.4*z,py-trunkHeight,2.8*z,trunkHeight+1*z)
+      ctx.beginPath(); ctx.arc(px,py-trunkHeight-2.5*z,canopy,0,Math.PI*2); ctx.fillStyle=i%2 ? '#3f7d20' : '#4d8b26'; ctx.fill()
+      if (cropState && typeId!=='tree-row') {
+        const fruitColor=cropState.info.color || '#ef4444'
+        const fruitCount=cropState.done ? 5 : Math.max(1,Math.floor(cropState.progress*4))
+        if (cropState.done) readyFruit++
+        for (let fruit=0;fruit<fruitCount;fruit++) {
+          const angle=(fruit/fruitCount)*Math.PI*2+i*.7
+          const fx=px+Math.cos(angle)*canopy*.45
+          const fy=py-trunkHeight-2.5*z+Math.sin(angle)*canopy*.28
+          ctx.beginPath(); ctx.arc(fx,fy,Math.max(.8,1.15*z),0,Math.PI*2); ctx.fillStyle=fruitColor; ctx.fill()
+        }
       }
     })
-    const crop=getCropAtTile(building.tile_x,building.tile_y)
-    const cropState=crop && getCropStageInfo(crop)
+    const cropState=orchardTrees.find(tree=>tree.cropState)?.cropState
     if (cropState) {
       ctx.font=`${Math.max(11,15*z)}px sans-serif`
       ctx.textAlign='center'
