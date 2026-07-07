@@ -29,15 +29,6 @@ function extensionFor(fileName, fileType) {
   return 'mp4';
 }
 
-function base64ToBytes(value) {
-  const binary = atob(String(value || ''));
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
-
 function getUserFromRequest(context) {
   const userHeader = context.request.headers.get('x-fas-user');
   if (!userHeader) return null;
@@ -101,6 +92,43 @@ async function getUploads(env, username) {
     public: Array.isArray(publicRes.data) ? publicRes.data : [],
     mine: Array.isArray(mineRes.data) ? mineRes.data : [],
   };
+}
+
+async function readUploadPayload(request) {
+  const contentType = String(request.headers.get('content-type') || '').toLowerCase();
+  if (contentType.includes('multipart/form-data')) {
+    const form = await request.formData();
+    const file = form.get('file') || form.get('video');
+    return {
+      source: 'multipart',
+      channel_slug: form.get('channel_slug') || form.get('channelSlug') || '',
+      title: form.get('title') || '',
+      description: form.get('description') || '',
+      visibility: form.get('visibility') || 'public',
+      publish_to_directory: form.get('publish_to_directory') !== 'false',
+      file,
+      file_name: form.get('file_name') || (file && file.name) || 'clip.mp4',
+      file_type: form.get('file_type') || (file && file.type) || 'video/mp4',
+      file_size_bytes: Number(form.get('file_size_bytes') || (file && file.size) || 0),
+      source_url: form.get('source_url') || form.get('sourceUrl') || '',
+      thumb_url: form.get('thumb_url') || '',
+      external_video_id: form.get('external_video_id') || '',
+      duration_seconds: form.get('duration_seconds') || null,
+    };
+  }
+
+  const text = await request.text();
+  let body = {};
+  if (text) {
+    try {
+      body = JSON.parse(text);
+    } catch {
+      const err = new Error('Upload request was not valid JSON or multipart form data.');
+      err.status = 400;
+      throw err;
+    }
+  }
+  return { source: 'json', ...body };
 }
 
 async function createDirectoryPost(env, username, title, publicSrc) {
@@ -206,7 +234,7 @@ export async function onRequestPost(context) {
     const user = getUserFromRequest(context);
     if (!user) return json({ ok: false, error: 'Sign in first.' }, 401);
 
-    const body = await context.request.json();
+    const body = await readUploadPayload(context.request);
     const username = cleanUsername(user.username);
     const channelSlug = cleanText(body.channel_slug || body.channelSlug || '', 80).toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
     const title = cleanText(body.title, 120);
@@ -216,10 +244,12 @@ export async function onRequestPost(context) {
     const fileName = cleanText(body.file_name || 'clip.mp4', 120);
     const fileType = String(body.file_type || 'video/mp4').toLowerCase();
     const sourceUrl = cleanText(body.source_url || body.sourceUrl || '', 500);
+    const selectedFile = body.file && typeof body.file.arrayBuffer === 'function' ? body.file : null;
 
     if (!channelSlug) return json({ ok: false, error: 'Choose a channel.' }, 400);
     if (!title) return json({ ok: false, error: 'Enter a title.' }, 400);
-    if (!sourceUrl && !body.file_b64) return json({ ok: false, error: 'Select a file or provide a source URL.' }, 400);
+    if (!sourceUrl && !selectedFile) return json({ ok: false, error: 'Select a video file or provide a source URL.' }, 400);
+    if (body.file_b64) return json({ ok: false, error: 'Base64 video uploads are no longer supported. Upload the selected File or Blob directly.' }, 400);
 
     const channelRes = await supabaseFetch(context.env, `/rest/v1/tv_channels?select=*&channel_slug=eq.${encodeURIComponent(channelSlug)}&limit=1`, {
       headers: {
@@ -237,10 +267,10 @@ export async function onRequestPost(context) {
 
     let storagePath = null;
     let publicSrc = sourceUrl || null;
+    const fileSize = Number(body.file_size_bytes || selectedFile?.size || 0) || null;
 
-    if (body.file_b64) {
-      const bytes = base64ToBytes(body.file_b64);
-      if (bytes.byteLength > MAX_BYTES) {
+    if (selectedFile) {
+      if (selectedFile.size > MAX_BYTES) {
         return json({ ok: false, error: 'File too large. Max upload size is 50MB.' }, 413);
       }
 
@@ -254,10 +284,11 @@ export async function onRequestPost(context) {
           'Content-Type': fileType,
           'x-upsert': 'false',
         },
-        body: bytes,
+        body: selectedFile,
       });
 
       if (!upload.ok) {
+        console.error('[tv upload] Supabase storage error:', upload.status, upload.data || upload.text);
         return json({ ok: false, error: upload.data?.message || upload.text || 'Storage upload failed.' }, 500);
       }
 
@@ -275,7 +306,7 @@ export async function onRequestPost(context) {
       status: 'published',
       file_name: fileName,
       file_type: fileType,
-      file_size_bytes: body.file_size_bytes || null,
+      file_size_bytes: fileSize,
       storage_path: storagePath,
       source_url: publicSrc,
       thumb_url: body.thumb_url || null,
@@ -299,20 +330,26 @@ export async function onRequestPost(context) {
       if (storagePath) {
         await supabaseFetch(context.env, `/storage/v1/object/tv-media/${storagePath}`, { method: 'DELETE' });
       }
+      console.error('[tv upload] Supabase insert error:', insert.status, insert.data || insert.text);
       return json({ ok: false, error: insert.data?.message || insert.text || 'Could not save upload.' }, 500);
     }
 
     const directoryPost = visibility === 'public' && publishToDirectory
       ? await createDirectoryPost(context.env, username, title, publicSrc)
       : { ok: false, post: null, error: null };
+    const savedUpload = Array.isArray(insert.data) ? insert.data[0] : insert.data;
     return json({
       ok: true,
-      upload: Array.isArray(insert.data) ? insert.data[0] : insert.data,
+      upload: savedUpload,
+      storage_path: storagePath,
+      public_url: publicSrc,
+      file_size: fileSize,
+      mime_type: fileType,
       directory_post_created: directoryPost.ok,
       directory_post: directoryPost.post || null,
       warning: directoryPost.ok || visibility !== 'public' || !publishToDirectory ? null : directoryPost.error,
     });
   } catch (err) {
-    return json({ ok: false, error: err?.message || 'Upload failed.' }, 500);
+    return json({ ok: false, error: err?.message || 'Upload failed.' }, err?.status || 500);
   }
 }

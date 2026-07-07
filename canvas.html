@@ -2821,26 +2821,32 @@
       const uploadName = blob.type === 'video/mp4'
         ? String(STATE.exportedName || 'canvas-edit.webm').replace(/\.[^.]+$/, '') + '.mp4'
         : (STATE.exportedName || 'canvas-edit.webm');
-      const fileB64 = await blobToBase64(blob);
+      const uploadFile = blob instanceof File
+        ? blob
+        : new File([blob], uploadName, { type: blob.type || 'video/webm', lastModified: Date.now() });
+      const formData = new FormData();
+      formData.append('channel_slug', channelSlug);
+      formData.append('title', title);
+      formData.append('description', caption || '');
+      formData.append('visibility', visibility || 'public');
+      formData.append('file_name', uploadFile.name);
+      formData.append('file_type', uploadFile.type || 'video/webm');
+      formData.append('file_size_bytes', String(uploadFile.size));
+      formData.append('publish_to_directory', publishToBoard === false ? 'false' : 'true');
+      formData.append('file', uploadFile, uploadFile.name);
       const response = await fetch('/api/tv/uploads', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'x-fas-user': JSON.stringify(session),
         },
-        body: JSON.stringify({
-          channel_slug: channelSlug,
-          title,
-          description: caption,
-          visibility,
-          file_name: uploadName,
-          file_type: blob.type || 'video/webm',
-          file_size_bytes: blob.size,
-          file_b64: fileB64,
-          publish_to_directory: publishToBoard,
-        }),
+        body: formData,
       });
-      const payload = await response.json().catch(() => ({}));
+      const text = await response.text();
+      let payload = {};
+      try { payload = text ? JSON.parse(text) : {}; } catch (err) {
+        console.error('[canvas tv upload] non-JSON response:', text);
+        throw new Error('TV upload returned an invalid response.');
+      }
       if (!response.ok) throw new Error(payload.error || 'TV upload failed.');
       return payload;
     }

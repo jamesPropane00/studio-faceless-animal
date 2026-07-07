@@ -4491,11 +4491,13 @@ function getFarmData() {
     data.machineQueues[machine] = Array.isArray(data.machineQueues[machine]) ? data.machineQueues[machine].slice(-24) : []
   }
   data.animals = data.animals || {
-    chickens: { count: 2, readyAt: 0, fed: false },
-    cows: { count: 2, readyAt: 0, fed: false }
+    chickens: { count: 0, readyAt: 0, fed: false },
+    cows: { count: 0, readyAt: 0, fed: false }
   }
-  data.animals.chickens = data.animals.chickens || { count: 2, readyAt: 0, fed: false }
-  data.animals.cows = data.animals.cows || { count: 2, readyAt: 0, fed: false }
+  data.animals.chickens = data.animals.chickens || { count: 0, readyAt: 0, fed: false }
+  data.animals.cows = data.animals.cows || { count: 0, readyAt: 0, fed: false }
+  data.animals.chickens.count = Math.max(0,Number(data.animals.chickens.count) || 0)
+  data.animals.cows.count = Math.max(0,Number(data.animals.cows.count) || 0)
   data.animalResidents = Array.isArray(data.animalResidents) ? data.animalResidents : []
   const animalSeeds = {
     chicken: [
@@ -4512,7 +4514,12 @@ function getFarmData() {
   }
   for (const [group, species] of [['chickens','chicken'],['cows','cow']]) {
     const needed = Math.max(0, Number(data.animals[group].count) || 0)
-    const existing = data.animalResidents.filter(animal => animal.species === species)
+    let existing = data.animalResidents.filter(animal => animal.species === species)
+    if (existing.length > needed) {
+      let keep = needed
+      data.animalResidents = data.animalResidents.filter(animal => animal.species !== species || keep-- > 0)
+      existing = data.animalResidents.filter(animal => animal.species === species)
+    }
     for (let index = existing.length; index < needed; index++) {
       const seed = animalSeeds[species][index % animalSeeds[species].length]
       data.animalResidents.push({
@@ -4567,7 +4574,7 @@ function getFarmData() {
     lastVisitedAt:data.lastVisitedAt
   })
   data.buildings = data.buildings || {}
-  const buildingDefaults = { farmhouse:1, barn:1, silo:1, chickenCoop:1, cowPasture:0, feedMill:1, bakery:0, dairy:0, roadsideStand:0 }
+  const buildingDefaults = { farmhouse:1, barn:1, silo:1, chickenCoop:0, cowPasture:0, feedMill:1, bakery:0, dairy:0, roadsideStand:0 }
   for (const [key, value] of Object.entries(buildingDefaults)) {
     data.buildings[key] = Math.max(0, Number(data.buildings[key]) || value)
   }
@@ -6005,6 +6012,12 @@ function renderFarmHub() {
     const eco=farmEcosystemBonuses()
     const residents = data.animalResidents || []
     const animalNames = residents.slice(0,4).map(animal=>animal.name).join(', ')
+    const animalSummary = residents.length
+      ? `${animalNames} live on Pine Hollow.`
+      : 'No animals yet. Build a coop or pasture to bring animals onto the farm.'
+    const animalMeta = residents.length
+      ? `${ready.animals} ready · ${ready.needsFood} hungry · ${ready.needsCare} need care`
+      : 'No animals owned'
     const awayText = farmSessionSummary?.awayMs >= 60000
       ? `Welcome back. You were away for ${formatFarmAwayTime(farmSessionSummary.awayMs)}.`
       : 'Everything important on Pine Hollow is gathered here.'
@@ -6042,7 +6055,7 @@ function renderFarmHub() {
     </div>
     <div class="farm-card-grid">
       ${farmCard('Fields','🌾','Plant placed crop rows, wait, then harvest them by hand.',`${ready.crops} ready · ${data.crops.length} planted`,'go-tab:crops','Open Crops',false,ready.crops ? 'ready' : '')}
-      ${farmCard('Animal Care','🐓',animalNames ? `${animalNames} live on Pine Hollow.` : 'Your animals are waiting to meet you.',`${ready.animals} ready · ${ready.needsFood} hungry · ${ready.needsCare} need care`,'go-tab:animals','Check Animals',false,ready.animals || ready.needsCare ? 'ready' : '')}
+      ${farmCard('Animal Care','🐓',animalSummary,animalMeta,'go-tab:animals',residents.length ? 'Check Animals' : 'Build a coop or pasture',false,ready.animals || ready.needsCare ? 'ready' : '')}
       ${farmCard('Production','⚙️','Collect finished goods or start a new recipe.',`${ready.machines} ready`,'go-tab:machines','Open Machines',false,ready.machines ? 'ready' : '')}
       ${farmCard('Order Board','📋','Fresh city requests arrive every day.',`${ready.orders} can be completed now`,'go-tab:orders','View Orders',false,ready.orders ? 'ready' : '')}
       ${farmCard('Truck Route','🚚','Move Pine Hollow goods into Faceless City.',`${ready.activeTrucks} traveling · ${ready.trucks} recently returned`,'go-tab:shipments','View Shipments')}
@@ -6075,19 +6088,21 @@ function renderFarmHub() {
     refreshAnimalMoods(data)
     const ready = getFarmReadyCounts(data)
     const best = bestAnimalBondToday(data)
+    const hasAnimals = (data.animalResidents || []).length > 0
     html += `<div class="farm-today-hero">
       <section class="farm-morning-card">
         <div class="farm-morning-kicker">ANIMAL CARE</div>
-        <h2>${ready.needsCare ? `${ready.needsCare} friends need you.` : 'Everyone feels cared for.'}</h2>
-        <p>Mood gently changes production time and the chance of a small FC quality bonus.</p>
+        <h2>${hasAnimals ? (ready.needsCare ? `${ready.needsCare} friends need you.` : 'Everyone feels cared for.') : 'No animals yet.'}</h2>
+        <p>${hasAnimals ? 'Mood gently changes production time and the chance of a small FC quality bonus.' : 'Build a Chicken Coop or Cow Pasture on owned land to bring real animals to Pine Hollow.'}</p>
+        ${hasAnimals ? '' : '<button class="farm-action gold" data-farm-action="open-farm-build">Build a coop or pasture</button>'}
       </section>
       <section class="farm-daily-card">
         <div class="farm-daily-kicker">BEST BOND TODAY</div>
-        <h2 style="margin:.3rem 0;color:#f4ffe5">${best ? `${best.animal.name} +${best.gained} bond XP` : 'Spend time with an animal'}</h2>
+        <h2 style="margin:.3rem 0;color:#f4ffe5">${hasAnimals ? (best ? `${best.animal.name} +${best.gained} bond XP` : 'Spend time with an animal') : 'No bond data yet'}</h2>
         <p>${ready.animals} ready to collect · ${ready.needsFood} need food · ${ready.needsCare} need care</p>
       </section>
     </div>
-    <div class="animal-profile-grid">${data.animalResidents.map(animal=>animalProfileHtml(data,animal,now)).join('')}</div>`
+    <div class="animal-profile-grid">${hasAnimals ? data.animalResidents.map(animal=>animalProfileHtml(data,animal,now)).join('') : '<div class="farm-empty">No animals yet. Place a Chicken Coop or Cow Pasture from the Farmlands Build menu.</div>'}</div>`
   } else if (activeFarmTab === 'machines') {
     html += '<div class="farm-card-grid">'
     for (const [key, recipe] of Object.entries(FARM_RECIPES)) {
@@ -10560,6 +10575,23 @@ function drawCityPlotBuilding(building,s) {
   ctx.save()
   const plotFill=stage===0 ? '#513827' : (typeId === 'club' ? '#21122f' : typeId === 'warehouse' ? '#343942' : typeId === 'shop' ? '#3d4650' : '#355c3a')
   diamond(s.x,s.y,hw,hh,plotFill,stage<6 ? (stage===0 ? '#facc15' : '#a855f7') : 'rgba(255,255,255,.13)')
+  const zoneGroup=cityZoneGroup(building)
+  if (zoneGroup.length>1) {
+    ctx.save()
+    ctx.strokeStyle=plotFill
+    ctx.lineWidth=Math.max(10*z,Math.min(TILE_W,TILE_H)*z*.32)
+    ctx.lineCap='round'
+    zoneGroup.forEach(neighbor=>{
+      if (neighbor===building) return
+      const dx=Math.abs(Number(neighbor.tile_x)-Number(building.tile_x))
+      const dy=Math.abs(Number(neighbor.tile_y)-Number(building.tile_y))
+      const maxFoot=Math.max(Number(neighbor.footprint || 1),Number(building.footprint || 1))
+      if (dx>maxFoot && dy>maxFoot) return
+      const ns=worldToScreen(Number(neighbor.tile_x),Number(neighbor.tile_y))
+      ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(ns.x,ns.y);ctx.stroke()
+    })
+    ctx.restore()
+  }
   if(stage===0){
     ctx.strokeStyle='#facc15';ctx.lineWidth=Math.max(1,z);ctx.setLineDash([3*z,3*z])
     ctx.beginPath();ctx.moveTo(s.x-hw*.72,s.y);ctx.lineTo(s.x,s.y-hh*.72);ctx.lineTo(s.x+hw*.72,s.y);ctx.stroke();ctx.setLineDash([])
@@ -10685,6 +10717,21 @@ function drawCityPlotBuilding(building,s) {
     const barY=s.y+hh+6*z
     ctx.font=`700 ${Math.max(7,8*z)}px Inter`;ctx.textAlign='center';ctx.fillStyle='#fde68a'
     ctx.fillText('ZONED · WAITING',s.x,barY+8*z)
+  }
+  if (zoneGroup.length>1) {
+    const anchor=zoneGroup.slice().sort((a,b)=>Number(a.tile_y)-Number(b.tile_y) || Number(a.tile_x)-Number(b.tile_x))[0]
+    if (anchor===building && z>.5) {
+      const label=`${CITY_ZONE_BUILD_INFO[typeId]?.zone || 'Zone'} x${zoneGroup.length}`
+      ctx.font=`800 ${Math.max(7,8*z)}px Inter`
+      ctx.textAlign='center'
+      const w=Math.max(72*z,ctx.measureText(label).width+12*z)
+      ctx.fillStyle='rgba(0,0,0,.62)'
+      ctx.fillRect(s.x-w/2,s.y-hh-24*z,w,14*z)
+      ctx.strokeStyle='rgba(167,139,250,.55)'
+      ctx.strokeRect(s.x-w/2,s.y-hh-24*z,w,14*z)
+      ctx.fillStyle='#ddd6fe'
+      ctx.fillText(label,s.x,s.y-hh-14*z)
+    }
   }
   ctx.restore()
   return true
@@ -13764,10 +13811,103 @@ function calcPropertyValue(building) {
   return Math.floor(base * mult * levelMult * conditionMult)
 }
 
+function cityTotalPopulation() {
+  return state.npcs.filter(npc=>normalizeRegionId(npc.region_id ?? npc.region)==='city').length+
+    state.buildings.filter(item=>normalizeRegionId(item.region_id ?? item.region)==='city')
+      .reduce((sum,item)=>sum+cityPlotPopulation(item),0)
+}
+
+function nearbyCityPopulation(building,radius=12) {
+  const bx=Number(building.tile_x ?? building.x),by=Number(building.tile_y ?? building.y)
+  let residents=0
+  state.buildings.forEach(item=>{
+    if (normalizeRegionId(item.region_id ?? item.region)!=='city') return
+    const type=item.object_type || item.building_type
+    if (!['house','development-block'].includes(type)) return
+    if (Math.hypot(Number(item.tile_x)-bx,Number(item.tile_y)-by)<=radius) residents+=cityPlotPopulation(item)
+  })
+  residents+=state.npcs.filter(npc=>normalizeRegionId(npc.region_id ?? npc.region)==='city' && Math.hypot(Number(npc.x)-bx,Number(npc.y)-by)<=radius).length
+  return residents
+}
+
+function cityZoneGroup(building) {
+  const typeId=building.object_type || building.building_type
+  if (!PLAYER_CITY_ZONE_TYPES.has(typeId) || normalizeRegionId(building.region_id ?? building.region)!=='city') return []
+  const all=state.buildings.filter(item=>normalizeRegionId(item.region_id ?? item.region)==='city' && (item.object_type || item.building_type)===typeId)
+  const seen=new Set(),queue=[building],group=[]
+  const idFor=item=>String(item.id || `${item.tile_x},${item.tile_y}`)
+  const touches=(a,b)=>{
+    const af=Number(a.footprint || BUILDING_TYPES[a.object_type || a.building_type]?.footprint || 1)
+    const bf=Number(b.footprint || BUILDING_TYPES[b.object_type || b.building_type]?.footprint || 1)
+    const ax=Number(a.tile_x),ay=Number(a.tile_y),bx=Number(b.tile_x),by=Number(b.tile_y)
+    const xOverlap=ax<bx+bf && ax+af>bx
+    const yOverlap=ay<by+bf && ay+af>by
+    return (ax+af===bx || bx+bf===ax) && yOverlap || (ay+af===by || by+bf===ay) && xOverlap
+  }
+  while(queue.length){
+    const next=queue.shift(),key=idFor(next)
+    if(seen.has(key)) continue
+    seen.add(key); group.push(next)
+    all.forEach(item=>{ if(!seen.has(idFor(item)) && touches(next,item)) queue.push(item) })
+  }
+  return group
+}
+
+function cityZoneSizeBonus(building) {
+  const size=cityZoneGroup(building).length || 1
+  return Math.min(1.75,1+(size-1)*.08)
+}
+
+function cityIncomeFactors(building) {
+  const typeId=building.object_type || building.building_type
+  const construction=getCityPlotStage(building)
+  const lifecycle=ensureCityLifecycleData(building)
+  const supply=getCitySupply()
+  const totalPopulation=cityTotalPopulation()
+  const nearbyPopulation=nearbyCityPopulation(building)
+  const businessHealth=Math.max(0,Math.min(1,Number(building.business_health ?? 100)/100))
+  const foodSupplyBonus=Math.max(.35,Math.min(1.25,.65+citySupplyHealth(supply)*.6))
+  const district=cityDistrictAtTile(Number(building.tile_x),Number(building.tile_y))
+  const happiness=Math.max(0,Math.min(1,Number((district ? calculateCityAreaMetrics(district).happiness : calculateCityAreaMetrics().happiness) || 50)/100))
+  const zoneSizeBonus=cityZoneSizeBonus(building)
+  const propertyUpgradeBonus=1+((state.properties[building.id]?.upgrades?.length || 0)*.08)+((state.properties[building.id]?.level || 1)-1)*.05
+  let demand=1
+  let customers=nearbyPopulation
+  let why='City support is healthy.'
+  if (typeId==='shop') {
+    customers=nearbyPopulation || totalPopulation
+    demand=Math.max(0,Math.min(1.35,customers/18))
+    why=customers<8 ? 'Commercial income is low because the city needs more nearby residents/customers.' : 'Commercial income is supported by nearby residents and city customers.'
+  } else if (typeId==='club') {
+    customers=nearbyPopulation || totalPopulation
+    demand=Math.max(0,Math.min(1.45,(customers/28)*(.75+happiness*.5)))
+    why=customers<16 ? 'Entertainment income is low until the city has more people and nightlife demand.' : 'Entertainment income is boosted by population and happiness.'
+  } else if (typeId==='warehouse') {
+    const logisticsDemand=Math.max(0.15,Math.min(1.35,(state.shipments?.active?.length || 0)*.18+totalPopulation/35+(Number(supply.food || 0)<30 ? .2 : 0)))
+    demand=logisticsDemand
+    customers=totalPopulation
+    why='Industrial income follows logistics demand, shipments, shortages, and city scale.'
+  } else if (typeId==='house' || typeId==='development-block') {
+    demand=construction.stage>=6 ? Math.max(.15,Math.min(1.1,totalPopulation ? 1 : .45)) : 0
+    customers=cityPlotPopulation(building)
+    why=construction.stage>=6 ? 'Residential value comes from occupancy and city health.' : 'Residential income and population unlock when construction completes.'
+  }
+  if (construction.stage<4) why='Income is locked while this zone is still a dirt lot/foundation/frame.'
+  else if (construction.stage<6) why='This zone is partially opening and earns only 25% until complete.'
+  if (building.lifecycleStatus==='abandoned' || building.businessClosed) why='This property is closed or abandoned. Renovation is required before income returns.'
+  return { customers,totalPopulation,businessHealth,foodSupplyBonus,zoneSizeBonus,propertyUpgradeBonus,populationDemand:demand,why }
+}
+
+function cityIncomeMultiplier(building) {
+  const factors=cityIncomeFactors(building)
+  return factors.businessHealth*factors.populationDemand*factors.foodSupplyBonus*factors.zoneSizeBonus*factors.propertyUpgradeBonus
+}
+
 function getEffectiveIncome(building) {
   const prop = state.properties[building.id]
   const constructionMult=constructionIncomeMultiplier(building)*cityLifecycleIncomeMultiplier(building)
-  if (!prop) return (building.income_rate || BUILDING_TYPES[building.building_type]?.income || 0)*constructionMult
+  const cityMult=normalizeRegionId(building.region_id ?? building.region)==='city' ? cityIncomeMultiplier(building) : 1
+  if (!prop) return (building.income_rate || BUILDING_TYPES[building.building_type]?.income || 0)*constructionMult*cityMult
   let mult = 1, bonus = 0
   for (const key of prop.upgrades) {
     const list = PROPERTY_UPGRADES[building.building_type] || []
@@ -13783,7 +13923,7 @@ function getEffectiveIncome(building) {
     if (key === 'logistics') bonus += 0.3
   }
   const levelMult = 1 + (prop.level - 1) * 0.05
-  return ((building.income_rate || BUILDING_TYPES[building.building_type]?.income || 0) * mult + bonus) * levelMult*constructionMult
+  return ((building.income_rate || BUILDING_TYPES[building.building_type]?.income || 0) * mult + bonus) * levelMult*constructionMult*cityMult
 }
 
 function openPropertyPanel(buildingId) {
@@ -13806,9 +13946,12 @@ function openPropertyPanel(buildingId) {
   const pct = prop.xpToNext ? Math.min(100, (prop.xp % prop.xpToNext) / prop.xpToNext * 100) : 0
   document.getElementById('propLevelFill').style.width = pct + '%'
   document.getElementById('propValue').textContent = calcPropertyValue(building) + ' FC'
+  const incomeFactors = normalizeRegionId(building.region_id ?? building.region)==='city' ? cityIncomeFactors(building) : null
   document.getElementById('propIncome').textContent = getEffectiveIncome(building).toFixed(1) + '/min'
   document.getElementById('propUpgradeCount').textContent = prop.upgrades.length + ' / 3'
-  document.getElementById('propDistrictBonus').textContent = building.in_district ? 'Yes (+20%)' : 'None'
+  document.getElementById('propDistrictBonus').textContent = incomeFactors
+    ? `Customers ${incomeFactors.customers} · City pop ${incomeFactors.totalPopulation} · Business ${Math.round(incomeFactors.businessHealth*100)}% · ${incomeFactors.why}`
+    : (building.in_district ? 'Yes (+20%)' : 'None')
   const plotStatusRow=document.getElementById('propPlotStatusRow')
   const lifecycleRow=document.getElementById('propLifecycleRow')
   const cityPlot=CITY_PLOT_TYPES.has(building.object_type || building.building_type) && normalizeRegionId(building.region_id ?? building.region) === 'city'
@@ -13934,7 +14077,10 @@ function openIncomePanel(buildingId) {
   closeAllPanels()
 
   document.getElementById('incomeBuildingName').textContent = type.name
-  document.getElementById('incomeRate').textContent = building.income_rate
+  const incomeFactors = normalizeRegionId(building.region_id ?? building.region)==='city' ? cityIncomeFactors(building) : null
+  document.getElementById('incomeRate').textContent = incomeFactors
+    ? `${getEffectiveIncome(building).toFixed(1)}/min · customers ${incomeFactors.customers} · city pop ${incomeFactors.totalPopulation}`
+    : building.income_rate
 
   // Phase 5A: Building status
   ensureCityLifecycleData(building)
@@ -14050,7 +14196,7 @@ function constructionWeightedIncomeMs(building,lastCollected,now) {
 function calculateAccumulatedIncome(building) {
   // Phase 5A: Use pending_income if available (from simulation tick)
   const pending = parseFloat(building.pending_income) || 0
-  if (pending > 0) return Math.floor(pending*constructionIncomeMultiplier(building)*cityLifecycleIncomeMultiplier(building))
+  if (pending > 0) return Math.floor(pending*constructionIncomeMultiplier(building)*cityLifecycleIncomeMultiplier(building)*(normalizeRegionId(building.region_id ?? building.region)==='city' ? cityIncomeMultiplier(building) : 1))
 
   // Fallback: old time-based calculation (backward compat)
   let lastCollected = null
@@ -14066,11 +14212,9 @@ function calculateAccumulatedIncome(building) {
   const maxMs = 24 * 60 * 60 * 1000
   const cappedElapsed = Math.min(elapsed, maxMs)
   const minutes = cappedElapsed / 60000
-  const healthMultiplier = (building.business_health || 100) / 100
-  let income = (building.income_rate || BUILDING_TYPES[building.building_type]?.income || 0) * minutes * healthMultiplier * cityLifecycleIncomeMultiplier(building)
+  let income = getEffectiveIncome(building) * minutes
   const skillMult = 1 + getSkillBonus('builder', 'income') + getSkillBonus('developer', 'income')
   income *= skillMult
-  income *= 1 + getCityFoodBonus()
   if (building.in_district) {
     income *= 1.2
   }
@@ -14336,7 +14480,17 @@ function connectFarmBuildToGameplay(typeId) {
   if (!key) return
   const farm = getFarmData()
   farm.buildings[key] = Math.max(1, Number(farm.buildings[key]) || 0)
+  if (typeId === 'chicken-coop' && farm.animals.chickens.count < 1) {
+    farm.animals.chickens.count = 2
+    showToast('Chickens Arrived','Sunny and Pepper moved into the new coop.')
+  }
+  if (typeId === 'cow-pasture' && farm.animals.cows.count < 1) {
+    farm.animals.cows.count = 2
+    showToast('Cows Arrived','Molly and Clover moved into the new pasture.')
+  }
   saveFarmData(farm)
+  farmDataCache=null
+  getFarmData()
 }
 
 function onInteractBuildObject(object) {
@@ -14391,11 +14545,14 @@ async function placeBuildingAt(x, y) {
   const type = BUILDING_TYPES[typeId]
   const placement = validateRegionalPlacement(typeId,x,y)
   if (!placement.valid) {
-    showToast('Invalid Placement',placement.reason)
+    const reason = state.currentRegion==='farmlands' && /owned land|Pine Hollow|already occupied/i.test(String(placement.reason || ''))
+      ? (/occupied/i.test(String(placement.reason || '')) ? 'Blocked by another farm object.' : 'You do not own this land. Claim land first.')
+      : placement.reason
+    showToast('Invalid Placement',reason)
     return
   }
   if (state.coins < type.cost) {
-    showToast('Error', 'Not enough coins')
+    showToast('Not enough FC', 'Not enough FC.')
     return
   }
 

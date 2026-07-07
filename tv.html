@@ -2750,6 +2750,39 @@
   
   <script>
     window.FAS_TV_ORIGIN = window.FAS_TV_ORIGIN || window.location.origin;
+    window.FAS_TV = Object.assign(window.FAS_TV || {}, {
+      uploadVideoToTV: window.FAS_TV && window.FAS_TV.uploadVideoToTV ? window.FAS_TV.uploadVideoToTV : async function uploadVideoToTV(options) {
+        var upload = options || {};
+        var file = upload.file;
+        if (!file) throw new Error('Choose a video.');
+        if (!String(upload.title || '').trim()) throw new Error('Enter a title.');
+        var formData = new FormData();
+        formData.append('channel_slug', upload.channel_slug || '');
+        formData.append('title', String(upload.title || '').trim());
+        formData.append('description', upload.description || '');
+        formData.append('visibility', upload.visibility || 'public');
+        formData.append('file_name', file.name || 'clip.webm');
+        formData.append('file_type', file.type || 'video/webm');
+        formData.append('file_size_bytes', String(file.size || 0));
+        formData.append('publish_to_directory', upload.publish_to_directory === false ? 'false' : 'true');
+        formData.append('file', file, file.name || 'clip.webm');
+        var response = await fetch('/api/tv/uploads', {
+          method: 'POST',
+          headers: upload.session ? { 'x-fas-user': JSON.stringify(upload.session) } : {},
+          body: formData
+        });
+        var text = await response.text();
+        var payload = {};
+        try {
+          payload = text ? JSON.parse(text) : {};
+        } catch (err) {
+          console.error('[tv upload] Upload returned non-JSON:', text);
+          throw new Error('Server returned an invalid upload response.');
+        }
+        if (!response.ok) throw new Error(payload.error || 'Upload failed (' + response.status + ').');
+        return payload;
+      }
+    });
   </script>
   <script type="module" src="assets/js/tv-network.js?v=20260629-upload-compression"></script>
 
@@ -3009,6 +3042,46 @@
       progressPct.textContent = pctText;
     }
 
+    function safeJsonParse(text) {
+      try { return text ? JSON.parse(text) : {}; } catch (err) { return null; }
+    }
+
+    function uploadVideoToTV(options) {
+      var upload = options || {};
+      if (window.FAS_TV && typeof window.FAS_TV.uploadVideoToTV === 'function' && window.FAS_TV.uploadVideoToTV !== uploadVideoToTV) {
+        return window.FAS_TV.uploadVideoToTV(upload);
+      }
+      var file = upload.file;
+      if (!file) return Promise.reject(new Error('Choose a video.'));
+      var formData = new FormData();
+      formData.append('channel_slug', upload.channel_slug || '');
+      formData.append('title', upload.title || '');
+      formData.append('description', upload.description || '');
+      formData.append('visibility', upload.visibility || 'public');
+      formData.append('file_name', file.name || 'clip.webm');
+      formData.append('file_type', file.type || 'video/webm');
+      formData.append('file_size_bytes', String(file.size || 0));
+      formData.append('publish_to_directory', upload.publish_to_directory === false ? 'false' : 'true');
+      formData.append('file', file, file.name || 'clip.webm');
+      return fetch('/api/tv/uploads', {
+        method: 'POST',
+        headers: upload.session ? { 'x-fas-user': JSON.stringify(upload.session) } : {},
+        body: formData
+      }).then(async function(response) {
+        var text = await response.text();
+        var payload = safeJsonParse(text);
+        if (!response.ok || !payload) {
+          if (!payload) console.error('[tv widget] Upload returned non-JSON:', text);
+          throw new Error(payload && payload.error ? payload.error : 'Upload failed (' + response.status + ').');
+        }
+        return payload;
+      });
+    }
+
+    window.FAS_TV = Object.assign(window.FAS_TV || {}, {
+      uploadVideoToTV: uploadVideoToTV
+    });
+
     // ── Form submit ──
     if (form) form.addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -3036,60 +3109,17 @@
       var subBtn = document.getElementById('tv-quick-upload-submit');
       if (subBtn) subBtn.disabled = true;
       setStatus('Preparing...', '');
-      setProgress(0, 'Reading file...');
+      setProgress(5, 'Preparing file...');
 
       try {
-        var fileB64 = await new Promise(function(resolve, reject) {
-          var reader = new FileReader();
-          reader.onprogress = function(e) {
-            if (e.lengthComputable) {
-              var p = Math.round((e.loaded / e.total) * 85);
-              setProgress(p, 'Reading file...');
-            }
-          };
-          reader.onload = function() {
-            var r = String(reader.result || '');
-            var c = r.indexOf(',');
-            resolve(c >= 0 ? r.slice(c + 1) : r);
-          };
-          reader.onerror = function() { reject(new Error('Could not read file.')); };
-          reader.readAsDataURL(file);
-        });
-
-        setProgress(88, 'Uploading...');
-
-        var result = await new Promise(function(resolve, reject) {
-          var xhr = new XMLHttpRequest();
-          xhr.upload.addEventListener('progress', function(e) {
-            if (e.lengthComputable) {
-              var p = 85 + Math.round((e.loaded / e.total) * 12);
-              setProgress(Math.min(p, 97), 'Uploading...');
-            }
-          });
-          xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try { resolve(JSON.parse(xhr.responseText)); } catch (e) { resolve({}); }
-            } else {
-              try {
-                var err = JSON.parse(xhr.responseText);
-                reject(new Error(err.error || 'Upload failed (' + xhr.status + ').'));
-              } catch (e) { reject(new Error('Upload failed (' + xhr.status + ').')); }
-            }
-          };
-          xhr.onerror = function() { reject(new Error('Network error.')); };
-          xhr.open('POST', '/api/tv/uploads');
-          xhr.setRequestHeader('Content-Type', 'application/json');
-          xhr.setRequestHeader('x-fas-user', JSON.stringify(session));
-          xhr.send(JSON.stringify({
-            channel_slug: ch,
-            title: title,
-            description: desc,
-            visibility: vis,
-            file_name: file.name,
-            file_type: file.type,
-            file_size_bytes: file.size,
-            file_b64: fileB64
-          }));
+        setProgress(35, 'Uploading...');
+        var result = await uploadVideoToTV({
+          session: session,
+          channel_slug: ch,
+          title: title,
+          description: desc,
+          visibility: vis,
+          file: file
         });
 
         setProgress(100, 'Published!');

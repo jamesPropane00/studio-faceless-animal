@@ -1944,17 +1944,50 @@
 
   async function fetchJson(url, options) {
     var res = await fetch(url, options || {});
+    var text = await res.text();
     var data = null;
     try {
-      data = await res.json();
+      data = text ? JSON.parse(text) : null;
     } catch (err) {
       data = null;
     }
     if (!res.ok) {
+      if (!data) console.error('[TV] non-JSON response:', text);
       var message = data && (data.error || data.message) ? (data.error || data.message) : ('Request failed: ' + res.status);
       throw new Error(message);
     }
     return data;
+  }
+
+  async function uploadVideoToTV(options) {
+    var upload = options || {};
+    var file = upload.file;
+    var session = upload.session || state.session;
+    var channelSlug = upload.channel_slug || upload.channelSlug || '';
+    var title = String(upload.title || '').trim();
+    if (!session) throw new Error('Sign in first.');
+    if (!channelSlug) throw new Error('Choose a channel.');
+    if (!title) throw new Error('Enter a title.');
+    if (!file || typeof file.size !== 'number') throw new Error('Choose a video file.');
+    if (file.size > MAX_UPLOAD_BYTES) throw new Error('50MB max while Faceless TV is in test mode. Choose a smaller video for now.');
+
+    var safeName = file.name || upload.file_name || 'clip.webm';
+    var body = new FormData();
+    body.append('channel_slug', channelSlug);
+    body.append('title', title);
+    body.append('description', upload.description || '');
+    body.append('visibility', upload.visibility || 'public');
+    body.append('file_name', safeName);
+    body.append('file_type', file.type || upload.file_type || 'video/webm');
+    body.append('file_size_bytes', String(file.size));
+    body.append('publish_to_directory', upload.publish_to_directory === false ? 'false' : 'true');
+    body.append('file', file, safeName);
+
+    return fetchJson(API.uploads, {
+      method: 'POST',
+      headers: upload.headers || (session ? { 'x-fas-user': JSON.stringify(session) } : {}),
+      body: body,
+    });
   }
 
   async function fetchTvJson(path, options) {
@@ -2242,20 +2275,14 @@
 
       setStatus(el.uploadStatus, 'Uploading...');
       try {
-        var formData = new FormData();
-        formData.append('channel_slug', channelSlug);
-        formData.append('title', title);
-        formData.append('description', description);
-        formData.append('visibility', visibility);
-        formData.append('file_name', file.name);
-        formData.append('file_type', file.type || 'video/mp4');
-        formData.append('file_size_bytes', String(file.size));
-        formData.append('file', file, file.name);
-
-        var result = await fetchJson(API.uploads, {
-          method: 'POST',
+        var result = await uploadVideoToTV({
+          session: state.session,
+          channel_slug: channelSlug,
+          title: title,
+          description: description,
+          visibility: visibility,
+          file: file,
           headers: authHeaders(),
-          body: formData,
         });
         setStatus(el.uploadStatus, 'Upload published: ' + (result.upload && result.upload.title ? result.upload.title : 'done'), 'success');
         el.uploadForm.reset();
@@ -2539,6 +2566,7 @@
     window.FAS_TV = {
       state: state,
       loadNetwork: loadNetwork,
+      uploadVideoToTV: uploadVideoToTV,
     };
     state.soundUnlocked = readSoundUnlocked();
     document.addEventListener('click', function (event) {
