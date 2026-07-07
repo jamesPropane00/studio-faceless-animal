@@ -10301,16 +10301,16 @@ const CITY_CONSTRUCTION_KEY='fas_city_construction_v2'
 const CITY_PLOT_TYPES=new Set(['house','shop','club','warehouse','hide','development-block'])
 const PLAYER_CITY_ZONE_TYPES=new Set(['house','shop','club','warehouse'])
 const CITY_ZONE_BUILD_INFO={
-  house:{ zone:'Residential Zone',needs:'Road access · food supply · basic safety',result:'Grows into homes · adds population' },
+  house:{ zone:'Residential Zone',needs:'Starter housing demand · basic safety',result:'Starts quickly as homes · adds population' },
   shop:{ zone:'Commercial Zone',needs:'Nearby residents · road access · business health',result:'Grows into storefronts · earns income when open' },
   warehouse:{ zone:'Industrial Zone',needs:'Road access · logistics demand',result:'Grows into warehouses · supports jobs and freight' },
   club:{ zone:'Entertainment Zone',needs:'Population · happiness · road access',result:'Grows into venues · supports nightlife and culture' }
 }
 const CITY_PLOT_META={
-  house:{ duration:60000,population:6 },
-  shop:{ duration:90000,population:0 },
+  house:{ duration:32000,population:6 },
+  shop:{ duration:70000,population:0 },
   club:{ duration:120000,population:0 },
-  warehouse:{ duration:120000,population:0 },
+  warehouse:{ duration:90000,population:0 },
   hide:{ duration:90000,population:0 },
   'development-block':{ duration:180000,population:14 }
 }
@@ -10397,11 +10397,17 @@ function cityZoneGrowthSupport(building) {
   const activeFreight=Boolean(state.shipments?.active?.length) || state.buildings.some(item=>
     normalizeRegionId(item.region_id ?? item.region)==='city' && item.isComplete && ['shop','warehouse'].includes(item.object_type || item.building_type)
   )
+  const completedHousing=state.buildings.filter(item=>
+    normalizeRegionId(item.region_id ?? item.region)==='city' &&
+    (item.object_type || item.building_type)==='house' &&
+    getCityPlotStage(item).stage>=6
+  ).length
+  const starterResidential=typeId==='house' && completedHousing<6
   const reasons=[]
-  if (!road) reasons.push('road access')
+  if (!road && !starterResidential) reasons.push('road access')
   if (typeId==='house') {
-    if (food<20) reasons.push('stable food supply')
-    if (safety<35) reasons.push('basic safety')
+    if (!starterResidential && food<20) reasons.push('stable food supply')
+    if (safety<25) reasons.push('basic safety')
   } else if (typeId==='shop') {
     if (population<8) reasons.push('nearby residents')
     if (food<18) reasons.push('stable food supply')
@@ -10420,8 +10426,10 @@ function activateCityZoneConstruction(building,now=Date.now()) {
   building.constructionSupportReason=support.supported ? '' : `Needs ${support.reasons.join(', ')}`
   if (!support.supported) return false
   building.constructionPaused=false
-  building.constructionStartedAt=now
-  building.constructionCompleteAt=now+building.constructionDuration
+  const typeId=building.object_type || building.building_type
+  const headStart=typeId==='house' ? Math.min(5000,Math.floor((Number(building.constructionDuration) || CITY_PLOT_META.house.duration)*.16)) : 0
+  building.constructionStartedAt=now-headStart
+  building.constructionCompleteAt=building.constructionStartedAt+building.constructionDuration
   building.constructionStage=0
   return true
 }
@@ -15215,6 +15223,62 @@ async function placeInfrastructure(x, y, type) {
   }
 }
 
+function cityZoneSeedPlotType(blockType) {
+  return { residential:'house', commercial:'shop', industrial:'warehouse', entertainment:'club' }[blockType] || null
+}
+
+function seedCityBlockPlots(block) {
+  if (normalizeRegionId(block.region_id ?? block.region) !== 'city') return 0
+  const plotType=cityZoneSeedPlotType(block.block_type)
+  if (!plotType) return 0
+  const type=BUILDING_TYPES[plotType]
+  if (!type) return 0
+  const width=Number(block.width) || 6,height=Number(block.height) || 6
+  const desired=block.block_type==='residential' ? 4 : 2
+  const candidates=[
+    [1,1],[Math.max(1,width-3),1],[1,Math.max(1,height-3)],[Math.max(1,width-3),Math.max(1,height-3)],
+    [Math.floor(width/2),Math.floor(height/2)]
+  ]
+  let created=0
+  for (const [ox,oy] of candidates) {
+    if (created>=desired) break
+    const tx=Number(block.tile_x)+ox,ty=Number(block.tile_y)+oy
+    const footprint=Number(type.footprint) || 1
+    const blocked=state.buildings.some(item=>{
+      if (normalizeRegionId(item.region_id ?? item.region) !== 'city') return false
+      const other=BUILDING_TYPES[item.object_type || item.building_type] || {footprint:1}
+      const otherFoot=Number(item.footprint) || Number(other.footprint) || 1
+      return tx < Number(item.tile_x)+otherFoot && tx+footprint > Number(item.tile_x) &&
+        ty < Number(item.tile_y)+otherFoot && ty+footprint > Number(item.tile_y)
+    })
+    if (blocked) continue
+    const object={
+      id:`local-zone-${block.id || Date.now()}-${plotType}-${created}-${Math.random().toString(36).slice(2,6)}`,
+      region_id:'city',tile_x:tx,tile_y:ty,owner_id:block.owner_id || state.userId || 'local-player',
+      owner_name:currentPlayerOwnerName(),property_name:type.name,property_type:plotType,
+      value:type.cost || 0,object_type:plotType,object_category:type.category,building_type:plotType,
+      footprint,placed_at:Date.now(),world_instance_id:WORLD_INSTANCE_ID,income_rate:type.income || 0,
+      last_collected:Date.now(),last_collected_at:new Date().toISOString(),sync_status:'local',
+      _regionalLocal:true,_seededFromBlock:block.id,condition:100,status:'active'
+    }
+    normalizeOwnershipMetadata(object)
+    ensureConstructionData(object,{newBuild:true})
+    activateCityZoneConstruction(object)
+    ensureCityLifecycleData(object,{newBuild:true})
+    state.buildings.push(object)
+    getPropertyData(object.id)
+    created++
+  }
+  if (created) {
+    state.themesDirty=true
+    savePropertyData()
+    saveRegionalObjects()
+    updateCityPlotProgress(1,true)
+    createNewsItem('City',`${created} ${type.name.toLowerCase()} plot${created===1?'':'s'} begin growing inside a ${block.block_type} zone.`,'Fresh survey stakes, foundations, and crews appeared inside the new city zone.','city',3)
+  }
+  return created
+}
+
 // Phase 6: Place a development block
 async function placeBlock(x, y, blockType) {
   const cx = Math.max(0, Math.min(200, Math.floor(x)))
@@ -15266,10 +15330,12 @@ async function placeBlock(x, y, blockType) {
     }
     const data = await res.json()
     if (data.ok) {
-      state.blocks.push({ id: data.block.id, block_type: blockType, tile_x: cx, tile_y: cy, width: d.w, height: d.h, owner_id: state.userId, region_id: state.currentRegion })
+      const placedBlock={ id: data.block.id, block_type: blockType, tile_x: cx, tile_y: cy, width: d.w, height: d.h, owner_id: state.userId, region_id: state.currentRegion }
+      state.blocks.push(placedBlock)
       state.coins -= d.c
       document.getElementById('statCoins').textContent = state.coins
-      showToast('Urban DNA', `${blockType.charAt(0).toUpperCase() + blockType.slice(1)} block placed!`)
+      const seeded=seedCityBlockPlots(placedBlock)
+      showToast('Urban DNA', `${blockType.charAt(0).toUpperCase() + blockType.slice(1)} block placed${seeded ? ` · ${seeded} plots started` : ''}!`)
       state.blockType = null
       document.querySelectorAll('.block-item').forEach(el => el.classList.remove('selected'))
       awardSkillXP('developer', 10 + ({residential:5,commercial:10,industrial:15,entertainment:20,park:5,farm:10}[blockType]||0))
@@ -15279,7 +15345,16 @@ async function placeBlock(x, y, blockType) {
     }
   } catch (e) {
     console.error('[WORLD] placeBlock error:', e)
-    showToast('Error', 'Failed to place block')
+    const localBlock={ id:`local-block-${Date.now()}`, block_type:blockType, tile_x:cx, tile_y:cy, width:d.w, height:d.h, owner_id:state.userId || 'local-player', region_id:state.currentRegion, _regionalLocal:true }
+    state.blocks.push(localBlock)
+    state.coins-=d.c
+    document.getElementById('statCoins').textContent=state.coins
+    const seeded=seedCityBlockPlots(localBlock)
+    saveWorldPlayerProgress()
+    saveRegionalObjects()
+    state.blockType=null
+    document.querySelectorAll('.block-item').forEach(el=>el.classList.remove('selected'))
+    showToast('Urban DNA',`${blockType.charAt(0).toUpperCase()+blockType.slice(1)} zone placed locally${seeded ? ` · ${seeded} plots started` : ''}.`)
   }
 }
 
