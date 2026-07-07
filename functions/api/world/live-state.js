@@ -32,6 +32,7 @@ const ALLOWED_KEYS = new Set([
   'signal_wire',
 ]);
 const SHARED_WORLD_KEYS = new Set([
+  'farm',
   'regional_objects',
   'city_construction',
   'living_world',

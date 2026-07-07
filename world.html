@@ -4027,6 +4027,24 @@ function hasCurrentWorldProgressInStorage() {
   return false
 }
 
+function farmProgressScore(farm) {
+  if (!farm || typeof farm !== 'object') return 0
+  let score=0
+  score+=Math.max(0,(Array.isArray(farm.landParcels) ? farm.landParcels.length : 0)-1)*10
+  score+=Math.max(0,Number(farm.farmLevel || 1)-1)*12
+  score+=Math.max(0,Number(farm.farmXP || 0))/25
+  score+=(Array.isArray(farm.plots) ? farm.plots.length : 0)*4
+  score+=(Array.isArray(farm.cropPlots) ? farm.cropPlots.length : 0)*4
+  score+=(Array.isArray(farm.animals) ? farm.animals.length : 0)*5
+  score+=(Array.isArray(farm.stands) ? farm.stands.length : 0)*5
+  return score
+}
+
+function regionalProgressScore(saved) {
+  if (!saved || typeof saved !== 'object') return 0
+  return (Array.isArray(saved.buildings) ? saved.buildings.length : 0)+(Array.isArray(saved.infrastructure) ? saved.infrastructure.length : 0)
+}
+
 function createDayOneStarterFarm() {
   const center=Math.round(WORLD_SIZE/2),origin=center-FARM_LAND_PARCEL_SIZE/2
   return {
@@ -4577,7 +4595,7 @@ let farmDataCache=null
 let liveFarmLoadPromise=null
 let liveFarmSaveTimer=null
 const liveStateSaveTimers={}
-const LIVE_WORLD_SHARED_KEYS=new Set(['regional_objects','city_construction','living_world','signal_wire'])
+const LIVE_WORLD_SHARED_KEYS=new Set(['farm','regional_objects','city_construction','living_world','signal_wire'])
 
 function liveStateScope(key) {
   return LIVE_WORLD_SHARED_KEYS.has(key) ? 'world' : 'player'
@@ -4642,13 +4660,15 @@ function queueLiveStateSave(key,data,delay=650) {
 }
 
 async function loadLiveFarmData() {
-  if (!canUseLiveWorldSaves()) {
-    showToast('Guest Farm Save','Log in with the same account on phone and PC for one live farm.')
-    return null
-  }
   if (liveFarmLoadPromise) return liveFarmLoadPromise
   liveFarmLoadPromise=(async()=>{
     const remote=await loadLiveState('farm')
+    const local=getFarmData()
+    if (remote && typeof remote==='object' && farmProgressScore(local)>farmProgressScore(remote)) {
+      await saveLiveState('farm',local)
+      markLiveSaveStatus('Local farm progress promoted to shared server world')
+      return local
+    }
     if (remote && typeof remote==='object') {
       farmDataCache=null
       localStorage.setItem('fas_farm_data',JSON.stringify(remote))
@@ -4660,9 +4680,11 @@ async function loadLiveFarmData() {
       markLiveSaveStatus('Farm loaded from server')
       return farm
     }
-    const local=getFarmData()
-    await saveLiveState('farm',local)
-    markLiveSaveStatus('Farm seeded to server')
+    if (farmProgressScore(local)>0) {
+      await saveLiveState('farm',local)
+      if (hasLiveWorldIdentity()) markLiveSaveStatus('Farm seeded to shared server world')
+      else showToast('Read Only Live World','Log in to save changes into the shared world.')
+    }
     return local
   })()
   return liveFarmLoadPromise
@@ -11398,15 +11420,24 @@ function getConstructionOverrides() {
 
 async function loadLiveCityConstruction() {
   const remote=await loadLiveState('city_construction')
+  const local=getConstructionOverrides()
+  const remoteCount=remote && typeof remote==='object' && !Array.isArray(remote) ? Object.keys(remote).length : 0
+  const localCount=local && typeof local==='object' ? Object.keys(local).length : 0
+  if (remoteCount && localCount>remoteCount) {
+    await saveLiveState('city_construction',local)
+    markLiveSaveStatus('Local city construction promoted to shared server world')
+    return local
+  }
   if (remote && typeof remote==='object' && !Array.isArray(remote)) {
     cityPlotRuntime.overrides=remote
     try { localStorage.setItem(CITY_CONSTRUCTION_KEY,JSON.stringify(remote)) } catch {}
     markLiveSaveStatus('City construction loaded from server')
     return remote
   }
-  const local=getConstructionOverrides()
-  await saveLiveState('city_construction',local)
-  if (canUseLiveWorldSaves()) markLiveSaveStatus('City construction seeded to server')
+  if (localCount) {
+    await saveLiveState('city_construction',local)
+    if (hasLiveWorldIdentity()) markLiveSaveStatus('City construction seeded to shared server world')
+  }
   return local
 }
 
@@ -14358,9 +14389,16 @@ function loadRegionalObjects() {
 
 async function loadLiveRegionalObjects() {
   const remote=await loadLiveState('regional_objects')
+  const local=getRegionalSavedObjects()
   if (!remote || typeof remote!=='object') {
     loadRegionalObjects()
-    await saveLiveState('regional_objects',getRegionalSavedObjects())
+    if (regionalProgressScore(local)>0) await saveLiveState('regional_objects',local)
+    return
+  }
+  if (regionalProgressScore(local)>regionalProgressScore(remote)) {
+    loadRegionalObjects()
+    await saveLiveState('regional_objects',local)
+    markLiveSaveStatus('Local regional objects promoted to shared server world')
     return
   }
   try {
