@@ -3917,6 +3917,14 @@ const FARM_PLANT_BED_CROPS = {
   'orchard-row':['apples','peaches']
 }
 const FARM_PLANT_BED_TYPES = new Set(Object.keys(FARM_PLANT_BED_CROPS))
+const FARM_CROP_WITHER_AFTER_MS=6*60*60*1000
+const FARM_CROP_DISAPPEAR_AFTER_MS=36*60*60*1000
+const FARM_BED_OVERGROW_AFTER_MS=7*24*60*60*1000
+const FARM_BED_DISAPPEAR_AFTER_MS=14*24*60*60*1000
+const FARM_INACTIVE_CLUTTER_AFTER_MS=24*60*60*1000
+const FARM_INACTIVE_CLUTTER_EVERY_MS=12*60*60*1000
+const FARM_DECAY_CHECK_MS=60*1000
+let lastFarmDecayCheck=0
 
 function farmCropCatalog() {
   return { ...CROP_TYPES, ...FARM_SPECIAL_CROPS }
@@ -4849,7 +4857,9 @@ function getFarmData() {
   data.readyNotices = data.readyNotices || {}
   const noticeEntries=Object.entries(data.readyNotices)
   if (noticeEntries.length>160) data.readyNotices=Object.fromEntries(noticeEntries.slice(-160))
+  data.farmClutter = Array.isArray(data.farmClutter) ? data.farmClutter.slice(-90) : []
   data.lastSeedCrateAt = Number(data.lastSeedCrateAt) || 0
+  data.lastFarmClutterAt = Number(data.lastFarmClutterAt) || 0
   data.farmGuideStep = data.farmGuideStep || 'plant'
   data.lastActiveAt = Number(data.lastActiveAt) || Date.now()
   data.lastFarmVisitAt = Number(data.lastFarmVisitAt) || 0
@@ -5139,7 +5149,8 @@ function getCropStageInfo(crop) {
   const stage = getCropGrowth(elapsed, info)
   const done = stage >= info.stages
   const progress = Math.min(1, elapsed / info.growthTime)
-  return { info, stage, done, progress, elapsed }
+  const withered=crop.decayState==='withered'
+  return { info, stage, done, progress, elapsed, withered }
 }
 
 function updateFarmCrops() {
@@ -5282,6 +5293,12 @@ function showFarmPlantOverlay(tx, ty) {
   if (existing) {
     // Show harvest info
     const state = getCropStageInfo(existing)
+    if (state?.withered) {
+      title.textContent = `Clear Withered ${state.info.icon} ${state.info.name}`
+      harvestArea.style.display = 'block'
+      document.getElementById('farmHarvestBtn').textContent='Clear Withered Row'
+      document.getElementById('farmHarvestBtn').onclick = () => harvestCrop(tx, ty, 0)
+    } else
     if (state && state.done) {
       title.textContent = `${collectVerb} ${state.info.icon} ${state.info.name}`
       harvestArea.style.display = 'block'
@@ -5378,11 +5395,105 @@ function checkCropsReady() {
   for (const crop of data.crops) {
     const info = farmCropInfo(crop.type)
     if (!info) continue
+    if (crop.decayState==='withered') continue
     if (now - crop.plantedAt >= (crop.growthTime || info.growthTime)) {
       showToast('Crops Ready!', 'Harvest your ' + info.name + ' in the farmlands!')
       break
     }
   }
+}
+
+function addFarmClutter(data,tx,ty,type=null) {
+  data.farmClutter=Array.isArray(data.farmClutter) ? data.farmClutter : []
+  if (data.farmClutter.some(item=>Number(item.tx)===Number(tx) && Number(item.ty)===Number(ty))) return
+  const clutterTypes=['weeds','long-grass','junk']
+  data.farmClutter.push({ tx:Number(tx),ty:Number(ty),type:type || clutterTypes[Math.floor(Math.random()*clutterTypes.length)],createdAt:Date.now() })
+  if (data.farmClutter.length>90) data.farmClutter=data.farmClutter.slice(-90)
+}
+
+function randomOwnedFarmTile(data) {
+  const parcels=Array.isArray(data.landParcels) ? data.landParcels : []
+  if (!parcels.length) return null
+  const parcel=parcels[Math.floor(Math.random()*parcels.length)]
+  return {
+    tx:Math.floor(Number(parcel.x)+Math.random()*Math.max(1,Number(parcel.width) || FARM_LAND_PARCEL_SIZE)),
+    ty:Math.floor(Number(parcel.y)+Math.random()*Math.max(1,Number(parcel.height) || FARM_LAND_PARCEL_SIZE))
+  }
+}
+
+function runFarmDecaySimulation({force=false,silent=true}={}) {
+  const now=Date.now()
+  if (!force && now-lastFarmDecayCheck<FARM_DECAY_CHECK_MS) return
+  lastFarmDecayCheck=now
+  const data=getFarmData()
+  let farmChanged=false,regionalChanged=false,removedBeds=0,withered=0
+  data.crops=Array.isArray(data.crops) ? data.crops : []
+  const remainingCrops=[]
+  for (const crop of data.crops) {
+    const cropState=getCropStageInfo(crop)
+    if (!cropState) continue
+    const readyAge=cropState.elapsed-cropState.info.growthTime
+    if (cropState.done && readyAge>FARM_CROP_DISAPPEAR_AFTER_MS) {
+      addFarmClutter(data,crop.tx,crop.ty,'weeds')
+      farmChanged=true
+      continue
+    }
+    if (cropState.done && readyAge>FARM_CROP_WITHER_AFTER_MS && crop.decayState!=='withered') {
+      crop.decayState='withered'
+      crop.witheredAt=now
+      withered++
+      farmChanged=true
+    }
+    remainingCrops.push(crop)
+  }
+  data.crops=remainingCrops
+
+  const plantBeds=state.buildings.filter(building=>{
+    if (normalizeRegionId(building.region_id ?? building.region) !== 'farmlands') return false
+    return FARM_PLANT_BED_TYPES.has(building.object_type || building.building_type)
+  })
+  const removeIds=new Set()
+  for (const bed of plantBeds) {
+    const cells=farmPlantBedCells(bed)
+    const hasCrop=cells.some(cell=>data.crops.some(c=>Number(c.tx)===cell.tx && Number(c.ty)===cell.ty))
+    if (hasCrop) {
+      bed.lastMaintainedAt=bed.lastMaintainedAt || now
+      continue
+    }
+    const last=Number(bed.lastMaintainedAt || bed.updatedAt || bed.placed_at || bed.purchasedAt || now)
+    const age=now-last
+    if (age>FARM_BED_DISAPPEAR_AFTER_MS) {
+      for (const cell of cells.slice(0,5)) addFarmClutter(data,cell.tx,cell.ty,Math.random()>.35?'long-grass':'junk')
+      removeIds.add(String(bed.id || `${bed.tile_x},${bed.tile_y}`))
+      removedBeds++
+      regionalChanged=true
+      farmChanged=true
+    } else if (age>FARM_BED_OVERGROW_AFTER_MS && bed.farmDecayStage!=='overgrown') {
+      bed.farmDecayStage='overgrown'
+      bed.decayedAt=now
+      regionalChanged=true
+    }
+  }
+  if (removeIds.size) {
+    state.buildings=state.buildings.filter(building=>!removeIds.has(String(building.id || `${building.tile_x},${building.tile_y}`)))
+  }
+
+  const inactiveFor=now-Math.max(Number(data.lastFarmVisitAt) || 0,Number(data.lastActiveAt) || 0,0)
+  if (inactiveFor>FARM_INACTIVE_CLUTTER_AFTER_MS) {
+    const lastClutter=Number(data.lastFarmClutterAt) || Math.max(Number(data.lastFarmVisitAt) || 0,Number(data.lastActiveAt) || 0,now)
+    const batches=Math.min(6,Math.floor((now-lastClutter)/FARM_INACTIVE_CLUTTER_EVERY_MS))
+    for (let i=0;i<batches;i++) {
+      const tile=randomOwnedFarmTile(data)
+      if (tile) addFarmClutter(data,tile.tx,tile.ty,i%3===0?'junk':(i%2?'long-grass':'weeds'))
+    }
+    if (batches>0) {
+      data.lastFarmClutterAt=lastClutter+batches*FARM_INACTIVE_CLUTTER_EVERY_MS
+      farmChanged=true
+    }
+  }
+  if (farmChanged) saveFarmData(data)
+  if (regionalChanged) saveRegionalObjects()
+  if (!silent && (withered || removedBeds)) showToast('Farm Weathering',`${withered} crop area${withered===1?'':'s'} withered Â· ${removedBeds} old plant bed${removedBeds===1?'':'s'} disappeared.`)
 }
 
 function plantCrop(tx, ty, cropType) {
@@ -5420,6 +5531,9 @@ function plantCrop(tx, ty, cropType) {
   for (const cell of openCells.slice(0,plantCount)) {
     data.crops.push({ tx:cell.tx, ty:cell.ty, type: cropType, plantedAt, growthTime, plantedSeason, bedId:bed.id || null })
   }
+  bed.lastMaintainedAt=plantedAt
+  bed.farmDecayStage='active'
+  if (bed._regionalLocal || bed.sync_status==='local' || bed.world_instance_id===WORLD_INSTANCE_ID) saveRegionalObjects()
   saveFarmData(data)
   closeFarmOverlay()
   updateFarmInventory()
@@ -5439,9 +5553,31 @@ function harvestCrop(tx, ty, bonusYield=0) {
 
   const info = farmCropInfo(crop.type)
   const bed=farmPlantBedAt(tx,ty)
+  if (state.withered) {
+    const cells=bed ? farmPlantBedCells(bed) : [{tx,ty}]
+    const clearKeys=new Set(cells.map(cell=>`${cell.tx},${cell.ty}`))
+    let cleared=0
+    data.crops=data.crops.filter(item=>{
+      const key=`${Number(item.tx)},${Number(item.ty)}`
+      const remove=clearKeys.has(key) && item.type===crop.type && getCropStageInfo(item)?.withered
+      if (remove) { cleared++; addFarmClutter(data,item.tx,item.ty,'weeds') }
+      return !remove
+    })
+    if (bed) {
+      bed.lastMaintainedAt=Date.now()
+      bed.farmDecayStage='cleared'
+      if (bed._regionalLocal || bed.sync_status==='local' || bed.world_instance_id===WORLD_INSTANCE_ID) saveRegionalObjects()
+    }
+    saveFarmData(data)
+    closeFarmOverlay()
+    updateFarmInventory()
+    showToast('Withered Row Cleared',`${cleared || 1} dead plant square${cleared===1?'':'s'} cleared. Weeds may need cleanup later.`)
+    invalidateTileCache()
+    return
+  }
   const readyCrops=(bed ? farmPlantBedCells(bed) : [{tx,ty}])
     .map(cell=>data.crops.find(c=>Number(c.tx)===cell.tx && Number(c.ty)===cell.ty))
-    .filter(item=>item && item.type===crop.type && getCropStageInfo(item)?.done)
+    .filter(item=>item && item.type===crop.type && getCropStageInfo(item)?.done && !getCropStageInfo(item)?.withered)
   let perCellYield = info.yield || 1
   perCellYield = Math.floor(perCellYield * (1 + getSkillBonus('farmer', 'cropYield')))
   perCellYield = Math.max(1,Math.round(perCellYield*currentSeasonData().cropYield))
@@ -5460,6 +5596,11 @@ function harvestCrop(tx, ty, bonusYield=0) {
   addFarmXP(data, 6)
   if (data.farmGuideStep === 'harvest') data.farmGuideStep = 'makeFeed'
   recordFarmDaily(data,'harvest')
+  if (bed) {
+    bed.lastMaintainedAt=Date.now()
+    bed.farmDecayStage='active'
+    if (bed._regionalLocal || bed.sync_status==='local' || bed.world_instance_id===WORLD_INSTANCE_ID) saveRegionalObjects()
+  }
 
   saveFarmData(data)
   awardSkillXP('farmer', 10)
@@ -10740,9 +10881,9 @@ function drawFarmPlacedObject(building,s) {
         const cropState=crop && getCropStageInfo(crop)
         if (!cropState) continue
         plantedCells++
-        if (cropState.done) readyCells++
+        if (cropState.done && !cropState.withered) readyCells++
         const maturity=Math.max(.2,cropState.progress)
-        const cropColor=cropState.done ? cropState.info.color : '#65a30d'
+        const cropColor=cropState.withered ? '#8a6b3d' : (cropState.done ? cropState.info.color : '#65a30d')
         const cell=worldToScreen(tx,ty)
         for (let row=0;row<2;row++) for (let col=0;col<3;col++) {
           const u=(col/2-.5)*.7
@@ -10754,12 +10895,12 @@ function drawFarmPlacedObject(building,s) {
           ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,py-stem); ctx.stroke()
           ctx.beginPath(); ctx.arc(px,py-stem,Math.max(1.2,2.1*z*maturity),0,Math.PI*2)
           ctx.fillStyle=cropColor; ctx.fill()
-          if (cropState.done) {
+          if (cropState.done && !cropState.withered) {
             ctx.beginPath(); ctx.arc(px-0.5*z,py-stem-0.5*z,Math.max(.4,.65*z),0,Math.PI*2)
             ctx.fillStyle='rgba(255,244,180,.72)'; ctx.fill()
           }
         }
-        if (cropState.done) {
+        if (cropState.done && !cropState.withered) {
           ctx.font=`${Math.max(8,10*z)}px sans-serif`
           ctx.textAlign='center'
           ctx.fillText('✨',cell.x,cell.y-hh-5*z)
@@ -10779,13 +10920,24 @@ function drawFarmPlacedObject(building,s) {
       ctx.fillStyle='#fef08a'
       ctx.fillText(`${readyCells}/${footprint*footprint}`,s.x,s.y-hh-9*z)
     }
+    if (building.farmDecayStage==='overgrown') {
+      for (let ox=0;ox<footprint;ox++) for (let oy=0;oy<footprint;oy++) {
+        const cell=worldToScreen(Number(building.tile_x)+ox,Number(building.tile_y)+oy)
+        ctx.strokeStyle='rgba(132,204,22,.82)'
+        ctx.lineWidth=Math.max(.8,1.1*z)
+        for (let grass=0;grass<5;grass++) {
+          const gx=cell.x+(grass-2)*3*z,gy=cell.y+(grass%2-0.5)*3*z
+          ctx.beginPath();ctx.moveTo(gx,gy);ctx.lineTo(gx+(grass%2?1:-1)*2*z,gy-8*z);ctx.stroke()
+        }
+      }
+    }
     ctx.restore()
     return true
     const crop=building.tile_x == null ? null : getCropAtTile(building.tile_x,building.tile_y)
     const cropState=crop && getCropStageInfo(crop)
     if (cropState) {
       const maturity=Math.max(.2,cropState.progress)
-      const cropColor=cropState.done ? cropState.info.color : '#65a30d'
+      const cropColor=cropState.withered ? '#8a6b3d' : (cropState.done ? cropState.info.color : '#65a30d')
       for (let ox=0;ox<footprint;ox++) {
         for (let oy=0;oy<footprint;oy++) {
           const cell=building.tile_x == null ? s : worldToScreen(building.tile_x+ox,building.tile_y+oy)
@@ -10799,14 +10951,14 @@ function drawFarmPlacedObject(building,s) {
           ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,py-stem); ctx.stroke()
           ctx.beginPath(); ctx.arc(px,py-stem,Math.max(1.2,2.1*z*maturity),0,Math.PI*2)
           ctx.fillStyle=cropColor; ctx.fill()
-          if (cropState.done) {
+          if (cropState.done && !cropState.withered) {
             ctx.beginPath(); ctx.arc(px-0.5*z,py-stem-0.5*z,Math.max(.4,.65*z),0,Math.PI*2)
             ctx.fillStyle='rgba(255,244,180,.72)'; ctx.fill()
           }
           }
         }
       }
-      if (cropState.done) {
+      if (cropState.done && !cropState.withered) {
         ctx.font=`${Math.max(10,12*z)}px sans-serif`
         ctx.textAlign='center'
         ctx.fillText('✨',s.x,s.y-hh-8*z)
@@ -10829,7 +10981,7 @@ function drawFarmPlacedObject(building,s) {
       const crop=getCropAtTile(tx,ty)
       const cropState=crop && getCropStageInfo(crop)
       if (cropState) plantedCells++
-      if (cropState?.done) readyCells++
+      if (cropState?.done && !cropState?.withered) readyCells++
       diamond(cell,'rgba(61,42,27,.72)','rgba(125,211,252,.22)')
       ctx.strokeStyle='rgba(94,64,42,.7)'
       ctx.lineWidth=Math.max(.8,1*z)
@@ -10842,7 +10994,7 @@ function drawFarmPlacedObject(building,s) {
       }
       if (cropState) {
         const maturity=Math.max(.18,cropState.progress)
-        const cropColor=cropState.done ? cropState.info.color : '#22c55e'
+        const cropColor=cropState.withered ? '#8a6b3d' : (cropState.done ? cropState.info.color : '#22c55e')
         for (let row=0;row<2;row++) for (let col=0;col<3;col++) {
           const u=(col/2-.5)*.62
           const v=(row-.5)*.42
@@ -10853,12 +11005,12 @@ function drawFarmPlacedObject(building,s) {
           ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,py-stem); ctx.stroke()
           ctx.beginPath(); ctx.arc(px,py-stem,Math.max(1.1,2*z*maturity),0,Math.PI*2)
           ctx.fillStyle=cropColor; ctx.fill()
-          if (cropState.done) {
+          if (cropState.done && !cropState.withered) {
             ctx.beginPath(); ctx.arc(px+.8*z,py-stem-.6*z,Math.max(.45,.75*z),0,Math.PI*2)
             ctx.fillStyle='rgba(254,240,138,.8)'; ctx.fill()
           }
         }
-        if (cropState.done) {
+        if (cropState.done && !cropState.withered) {
           ctx.font=`${Math.max(8,10*z)}px sans-serif`
           ctx.textAlign='center'
           ctx.fillStyle='#fef08a'
@@ -10985,9 +11137,9 @@ function drawFarmPlacedObject(building,s) {
       ctx.fillStyle='#6b4423'; ctx.fillRect(px-1.4*z,py-trunkHeight,2.8*z,trunkHeight+1*z)
       ctx.beginPath(); ctx.arc(px,py-trunkHeight-2.5*z,canopy,0,Math.PI*2); ctx.fillStyle=i%2 ? '#3f7d20' : '#4d8b26'; ctx.fill()
       if (cropState && typeId!=='tree-row') {
-        const fruitColor=cropState.info.color || '#ef4444'
-        const fruitCount=cropState.done ? 5 : Math.max(1,Math.floor(cropState.progress*4))
-        if (cropState.done) readyFruit++
+        const fruitColor=cropState.withered ? '#8a6b3d' : (cropState.info.color || '#ef4444')
+        const fruitCount=cropState.withered ? 2 : (cropState.done ? 5 : Math.max(1,Math.floor(cropState.progress*4)))
+        if (cropState.done && !cropState.withered) readyFruit++
         for (let fruit=0;fruit<fruitCount;fruit++) {
           const angle=(fruit/fruitCount)*Math.PI*2+i*.7
           const fx=px+Math.cos(angle)*canopy*.45
@@ -11001,7 +11153,7 @@ function drawFarmPlacedObject(building,s) {
       ctx.font=`${Math.max(11,15*z)}px sans-serif`
       ctx.textAlign='center'
       ctx.fillText(cropState.info.icon,s.x,s.y-18*z)
-      if (cropState.done) ctx.fillText('✨',s.x,s.y-hh-8*z)
+      if (readyFruit) ctx.fillText(`${readyFruit}/${cells*cells}`,s.x,s.y-hh-8*z)
     }
   } else if (typeId === 'farmhand-shed' || typeId === 'country-cottage') {
     const footprint=Math.max(1,Number(building.footprint) || Number(BUILDING_TYPES[typeId]?.footprint) || 2)
@@ -12748,6 +12900,7 @@ function drawFarmLandParcels() {
       ctx.restore()
     }
   }
+  drawFarmClutter()
   if (!state.blockMode || state.blockType!=='farm' || z<.38) return
   const price=farmLandExpansionCost()
   const preview=state.farmLandPreview
@@ -12760,6 +12913,38 @@ function drawFarmLandParcels() {
     ctx.strokeStyle='rgba(0,0,0,.82)';ctx.lineWidth=3
     const label=preview.valid ? `VALID · ${price.toLocaleString()} FC` : preview.reason
     ctx.strokeText(label,center.x,center.y-8*z);ctx.fillText(label,center.x,center.y-8*z)
+  }
+}
+
+function drawFarmClutter() {
+  const data=getFarmData(),z=state.camera.zoom
+  if (z<.35 || !Array.isArray(data.farmClutter)) return
+  const hw=TILE_W*z*.34,hh=TILE_H*z*.34
+  for (const item of data.farmClutter) {
+    const s=worldToScreen(Number(item.tx),Number(item.ty))
+    if (!s) continue
+    if (item.type==='junk') {
+      ctx.save()
+      ctx.translate(s.x,s.y)
+      ctx.rotate(((Number(item.tx)*17+Number(item.ty)*31)%7-3)*.08)
+      ctx.fillStyle='rgba(87,83,78,.72)'
+      ctx.fillRect(-hw*.2,-hh*.2,hw*.55,hh*.28)
+      ctx.fillStyle='rgba(168,85,247,.38)'
+      ctx.fillRect(hw*.08,-hh*.35,hw*.28,hh*.18)
+      ctx.restore()
+    } else {
+      const long=item.type==='long-grass'
+      ctx.strokeStyle=long?'rgba(132,204,22,.76)':'rgba(74,124,28,.8)'
+      ctx.lineWidth=Math.max(.7,z)
+      const count=long?8:5
+      for (let i=0;i<count;i++) {
+        const seed=(Number(item.tx)*41+Number(item.ty)*59+i*13)
+        const ox=((seed%9)-4)*z
+        const oy=(((seed*7)%7)-3)*z
+        const h=(long?9:6)*z+((seed%4)*z)
+        ctx.beginPath();ctx.moveTo(s.x+ox,s.y+oy);ctx.lineTo(s.x+ox+((i%2)*2-1)*2*z,s.y+oy-h);ctx.stroke()
+      }
+    }
   }
 }
 
@@ -13471,6 +13656,7 @@ function update(dt) {
   if (state.currentRegion !== 'farmlands' && state.loaded) {
     checkCropsReady()
   }
+  if (state.loaded) runFarmDecaySimulation()
 }
 
 let lastTime = performance.now()
