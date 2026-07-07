@@ -3881,6 +3881,16 @@ for (const [regionId, entries] of Object.entries(REGIONAL_BUILD_CATALOGS)) {
   }
 }
 Object.assign(BUILDING_TYPES, REGIONAL_BUILD_TYPES)
+Object.assign(BUILDING_TYPES,{
+  'farmhand-shed':{
+    name:'Seasonal Worker Shed',icon:'🛖',cost:60,desc:'A tidy small farmhand shelter built beside dirt farm roads.',
+    category:'residential',regionId:'farmlands',footprint:2,color:'#a16207',height:8,income:0,infrastructure:false,npcOnly:true
+  },
+  'country-cottage':{
+    name:'Country Cottage',icon:'🏡',cost:130,desc:'A neat rural cottage that makes Farmlands feel lived in.',
+    category:'residential',regionId:'farmlands',footprint:2,color:'#84cc16',height:10,income:0,infrastructure:false,npcOnly:true
+  }
+})
 
 const REGIONAL_OBJECTS_KEY = 'fas_regional_build_objects_v1'
 const OWNERSHIP_META_KEY = 'fas_ownership_metadata_v1'
@@ -9377,22 +9387,36 @@ let npcBuildingAssignmentNeeded = true
 
 function assignNPCBuildings() {
   if (!state.buildings || state.buildings.length === 0) return
-  // Only assign buildings that belong to the same region as NPCs (city)
-  const regionBuildings = state.buildings.filter(b => b.region_id === undefined || b.region_id === 'city')
-  const houses = regionBuildings.filter(b => b.building_type === 'house')
-  const camps = regionBuildings.filter(b => b.building_type === 'camp')
-  const shops = regionBuildings.filter(b => b.building_type === 'shop')
-  const clubs = regionBuildings.filter(b => b.building_type === 'club')
-  const warehouses = regionBuildings.filter(b => b.building_type === 'warehouse')
-  const hides = regionBuildings.filter(b => b.building_type === 'hide')
+  const cityBuildings = state.buildings.filter(b => b.region_id === undefined || b.region_id === 'city')
+  const houses = cityBuildings.filter(b => b.building_type === 'house')
+  const camps = cityBuildings.filter(b => b.building_type === 'camp')
+  const shops = cityBuildings.filter(b => b.building_type === 'shop')
+  const clubs = cityBuildings.filter(b => b.building_type === 'club')
+  const warehouses = cityBuildings.filter(b => b.building_type === 'warehouse')
+  const farmBuildings = state.buildings.filter(b => normalizeRegionId(b.region_id ?? b.region)==='farmlands')
+  const farmHomes = farmBuildings.filter(b => FARMLAND_NPC_HOME_TYPES.has(b.object_type || b.building_type))
+  const farmStands = farmBuildings.filter(b => (b.object_type || b.building_type)==='roadside-stand')
+  const farmWork = farmBuildings.filter(b => ['crop-row','field-plot','berry-field','vineyard','flower-field','orchard-row','greenhouse','barn','silo','feed-mill','farmers-market'].includes(b.object_type || b.building_type))
 
-  let houseIdx = 0, campIdx = 0
+  let houseIdx = 0, campIdx = 0, farmHomeIdx = 0
 
   for (let i = 0; i < state.npcs.length; i++) {
     const npc = state.npcs[i]
     npc.homeBuilding = null
     npc.workBuilding = null
     npc.leisureTarget = null
+    const regionId=normalizeRegionId(npc.region_id ?? npc.region)
+
+    if (regionId === 'farmlands') {
+      if (farmHomes.length) {
+        npc.homeBuilding=farmHomes[farmHomeIdx % farmHomes.length]
+        farmHomeIdx++
+      }
+      if (npc.farmlandRole === 'stand-shopper') npc.leisureTarget=findNearestBuilding(npc.x,npc.y,farmStands)
+      else if (npc.farmlandRole === 'road-worker') npc.workBuilding=findNearestBuilding(npc.x,npc.y,farmHomes.length ? farmHomes : farmWork)
+      else npc.workBuilding=findNearestBuilding(npc.x,npc.y,farmWork.length ? farmWork : farmHomes)
+      continue
+    }
 
     // Assign home: round-robin through houses, then camps
     if (houses.length > 0) {
@@ -9432,6 +9456,20 @@ function findNearestBuilding(wx, wy, buildings) {
 }
 
 function findLeisureDestination(npc) {
+  const regionId=normalizeRegionId(npc.region_id ?? npc.region)
+  if (regionId === 'farmlands') {
+    const typeList=npc.farmlandRole==='stand-shopper'
+      ? ['roadside-stand','farmers-market']
+      : npc.farmlandRole==='homesteader'
+        ? ['farmhand-shed','country-cottage','farm-road']
+        : ['barn','silo','crop-row','field-plot','greenhouse','orchard-row']
+    const candidates=[
+      ...state.buildings.filter(b=>normalizeRegionId(b.region_id ?? b.region)==='farmlands' && typeList.includes(b.object_type || b.building_type)),
+      ...state.infrastructure.filter(item=>normalizeRegionId(item.region_id ?? item.region)==='farmlands' && typeList.includes(item.object_type || item.building_type))
+    ]
+    if (!candidates.length) return null
+    return findNearestBuilding(npc.x,npc.y,candidates)
+  }
   const t = state.time
   // Clubs at night (>0.7 or <0.3), shops during the day
   const isNight = t > 0.7 || t < 0.3
@@ -9566,6 +9604,57 @@ function assignNPCAmbientTarget(npc,radius=6) {
   return true
 }
 
+function updateFarmlandNpcBehavior(npc, dt) {
+  if (normalizeRegionId(npc.region_id ?? npc.region)!=='farmlands') return
+  npc._farmlandThink=(Number(npc._farmlandThink) || 0)+dt
+  if (npc._farmlandThink>4) {
+    npc._farmlandThink=0
+    if (npc.farmlandRole==='stand-shopper') {
+      const stand=findLeisureDestination(npc)
+      if (stand) {
+        npc.tx=(Number(stand.tile_x) || Number(stand.x))+0.6
+        npc.ty=(Number(stand.tile_y) || Number(stand.y))+0.6
+        npc.leisureTarget=stand
+      }
+    } else if (npc.farmlandRole==='road-worker') {
+      if (Math.random()<.35) {
+        const roads=farmlandRoadTiles()
+        const anchor=roads.length ? roads[Math.floor(Math.random()*roads.length)] : null
+        if (anchor) {
+          npc.tx=Number(anchor.tile_x)+0.5+(Math.random()-.5)*1.5
+          npc.ty=Number(anchor.tile_y)+0.5+(Math.random()-.5)*1.5
+        }
+      }
+    } else if (npc.farmlandRole==='homesteader') {
+      maybeGrowFarmlandCommunity()
+    }
+  }
+  if (npc.farmlandRole==='stand-shopper') maybeFarmlandNpcShopStand(npc)
+}
+
+function maybeFarmlandNpcShopStand(npc) {
+  const now=Date.now()
+  const growth=getFarmlandNPCGrowthState()
+  if (now-growth.lastStandVisitAt<90000) return
+  const stands=state.buildings.filter(b=>normalizeRegionId(b.region_id ?? b.region)==='farmlands' && (b.object_type || b.building_type)==='roadside-stand')
+  const stand=stands.find(item=>Math.hypot((Number(item.tile_x)+.5)-Number(npc.x),(Number(item.tile_y)+.5)-Number(npc.y))<2.4)
+  if (!stand) return
+  const data=roadsideStandData(stand)
+  const stockEntries=Object.entries(data.stock || {}).filter(([,item])=>Number(item.qty)>0)
+  if (!stockEntries.length) return
+  const [key,item]=stockEntries[Math.floor(Math.random()*stockEntries.length)]
+  const info=roadsideItemInfo(key)
+  const price=Math.max(1,Number(item.price) || info.price)
+  item.qty--
+  if (item.qty<=0) delete data.stock[key]
+  data.earnings=(Number(data.earnings) || 0)+price
+  saveRoadsideStandData(stand,data)
+  growth.lastStandVisitAt=now
+  saveFarmlandNPCGrowthState(growth)
+  npc.carrying='🧺'
+  showToast('Roadside Visitor',`${npc.name} bought ${info.name} for ${price} FC.`)
+}
+
 function computeDistrictThemes() {
   if (!state.districts || !state.buildings) return
   for (const district of state.districts) {
@@ -9666,6 +9755,7 @@ function updateNPCs(dt) {
     }
     const prevX=Number(npc.x),prevY=Number(npc.y)
     updateNPCRoutine(npc, dt)
+    updateFarmlandNpcBehavior(npc, dt)
 
     npc.stateTimer += dt
     npc.animTimer += dt
@@ -9781,6 +9871,185 @@ function updateNPCs(dt) {
       npc._stuckTimer=0
     }
   }
+}
+
+const FARMLAND_NPC_GROWTH_KEY='fas_farmland_npc_growth_v1'
+const FARMLAND_NPC_HOME_TYPES=new Set(['farmhand-shed','country-cottage'])
+
+function getFarmlandNPCGrowthState() {
+  let raw={}
+  try { raw=JSON.parse(localStorage.getItem(FARMLAND_NPC_GROWTH_KEY) || '{}') } catch { raw={} }
+  raw=raw && typeof raw==='object' ? raw : {}
+  raw.lastBuildAt=Math.max(0,Number(raw.lastBuildAt) || 0)
+  raw.totalHomes=Math.max(0,Number(raw.totalHomes) || 0)
+  raw.lastStandVisitAt=Math.max(0,Number(raw.lastStandVisitAt) || 0)
+  return raw
+}
+
+function saveFarmlandNPCGrowthState(data) {
+  try { localStorage.setItem(FARMLAND_NPC_GROWTH_KEY,JSON.stringify(data || getFarmlandNPCGrowthState())) } catch {}
+}
+
+function farmlandNpcHomeCount() {
+  return state.buildings.filter(item=>normalizeRegionId(item.region_id ?? item.region)==='farmlands' && FARMLAND_NPC_HOME_TYPES.has(item.object_type || item.building_type)).length
+}
+
+function farmlandRoadTiles() {
+  return state.infrastructure.filter(item=>{
+    const type=item.infra_type || item.object_type || item.building_type
+    return normalizeRegionId(item.region_id ?? item.region)==='farmlands' && (type==='farm_road' || type==='farm-road')
+  })
+}
+
+function isFarmlandTileClearForNPC(tx,ty,footprint=1) {
+  for (let ox=0;ox<footprint;ox++) for (let oy=0;oy<footprint;oy++) {
+    const x=tx+ox,y=ty+oy
+    if (x<2 || y<2 || x>=WORLD_SIZE-2 || y>=WORLD_SIZE-2) return false
+    const terrain=getTerrainAt(x,y,'farmlands')
+    if (terrain===TERRAIN.WATER || terrain===TERRAIN.DEEP_WATER) return false
+    const occupiedBuilding=state.buildings.some(item=>{
+      if (normalizeRegionId(item.region_id ?? item.region)!=='farmlands') return false
+      const typeId=item.object_type || item.building_type
+      const other=BUILDING_TYPES[typeId] || {footprint:1}
+      return x>=Number(item.tile_x) && x<Number(item.tile_x)+(other.footprint || 1) &&
+        y>=Number(item.tile_y) && y<Number(item.tile_y)+(other.footprint || 1)
+    })
+    if (occupiedBuilding) return false
+  }
+  return true
+}
+
+function addFarmDirtRoad(tx,ty,{npcBuilt=false}={}) {
+  const tileX=Math.round(tx),tileY=Math.round(ty)
+  if (state.infrastructure.some(item=>normalizeRegionId(item.region_id ?? item.region)==='farmlands' && Number(item.tile_x)===tileX && Number(item.tile_y)===tileY)) return false
+  const terrain=getTerrainAt(tileX,tileY,'farmlands')
+  if (terrain===TERRAIN.WATER || terrain===TERRAIN.DEEP_WATER) return false
+  const occupiedBuilding=state.buildings.some(item=>{
+    if (normalizeRegionId(item.region_id ?? item.region)!=='farmlands') return false
+    const typeId=item.object_type || item.building_type
+    const footprint=Math.max(1,Number(item.footprint) || Number(BUILDING_TYPES[typeId]?.footprint) || 1)
+    return tileX>=Number(item.tile_x) && tileX<Number(item.tile_x)+footprint &&
+      tileY>=Number(item.tile_y) && tileY<Number(item.tile_y)+footprint
+  })
+  if (occupiedBuilding) return false
+  state.infrastructure.push({
+    id:`regional_farmlands_road_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
+    region_id:'farmlands',tile_x:tileX,tile_y:tileY,
+    owner_id:npcBuilt ? 'farmland-community' : (state.userId || 'local-player'),
+    owner_name:npcBuilt ? 'Farmlands Community' : currentPlayerOwnerName(),
+    property_name:'Dirt Farm Road',property_type:'farm-road',object_type:'farm-road',building_type:'farm-road',
+    object_category:'infrastructure',infra_type:'farm_road',footprint:1,value:5,condition:100,status:'active',
+    world_instance_id:WORLD_INSTANCE_ID,sync_status:'local',_regionalLocal:true,built_by_npc:npcBuilt,lastVisitedAt:Date.now()
+  })
+  state.walkableDirty=true
+  return true
+}
+
+function addFarmRoadLine(x1,y1,x2,y2,{npcBuilt=false}={}) {
+  let placed=0
+  const sx=Math.round(x1),sy=Math.round(y1),ex=Math.round(x2),ey=Math.round(y2)
+  const stepX=sx<=ex ? 1 : -1
+  for (let x=sx;x!==ex+stepX;x+=stepX) if (addFarmDirtRoad(x,sy,{npcBuilt})) placed++
+  const stepY=sy<=ey ? 1 : -1
+  for (let y=sy;y!==ey+stepY;y+=stepY) if (addFarmDirtRoad(ex,y,{npcBuilt})) placed++
+  return placed
+}
+
+function findFarmlandCommunityBuildTile() {
+  const roads=farmlandRoadTiles()
+  const parcels=getFarmLandParcels()
+  const anchors=roads.length ? roads : parcels.map(parcel=>({tile_x:parcel.x+parcel.width+2,tile_y:parcel.y+Math.floor(parcel.height/2)}))
+  for (let attempt=0;attempt<80;attempt++) {
+    const anchor=anchors[Math.floor(Math.random()*anchors.length)] || {tile_x:WORLD_SIZE/2,tile_y:WORLD_SIZE/2}
+    const angle=Math.random()*Math.PI*2,dist=3+Math.random()*9
+    const tx=Math.round(Number(anchor.tile_x)+Math.cos(angle)*dist)
+    const ty=Math.round(Number(anchor.tile_y)+Math.sin(angle)*dist)
+    if (!isFarmlandTileClearForNPC(tx,ty,2)) continue
+    return {tileX:tx,tileY:ty,roadX:Math.round(Number(anchor.tile_x)),roadY:Math.round(Number(anchor.tile_y))}
+  }
+  return null
+}
+
+function placeFarmlandNPCHome(typeId='farmhand-shed',builderName='A farmhand') {
+  const tile=findFarmlandCommunityBuildTile()
+  if (!tile) return false
+  const type=BUILDING_TYPES[typeId]
+  const object={
+    id:`regional_farmlands_npc_home_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
+    region_id:'farmlands',tile_x:tile.tileX,tile_y:tile.tileY,
+    owner_id:'farmland-community',owner_name:'Farmlands Community',
+    property_name:type.name,property_type:typeId,object_type:typeId,building_type:typeId,
+    object_category:type.category,footprint:type.footprint || 2,value:type.cost || 0,
+    placed_at:Date.now(),lastVisitedAt:Date.now(),world_instance_id:WORLD_INSTANCE_ID,
+    sync_status:'local',_regionalLocal:true,built_by_npc:true,built_by_npc_name:builderName,
+    condition:100,status:'active',income_rate:0
+  }
+  normalizeOwnershipMetadata(object)
+  state.buildings.push(object)
+  addFarmRoadLine(tile.roadX,tile.roadY,tile.tileX,tile.tileY,{npcBuilt:true})
+  state.themesDirty=true
+  saveRegionalObjects()
+  createNewsItem('Farm','A small Farmlands home goes up.',`${builderName} helped raise a tidy ${type.name.toLowerCase()} along a dirt farm road.`,'farmlands',2)
+  return true
+}
+
+function maybeGrowFarmlandCommunity({forceStarter=false}={}) {
+  if (state.currentRegion!=='farmlands') return
+  const growth=getFarmlandNPCGrowthState()
+  const homes=farmlandNpcHomeCount()
+  if (forceStarter && homes<1) {
+    if (placeFarmlandNPCHome('farmhand-shed','Mara Fields')) {
+      growth.totalHomes=farmlandNpcHomeCount()
+      growth.lastBuildAt=Date.now()
+      saveFarmlandNPCGrowthState(growth)
+    }
+    return
+  }
+  const now=Date.now()
+  const maxHomes=12
+  const cooldown=36*60*60*1000
+  if (homes>=maxHomes || now-growth.lastBuildAt<cooldown) return
+  const typeId=homes<3 || Math.random()<.65 ? 'farmhand-shed' : 'country-cottage'
+  const builder=['Mara Fields','Eli Rows','Nora Bale','Cal Tucker'][Math.floor(Math.random()*4)]
+  if (placeFarmlandNPCHome(typeId,builder)) {
+    growth.totalHomes=farmlandNpcHomeCount()
+    growth.lastBuildAt=now
+    saveFarmlandNPCGrowthState(growth)
+    showToast('Farmlands Growth',`${builder} built a neat ${BUILDING_TYPES[typeId].name.toLowerCase()} by the dirt road.`)
+  }
+}
+
+function ensureFarmlandNPCs() {
+  const existing=state.npcs.filter(npc=>normalizeRegionId(npc.region_id ?? npc.region)==='farmlands')
+  if (existing.length>=8) return
+  state.npcs=state.npcs.filter(npc=>normalizeRegionId(npc.region_id ?? npc.region)!=='farmlands')
+  const rng=seededRandom(1917)
+  const parcels=getFarmLandParcels()
+  const home=parcels[0] || {x:WORLD_SIZE/2-5,y:WORLD_SIZE/2-5,width:10,height:10}
+  const roster=[
+    ['Mara Fields','farmhand','worker','Maintains crop rows and helps build tidy shed homes.'],
+    ['Eli Rows','road-worker','worker','Keeps dirt farm roads connected between plots.'],
+    ['June Cart','stand-shopper','vendor','Visits roadside stands and buys fresh goods.'],
+    ['Cal Tucker','homesteader','wanderer','Looks for a quiet place to raise a country cottage.'],
+    ['Nora Bale','farmhand','worker','Carries feed, seed crates, and market baskets.'],
+    ['Bea Orchard','stand-shopper','merchant','Checks stands for berries, eggs, bread, and milk.'],
+    ['Otis Creek','delivery-helper','walker','Walks shipments toward the city road.'],
+    ['Lena Porch','homesteader','wanderer','Keeps the farm roads and cottage lanes neat.']
+  ]
+  for (let i=0;i<roster.length;i++) {
+    const [name,farmlandRole,type,desc]=roster[i]
+    const nx=home.x+2+rng()*Math.max(4,home.width-4)+(i%2)*2
+    const ny=home.y+2+rng()*Math.max(4,home.height-4)+Math.floor(i/2)
+    state.npcs.push({
+      id:`farmland_npc_${i+1}`,region_id:'farmlands',x:nx,y:ny,tx:nx,ty:ny,homeX:nx,homeY:ny,
+      speed:.22+rng()*.22,color:['#a16207','#65a30d','#d97706','#84cc16'][i%4],
+      name,type,farmlandRole,desc,routine:'early_bird',routineData:NPC_ROUTINES.early_bird,
+      state:'idle',stateTimer:0,mood:.65+rng()*.25,energy:.8+rng()*.15,targetBuilding:null,
+      carrying:i%3===0?'🧺':(i%4===0?'🌾':null),direction:0,animFrame:0,animTimer:0,moveTimer:rng()*4
+    })
+  }
+  maybeGrowFarmlandCommunity({forceStarter:true})
+  assignNPCBuildings()
 }
 
 function updateWeather(dt) {
@@ -10184,7 +10453,7 @@ function drawFarmPlacedObject(building,s) {
     'woodland-habitat','wetland-habitat','night-habitat','meadow-habitat','cave-habitat','neon-habitat',
     'breeding-pen','quarantine-pen','farm-feed-station'
   ])
-  const groundTypes=new Set([...farmRowTypes,...farmHabitatTypes,'greenhouse','fence','pond','orchard','orchard-row','tree-row','farm-decoration','flower-garden','bird-house','stone-wall','windmill'])
+  const groundTypes=new Set([...farmRowTypes,...farmHabitatTypes,'greenhouse','fence','pond','orchard','orchard-row','tree-row','farm-decoration','flower-garden','bird-house','stone-wall','windmill','farmhand-shed','country-cottage'])
   if (!groundTypes.has(typeId)) return false
   const z=state.camera.zoom
   const hw=TILE_W*z*.44
@@ -10475,6 +10744,47 @@ function drawFarmPlacedObject(building,s) {
       ctx.fillText(cropState.info.icon,s.x,s.y-18*z)
       if (cropState.done) ctx.fillText('✨',s.x,s.y-hh-8*z)
     }
+  } else if (typeId === 'farmhand-shed' || typeId === 'country-cottage') {
+    const footprint=Math.max(1,Number(building.footprint) || Number(BUILDING_TYPES[typeId]?.footprint) || 2)
+    for (let ox=0;ox<footprint;ox++) for (let oy=0;oy<footprint;oy++) {
+      const cell=worldToScreen(Number(building.tile_x)+ox,Number(building.tile_y)+oy)
+      diamond(cell,'rgba(120,83,45,.24)','rgba(180,126,70,.22)')
+    }
+    const baseW=hw*(typeId==='country-cottage'?1.35:1.1)
+    const baseH=hh*(typeId==='country-cottage'?1.05:.85)
+    const lift=typeId==='country-cottage'?20*z:15*z
+    ctx.fillStyle=typeId==='country-cottage'?'#d9c7a3':'#9a6b3f'
+    ctx.strokeStyle='rgba(58,38,22,.75)'
+    ctx.lineWidth=Math.max(1,1.2*z)
+    ctx.beginPath()
+    ctx.moveTo(s.x-baseW*.72,s.y-baseH*.2)
+    ctx.lineTo(s.x,s.y-baseH*.55)
+    ctx.lineTo(s.x+baseW*.72,s.y-baseH*.2)
+    ctx.lineTo(s.x+baseW*.72,s.y+baseH*.45)
+    ctx.lineTo(s.x,s.y+baseH*.82)
+    ctx.lineTo(s.x-baseW*.72,s.y+baseH*.45)
+    ctx.closePath();ctx.fill();ctx.stroke()
+    ctx.fillStyle=typeId==='country-cottage'?'#7c2d12':'#5f3d22'
+    ctx.beginPath()
+    ctx.moveTo(s.x-baseW*.85,s.y-baseH*.24)
+    ctx.lineTo(s.x,s.y-lift)
+    ctx.lineTo(s.x+baseW*.85,s.y-baseH*.24)
+    ctx.lineTo(s.x+baseW*.66,s.y-baseH*.02)
+    ctx.lineTo(s.x,s.y-lift*.68)
+    ctx.lineTo(s.x-baseW*.66,s.y-baseH*.02)
+    ctx.closePath();ctx.fill();ctx.stroke()
+    ctx.fillStyle=typeId==='country-cottage'?'#5b3a1e':'#3f2714'
+    ctx.fillRect(s.x-3*z,s.y+baseH*.18,6*z,9*z)
+    ctx.fillStyle='rgba(253,224,71,.82)'
+    ctx.fillRect(s.x-baseW*.42,s.y+baseH*.02,5*z,4*z)
+    ctx.fillRect(s.x+baseW*.26,s.y+baseH*.02,5*z,4*z)
+    ctx.fillStyle='#4d7c0f'
+    ctx.beginPath();ctx.arc(s.x-baseW*.7,s.y+baseH*.5,2.8*z,0,Math.PI*2);ctx.fill()
+    ctx.beginPath();ctx.arc(s.x+baseW*.72,s.y+baseH*.42,2.2*z,0,Math.PI*2);ctx.fill()
+    ctx.font=`${Math.max(7,8*z)}px sans-serif`
+    ctx.textAlign='center'
+    ctx.fillStyle='rgba(254,243,199,.9)'
+    ctx.fillText(typeId==='country-cottage'?'cottage':'shed',s.x,s.y-lift-4*z)
   } else if (typeId === 'bee-box') {
     diamond(s,'rgba(101,126,46,.15)',null)
     ctx.fillStyle='#d6a52a'; ctx.fillRect(s.x-7*z,s.y-8*z,14*z,9*z)
@@ -12323,7 +12633,14 @@ function drawTinyNPC(npc, s) {
     worker:   { jacket: '#3b82f6', skin: '#f0c9a0', pants: '#2c3e50' },
     guard:    { jacket: '#ef4444', skin: '#f5d0a9', pants: '#1a1a2e' },
   }
-  const style = palette[npc.type] || { jacket: '#8b5cf6', skin: '#f5d0a9', pants: '#374151' }
+  const farmlandStyles = {
+    farmhand:{ jacket:'#65a30d', skin:'#edd4b0', pants:'#5f3d22' },
+    'road-worker':{ jacket:'#b45309', skin:'#f5d0a9', pants:'#3f2a18' },
+    'stand-shopper':{ jacket:'#f59e0b', skin:'#f0c9a0', pants:'#4a3f35' },
+    homesteader:{ jacket:'#84cc16', skin:'#edd4b0', pants:'#574022' },
+    'delivery-helper':{ jacket:'#0f766e', skin:'#f5d0a9', pants:'#374151' }
+  }
+  const style = farmlandStyles[npc.farmlandRole] || palette[npc.type] || { jacket: '#8b5cf6', skin: '#f5d0a9', pants: '#374151' }
 
   // Shadow
   ctx.beginPath()
@@ -12390,6 +12707,15 @@ function drawTinyNPC(npc, s) {
   ctx.strokeStyle = 'rgba(0,0,0,0.08)'
   ctx.lineWidth = 0.5 * z
   ctx.stroke()
+
+  if (npc.farmlandRole && z > .55) {
+    const roleIcon={
+      farmhand:'🌾','road-worker':'🛤️','stand-shopper':'🧺',homesteader:'🛖','delivery-helper':'📦'
+    }[npc.farmlandRole] || '🌱'
+    ctx.font = `${Math.max(7,8*z)}px sans-serif`
+    ctx.textAlign='center'
+    ctx.fillText(roleIcon,s.x+7*z,s.y-14*z)
+  }
 
   // Name label (same as before, kept for reference)
   if (npc.name && state.camera.zoom > 0.5) {
@@ -15093,7 +15419,7 @@ function validateRegionalPlacement(typeId, x, y) {
     for (let oy = 0; oy < footprint; oy++) {
       const tx = tileX + ox, ty = tileY + oy
       if (tx < 0 || ty < 0 || tx >= WORLD_SIZE || ty >= WORLD_SIZE) return { valid:false, reason:'Outside the region boundary' }
-      if (state.currentRegion==='farmlands' && !isFarmLandTileOwned(tx,ty)) {
+      if (state.currentRegion==='farmlands' && typeId!=='farm-road' && !isFarmLandTileOwned(tx,ty)) {
         return { valid:false, reason:'Expand Pine Hollow first — farm builds must stay on owned land' }
       }
       const terrain = getTerrainAt(tx,ty,state.currentRegion)
@@ -17548,6 +17874,9 @@ function completeTravel(targetRegion) {
     showToast('Arrived at Farmlands', 'Build your farm, grow food, supply the city.')
     updateFarmInventory()
     spawnFarmLife()
+    ensureFarmlandNPCs()
+    maybeGrowFarmlandCommunity()
+    assignNPCBuildings()
     completeGoalTravelFarm()
     const farmData = getFarmData()
     farmData.lastFarmVisitAt = Date.now()
@@ -17643,6 +17972,7 @@ async function init() {
     text.textContent = 'Spawning life...'
     bar.style.width = '85%'
     generateNPCs()
+    if (state.currentRegion === 'farmlands') ensureFarmlandNPCs()
     await new Promise(r => setTimeout(r, 50))
 
     text.textContent = 'Connecting to world...'
