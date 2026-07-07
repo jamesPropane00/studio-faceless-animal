@@ -4517,6 +4517,11 @@ function selectionDescriptor(target) {
     const creature=getCreature(target.data) || state.creatureCollection[target.data] || {}
     return { kicker:`${REGIONS[state.currentRegion]?.name || state.currentRegion} · Creature`,name:creature.name || 'Unknown Creature',owner:'Wild / unclaimed',region:REGIONS[state.currentRegion]?.name || state.currentRegion,status:'Encounter available',value:`Trust ${creature.trust || 0}%`,deed:'Trail Journal sighting',organization:'Wildlife',actions:['interact'] }
   }
+  if (target?.kind==='world-event') {
+    const evt=target.data
+    const action=evt.type==='treasure' ? 'Collect Money Bag' : evt.type==='portal' ? 'Enter Portal' : evt.type==='blessing' ? 'Receive Blessing' : 'Inspect Event'
+    return { kicker:`${REGIONS[state.currentRegion]?.name || state.currentRegion} · World Event`,name:`${evt.icon || '✨'} ${evt.name || 'World Event'}`,owner:'The living world',region:REGIONS[state.currentRegion]?.name || state.currentRegion,status:`${Math.max(1,Math.ceil(Number(evt.timer) || 0))}s remaining`,value:action,deed:'Temporary event',organization:'Faceless World',actions:['interact'] }
+  }
   if (target?.kind==='discovery' || target?.kind==='region-discovery') return { kicker:`${REGIONS[state.currentRegion]?.name || state.currentRegion} · Discovery`,name:target.data?.name || 'Regional Discovery',owner:'The living world',region:REGIONS[state.currentRegion]?.name || state.currentRegion,status:'Uncollected',value:'Trail Journal item',deed:'Discovery',organization:'None',actions:['interact'] }
   return { kicker:REGIONS[regionId]?.name || regionId,name:'World Object',owner:'Unowned',region:REGIONS[regionId]?.name || regionId,status:'Available',value:'—',deed:'—',organization:'Independent',actions:[] }
 }
@@ -4552,6 +4557,7 @@ function activateWorldTarget(target) {
   if (target.kind==='creature') startCreatureEncounter(target.data)
   else if (target.kind==='discovery') collectWoodsDiscovery(target.data?.id || target.data)
   else if (target.kind==='region-discovery') collectRegionSeedDiscovery(target.data?.id || target.data)
+  else if (target.kind==='world-event') activateWorldEvent(target.data)
   else if (target.kind==='npc') beginEncounter('npc',target.data)
   else if (target.kind==='farm-animal') openFarmHub('animals')
   else if (target.kind==='sanctuary-slot') openFarmHub('sanctuary')
@@ -4567,6 +4573,8 @@ function activateWorldTarget(target) {
 function worldTargetAt(world) {
   const sighting=state.creatureSighting
   if (sighting?.phase>=2 && Math.hypot(sighting.x-world.x,sighting.y-world.y)<4) return {kind:'creature',data:sighting.creatureId,x:sighting.x,y:sighting.y,range:1.5}
+  const worldEvent=state.events.find(evt=>!evt.claimed && (!evt.region_id && !evt.region || isInCurrentRegion(evt)) && Math.hypot(Number(evt.x)-world.x,Number(evt.y)-world.y)<Math.max(2.2,Number(evt.radius) || 1.5))
+  if (worldEvent) return {kind:'world-event',data:worldEvent,x:worldEvent.x,y:worldEvent.y,range:Math.max(1.3,Number(worldEvent.radius) || 1.5)}
   const discovery=state.currentRegion==='whisper-woods' && woodsRuntime.discoveries.find(item=>Math.hypot(item.x-world.x,item.y-world.y)<2.4)
   if (discovery) return {kind:'discovery',data:discovery,x:discovery.x,y:discovery.y,range:1.2}
   const regionDiscovery=REGION_IDENTITY_SEEDS[state.currentRegion] && regionIdentityRuntime.discoveries.find(item=>Math.hypot(item.x-world.x,item.y-world.y)<2.4)
@@ -10621,6 +10629,99 @@ function drawWorldEvents() {
   }
 }
 
+function removeWorldEvent(evt) {
+  const id=evt?.id
+  const index=state.events.findIndex(item=>item===evt || (id!=null && String(item.id)===String(id)))
+  if (index>=0) state.events.splice(index,1)
+}
+
+function buildingsInEventRadius(x,y,radius) {
+  const r=Math.max(0,Number(radius) || 0)
+  return state.buildings.filter(building=>{
+    if (!isInCurrentRegion(building)) return false
+    const dx=Number(building.tile_x)-Number(x),dy=Number(building.tile_y)-Number(y)
+    return Math.hypot(dx,dy)<=r
+  })
+}
+
+function applyGodPowerLocalEffect(type,x,y,power={}) {
+  const radius=Number(power.radius) || (type==='earthquake'?8:type==='blessing'?5:3)
+  let changed=false
+  if (type==='spawn_npc') {
+    const npc={ id:`npc_${Date.now()}_${Math.floor(Math.random()*999)}`,name:`New Resident ${state.npcs.length+1}`,type:'wanderer',x:Number(x),y:Number(y),tx:Number(x)+Math.random()*4-2,ty:Number(y)+Math.random()*4-2,state:'wandering',region_id:state.currentRegion,color:'#c084fc',created_by:state.userId || 'local-player' }
+    state.npcs.push(npc)
+    showToast('NPC Spawned',`${npc.name} entered ${REGIONS[state.currentRegion]?.name || state.currentRegion}.`)
+    return true
+  }
+  const affected=buildingsInEventRadius(x,y,radius)
+  for (const building of affected) {
+    if (type==='meteor' || type==='earthquake') {
+      building.condition=Math.max(0,Number(building.condition ?? 100)-(type==='meteor'?65:35))
+      building.lifecycleStatus=building.condition<=15?'abandoned':(building.condition<45?'declining':building.lifecycleStatus || 'active')
+      building.businessClosed=building.condition<30 || building.businessClosed
+      changed=true
+    } else if (type==='blessing') {
+      building.condition=Math.min(100,Number(building.condition ?? 70)+35)
+      building.lifecycleStatus='active'
+      building.businessClosed=false
+      changed=true
+    }
+    saveConstructionBuilding(building)
+  }
+  if (changed) {
+    saveRegionalObjects()
+    refreshCityHealthMetrics()
+    updateCityPlotProgress(1,true)
+  }
+  return changed
+}
+
+function activateWorldEvent(evt) {
+  if (!evt || evt.claimed) return
+  if (evt.type==='treasure') {
+    const reward=50+Math.floor(Math.random()*101)
+    state.coins+=reward
+    document.getElementById('statCoins').textContent=state.coins
+    saveWorldPlayerProgress()
+    evt.claimed=true
+    removeWorldEvent(evt)
+    showToast('Money Bag Collected',`+${reward} FC`)
+    createNewsItem('Economy','A money bag was recovered in the world.',`${state.username || 'A resident'} collected ${reward} FC.`,state.currentRegion,2)
+    return
+  }
+  if (evt.type==='portal') {
+    const regions=Object.keys(REGIONS).filter(region=>region!==state.currentRegion)
+    const next=regions[Math.floor(Math.random()*regions.length)] || 'city'
+    evt.claimed=true
+    removeWorldEvent(evt)
+    startTravel(next)
+    showToast('Portal Entered',`Warping to ${REGIONS[next]?.name || next}.`)
+    return
+  }
+  if (evt.type==='blessing') {
+    applyGodPowerLocalEffect('blessing',evt.x,evt.y,{radius:evt.radius || 5})
+    evt.claimed=true
+    removeWorldEvent(evt)
+    showToast('Blessing Received','Nearby properties were repaired.')
+    return
+  }
+  if (evt.type==='meteor' || evt.type==='earthquake') {
+    applyGodPowerLocalEffect(evt.type,evt.x,evt.y,{radius:evt.radius})
+    evt.claimed=true
+    removeWorldEvent(evt)
+    showToast(evt.name || 'World Event','The area changed.')
+    return
+  }
+  showToast(evt.name || 'World Event',evt.desc || 'Nothing else happened.')
+}
+
+function createLocalGodPowerEvent(type,x,y,power={}) {
+  const template=WORLD_EVENTS.find(item=>item.type===type) || { type,name:power.name || type,icon:power.icon || '✨',desc:power.desc || '',radius:power.radius || 2,duration:power.duration || 8 }
+  const evt={ ...template,id:`local_evt_${Date.now()}_${Math.floor(Math.random()*9999)}`,x:Number(x),y:Number(y),region_id:state.currentRegion,timer:power.duration || template.duration || 8,startTime:performance.now() }
+  state.events.push(evt)
+  return evt
+}
+
 function worldToScreen(wx, wy) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
   const logicalWidth = canvas.width / dpr
@@ -16130,10 +16231,27 @@ async function triggerGodPower(x, y) {
     return
   }
   
-  const power = GOD_POWERS[state.godPower]
+  const powerType=state.godPower
+  const power = GOD_POWERS[powerType]
   if (state.coins < power.cost) {
     showToast('Error', 'Not enough coins')
     return
+  }
+  const applyClientEffect=({deduct=true}={})=>{
+    if (deduct) {
+      state.coins=Math.max(0,state.coins-power.cost)
+      document.getElementById('statCoins').textContent=state.coins
+      saveWorldPlayerProgress()
+    }
+    if (powerType==='treasure' || powerType==='portal') createLocalGodPowerEvent(powerType,Math.floor(x),Math.floor(y),power)
+    else applyGodPowerLocalEffect(powerType,Math.floor(x),Math.floor(y),power)
+    showToast('God Power Triggered', `${power.name} unleashed!`)
+    addChatMessage('', `${state.username} triggered ${power.name}!`, true)
+    createNewsItem('World',`${power.name} used in ${REGIONS[state.currentRegion]?.name || state.currentRegion}.`,power.desc || 'The living world reacted.',state.currentRegion,3)
+    state.godMode=false
+    state.godPower=null
+    document.getElementById('modeIndicator').classList.remove('open')
+    completeGoalGodPower()
   }
   
   try {
@@ -16151,7 +16269,8 @@ async function triggerGodPower(x, y) {
     // Check if response is JSON
     const contentType = res.headers.get('content-type')
     if (!contentType || !contentType.includes('application/json')) {
-      showToast('Server Offline', 'World API unavailable. Running in offline mode.')
+      applyClientEffect()
+      showToast('Server Offline', 'Power applied locally while the world API is unavailable.')
       return
     }
     
@@ -16159,20 +16278,25 @@ async function triggerGodPower(x, y) {
     if (data.ok) {
       if (data.newBalance != null) {
         state.coins = data.newBalance
-      } else {
-        state.coins -= power.cost
+        document.getElementById('statCoins').textContent = state.coins
+        saveWorldPlayerProgress()
       }
-      document.getElementById('statCoins').textContent = state.coins
+      if (powerType==='treasure' || powerType==='portal') createLocalGodPowerEvent(powerType,Math.floor(x),Math.floor(y),power)
+      else applyGodPowerLocalEffect(powerType,Math.floor(x),Math.floor(y),power)
       showToast('God Power Triggered', `${power.name} unleashed!`)
       addChatMessage('', `${state.username} triggered ${power.name}!`, true)
+      state.godMode=false
+      state.godPower=null
+      document.getElementById('modeIndicator').classList.remove('open')
       completeGoalGodPower()
     } else {
       console.error('[WORLD] triggerGodPower failed:', res.status, data)
-      showToast('Error', data.error || 'Failed to trigger power')
+      if (String(data.error || '').includes('verify player state') || String(data.error || '').includes('Failed to deduct') || (String(data.error || '').includes('Not enough coins') && state.coins>=power.cost)) applyClientEffect()
+      else showToast('Error', data.error || 'Failed to trigger power')
     }
   } catch (e) {
     console.error('[WORLD] triggerGodPower exception:', e)
-    showToast('Error', 'Failed to trigger power')
+    applyClientEffect()
   }
 }
 

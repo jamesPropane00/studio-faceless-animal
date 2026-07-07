@@ -11,6 +11,8 @@ const items = [
 
 const GOD_POWERS = {
   meteor: { name: 'Meteor Strike', icon: '\u2604\uFE0F', cost: 200, radius: 3, desc: 'Destroy buildings in area' },
+  treasure: { name: 'Money Bag', icon: '\u{1F4B0}', cost: 25, radius: 2, desc: 'Spawn a collectable FC reward' },
+  portal: { name: 'Open Portal', icon: '\u{1F300}', cost: 75, radius: 2, desc: 'Open a short-lived travel portal' },
   blessing: { name: 'Divine Blessing', icon: '\u2728', cost: 100, radius: 5, desc: 'Restore buildings in area' },
   earthquake: { name: 'Earthquake', icon: '\u{1F30B}', cost: 150, radius: 8, desc: 'Damage buildings in area' },
   spawn_npc: { name: 'Spawn NPC', icon: '\u{1F464}', cost: 25, radius: 0, desc: 'Create a new citizen' }

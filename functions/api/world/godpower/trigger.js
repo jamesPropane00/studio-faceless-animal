@@ -17,6 +17,8 @@ function json(body, status = 200) {
 }
 
 const GOD_POWERS = {
+  treasure:   { name: 'Money Bag',         icon: '💰',  cost: 25,  radius: 2, desc: 'Spawn a collectable FC reward', duration: 25 },
+  portal:     { name: 'Open Portal',       icon: '🌀',  cost: 75,  radius: 2, desc: 'Open a short-lived travel portal', duration: 30 },
   meteor:     { name: 'Meteor Strike',     icon: '☄️',  cost: 200, radius: 3, desc: 'Destroy buildings in area' },
   blessing:   { name: 'Divine Blessing',   icon: '✨',  cost: 100, radius: 5, desc: 'Restore buildings in area' },
   earthquake: { name: 'Earthquake',        icon: '🌋',  cost: 150, radius: 8, desc: 'Damage buildings in area' },
@@ -181,7 +183,7 @@ export async function onRequestPost(context) {
 
     // Fetch updated balance to return to client
     let newBalance = null;
-    if (isUuid) {
+    if (userId) {
       const balanceResult = await supabaseFetch(context.env, `/rest/v1/world_player_states?select=coins&user_id=eq.${encodeURIComponent(userId)}`);
       if (balanceResult.ok && Array.isArray(balanceResult.data) && balanceResult.data.length > 0) {
         newBalance = balanceResult.data[0].coins;
