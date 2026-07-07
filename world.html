@@ -3860,6 +3860,54 @@ const OWNERSHIP_META_KEY = 'fas_ownership_metadata_v1'
 const PORTFOLIO_REGION_ORDER=['city','farmlands','whisper-woods','purple-pulse','iron-district','coast','mountains']
 let ownershipMetaCache=null
 
+const FARM_SPECIAL_CROPS = {
+  blueberries:{ name:'Blueberries', icon:'🫐', growthTime:42000, stages:4, yield:4, sellValue:6, xp:6, color:'#60a5fa' },
+  strawberries:{ name:'Strawberries', icon:'🍓', growthTime:45000, stages:4, yield:4, sellValue:6, xp:6, color:'#f43f5e' },
+  grapes:{ name:'Grapes', icon:'🍇', growthTime:65000, stages:5, yield:5, sellValue:8, xp:8, color:'#8b5cf6' },
+  wildflowers:{ name:'Wildflowers', icon:'🌼', growthTime:30000, stages:3, yield:5, sellValue:3, xp:5, color:'#fde047' },
+  lavender:{ name:'Lavender', icon:'🪻', growthTime:52000, stages:4, yield:4, sellValue:7, xp:7, color:'#a78bfa' },
+  apples:{ name:'Apples', icon:'🍎', growthTime:90000, stages:5, yield:6, sellValue:9, xp:10, color:'#ef4444' },
+  peaches:{ name:'Peaches', icon:'🍑', growthTime:95000, stages:5, yield:6, sellValue:10, xp:10, color:'#fb923c' }
+}
+const BASE_FARM_CROP_KEYS = ['wheat','corn','carrots','tomatoes']
+const FARM_PLANT_BED_CROPS = {
+  'crop-row':BASE_FARM_CROP_KEYS,
+  'field-plot':BASE_FARM_CROP_KEYS,
+  greenhouse:BASE_FARM_CROP_KEYS,
+  'berry-field':['blueberries','strawberries'],
+  vineyard:['grapes'],
+  'flower-field':['wildflowers','lavender'],
+  'orchard-row':['apples','peaches']
+}
+const FARM_PLANT_BED_TYPES = new Set(Object.keys(FARM_PLANT_BED_CROPS))
+
+function farmCropCatalog() {
+  return { ...CROP_TYPES, ...FARM_SPECIAL_CROPS }
+}
+
+function farmCropInfo(cropKey) {
+  return farmCropCatalog()[cropKey] || null
+}
+
+function farmInventoryCropKeys() {
+  return Object.keys(farmCropCatalog())
+}
+
+function farmPlantBedAt(tx,ty) {
+  return state.buildings.find(item=>{
+    if (!isInCurrentRegion(item)) return false
+    const typeId=item.object_type || item.building_type
+    if (!FARM_PLANT_BED_TYPES.has(typeId)) return false
+    return Number(item.tile_x)===Number(tx) && Number(item.tile_y)===Number(ty)
+  }) || null
+}
+
+function farmPlantBedCropKeys(tx,ty) {
+  const bed=farmPlantBedAt(tx,ty)
+  const typeId=bed?.object_type || bed?.building_type
+  return (FARM_PLANT_BED_CROPS[typeId] || BASE_FARM_CROP_KEYS).filter(key=>farmCropInfo(key))
+}
+
 function safeText(value) {
   return String(value ?? '').replace(/[&<>"']/g,char=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[char]))
 }
@@ -4494,7 +4542,7 @@ function getFarmData() {
   data.inventory = data.inventory || {}
   if (data.inventory.veggies && !data.inventory.carrots) data.inventory.carrots = data.inventory.veggies
   delete data.inventory.veggies
-  for (const crop of ['wheat', 'corn', 'carrots', 'tomatoes']) {
+  for (const crop of farmInventoryCropKeys()) {
     data.inventory[crop] = Math.max(0, Number(data.inventory[crop]) || 0)
   }
   if (!data.hayDayResetVersion) {
@@ -4841,7 +4889,7 @@ function makeFarmOrder(level) {
   return {
     crop,
     amount,
-    coins: amount * (CROP_TYPES[crop]?.sellValue || 3),
+    coins: amount * (farmCropInfo(crop)?.sellValue || 3),
     xp: 8 + amount * 2
   }
 }
@@ -4853,7 +4901,7 @@ function ensureFarmOrders(data) {
 function renderFarmOrder(data) {
   ensureFarmOrders(data)
   const order = data.orders[0]
-  const info = CROP_TYPES[order.crop]
+  const info = farmCropInfo(order.crop)
   const owned = data.inventory[order.crop] || 0
   document.getElementById('farmOrderText').textContent = `${info.icon} ${order.amount} ${info.name} (${owned} in barn)`
   document.getElementById('farmOrderReward').textContent = `Reward: ${order.coins} FC + ${order.xp} farm XP`
@@ -4890,7 +4938,7 @@ function getCropGrowth(elapsed, info) {
 }
 
 function getCropStageInfo(crop) {
-  const baseInfo = CROP_TYPES[crop.type]
+  const baseInfo = farmCropInfo(crop.type)
   if (!baseInfo) return null
   const info = { ...baseInfo, growthTime:Math.max(1000,Number(crop.growthTime) || baseInfo.growthTime) }
   const planted = crop.plantedAt || 0
@@ -4920,7 +4968,7 @@ function updateFarmInventory() {
   document.getElementById('farmCarrots').textContent = data.inventory.carrots || 0
   document.getElementById('farmTomatoes').textContent = data.inventory.tomatoes || 0
   // Compute food from raw crops (3:1)
-  const totalRaw = ['wheat','corn','carrots','tomatoes'].reduce((sum, key) => sum + (data.inventory[key] || 0), 0)
+  const totalRaw = farmInventoryCropKeys().reduce((sum, key) => sum + (data.inventory[key] || 0), 0)
   const food = Math.floor(totalRaw / 3)
   document.getElementById('farmFood').textContent = food
   document.getElementById('farmSendBtn').disabled = food < 1
@@ -4935,7 +4983,7 @@ function updateFarmInventory() {
   const now = Date.now()
   let ready = 0
   for (const crop of (data.crops || [])) {
-    const info = CROP_TYPES[crop.type]
+    const info = farmCropInfo(crop.type)
     if (!info) continue
     const elapsed = now - crop.plantedAt
     if (elapsed >= (crop.growthTime || info.growthTime)) ready++
@@ -4959,6 +5007,9 @@ function startCropHarvestGame(tx,ty) {
   const crop=getCropAtTile(tx,ty)
   const cropState=crop && getCropStageInfo(crop)
   if (!cropState?.done) return
+  const bed=farmPlantBedAt(tx,ty)
+  const bedType=bed?.object_type || bed?.building_type
+  const collectVerb=['berry-field','vineyard','flower-field','orchard-row'].includes(bedType) ? 'Collect' : 'Gather'
   stopFarmHarvestGame()
   farmHarvestRuntime.tx=tx
   farmHarvestRuntime.ty=ty
@@ -4969,7 +5020,7 @@ function startCropHarvestGame(tx,ty) {
   const score=document.getElementById('farmHarvestScore')
   const timer=document.getElementById('farmHarvestTimer')
   document.getElementById('farmHarvestArea').style.display='none'
-  document.getElementById('farmPlantTitle').textContent=`Gather the ${cropState.info.name}!`
+  document.getElementById('farmPlantTitle').textContent=`${collectVerb} the ${cropState.info.name}!`
   game.classList.add('active')
   score.textContent=`0 / ${farmHarvestRuntime.total} gathered`
   timer.textContent='12.0s'
@@ -5016,6 +5067,10 @@ function startCropHarvestGame(tx,ty) {
 
 function showFarmPlantOverlay(tx, ty) {
   const existing = getCropAtTile(tx, ty)
+  const bed = farmPlantBedAt(tx,ty)
+  const bedType = bed?.object_type || bed?.building_type
+  const bedName = BUILDING_TYPES[bedType]?.name || 'Plant Bed'
+  const collectVerb = ['berry-field','vineyard','flower-field','orchard-row'].includes(bedType) ? 'Collect' : 'Harvest'
   const overlay = document.getElementById('farmPlantOverlay')
   const title = document.getElementById('farmPlantTitle')
   const list = document.getElementById('farmCropList')
@@ -5032,7 +5087,7 @@ function showFarmPlantOverlay(tx, ty) {
     // Show harvest info
     const state = getCropStageInfo(existing)
     if (state && state.done) {
-      title.textContent = `Harvest ${state.info.icon} ${state.info.name}`
+      title.textContent = `${collectVerb} ${state.info.icon} ${state.info.name}`
       harvestArea.style.display = 'block'
       document.getElementById('farmHarvestBtn').onclick = () => startCropHarvestGame(tx, ty)
     } else {
@@ -5050,9 +5105,10 @@ function showFarmPlantOverlay(tx, ty) {
     }
   } else {
     // Show planting options
-    title.textContent = 'Plant a Crop'
+    title.textContent = `Plant ${bedName}`
     const season=currentSeasonData()
-    for (const [key, info] of Object.entries(CROP_TYPES)) {
+    for (const key of farmPlantBedCropKeys(tx,ty)) {
+      const info = farmCropInfo(key)
       const owned = getFarmData().inventory[key] || 0
       const seasonalGrowth=Math.max(1000,Math.round(info.growthTime/season.cropGrowth))
       const item = document.createElement('div')
@@ -5123,7 +5179,7 @@ function checkCropsReady() {
   const data = getFarmData()
   if (!data || !data.crops) return
   for (const crop of data.crops) {
-    const info = CROP_TYPES[crop.type]
+    const info = farmCropInfo(crop.type)
     if (!info) continue
     if (now - crop.plantedAt >= (crop.growthTime || info.growthTime)) {
       showToast('Crops Ready!', 'Harvest your ' + info.name + ' in the farmlands!')
@@ -5134,6 +5190,8 @@ function checkCropsReady() {
 
 function plantCrop(tx, ty, cropType) {
   const data = getFarmData()
+  const cropInfo=farmCropInfo(cropType)
+  if (!cropInfo) return
   if (data.crops.some(c => c.tx === tx && c.ty === ty)) return
   if ((data.inventory[cropType] || 0) < 1) {
     showToast('No seeds left', 'Harvest or fill orders to keep your crop stock moving.')
@@ -5141,11 +5199,11 @@ function plantCrop(tx, ty, cropType) {
   }
   data.inventory[cropType]--
   const season=currentSeasonData()
-  data.crops.push({ tx, ty, type: cropType, plantedAt: Date.now(), growthTime:Math.max(1000,Math.round(CROP_TYPES[cropType].growthTime/season.cropGrowth)), plantedSeason:getLivingWorldData().season })
+  data.crops.push({ tx, ty, type: cropType, plantedAt: Date.now(), growthTime:Math.max(1000,Math.round(cropInfo.growthTime/season.cropGrowth)), plantedSeason:getLivingWorldData().season })
   saveFarmData(data)
   closeFarmOverlay()
   updateFarmInventory()
-  showToast('Planted ' + CROP_TYPES[cropType].name, 'One crop used from your barn.')
+  showToast('Planted ' + cropInfo.name, 'One crop used from your barn.')
   awardSkillXP('farmer', 5)
   invalidateTileCache()
 }
@@ -5158,14 +5216,14 @@ function harvestCrop(tx, ty, bonusYield=0) {
   const state = getCropStageInfo(crop)
   if (!state || !state.done) return
 
-  const info = CROP_TYPES[crop.type]
+  const info = farmCropInfo(crop.type)
   let yield_ = info.yield || 1
   yield_ = Math.floor(yield_ * (1 + getSkillBonus('farmer', 'cropYield')))
   yield_ = Math.max(1,Math.round(yield_*currentSeasonData().cropYield))
   const soilQuality = getRegionalHealth('farmlands')['Soil quality'] || 50
   if (soilQuality >= 75) yield_ += 1
   yield_ += Math.max(0,Number(bonusYield) || 0)
-  const siloUsed = ['wheat','corn','carrots','tomatoes'].reduce((sum, key) => sum + (data.inventory[key] || 0), 0)
+  const siloUsed = farmInventoryCropKeys().reduce((sum, key) => sum + (data.inventory[key] || 0), 0)
   if (siloUsed + yield_ > data.siloCapacity) {
     showToast('Silo Full', 'Fill a delivery order or send crops to the city first.')
     return
@@ -5181,14 +5239,17 @@ function harvestCrop(tx, ty, bonusYield=0) {
   createNewsItem('Farm', 'Crops harvested at the farm.', yield_ + ' ' + info.name + ' brought in.', 'farmlands', 2)
   closeFarmOverlay()
   updateFarmInventory()
-  showToast(`Harvested ${yield_} ${info.name}!`, bonusYield ? `Fast hands bonus: +${bonusYield}` : 'Row cleared and ready to plant again.')
+  const bed=farmPlantBedAt(tx,ty)
+  const bedType=bed?.object_type || bed?.building_type
+  const actionText=['berry-field','vineyard','flower-field','orchard-row'].includes(bedType) ? 'Collected' : 'Harvested'
+  showToast(`${actionText} ${yield_} ${info.name}!`, bonusYield ? `Fast hands bonus: +${bonusYield}` : 'Plant bed cleared and ready again.')
   completeGoalHarvest()
   invalidateTileCache()
 }
 
 async function sendFoodToCity() {
   const data = getFarmData()
-  const totalRaw = ['wheat','corn','carrots','tomatoes'].reduce((sum, key) => sum + (data.inventory[key] || 0), 0)
+  const totalRaw = farmInventoryCropKeys().reduce((sum, key) => sum + (data.inventory[key] || 0), 0)
   const food = Math.floor(totalRaw / 3)
   if (food < 1) return
 
@@ -5549,13 +5610,13 @@ function careForFarmCreature(creatureId,action) {
   if (!creature || !habitat) return
   const farm=getFarmData()
   if (action==='feed') {
-    const crop=Object.keys(CROP_TYPES).find(key=>(farm.inventory[key] || 0)>0)
+    const crop=farmInventoryCropKeys().find(key=>(farm.inventory[key] || 0)>0)
     if (!crop) { showToast('No Feed Available','Grow crops before feeding this habitat resident.');return }
     farm.inventory[crop]--
     creature.habitatMood=Math.min(100,(creature.habitatMood || 70)+12)
     creature.trust=Math.min(100,(creature.trust || 100)+1)
     creature.productReadyAt=Math.min(creature.productReadyAt || Infinity,Date.now()+45000)
-    showToast('Creature Fed',`${creature.name} enjoyed ${CROP_TYPES[crop].name.toLowerCase()}.`)
+    showToast('Creature Fed',`${creature.name} enjoyed ${farmCropInfo(crop).name.toLowerCase()}.`)
   } else if (action==='care') {
     creature.habitatMood=Math.min(100,(creature.habitatMood || 70)+9)
     creature.lastFarmCareAt=Date.now()
@@ -5742,7 +5803,7 @@ function cycleSanctuaryHabitat(index) {
 function careForSanctuaryCreature(index) {
   const data=getFarmData(), slot=data.sanctuary.slots[index], creature=sanctuaryCreatureForSlot(slot), now=Date.now()
   if (!creature || now-(slot.lastCaredAt || 0)<5*60*1000) return
-  const crop=Object.keys(CROP_TYPES).find(key=>(data.inventory[key] || 0)>0)
+  const crop=farmInventoryCropKeys().find(key=>(data.inventory[key] || 0)>0)
   if (!crop && !data.sanctuary.upgrades.feeding) { showToast('Sanctuary Needs Food','Harvest a crop or build the Feeding Station.'); return }
   if (crop) data.inventory[crop]--
   slot.mood=Math.min(100,(slot.mood || 60)+(data.sanctuary.upgrades.feeding ? 22 : 15))
@@ -5863,7 +5924,7 @@ function farmItemCount(data, key) {
 }
 
 function farmSiloUsed(data) {
-  return ['wheat','corn','carrots','tomatoes'].reduce((sum, key) => sum + (data.inventory[key] || 0), 0)
+  return farmInventoryCropKeys().reduce((sum, key) => sum + (data.inventory[key] || 0), 0)
 }
 
 function farmBarnUsed(data) {
@@ -5883,7 +5944,7 @@ function farmTakeIngredients(data, ingredients) {
 
 function farmFormatNeeds(needs) {
   return Object.entries(needs).filter(([,amount]) => amount > 0).map(([key, amount]) => {
-    const item = CROP_TYPES[key] || FARM_GOODS[key]
+    const item = farmCropInfo(key) || FARM_GOODS[key]
     return `${item?.icon || ''} ${amount} ${item?.name || key}`
   }).join(' + ')
 }
@@ -6084,7 +6145,7 @@ function renderFarmHub() {
       </section>
     </div>
     <div class="farm-card-grid">
-      ${farmCard('Fields','🌾','Plant placed crop rows, wait, then harvest them by hand.',`${ready.crops} ready · ${data.crops.length} planted`,'go-tab:crops','Open Crops',false,ready.crops ? 'ready' : '')}
+      ${farmCard('Fields','🌾','Plant crop rows, greenhouse beds, berries, flowers, vineyards, and orchards by hand.',`${ready.crops} ready · ${data.crops.length} planted`,'go-tab:crops','Open Crops',false,ready.crops ? 'ready' : '')}
       ${farmCard('Animal Care','🐓',animalSummary,animalMeta,'go-tab:animals',residents.length ? 'Check Animals' : 'Build a coop or pasture',false,ready.animals || ready.needsCare ? 'ready' : '')}
       ${farmCard('Production','⚙️','Collect finished goods or start a new recipe.',`${ready.machines} ready`,'go-tab:machines','Open Machines',false,ready.machines ? 'ready' : '')}
       ${farmCard('Order Board','📋','Fresh city requests arrive every day.',`${ready.orders} can be completed now`,'go-tab:orders','View Orders',false,ready.orders ? 'ready' : '')}
@@ -6094,17 +6155,18 @@ function renderFarmHub() {
     </div>`
   } else if (activeFarmTab === 'crops') {
     html += '<div class="farm-card-grid">'
-    const needsSeeds = Object.keys(CROP_TYPES).some(key => (data.inventory[key] || 0) < 1)
+    const needsSeeds = farmInventoryCropKeys().some(key => (data.inventory[key] || 0) < 1)
     if (needsSeeds) {
       const seedWait = Math.max(0, 60000 - (now-data.lastSeedCrateAt))
       html += farmCard('Community Seed Crate','\u{1F381}','A recovery crate prevents the farm from ever running out of planting stock.',
-        seedWait ? `Next crate in ${Math.ceil(seedWait/1000)}s` : 'Contains 2 of every crop',
+        seedWait ? `Next crate in ${Math.ceil(seedWait/1000)}s` : 'Contains 2 of every crop and plant product',
         'claim-seeds','Claim Seed Crate',seedWait > 0,'ready')
     }
-    for (const [key, crop] of Object.entries(CROP_TYPES)) {
+    for (const [key, crop] of Object.entries(farmCropCatalog())) {
       const planted = data.crops.filter(field => field.type === key)
       const ready = planted.filter(field => getCropStageInfo(field)?.done).length
-      const availableRows = state.buildings.filter(item=>isInCurrentRegion(item) && ['crop-row','field-plot'].includes(item.object_type || item.building_type))
+      const availableRows = state.buildings.filter(item=>isInCurrentRegion(item) && FARM_PLANT_BED_TYPES.has(item.object_type || item.building_type))
+        .filter(item=>farmPlantBedCropKeys(item.tile_x,item.tile_y).includes(key))
         .filter(item=>!data.crops.some(crop=>crop.tx === item.tile_x && crop.ty === item.tile_y))
       const canPlant = (data.inventory[key] || 0) > 0 && availableRows.length > 0
       const action = ready ? `harvest:${key}` : `plant:${key}`
@@ -6279,11 +6341,12 @@ function renderFarmHub() {
 }
 
 function plantFarmField(cropKey) {
-  const data = getFarmData(), crop = CROP_TYPES[cropKey]
-  const row = state.buildings.filter(item=>isInCurrentRegion(item) && ['crop-row','field-plot'].includes(item.object_type || item.building_type))
+  const data = getFarmData(), crop = farmCropInfo(cropKey)
+  const row = state.buildings.filter(item=>isInCurrentRegion(item) && FARM_PLANT_BED_TYPES.has(item.object_type || item.building_type))
+    .filter(item=>farmPlantBedCropKeys(item.tile_x,item.tile_y).includes(cropKey))
     .find(item=>!data.crops.some(planted=>planted.tx === item.tile_x && planted.ty === item.tile_y))
   if (!crop || data.inventory[cropKey] < 1) return
-  if (!row) { showToast('Place a Crop Row','The Farm panel only plants real crop rows placed in the world.'); return }
+  if (!row) { showToast('Place a Plant Bed','Build an open crop row, greenhouse, berry patch, vineyard, flower patch, or orchard that can grow this.'); return }
   plantCrop(row.tile_x,row.tile_y,cropKey)
   const updated=getFarmData()
   if (updated.farmGuideStep === 'plant') updated.farmGuideStep='harvest'
@@ -6523,17 +6586,17 @@ function sellFarmSurplus() {
   const key = Object.keys(data.goods).find(k=>data.goods[k]>0) || Object.keys(data.inventory).find(k=>data.inventory[k]>2)
   if (!key) return
   if (data.goods[key] !== undefined) data.goods[key]--; else data.inventory[key]--
-  const value = CROP_TYPES[key]?.sellValue || 6
+  const value = farmCropInfo(key)?.sellValue || 6
   state.coins += value; document.getElementById('statCoins').textContent = state.coins
   saveFarmData(data); updateFarmInventory(); renderFarmHub()
-  showToast('Roadside Sale',`Sold 1 ${CROP_TYPES[key]?.name || FARM_GOODS[key]?.name} for ${value} FC.`)
+  showToast('Roadside Sale',`Sold 1 ${farmCropInfo(key)?.name || FARM_GOODS[key]?.name} for ${value} FC.`)
 }
 
 function claimFarmSeeds() {
   const data = getFarmData(), now = Date.now()
   if (now-data.lastSeedCrateAt < 60000) return
   let space=Math.max(0,data.siloCapacity-farmSiloUsed(data)), added=0
-  for (const key of Object.keys(CROP_TYPES)) {
+  for (const key of farmInventoryCropKeys()) {
     const amount=Math.min(2,space)
     data.inventory[key]+=amount
     added+=amount
@@ -6602,7 +6665,7 @@ function farmMvpTick() {
     const key = `field_${field.tx}_${field.ty}_${field.plantedAt}`
     if (getCropStageInfo(field)?.done && !data.readyNotices[key]) {
       data.readyNotices[key] = true; changed = true
-      showToast('Crop Ready!',`${CROP_TYPES[field.type].name} is ready. Click its crop row to harvest.`)
+      showToast('Crop Ready!',`${farmCropInfo(field.type)?.name || 'Crop'} is ready. Click its plant bed to collect.`)
     }
   }
   for (const [machine,queue] of Object.entries(data.machineQueues)) {
@@ -7998,7 +8061,7 @@ function resolveCreatureEncounterAction(action) {
     gain = 5; encounterEngine.mood = 'Curious'
     encounterDialogue(`${creature.name} notices that you are watching without moving closer.`)
   } else if (action === 'food') {
-    const farm = getFarmData(), crop = Object.keys(CROP_TYPES).find(key=>(farm.inventory[key] || 0)>0)
+    const farm = getFarmData(), crop = farmInventoryCropKeys().find(key=>(farm.inventory[key] || 0)>0)
     if (!crop) {
       addEncounterLog('You have no farm food to offer.','Offer Food')
       encounterDialogue('An empty hand communicates nothing. The creature continues waiting.')
@@ -8007,7 +8070,7 @@ function resolveCreatureEncounterAction(action) {
     farm.inventory[crop]--; saveFarmData(farm)
     updateFarmInventory()
     gain = 18+Math.floor(Math.random()*8); encounterEngine.mood = 'Interested'
-    encounterDialogue(`${creature.name} waits for you to step back, then accepts the ${CROP_TYPES[crop].name.toLowerCase()}.`)
+    encounterDialogue(`${creature.name} waits for you to step back, then accepts the ${farmCropInfo(crop).name.toLowerCase()}.`)
   } else if (action === 'still') {
     gain = 8+Math.floor(Math.random()*4); encounterEngine.mood = 'Calm'
     encounterDialogue(`You match the stillness of the woods. ${creature.name} takes one careful step closer.`)
@@ -8053,7 +8116,7 @@ function resolveNpcEncounterAction(action) {
     farm.inventory[crop]++; saveFarmData(farm)
     document.getElementById('statCoins').textContent = state.coins
     gain = 7; encounterEngine.mood = 'Satisfied'
-    encounterDialogue(`A fair exchange: 3 FC for one ${CROP_TYPES[crop].name}.`)
+    encounterDialogue(`A fair exchange: 3 FC for one ${farmCropInfo(crop).name}.`)
   } else if (action === 'persuade') {
     const chance = Math.min(.9,.35+(state.rep || 0)/200+encounterEngine.status/160)
     if (Math.random() > chance) {
@@ -9790,7 +9853,7 @@ function drawFarmPlacedObject(building,s) {
     'woodland-habitat','wetland-habitat','night-habitat','meadow-habitat','cave-habitat','neon-habitat',
     'breeding-pen','quarantine-pen','farm-feed-station'
   ])
-  const groundTypes=new Set([...farmRowTypes,...farmHabitatTypes,'fence','pond','orchard','orchard-row','tree-row','farm-decoration','flower-garden','bird-house','stone-wall','windmill'])
+  const groundTypes=new Set([...farmRowTypes,...farmHabitatTypes,'greenhouse','fence','pond','orchard','orchard-row','tree-row','farm-decoration','flower-garden','bird-house','stone-wall','windmill'])
   if (!groundTypes.has(typeId)) return false
   const z=state.camera.zoom
   const hw=TILE_W*z*.44
@@ -9862,6 +9925,21 @@ function drawFarmPlacedObject(building,s) {
       ctx.fillText(idleIcon,s.x,s.y-2*z)
       ctx.globalAlpha=1
     }
+  } else if (typeId === 'greenhouse') {
+    const footprint=Math.max(1,Number(building.footprint) || Number(BUILDING_TYPES[typeId]?.footprint) || 1)
+    for(let ox=0;ox<footprint;ox++) for(let oy=0;oy<footprint;oy++) {
+      const cell=worldToScreen(building.tile_x+ox,building.tile_y+oy)
+      diamond(cell,'rgba(20,184,166,.16)','rgba(125,211,252,.42)')
+      ctx.strokeStyle='rgba(219,234,254,.38)'
+      ctx.lineWidth=Math.max(.7,z)
+      ctx.beginPath(); ctx.moveTo(cell.x-hw*.35,cell.y-hh*.6); ctx.lineTo(cell.x,cell.y-hh*.95); ctx.lineTo(cell.x+hw*.35,cell.y-hh*.6); ctx.stroke()
+    }
+    const crop=getCropAtTile(building.tile_x,building.tile_y)
+    const cropState=crop && getCropStageInfo(crop)
+    ctx.font=`${Math.max(11,15*z)}px sans-serif`
+    ctx.textAlign='center'
+    ctx.fillText(cropState ? cropState.info.icon : '🏡',s.x,s.y-9*z)
+    if (cropState?.done) ctx.fillText('✨',s.x,s.y-hh-8*z)
   } else if (farmHabitatTypes.has(typeId)) {
     const footprint=Math.max(1,Number(building.footprint) || Number(BUILDING_TYPES[typeId]?.footprint) || 1)
     for(let ox=0;ox<footprint;ox++) for(let oy=0;oy<footprint;oy++) {
@@ -9918,6 +9996,14 @@ function drawFarmPlacedObject(building,s) {
         ctx.beginPath(); ctx.arc(px+(i%3-1)*2*z,py-11*z,1.15*z,0,Math.PI*2); ctx.fillStyle='#ef4444'; ctx.fill()
       }
     })
+    const crop=getCropAtTile(building.tile_x,building.tile_y)
+    const cropState=crop && getCropStageInfo(crop)
+    if (cropState) {
+      ctx.font=`${Math.max(11,15*z)}px sans-serif`
+      ctx.textAlign='center'
+      ctx.fillText(cropState.info.icon,s.x,s.y-18*z)
+      if (cropState.done) ctx.fillText('✨',s.x,s.y-hh-8*z)
+    }
   } else if (typeId === 'bee-box') {
     diamond(s,'rgba(101,126,46,.15)',null)
     ctx.fillStyle='#d6a52a'; ctx.fillRect(s.x-7*z,s.y-8*z,14*z,9*z)
@@ -14546,7 +14632,7 @@ function onInteractBuildObject(object) {
     bakery:'machines', dairy:'machines', barn:'storage', silo:'storage',
     'roadside-stand':'storage'
   }
-  if (typeId === 'crop-row' || typeId === 'field-plot') {
+  if (FARM_PLANT_BED_TYPES.has(typeId)) {
     showFarmPlantOverlay(object.tile_x,object.tile_y)
     return true
   }
@@ -14562,7 +14648,6 @@ function onInteractBuildObject(object) {
   const hooks = {
     pond:'Fishing mini-game hook ready for a later phase.',
     orchard:'The orchard is planted in rows and will support fruit growth.',
-    'orchard-row':'The orchard is planted in rows and will support fruit growth.',
     'bee-box':'The bees are supporting pollination across Pine Hollow Farm.',
     windmill:'The windmill is supporting farm production.',
     'trail-camera':'Wildlife observation hook ready. It also improves rare sighting chances.',
