@@ -9954,7 +9954,12 @@ function updateNPCRoutine(npc, dt) {
   const r = npc.routineData
 
   let shouldBe = 'idle'
-  if (npc.ambientNightWalker == null) npc.ambientNightWalker = ['walker','wanderer','guard'].includes(npc.type) && Math.random() < .18
+  const npcRegion=normalizeRegionId(npc.region_id ?? npc.region)
+  if (npc.ambientNightWalker == null) {
+    npc.ambientNightWalker = npcRegion === 'city'
+      ? Math.random() < .72
+      : ['walker','wanderer','guard'].includes(npc.type) && Math.random() < .18
+  }
   const ambientNightWalker = npc.ambientNightWalker
   if (!ambientNightWalker && (t >= r.sleepStart || t < r.sleepEnd)) {
     shouldBe = 'sleeping'
@@ -10034,6 +10039,44 @@ function assignNPCAmbientTarget(npc,radius=6) {
   npc.ty=Math.max(2,Math.min(WORLD_SIZE-3,baseY+(Math.random()-.5)*3))
   npc.path=null; npc.pathDestKey=null; npc.moveTimer=3+Math.random()*6
   return true
+}
+
+function ensureCityNPCMotion() {
+  if (normalizeRegionId(state.currentRegion)!=='city') return
+  state.npcs=Array.isArray(state.npcs) ? state.npcs : []
+  const cityNpcs=state.npcs.filter(npc=>normalizeRegionId(npc.region_id ?? npc.region)==='city')
+  const center=WORLD_SIZE/2
+  const colors=['#c084fc','#67e8f9','#facc15','#fb7185','#86efac','#f0abfc']
+  while (cityNpcs.length<14) {
+    const angle=Math.random()*Math.PI*2
+    const dist=5+Math.random()*12
+    const x=center+Math.cos(angle)*dist
+    const y=center+Math.sin(angle)*dist
+    const npc={
+      id:`city_walker_${Date.now()}_${cityNpcs.length}`,
+      x,y,tx:x,ty:y,homeX:x,homeY:y,
+      speed:.42+Math.random()*.38,
+      color:colors[Math.floor(Math.random()*colors.length)],
+      name:`City Walker ${cityNpcs.length+1}`,
+      moveTimer:0,type:'wanderer',routine:'wanderer',routineData:NPC_ROUTINES.wanderer,
+      state:'leisure',stateTimer:0,mood:.65,energy:.9,targetBuilding:null,carrying:null,
+      direction:0,animFrame:0,animTimer:0,region_id:'city',ambientNightWalker:true
+    }
+    assignNPCAmbientTarget(npc,10)
+    state.npcs.push(npc)
+    cityNpcs.push(npc)
+  }
+  for (const npc of cityNpcs) {
+    npc.ambientNightWalker = npc.ambientNightWalker !== false
+    if (npc.state === 'sleeping' && npc.ambientNightWalker) {
+      npc.state='leisure'
+      npc.moveTimer=0
+    }
+    const tx=Number(npc.tx),ty=Number(npc.ty),x=Number(npc.x),y=Number(npc.y)
+    if (!Number.isFinite(tx) || !Number.isFinite(ty) || Math.hypot(tx-x,ty-y)<.08 || Number(npc.moveTimer)>120) {
+      assignNPCAmbientTarget(npc,8)
+    }
+  }
 }
 
 function updateFarmlandNpcBehavior(npc, dt) {
@@ -10173,6 +10216,7 @@ function findPath(walkable, sx, sy, ex, ey) {
 }
 
 function updateNPCs(dt) {
+  ensureCityNPCMotion()
   // Phase 6E: Build walkable graph if infrastructure changed
   if (state.walkableDirty) {
     state.walkableGraph = buildWalkableGraph()
@@ -11371,7 +11415,7 @@ const CITY_ZONE_BUILD_INFO={
   club:{ zone:'Entertainment Zone',needs:'Population · happiness · road access',result:'Grows into venues · supports nightlife and culture' }
 }
 const CITY_PLOT_META={
-  house:{ duration:32000,population:6 },
+  house:{ duration:15000,population:6 },
   shop:{ duration:70000,population:0 },
   club:{ duration:120000,population:0 },
   warehouse:{ duration:90000,population:0 },
@@ -11491,11 +11535,51 @@ function activateCityZoneConstruction(building,now=Date.now()) {
   if (!support.supported) return false
   building.constructionPaused=false
   const typeId=building.object_type || building.building_type
-  const headStart=typeId==='house' ? Math.min(5000,Math.floor((Number(building.constructionDuration) || CITY_PLOT_META.house.duration)*.16)) : 0
+  const duration=Number(building.constructionDuration) || CITY_PLOT_META[typeId]?.duration || CITY_PLOT_META.house.duration
+  const headStart=typeId==='house' ? Math.min(9000,Math.floor(duration*.45)) : 0
   building.constructionStartedAt=now-headStart
-  building.constructionCompleteAt=building.constructionStartedAt+building.constructionDuration
-  building.constructionStage=0
+  building.constructionDuration=duration
+  building.constructionCompleteAt=building.constructionStartedAt+duration
+  building.constructionStage=typeId==='house' ? Math.max(1,building.constructionStage || 0) : 0
   return true
+}
+
+function isResidentialCityPlot(building) {
+  if (!building) return false
+  const typeId=building.object_type || building.building_type
+  return normalizeRegionId(building.region_id ?? building.region)==='city' && ['house','development-block'].includes(typeId)
+}
+
+function spawnCityResidentsForBuilding(building,count=null) {
+  if (!isResidentialCityPlot(building) || getCityPlotStage(building).stage<6) return 0
+  const existing=state.npcs.filter(npc=>npc.spawnedFromBuilding===building.id).length
+  const intended=Math.min(3,Math.max(1,count || Math.ceil((cityPlotPopulation(building) || 1)/3)))
+  if (existing>=intended) return 0
+  const bx=Number(building.tile_x ?? building.x) || WORLD_SIZE/2
+  const by=Number(building.tile_y ?? building.y) || WORLD_SIZE/2
+  const colors=['#a78bfa','#f0abfc','#67e8f9','#facc15','#fb7185','#86efac']
+  let created=0
+  for (let i=existing;i<intended;i++) {
+    const angle=Math.random()*Math.PI*2
+    const dist=1+Math.random()*2.5
+    const x=Math.max(2,Math.min(WORLD_SIZE-3,bx+.5+Math.cos(angle)*dist))
+    const y=Math.max(2,Math.min(WORLD_SIZE-3,by+.5+Math.sin(angle)*dist))
+    state.npcs.push({
+      id:`city_resident_${building.id}_${Date.now()}_${i}`,
+      x,y,tx:x,ty:y,homeX:bx+.5,homeY:by+.5,
+      speed:.45+Math.random()*.35,
+      color:colors[Math.floor(Math.random()*colors.length)],
+      name:`Resident ${state.npcs.filter(npc=>normalizeRegionId(npc.region_id ?? npc.region)==='city').length+1}`,
+      moveTimer:0,type:'wanderer',routine:'wanderer',routineData:NPC_ROUTINES.wanderer,
+      state:'leisure',stateTimer:0,mood:.65+Math.random()*.3,energy:.8,
+      targetBuilding:null,homeBuilding:building,workBuilding:null,leisureTarget:null,
+      carrying:null,direction:0,animFrame:0,animTimer:0,region_id:'city',
+      ambientNightWalker:true,spawnedFromBuilding:building.id
+    })
+    created++
+  }
+  building.spawnedResidentNpcs=existing+created
+  return created
 }
 
 function cityBuildingsForDistrict(district=null) {
@@ -11973,6 +12057,7 @@ function updateCityPlotProgress(dt,initial=false) {
       building.residentPopulation=0
       building.incomeUnlocked=false
     }
+    if (building.isComplete && isResidentialCityPlot(building) && spawnCityResidentsForBuilding(building)) changed=true
     if (changed) saveConstructionBuilding(building)
     const population=cityPlotPopulation(building)
     plotPopulation+=population
@@ -15555,11 +15640,16 @@ function openPropertyPanel(buildingId) {
   document.getElementById('propLevelFill').style.width = pct + '%'
   document.getElementById('propValue').textContent = calcPropertyValue(building) + ' FC'
   const incomeFactors = normalizeRegionId(building.region_id ?? building.region)==='city' ? cityIncomeFactors(building) : null
+  const residentialCityPlot=isResidentialCityPlot(building)
   document.getElementById('propIncome').textContent = getEffectiveIncome(building).toFixed(1) + '/min'
   document.getElementById('propUpgradeCount').textContent = prop.upgrades.length + ' / 3'
   document.getElementById('propDistrictBonus').textContent = incomeFactors
     ? `Customers ${incomeFactors.customers} · City pop ${incomeFactors.totalPopulation} · Market ${incomeFactors.marketPressure.toFixed(1)}x · Avg goods ${Math.round(incomeFactors.avgProductValue)} FC · Business ${Math.round(incomeFactors.businessHealth*100)}% · ${incomeFactors.why}`
     : (building.in_district ? 'Yes (+20%)' : 'None')
+  if (residentialCityPlot) {
+    document.getElementById('propIncome').textContent='0.0/min · adds population'
+    document.getElementById('propDistrictBonus').textContent=`Residential income rate: 0.0 FC/min · Population ${cityPlotPopulation(building)} · City pop ${incomeFactors?.totalPopulation || cityTotalPopulation()} · Homes create customers for shops instead of direct rent.`
+  }
   const plotStatusRow=document.getElementById('propPlotStatusRow')
   const lifecycleRow=document.getElementById('propLifecycleRow')
   const cityPlot=CITY_PLOT_TYPES.has(building.object_type || building.building_type) && normalizeRegionId(building.region_id ?? building.region) === 'city'
@@ -15629,7 +15719,8 @@ function openPropertyPanel(buildingId) {
     renovateBtn.onclick=()=>{ if (renovateCityBuilding(building)) openPropertyPanel(buildingId) }
   }
   const collectBtn=document.getElementById('propCollectBtn')
-  collectBtn.disabled=cityPlot && cityLifecycleIncomeMultiplier(building)<=0
+  collectBtn.textContent=residentialCityPlot ? 'Residential Income: 0.0' : 'Collect Income'
+  collectBtn.disabled=cityPlot && cityLifecycleIncomeMultiplier(building)<=0 && !residentialCityPlot
   collectBtn.onclick = () => { closeAllPanels(); setTimeout(() => openIncomePanel(buildingId), 200) }
   document.getElementById('propertyPanel').classList.remove('panel-hidden')
   document.getElementById('propertyPanel').classList.add('open')
@@ -15689,6 +15780,9 @@ function openIncomePanel(buildingId) {
   document.getElementById('incomeRate').textContent = incomeFactors
     ? `${getEffectiveIncome(building).toFixed(1)}/min · customers ${incomeFactors.customers} · city pop ${incomeFactors.totalPopulation}`
     : building.income_rate
+  if (isResidentialCityPlot(building)) {
+    document.getElementById('incomeRate').textContent=`0.0/min · residential zone · ${cityPlotPopulation(building)} residents when active`
+  }
 
   // Phase 5A: Building status
   ensureCityLifecycleData(building)
@@ -15802,6 +15896,7 @@ function constructionWeightedIncomeMs(building,lastCollected,now) {
 }
 
 function calculateAccumulatedIncome(building) {
+  if (isResidentialCityPlot(building)) return 0
   // Phase 5A: Use pending_income if available (from simulation tick)
   const pending = parseFloat(building.pending_income) || 0
   if (pending > 0) return Math.floor(pending*constructionIncomeMultiplier(building)*cityLifecycleIncomeMultiplier(building)*(normalizeRegionId(building.region_id ?? building.region)==='city' ? cityIncomeMultiplier(building) : 1))
@@ -15831,6 +15926,14 @@ function calculateAccumulatedIncome(building) {
 
 async function collectIncome() {
   if (!currentIncomeBuilding) return
+  if (isResidentialCityPlot(currentIncomeBuilding)) {
+    const construction=getCityPlotStage(currentIncomeBuilding)
+    const population=cityPlotPopulation(currentIncomeBuilding)
+    showToast('Residential Income 0.0',construction.stage>=6
+      ? `Homes add ${population} population and customers for shops instead of direct rent.`
+      : 'This residential zone is still growing. When complete it adds population, not direct income.')
+    return
+  }
   const constructionMult=constructionIncomeMultiplier(currentIncomeBuilding)
   const lifecycleMult=cityLifecycleIncomeMultiplier(currentIncomeBuilding)
   if (lifecycleMult<=0) {
