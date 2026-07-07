@@ -4788,6 +4788,16 @@ function getFarmData() {
   data.animals.chickens.count = Math.max(0,Number(data.animals.chickens.count) || 0)
   data.animals.cows.count = Math.max(0,Number(data.animals.cows.count) || 0)
   data.animalResidents = Array.isArray(data.animalResidents) ? data.animalResidents : []
+  if (!data.wildCaughtAnimalRuleVersion) {
+    data.animalResidents=data.animalResidents.filter(animal=>animal.captured || animal.source==='whisper-woods' || animal.source==='encounter' || animal.fromEncounter)
+    data.animals.chickens.count=data.animalResidents.filter(animal=>animal.species==='chicken').length
+    data.animals.cows.count=data.animalResidents.filter(animal=>animal.species==='cow').length
+    data.animals.chickens.fed=false; data.animals.chickens.readyAt=0
+    data.animals.cows.fed=false; data.animals.cows.readyAt=0
+    data.wildCaughtAnimalRuleVersion=1
+    try { localStorage.setItem('fas_farm_data',JSON.stringify(data)) } catch {}
+    queueLiveFarmSave(data)
+  }
   const animalSeeds = {
     chicken: [
       { name:'Sunny', mood:'happy', trust:62, favoriteFood:'Corn', favoriteWeather:'Sunny' },
@@ -4809,13 +4819,7 @@ function getFarmData() {
       data.animalResidents = data.animalResidents.filter(animal => animal.species !== species || keep-- > 0)
       existing = data.animalResidents.filter(animal => animal.species === species)
     }
-    for (let index = existing.length; index < needed; index++) {
-      const seed = animalSeeds[species][index % animalSeeds[species].length]
-      data.animalResidents.push({
-        id:`${species}_${Date.now()}_${index}_${Math.random().toString(36).slice(2,6)}`,
-        species, variant:'normal', bornAt:Date.now(), bondXP:0, friendId:null, ...seed
-      })
-    }
+    data.animals[group].count=existing.length
   }
   const sunny = data.animalResidents.find(animal => animal.name === 'Sunny')
   const molly = data.animalResidents.find(animal => animal.name === 'Molly')
@@ -5613,7 +5617,7 @@ function harvestCrop(tx, ty, bonusYield=0) {
   recordFarmDaily(data,'harvest')
   if (bed) {
     bed.lastMaintainedAt=Date.now()
-    bed.farmDecayStage='active'
+    bed.farmDecayStage='empty'
     if (bed._regionalLocal || bed.sync_status==='local' || bed.world_instance_id===WORLD_INSTANCE_ID) saveRegionalObjects()
   }
 
@@ -6607,7 +6611,7 @@ function renderFarmHub() {
       <section class="farm-morning-card">
         <div class="farm-morning-kicker">ANIMAL CARE</div>
         <h2>${hasAnimals ? (ready.needsCare ? `${ready.needsCare} friends need you.` : 'Everyone feels cared for.') : 'No animals yet.'}</h2>
-        <p>${hasAnimals ? 'Mood gently changes production time and the chance of a small FC quality bonus.' : 'Build a Chicken Coop or Cow Pasture on owned land to bring real animals to Pine Hollow.'}</p>
+        <p>${hasAnimals ? 'Mood gently changes production time and the chance of a small FC quality bonus.' : 'Build fenced animal space, then bring animals home from Whispering Woods encounters.'}</p>
         ${hasAnimals ? '' : '<button class="farm-action gold" data-farm-action="open-farm-build">Build a coop or pasture</button>'}
       </section>
       <section class="farm-daily-card">
@@ -6616,7 +6620,7 @@ function renderFarmHub() {
         <p>${ready.animals} ready to collect · ${ready.needsFood} need food · ${ready.needsCare} need care</p>
       </section>
     </div>
-    <div class="animal-profile-grid">${hasAnimals ? data.animalResidents.map(animal=>animalProfileHtml(data,animal,now)).join('') : '<div class="farm-empty">No animals yet. Place a Chicken Coop or Cow Pasture from the Farmlands Build menu.</div>'}</div>`
+    <div class="animal-profile-grid">${hasAnimals ? data.animalResidents.map(animal=>animalProfileHtml(data,animal,now)).join('') : '<div class="farm-empty">No animals yet. Build a fenced coop/pasture, then catch or befriend animals in Whispering Woods to bring them home.</div>'}</div>`
   } else if (activeFarmTab === 'machines') {
     html += '<div class="farm-card-grid">'
     for (const [key, recipe] of Object.entries(FARM_RECIPES)) {
@@ -16087,12 +16091,10 @@ function connectFarmBuildToGameplay(typeId) {
   const farm = getFarmData()
   farm.buildings[key] = Math.max(1, Number(farm.buildings[key]) || 0)
   if (typeId === 'chicken-coop' && farm.animals.chickens.count < 1) {
-    farm.animals.chickens.count = 2
-    showToast('Chickens Arrived','Sunny and Pepper moved into the new coop.')
+    showToast('Chicken Coop Ready','The fenced run is ready. Bring chickens home through exploration/encounters.')
   }
   if (typeId === 'cow-pasture' && farm.animals.cows.count < 1) {
-    farm.animals.cows.count = 2
-    showToast('Cows Arrived','Molly and Clover moved into the new pasture.')
+    showToast('Cow Pasture Ready','The pasture is ready. Bring cows home through exploration/encounters.')
   }
   saveFarmData(farm)
   farmDataCache=null
