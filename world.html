@@ -3903,6 +3903,30 @@ function localWorldSaveKeys() {
   return [...keys]
 }
 
+function hasCurrentWorldProgressInStorage() {
+  try {
+    const farm=JSON.parse(localStorage.getItem('fas_farm_data') || 'null')
+    if (farm?.worldInstanceId===WORLD_INSTANCE_ID) {
+      if ((Array.isArray(farm.landParcels) && farm.landParcels.length>1) || Number(farm.farmLevel)>1 || Number(farm.farmXP)>0) return true
+    }
+  } catch {}
+  try {
+    const regional=JSON.parse(localStorage.getItem(REGIONAL_OBJECTS_KEY) || 'null')
+    if (regional?.worldInstanceId===WORLD_INSTANCE_ID) {
+      if ((Array.isArray(regional.buildings) && regional.buildings.length) || (Array.isArray(regional.infrastructure) && regional.infrastructure.length)) return true
+    }
+  } catch {}
+  try {
+    const progress=JSON.parse(localStorage.getItem(WORLD_PLAYER_PROGRESS_KEY) || 'null')
+    if (progress?.worldInstanceId===WORLD_INSTANCE_ID && (Number(progress.coins)!==100 || Number(progress.rep)>0)) return true
+  } catch {}
+  try {
+    const props=JSON.parse(localStorage.getItem('fas_properties') || 'null')
+    if (props && typeof props==='object' && Object.keys(props).length>0) return true
+  } catch {}
+  return false
+}
+
 function createDayOneStarterFarm() {
   const center=Math.round(WORLD_SIZE/2),origin=center-FARM_LAND_PARCEL_SIZE/2
   return {
@@ -3931,6 +3955,11 @@ function seedDayOneLocalWorld() {
 
 function ensureWorldSaveVersion() {
   if (localStorage.getItem(WORLD_SAVE_VERSION_KEY)===WORLD_SAVE_VERSION) return false
+  if (hasCurrentWorldProgressInStorage()) {
+    localStorage.setItem(WORLD_SAVE_VERSION_KEY,WORLD_SAVE_VERSION)
+    console.info('[WORLD] Save version flag repaired without clearing current progress:',WORLD_SAVE_VERSION)
+    return false
+  }
   for (const key of localWorldSaveKeys()) localStorage.removeItem(key)
   seedDayOneLocalWorld()
   localStorage.setItem(WORLD_SAVE_VERSION_KEY,WORLD_SAVE_VERSION)
@@ -4764,6 +4793,7 @@ function buyFarmLandParcel(x,y) {
   state.coins-=cost
   document.getElementById('statCoins').textContent=state.coins
   saveFarmData(data)
+  saveWorldPlayerProgress()
   state.farmLandPreview.visible=false
   state.blockType=null
   state.blockMode=false
@@ -13153,7 +13183,10 @@ function mergeRegionalObjects(target, saved) {
       region_id: normalizeRegionId(raw.region_id),
       tile_x: Number(raw.tile_x),
       tile_y: Number(raw.tile_y),
-      owner_id: raw.owner_id || state.userId || 'local-player'
+      owner_id: raw.owner_id || state.userId || 'local-player',
+      world_instance_id: raw.world_instance_id || WORLD_INSTANCE_ID,
+      sync_status: raw.sync_status || 'local',
+      _regionalLocal: true
     }
     normalizeOwnershipMetadata(item)
     if (!byId.has(String(item.id))) {
@@ -13173,12 +13206,17 @@ function loadRegionalObjects() {
 
 function saveRegionalObjects() {
   if (window.__facelessDayOneResetting) return
+  const isLocalWorldObject=item=>
+    item?._regionalLocal === true ||
+    item?.sync_status === 'local' ||
+    String(item?.id || '').startsWith('regional_') ||
+    item?.world_instance_id === WORLD_INSTANCE_ID
   try {
     localStorage.setItem(REGIONAL_OBJECTS_KEY, JSON.stringify({
       version: 3,
       worldInstanceId:WORLD_INSTANCE_ID,
-      buildings: state.buildings.filter(item => item._regionalLocal),
-      infrastructure: state.infrastructure.filter(item => item._regionalLocal)
+      buildings: state.buildings.filter(isLocalWorldObject),
+      infrastructure: state.infrastructure.filter(isLocalWorldObject)
     }))
   } catch {}
 }
@@ -14250,6 +14288,7 @@ async function collectIncome() {
     awardSkillXP('entertainer',currentIncomeBuilding.building_type==='club'?15:5)
     createNewsItem('Economy',`Income flows from ${BUILDING_TYPES[currentIncomeBuilding.building_type]?.name || currentIncomeBuilding.building_type}.`,`+${collected} coins collected.`,'city',2)
     saveRegionalObjects()
+    saveWorldPlayerProgress()
     showToast('Income Collected',`+${collected} coins${constructionMult<1?' · partial opening rate':''}`)
     closeIncomePanel()
     completeGoalCollectIncome()
@@ -14289,6 +14328,7 @@ async function collectIncome() {
         if (prop) addPropertyXP(prop, 10)
         awardSkillXP('entertainer', currentIncomeBuilding.building_type === 'club' ? 15 : 5)
         createNewsItem('Economy', 'Income flows from ' + (BUILDING_TYPES[currentIncomeBuilding.building_type]?.name || currentIncomeBuilding.building_type) + '.', '+' + data.coinsCollected + ' coins collected.', state.currentRegion, 2)
+        saveWorldPlayerProgress()
         showToast('Income Collected', `+${data.coinsCollected} coins`)
         closeIncomePanel()
         completeGoalCollectIncome()
@@ -14603,6 +14643,9 @@ async function placeBuildingAt(x, y) {
   state.ownBuildingsCount = state.buildings.filter(b => b.owner_id === (state.userId || 'local-player')).length
   document.getElementById('statCoins').textContent = state.coins
   connectFarmBuildToGameplay(typeId)
+  getPropertyData(object.id)
+  savePropertyData()
+  saveWorldPlayerProgress()
   saveRegionalObjects()
   if (state.currentRegion==='farmlands' && FARM_CREATURE_HABITATS[typeId]) {
     const waiting=Object.values(state.creatureCollection || {}).find(creature=>creature.farmOfferPending && !creature.farmResident && farmHabitatMatchesCreature(object,creature))
