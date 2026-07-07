@@ -4574,6 +4574,91 @@ const FARM_LAND_PARCEL_SIZE=10
 const FARM_LAND_COSTS=[500,750,1100,1600,2300]
 const FARM_LAND_MAX_PARCELS=24
 let farmDataCache=null
+let liveFarmLoadPromise=null
+let liveFarmSaveTimer=null
+const liveStateSaveTimers={}
+
+function canUseLiveWorldSaves() {
+  return Boolean(state.userId && !String(state.userId).startsWith('local_'))
+}
+
+function markLiveSaveStatus(message) {
+  if (message) console.log('[LIVE-SAVE]', message)
+}
+
+async function loadLiveState(key) {
+  if (!canUseLiveWorldSaves()) return null
+  try {
+    const res=await fetch(`/api/world/live-state?userId=${encodeURIComponent(state.userId)}&key=${encodeURIComponent(key)}`)
+    const contentType=res.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) return null
+    const payload=await res.json()
+    if (!payload.ok) {
+      console.warn('[LIVE-SAVE] load skipped:', key, payload.error)
+      return null
+    }
+    return payload.state || null
+  } catch (error) {
+    console.warn('[LIVE-SAVE] load failed:', key, error.message)
+    return null
+  }
+}
+
+async function saveLiveState(key,data) {
+  if (!canUseLiveWorldSaves() || window.__facelessDayOneResetting) return false
+  try {
+    const res=await fetch('/api/world/live-state',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ userId:state.userId,key,state:data || {} })
+    })
+    if (!res.ok) return false
+    return true
+  } catch (error) {
+    console.warn('[LIVE-SAVE] save failed:', key, error.message)
+    return false
+  }
+}
+
+function queueLiveStateSave(key,data,delay=650) {
+  if (!canUseLiveWorldSaves()) return
+  if (liveStateSaveTimers[key]) clearTimeout(liveStateSaveTimers[key])
+  liveStateSaveTimers[key]=setTimeout(()=>{
+    saveLiveState(key,data).then(ok=>{ if (ok) markLiveSaveStatus(`${key} saved to server`) })
+  },delay)
+}
+
+async function loadLiveFarmData() {
+  if (!canUseLiveWorldSaves()) {
+    showToast('Guest Farm Save','Log in with the same account on phone and PC for one live farm.')
+    return null
+  }
+  if (liveFarmLoadPromise) return liveFarmLoadPromise
+  liveFarmLoadPromise=(async()=>{
+    const remote=await loadLiveState('farm')
+    if (remote && typeof remote==='object') {
+      farmDataCache=null
+      localStorage.setItem('fas_farm_data',JSON.stringify(remote))
+      const farm=getFarmData()
+      farm._liveLoadedAt=Date.now()
+      farmDataCache=farm
+      updateFarmInventory()
+      renderFarmHub()
+      markLiveSaveStatus('Farm loaded from server')
+      return farm
+    }
+    const local=getFarmData()
+    await saveLiveState('farm',local)
+    markLiveSaveStatus('Farm seeded to server')
+    return local
+  })()
+  return liveFarmLoadPromise
+}
+
+function queueLiveFarmSave(data) {
+  if (liveFarmSaveTimer) clearTimeout(liveFarmSaveTimer)
+  liveFarmSaveTimer=setTimeout(()=>{ saveLiveState('farm',data).then(ok=>{ if (ok) markLiveSaveStatus('Farm saved to server') }) },650)
+}
 
 function getFarmData() {
   if (farmDataCache) {
@@ -4763,6 +4848,7 @@ function saveFarmData(data) {
   if (window.__facelessDayOneResetting) return
   farmDataCache=data
   try { localStorage.setItem('fas_farm_data', JSON.stringify(data)) } catch {}
+  queueLiveFarmSave(data)
 }
 
 function farmLandExpansionCost(data=getFarmData()) {
@@ -11162,6 +11248,7 @@ function persistCityLifecycleBuildings(buildings) {
   const keys=Object.keys(overrides)
   for (const key of keys.slice(0,Math.max(0,keys.length-250))) delete overrides[key]
   try { localStorage.setItem(CITY_CONSTRUCTION_KEY,JSON.stringify(overrides)) } catch {}
+  queueLiveStateSave('city_construction',overrides,900)
   if (buildings.some(building=>building._regionalLocal)) saveRegionalObjects()
   saveCityLifecycleStore()
 }
@@ -11296,6 +11383,20 @@ function getConstructionOverrides() {
   return cityPlotRuntime.overrides
 }
 
+async function loadLiveCityConstruction() {
+  const remote=await loadLiveState('city_construction')
+  if (remote && typeof remote==='object' && !Array.isArray(remote)) {
+    cityPlotRuntime.overrides=remote
+    try { localStorage.setItem(CITY_CONSTRUCTION_KEY,JSON.stringify(remote)) } catch {}
+    markLiveSaveStatus('City construction loaded from server')
+    return remote
+  }
+  const local=getConstructionOverrides()
+  await saveLiveState('city_construction',local)
+  if (canUseLiveWorldSaves()) markLiveSaveStatus('City construction seeded to server')
+  return local
+}
+
 function constructionSnapshot(building) {
   return {
     constructionStage:building.constructionStage,
@@ -11328,6 +11429,7 @@ function saveConstructionBuilding(building) {
   const keys=Object.keys(overrides)
   for (const key of keys.slice(0,Math.max(0,keys.length-250))) delete overrides[key]
   try { localStorage.setItem(CITY_CONSTRUCTION_KEY,JSON.stringify(overrides)) } catch {}
+  queueLiveStateSave('city_construction',overrides,900)
   if (building._regionalLocal) saveRegionalObjects()
 }
 
@@ -11583,6 +11685,7 @@ function convertLegacyCityBuildingsToStaged() {
   const keys=Object.keys(overrides)
   for (const key of keys.slice(0,Math.max(0,keys.length-250))) delete overrides[key]
   try { localStorage.setItem(CITY_CONSTRUCTION_KEY,JSON.stringify(overrides)) } catch {}
+  queueLiveStateSave('city_construction',overrides,900)
   saveRegionalObjects()
   cityPlotRuntime.initialized=true
   updateCityPlotProgress(1,true)
@@ -14240,6 +14343,25 @@ function loadRegionalObjects() {
   normalizeAllOwnership()
 }
 
+async function loadLiveRegionalObjects() {
+  const remote=await loadLiveState('regional_objects')
+  if (!remote || typeof remote!=='object') {
+    loadRegionalObjects()
+    await saveLiveState('regional_objects',getRegionalSavedObjects())
+    return
+  }
+  try {
+    localStorage.setItem(REGIONAL_OBJECTS_KEY,JSON.stringify({
+      version:3,
+      worldInstanceId:WORLD_INSTANCE_ID,
+      buildings:Array.isArray(remote.buildings) ? remote.buildings : [],
+      infrastructure:Array.isArray(remote.infrastructure) ? remote.infrastructure : []
+    }))
+  } catch {}
+  loadRegionalObjects()
+  markLiveSaveStatus('Regional objects loaded from server')
+}
+
 function saveRegionalObjects() {
   if (window.__facelessDayOneResetting) return
   const isLocalWorldObject=item=>
@@ -14248,12 +14370,14 @@ function saveRegionalObjects() {
     String(item?.id || '').startsWith('regional_') ||
     item?.world_instance_id === WORLD_INSTANCE_ID
   try {
-    localStorage.setItem(REGIONAL_OBJECTS_KEY, JSON.stringify({
+    const payload={
       version: 3,
       worldInstanceId:WORLD_INSTANCE_ID,
       buildings: state.buildings.filter(isLocalWorldObject),
       infrastructure: state.infrastructure.filter(isLocalWorldObject)
-    }))
+    }
+    localStorage.setItem(REGIONAL_OBJECTS_KEY, JSON.stringify(payload))
+    queueLiveStateSave('regional_objects',payload,900)
   } catch {}
 }
 
@@ -17095,6 +17219,7 @@ function initSkills() {
 
 function saveSkills() {
   try { localStorage.setItem('fas_world_skills', JSON.stringify(state.skills)) } catch {}
+  queueLiveStateSave('skills',state.skills,900)
 }
 
 function loadSkills() {
@@ -17102,6 +17227,20 @@ function loadSkills() {
     const raw = localStorage.getItem('fas_world_skills')
     if (raw) state.skills = JSON.parse(raw)
   } catch {}
+}
+
+async function loadLiveSkills() {
+  const remote=await loadLiveState('skills')
+  if (remote && typeof remote==='object' && !Array.isArray(remote)) {
+    state.skills=remote
+    try { localStorage.setItem('fas_world_skills',JSON.stringify(state.skills)) } catch {}
+    markLiveSaveStatus('Skills loaded from server')
+    return state.skills
+  }
+  initSkills()
+  await saveLiveState('skills',state.skills)
+  if (canUseLiveWorldSaves()) markLiveSaveStatus('Skills seeded to server')
+  return state.skills
 }
 
 function openSkillsPanel() {
@@ -18101,7 +18240,9 @@ async function init() {
     await setupMultiplayer()
     await fetchPlayerState()
     await fetchWorldState()
-    loadRegionalObjects()
+    await loadLiveFarmData()
+    await loadLiveRegionalObjects()
+    await loadLiveCityConstruction()
     await refreshDistricts()
     await fetchVisualData()
     updateCityPlotProgress(1,true)
@@ -18123,6 +18264,7 @@ async function init() {
   loadPropertyData()
   initSkills()
   loadSkills()
+  await loadLiveSkills()
   updateSkillTitleUI()
   loadSignalWire()
   initLivingWorld()
