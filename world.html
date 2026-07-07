@@ -9270,10 +9270,19 @@ function getBuildingPosition(building) {
 
 function updateNPCRoutine(npc, dt) {
   const t = state.time
+  npc.routineData = npc.routineData || NPC_ROUTINES[npc.routine] || NPC_ROUTINES.wanderer
+  npc.homeX = Number.isFinite(Number(npc.homeX)) ? Number(npc.homeX) : Number(npc.x) || WORLD_SIZE/2
+  npc.homeY = Number.isFinite(Number(npc.homeY)) ? Number(npc.homeY) : Number(npc.y) || WORLD_SIZE/2
+  npc.tx = Number.isFinite(Number(npc.tx)) ? Number(npc.tx) : npc.homeX
+  npc.ty = Number.isFinite(Number(npc.ty)) ? Number(npc.ty) : npc.homeY
+  npc.speed = Math.max(.18,Number(npc.speed) || .35)
+  npc.moveTimer = Number.isFinite(Number(npc.moveTimer)) ? Number(npc.moveTimer) : 0
   const r = npc.routineData
 
   let shouldBe = 'idle'
-  if (t >= r.sleepStart || t < r.sleepEnd) {
+  if (npc.ambientNightWalker == null) npc.ambientNightWalker = ['walker','wanderer','guard'].includes(npc.type) && Math.random() < .18
+  const ambientNightWalker = npc.ambientNightWalker
+  if (!ambientNightWalker && (t >= r.sleepStart || t < r.sleepEnd)) {
     shouldBe = 'sleeping'
   } else if (t >= r.workStart && t < r.workEnd) {
     shouldBe = 'working'
@@ -9332,6 +9341,26 @@ function updateNPCRoutine(npc, dt) {
 }
 
 // NEIGHBORHOOD_THEMES — imported from /world/js/data/regions.js
+
+function assignNPCAmbientTarget(npc,radius=6) {
+  const baseX=Number.isFinite(Number(npc.x)) ? Number(npc.x) : (Number(npc.homeX) || WORLD_SIZE/2)
+  const baseY=Number.isFinite(Number(npc.y)) ? Number(npc.y) : (Number(npc.homeY) || WORLD_SIZE/2)
+  for (let attempt=0;attempt<8;attempt++) {
+    const angle=Math.random()*Math.PI*2
+    const dist=1.5+Math.random()*radius
+    const tx=Math.max(2,Math.min(WORLD_SIZE-3,baseX+Math.cos(angle)*dist))
+    const ty=Math.max(2,Math.min(WORLD_SIZE-3,baseY+Math.sin(angle)*dist))
+    const ter=getTerrainAt(Math.floor(tx),Math.floor(ty))
+    if (ter !== TERRAIN.DEEP_WATER && ter !== TERRAIN.WATER) {
+      npc.tx=tx; npc.ty=ty; npc.path=null; npc.pathDestKey=null; npc.moveTimer=3+Math.random()*6
+      return true
+    }
+  }
+  npc.tx=Math.max(2,Math.min(WORLD_SIZE-3,baseX+(Math.random()-.5)*3))
+  npc.ty=Math.max(2,Math.min(WORLD_SIZE-3,baseY+(Math.random()-.5)*3))
+  npc.path=null; npc.pathDestKey=null; npc.moveTimer=3+Math.random()*6
+  return true
+}
 
 function computeDistrictThemes() {
   if (!state.districts || !state.buildings) return
@@ -9427,6 +9456,11 @@ function updateNPCs(dt) {
 
   for (const npc of state.npcs) {
     if (!isInCurrentRegion(npc)) continue
+    if (!Number.isFinite(Number(npc.x)) || !Number.isFinite(Number(npc.y))) {
+      npc.x=Number(npc.homeX) || WORLD_SIZE/2
+      npc.y=Number(npc.homeY) || WORLD_SIZE/2
+    }
+    const prevX=Number(npc.x),prevY=Number(npc.y)
     updateNPCRoutine(npc, dt)
 
     npc.stateTimer += dt
@@ -9438,6 +9472,15 @@ function updateNPCs(dt) {
 
     const ddx = npc.tx - npc.x, ddy = npc.ty - npc.y
     const dd = Math.sqrt(ddx * ddx + ddy * ddy)
+    if ((!Number.isFinite(dd) || dd < .05) && npc.state !== 'sleeping') {
+      npc._idleWanderTimer=(Number(npc._idleWanderTimer) || 0)+dt
+      if (npc._idleWanderTimer > 2.5) {
+        assignNPCAmbientTarget(npc,npc.state === 'working' ? 3 : 7)
+        npc._idleWanderTimer=0
+      }
+    } else {
+      npc._idleWanderTimer=0
+    }
 
     if (dd < 0.5) {
       // Arrived at destination — clear path cache
@@ -9522,6 +9565,16 @@ function updateNPCs(dt) {
       npc.x += (ddx / dd) * actualSpeed
       npc.y += (ddy / dd) * actualSpeed
       npc.direction = Math.atan2(ddy, ddx)
+    }
+    const movedDistance=Math.hypot(Number(npc.x)-prevX,Number(npc.y)-prevY)
+    if (npc.state !== 'sleeping' && dd > .7 && movedDistance < .003) {
+      npc._stuckTimer=(Number(npc._stuckTimer) || 0)+dt
+      if (npc._stuckTimer > 1.8) {
+        assignNPCAmbientTarget(npc,6)
+        npc._stuckTimer=0
+      }
+    } else {
+      npc._stuckTimer=0
     }
   }
 }
@@ -12561,11 +12614,17 @@ function update(dt) {
 
   for (const npc of state.npcs) {
     if (!isInCurrentRegion(npc)) continue
-    if (npc._serverX !== undefined) {
+    const serverFresh=npc._serverSeenAt && Date.now()-npc._serverSeenAt<8000
+    const serverAnimated=(Number(npc._serverStillTicks) || 0)<3
+    if (npc._serverX !== undefined && serverFresh && serverAnimated) {
       npc.x += (npc._serverX - npc.x) * 0.1
       npc.y += (npc._serverY - npc.y) * 0.1
       if (npc._serverState) npc.state = npc._serverState
       if (npc._serverDir !== undefined) npc.direction = npc._serverDir
+    } else if (npc._serverX !== undefined && !serverAnimated) {
+      npc._serverX=undefined
+      npc._serverY=undefined
+      npc._serverState=undefined
     }
   }
 
@@ -15393,6 +15452,11 @@ async function setupMultiplayer() {
       for (const sn of payload.npcs) {
         const local = state.npcs.find(n => n.id === sn.id)
         if (local) {
+          const serverMoved=local._lastServerX == null || Math.hypot(Number(sn.x)-Number(local._lastServerX),Number(sn.y)-Number(local._lastServerY))>.05
+          local._serverStillTicks=serverMoved ? 0 : (Number(local._serverStillTicks) || 0)+1
+          local._lastServerX=Number(sn.x)
+          local._lastServerY=Number(sn.y)
+          local._serverSeenAt=Date.now()
           local._serverX = sn.x
           local._serverY = sn.y
           local._serverState = sn.state
