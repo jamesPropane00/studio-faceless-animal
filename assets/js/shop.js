@@ -38,7 +38,7 @@ $("#cart-open").onclick=openCart;$("#cart-close").onclick=closeCart;$("#drawer-s
 document.querySelectorAll('input[name="fulfillment"]').forEach(r=>r.onchange=()=>{const ship=r.value==="shipping"&&r.checked;$("#shipping-fields").hidden=!ship;$("#shipping-fields").querySelectorAll("input").forEach(i=>i.required=ship);renderCart()});
 $("#checkout-form").onsubmit=async(e)=>{e.preventDefault();const btn=$(".checkout-button"),err=$("#checkout-error"),fd=new FormData(e.currentTarget),fulfillment=$('input[name="fulfillment"]:checked').value;err.textContent="";btn.disabled=true;btn.textContent="Reserving your order…";
  try{if(fulfillment==="pickup"&&cart.some(i=>!productById(i.id).local_pickup))throw new Error("One or more items are not available for pickup.");
- const {data,error}=await supabase.functions.invoke("create-checkout-session",{
+ const {data,error}=await supabase.functions.invoke("smart-responder",{
    body:{
      items:cart.map(i=>({product_id:i.id,quantity:i.quantity})),
      fulfillment,
