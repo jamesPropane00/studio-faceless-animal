@@ -1,3 +1,4 @@
+// Deployed function name: clever-function (kept to match the live storefront).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const cors = {
@@ -18,13 +19,17 @@ Deno.serve(async (req) => {
       quantity: Number(item.quantity ?? 0),
     })) : [];
     if (!items.length || items.length > 20) return reply({ error: "Your cart is empty or too large." }, 400);
-    if (!["shipping", "pickup"].includes(body.fulfillment)) return reply({ error: "Choose shipping or pickup." }, 400);
+    if (!["shipping", "pickup", "digital"].includes(body.fulfillment)) {
+      return reply({ error: "Choose shipping, pickup, or digital delivery." }, 400);
+    }
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       { auth: { persistSession: false } },
     );
+    const { error: releaseError } = await admin.rpc("release_expired_shop_reservations");
+    if (releaseError) throw releaseError;
     const { data: created, error: createError } = await admin.rpc("create_shop_order", {
       p_items: items, p_fulfillment: body.fulfillment, p_customer: body.customer ?? {},
     });
@@ -33,7 +38,8 @@ Deno.serve(async (req) => {
     const { data: order, error: orderError } = await admin.from("orders")
       .select("id,order_number,total_cents,currency,customer_email,reservation_token").eq("id", created.order_id).single();
     if (orderError) throw orderError;
-    const origin = Deno.env.get("SHOP_ORIGIN")!;
+    const origin = Deno.env.get("SHOP_ORIGIN");
+    if (!origin) throw new Error("SHOP_ORIGIN is not configured.");
     const params = new URLSearchParams();
     params.set("mode", "payment");
     params.set("success_url", `${origin}/checkout-success.html?order=${order.id}&token=${order.reservation_token}`);

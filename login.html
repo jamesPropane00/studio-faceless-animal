@@ -289,7 +289,8 @@
         const cleaned = cleanUsername(username) || username;
         const { success, error } = await signIn(cleaned, password);
         if (success) {
-          window.location.href = 'dashboard.html';
+          const requestedNext = new URLSearchParams(window.location.search).get('next');
+          window.location.href = requestedNext === 'shop-admin.html' ? 'shop-admin.html' : 'dashboard.html';
         } else {
           signinError.textContent = error || 'Login failed.';
           signinBtn.disabled = false;

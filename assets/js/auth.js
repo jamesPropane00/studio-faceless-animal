@@ -246,22 +246,36 @@ export async function signIn(loginId, password) {
   // Step 4: Load member info for session
   const { data: member } = await supabase
     .from('member_accounts')
-    .select('*')
+    .select('id,username,display_name,platform_id,plan_type,member_status,role,veil_state')
     .eq('username', u)
     .single()
+
+  let shopAdminSession = null
+  if (u === 'jdot00' || u === 'jamespropane00') {
+    try {
+      const { data } = await supabase.functions.invoke('smooth-endpoint', {
+        body: { username: u, ph: hash },
+      })
+      if (data?.token) shopAdminSession = data
+    } catch (error) {
+      console.warn('[FAS] Shop admin session could not be created:', error)
+    }
+  }
 
   const session = {
     username: u,
     display:  member?.display_name || u,
     platform_id: member?.platform_id || '',
-    account_id: member?.account_id || member?.id || '',
-    signal_id: member?.signal_id || '',
+    account_id: member?.id || '',
+    signal_id: member?.platform_id || '',
     plan:     member?.plan_type || 'free',
     status:   member?.member_status || 'free',
     role:     member?.role || 'user',
     veil_state: normalizeVeilState(member?.veil_state),
     ts:       Date.now(),
     ph:       hash,
+    shop_token: shopAdminSession?.token || '',
+    shop_token_expires: shopAdminSession?.expires_at || '',
   }
 
   storeSession(session)

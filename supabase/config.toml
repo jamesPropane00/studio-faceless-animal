@@ -1,5 +1,14 @@
-[functions.create-checkout-session]
+[functions.clever-function]
 verify_jwt = false
 
-[functions.stripe-webhook]
+[functions.stripe-hook]
+verify_jwt = false
+
+[functions.hyper-handler]
+verify_jwt = false
+
+[functions.dynamic-function]
+verify_jwt = false
+
+[functions.smooth-endpoint]
 verify_jwt = false

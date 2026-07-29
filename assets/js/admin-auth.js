@@ -10,10 +10,10 @@
  *  Access model:
  *    - Uses the same platform-native member session as the main app
  *      (localStorage key: fas_user)
- *    - Session is verified against member_accounts via username + password_hash
+ *    - Session is verified by the SECURITY DEFINER password-check RPC
  *    - Authorization is derived from member_accounts.role only
  *    - Only super_admin/admin can access the standalone admin page
- *    - No email lookups or Supabase auth bridge required
+ *    - No email lookups or separate Supabase Auth login required
  * ============================================================
  */
 
@@ -50,17 +50,14 @@ async function getRoleFromMemberSession(sess) {
   const ph = String(sess && sess.ph || '').trim()
   if (!username || !ph) return null
 
-  const { data, error } = await supabase
-    .from('member_accounts')
-    .select('role')
-    .eq('username', username)
-    .eq('password_hash', ph)
-    .limit(1)
+  const { data: valid, error: verifyError } = await supabase
+    .rpc('verify_member_password', { p_username: username, p_hash: ph })
+  if (verifyError || !valid) return null
 
+  const { data, error } = await supabase.from('member_accounts')
+    .select('role').eq('username', username).maybeSingle()
   if (error) return null
-
-  const row = Array.isArray(data) ? data[0] : null
-  return normalizeRole(row && row.role)
+  return normalizeRole(data && data.role)
 }
 
 // ── getAdminSession ──────────────────────────────────────────

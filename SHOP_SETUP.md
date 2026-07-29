@@ -6,13 +6,7 @@ The frontend uses the existing shared client in `assets/js/supabase-client.js`. 
 
 Apply `supabase/migrations/038_ecommerce.sql` through the Supabase CLI (`supabase db push`) or paste it into Dashboard → SQL Editor. It creates the product, image, reservation, order, item, event and admin tables; atomic reservation/payment functions; indexes; image bucket; triggers; and RLS policies.
 
-In Dashboard → Authentication → Users, create the admin email/password account (or invite it). Copy its UUID and run this once in SQL Editor:
-
-```sql
-insert into public.shop_admins (user_id) values ('AUTH-USER-UUID-HERE');
-```
-
-Only listed Supabase Auth users can access `shop-admin.html`. Never put a service-role key in that page or any browser file.
+Apply migrations `039_shop_digital_products_and_admin_lockdown.sql`, `040_shop_platform_sessions.sql`, and `041_shop_reservation_and_payment_hardening.sql` after migration 038. Shop administration uses the existing Faceless Animal website login, not a second Supabase Auth account. After a valid normal login, `smooth-endpoint` issues an opaque seven-day admin token only for `jdot00` or `jamespropane00`. `dynamic-function` verifies that token on every request. Migration 040 also removes browser read access to password, recovery and email columns. Migration 041 releases expired holds when the store loads and automatically refunds a verified Stripe payment if its ten-minute inventory reservation already expired.
 
 ## 2. Supabase browser configuration
 
@@ -32,7 +26,7 @@ In Stripe Dashboard:
 1. Activate the account and finish business verification.
 2. Developers → API keys: copy the **Secret key** for the intended mode. Test keys begin `sk_test_`; live keys begin `sk_live_`. Do not use the publishable key for the Edge Function.
 3. Developers → Webhooks → Add endpoint. Use:
-   `https://PROJECT.supabase.co/functions/v1/stripe-webhook`
+   `https://PROJECT.supabase.co/functions/v1/stripe-hook`
 4. Select only `checkout.session.completed`. After creating the endpoint, reveal and copy its signing secret (`whsec_…`).
 5. Settings → Payment methods: enable the payment methods you want Checkout to show. Stripe dynamically presents compatible methods.
 6. Settings → Checkout and Payment Links → Checkout: enable customer-facing options you want (receipts, saved methods, branding). Shipping addresses are collected by the site and snapshotted in Supabase; Stripe Checkout handles payment.
@@ -47,16 +41,21 @@ From a terminal authenticated with the Supabase CLI:
 supabase secrets set STRIPE_SECRET_KEY=sk_test_REPLACE
 supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_REPLACE
 supabase secrets set SHOP_ORIGIN=https://your-exact-site-domain.example
-supabase functions deploy create-checkout-session
-supabase functions deploy stripe-webhook
+supabase functions deploy clever-function
+supabase functions deploy stripe-hook
+supabase functions deploy hyper-handler
+supabase functions deploy dynamic-function
+supabase functions deploy smooth-endpoint
 ```
 
-`SHOP_ORIGIN` must be the exact production origin with no trailing slash. Supabase automatically provides `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to deployed functions. Do not copy either secret into frontend JavaScript. The function configuration disables JWT verification because checkout is public and Stripe cannot send a Supabase JWT; authorization is instead limited by the RPC grants, server-side service role, webhook signature, RLS and strict input validation.
+When deploying through the Dashboard editor, use those exact function names. The current storefront calls the deployed `clever-function` checkout function.
+
+`SHOP_ORIGIN` must be the exact production origin with no trailing slash. Supabase automatically provides `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to deployed functions. Do not copy either secret into frontend JavaScript. JWT verification is disabled because checkout is public, Stripe cannot send a Supabase JWT, and the website uses its existing platform session. `dynamic-function` independently re-verifies that platform credential for every privileged action.
 
 For local webhook testing:
 
 ```bash
-stripe listen --forward-to http://127.0.0.1:54321/functions/v1/stripe-webhook
+stripe listen --forward-to http://127.0.0.1:54321/functions/v1/stripe-hook
 supabase functions serve --env-file supabase/.env.local
 ```
 
@@ -70,11 +69,23 @@ Stripe’s minimum Checkout Session expiry is 30 minutes, while the authoritativ
 
 The success redirect queries `get_order_status` using the opaque order ID plus reservation token and polls briefly. It never treats a redirect as proof of payment. Only a valid signed Stripe event can create a payment event, mark the order paid, store Stripe identifiers, and decrement inventory. Duplicate Stripe event IDs are ignored.
 
-## 6. Go-live checklist
+## 6. Product types and protected files
+
+The mobile admin supports:
+
+- `physical`: clothing, one-of-one objects and other shipped/pickup inventory.
+- `music_download`: tracks, albums, DJ mixes and downloadable audio packages.
+- `file_download`: ZIP, PDF, video, project files and other digital products.
+
+Product photos and cover art remain public. Customer download files go into the private `product-downloads` bucket. After the verified webhook marks an order paid, `hyper-handler` validates the order ID plus its opaque reservation token and creates one-hour signed links. Never place paid files in the public `product-images` bucket.
+
+## 7. Go-live checklist
 
 - Create products and upload phone photos in `shop-admin.html`; publish only finished listings.
 - Run a two-browser final-unit test: first checkout reserves it, second receives a sold-out response.
 - Confirm successful test payment becomes `paid`, inventory decrements once, and resending the same event does not decrement again.
 - Confirm canceled checkout remains `pending` and its reservation becomes reusable after 10 minutes.
-- Confirm an unlisted Supabase user cannot access products/orders in the admin.
+- Confirm `jdot00` and `jamespropane00` can open `shop-admin.html` immediately after the normal website login.
+- Confirm another website member is rejected and changing only `fas_user.username` without a matching credential is rejected.
+- Buy one music/file product in test mode and confirm its signed download appears only after webhook-verified payment.
 - Replace all test-mode Stripe secrets with live-mode values and create a separate live webhook endpoint.

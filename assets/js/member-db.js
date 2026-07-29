@@ -95,7 +95,7 @@ export async function getMember(username) {
   if (!SUPABASE_READY || !supabase) return null
   const { data, error } = await supabase
     .from('member_accounts')
-    .select('*')
+    .select('id,username,display_name,bio,avatar_initial,city,state_abbr,plan_type,member_status,page_slug,page_status,upgrade_requested,created_at,last_active_at,platform_id,role,veil_state')
     .eq('username', username.toLowerCase())
     .order('last_active_at', { ascending: false })
     .limit(1)
