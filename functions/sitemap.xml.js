@@ -12,6 +12,7 @@ export async function onRequestGet(context) {
   const key = context.env.SUPABASE_SERVICE_ROLE_KEY || context.env.SUPABASE_ANON_KEY;
   let articles = [];
   let profiles = [];
+  let products = [];
   if (key) {
     const headers = { apikey: key, Authorization: `Bearer ${key}` };
     const response = await fetch(`${base}/rest/v1/signal_wire_posts?select=slug,updated_at,published_at&status=eq.published&order=published_at.desc&limit=1000`, {
@@ -20,10 +21,14 @@ export async function onRequestGet(context) {
     const profileResponse = await fetch(`${base}/rest/v1/member_accounts?select=username,last_active_at&member_status=in.(active,free)&order=last_active_at.desc&limit=1000`, {
       headers,
     });
+    const productResponse = await fetch(`${base}/rest/v1/products?select=slug,updated_at&published=eq.true&state=in.(available,reserved)&quantity=gt.0&order=updated_at.desc&limit=1000`, {
+      headers,
+    });
     if (response.ok) articles = await response.json();
     if (profileResponse.ok) profiles = await profileResponse.json();
+    if (productResponse.ok) products = await productResponse.json();
   }
-  const staticPages = ['', '/news', '/radio', '/tv', '/directory', '/network', '/ai'];
+  const staticPages = ['', '/store', '/news', '/radio', '/tv', '/directory', '/network', '/ai'];
   const urls = staticPages.map((path) => `<url><loc>${SITE_URL}${path}</loc></url>`);
   articles.forEach((article) => {
     if (!article.slug) return;
@@ -33,6 +38,10 @@ export async function onRequestGet(context) {
   profiles.forEach((profile) => {
     if (!profile.username) return;
     urls.push(`<url><loc>${SITE_URL}/profile/${xml(encodeURIComponent(profile.username))}</loc>${profile.last_active_at ? `<lastmod>${xml(new Date(profile.last_active_at).toISOString())}</lastmod>` : ''}</url>`);
+  });
+  products.forEach((product) => {
+    if (!product.slug) return;
+    urls.push(`<url><loc>${SITE_URL}/product/${xml(encodeURIComponent(product.slug))}</loc>${product.updated_at ? `<lastmod>${xml(new Date(product.updated_at).toISOString())}</lastmod>` : ''}</url>`);
   });
   const body = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`;
   return new Response(body, {

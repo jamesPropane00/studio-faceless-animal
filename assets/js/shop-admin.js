@@ -66,6 +66,7 @@ async function loadProducts() {
     $("#product-list").innerHTML = products.map((product) => `
       <article class="admin-row"><div><strong>${safe(product.title)}</strong>
         <p>${safe(product.sku)} · ${safe(product.product_kind?.replaceAll("_", " ") || "physical")} · ${money(product.price_cents)} · ${product.quantity} available · ${product.state} · ${product.published ? "published" : "hidden"}</p>
+        <p>${product.slug ? `<a href="/product/${encodeURIComponent(product.slug)}" target="_blank" rel="noopener">/product/${safe(product.slug)} ↗</a>` : "No public product URL yet"} · ${product.marketplace_ready ? "marketplace-ready" : "marketplace draft"}</p>
       </div><div class="admin-actions"><button data-edit="${product.id}">Edit</button><button data-publish="${product.id}">${product.published ? "Unpublish" : "Publish"}</button><button data-delete="${product.id}">Delete</button></div></article>`
     ).join("") || "<p>No products yet.</p>";
   } catch (error) {
@@ -127,6 +128,14 @@ $("#product-form").onsubmit = async (event) => {
         price_cents: Math.round(Number(form.get("price")) * 100),
         quantity: Number(form.get("quantity")),
         condition: form.get("condition"), category: form.get("category"),
+        slug: form.get("slug"), brand: form.get("brand"),
+        seo_title: form.get("seo_title"), meta_description: form.get("meta_description"),
+        search_keywords: String(form.get("search_keywords") || "").split(",").map((word) => word.trim()).filter(Boolean),
+        gtin: form.get("gtin"), mpn: form.get("mpn"),
+        google_product_category: form.get("google_product_category"),
+        ebay_category_id: form.get("ebay_category_id"),
+        facebook_category: form.get("facebook_category"),
+        marketplace_ready: form.get("marketplace_ready") === "on",
         shipping_price_cents: Math.round(Number(form.get("shipping_price") || 0) * 100),
         state: form.get("state"), local_pickup: form.get("local_pickup") === "on",
         published: form.get("published") === "on", product_kind: kind,
@@ -145,13 +154,15 @@ $("#product-form").onsubmit = async (event) => {
 
 function editProduct(product) {
   const form = $("#product-form");
-  for (const key of ["id","title","sku","description","quantity","condition","category","state","product_kind","preview_url"]) {
+  for (const key of ["id","title","sku","description","quantity","condition","category","state","product_kind","preview_url","slug","brand","seo_title","meta_description","gtin","mpn","google_product_category","ebay_category_id","facebook_category"]) {
     form.elements[key].value = product[key] || "";
   }
+  form.elements.search_keywords.value = (product.search_keywords || []).join(", ");
   form.elements.price.value = (product.price_cents / 100).toFixed(2);
   form.elements.shipping_price.value = (product.shipping_price_cents / 100).toFixed(2);
   form.elements.local_pickup.checked = product.local_pickup;
   form.elements.published.checked = product.published;
+  form.elements.marketplace_ready.checked = product.marketplace_ready;
   showKindFields();
   scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -178,6 +189,7 @@ function resetProductForm() {
   $("#product-form").reset();
   $("#product-form").elements.id.value = "";
   $("#product-kind").value = "physical";
+  $("#product-form").elements.brand.value = "Faceless Animal Studios";
   showKindFields();
 }
 $("#reset-product").onclick = resetProductForm;

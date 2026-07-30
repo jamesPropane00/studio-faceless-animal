@@ -6,7 +6,7 @@ The frontend uses the existing shared client in `assets/js/supabase-client.js`. 
 
 Apply `supabase/migrations/038_ecommerce.sql` through the Supabase CLI (`supabase db push`) or paste it into Dashboard → SQL Editor. It creates the product, image, reservation, order, item, event and admin tables; atomic reservation/payment functions; indexes; image bucket; triggers; and RLS policies.
 
-Apply migrations `039_shop_digital_products_and_admin_lockdown.sql`, `040_shop_platform_sessions.sql`, and `041_shop_reservation_and_payment_hardening.sql` after migration 038. Shop administration uses the existing Faceless Animal website login, not a second Supabase Auth account. After a valid normal login, `smooth-endpoint` issues an opaque seven-day admin token only for `jdot00` or `jamespropane00`. `dynamic-function` verifies that token on every request. Migration 040 also removes browser read access to password, recovery and email columns. Migration 041 releases expired holds when the store loads and automatically refunds a verified Stripe payment if its ten-minute inventory reservation already expired.
+Apply migrations `039_shop_digital_products_and_admin_lockdown.sql`, `040_shop_platform_sessions.sql`, `041_shop_reservation_and_payment_hardening.sql`, and `042_shop_seo_and_marketplace_foundation.sql` after migration 038. Shop administration uses the existing Faceless Animal website login, not a second Supabase Auth account. After a valid normal login, `smooth-endpoint` issues an opaque seven-day admin token only for `jdot00` or `jamespropane00`. `dynamic-function` verifies that token on every request. Migration 040 also removes browser read access to password, recovery and email columns. Migration 041 releases expired holds when the store loads and automatically refunds a verified Stripe payment if its ten-minute inventory reservation already expired. Migration 042 adds permanent product slugs, search metadata, GTIN/MPN/category fields, search indexes and connector-neutral eBay/Facebook listing records.
 
 ## 2. Supabase browser configuration
 
@@ -89,3 +89,11 @@ Product photos and cover art remain public. Customer download files go into the 
 - Confirm another website member is rejected and changing only `fas_user.username` without a matching credential is rejected.
 - Buy one music/file product in test mode and confirm its signed download appears only after webhook-verified payment.
 - Replace all test-mode Stripe secrets with live-mode values and create a separate live webhook endpoint.
+
+## 8. Search visibility and marketplace preparation
+
+Every published product receives a permanent `/product/{slug}` page rendered by the Cloudflare Pages Function in `functions/product/[slug].js`. Those pages include canonical URLs, Open Graph metadata, Product and Breadcrumb structured data, server-rendered descriptions, prices, availability, images, SKU, brand, GTIN and MPN where supplied. The dynamic sitemap includes `/store` and every published available product.
+
+Use original product titles and detailed descriptions. Add a concise SEO title, a useful meta description, accurate categories and specific search keywords. Upload clear original photos and complete GTIN/UPC, MPN and brand fields when the product has them; never invent identifiers.
+
+Migration 042 creates `product_marketplace_listings` for future eBay and Facebook Marketplace connectors. API credentials and automated publishing are intentionally not implemented yet. Future connector functions should use the service role, write the returned external listing ID and URL to this table, and treat Supabase product price and inventory as the source of truth.

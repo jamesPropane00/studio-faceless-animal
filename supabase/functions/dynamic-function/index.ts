@@ -15,6 +15,13 @@ const cleanUsername = (value: unknown) =>
   String(value ?? "").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
 const cleanFilename = (value: unknown) =>
   String(value ?? "file").replace(/[^a-z0-9._-]/gi, "-").slice(0, 160);
+const cleanSlug = (value: unknown) =>
+  String(value ?? "").trim().toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 180);
+const cleanOptional = (value: unknown, limit = 255) => {
+  const text = String(value ?? "").trim().slice(0, limit);
+  return text || null;
+};
 const hex = (bytes: ArrayBuffer) =>
   [...new Uint8Array(bytes)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 
@@ -81,18 +88,36 @@ Deno.serve(async (req) => {
         if (!/^[0-9a-f-]{36}$/i.test(id)) return reply({ error: "Invalid product ID" }, 400);
         const title = String(input.title ?? "").trim();
         const sku = String(input.sku ?? "").trim();
+        const slugBase = cleanSlug(input.slug || title);
+        const slug = slugBase.length >= 2 ? slugBase : `product-${id.slice(0, 8)}`;
         const price = Number(input.price_cents);
         const quantity = Number(input.quantity);
         if (!title || !sku || !Number.isInteger(price) || price < 0 || !Number.isInteger(quantity) || quantity < 0) {
           return reply({ error: "Title, SKU, price and quantity are required" }, 400);
         }
         const isDigital = kind !== "physical";
+        const seoTitle = String(input.seo_title ?? "").trim().slice(0, 70);
+        const metaDescription = String(input.meta_description ?? "").trim().slice(0, 320);
+        const searchKeywords = (Array.isArray(input.search_keywords) ? input.search_keywords : [])
+          .map((keyword: unknown) => String(keyword).trim().toLowerCase().slice(0, 80))
+          .filter(Boolean).slice(0, 30);
         if (isDigital && (!input.download_storage_path || !input.download_filename)) {
           return reply({ error: "Digital products require a protected download file" }, 400);
         }
         const product = {
           id, title, sku, product_kind: kind, state,
           description: String(input.description ?? ""),
+          slug,
+          seo_title: seoTitle || null,
+          meta_description: metaDescription || null,
+          search_keywords: searchKeywords,
+          brand: String(input.brand ?? "Faceless Animal Studios").trim().slice(0, 120) || "Faceless Animal Studios",
+          gtin: cleanOptional(input.gtin, 32),
+          mpn: cleanOptional(input.mpn, 80),
+          google_product_category: cleanOptional(input.google_product_category, 160),
+          ebay_category_id: cleanOptional(input.ebay_category_id, 40),
+          facebook_category: cleanOptional(input.facebook_category, 160),
+          marketplace_ready: Boolean(input.marketplace_ready),
           price_cents: price, quantity,
           condition: isDigital ? "Digital" : String(input.condition ?? "New"),
           category: String(input.category ?? "Other").trim() || "Other",
