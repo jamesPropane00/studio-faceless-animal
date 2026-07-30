@@ -10,11 +10,6 @@ const productUrl=(product)=>product.slug
 const springUrl=(product)=>{
  try{const url=new URL(product.external_purchase_url||"");return url.protocol==="https:"&&/^[a-z0-9-]+\.creator-spring\.com$/i.test(url.hostname)&&/^\/listing\/[a-z0-9-]+\/?$/i.test(url.pathname)?url.toString():""}catch{return""}
 };
-try {
- const websiteSession=JSON.parse(localStorage.getItem("fas_user")||"null");
- const username=String(websiteSession?.username||"").toLowerCase();
- $("#shop-admin-link").hidden=!["jdot00","jamespropane00"].includes(username);
-} catch {}
 function save(){localStorage.setItem("fas_shop_cart",JSON.stringify(cart.map(({id,quantity})=>({id,quantity}))));renderCart()}
 function image(p){return p.product_images?.sort((a,b)=>a.sort_order-b.sort_order)[0]?.public_url||""}
 async function load(){
