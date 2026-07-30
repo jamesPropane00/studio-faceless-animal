@@ -63,7 +63,13 @@ Deno.serve(async (req) => {
       }
 
       case "list_orders": {
-        let query = admin.from("orders").select("*,order_items(*)").order("created_at", { ascending: false });
+        let query = admin.from("orders").select(`
+          id,order_number,status,fulfillment_method,
+          customer_email,customer_name,customer_phone,shipping_address,
+          subtotal_cents,shipping_cents,total_cents,currency,
+          created_at,updated_at,paid_at,
+          order_items(id,title,sku,unit_price_cents,quantity,shipping_price_cents,image_url,product_kind)
+        `).order("created_at", { ascending: false });
         if (body.status) query = query.eq("status", String(body.status));
         const { data, error } = await query;
         if (error) throw error;

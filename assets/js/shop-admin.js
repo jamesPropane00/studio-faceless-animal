@@ -15,6 +15,7 @@ const excerpt = (value, limit = 155) => {
 };
 let session = null;
 let products = [];
+let orders = [];
 
 function getWebsiteSession() {
   try { return JSON.parse(localStorage.getItem("fas_user") || "null"); } catch { return null; }
@@ -203,22 +204,90 @@ function resetProductForm() {
 }
 $("#reset-product").onclick = resetProductForm;
 
+const confirmedStatuses = new Set(["paid", "shipped", "completed"]);
+const formatDate = (value) => new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium", timeStyle: "short",
+}).format(new Date(value));
+function formatAddress(address) {
+  if (!address) return "";
+  return [
+    address.line1, address.line2,
+    [address.city, address.state, address.postal_code].filter(Boolean).join(", "),
+    address.country,
+  ].filter(Boolean).join(" · ");
+}
+function updateSalesSummary() {
+  const sales = orders.filter((order) => confirmedStatuses.has(order.status));
+  $("#sales-count").textContent = String(sales.length);
+  $("#sales-revenue").textContent = money(sales.reduce((total, order) => total + order.total_cents, 0));
+  $("#sales-to-ship").textContent = String(orders.filter((order) => order.status === "paid" && order.fulfillment_method === "shipping").length);
+  $("#sales-customers").textContent = String(new Set(sales.map((order) => order.customer_email.toLowerCase())).size);
+}
+function renderOrders() {
+  const status = $("#order-filter").value;
+  const search = $("#order-search").value.trim().toLowerCase();
+  const transitions = { pending: ["canceled"], paid: ["shipped"], shipped: ["completed"] };
+  const visible = orders.filter((order) => {
+    if (status && order.status !== status) return false;
+    if (!search) return true;
+    const haystack = [
+      order.order_number, order.customer_name, order.customer_email, order.customer_phone,
+      ...order.order_items.flatMap((item) => [item.title, item.sku]),
+    ].join(" ").toLowerCase();
+    return haystack.includes(search);
+  });
+  $("#order-list").innerHTML = visible.map((order) => {
+    const address = formatAddress(order.shipping_address);
+    const paidDate = order.paid_at ? `Paid ${formatDate(order.paid_at)}` : "Payment not confirmed";
+    return `
+      <article class="order-card">
+        <div class="order-head">
+          <div><span class="status-badge status-${safe(order.status)}">${safe(order.status)}</span><h3>${safe(order.order_number)}</h3><div class="order-date">Ordered ${safe(formatDate(order.created_at))} · ${safe(paidDate)}</div></div>
+          <strong class="order-total">${money(order.total_cents)}</strong>
+        </div>
+        <div class="order-sections">
+          <section class="order-box">
+            <h4>Customer</h4>
+            <p><strong>${safe(order.customer_name)}</strong></p>
+            <p><a href="mailto:${encodeURIComponent(order.customer_email)}">${safe(order.customer_email)}</a> <button class="copy-button" type="button" data-copy="${safe(order.customer_email)}">Copy</button></p>
+            <p>${order.customer_phone ? `<a href="tel:${encodeURIComponent(order.customer_phone)}">${safe(order.customer_phone)}</a>` : "No phone number supplied"}</p>
+          </section>
+          <section class="order-box">
+            <h4>${order.fulfillment_method === "shipping" ? "Shipping" : order.fulfillment_method === "pickup" ? "Local pickup" : "Digital delivery"}</h4>
+            <p>${address ? `${safe(address)} <button class="copy-button" type="button" data-copy="${safe(address)}">Copy</button>` : order.fulfillment_method === "digital" ? "Download delivered after verified payment." : "No shipping address required."}</p>
+            <p>Subtotal ${money(order.subtotal_cents)} · Shipping ${money(order.shipping_cents)}</p>
+          </section>
+          <section class="order-box order-items">
+            <h4>Purchased items</h4>
+            ${order.order_items.map((item) => `
+              <div class="order-item">
+                ${item.image_url ? `<img src="${safe(item.image_url)}" alt="">` : "<span></span>"}
+                <div><strong>${item.quantity}× ${safe(item.title)}</strong><small>SKU ${safe(item.sku)} · ${money(item.unit_price_cents)} each</small></div>
+                <strong>${money(item.unit_price_cents * item.quantity)}</strong>
+              </div>`).join("")}
+          </section>
+        </div>
+        <div class="order-footer">
+          <span class="field-help">${confirmedStatuses.has(order.status) ? "Verified sale" : order.status === "pending" ? "Checkout started; payment has not been verified." : `Order ${safe(order.status)}`}</span>
+          <label class="field-label"><span>Update status</span><select data-status="${order.id}">
+            ${[order.status, ...(transitions[order.status] || [])].map((nextStatus) => `<option>${nextStatus}</option>`).join("")}
+          </select></label>
+        </div>
+      </article>`;
+  }).join("") || "<p>No orders match this search.</p>";
+}
 async function loadOrders() {
   try {
-    const data = await api("list_orders", { status: $("#order-filter").value });
-    const transitions = { pending: ["canceled"], paid: ["shipped"], shipped: ["completed"] };
-    $("#order-list").innerHTML = (data.orders || []).map((order) => `
-      <article class="admin-row"><div><strong>${safe(order.order_number)}</strong>
-        <p>${safe(order.customer_name)} · ${safe(order.customer_email)} · ${money(order.total_cents)} · ${order.fulfillment_method}</p>
-        <p>${order.order_items.map((item) => `${item.quantity}× ${safe(item.title)} (${safe(item.product_kind?.replaceAll("_", " ") || "physical")})`).join(" · ")}</p>
-      </div><div class="admin-actions"><select data-status="${order.id}">
-        ${[order.status, ...(transitions[order.status] || [])].map((status) => `<option>${status}</option>`).join("")}
-      </select></div></article>`).join("") || "<p>No orders found.</p>";
+    const data = await api("list_orders");
+    orders = data.orders || [];
+    updateSalesSummary();
+    renderOrders();
   } catch (error) {
     $("#order-list").innerHTML = `<p class="form-error">${safe(error.message)}</p>`;
   }
 }
-$("#order-filter").onchange = loadOrders;
+$("#order-filter").onchange = renderOrders;
+$("#order-search").oninput = renderOrders;
 document.addEventListener("change", async (event) => {
   if (!event.target.dataset.status) return;
   try {
@@ -226,6 +295,18 @@ document.addEventListener("change", async (event) => {
     loadOrders();
   } catch (error) {
     alert(error.message);
+  }
+});
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-copy]");
+  if (!button) return;
+  try {
+    await navigator.clipboard.writeText(button.dataset.copy);
+    const label = button.textContent;
+    button.textContent = "Copied";
+    setTimeout(() => { button.textContent = label; }, 1200);
+  } catch {
+    alert("Could not copy that information.");
   }
 });
 
