@@ -42,6 +42,7 @@
               <option value="music_download">Digital music download</option>
               <option value="file_download">Digital file download</option>
               <option value="spring">Spring / Teespring product</option>
+              <option value="fanvue">Fanvue post / profile link</option>
             </select>
           </label>
           <div id="spring-fields" class="wide admin-grid hidden">
@@ -51,6 +52,18 @@
             </label>
             <input name="external_listing_id" type="hidden">
             <div class="wide admin-actions"><button type="button" id="import-spring" class="admin-button ghost">Import details from Spring</button><span id="spring-import-status" class="field-help">Paste a public Spring listing and import its title, price, description, and main image.</span></div>
+          </div>
+          <div id="fanvue-fields" class="wide admin-grid hidden">
+            <label class="field-label wide">
+              <span>Fanvue profile or post link</span>
+              <input name="fanvue_url" type="url" placeholder="https://www.fanvue.com/your-profile-or-post">
+            </label>
+            <p class="field-help wide">Fanvue handles sign-in, age controls, payment, and access. This listing links out and never enters the Faceless Supply Stripe cart.</p>
+            <label class="publish-control wide">
+              <input name="fanvue_preview_safe" type="checkbox">
+              <strong>The promotional preview is safe for a general audience</strong>
+              <span class="field-help">Do not upload nudity, explicit imagery, or explicit wording here. Keep restricted content on Fanvue.</span>
+            </label>
           </div>
           <label class="field-label">
             <span>Product title</span>

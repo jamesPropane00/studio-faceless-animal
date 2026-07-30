@@ -46,6 +46,20 @@ const springUrl = (value: unknown) => {
     return null;
   }
 };
+const fanvueUrl = (value: unknown) => {
+  try {
+    const url = new URL(String(value ?? "").trim());
+    if (
+      url.protocol !== "https:" ||
+      !/^(www\.)?fanvue\.com$/i.test(url.hostname) ||
+      url.pathname === "/"
+    ) return null;
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return null;
+  }
+};
 const decodeEscaped = (value: string) => {
   try {
     return JSON.parse(`"${value.replace(/"/g, '\\"')}"`);
@@ -168,10 +182,18 @@ Deno.serve(async (req) => {
         const kind = String(input.product_kind ?? "");
         if (!allowedKinds.has(kind)) return reply({ error: "Invalid product type" }, 400);
         const provider = String(input.fulfillment_provider ?? "internal");
-        if (!["internal", "spring"].includes(provider)) return reply({ error: "Invalid fulfillment provider" }, 400);
+        if (!["internal", "spring", "fanvue"].includes(provider)) return reply({ error: "Invalid fulfillment provider" }, 400);
         const isSpring = provider === "spring";
-        const purchaseUrl = isSpring ? springUrl(input.external_purchase_url) : null;
+        const isFanvue = provider === "fanvue";
+        const isExternal = isSpring || isFanvue;
+        const purchaseUrl = isSpring
+          ? springUrl(input.external_purchase_url)
+          : isFanvue ? fanvueUrl(input.external_purchase_url) : null;
         if (isSpring && !purchaseUrl) return reply({ error: "A valid Spring listing URL is required." }, 400);
+        if (isFanvue && !purchaseUrl) return reply({ error: "A valid fanvue.com profile or post URL is required." }, 400);
+        if (isFanvue && !Boolean(input.preview_is_safe)) {
+          return reply({ error: "Confirm that the promotional image and description are safe for a general audience." }, 400);
+        }
         const id = String(input.id ?? "");
         if (!/^[0-9a-f-]{36}$/i.test(id)) return reply({ error: "Invalid product ID" }, 400);
         const title = String(input.title ?? "").trim();
@@ -202,7 +224,7 @@ Deno.serve(async (req) => {
         if (reservationError) throw reservationError;
         const reservedQuantity = (activeReservations ?? [])
           .reduce((total: number, reservation: { quantity: number }) => total + reservation.quantity, 0);
-        const state = isSpring ? "available" : (quantity <= 0 ? "sold" : (quantity - reservedQuantity <= 0 ? "reserved" : "available"));
+        const state = isExternal ? "available" : (quantity <= 0 ? "sold" : (quantity - reservedQuantity <= 0 ? "reserved" : "available"));
         const rawSeoTitle = `${title} | Faceless Supply`;
         const seoTitle = rawSeoTitle.length <= 70 ? rawSeoTitle : excerpt(title, 51) + " | Faceless Supply";
         const metaDescription = excerpt(description, 155);
@@ -230,8 +252,9 @@ Deno.serve(async (req) => {
           fulfillment_provider: provider,
           external_purchase_url: purchaseUrl,
           external_listing_id: isSpring ? cleanOptional(input.external_listing_id, 80) : null,
-          shipping_price_cents: (isDigital || isSpring) ? 0 : Math.max(0, Number(input.shipping_price_cents) || 0),
-          local_pickup: !isDigital && !isSpring && Boolean(input.local_pickup),
+          content_rating: isFanvue ? "mature_external" : "general",
+          shipping_price_cents: (isDigital || isExternal) ? 0 : Math.max(0, Number(input.shipping_price_cents) || 0),
+          local_pickup: !isDigital && !isExternal && Boolean(input.local_pickup),
           published: Boolean(input.published),
           preview_url: isDigital ? (String(input.preview_url ?? "") || null) : null,
           download_storage_path: isDigital ? String(input.download_storage_path) : null,

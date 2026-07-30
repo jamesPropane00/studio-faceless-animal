@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       .select("id,fulfillment_provider").in("id", items.map((item: { product_id: string; quantity: number }) => item.product_id));
     if (productError) throw productError;
     if ((requestedProducts ?? []).some((product) => product.fulfillment_provider !== "internal")) {
-      return reply({ error: "Spring products must be purchased through the Spring product page." }, 400);
+      return reply({ error: "External products must be purchased through their official product page." }, 400);
     }
     const { data: created, error: createError } = await admin.rpc("create_shop_order", {
       p_items: items, p_fulfillment: body.fulfillment, p_customer: body.customer ?? {},

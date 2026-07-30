@@ -63,13 +63,21 @@ $("#signout").onclick = () => {
 function showKindFields() {
   const selectedKind = $("#product-kind").value;
   const spring = selectedKind === "spring";
+  const fanvue = selectedKind === "fanvue";
+  const external = spring || fanvue;
   const digital = selectedKind === "music_download" || selectedKind === "file_download";
-  $("#physical-fields").classList.toggle("hidden", digital || spring);
+  $("#physical-fields").classList.toggle("hidden", digital || external);
   $("#digital-fields").classList.toggle("hidden", !digital);
   $("#spring-fields").classList.toggle("hidden", !spring);
-  $("#photo-help").textContent = spring
-    ? "The main Spring product image imports automatically. You may upload extra promotional images."
-    : "Select several photos at once from your phone. The first image is the main image.";
+  $("#fanvue-fields").classList.toggle("hidden", !fanvue);
+  $("#photo-help").textContent = fanvue
+    ? "Upload only non-explicit promotional images that are safe for a general audience."
+    : spring
+      ? "The main Spring product image imports automatically. You may upload extra promotional images."
+      : "Select several photos at once from your phone. The first image is the main image.";
+  if (external && !$("#product-form").elements.quantity.value) {
+    $("#product-form").elements.quantity.value = "1";
+  }
   const current = products.find((product) => product.id === $("#product-form").elements.id.value);
   $("#product-form").elements.download_file.required = digital && !current?.download_storage_path;
 }
@@ -112,11 +120,20 @@ $("#product-form").elements.description.addEventListener("input", updateSearchPr
 async function loadProducts() {
   try {
     products = (await api("list_products")).products || [];
-    $("#product-list").innerHTML = products.map((product) => `
+    $("#product-list").innerHTML = products.map((product) => {
+      const provider = product.fulfillment_provider || "internal";
+      const typeLabel = provider === "spring"
+        ? "Spring fulfillment"
+        : provider === "fanvue" ? "Fanvue link · 18+" : safe(product.product_kind?.replaceAll("_", " ") || "physical");
+      const inventoryLabel = provider === "spring"
+        ? "inventory on Spring"
+        : provider === "fanvue" ? "access on Fanvue" : `${product.quantity} available · ${product.state}`;
+      return `
       <article class="admin-row"><div><strong>${safe(product.title)}</strong>
-        <p>${safe(product.sku)} · ${product.fulfillment_provider === "spring" ? "Spring fulfillment" : safe(product.product_kind?.replaceAll("_", " ") || "physical")} · ${money(product.price_cents)} · ${product.fulfillment_provider === "spring" ? "inventory on Spring" : `${product.quantity} available · ${product.state}`} · ${product.published ? "published" : "hidden"}</p>
+        <p>${safe(product.sku)} · ${typeLabel} · ${money(product.price_cents)} · ${inventoryLabel} · ${product.published ? "published" : "hidden"}</p>
         <p>${product.slug ? `<a href="/product/${encodeURIComponent(product.slug)}" target="_blank" rel="noopener">View product page ↗</a>` : "Product URL is created when saved"} · ${product.published ? "Live in store" : "Private draft"}</p>
-      </div><div class="admin-actions"><button data-edit="${product.id}">Edit</button><button data-publish="${product.id}">${product.published ? "Unpublish" : "Publish"}</button><button data-delete="${product.id}">Delete</button></div></article>`
+      </div><div class="admin-actions"><button data-edit="${product.id}">Edit</button><button data-publish="${product.id}">${product.published ? "Unpublish" : "Publish"}</button><button data-delete="${product.id}">Delete</button></div></article>`;
+    }
     ).join("") || "<p>No products yet.</p>";
   } catch (error) {
     $("#product-list").innerHTML = `<p class="form-error">${safe(error.message)}</p>`;
@@ -144,6 +161,8 @@ $("#product-form").onsubmit = async (event) => {
   const existing = products.find((product) => product.id === existingId);
   const kind = String(form.get("product_kind"));
   const isSpring = kind === "spring";
+  const isFanvue = kind === "fanvue";
+  const isExternal = isSpring || isFanvue;
   const isDigital = kind === "music_download" || kind === "file_download";
   const downloadFile = form.get("download_file");
   let download = {
@@ -163,6 +182,12 @@ $("#product-form").onsubmit = async (event) => {
     if (isDigital && !download.path) throw new Error("Choose the protected file customers will download.");
     const imageRecords = [];
     const images = form.getAll("images").filter((file) => file.size);
+    if (isFanvue && form.get("fanvue_preview_safe") !== "on") {
+      throw new Error("Confirm that the Fanvue promotional preview is safe for a general audience.");
+    }
+    if (isFanvue && !images.length && !existing?.product_images?.length) {
+      throw new Error("Upload a non-explicit promotional image for this Fanvue listing.");
+    }
     for (const [index, file] of images.entries()) {
       const path = await uploadFile("product-images", productId, file);
       const { data: publicData } = supabase.storage.from("product-images").getPublicUrl(path);
@@ -183,15 +208,16 @@ $("#product-form").onsubmit = async (event) => {
         id: productId, title: form.get("title"), sku: form.get("sku"),
         description: form.get("description"),
         price_cents: Math.round(Number(form.get("price")) * 100),
-        quantity: isSpring ? 1 : Number(form.get("quantity")),
+        quantity: isExternal ? 1 : Number(form.get("quantity")),
         condition: form.get("condition"), category: form.get("category"),
         shipping_price_cents: Math.round(Number(form.get("shipping_price") || 0) * 100),
         local_pickup: form.get("local_pickup") === "on",
         published: form.get("published") === "on",
-        product_kind: isSpring ? "physical" : kind,
-        fulfillment_provider: isSpring ? "spring" : "internal",
-        external_purchase_url: isSpring ? form.get("external_purchase_url") : null,
+        product_kind: isExternal ? "physical" : kind,
+        fulfillment_provider: isSpring ? "spring" : isFanvue ? "fanvue" : "internal",
+        external_purchase_url: isSpring ? form.get("external_purchase_url") : isFanvue ? form.get("fanvue_url") : null,
         external_listing_id: isSpring ? form.get("external_listing_id") : null,
+        preview_is_safe: isFanvue && form.get("fanvue_preview_safe") === "on",
         preview_url: form.get("preview_url") || null,
         download_storage_path: download.path, download_filename: download.filename,
         download_mime_type: download.mime,
@@ -207,10 +233,14 @@ $("#product-form").onsubmit = async (event) => {
 
 function editProduct(product) {
   const form = $("#product-form");
-  for (const key of ["id","title","sku","description","quantity","condition","category","preview_url","external_purchase_url","external_listing_id"]) {
+  for (const key of ["id","title","sku","description","quantity","condition","category","preview_url","external_listing_id"]) {
     form.elements[key].value = product[key] || "";
   }
-  form.elements.product_kind.value = product.fulfillment_provider === "spring" ? "spring" : (product.product_kind || "physical");
+  const provider = product.fulfillment_provider || "internal";
+  form.elements.product_kind.value = provider === "spring" ? "spring" : provider === "fanvue" ? "fanvue" : (product.product_kind || "physical");
+  form.elements.external_purchase_url.value = provider === "spring" ? (product.external_purchase_url || "") : "";
+  form.elements.fanvue_url.value = provider === "fanvue" ? (product.external_purchase_url || "") : "";
+  form.elements.fanvue_preview_safe.checked = provider === "fanvue";
   importedSpringImage = null;
   form.elements.price.value = (product.price_cents / 100).toFixed(2);
   form.elements.shipping_price.value = (product.shipping_price_cents / 100).toFixed(2);
@@ -244,6 +274,7 @@ function resetProductForm() {
   $("#product-form").elements.id.value = "";
   $("#product-kind").value = "physical";
   importedSpringImage = null;
+  $("#product-form").elements.fanvue_preview_safe.checked = false;
   $("#spring-import-status").textContent = "Paste a public Spring listing and import its title, price, description, and main image.";
   showKindFields();
   updateSearchPreview();

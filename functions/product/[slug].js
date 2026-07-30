@@ -30,6 +30,19 @@ function springPurchaseUrl(value) {
   }
 }
 
+function fanvuePurchaseUrl(value) {
+  const text = safeUrl(value);
+  if (!text) return '';
+  try {
+    const url = new URL(text);
+    return url.protocol === 'https:' &&
+      /^(www\.)?fanvue\.com$/i.test(url.hostname) &&
+      url.pathname !== '/' ? url.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
 function excerpt(value, limit = 160) {
   const text = String(value || '').replace(/\s+/g, ' ').trim();
   if (text.length <= limit) return text;
@@ -94,7 +107,11 @@ function render(product) {
   const springUrl = product.fulfillment_provider === 'spring'
     ? springPurchaseUrl(product.external_purchase_url)
     : '';
-  const digital = !springUrl && product.product_kind !== 'physical';
+  const fanvueUrl = product.fulfillment_provider === 'fanvue'
+    ? fanvuePurchaseUrl(product.external_purchase_url)
+    : '';
+  const externalUrl = springUrl || fanvueUrl;
+  const digital = !externalUrl && product.product_kind !== 'physical';
   const availability = product.state === 'reserved'
     ? 'https://schema.org/LimitedAvailability'
     : 'https://schema.org/InStock';
@@ -118,9 +135,9 @@ function render(product) {
     itemCondition: digital
       ? 'https://schema.org/NewCondition'
       : conditionUrl(product.condition),
-    offers: {
+    ...((!fanvueUrl || Number(product.price_cents) > 0) ? { offers: {
       '@type': 'Offer',
-      url: springUrl || storeUrl,
+      url: externalUrl || storeUrl,
       priceCurrency: 'USD',
       price,
       availability,
@@ -132,7 +149,7 @@ function render(product) {
         name: 'Faceless Animal Studios',
         url: SITE_URL,
       },
-    },
+    } } : {}),
   };
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
@@ -159,8 +176,7 @@ function render(product) {
   <meta property="og:description" content="${esc(description)}">
   <meta property="og:url" content="${esc(canonical)}">
   ${primaryImage ? `<meta property="og:image" content="${esc(primaryImage)}"><meta name="twitter:card" content="summary_large_image">` : '<meta name="twitter:card" content="summary">'}
-  <meta property="product:price:amount" content="${esc(price)}">
-  <meta property="product:price:currency" content="USD">
+  ${!fanvueUrl || Number(product.price_cents) > 0 ? `<meta property="product:price:amount" content="${esc(price)}"><meta property="product:price:currency" content="USD">` : ''}
   <meta name="twitter:title" content="${esc(product.title)}">
   <meta name="twitter:description" content="${esc(description)}">
   <script type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>
@@ -189,10 +205,10 @@ function render(product) {
         ? images.map((image, index) => `<img src="${esc(image)}" alt="${esc(index === 0 ? product.title : `${product.title} view ${index + 1}`)}" ${index ? 'loading="lazy"' : ''}>`).join('')
         : '<div class="empty-image" aria-label="Product image coming soon">FA</div>'}</div>
       <div class="copy">
-        <p class="eyebrow">${esc(product.category)} &middot; ${springUrl ? 'Made to order by Spring' : digital ? 'Digital release' : esc(product.condition)}</p>
+        <p class="eyebrow">${esc(product.category)} &middot; ${fanvueUrl ? '18+ on Fanvue' : springUrl ? 'Made to order by Spring' : digital ? 'Digital release' : esc(product.condition)}</p>
         <h1>${esc(product.title)}</h1>
-        <p class="price">${springUrl ? 'From ' : ''}$${esc(price)}</p>
-        <span class="status">${springUrl ? 'Available through Spring' : product.state === 'reserved' ? 'Temporarily reserved' : Number(product.quantity) <= 3 ? `Only ${esc(product.quantity)} left` : 'Available'}</span>
+        <p class="price">${fanvueUrl && Number(product.price_cents) <= 0 ? 'Exclusive access' : `${springUrl ? 'From ' : ''}$${esc(price)}`}</p>
+        <span class="status">${fanvueUrl ? 'Available through Fanvue · 18+' : springUrl ? 'Available through Spring' : product.state === 'reserved' ? 'Temporarily reserved' : Number(product.quantity) <= 3 ? `Only ${esc(product.quantity)} left` : 'Available'}</span>
         <p class="description">${esc(product.description)}</p>
         ${digital && product.preview_url ? `<a class="preview" href="${esc(safeUrl(product.preview_url))}" rel="noopener" target="_blank">Preview this release &rarr;</a>` : ''}
         <div class="facts">
@@ -200,10 +216,10 @@ function render(product) {
           <span><strong>SKU:</strong> ${esc(product.sku)}</span>
           ${product.gtin ? `<span><strong>GTIN:</strong> ${esc(product.gtin)}</span>` : ''}
           ${product.mpn ? `<span><strong>MPN:</strong> ${esc(product.mpn)}</span>` : ''}
-          <span><strong>Delivery:</strong> ${springUrl ? 'Produced and shipped by Spring' : digital ? 'Protected download after verified payment' : product.local_pickup ? 'Shipping or local pickup' : 'Shipping'}</span>
+          <span><strong>Delivery:</strong> ${fanvueUrl ? 'Access provided by Fanvue after its age and account checks' : springUrl ? 'Produced and shipped by Spring' : digital ? 'Protected download after verified payment' : product.local_pickup ? 'Shipping or local pickup' : 'Shipping'}</span>
         </div>
-        <a class="buy" href="${esc(springUrl || storeUrl)}" ${springUrl ? 'target="_blank" rel="noopener"' : ''}>${springUrl ? 'Choose options and buy on Spring' : 'Buy securely on Faceless Supply'}</a>
-        <p class="note">${springUrl ? 'Spring handles product options, payment, production, shipping, returns, and customer support for this item.' : 'Prices and inventory are verified by the server before Stripe Checkout opens.'}</p>
+        <a class="buy" href="${esc(externalUrl || storeUrl)}" ${externalUrl ? 'target="_blank" rel="noopener"' : ''}>${fanvueUrl ? 'View and unlock on Fanvue (18+)' : springUrl ? 'Choose options and buy on Spring' : 'Buy securely on Faceless Supply'}</a>
+        <p class="note">${fanvueUrl ? 'Fanvue handles sign-in, age controls, payment, content access, and customer support. This item does not use the Faceless Supply Stripe checkout.' : springUrl ? 'Spring handles product options, payment, production, shipping, returns, and customer support for this item.' : 'Prices and inventory are verified by the server before Stripe Checkout opens.'}</p>
       </div>
     </article>
   </main>
