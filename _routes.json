@@ -4,6 +4,7 @@
     "/api/**",
     "/profile/**",
     "/article/**",
+    "/product/**",
     "/sitemap.xml"
   ],
   "exclude": [
