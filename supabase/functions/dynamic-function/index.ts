@@ -8,7 +8,6 @@ const cors = {
 };
 const allowedUsers = new Set(["jdot00", "jamespropane00"]);
 const allowedKinds = new Set(["physical", "music_download", "file_download"]);
-const allowedStates = new Set(["available", "reserved", "sold", "inactive"]);
 const reply = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 const cleanUsername = (value: unknown) =>
@@ -18,9 +17,15 @@ const cleanFilename = (value: unknown) =>
 const cleanSlug = (value: unknown) =>
   String(value ?? "").trim().toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 180);
-const cleanOptional = (value: unknown, limit = 255) => {
-  const text = String(value ?? "").trim().slice(0, limit);
-  return text || null;
+const excerpt = (value: unknown, limit = 155) => {
+  const text = String(value ?? "").replace(/\s+/g, " ").trim();
+  if (text.length <= limit) return text;
+  return `${text.slice(0, limit - 1).replace(/\s+\S*$/, "")}…`;
+};
+const automaticKeywords = (...values: unknown[]) => {
+  const stopWords = new Set(["about", "after", "also", "and", "are", "been", "for", "from", "have", "into", "that", "the", "their", "this", "with", "your"]);
+  const words = values.join(" ").toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  return [...new Set(words.filter((word) => word.length > 2 && !stopWords.has(word)))].slice(0, 24);
 };
 const hex = (bytes: ArrayBuffer) =>
   [...new Uint8Array(bytes)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -82,45 +87,62 @@ Deno.serve(async (req) => {
       case "save_product": {
         const input = body.product ?? {};
         const kind = String(input.product_kind ?? "");
-        const state = String(input.state ?? "");
-        if (!allowedKinds.has(kind) || !allowedStates.has(state)) return reply({ error: "Invalid product type or state" }, 400);
+        if (!allowedKinds.has(kind)) return reply({ error: "Invalid product type" }, 400);
         const id = String(input.id ?? "");
         if (!/^[0-9a-f-]{36}$/i.test(id)) return reply({ error: "Invalid product ID" }, 400);
         const title = String(input.title ?? "").trim();
-        const sku = String(input.sku ?? "").trim();
-        const slugBase = cleanSlug(input.slug || title);
-        const slug = slugBase.length >= 2 ? slugBase : `product-${id.slice(0, 8)}`;
+        const description = String(input.description ?? "").trim();
         const price = Number(input.price_cents);
         const quantity = Number(input.quantity);
-        if (!title || !sku || !Number.isInteger(price) || price < 0 || !Number.isInteger(quantity) || quantity < 0) {
-          return reply({ error: "Title, SKU, price and quantity are required" }, 400);
+        if (!title || !description || !Number.isInteger(price) || price < 0 || !Number.isInteger(quantity) || quantity < 0) {
+          return reply({ error: "Title, description, price and quantity are required" }, 400);
         }
         const isDigital = kind !== "physical";
-        const seoTitle = String(input.seo_title ?? "").trim().slice(0, 70);
-        const metaDescription = String(input.meta_description ?? "").trim().slice(0, 320);
-        const searchKeywords = (Array.isArray(input.search_keywords) ? input.search_keywords : [])
-          .map((keyword: unknown) => String(keyword).trim().toLowerCase().slice(0, 80))
-          .filter(Boolean).slice(0, 30);
+        const category = String(input.category ?? "Other").trim() || "Other";
+        const condition = isDigital ? "Digital" : (String(input.condition ?? "New").trim() || "New");
+        const { data: existing, error: existingError } = await admin.from("products")
+          .select("slug,sku,gtin,mpn,google_product_category,ebay_category_id,facebook_category,marketplace_ready")
+          .eq("id", id).maybeSingle();
+        if (existingError) throw existingError;
+        const sku = String(input.sku ?? "").trim() || existing?.sku || `FA-${id.replaceAll("-", "").slice(0, 8).toUpperCase()}`;
+        let slug = existing?.slug || cleanSlug(title) || `product-${id.slice(0, 8)}`;
+        if (!existing) {
+          const { data: slugOwner, error: slugError } = await admin.from("products")
+            .select("id").eq("slug", slug).maybeSingle();
+          if (slugError) throw slugError;
+          if (slugOwner) slug = `${slug}-${id.slice(0, 8)}`;
+        }
+        const { data: activeReservations, error: reservationError } = await admin.from("inventory_reservations")
+          .select("quantity")
+          .eq("product_id", id).eq("status", "active").gt("expires_at", new Date().toISOString());
+        if (reservationError) throw reservationError;
+        const reservedQuantity = (activeReservations ?? [])
+          .reduce((total: number, reservation: { quantity: number }) => total + reservation.quantity, 0);
+        const state = quantity <= 0 ? "sold" : (quantity - reservedQuantity <= 0 ? "reserved" : "available");
+        const rawSeoTitle = `${title} | Faceless Supply`;
+        const seoTitle = rawSeoTitle.length <= 70 ? rawSeoTitle : excerpt(title, 51) + " | Faceless Supply";
+        const metaDescription = excerpt(description, 155);
+        const searchKeywords = automaticKeywords(title, category, condition, kind.replaceAll("_", " "), description);
         if (isDigital && (!input.download_storage_path || !input.download_filename)) {
           return reply({ error: "Digital products require a protected download file" }, 400);
         }
         const product = {
           id, title, sku, product_kind: kind, state,
-          description: String(input.description ?? ""),
+          description,
           slug,
-          seo_title: seoTitle || null,
-          meta_description: metaDescription || null,
+          seo_title: seoTitle,
+          meta_description: metaDescription,
           search_keywords: searchKeywords,
-          brand: String(input.brand ?? "Faceless Animal Studios").trim().slice(0, 120) || "Faceless Animal Studios",
-          gtin: cleanOptional(input.gtin, 32),
-          mpn: cleanOptional(input.mpn, 80),
-          google_product_category: cleanOptional(input.google_product_category, 160),
-          ebay_category_id: cleanOptional(input.ebay_category_id, 40),
-          facebook_category: cleanOptional(input.facebook_category, 160),
-          marketplace_ready: Boolean(input.marketplace_ready),
+          brand: "Faceless Animal Studios",
+          gtin: existing?.gtin ?? null,
+          mpn: existing?.mpn ?? null,
+          google_product_category: existing?.google_product_category ?? null,
+          ebay_category_id: existing?.ebay_category_id ?? null,
+          facebook_category: existing?.facebook_category ?? null,
+          marketplace_ready: existing?.marketplace_ready ?? false,
           price_cents: price, quantity,
-          condition: isDigital ? "Digital" : String(input.condition ?? "New"),
-          category: String(input.category ?? "Other").trim() || "Other",
+          condition,
+          category,
           shipping_price_cents: isDigital ? 0 : Math.max(0, Number(input.shipping_price_cents) || 0),
           local_pickup: !isDigital && Boolean(input.local_pickup),
           published: Boolean(input.published),

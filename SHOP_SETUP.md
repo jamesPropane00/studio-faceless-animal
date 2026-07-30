@@ -90,10 +90,12 @@ Product photos and cover art remain public. Customer download files go into the 
 - Buy one music/file product in test mode and confirm its signed download appears only after webhook-verified payment.
 - Replace all test-mode Stripe secrets with live-mode values and create a separate live webhook endpoint.
 
-## 8. Search visibility and marketplace preparation
+## 8. Automatic search visibility
 
 Every published product receives a permanent `/product/{slug}` page rendered by the Cloudflare Pages Function in `functions/product/[slug].js`. Those pages include canonical URLs, Open Graph metadata, Product and Breadcrumb structured data, server-rendered descriptions, prices, availability, images, SKU, brand, GTIN and MPN where supplied. The dynamic sitemap includes `/store` and every published available product.
 
-Use original product titles and detailed descriptions. Add a concise SEO title, a useful meta description, accurate categories and specific search keywords. Upload clear original photos and complete GTIN/UPC, MPN and brand fields when the product has them; never invent identifiers.
+The admin does not ask for SEO or marketplace fields. It automatically creates the permanent URL, search title, search description, search keywords, brand, SKU (when left blank), availability and structured search data from the product title, category, condition, type and description. The form shows a live Google-style preview before saving.
 
-Migration 042 creates `product_marketplace_listings` for future eBay and Facebook Marketplace connectors. API credentials and automated publishing are intentionally not implemented yet. Future connector functions should use the service role, write the returned external listing ID and URL to this table, and treat Supabase product price and inventory as the source of truth.
+For the strongest listing, write a specific title, choose an accurate category, explain the item clearly in the description and upload several sharp original photos. Include useful details a buyer would search for, such as color, material, size, style, format, genre or intended use. Do not stuff repeated keywords into the title or description.
+
+Migration 042 keeps the database foundation for future eBay and Facebook Marketplace connectors, but those controls stay hidden until the connectors are actually built. API credentials and automated marketplace publishing are intentionally not implemented yet. Future connector functions should use the service role, write the returned external listing ID and URL to this table, and treat Supabase product price and inventory as the source of truth.
