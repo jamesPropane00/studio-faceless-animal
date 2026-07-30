@@ -16,6 +16,7 @@ const excerpt = (value, limit = 155) => {
 let session = null;
 let products = [];
 let orders = [];
+let importedSpringImage = null;
 
 function getWebsiteSession() {
   try { return JSON.parse(localStorage.getItem("fas_user") || "null"); } catch { return null; }
@@ -60,13 +61,42 @@ $("#signout").onclick = () => {
 };
 
 function showKindFields() {
-  const digital = $("#product-kind").value !== "physical";
-  $("#physical-fields").classList.toggle("hidden", digital);
+  const selectedKind = $("#product-kind").value;
+  const spring = selectedKind === "spring";
+  const digital = selectedKind === "music_download" || selectedKind === "file_download";
+  $("#physical-fields").classList.toggle("hidden", digital || spring);
   $("#digital-fields").classList.toggle("hidden", !digital);
+  $("#spring-fields").classList.toggle("hidden", !spring);
+  $("#photo-help").textContent = spring
+    ? "The main Spring product image imports automatically. You may upload extra promotional images."
+    : "Select several photos at once from your phone. The first image is the main image.";
   const current = products.find((product) => product.id === $("#product-form").elements.id.value);
   $("#product-form").elements.download_file.required = digital && !current?.download_storage_path;
 }
 $("#product-kind").onchange = showKindFields;
+
+$("#import-spring").onclick = async () => {
+  const form = $("#product-form");
+  const status = $("#spring-import-status");
+  status.textContent = "Importing from Spring…";
+  try {
+    const data = await api("import_spring_product", { url: form.elements.external_purchase_url.value });
+    const imported = data.product;
+    form.elements.title.value = imported.title || "";
+    form.elements.description.value = imported.description || "";
+    form.elements.price.value = (imported.price_cents / 100).toFixed(2);
+    form.elements.quantity.value = "1";
+    form.elements.condition.value = "New";
+    form.elements.category.value = imported.category || "Spring merchandise";
+    form.elements.external_purchase_url.value = imported.external_purchase_url;
+    form.elements.external_listing_id.value = imported.external_listing_id || "";
+    importedSpringImage = imported.image_url || null;
+    status.textContent = "Imported. Review the wording, then save or publish.";
+    updateSearchPreview();
+  } catch (error) {
+    status.textContent = error.message;
+  }
+};
 
 function updateSearchPreview() {
   const form = $("#product-form");
@@ -84,7 +114,7 @@ async function loadProducts() {
     products = (await api("list_products")).products || [];
     $("#product-list").innerHTML = products.map((product) => `
       <article class="admin-row"><div><strong>${safe(product.title)}</strong>
-        <p>${safe(product.sku)} · ${safe(product.product_kind?.replaceAll("_", " ") || "physical")} · ${money(product.price_cents)} · ${product.quantity} available · ${product.state} · ${product.published ? "published" : "hidden"}</p>
+        <p>${safe(product.sku)} · ${product.fulfillment_provider === "spring" ? "Spring fulfillment" : safe(product.product_kind?.replaceAll("_", " ") || "physical")} · ${money(product.price_cents)} · ${product.fulfillment_provider === "spring" ? "inventory on Spring" : `${product.quantity} available · ${product.state}`} · ${product.published ? "published" : "hidden"}</p>
         <p>${product.slug ? `<a href="/product/${encodeURIComponent(product.slug)}" target="_blank" rel="noopener">View product page ↗</a>` : "Product URL is created when saved"} · ${product.published ? "Live in store" : "Private draft"}</p>
       </div><div class="admin-actions"><button data-edit="${product.id}">Edit</button><button data-publish="${product.id}">${product.published ? "Unpublish" : "Publish"}</button><button data-delete="${product.id}">Delete</button></div></article>`
     ).join("") || "<p>No products yet.</p>";
@@ -113,7 +143,8 @@ $("#product-form").onsubmit = async (event) => {
   const productId = existingId || crypto.randomUUID();
   const existing = products.find((product) => product.id === existingId);
   const kind = String(form.get("product_kind"));
-  const isDigital = kind !== "physical";
+  const isSpring = kind === "spring";
+  const isDigital = kind === "music_download" || kind === "file_download";
   const downloadFile = form.get("download_file");
   let download = {
     path: existing?.download_storage_path || null,
@@ -140,16 +171,27 @@ $("#product-form").onsubmit = async (event) => {
         sort_order: (existing?.product_images?.length || 0) + index,
       });
     }
+    if (isSpring && importedSpringImage && !existing?.product_images?.some((image) => image.public_url === importedSpringImage)) {
+      imageRecords.push({
+        storage_path: `spring/${form.get("external_listing_id") || productId}/front`,
+        public_url: importedSpringImage,
+        sort_order: 0,
+      });
+    }
     await api("save_product", {
       product: {
         id: productId, title: form.get("title"), sku: form.get("sku"),
         description: form.get("description"),
         price_cents: Math.round(Number(form.get("price")) * 100),
-        quantity: Number(form.get("quantity")),
+        quantity: isSpring ? 1 : Number(form.get("quantity")),
         condition: form.get("condition"), category: form.get("category"),
         shipping_price_cents: Math.round(Number(form.get("shipping_price") || 0) * 100),
         local_pickup: form.get("local_pickup") === "on",
-        published: form.get("published") === "on", product_kind: kind,
+        published: form.get("published") === "on",
+        product_kind: isSpring ? "physical" : kind,
+        fulfillment_provider: isSpring ? "spring" : "internal",
+        external_purchase_url: isSpring ? form.get("external_purchase_url") : null,
+        external_listing_id: isSpring ? form.get("external_listing_id") : null,
         preview_url: form.get("preview_url") || null,
         download_storage_path: download.path, download_filename: download.filename,
         download_mime_type: download.mime,
@@ -165,9 +207,11 @@ $("#product-form").onsubmit = async (event) => {
 
 function editProduct(product) {
   const form = $("#product-form");
-  for (const key of ["id","title","sku","description","quantity","condition","category","product_kind","preview_url"]) {
+  for (const key of ["id","title","sku","description","quantity","condition","category","preview_url","external_purchase_url","external_listing_id"]) {
     form.elements[key].value = product[key] || "";
   }
+  form.elements.product_kind.value = product.fulfillment_provider === "spring" ? "spring" : (product.product_kind || "physical");
+  importedSpringImage = null;
   form.elements.price.value = (product.price_cents / 100).toFixed(2);
   form.elements.shipping_price.value = (product.shipping_price_cents / 100).toFixed(2);
   form.elements.local_pickup.checked = product.local_pickup;
@@ -199,6 +243,8 @@ function resetProductForm() {
   $("#product-form").reset();
   $("#product-form").elements.id.value = "";
   $("#product-kind").value = "physical";
+  importedSpringImage = null;
+  $("#spring-import-status").textContent = "Paste a public Spring listing and import its title, price, description, and main image.";
   showKindFields();
   updateSearchPreview();
 }

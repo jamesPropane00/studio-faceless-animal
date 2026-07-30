@@ -17,6 +17,10 @@ const cleanFilename = (value: unknown) =>
 const cleanSlug = (value: unknown) =>
   String(value ?? "").trim().toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 180);
+const cleanOptional = (value: unknown, limit = 255) => {
+  const text = String(value ?? "").trim().slice(0, limit);
+  return text || null;
+};
 const excerpt = (value: unknown, limit = 155) => {
   const text = String(value ?? "").replace(/\s+/g, " ").trim();
   if (text.length <= limit) return text;
@@ -26,6 +30,35 @@ const automaticKeywords = (...values: unknown[]) => {
   const stopWords = new Set(["about", "after", "also", "and", "are", "been", "for", "from", "have", "into", "that", "the", "their", "this", "with", "your"]);
   const words = values.join(" ").toLowerCase().match(/[a-z0-9]+/g) ?? [];
   return [...new Set(words.filter((word) => word.length > 2 && !stopWords.has(word)))].slice(0, 24);
+};
+const springUrl = (value: unknown) => {
+  try {
+    const url = new URL(String(value ?? "").trim());
+    if (
+      url.protocol !== "https:" ||
+      !/^[a-z0-9-]+\.creator-spring\.com$/i.test(url.hostname) ||
+      !/^\/listing\/[a-z0-9-]+\/?$/i.test(url.pathname)
+    ) return null;
+    url.search = "";
+    url.hash = "";
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return null;
+  }
+};
+const decodeEscaped = (value: string) => {
+  try {
+    return JSON.parse(`"${value.replace(/"/g, '\\"')}"`);
+  } catch {
+    return value.replace(/\\u0026/g, "&").replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+  }
+};
+const decodeHtml = (value: string) => value
+  .replace(/&amp;/g, "&").replace(/&quot;/g, '"')
+  .replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+const metaContent = (html: string, name: string) => {
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return decodeHtml(html.match(new RegExp(`<meta[^>]+(?:property|name)="${escapedName}"[^>]+content="([^"]*)"`, "i"))?.[1] ?? "");
 };
 const hex = (bytes: ArrayBuffer) =>
   [...new Uint8Array(bytes)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -90,10 +123,55 @@ Deno.serve(async (req) => {
         return reply({ path, token: data.token });
       }
 
+      case "import_spring_product": {
+        const url = springUrl(body.url);
+        if (!url) return reply({ error: "Paste a valid creator-spring.com product listing URL." }, 400);
+        const response = await fetch(url, {
+          headers: { "User-Agent": "FacelessAnimalStoreImporter/1.0" },
+          signal: AbortSignal.timeout(12000),
+        });
+        if (!response.ok) return reply({ error: "Spring could not load that listing." }, 422);
+        const html = (await response.text()).slice(0, 2_000_000);
+        const start = html.indexOf('\\"storeListing\\":');
+        const listing = start >= 0 ? html.slice(start, start + 300_000) : "";
+        const field = (name: string, useLast = false) => {
+          const prefix = `\\"${name}\\":\\"`;
+          const valueStart = useLast ? listing.lastIndexOf(prefix) : listing.indexOf(prefix);
+          if (valueStart < 0) return "";
+          const contentStart = valueStart + prefix.length;
+          const valueEnd = listing.indexOf('\\"', contentStart);
+          return valueEnd < 0 ? "" : decodeEscaped(listing.slice(contentStart, valueEnd));
+        };
+        const metaTitle = metaContent(html, "og:title").replace(/^.*?\s+-\s+/, "");
+        const title = field("title") || metaTitle;
+        const description = field("description", true) || field("description") || metaContent(html, "og:description");
+        const imageUrl = field("full") || metaContent(html, "og:image");
+        const priceText = field("price");
+        const productType = field("productType");
+        const listingId = listing.match(/\\"listingId\\":(\d+)/)?.[1] ?? "";
+        const priceCents = Math.round(Number(priceText) * 100);
+        if (!title || !imageUrl || !Number.isInteger(priceCents)) {
+          return reply({ error: "That Spring listing did not expose enough product information to import." }, 422);
+        }
+        return reply({
+          product: {
+            title, description, image_url: imageUrl, price_cents: priceCents,
+            category: productType || "Spring merchandise",
+            external_purchase_url: url,
+            external_listing_id: listingId,
+          },
+        });
+      }
+
       case "save_product": {
         const input = body.product ?? {};
         const kind = String(input.product_kind ?? "");
         if (!allowedKinds.has(kind)) return reply({ error: "Invalid product type" }, 400);
+        const provider = String(input.fulfillment_provider ?? "internal");
+        if (!["internal", "spring"].includes(provider)) return reply({ error: "Invalid fulfillment provider" }, 400);
+        const isSpring = provider === "spring";
+        const purchaseUrl = isSpring ? springUrl(input.external_purchase_url) : null;
+        if (isSpring && !purchaseUrl) return reply({ error: "A valid Spring listing URL is required." }, 400);
         const id = String(input.id ?? "");
         if (!/^[0-9a-f-]{36}$/i.test(id)) return reply({ error: "Invalid product ID" }, 400);
         const title = String(input.title ?? "").trim();
@@ -107,7 +185,7 @@ Deno.serve(async (req) => {
         const category = String(input.category ?? "Other").trim() || "Other";
         const condition = isDigital ? "Digital" : (String(input.condition ?? "New").trim() || "New");
         const { data: existing, error: existingError } = await admin.from("products")
-          .select("slug,sku,gtin,mpn,google_product_category,ebay_category_id,facebook_category,marketplace_ready")
+          .select("slug,sku,gtin,mpn,google_product_category,ebay_category_id,facebook_category,marketplace_ready,fulfillment_provider,external_purchase_url,external_listing_id")
           .eq("id", id).maybeSingle();
         if (existingError) throw existingError;
         const sku = String(input.sku ?? "").trim() || existing?.sku || `FA-${id.replaceAll("-", "").slice(0, 8).toUpperCase()}`;
@@ -124,7 +202,7 @@ Deno.serve(async (req) => {
         if (reservationError) throw reservationError;
         const reservedQuantity = (activeReservations ?? [])
           .reduce((total: number, reservation: { quantity: number }) => total + reservation.quantity, 0);
-        const state = quantity <= 0 ? "sold" : (quantity - reservedQuantity <= 0 ? "reserved" : "available");
+        const state = isSpring ? "available" : (quantity <= 0 ? "sold" : (quantity - reservedQuantity <= 0 ? "reserved" : "available"));
         const rawSeoTitle = `${title} | Faceless Supply`;
         const seoTitle = rawSeoTitle.length <= 70 ? rawSeoTitle : excerpt(title, 51) + " | Faceless Supply";
         const metaDescription = excerpt(description, 155);
@@ -149,8 +227,11 @@ Deno.serve(async (req) => {
           price_cents: price, quantity,
           condition,
           category,
-          shipping_price_cents: isDigital ? 0 : Math.max(0, Number(input.shipping_price_cents) || 0),
-          local_pickup: !isDigital && Boolean(input.local_pickup),
+          fulfillment_provider: provider,
+          external_purchase_url: purchaseUrl,
+          external_listing_id: isSpring ? cleanOptional(input.external_listing_id, 80) : null,
+          shipping_price_cents: (isDigital || isSpring) ? 0 : Math.max(0, Number(input.shipping_price_cents) || 0),
+          local_pickup: !isDigital && !isSpring && Boolean(input.local_pickup),
           published: Boolean(input.published),
           preview_url: isDigital ? (String(input.preview_url ?? "") || null) : null,
           download_storage_path: isDigital ? String(input.download_storage_path) : null,

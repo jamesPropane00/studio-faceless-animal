@@ -30,6 +30,12 @@ Deno.serve(async (req) => {
     );
     const { error: releaseError } = await admin.rpc("release_expired_shop_reservations");
     if (releaseError) throw releaseError;
+    const { data: requestedProducts, error: productError } = await admin.from("products")
+      .select("id,fulfillment_provider").in("id", items.map((item: { product_id: string; quantity: number }) => item.product_id));
+    if (productError) throw productError;
+    if ((requestedProducts ?? []).some((product) => product.fulfillment_provider !== "internal")) {
+      return reply({ error: "Spring products must be purchased through the Spring product page." }, 400);
+    }
     const { data: created, error: createError } = await admin.rpc("create_shop_order", {
       p_items: items, p_fulfillment: body.fulfillment, p_customer: body.customer ?? {},
     });

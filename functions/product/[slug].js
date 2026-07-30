@@ -17,6 +17,19 @@ function safeUrl(value) {
   }
 }
 
+function springPurchaseUrl(value) {
+  const text = safeUrl(value);
+  if (!text) return '';
+  try {
+    const url = new URL(text);
+    return url.protocol === 'https:' &&
+      /^[a-z0-9-]+\.creator-spring\.com$/i.test(url.hostname) &&
+      /^\/listing\/[a-z0-9-]+\/?$/i.test(url.pathname) ? url.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
 function excerpt(value, limit = 160) {
   const text = String(value || '').replace(/\s+/g, ' ').trim();
   if (text.length <= limit) return text;
@@ -45,6 +58,7 @@ async function fetchProduct(env, slug) {
     'search_keywords', 'brand', 'gtin', 'mpn', 'price_cents', 'quantity',
     'sku', 'condition', 'category', 'shipping_price_cents', 'local_pickup',
     'state', 'product_kind', 'preview_url', 'updated_at',
+    'fulfillment_provider', 'external_purchase_url',
     'product_images(public_url,alt_text,sort_order)',
   ].join(',');
   const query = new URLSearchParams({
@@ -77,7 +91,10 @@ function render(product) {
     .map((image) => safeUrl(image.public_url))
     .filter(Boolean);
   const primaryImage = images[0] || '';
-  const digital = product.product_kind !== 'physical';
+  const springUrl = product.fulfillment_provider === 'spring'
+    ? springPurchaseUrl(product.external_purchase_url)
+    : '';
+  const digital = !springUrl && product.product_kind !== 'physical';
   const availability = product.state === 'reserved'
     ? 'https://schema.org/LimitedAvailability'
     : 'https://schema.org/InStock';
@@ -103,7 +120,7 @@ function render(product) {
       : conditionUrl(product.condition),
     offers: {
       '@type': 'Offer',
-      url: storeUrl,
+      url: springUrl || storeUrl,
       priceCurrency: 'USD',
       price,
       availability,
@@ -172,10 +189,10 @@ function render(product) {
         ? images.map((image, index) => `<img src="${esc(image)}" alt="${esc(index === 0 ? product.title : `${product.title} view ${index + 1}`)}" ${index ? 'loading="lazy"' : ''}>`).join('')
         : '<div class="empty-image" aria-label="Product image coming soon">FA</div>'}</div>
       <div class="copy">
-        <p class="eyebrow">${esc(product.category)} &middot; ${digital ? 'Digital release' : esc(product.condition)}</p>
+        <p class="eyebrow">${esc(product.category)} &middot; ${springUrl ? 'Made to order by Spring' : digital ? 'Digital release' : esc(product.condition)}</p>
         <h1>${esc(product.title)}</h1>
-        <p class="price">$${esc(price)}</p>
-        <span class="status">${product.state === 'reserved' ? 'Temporarily reserved' : Number(product.quantity) <= 3 ? `Only ${esc(product.quantity)} left` : 'Available'}</span>
+        <p class="price">${springUrl ? 'From ' : ''}$${esc(price)}</p>
+        <span class="status">${springUrl ? 'Available through Spring' : product.state === 'reserved' ? 'Temporarily reserved' : Number(product.quantity) <= 3 ? `Only ${esc(product.quantity)} left` : 'Available'}</span>
         <p class="description">${esc(product.description)}</p>
         ${digital && product.preview_url ? `<a class="preview" href="${esc(safeUrl(product.preview_url))}" rel="noopener" target="_blank">Preview this release &rarr;</a>` : ''}
         <div class="facts">
@@ -183,10 +200,10 @@ function render(product) {
           <span><strong>SKU:</strong> ${esc(product.sku)}</span>
           ${product.gtin ? `<span><strong>GTIN:</strong> ${esc(product.gtin)}</span>` : ''}
           ${product.mpn ? `<span><strong>MPN:</strong> ${esc(product.mpn)}</span>` : ''}
-          <span><strong>Delivery:</strong> ${digital ? 'Protected download after verified payment' : product.local_pickup ? 'Shipping or local pickup' : 'Shipping'}</span>
+          <span><strong>Delivery:</strong> ${springUrl ? 'Produced and shipped by Spring' : digital ? 'Protected download after verified payment' : product.local_pickup ? 'Shipping or local pickup' : 'Shipping'}</span>
         </div>
-        <a class="buy" href="${esc(storeUrl)}">Buy securely on Faceless Supply</a>
-        <p class="note">Prices and inventory are verified by the server before Stripe Checkout opens.</p>
+        <a class="buy" href="${esc(springUrl || storeUrl)}" ${springUrl ? 'target="_blank" rel="noopener"' : ''}>${springUrl ? 'Choose options and buy on Spring' : 'Buy securely on Faceless Supply'}</a>
+        <p class="note">${springUrl ? 'Spring handles product options, payment, production, shipping, returns, and customer support for this item.' : 'Prices and inventory are verified by the server before Stripe Checkout opens.'}</p>
       </div>
     </article>
   </main>
