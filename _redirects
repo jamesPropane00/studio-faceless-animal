@@ -18,6 +18,7 @@
 /artist/*    /templates/artist.html    200
 /creator/*   /templates/creator.html   200
 /business/*  /templates/business.html  200
+/product/coke-boys-character-trio-vinyl-sticker    /product/coke-boys-character-trio-vinyl-sticker/index.html    200
 
 # ── DOMAIN ALIASES ─────────────────────────────────────────────────
 # djfacelessanimal.com → DJ Faceless Animal artist page
