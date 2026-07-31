@@ -53,6 +53,12 @@ function base64ToBytes(value) {
   return bytes;
 }
 
+function safeStoragePath(username, title, fileName, fileType) {
+  const ext = extensionFor(fileName, fileType);
+  const safeName = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50) || 'track';
+  return `ch1/community/member-${username}-${Date.now()}-${crypto.randomUUID()}-${safeName}.${ext}`;
+}
+
 async function supabaseFetch(env, path, options = {}) {
   const supabaseUrl = String(env.SUPABASE_URL || '').replace(/\/+$/, '');
   const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY;
@@ -139,6 +145,52 @@ async function insertTrack(env, row) {
   });
 }
 
+async function finishTrack(env, { username, title, storagePath, monthlyCount }) {
+  const objectInfo = await supabaseFetch(
+    env,
+    `/storage/v1/object/info/radio/${storagePath.split('/').map(encodeURIComponent).join('/')}`,
+  );
+  if (!objectInfo.ok) {
+    return { response: json({ ok: false, error: 'The audio file did not reach storage. Please try the upload again.' }, 409) };
+  }
+
+  const supabaseUrl = String(env.SUPABASE_URL || objectInfo.supabaseUrl || '').replace(/\/+$/, '');
+  const publicSrc = `${supabaseUrl}/storage/v1/object/public/radio/${storagePath}`;
+  const trackRow = {
+    title,
+    src: publicSrc,
+    storage_path: storagePath,
+    channel: 1,
+    is_active: true,
+    play_count: 0,
+    upvotes: 0,
+    uploaded_by: username,
+    uploaded_at: new Date().toISOString(),
+  };
+
+  const insert = await insertTrack(env, trackRow);
+  if (!insert.ok) {
+    await supabaseFetch(env, `/storage/v1/object/radio/${storagePath}`, { method: 'DELETE' });
+    return { response: json({ ok: false, error: insert.data?.message || insert.text || 'Track saved to storage, but database insert failed.' }, 500) };
+  }
+
+  const directoryPost = await createDirectoryPost(env, username, title, publicSrc);
+  const used = monthlyCount === null ? null : monthlyCount + 1;
+  const remaining = used === null ? null : Math.max(0, 2 - used);
+  return {
+    response: json({
+      ok: true,
+      track: Array.isArray(insert.data) ? insert.data[0] : insert.data,
+      storage_path: storagePath,
+      remaining,
+      remaining_this_month: remaining,
+      directory_post_created: directoryPost.ok,
+      directory_post: directoryPost.post || null,
+      warning: directoryPost.ok ? null : directoryPost.error,
+    }),
+  };
+}
+
 async function createDirectoryPost(env, username, title, publicSrc) {
   const bodyText = `🎵 "${title}" — @${username} uploaded to Station 1 on Faceless Radio.`;
   const signal = await supabaseFetch(env, '/rest/v1/signal_posts?select=id,author_username,body_text,category,media_url,created_at', {
@@ -201,13 +253,15 @@ export async function onRequestPost(context) {
     const title = cleanTitle(body.title);
     const fileType = String(body.file_type || 'audio/mpeg').toLowerCase();
     const fileName = String(body.file_name || 'track.mp3');
+    const action = String(body.action || 'legacy').toLowerCase();
+    const fileSize = Number(body.file_size || 0);
 
     if (!username || !ph) return json({ ok: false, error: 'Please sign in before uploading.' }, 401);
     if (!title) return json({ ok: false, error: 'Enter a track title.' }, 400);
-    if (!body.file_b64) return json({ ok: false, error: 'Select an audio file to upload.' }, 400);
     if (!ALLOWED_TYPES.has(fileType) && !fileType.startsWith('audio/')) {
       return json({ ok: false, error: 'Only audio files are supported.' }, 400);
     }
+    if (fileSize && fileSize > MAX_BYTES) return json({ ok: false, error: 'File too large. Max upload size is 50MB.' }, 413);
 
     const memberResult = await getMember(context.env, username, ph);
     if (memberResult.error) return json({ ok: false, error: memberResult.error }, 403);
@@ -219,12 +273,37 @@ export async function onRequestPost(context) {
       return json({ ok: false, error: 'You have already used your 2 uploads for this month.', remaining: 0 }, 429);
     }
 
+    if (action === 'prepare') {
+      if (!fileSize || fileSize < 1) return json({ ok: false, error: 'Select an audio file to upload.' }, 400);
+      const storagePath = safeStoragePath(username, title, fileName, fileType);
+      const signed = await supabaseFetch(context.env, `/storage/v1/object/upload/sign/radio/${storagePath}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-upsert': 'false' },
+        body: JSON.stringify({}),
+      });
+      if (!signed.ok || !signed.data?.url) {
+        return json({ ok: false, error: signed.data?.message || signed.text || 'Could not prepare the storage upload.' }, 500);
+      }
+      const supabaseUrl = String(context.env.SUPABASE_URL || signed.supabaseUrl || '').replace(/\/+$/, '');
+      const signedUrl = new URL(signed.data.url, `${supabaseUrl}/storage/v1/`).toString();
+      return json({ ok: true, storage_path: storagePath, signed_url: signedUrl });
+    }
+
+    if (action === 'finalize') {
+      const storagePath = String(body.storage_path || '').replace(/^\/+/, '');
+      const expectedPrefix = `ch1/community/member-${username}-`;
+      if (!storagePath.startsWith(expectedPrefix) || storagePath.includes('..')) {
+        return json({ ok: false, error: 'Invalid upload path.' }, 400);
+      }
+      return (await finishTrack(context.env, { username, title, storagePath, monthlyCount })).response;
+    }
+
+    if (!body.file_b64) return json({ ok: false, error: 'Select an audio file to upload.' }, 400);
+
     const bytes = base64ToBytes(body.file_b64);
     if (bytes.byteLength > MAX_BYTES) return json({ ok: false, error: 'File too large. Max upload size is 50MB.' }, 413);
 
-    const ext = extensionFor(fileName, fileType);
-    const safeName = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50) || 'track';
-    const storagePath = `ch1/member-${username}-${Date.now()}-${safeName}.${ext}`;
+    const storagePath = safeStoragePath(username, title, fileName, fileType);
 
     const upload = await supabaseFetch(context.env, `/storage/v1/object/radio/${storagePath}`, {
       method: 'POST',
@@ -238,39 +317,7 @@ export async function onRequestPost(context) {
       return json({ ok: false, error: upload.data?.message || upload.text || 'Storage upload failed.' }, 500);
     }
 
-    const supabaseUrl = String(context.env.SUPABASE_URL || upload.supabaseUrl || '').replace(/\/+$/, '');
-    const publicSrc = `${supabaseUrl}/storage/v1/object/public/radio/${storagePath}`;
-    const trackRow = {
-      title,
-      src: publicSrc,
-      storage_path: storagePath,
-      channel: 1,
-      is_active: true,
-      play_count: 0,
-      upvotes: 0,
-      uploaded_by: username,
-      uploaded_at: new Date().toISOString(),
-    };
-
-    const insert = await insertTrack(context.env, trackRow);
-    if (!insert.ok) {
-      await supabaseFetch(context.env, `/storage/v1/object/radio/${storagePath}`, { method: 'DELETE' });
-      return json({ ok: false, error: insert.data?.message || insert.text || 'Track saved to storage, but database insert failed.' }, 500);
-    }
-
-    const directoryPost = await createDirectoryPost(context.env, username, title, publicSrc);
-    const used = monthlyCount === null ? null : monthlyCount + 1;
-    const remaining = used === null ? null : Math.max(0, 2 - used);
-    return json({
-      ok: true,
-      track: Array.isArray(insert.data) ? insert.data[0] : insert.data,
-      storage_path: storagePath,
-      remaining,
-      remaining_this_month: remaining,
-      directory_post_created: directoryPost.ok,
-      directory_post: directoryPost.post || null,
-      warning: directoryPost.ok ? null : directoryPost.error,
-    });
+    return (await finishTrack(context.env, { username, title, storagePath, monthlyCount })).response;
   } catch (err) {
     return json({ ok: false, error: err?.message || 'Upload failed.' }, 500);
   }

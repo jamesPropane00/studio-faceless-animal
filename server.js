@@ -1382,8 +1382,9 @@ async function handleCommunityUpload(req, res) {
   }
 
   const { username, ph, file_b64, file_type, file_name, title } = body
-  if (!username || !ph || !file_b64 || !file_type || !file_name || !title) {
-    return sendJSON(res, 400, { error: 'Missing required fields (username, ph, file_b64, file_type, file_name, title).' })
+  const action = String(body.action || 'legacy').toLowerCase()
+  if (!username || !ph || !file_type || !file_name || !title) {
+    return sendJSON(res, 400, { error: 'Missing required upload information.' })
   }
 
   const u = username.toLowerCase().replace(/[^a-z0-9_-]/g, '')
@@ -1461,22 +1462,60 @@ async function handleCommunityUpload(req, res) {
     }
   }
 
-  let fileBuffer
-  try { fileBuffer = Buffer.from(file_b64, 'base64') } catch {
-    return sendJSON(res, 400, { error: 'Could not decode file data.' })
+  const ext = path.extname(file_name).toLowerCase() || '.mp3'
+  const safeName = (path.basename(file_name, ext) || 'track').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60)
+
+  if (action === 'prepare') {
+    const fileSize = Number(body.file_size || 0)
+    if (!fileSize || fileSize > COMMUNITY_MAX_FILE_B) {
+      return sendJSON(res, 400, { error: `Select an audio file up to ${COMMUNITY_MAX_FILE_MB}MB.` })
+    }
+    const preparedPath = 'ch1/community/member-' + u + '-' + Date.now() + '-' +
+      Math.random().toString(36).slice(2, 10) + '-' + safeName + ext
+    const signed = await sbRequest(
+      creds.host,
+      creds.key,
+      'POST',
+      `/storage/v1/object/upload/sign/radio/${preparedPath}`,
+      JSON.stringify({})
+    )
+    if (signed.status < 200 || signed.status >= 300) {
+      return sendJSON(res, 500, { error: 'Could not prepare the storage upload.' })
+    }
+    const signedData = JSON.parse(signed.body.toString())
+    return sendJSON(res, 200, {
+      ok: true,
+      storage_path: preparedPath,
+      signed_url: `https://${creds.host}/storage/v1${signedData.url}`,
+    })
   }
-  if (fileBuffer.length > COMMUNITY_MAX_FILE_B) {
-    return sendJSON(res, 400, { error: `File exceeds ${COMMUNITY_MAX_FILE_MB}MB limit.` })
+
+  const isFinalize = action === 'finalize'
+  if (isFinalize) {
+    const requestedPath = String(body.storage_path || '').replace(/^\/+/, '')
+    if (!requestedPath.startsWith('ch1/community/member-' + u + '-') || requestedPath.includes('..')) {
+      return sendJSON(res, 400, { error: 'Invalid upload path.' })
+    }
+  } else if (!file_b64) {
+    return sendJSON(res, 400, { error: 'Select an audio file to upload.' })
+  }
+
+  let fileBuffer = null
+  if (!isFinalize) {
+    try { fileBuffer = Buffer.from(file_b64, 'base64') } catch {
+      return sendJSON(res, 400, { error: 'Could not decode file data.' })
+    }
+    if (fileBuffer.length > COMMUNITY_MAX_FILE_B) {
+      return sendJSON(res, 400, { error: `File exceeds ${COMMUNITY_MAX_FILE_MB}MB limit.` })
+    }
   }
 
   // Upload to Supabase Storage bucket so metadata remains canonical in Supabase.
-  const ext      = path.extname(file_name).toLowerCase() || '.mp3'
-  const safeName = (path.basename(file_name, ext) || 'track').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60)
   const fileName = Date.now() + '_' + u + '_' + safeName + ext
-  const storagePath = 'ch1/community/' + fileName
+  const storagePath = isFinalize ? String(body.storage_path).replace(/^\/+/, '') : 'ch1/community/' + fileName
   const publicSrc = `https://${creds.host}/storage/v1/object/public/radio/${storagePath}`
 
-  try {
+  if (!isFinalize) try {
     const upload = await sbStorageUpload(
       creds.host,
       creds.key,
@@ -1539,7 +1578,7 @@ async function handleCommunityUpload(req, res) {
   }
 
   console.log('[FAS:community:upload]', u, 'uploaded:', fileName,
-    `(${fileBuffer.length} bytes, month ${monthCount + 1}/${COMMUNITY_MAX_PER_MONTH})`)
+    `(${fileBuffer ? fileBuffer.length : Number(body.file_size || 0)} bytes, month ${monthCount + 1}/${COMMUNITY_MAX_PER_MONTH})`)
 
   const nextCount = monthCount + 1
   const remaining = Math.max(0, COMMUNITY_MAX_PER_MONTH - nextCount)
