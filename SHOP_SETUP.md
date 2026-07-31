@@ -6,7 +6,7 @@ The frontend uses the existing shared client in `assets/js/supabase-client.js`. 
 
 Apply `supabase/migrations/038_ecommerce.sql` through the Supabase CLI (`supabase db push`) or paste it into Dashboard → SQL Editor. It creates the product, image, reservation, order, item, event and admin tables; atomic reservation/payment functions; indexes; image bucket; triggers; and RLS policies.
 
-Apply migrations `039_shop_digital_products_and_admin_lockdown.sql`, `040_shop_platform_sessions.sql`, `041_shop_reservation_and_payment_hardening.sql`, `042_shop_seo_and_marketplace_foundation.sql`, `043_shop_spring_products.sql`, and `044_shop_fanvue_external_links.sql` after migration 038. Shop administration uses the existing Faceless Animal website login, not a second Supabase Auth account. After a valid normal login, `smooth-endpoint` issues an opaque seven-day admin token only for `jdot00` or `jamespropane00`. `dynamic-function` verifies that token on every request. Migration 040 also removes browser read access to password, recovery and email columns. Migration 041 releases expired holds when the store loads and automatically refunds a verified Stripe payment if its ten-minute inventory reservation already expired. Migration 042 adds permanent product slugs, search metadata, GTIN/MPN/category fields, search indexes and connector-neutral eBay/Facebook listing records. Migration 043 adds Spring fulfillment links and migration 044 adds safe promotional Fanvue links.
+Apply migrations `039_shop_digital_products_and_admin_lockdown.sql`, `040_shop_platform_sessions.sql`, `041_shop_reservation_and_payment_hardening.sql`, `042_shop_seo_and_marketplace_foundation.sql`, `043_shop_spring_products.sql`, `044_shop_fanvue_external_links.sql`, and `045_shop_dropship_fulfillment.sql` after migration 038. Shop administration uses the existing Faceless Animal website login, not a second Supabase Auth account. After a valid normal login, `smooth-endpoint` issues an opaque seven-day admin token only for `jdot00` or `jamespropane00`. `dynamic-function` verifies that token on every request. Migration 040 also removes browser read access to password, recovery and email columns. Migration 041 releases expired holds when the store loads and automatically refunds a verified Stripe payment if its ten-minute inventory reservation already expired. Migration 042 adds permanent product slugs, search metadata, GTIN/MPN/category fields, search indexes and connector-neutral eBay/Facebook listing records. Migration 043 adds Spring fulfillment links, migration 044 adds safe promotional Fanvue links, and migration 045 adds private dropship sourcing plus public delivery estimates.
 
 ## 2. Supabase browser configuration
 
@@ -113,3 +113,20 @@ Choose **Fanvue post / profile link** in the admin and paste the public Fanvue p
 These products receive a searchable Faceless Supply page, but every purchase button opens Fanvue in a new tab. Fanvue handles account access, age controls, payment, delivery, and customer records; the product never enters the local cart or Stripe Checkout. Fanvue sales therefore remain in the Fanvue dashboard and do not appear in the Faceless Supply Orders tab.
 
 Keep nudity, sexually explicit imagery, and explicit sales copy off this website. An external link reduces technical exposure but does not guarantee that Stripe will approve the surrounding business. Get written guidance from Stripe or separate the adult-facing brand/domain before expanding this category.
+
+## 11. AliExpress dropshipping
+
+Choose **AliExpress dropship product** in the admin. Paste the exact supplier listing, choose its exact variant, record your private supplier cost, and select a delivery preset. Standard, Choice, and US-warehouse presets fill the ships-from location, service, and estimated business-day range automatically; every field remains editable.
+
+Supplier URLs, costs, variants, product IDs, and ordering notes are stored in the private `product_sources` table. Customers can see only the ships-from location, shipping service, and estimated delivery window. The estimate is repeated on product cards, product pages, the shopping bag, and the verified order page.
+
+When Stripe verifies payment, the order snapshots the supplier details. The Orders tab then provides:
+
+- The private supplier listing and copyable AliExpress product ID.
+- The exact variant and source cost recorded when the customer ordered.
+- A supplier-ready customer shipping address copy button.
+- AliExpress order ID, tracking number, and supplier-status fields.
+
+Before publishing, verify supplier stock, pricing, variants, image rights, tracking availability, packaging, return handling, and the delivery estimate for the destination you serve. Do not promise a faster delivery window than the listing currently supports.
+
+AliExpress offers authorized dropshipping APIs for product information, freight calculation, order placement, order lookup, and tracking. Those APIs require an AliExpress developer application, app credentials, and buyer authorization. The current workflow intentionally avoids scraping and works without those credentials. Once an application is approved, an Edge Function can automate supplier price/stock refresh and order placement while keeping the credentials server-side.

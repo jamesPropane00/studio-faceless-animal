@@ -66,28 +66,37 @@ async function fetchProduct(env, slug) {
   const base = String(env.SUPABASE_URL || '').replace(/\/+$/, '');
   const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY;
   if (!base || !key) return null;
-  const select = [
+  const baseFields = [
     'id', 'slug', 'title', 'description', 'seo_title', 'meta_description',
     'search_keywords', 'brand', 'gtin', 'mpn', 'price_cents', 'quantity',
     'sku', 'condition', 'category', 'shipping_price_cents', 'local_pickup',
     'state', 'product_kind', 'preview_url', 'updated_at',
     'fulfillment_provider', 'external_purchase_url',
     'product_images(public_url,alt_text,sort_order)',
-  ].join(',');
-  const query = new URLSearchParams({
-    select,
-    slug: `eq.${slug}`,
-    published: 'eq.true',
-    state: 'in.(available,reserved)',
-    quantity: 'gt.0',
-    limit: '1',
-  });
-  const response = await fetch(`${base}/rest/v1/products?${query}`, {
-    headers: { apikey: key, Authorization: `Bearer ${key}` },
-  });
-  if (!response.ok) return null;
-  const rows = await response.json();
-  return Array.isArray(rows) ? rows[0] || null : null;
+  ];
+  const requestProduct = async (fields) => {
+    const query = new URLSearchParams({
+      select: fields.join(','),
+      slug: `eq.${slug}`,
+      published: 'eq.true',
+      state: 'in.(available,reserved)',
+      quantity: 'gt.0',
+      limit: '1',
+    });
+    const response = await fetch(`${base}/rest/v1/products?${query}`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    });
+    if (!response.ok) return { ok: false, product: null };
+    const rows = await response.json();
+    return { ok: true, product: Array.isArray(rows) ? rows[0] || null : null };
+  };
+  const enhanced = await requestProduct([
+    ...baseFields,
+    'fulfillment_mode', 'ships_from', 'delivery_min_business_days',
+    'delivery_max_business_days', 'shipping_service',
+  ]);
+  if (enhanced.ok) return enhanced.product;
+  return (await requestProduct(baseFields)).product;
 }
 
 function render(product) {
@@ -112,6 +121,7 @@ function render(product) {
     : '';
   const externalUrl = springUrl || fanvueUrl;
   const digital = !externalUrl && product.product_kind !== 'physical';
+  const dropship = !externalUrl && product.fulfillment_mode === 'dropship';
   const availability = product.state === 'reserved'
     ? 'https://schema.org/LimitedAvailability'
     : 'https://schema.org/InStock';
@@ -192,7 +202,7 @@ function render(product) {
     .shell{padding:clamp(2rem,6vw,5rem) 0 5rem}.breadcrumbs{color:var(--muted);font-size:.72rem;margin-bottom:1.2rem}.breadcrumbs a{text-decoration:none}
     .product{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:clamp(1.4rem,5vw,4rem);align-items:start}.gallery{display:grid;gap:.8rem}.gallery img{display:block;width:100%;max-height:760px;object-fit:cover;border:1px solid var(--line);background:#15131a}.empty-image{aspect-ratio:1;background:#15131a;display:grid;place-items:center;color:#ffffff18;font-size:5rem;font-weight:900}
     .copy{position:sticky;top:100px}.eyebrow{color:var(--gold);font-size:.68rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.copy h1{font-size:clamp(2.4rem,6vw,5.5rem);line-height:.9;letter-spacing:-.065em;margin:.7rem 0 1rem}.price{font-size:1.65rem;font-weight:900;color:var(--gold)}.description{color:var(--muted);line-height:1.8;white-space:pre-wrap}.facts{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:1rem 0;margin:1.5rem 0;display:grid;gap:.45rem;color:var(--muted);font-size:.78rem}.facts strong{color:#fff}.status{display:inline-flex;border:1px solid #72569c;color:#d8c6ff;padding:.38rem .6rem;font-size:.64rem;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
-    .buy{display:block;text-align:center;text-decoration:none;background:linear-gradient(110deg,#7841d2,var(--purple));padding:1rem;border-radius:4px;font-weight:900;margin-top:1rem}.note{font-size:.7rem;color:var(--muted);line-height:1.6}.preview{display:inline-block;color:#d8c6ff;font-weight:800;margin:.7rem 0}
+    .buy{display:block;text-align:center;text-decoration:none;background:linear-gradient(110deg,#7841d2,var(--purple));padding:1rem;border-radius:4px;font-weight:900;margin-top:1rem}.note{font-size:.7rem;color:var(--muted);line-height:1.6}.preview{display:inline-block;color:#d8c6ff;font-weight:800;margin:.7rem 0}.shipping-disclosure{display:grid;gap:.35rem;border:1px solid #4b3b23;background:#17130d;padding:.9rem;margin:1rem 0;color:#e9d3a1;font-size:.78rem;line-height:1.5}.shipping-disclosure span{color:var(--muted)}
     @media(max-width:760px){.product{grid-template-columns:1fr}.copy{position:static}.top-inner,.shell{width:min(100% - 1rem,1120px)}.copy h1{font-size:clamp(2.5rem,14vw,4.5rem)}}
   </style>
 </head>
@@ -205,21 +215,22 @@ function render(product) {
         ? images.map((image, index) => `<img src="${esc(image)}" alt="${esc(index === 0 ? product.title : `${product.title} view ${index + 1}`)}" ${index ? 'loading="lazy"' : ''}>`).join('')
         : '<div class="empty-image" aria-label="Product image coming soon">FA</div>'}</div>
       <div class="copy">
-        <p class="eyebrow">${esc(product.category)} &middot; ${fanvueUrl ? '18+ on Fanvue' : springUrl ? 'Made to order by Spring' : digital ? 'Digital release' : esc(product.condition)}</p>
+        <p class="eyebrow">${esc(product.category)} &middot; ${fanvueUrl ? '18+ on Fanvue' : springUrl ? 'Made to order by Spring' : dropship ? `Ships from ${esc(product.ships_from)}` : digital ? 'Digital release' : esc(product.condition)}</p>
         <h1>${esc(product.title)}</h1>
         <p class="price">${fanvueUrl && Number(product.price_cents) <= 0 ? 'Exclusive access' : `${springUrl ? 'From ' : ''}$${esc(price)}`}</p>
         <span class="status">${fanvueUrl ? 'Available through Fanvue · 18+' : springUrl ? 'Available through Spring' : product.state === 'reserved' ? 'Temporarily reserved' : Number(product.quantity) <= 3 ? `Only ${esc(product.quantity)} left` : 'Available'}</span>
         <p class="description">${esc(product.description)}</p>
+        ${dropship ? `<div class="shipping-disclosure"><strong>Estimated delivery: ${esc(product.delivery_min_business_days)}&ndash;${esc(product.delivery_max_business_days)} business days</strong><span>${esc(product.shipping_service || 'Supplier shipping')} from ${esc(product.ships_from)}. Delivery timing may vary by destination, carrier processing, and customs.</span></div>` : ''}
         ${digital && product.preview_url ? `<a class="preview" href="${esc(safeUrl(product.preview_url))}" rel="noopener" target="_blank">Preview this release &rarr;</a>` : ''}
         <div class="facts">
           <span><strong>Brand:</strong> ${esc(product.brand || 'Faceless Animal Studios')}</span>
           <span><strong>SKU:</strong> ${esc(product.sku)}</span>
           ${product.gtin ? `<span><strong>GTIN:</strong> ${esc(product.gtin)}</span>` : ''}
           ${product.mpn ? `<span><strong>MPN:</strong> ${esc(product.mpn)}</span>` : ''}
-          <span><strong>Delivery:</strong> ${fanvueUrl ? 'Access provided by Fanvue after its age and account checks' : springUrl ? 'Produced and shipped by Spring' : digital ? 'Protected download after verified payment' : product.local_pickup ? 'Shipping or local pickup' : 'Shipping'}</span>
+          <span><strong>Delivery:</strong> ${fanvueUrl ? 'Access provided by Fanvue after its age and account checks' : springUrl ? 'Produced and shipped by Spring' : dropship ? `Ships directly from a fulfillment supplier in ${esc(product.ships_from)}` : digital ? 'Protected download after verified payment' : product.local_pickup ? 'Shipping or local pickup' : 'Shipping'}</span>
         </div>
         <a class="buy" href="${esc(externalUrl || storeUrl)}" ${externalUrl ? 'target="_blank" rel="noopener"' : ''}>${fanvueUrl ? 'View and unlock on Fanvue (18+)' : springUrl ? 'Choose options and buy on Spring' : 'Buy securely on Faceless Supply'}</a>
-        <p class="note">${fanvueUrl ? 'Fanvue handles sign-in, age controls, payment, content access, and customer support. This item does not use the Faceless Supply Stripe checkout.' : springUrl ? 'Spring handles product options, payment, production, shipping, returns, and customer support for this item.' : 'Prices and inventory are verified by the server before Stripe Checkout opens.'}</p>
+        <p class="note">${fanvueUrl ? 'Fanvue handles sign-in, age controls, payment, content access, and customer support. This item does not use the Faceless Supply Stripe checkout.' : springUrl ? 'Spring handles product options, payment, production, shipping, returns, and customer support for this item.' : dropship ? 'This item is fulfilled by a third-party supplier. Faceless Animal Studios remains your seller and customer-service contact.' : 'Prices and inventory are verified by the server before Stripe Checkout opens.'}</p>
       </div>
     </article>
   </main>

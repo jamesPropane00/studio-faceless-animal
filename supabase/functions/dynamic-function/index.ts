@@ -60,6 +60,21 @@ const fanvueUrl = (value: unknown) => {
     return null;
   }
 };
+const aliexpressUrl = (value: unknown) => {
+  try {
+    const url = new URL(String(value ?? "").trim());
+    const host = url.hostname.toLowerCase();
+    if (
+      url.protocol !== "https:" ||
+      !(host === "aliexpress.com" || host.endsWith(".aliexpress.com") ||
+        host === "aliexpress.us" || host.endsWith(".aliexpress.us"))
+    ) return null;
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return null;
+  }
+};
 const decodeEscaped = (value: string) => {
   try {
     return JSON.parse(`"${value.replace(/"/g, '\\"')}"`);
@@ -104,7 +119,7 @@ Deno.serve(async (req) => {
 
       case "list_products": {
         const { data, error } = await admin.from("products")
-          .select("*,product_images(*)").order("created_at", { ascending: false });
+          .select("*,product_images(*),product_sources(*)").order("created_at", { ascending: false });
         if (error) throw error;
         return reply({ products: data ?? [] });
       }
@@ -115,7 +130,12 @@ Deno.serve(async (req) => {
           customer_email,customer_name,customer_phone,shipping_address,
           subtotal_cents,shipping_cents,total_cents,currency,
           created_at,updated_at,paid_at,
-          order_items(id,title,sku,unit_price_cents,quantity,shipping_price_cents,image_url,product_kind)
+          order_items(
+            id,title,sku,unit_price_cents,quantity,shipping_price_cents,image_url,product_kind,
+            fulfillment_mode,ships_from,delivery_min_business_days,delivery_max_business_days,shipping_service,
+            supplier_name,supplier_product_url,supplier_product_id,supplier_variant,supplier_cost_cents,supplier_notes,
+            supplier_order_id,supplier_tracking_number,supplier_status
+          )
         `).order("created_at", { ascending: false });
         if (body.status) query = query.eq("status", String(body.status));
         const { data, error } = await query;
@@ -186,6 +206,14 @@ Deno.serve(async (req) => {
         const isSpring = provider === "spring";
         const isFanvue = provider === "fanvue";
         const isExternal = isSpring || isFanvue;
+        const fulfillmentMode = String(input.fulfillment_mode ?? "stocked");
+        if (!["stocked", "dropship"].includes(fulfillmentMode)) {
+          return reply({ error: "Invalid fulfillment mode" }, 400);
+        }
+        const isDropship = fulfillmentMode === "dropship";
+        if (isDropship && (provider !== "internal" || kind !== "physical")) {
+          return reply({ error: "Dropship listings must be physical products sold through this store." }, 400);
+        }
         const purchaseUrl = isSpring
           ? springUrl(input.external_purchase_url)
           : isFanvue ? fanvueUrl(input.external_purchase_url) : null;
@@ -232,6 +260,31 @@ Deno.serve(async (req) => {
         if (isDigital && (!input.download_storage_path || !input.download_filename)) {
           return reply({ error: "Digital products require a protected download file" }, 400);
         }
+        const deliveryMinValue = Number(input.delivery_min_business_days);
+        const deliveryMaxValue = Number(input.delivery_max_business_days);
+        const deliveryMin = isDropship ? deliveryMinValue : null;
+        const deliveryMax = isDropship ? deliveryMaxValue : null;
+        const shipsFrom = isDropship ? String(input.ships_from ?? "").trim().slice(0, 80) : null;
+        if (
+          isDropship &&
+          (!Number.isInteger(deliveryMinValue) || !Number.isInteger(deliveryMaxValue) ||
+            deliveryMinValue < 1 || deliveryMinValue > 90 ||
+            deliveryMaxValue < deliveryMinValue || deliveryMaxValue > 120 ||
+            !shipsFrom || shipsFrom.length < 2)
+        ) {
+          return reply({ error: "Enter a valid ships-from location and delivery window." }, 400);
+        }
+        const sourceInput = body.source ?? {};
+        const supplierUrl = isDropship ? aliexpressUrl(sourceInput.supplier_product_url) : null;
+        if (isDropship && !supplierUrl) {
+          return reply({ error: "Paste a valid AliExpress product URL." }, 400);
+        }
+        const sourceCost = isDropship && sourceInput.supplier_cost_cents !== null &&
+          sourceInput.supplier_cost_cents !== undefined
+          ? Number(sourceInput.supplier_cost_cents) : null;
+        if (sourceCost !== null && (!Number.isInteger(sourceCost) || sourceCost < 0)) {
+          return reply({ error: "Supplier cost must be a valid amount." }, 400);
+        }
         const product = {
           id, title, sku, product_kind: kind, state,
           description,
@@ -253,8 +306,13 @@ Deno.serve(async (req) => {
           external_purchase_url: purchaseUrl,
           external_listing_id: isSpring ? cleanOptional(input.external_listing_id, 80) : null,
           content_rating: isFanvue ? "mature_external" : "general",
+          fulfillment_mode: fulfillmentMode,
+          ships_from: shipsFrom,
+          delivery_min_business_days: deliveryMin,
+          delivery_max_business_days: deliveryMax,
+          shipping_service: isDropship ? cleanOptional(input.shipping_service, 100) : null,
           shipping_price_cents: (isDigital || isExternal) ? 0 : Math.max(0, Number(input.shipping_price_cents) || 0),
-          local_pickup: !isDigital && !isExternal && Boolean(input.local_pickup),
+          local_pickup: !isDigital && !isExternal && !isDropship && Boolean(input.local_pickup),
           published: Boolean(input.published),
           preview_url: isDigital ? (String(input.preview_url ?? "") || null) : null,
           download_storage_path: isDigital ? String(input.download_storage_path) : null,
@@ -263,6 +321,23 @@ Deno.serve(async (req) => {
         };
         const { data, error } = await admin.from("products").upsert(product).select().single();
         if (error) throw error;
+        if (isDropship) {
+          const sourceProductId = cleanOptional(sourceInput.supplier_product_id, 100) ??
+            supplierUrl!.match(/\/item\/(\d+)\.html/i)?.[1] ?? null;
+          const { error: sourceError } = await admin.from("product_sources").upsert({
+            product_id: id,
+            supplier_name: "AliExpress",
+            supplier_product_url: supplierUrl,
+            supplier_product_id: sourceProductId,
+            supplier_variant: cleanOptional(sourceInput.supplier_variant, 240),
+            supplier_cost_cents: sourceCost,
+            supplier_notes: cleanOptional(sourceInput.supplier_notes, 2000),
+          });
+          if (sourceError) throw sourceError;
+        } else {
+          const { error: sourceDeleteError } = await admin.from("product_sources").delete().eq("product_id", id);
+          if (sourceDeleteError) throw sourceDeleteError;
+        }
         const images = Array.isArray(body.images) ? body.images.slice(0, 12) : [];
         if (images.length) {
           const rows = images.map((image: Record<string, unknown>, index: number) => ({
@@ -317,6 +392,26 @@ Deno.serve(async (req) => {
           return reply({ error: "That order transition is not allowed" }, 400);
         }
         const { error } = await admin.from("orders").update({ status }).eq("id", String(body.order_id));
+        if (error) throw error;
+        return reply({ ok: true });
+      }
+
+      case "update_dropship_fulfillment": {
+        const itemId = String(body.order_item_id ?? "");
+        if (!/^[0-9a-f-]{36}$/i.test(itemId)) return reply({ error: "Invalid order item" }, 400);
+        const supplierStatus = String(body.supplier_status ?? "");
+        if (!["awaiting_purchase", "ordered", "shipped", "delivered", "canceled"].includes(supplierStatus)) {
+          return reply({ error: "Invalid supplier status" }, 400);
+        }
+        const { data: item, error: itemError } = await admin.from("order_items")
+          .select("id,fulfillment_mode").eq("id", itemId).single();
+        if (itemError) throw itemError;
+        if (item.fulfillment_mode !== "dropship") return reply({ error: "That item is not dropshipped." }, 400);
+        const { error } = await admin.from("order_items").update({
+          supplier_status: supplierStatus,
+          supplier_order_id: cleanOptional(body.supplier_order_id, 160),
+          supplier_tracking_number: cleanOptional(body.supplier_tracking_number, 240),
+        }).eq("id", itemId);
         if (error) throw error;
         return reply({ ok: true });
       }

@@ -13,6 +13,13 @@ const excerpt = (value, limit = 155) => {
   if (text.length <= limit) return text;
   return `${text.slice(0, limit - 1).replace(/\s+\S*$/, "")}…`;
 };
+const sourceFor = (product) => Array.isArray(product?.product_sources)
+  ? product.product_sources[0] : product?.product_sources || null;
+const deliveryPresets = {
+  standard: { min: 15, max: 30, from: "China", service: "AliExpress Standard Shipping" },
+  choice: { min: 7, max: 15, from: "China", service: "AliExpress Choice" },
+  us_warehouse: { min: 5, max: 10, from: "United States", service: "US warehouse shipping" },
+};
 let session = null;
 let products = [];
 let orders = [];
@@ -64,17 +71,23 @@ function showKindFields() {
   const selectedKind = $("#product-kind").value;
   const spring = selectedKind === "spring";
   const fanvue = selectedKind === "fanvue";
+  const dropship = selectedKind === "dropship";
   const external = spring || fanvue;
   const digital = selectedKind === "music_download" || selectedKind === "file_download";
   $("#physical-fields").classList.toggle("hidden", digital || external);
   $("#digital-fields").classList.toggle("hidden", !digital);
   $("#spring-fields").classList.toggle("hidden", !spring);
   $("#fanvue-fields").classList.toggle("hidden", !fanvue);
+  $("#dropship-fields").classList.toggle("hidden", !dropship);
+  $("#local-pickup-control").classList.toggle("hidden", dropship);
+  if (dropship) $("#product-form").elements.local_pickup.checked = false;
   $("#photo-help").textContent = fanvue
     ? "Upload only non-explicit promotional images that are safe for a general audience."
     : spring
       ? "The main Spring product image imports automatically. You may upload extra promotional images."
-      : "Select several photos at once from your phone. The first image is the main image.";
+      : dropship
+        ? "Upload your own licensed product images. The first image is the main storefront image."
+        : "Select several photos at once from your phone. The first image is the main image.";
   if (external && !$("#product-form").elements.quantity.value) {
     $("#product-form").elements.quantity.value = "1";
   }
@@ -82,6 +95,35 @@ function showKindFields() {
   $("#product-form").elements.download_file.required = digital && !current?.download_storage_path;
 }
 $("#product-kind").onchange = showKindFields;
+
+$("#delivery-preset").onchange = (event) => {
+  const preset = deliveryPresets[event.target.value];
+  if (!preset) return;
+  const form = $("#product-form");
+  form.elements.delivery_min_business_days.value = String(preset.min);
+  form.elements.delivery_max_business_days.value = String(preset.max);
+  form.elements.ships_from.value = preset.from;
+  form.elements.shipping_service.value = preset.service;
+};
+$("#product-form").elements.supplier_product_url.addEventListener("input", (event) => {
+  const value = String(event.target.value || "");
+  $("#open-supplier-source").href = value.startsWith("https://") ? value : "https://www.aliexpress.com/";
+  const match = String(event.target.value).match(/\/item\/(\d+)\.html/i);
+  if (match && !$("#product-form").elements.supplier_product_id.value) {
+    $("#product-form").elements.supplier_product_id.value = match[1];
+  }
+});
+$("#copy-supplier-source").onclick = async () => {
+  const value = $("#product-form").elements.supplier_product_url.value;
+  if (!value) return;
+  try {
+    await navigator.clipboard.writeText(value);
+    $("#copy-supplier-source").textContent = "Copied";
+    setTimeout(() => { $("#copy-supplier-source").textContent = "Copy source URL"; }, 1200);
+  } catch {
+    alert("Could not copy the supplier URL.");
+  }
+};
 
 $("#import-spring").onclick = async () => {
   const form = $("#product-form");
@@ -124,10 +166,14 @@ async function loadProducts() {
       const provider = product.fulfillment_provider || "internal";
       const typeLabel = provider === "spring"
         ? "Spring fulfillment"
-        : provider === "fanvue" ? "Fanvue link · 18+" : safe(product.product_kind?.replaceAll("_", " ") || "physical");
+        : provider === "fanvue" ? "Fanvue link · 18+"
+          : product.fulfillment_mode === "dropship" ? "AliExpress dropship" : safe(product.product_kind?.replaceAll("_", " ") || "physical");
       const inventoryLabel = provider === "spring"
         ? "inventory on Spring"
-        : provider === "fanvue" ? "access on Fanvue" : `${product.quantity} available · ${product.state}`;
+        : provider === "fanvue" ? "access on Fanvue"
+          : product.fulfillment_mode === "dropship"
+            ? `${product.delivery_min_business_days}–${product.delivery_max_business_days} business days`
+            : `${product.quantity} available · ${product.state}`;
       return `
       <article class="admin-row"><div><strong>${safe(product.title)}</strong>
         <p>${safe(product.sku)} · ${typeLabel} · ${money(product.price_cents)} · ${inventoryLabel} · ${product.published ? "published" : "hidden"}</p>
@@ -162,6 +208,7 @@ $("#product-form").onsubmit = async (event) => {
   const kind = String(form.get("product_kind"));
   const isSpring = kind === "spring";
   const isFanvue = kind === "fanvue";
+  const isDropship = kind === "dropship";
   const isExternal = isSpring || isFanvue;
   const isDigital = kind === "music_download" || kind === "file_download";
   const downloadFile = form.get("download_file");
@@ -211,10 +258,15 @@ $("#product-form").onsubmit = async (event) => {
         quantity: isExternal ? 1 : Number(form.get("quantity")),
         condition: form.get("condition"), category: form.get("category"),
         shipping_price_cents: Math.round(Number(form.get("shipping_price") || 0) * 100),
-        local_pickup: form.get("local_pickup") === "on",
+        local_pickup: !isDropship && form.get("local_pickup") === "on",
         published: form.get("published") === "on",
-        product_kind: isExternal ? "physical" : kind,
+        product_kind: isExternal || isDropship ? "physical" : kind,
         fulfillment_provider: isSpring ? "spring" : isFanvue ? "fanvue" : "internal",
+        fulfillment_mode: isDropship ? "dropship" : "stocked",
+        ships_from: isDropship ? form.get("ships_from") : null,
+        delivery_min_business_days: isDropship ? Number(form.get("delivery_min_business_days")) : null,
+        delivery_max_business_days: isDropship ? Number(form.get("delivery_max_business_days")) : null,
+        shipping_service: isDropship ? form.get("shipping_service") : null,
         external_purchase_url: isSpring ? form.get("external_purchase_url") : isFanvue ? form.get("fanvue_url") : null,
         external_listing_id: isSpring ? form.get("external_listing_id") : null,
         preview_is_safe: isFanvue && form.get("fanvue_preview_safe") === "on",
@@ -222,6 +274,13 @@ $("#product-form").onsubmit = async (event) => {
         download_storage_path: download.path, download_filename: download.filename,
         download_mime_type: download.mime,
       },
+      source: isDropship ? {
+        supplier_product_url: form.get("supplier_product_url"),
+        supplier_product_id: form.get("supplier_product_id") || null,
+        supplier_variant: form.get("supplier_variant") || null,
+        supplier_cost_cents: form.get("supplier_cost") === "" ? null : Math.round(Number(form.get("supplier_cost")) * 100),
+        supplier_notes: form.get("supplier_notes") || null,
+      } : null,
       images: imageRecords,
     });
     resetProductForm();
@@ -237,10 +296,25 @@ function editProduct(product) {
     form.elements[key].value = product[key] || "";
   }
   const provider = product.fulfillment_provider || "internal";
-  form.elements.product_kind.value = provider === "spring" ? "spring" : provider === "fanvue" ? "fanvue" : (product.product_kind || "physical");
+  form.elements.product_kind.value = provider === "spring"
+    ? "spring"
+    : provider === "fanvue" ? "fanvue"
+      : product.fulfillment_mode === "dropship" ? "dropship" : (product.product_kind || "physical");
   form.elements.external_purchase_url.value = provider === "spring" ? (product.external_purchase_url || "") : "";
   form.elements.fanvue_url.value = provider === "fanvue" ? (product.external_purchase_url || "") : "";
   form.elements.fanvue_preview_safe.checked = provider === "fanvue";
+  const source = sourceFor(product);
+  form.elements.supplier_product_url.value = source?.supplier_product_url || "";
+  $("#open-supplier-source").href = source?.supplier_product_url || "https://www.aliexpress.com/";
+  form.elements.supplier_product_id.value = source?.supplier_product_id || "";
+  form.elements.supplier_variant.value = source?.supplier_variant || "";
+  form.elements.supplier_cost.value = source?.supplier_cost_cents == null ? "" : (source.supplier_cost_cents / 100).toFixed(2);
+  form.elements.supplier_notes.value = source?.supplier_notes || "";
+  form.elements.ships_from.value = product.ships_from || "China";
+  form.elements.delivery_min_business_days.value = product.delivery_min_business_days || 15;
+  form.elements.delivery_max_business_days.value = product.delivery_max_business_days || 30;
+  form.elements.shipping_service.value = product.shipping_service || "AliExpress Standard Shipping";
+  form.elements.delivery_preset.value = "custom";
   importedSpringImage = null;
   form.elements.price.value = (product.price_cents / 100).toFixed(2);
   form.elements.shipping_price.value = (product.shipping_price_cents / 100).toFixed(2);
@@ -275,6 +349,12 @@ function resetProductForm() {
   $("#product-kind").value = "physical";
   importedSpringImage = null;
   $("#product-form").elements.fanvue_preview_safe.checked = false;
+  $("#product-form").elements.delivery_preset.value = "standard";
+  $("#product-form").elements.ships_from.value = "China";
+  $("#product-form").elements.delivery_min_business_days.value = "15";
+  $("#product-form").elements.delivery_max_business_days.value = "30";
+  $("#product-form").elements.shipping_service.value = "AliExpress Standard Shipping";
+  $("#open-supplier-source").href = "https://www.aliexpress.com/";
   $("#spring-import-status").textContent = "Paste a public Spring listing and import its title, price, description, and main image.";
   showKindFields();
   updateSearchPreview();
@@ -293,6 +373,17 @@ function formatAddress(address) {
     address.country,
   ].filter(Boolean).join(" · ");
 }
+function formatAddressForSupplier(address, customerName, phone) {
+  if (!address) return "";
+  return [
+    customerName,
+    address.line1,
+    address.line2,
+    [address.city, address.state, address.postal_code].filter(Boolean).join(", "),
+    address.country,
+    phone,
+  ].filter(Boolean).join("\n");
+}
 function updateSalesSummary() {
   const sales = orders.filter((order) => confirmedStatuses.has(order.status));
   $("#sales-count").textContent = String(sales.length);
@@ -309,12 +400,18 @@ function renderOrders() {
     if (!search) return true;
     const haystack = [
       order.order_number, order.customer_name, order.customer_email, order.customer_phone,
-      ...order.order_items.flatMap((item) => [item.title, item.sku]),
+      ...order.order_items.flatMap((item) => [
+        item.title, item.sku, item.supplier_order_id, item.supplier_tracking_number,
+        item.supplier_product_id, item.supplier_variant,
+      ]),
     ].join(" ").toLowerCase();
     return haystack.includes(search);
   });
   $("#order-list").innerHTML = visible.map((order) => {
     const address = formatAddress(order.shipping_address);
+    const supplierAddress = formatAddressForSupplier(
+      order.shipping_address, order.customer_name, order.customer_phone,
+    );
     const paidDate = order.paid_at ? `Paid ${formatDate(order.paid_at)}` : "Payment not confirmed";
     return `
       <article class="order-card">
@@ -331,7 +428,7 @@ function renderOrders() {
           </section>
           <section class="order-box">
             <h4>${order.fulfillment_method === "shipping" ? "Shipping" : order.fulfillment_method === "pickup" ? "Local pickup" : "Digital delivery"}</h4>
-            <p>${address ? `${safe(address)} <button class="copy-button" type="button" data-copy="${safe(address)}">Copy</button>` : order.fulfillment_method === "digital" ? "Download delivered after verified payment." : "No shipping address required."}</p>
+            <p>${address ? `${safe(address)} <button class="copy-button" type="button" data-copy="${safe(supplierAddress)}">Copy supplier address</button>` : order.fulfillment_method === "digital" ? "Download delivered after verified payment." : "No shipping address required."}</p>
             <p>Subtotal ${money(order.subtotal_cents)} · Shipping ${money(order.shipping_cents)}</p>
           </section>
           <section class="order-box order-items">
@@ -339,8 +436,27 @@ function renderOrders() {
             ${order.order_items.map((item) => `
               <div class="order-item">
                 ${item.image_url ? `<img src="${safe(item.image_url)}" alt="">` : "<span></span>"}
-                <div><strong>${item.quantity}× ${safe(item.title)}</strong><small>SKU ${safe(item.sku)} · ${money(item.unit_price_cents)} each</small></div>
+                <div><strong>${item.quantity}× ${safe(item.title)}</strong><small>SKU ${safe(item.sku)} · ${money(item.unit_price_cents)} each${item.fulfillment_mode === "dropship" ? ` · ${safe(item.delivery_min_business_days)}–${safe(item.delivery_max_business_days)} business days` : ""}</small></div>
                 <strong>${money(item.unit_price_cents * item.quantity)}</strong>
+                ${item.fulfillment_mode === "dropship" ? `
+                  <div class="dropship-source">
+                    <h5>AliExpress fulfillment · ${safe(item.supplier_status?.replaceAll("_", " ") || "awaiting purchase")}</h5>
+                    <p><a href="${safe(item.supplier_product_url)}" target="_blank" rel="noopener">Open supplier listing ↗</a>
+                      <button class="copy-button" type="button" data-copy="${safe(item.supplier_product_url)}">Copy URL</button>
+                      ${item.supplier_product_id ? `<button class="copy-button" type="button" data-copy="${safe(item.supplier_product_id)}">Copy product ID</button>` : ""}
+                      ${supplierAddress ? `<button class="copy-button" type="button" data-copy="${safe(supplierAddress)}">Copy customer address</button>` : ""}
+                    </p>
+                    <p>${item.supplier_variant ? `<strong>Variant:</strong> ${safe(item.supplier_variant)} · ` : ""}<strong>Ships from:</strong> ${safe(item.ships_from || "Supplier")} · <strong>Service:</strong> ${safe(item.shipping_service || "Supplier shipping")}${item.supplier_cost_cents == null ? "" : ` · <strong>Source cost:</strong> ${money(item.supplier_cost_cents)}`}</p>
+                    ${item.supplier_notes ? `<p><strong>Private notes:</strong> ${safe(item.supplier_notes)}</p>` : ""}
+                    <div class="dropship-source-grid">
+                      <label class="field-label"><span>Supplier status</span><select data-supplier-status="${item.id}">
+                        ${["awaiting_purchase","ordered","shipped","delivered","canceled"].map((value) => `<option value="${value}" ${item.supplier_status === value ? "selected" : ""}>${value.replaceAll("_", " ")}</option>`).join("")}
+                      </select></label>
+                      <label class="field-label"><span>AliExpress order ID</span><input data-supplier-order="${item.id}" value="${safe(item.supplier_order_id || "")}" placeholder="Order ID"></label>
+                      <label class="field-label"><span>Tracking number</span><input data-supplier-tracking="${item.id}" value="${safe(item.supplier_tracking_number || "")}" placeholder="Tracking number"></label>
+                    </div>
+                    <div class="admin-actions"><button type="button" data-save-dropship="${item.id}">Save supplier fulfillment</button></div>
+                  </div>` : ""}
               </div>`).join("")}
           </section>
         </div>
@@ -375,6 +491,25 @@ document.addEventListener("change", async (event) => {
   }
 });
 document.addEventListener("click", async (event) => {
+  const saveDropship = event.target.closest("[data-save-dropship]");
+  if (saveDropship) {
+    const itemId = saveDropship.dataset.saveDropship;
+    saveDropship.disabled = true;
+    try {
+      await api("update_dropship_fulfillment", {
+        order_item_id: itemId,
+        supplier_status: document.querySelector(`[data-supplier-status="${itemId}"]`).value,
+        supplier_order_id: document.querySelector(`[data-supplier-order="${itemId}"]`).value,
+        supplier_tracking_number: document.querySelector(`[data-supplier-tracking="${itemId}"]`).value,
+      });
+      saveDropship.textContent = "Saved";
+      setTimeout(loadOrders, 700);
+    } catch (error) {
+      alert(error.message);
+      saveDropship.disabled = false;
+    }
+    return;
+  }
   const button = event.target.closest("[data-copy]");
   if (!button) return;
   try {

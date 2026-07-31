@@ -37,7 +37,7 @@ async function check() {
   document.querySelector("#result-title").textContent = paid
     ? `Payment verified · ${result.order_number}` : `Payment status: ${result.status}`;
   document.querySelector("#order-result").innerHTML = `
-    <p>${result.items.map((item) => `${item.quantity}× ${safe(item.title)} — ${money(item.unit_price_cents * item.quantity)}`).join("<br>")}</p>
+    <p>${result.items.map((item) => `${item.quantity}× ${safe(item.title)} — ${money(item.unit_price_cents * item.quantity)}${item.fulfillment_mode === "dropship" ? `<br><small>Estimated delivery: ${safe(item.delivery_min_business_days)}–${safe(item.delivery_max_business_days)} business days from ${safe(item.ships_from)}. Timing may vary by destination and customs.${item.tracking_number ? `<br>Tracking: ${safe(item.tracking_number)}` : ""}</small>` : ""}`).join("<br>")}</p>
     <p><strong>${money(result.total_cents)}</strong> · ${fulfillment}</p>
     <p>Status: <strong>${result.status}</strong></p>
     ${paid && result.status !== "refunded" ? await loadDownloads() : ""}`;
