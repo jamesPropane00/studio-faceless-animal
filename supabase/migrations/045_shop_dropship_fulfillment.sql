@@ -2,11 +2,16 @@
 -- supplier purchasing details stay private and are snapshotted onto each order.
 
 alter table public.products
+  add column if not exists content_rating text not null default 'general',
   add column if not exists fulfillment_mode text not null default 'stocked',
   add column if not exists ships_from text,
   add column if not exists delivery_min_business_days smallint,
   add column if not exists delivery_max_business_days smallint,
   add column if not exists shipping_service text;
+
+alter table public.products drop constraint if exists products_content_rating;
+alter table public.products add constraint products_content_rating
+  check (content_rating in ('general', 'mature_external'));
 
 alter table public.products drop constraint if exists products_fulfillment_mode;
 alter table public.products add constraint products_fulfillment_mode
