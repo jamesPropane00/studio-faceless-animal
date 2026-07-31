@@ -188,6 +188,48 @@ async function loadProducts() {
 function cleanFilename(name) {
   return String(name).replace(/[^a-z0-9._-]/gi, "-");
 }
+function isAvif(file) {
+  return file?.type === "image/avif" || /\.avif$/i.test(file?.name || "");
+}
+async function convertAvifToJpeg(file) {
+  if (!isAvif(file)) return file;
+  let bitmap;
+  let objectUrl;
+  try {
+    if ("createImageBitmap" in window) {
+      bitmap = await createImageBitmap(file);
+    } else {
+      objectUrl = URL.createObjectURL(file);
+      bitmap = await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("This browser cannot read that AVIF image."));
+        image.src = objectUrl;
+      });
+    }
+    const maxDimension = 3000;
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Image conversion is unavailable in this browser.");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(bitmap, 0, 0, width, height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.92));
+    if (!blob) throw new Error("The AVIF image could not be converted.");
+    const jpegName = (file.name || "product-image").replace(/\.avif$/i, "") + ".jpg";
+    return new File([blob], jpegName, { type: "image/jpeg", lastModified: file.lastModified });
+  } catch (error) {
+    throw new Error(`${error.message || "The AVIF image could not be read."} Convert it to JPG or PNG and try again.`);
+  } finally {
+    if (bitmap?.close) bitmap.close();
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+  }
+}
 async function uploadFile(bucket, productId, file) {
   const signed = await api("create_upload_url", {
     bucket, product_id: productId, filename: cleanFilename(file.name), size: file.size,
@@ -235,7 +277,8 @@ $("#product-form").onsubmit = async (event) => {
     if (isFanvue && !images.length && !existing?.product_images?.length) {
       throw new Error("Upload a non-explicit promotional image for this Fanvue listing.");
     }
-    for (const [index, file] of images.entries()) {
+    for (const [index, originalFile] of images.entries()) {
+      const file = await convertAvifToJpeg(originalFile);
       const path = await uploadFile("product-images", productId, file);
       const { data: publicData } = supabase.storage.from("product-images").getPublicUrl(path);
       imageRecords.push({

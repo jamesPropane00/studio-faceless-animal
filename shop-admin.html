@@ -167,8 +167,8 @@
 
           <label class="field-label wide">
             <span>Product photos / cover art</span>
-            <input name="images" type="file" accept="image/*" multiple>
-            <small id="photo-help">Select several photos at once from your phone. The first image is the main image.</small>
+            <input name="images" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif,.avif" multiple>
+            <small id="photo-help">Select several photos at once from your phone. AVIF photos are converted to JPG automatically. The first image is the main image.</small>
           </label>
 
           <div id="seo-preview" class="search-preview wide">
@@ -212,6 +212,6 @@
   </main>
   <script>window.__FAS_CONFIG=window.__FAS_CONFIG||{}</script>
   <script src="/assets/js/env.js" onerror="void 0"></script>
-  <script type="module" src="/assets/js/shop-admin.js?v=20260731-dropship"></script>
+  <script type="module" src="/assets/js/shop-admin.js?v=20260731-avif"></script>
 </body>
 </html>
