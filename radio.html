@@ -701,10 +701,71 @@
     }
     .rp-player-card {
       margin: 0;
+      position: relative;
+      isolation: isolate;
       background:
         radial-gradient(circle at 100% 0%, rgba(33,244,208,0.12), transparent 36%),
         rgba(17,18,24,0.96);
       overflow: hidden;
+    }
+    .rp-player-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(circle at 18% 34%, rgba(33,244,208,0.23), transparent 23%),
+        radial-gradient(circle at 80% 25%, rgba(255,47,79,0.2), transparent 25%),
+        radial-gradient(circle at 50% 76%, rgba(139,92,246,0.28), transparent 34%),
+        conic-gradient(from 210deg at 50% 65%, transparent 0 13%, rgba(33,244,208,0.09) 15%, transparent 18% 43%, rgba(255,47,79,0.08) 46%, transparent 50% 100%),
+        #070811;
+      background-size: 125% 125%, 130% 130%, 115% 115%, 145% 145%, auto;
+      animation: rp-projectm-drift 12s ease-in-out infinite alternate;
+    }
+    .rp-player-card::after {
+      content: "";
+      position: absolute;
+      left: -15%;
+      right: -15%;
+      bottom: -18%;
+      height: 66%;
+      z-index: -1;
+      opacity: 0.34;
+      transform: perspective(420px) rotateX(58deg);
+      transform-origin: center bottom;
+      background-image:
+        linear-gradient(rgba(33,244,208,0.28) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(167,139,250,0.25) 1px, transparent 1px);
+      background-size: 34px 28px;
+      mask-image: linear-gradient(to top, #000 25%, transparent 100%);
+      animation: rp-projectm-grid 4s linear infinite;
+      pointer-events: none;
+    }
+    .rp-player-card > * {
+      position: relative;
+      z-index: 1;
+    }
+    .rp-boombox-header,
+    .rp-station-nav,
+    .rp-controls,
+    .rp-ctrl-now-playing,
+    .rp-repeat-row,
+    .rp-vol-bar {
+      backdrop-filter: blur(8px);
+    }
+    @keyframes rp-projectm-drift {
+      0% { background-position: 0% 15%, 100% 0%, 50% 100%, 40% 50%, 0 0; filter: hue-rotate(0deg); }
+      100% { background-position: 20% 0%, 80% 22%, 58% 78%, 58% 42%, 0 0; filter: hue-rotate(22deg); }
+    }
+    @keyframes rp-projectm-grid {
+      from { background-position: 0 0, 0 0; }
+      to { background-position: 0 28px, 34px 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .rp-player-card::before,
+      .rp-player-card::after {
+        animation: none;
+      }
     }
 
     /* Boombox header */
