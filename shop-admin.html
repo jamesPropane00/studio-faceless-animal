@@ -296,6 +296,13 @@
     </section>
   </main>
   <script>window.__FAS_CONFIG=window.__FAS_CONFIG||{}</script>
+  <script>
+    try {
+      if (!localStorage.getItem('fas_user') && localStorage.getItem('fas_member')) {
+        localStorage.setItem('fas_user', localStorage.getItem('fas_member'));
+      }
+    } catch (_) {}
+  </script>
   <script src="/assets/js/env.js" onerror="void 0"></script>
   <script type="module" src="/assets/js/shop-admin.js?v=20260801-cj-tiktok"></script>
   <script type="module" src="/assets/js/neon-dreams-admin.js?v=20260801-character-files"></script>

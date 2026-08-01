@@ -94,33 +94,66 @@
   'use strict';
 
   function getSession() {
-    try { return JSON.parse(localStorage.getItem('fas_user') || 'null'); } catch(e) { return null; }
+    try {
+      return JSON.parse(localStorage.getItem('fas_user') || localStorage.getItem('fas_member') || 'null');
+    } catch(e) { return null; }
   }
 
-  function rootHref(target) {
-    return '/' + String(target || '').replace(/^\/+/, '');
+  function sessionUsername(session) {
+    return String(
+      session && (session.username || session.user_name || session.handle || session.profile && session.profile.username) || ''
+    ).trim().replace(/^@/, '').toLowerCase();
   }
 
-  function hasAdminAccessRole(role) {
-    var normalized = String(role || '').toLowerCase();
-    return normalized === 'super_admin' || normalized === 'admin';
+  function clearSession() {
+    localStorage.removeItem('fas_user');
+    localStorage.removeItem('fas_member');
   }
 
-  function armSingleNavigation(link) {
-    if (!link || link.dataset.navGuardBound === '1') return;
-    link.dataset.navGuardBound = '1';
-    link.addEventListener('click', function(e) {
-      if (link.dataset.navPending === '1') {
-        e.preventDefault();
-        return;
-      }
-      link.dataset.navPending = '1';
-      link.style.pointerEvents = 'none';
-      link.setAttribute('aria-disabled', 'true');
+  function authClick(event) {
+    if (!getSession()) return;
+    event.preventDefault();
+    clearSession();
+    window.dispatchEvent(new CustomEvent('fas:session-changed'));
+    location.href = '/index.html';
+  }
+
+  function initSessionNav() {
+    var session = getSession();
+    var signedIn = Boolean(session && sessionUsername(session));
+    var label = signedIn ? 'Log Out' : 'Sign In';
+
+    document.querySelectorAll('a[href$="login.html"], a[href*="login.html?"]').forEach(function(link) {
+      link.textContent = label;
+      link.href = signedIn ? '#logout' : '/login.html';
+      link.removeEventListener('click', authClick);
+      if (signedIn) link.addEventListener('click', authClick);
     });
+
+    var chip = document.getElementById('fas-global-auth');
+    if (!chip) {
+      chip = document.createElement('a');
+      chip.id = 'fas-global-auth';
+      chip.className = 'fas-global-auth';
+      document.body.appendChild(chip);
+    }
+    chip.textContent = label;
+    chip.href = signedIn ? '#logout' : '/login.html';
+    chip.setAttribute('aria-label', signedIn ? 'Log out of Faceless Animal Studios' : 'Sign in to Faceless Animal Studios');
+    chip.removeEventListener('click', authClick);
+    if (signedIn) chip.addEventListener('click', authClick);
+
+    if (!document.getElementById('fas-global-auth-style')) {
+      var style = document.createElement('style');
+      style.id = 'fas-global-auth-style';
+      style.textContent = '.fas-global-auth{position:fixed;top:10px;right:12px;z-index:10050;display:inline-flex;align-items:center;min-height:30px;padding:5px 10px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(8,8,13,.72);color:#fff!important;font:700 11px/1 Inter,system-ui,sans-serif;letter-spacing:.04em;text-decoration:none!important;box-shadow:0 8px 26px rgba(0,0,0,.28);backdrop-filter:blur(12px)}.fas-global-auth:hover{border-color:rgba(236,72,153,.72);background:rgba(35,17,39,.86)}@media(max-width:700px){.fas-global-auth{right:58px;top:12px}}';
+      document.head.appendChild(style);
+    }
   }
 
-  // No session-aware nav logic on index page. Navigation is always public and direct.
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSessionNav);
+  else initSessionNav();
+  window.addEventListener('fas:session-changed', initSessionNav);
 }());
 (function () {
   'use strict';

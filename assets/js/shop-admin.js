@@ -32,7 +32,7 @@ let importedSpringImage = null;
 let importedCJImages = [];
 
 function getWebsiteSession() {
-  try { return JSON.parse(localStorage.getItem("fas_user") || "null"); } catch { return null; }
+  try { return JSON.parse(localStorage.getItem("fas_user") || localStorage.getItem("fas_member") || "null"); } catch { return null; }
 }
 async function api(action, payload = {}) {
   if (!session?.username || !session?.shop_token) throw new Error("Sign in with your website account again.");

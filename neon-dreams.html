@@ -797,8 +797,8 @@
   <script>
     (function () {
       try {
-        var user = JSON.parse(localStorage.getItem('fas_user') || 'null');
-        var username = String(user && user.username || '').toLowerCase();
+        var user = JSON.parse(localStorage.getItem('fas_user') || localStorage.getItem('fas_member') || 'null');
+        var username = String(user && (user.username || user.user_name || user.handle || user.profile && user.profile.username) || '').replace(/^@/, '').toLowerCase();
         if (username === 'jdot00' || username === 'jamespropane00') {
           document.getElementById('ndc-admin-entry').hidden = false;
         }
