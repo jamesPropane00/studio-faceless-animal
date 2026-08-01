@@ -122,12 +122,12 @@
         navLink('dashboard.html', 'Dashboard', false) +
         '<a class="fas-nav-auth" href="/login.html">Sign In</a>' +
       '</div>' +
-      '<button class="nav-toggle fas-nav-toggle" type="button" aria-label="Open full app launcher" aria-expanded="false" aria-controls="mobile-menu"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button>' +
+      '<button id="fas-app-launcher-toggle" class="fas-nav-toggle" type="button" aria-label="Open full app launcher" aria-expanded="false" aria-controls="fas-app-launcher-menu"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button>' +
     '</div>';
 
     var mobile = document.createElement('div');
-    mobile.id = 'mobile-menu';
-    mobile.className = 'mobile-nav fas-mobile-nav';
+    mobile.id = 'fas-app-launcher-menu';
+    mobile.className = 'fas-mobile-nav';
     mobile.setAttribute('role', 'navigation');
     mobile.setAttribute('aria-label', 'Full app launcher');
     mobile.innerHTML = '<div class="fas-launcher-title"><span>All systems</span><small>Faceless Animal network</small></div>' +
@@ -145,6 +145,26 @@
     if (oldNav) oldNav.replaceWith(nav);
     else document.body.insertBefore(nav, document.body.firstChild);
     nav.insertAdjacentElement('afterend', mobile);
+
+    var launcherToggle = document.getElementById('fas-app-launcher-toggle');
+    function closeLauncher() {
+      mobile.classList.remove('open');
+      launcherToggle.classList.remove('open');
+      launcherToggle.setAttribute('aria-expanded', 'false');
+    }
+    launcherToggle.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      var opening = !mobile.classList.contains('open');
+      mobile.classList.toggle('open', opening);
+      launcherToggle.classList.toggle('open', opening);
+      launcherToggle.setAttribute('aria-expanded', String(opening));
+    });
+    mobile.addEventListener('click', function (event) { event.stopPropagation(); });
+    document.addEventListener('click', closeLauncher);
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') closeLauncher();
+    });
 
     if (!document.getElementById('fas-canonical-nav-style')) {
       var style = document.createElement('style');
