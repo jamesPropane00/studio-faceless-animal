@@ -86,6 +86,75 @@
 }());
 
 /* ================================================================
+   CANONICAL SITE NAVIGATION — one sleek Neon-style bar everywhere.
+   ================================================================ */
+(function () {
+  'use strict';
+
+  function currentPath() {
+    var file = location.pathname.split('/').pop() || 'index.html';
+    return file.toLowerCase();
+  }
+
+  function navLink(href, label, compact) {
+    var active = currentPath() === href.toLowerCase();
+    return '<a href="/' + href + '" class="fas-nav-link' + (compact ? ' fas-nav-link-compact' : '') + '"' + (active ? ' aria-current="page"' : '') + '>' + label + '</a>';
+  }
+
+  function initCanonicalNav() {
+    if (!document.body || document.getElementById('fas-canonical-nav')) return;
+    var oldNav = document.querySelector('nav.navbar, nav.site-nav, header nav[aria-label*="navigation" i]');
+    var oldMobile = document.getElementById('mobile-menu');
+    var nav = document.createElement('nav');
+    nav.id = 'fas-canonical-nav';
+    nav.className = 'fas-canonical-nav';
+    nav.setAttribute('aria-label', 'Main navigation');
+    nav.innerHTML = '<div class="fas-nav-shell">' +
+      '<a class="fas-nav-brand" href="/index.html"><span>FACELESS</span><b>ANIMAL</b><small>STUDIOS</small></a>' +
+      '<div class="fas-nav-primary" aria-label="Primary links">' +
+        navLink('directory.html', 'Directory', true) +
+        navLink('radio.html', 'Radio', true) +
+        navLink('tv.html', 'Faceless TV', true) +
+        navLink('neon-dreams.html', 'Neon Dreams', true) +
+        navLink('store.html', 'Store', true) +
+      '</div>' +
+      '<div class="fas-nav-actions">' +
+        navLink('dashboard.html', 'Dashboard', false) +
+        '<a class="fas-nav-auth" href="/login.html">Sign In</a>' +
+      '</div>' +
+      '<button class="nav-toggle fas-nav-toggle" type="button" aria-label="Open site menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button>' +
+    '</div>';
+
+    var mobile = document.createElement('div');
+    mobile.id = 'mobile-menu';
+    mobile.className = 'mobile-nav fas-mobile-nav';
+    mobile.setAttribute('role', 'navigation');
+    mobile.setAttribute('aria-label', 'Mobile navigation');
+    mobile.innerHTML = navLink('directory.html', 'Directory') + navLink('radio.html', 'Radio') +
+      navLink('tv.html', 'Faceless TV') + navLink('neon-dreams.html', 'Neon Dreams') +
+      navLink('store.html', 'Store') + '<div class="fas-mobile-divider"></div>' +
+      navLink('dashboard.html', 'Dashboard') + navLink('apps.html', 'Apps') +
+      navLink('wallet.html', 'Vault') + navLink('news.html', 'News') +
+      '<a class="fas-nav-auth" href="/login.html">Sign In</a>';
+
+    if (oldMobile) oldMobile.remove();
+    if (oldNav) oldNav.replaceWith(nav);
+    else document.body.insertBefore(nav, document.body.firstChild);
+    nav.insertAdjacentElement('afterend', mobile);
+
+    if (!document.getElementById('fas-canonical-nav-style')) {
+      var style = document.createElement('style');
+      style.id = 'fas-canonical-nav-style';
+      style.textContent = '.fas-canonical-nav{position:sticky;top:0;z-index:10040;width:100%;border-bottom:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(9,8,14,.96),rgba(7,6,11,.88));box-shadow:0 14px 44px rgba(0,0,0,.24);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}.fas-nav-shell{width:min(1480px,100%);min-height:62px;margin:auto;padding:0 clamp(14px,2.4vw,34px);display:flex;align-items:center;gap:clamp(14px,2vw,28px);box-sizing:border-box}.fas-nav-brand{display:inline-flex;align-items:baseline;gap:4px;flex:0 0 auto;color:#fff!important;text-decoration:none!important;font:900 13px/1 Inter,system-ui,sans-serif;letter-spacing:.055em}.fas-nav-brand b{color:#ec4899}.fas-nav-brand small{color:#8b5cf6;font-size:8px;letter-spacing:.16em}.fas-nav-primary{display:flex;align-items:center;gap:4px;min-width:0}.fas-nav-link{position:relative;display:inline-flex;align-items:center;min-height:34px;padding:0 9px;border-radius:999px;color:rgba(255,255,255,.72)!important;text-decoration:none!important;font:700 11px/1 Inter,system-ui,sans-serif;white-space:nowrap;transition:color .18s ease,background .18s ease,box-shadow .18s ease}.fas-nav-link:hover,.fas-nav-link[aria-current=page]{color:#fff!important;background:rgba(255,255,255,.075);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}.fas-nav-link[aria-current=page]::after{content:"";position:absolute;left:35%;right:35%;bottom:3px;height:2px;border-radius:9px;background:linear-gradient(90deg,#8b5cf6,#ec4899);box-shadow:0 0 10px rgba(236,72,153,.8)}.fas-nav-actions{display:flex;align-items:center;gap:5px;margin-left:auto}.fas-nav-auth{display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:0 11px;border:1px solid rgba(236,72,153,.38);border-radius:999px;background:linear-gradient(135deg,rgba(139,92,246,.14),rgba(236,72,153,.16));color:#fff!important;text-decoration:none!important;font:800 10px/1 Inter,system-ui,sans-serif;letter-spacing:.05em;white-space:nowrap}.fas-nav-auth:hover{border-color:rgba(236,72,153,.75);box-shadow:0 0 24px rgba(236,72,153,.14)}.fas-nav-toggle{display:none!important;margin-left:auto}.fas-mobile-nav{display:none;position:fixed;z-index:10030;top:62px;right:10px;width:min(310px,calc(100vw - 20px));max-height:calc(100dvh - 76px);overflow:auto;padding:10px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(9,7,13,.97);box-shadow:0 24px 80px rgba(0,0,0,.55);backdrop-filter:blur(20px)}.fas-mobile-nav.open{display:grid!important;gap:3px}.fas-mobile-nav .fas-nav-link,.fas-mobile-nav .fas-nav-auth{justify-content:flex-start;min-height:42px;padding:0 14px;border-radius:10px}.fas-mobile-divider{height:1px;margin:6px;background:rgba(255,255,255,.09)}@media(max-width:980px){.fas-nav-primary{gap:0}.fas-nav-link-compact{padding:0 6px;font-size:10px}.fas-nav-actions>.fas-nav-link{display:none}}@media(max-width:760px){.fas-nav-shell{min-height:58px}.fas-nav-primary,.fas-nav-actions{display:none}.fas-nav-toggle{display:inline-flex!important;position:relative!important;inset:auto!important}.fas-mobile-nav{top:60px}.fas-nav-brand{font-size:12px}}';
+      document.head.appendChild(style);
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCanonicalNav);
+  else initCanonicalNav();
+}());
+
+/* ================================================================
    SESSION-AWARE NAV — runs on every page that loads this script.
    Reads fas_user from localStorage and updates nav + adds a
    signed-in bar so the site always knows who is logged in.
@@ -130,25 +199,6 @@
       if (signedIn) link.addEventListener('click', authClick);
     });
 
-    var chip = document.getElementById('fas-global-auth');
-    if (!chip) {
-      chip = document.createElement('a');
-      chip.id = 'fas-global-auth';
-      chip.className = 'fas-global-auth';
-      document.body.appendChild(chip);
-    }
-    chip.textContent = label;
-    chip.href = signedIn ? '#logout' : '/login.html';
-    chip.setAttribute('aria-label', signedIn ? 'Log out of Faceless Animal Studios' : 'Sign in to Faceless Animal Studios');
-    chip.removeEventListener('click', authClick);
-    if (signedIn) chip.addEventListener('click', authClick);
-
-    if (!document.getElementById('fas-global-auth-style')) {
-      var style = document.createElement('style');
-      style.id = 'fas-global-auth-style';
-      style.textContent = '.fas-global-auth{position:fixed;top:10px;right:12px;z-index:10050;display:inline-flex;align-items:center;min-height:30px;padding:5px 10px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(8,8,13,.72);color:#fff!important;font:700 11px/1 Inter,system-ui,sans-serif;letter-spacing:.04em;text-decoration:none!important;box-shadow:0 8px 26px rgba(0,0,0,.28);backdrop-filter:blur(12px)}.fas-global-auth:hover{border-color:rgba(236,72,153,.72);background:rgba(35,17,39,.86)}@media(max-width:700px){.fas-global-auth{right:58px;top:12px}}';
-      document.head.appendChild(style);
-    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSessionNav);
