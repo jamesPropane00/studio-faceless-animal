@@ -6,7 +6,7 @@ The frontend uses the existing shared client in `assets/js/supabase-client.js`. 
 
 Apply `supabase/migrations/038_ecommerce.sql` through the Supabase CLI (`supabase db push`) or paste it into Dashboard → SQL Editor. It creates the product, image, reservation, order, item, event and admin tables; atomic reservation/payment functions; indexes; image bucket; triggers; and RLS policies.
 
-Apply migrations `039_shop_digital_products_and_admin_lockdown.sql`, `040_shop_platform_sessions.sql`, `041_shop_reservation_and_payment_hardening.sql`, `042_shop_seo_and_marketplace_foundation.sql`, `043_shop_spring_products.sql`, `044_shop_fanvue_external_links.sql`, and `045_shop_dropship_fulfillment.sql` after migration 038. Shop administration uses the existing Faceless Animal website login, not a second Supabase Auth account. After a valid normal login, `smooth-endpoint` issues an opaque seven-day admin token only for `jdot00` or `jamespropane00`. `dynamic-function` verifies that token on every request. Migration 040 also removes browser read access to password, recovery and email columns. Migration 041 releases expired holds when the store loads and automatically refunds a verified Stripe payment if its ten-minute inventory reservation already expired. Migration 042 adds permanent product slugs, search metadata, GTIN/MPN/category fields, search indexes and connector-neutral eBay/Facebook listing records. Migration 043 adds Spring fulfillment links, migration 044 adds safe promotional Fanvue links, and migration 045 adds private dropship sourcing plus public delivery estimates.
+Apply migrations `039_shop_digital_products_and_admin_lockdown.sql` through `047_cj_and_tiktok_marketplace.sql` in numeric order after migration 038. Shop administration uses the existing Faceless Animal website login, not a second Supabase Auth account. After a valid normal login, `smooth-endpoint` issues an opaque seven-day admin token only for `jdot00` or `jamespropane00`. `dynamic-function` verifies that token on every request. Migration 040 also removes browser read access to password, recovery and email columns. Migration 041 hardens reservation/payment handling. Migration 042 adds the marketplace foundation. Migrations 043-045 add Spring, Fanvue and private dropship workflows. Migration 046 permits AVIF product images, and migration 047 adds private CJ identifiers and TikTok Shop preparation records.
 
 ## 2. Supabase browser configuration
 
@@ -130,3 +130,34 @@ When Stripe verifies payment, the order snapshots the supplier details. The Orde
 Before publishing, verify supplier stock, pricing, variants, image rights, tracking availability, packaging, return handling, and the delivery estimate for the destination you serve. Do not promise a faster delivery window than the listing currently supports.
 
 AliExpress offers authorized dropshipping APIs for product information, freight calculation, order placement, order lookup, and tracking. Those APIs require an AliExpress developer application, app credentials, and buyer authorization. The current workflow intentionally avoids scraping and works without those credentials. Once an application is approved, an Edge Function can automate supplier price/stock refresh and order placement while keeping the credentials server-side.
+
+## 12. CJdropshipping
+
+In CJ, open **Apps → Install App**, install the API app, then open **My CJ → Authorization → API** and create an API key. Store it only as a Supabase Edge Function secret:
+
+```bash
+supabase secrets set CJ_API_KEY=REPLACE_WITH_PRIVATE_CJ_KEY
+supabase functions deploy dynamic-function --no-verify-jwt
+```
+
+Do not paste the key into `shop-admin.html`, `env.js`, Git, or any public JavaScript. CJ documents that its access token must remain backend-only. The admin sends the private product URL or PID to `dynamic-function`; that function exchanges the API key for a CJ access token and requests the current CJ product record server-side.
+
+Choose **Dropship product (AliExpress or CJ)** and then **CJdropshipping**. Paste the CJ listing URL. If the URL does not contain the PID, copy the PID into **Supplier product ID**, then press **Import details from CJ**. The importer fills the English title, plain-text description, CJ category, PID, SKU, first VID/variant, cost, suggested price when provided, inventory, weight and up to twelve image URLs. Always review the exact variant, current warehouse inventory, freight, delivery window, retail price, image rights and product compliance before publishing.
+
+Saving or receiving a Stripe payment never spends money at CJ. Until CJ automated order creation is separately enabled and tested, use the paid-order supplier panel to open CJ, place the supplier order, and save its order ID and tracking number.
+
+## 13. TikTok Shop listing preparation
+
+The TikTok panel prepares physical products for Seller Center and keeps marketplace data private. Enable **Prepare this physical product for TikTok Shop**, then enter the category ID, warehouse ID, authorized brand or `No brand`, country of origin, package weight and dimensions. Confirm the policy review only after checking the exact item. The TikTok Shop tab shows missing requirements and generates copyable Seller Center listing text when the draft is ready.
+
+The seller account alone does not authorize Open API publishing. One-click publishing later requires:
+
+- A TikTok Shop Partner Center app/service approved for the U.S. market.
+- A server-side redirect URL and OAuth `state` validation.
+- Seller authorization, an access token/refresh token, and the shop cipher.
+- Product, image, category, warehouse and inventory scopes.
+- `TIKTOK_APP_KEY` and `TIKTOK_APP_SECRET` stored only as Supabase secrets.
+- Signed HMAC-SHA256 API requests from an Edge Function, never from browser JavaScript.
+- Product webhooks so review, rejection, freeze and live status are synchronized back into `marketplace_listings`.
+
+TikTok reviews created and edited listings. A ready status in this website means the local required fields are filled; it is not TikTok approval. Re-check TikTok Seller Center's current prohibited, restricted, listing and fulfillment policies before every new category. Never list adult/explicit content, digital products, counterfeit or unauthorized branded goods, recalled or unsafe products, weapons, drugs, tobacco/vapes, alcohol, hazardous goods, or other prohibited items. Restricted products require the exact qualifications TikTok requests. Keep inventory, price, origin, claims, category, delivery promises and tracking accurate, and meet the active handling and delivery SLA.

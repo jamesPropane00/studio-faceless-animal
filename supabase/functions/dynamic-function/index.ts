@@ -75,6 +75,52 @@ const aliexpressUrl = (value: unknown) => {
     return null;
   }
 };
+const cjUrl = (value: unknown) => {
+  try {
+    const url = new URL(String(value ?? "").trim());
+    const host = url.hostname.toLowerCase();
+    if (
+      url.protocol !== "https:" ||
+      !(host === "cjdropshipping.com" || host.endsWith(".cjdropshipping.com"))
+    ) return null;
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return null;
+  }
+};
+const stripHtml = (value: unknown) => String(value ?? "")
+  .replace(/<script[\s\S]*?<\/script>/gi, " ")
+  .replace(/<style[\s\S]*?<\/style>/gi, " ")
+  .replace(/<[^>]+>/g, " ")
+  .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"')
+  .replace(/&#39;/gi, "'").replace(/\s+/g, " ").trim();
+const cjProductId = (url: string | null, explicit: unknown) => {
+  const direct = String(explicit ?? "").trim();
+  if (/^[a-z0-9-]{8,80}$/i.test(direct)) return direct;
+  if (!url) return null;
+  const queryId = new URL(url).searchParams.get("pid") ?? new URL(url).searchParams.get("productId");
+  if (queryId && /^[a-z0-9-]{8,80}$/i.test(queryId)) return queryId;
+  const matches = url.match(/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}|\d{12,}/gi);
+  return matches?.at(-1) ?? null;
+};
+const getCJAccessToken = async () => {
+  const stored = Deno.env.get("CJ_ACCESS_TOKEN")?.trim();
+  if (stored) return stored;
+  const apiKey = Deno.env.get("CJ_API_KEY")?.trim();
+  if (!apiKey) throw new Error("CJ is not connected yet. Add CJ_API_KEY in Supabase Edge Function secrets.");
+  const response = await fetch("https://developers.cjdropshipping.com/api2.0/v1/authentication/getAccessToken", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ apiKey }),
+    signal: AbortSignal.timeout(15000),
+  });
+  const result = await response.json();
+  if (!response.ok || !result?.result || !result?.data?.accessToken) {
+    throw new Error(result?.message || "CJ rejected the API key.");
+  }
+  return String(result.data.accessToken);
+};
 const decodeEscaped = (value: string) => {
   try {
     return JSON.parse(`"${value.replace(/"/g, '\\"')}"`);
@@ -119,7 +165,7 @@ Deno.serve(async (req) => {
 
       case "list_products": {
         const { data, error } = await admin.from("products")
-          .select("*,product_images(*),product_sources(*)").order("created_at", { ascending: false });
+          .select("*,product_images(*),product_sources(*),marketplace_listings(*)").order("created_at", { ascending: false });
         if (error) throw error;
         return reply({ products: data ?? [] });
       }
@@ -155,6 +201,59 @@ Deno.serve(async (req) => {
         const { data, error } = await admin.storage.from(bucket).createSignedUploadUrl(path);
         if (error) throw error;
         return reply({ path, token: data.token });
+      }
+
+      case "import_cj_product": {
+        const sourceUrl = cjUrl(body.url);
+        const productId = cjProductId(sourceUrl, body.product_id);
+        if (!sourceUrl && !productId) {
+          return reply({ error: "Paste a valid cjdropshipping.com product URL or CJ product ID." }, 400);
+        }
+        if (!productId) {
+          return reply({ error: "CJ's URL did not contain a product ID. Copy the PID from CJ into Supplier product ID." }, 400);
+        }
+        const accessToken = await getCJAccessToken();
+        const endpoint = new URL("https://developers.cjdropshipping.com/api2.0/v1/product/query");
+        endpoint.searchParams.set("pid", productId);
+        const response = await fetch(endpoint, {
+          headers: { "CJ-Access-Token": accessToken },
+          signal: AbortSignal.timeout(20000),
+        });
+        const result = await response.json();
+        if (!response.ok || !result?.result || !result?.data) {
+          return reply({ error: result?.message || "CJ could not find that product." }, 422);
+        }
+        const item = result.data;
+        const variants = Array.isArray(item.variants) ? item.variants : [];
+        const firstVariant = variants[0] ?? {};
+        const inventory = variants.reduce((total: number, variant: Record<string, unknown>) => {
+          const locations = Array.isArray(variant.inventories) ? variant.inventories : [];
+          return total + locations.reduce((sum: number, location: Record<string, unknown>) =>
+            sum + Math.max(0, Number(location.totalInventory) || 0), 0);
+        }, 0);
+        const suggestedText = String(firstVariant.variantSugSellPrice ?? item.suggestSellPrice ?? "");
+        const suggestedValues = suggestedText.match(/\d+(?:\.\d+)?/g)?.map(Number).filter(Number.isFinite) ?? [];
+        const suggestedPrice = suggestedValues.length ? Math.max(...suggestedValues) : null;
+        const cost = Number(firstVariant.variantSellPrice ?? item.sellPrice);
+        const images = [...new Set([item.bigImage, ...(Array.isArray(item.productImageSet) ? item.productImageSet : [])])]
+          .filter((url): url is string => typeof url === "string" && /^https:\/\//i.test(url)).slice(0, 12);
+        return reply({
+          product: {
+            title: cleanOptional(item.productNameEn, 200) ?? "CJ product",
+            description: stripHtml(item.description).slice(0, 8000),
+            category: cleanOptional(item.categoryName, 160) ?? "CJ merchandise",
+            product_id: String(item.pid ?? productId),
+            sku: cleanOptional(item.productSku, 160),
+            variant_id: cleanOptional(firstVariant.vid, 160),
+            variant_name: cleanOptional(firstVariant.variantNameEn ?? firstVariant.variantKey, 240),
+            cost_cents: Number.isFinite(cost) && cost >= 0 ? Math.round(cost * 100) : null,
+            suggested_price_cents: suggestedPrice !== null ? Math.round(suggestedPrice * 100) : null,
+            quantity: Math.max(0, Math.min(999999, Math.floor(inventory))),
+            weight_grams: Math.round(Number(firstVariant.variantWeight ?? item.packingWeight ?? item.productWeight) || 0) || null,
+            images,
+            variants_count: variants.length,
+          },
+        });
       }
 
       case "import_spring_product": {
@@ -275,9 +374,13 @@ Deno.serve(async (req) => {
           return reply({ error: "Enter a valid ships-from location and delivery window." }, 400);
         }
         const sourceInput = body.source ?? {};
-        const supplierUrl = isDropship ? aliexpressUrl(sourceInput.supplier_product_url) : null;
+        const supplierName = String(sourceInput.supplier_name ?? "AliExpress") === "CJdropshipping"
+          ? "CJdropshipping" : "AliExpress";
+        const supplierUrl = isDropship
+          ? (supplierName === "CJdropshipping" ? cjUrl(sourceInput.supplier_product_url) : aliexpressUrl(sourceInput.supplier_product_url))
+          : null;
         if (isDropship && !supplierUrl) {
-          return reply({ error: "Paste a valid AliExpress product URL." }, 400);
+          return reply({ error: `Paste a valid ${supplierName} product URL.` }, 400);
         }
         const sourceCost = isDropship && sourceInput.supplier_cost_cents !== null &&
           sourceInput.supplier_cost_cents !== undefined
@@ -323,13 +426,25 @@ Deno.serve(async (req) => {
         if (error) throw error;
         if (isDropship) {
           const sourceProductId = cleanOptional(sourceInput.supplier_product_id, 100) ??
-            supplierUrl!.match(/\/item\/(\d+)\.html/i)?.[1] ?? null;
+            (supplierName === "CJdropshipping"
+              ? cjProductId(supplierUrl, null)
+              : supplierUrl!.match(/\/item\/(\d+)\.html/i)?.[1] ?? null);
+          const sourceVariantId = supplierName === "CJdropshipping" ? cleanOptional(sourceInput.supplier_variant_id, 160) : null;
+          const sourceSku = supplierName === "CJdropshipping" ? cleanOptional(sourceInput.supplier_sku, 160) : null;
+          const baseVariant = cleanOptional(sourceInput.supplier_variant, 240);
+          const variantText = [
+            baseVariant,
+            sourceVariantId && !baseVariant?.includes(`VID ${sourceVariantId}`) ? `VID ${sourceVariantId}` : null,
+            sourceSku && !baseVariant?.includes(`SKU ${sourceSku}`) ? `SKU ${sourceSku}` : null,
+          ].filter(Boolean).join(" | ").slice(0, 600) || null;
           const { error: sourceError } = await admin.from("product_sources").upsert({
             product_id: id,
-            supplier_name: "AliExpress",
+            supplier_name: supplierName,
             supplier_product_url: supplierUrl,
             supplier_product_id: sourceProductId,
-            supplier_variant: cleanOptional(sourceInput.supplier_variant, 240),
+            supplier_variant: variantText,
+            supplier_variant_id: sourceVariantId,
+            supplier_sku: sourceSku,
             supplier_cost_cents: sourceCost,
             supplier_notes: cleanOptional(sourceInput.supplier_notes, 2000),
           });
@@ -338,7 +453,43 @@ Deno.serve(async (req) => {
           const { error: sourceDeleteError } = await admin.from("product_sources").delete().eq("product_id", id);
           if (sourceDeleteError) throw sourceDeleteError;
         }
+        const marketplace = body.marketplace ?? {};
+        const marketplaceEnabled = Boolean(marketplace.enabled);
+        if (marketplaceEnabled && (kind !== "physical" || isExternal || isFanvue)) {
+          return reply({ error: "Only physical products may be prepared for TikTok Shop." }, 400);
+        }
+        const categoryId = cleanOptional(marketplace.category_id, 160);
+        const warehouseId = cleanOptional(marketplace.warehouse_id, 160);
+        const countryOfOrigin = cleanOptional(marketplace.country_of_origin, 100);
+        const weight = marketplace.package_weight_grams ? Number(marketplace.package_weight_grams) : null;
+        const length = marketplace.package_length_cm ? Number(marketplace.package_length_cm) : null;
+        const width = marketplace.package_width_cm ? Number(marketplace.package_width_cm) : null;
+        const height = marketplace.package_height_cm ? Number(marketplace.package_height_cm) : null;
+        const complianceConfirmed = Boolean(marketplace.compliance_confirmed);
         const images = Array.isArray(body.images) ? body.images.slice(0, 12) : [];
+        const { count: existingImageCount, error: imageCountError } = await admin.from("product_images")
+          .select("id", { count: "exact", head: true }).eq("product_id", id);
+        if (imageCountError) throw imageCountError;
+        const listingReady = marketplaceEnabled && Boolean(
+          categoryId && warehouseId && countryOfOrigin && complianceConfirmed &&
+          weight && weight > 0 && length && length > 0 && width && width > 0 && height && height > 0 &&
+          price > 0 && quantity > 0 && (images.length > 0 || (existingImageCount ?? 0) > 0)
+        );
+        const { error: marketplaceError } = await admin.from("marketplace_listings").upsert({
+          product_id: id,
+          marketplace: "tiktok_shop",
+          status: marketplaceEnabled ? (listingReady ? "ready" : "draft") : "disabled",
+          category_id: categoryId,
+          warehouse_id: warehouseId,
+          brand_name: cleanOptional(marketplace.brand_name, 160) ?? "No brand",
+          country_of_origin: countryOfOrigin,
+          package_weight_grams: weight,
+          package_length_cm: length,
+          package_width_cm: width,
+          package_height_cm: height,
+          compliance_confirmed_at: complianceConfirmed ? new Date().toISOString() : null,
+        }, { onConflict: "product_id,marketplace" });
+        if (marketplaceError) throw marketplaceError;
         if (images.length) {
           const rows = images.map((image: Record<string, unknown>, index: number) => ({
             product_id: id,

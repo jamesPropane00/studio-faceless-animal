@@ -15,15 +15,21 @@ const excerpt = (value, limit = 155) => {
 };
 const sourceFor = (product) => Array.isArray(product?.product_sources)
   ? product.product_sources[0] : product?.product_sources || null;
+const marketplaceFor = (product) => Array.isArray(product?.marketplace_listings)
+  ? product.marketplace_listings.find((listing) => listing.marketplace === "tiktok_shop")
+  : product?.marketplace_listings || null;
 const deliveryPresets = {
   standard: { min: 15, max: 30, from: "China", service: "AliExpress Standard Shipping" },
   choice: { min: 7, max: 15, from: "China", service: "AliExpress Choice" },
   us_warehouse: { min: 5, max: 10, from: "United States", service: "US warehouse shipping" },
+  cj_standard: { min: 8, max: 18, from: "China", service: "CJPacket / CJ standard shipping" },
+  cj_us_warehouse: { min: 3, max: 8, from: "United States", service: "CJ US warehouse shipping" },
 };
 let session = null;
 let products = [];
 let orders = [];
 let importedSpringImage = null;
+let importedCJImages = [];
 
 function getWebsiteSession() {
   try { return JSON.parse(localStorage.getItem("fas_user") || "null"); } catch { return null; }
@@ -74,11 +80,13 @@ function showKindFields() {
   const dropship = selectedKind === "dropship";
   const external = spring || fanvue;
   const digital = selectedKind === "music_download" || selectedKind === "file_download";
+  const tiktokEligible = selectedKind === "physical" || dropship;
   $("#physical-fields").classList.toggle("hidden", digital || external);
   $("#digital-fields").classList.toggle("hidden", !digital);
   $("#spring-fields").classList.toggle("hidden", !spring);
   $("#fanvue-fields").classList.toggle("hidden", !fanvue);
   $("#dropship-fields").classList.toggle("hidden", !dropship);
+  $("#tiktok-fields").classList.toggle("hidden", !tiktokEligible);
   $("#local-pickup-control").classList.toggle("hidden", dropship);
   if (dropship) $("#product-form").elements.local_pickup.checked = false;
   $("#photo-help").textContent = fanvue
@@ -96,6 +104,25 @@ function showKindFields() {
 }
 $("#product-kind").onchange = showKindFields;
 
+function showSupplierFields() {
+  const form = $("#product-form");
+  const isCJ = form.elements.supplier_name.value === "CJdropshipping";
+  $("#import-cj").classList.toggle("hidden", !isCJ);
+  form.elements.supplier_product_url.placeholder = isCJ
+    ? "https://cjdropshipping.com/product/..."
+    : "https://www.aliexpress.com/item/1005000000000000.html";
+  const fallback = isCJ ? "https://cjdropshipping.com/" : "https://www.aliexpress.com/";
+  const value = form.elements.supplier_product_url.value;
+  $("#open-supplier-source").href = value.startsWith("https://") ? value : fallback;
+  if (!value) $("#cj-import-status").textContent = isCJ ? "Paste a CJ product URL or product ID, then import." : "";
+}
+$("#supplier-name").onchange = showSupplierFields;
+
+function showTikTokFields() {
+  $("#tiktok-details").classList.toggle("hidden", !$("#tiktok-enabled").checked);
+}
+$("#tiktok-enabled").onchange = showTikTokFields;
+
 $("#delivery-preset").onchange = (event) => {
   const preset = deliveryPresets[event.target.value];
   if (!preset) return;
@@ -107,7 +134,8 @@ $("#delivery-preset").onchange = (event) => {
 };
 $("#product-form").elements.supplier_product_url.addEventListener("input", (event) => {
   const value = String(event.target.value || "");
-  $("#open-supplier-source").href = value.startsWith("https://") ? value : "https://www.aliexpress.com/";
+  const isCJ = $("#product-form").elements.supplier_name.value === "CJdropshipping";
+  $("#open-supplier-source").href = value.startsWith("https://") ? value : (isCJ ? "https://cjdropshipping.com/" : "https://www.aliexpress.com/");
   const match = String(event.target.value).match(/\/item\/(\d+)\.html/i);
   if (match && !$("#product-form").elements.supplier_product_id.value) {
     $("#product-form").elements.supplier_product_id.value = match[1];
@@ -122,6 +150,38 @@ $("#copy-supplier-source").onclick = async () => {
     setTimeout(() => { $("#copy-supplier-source").textContent = "Copy source URL"; }, 1200);
   } catch {
     alert("Could not copy the supplier URL.");
+  }
+};
+
+$("#import-cj").onclick = async () => {
+  const form = $("#product-form");
+  const status = $("#cj-import-status");
+  status.textContent = "Importing from CJ...";
+  try {
+    const data = await api("import_cj_product", {
+      url: form.elements.supplier_product_url.value,
+      product_id: form.elements.supplier_product_id.value,
+    });
+    const imported = data.product;
+    form.elements.title.value = imported.title || "";
+    form.elements.description.value = imported.description || "";
+    form.elements.price.value = imported.suggested_price_cents
+      ? (imported.suggested_price_cents / 100).toFixed(2) : "";
+    form.elements.quantity.value = String(imported.quantity || 1);
+    form.elements.condition.value = "New";
+    form.elements.category.value = imported.category || "CJ merchandise";
+    form.elements.supplier_product_id.value = imported.product_id || "";
+    form.elements.supplier_sku.value = imported.sku || "";
+    form.elements.supplier_variant_id.value = imported.variant_id || "";
+    form.elements.supplier_variant.value = imported.variant_name || "";
+    form.elements.supplier_cost.value = imported.cost_cents == null ? "" : (imported.cost_cents / 100).toFixed(2);
+    form.elements.tiktok_weight_grams.value = imported.weight_grams || "";
+    form.elements.tiktok_country_of_origin.value = imported.country_of_origin || "China";
+    importedCJImages = imported.images || [];
+    status.textContent = `Imported ${imported.variants_count || 0} CJ variants. Review the exact variant, price, stock, shipping and image rights before saving.`;
+    updateSearchPreview();
+  } catch (error) {
+    status.textContent = error.message;
   }
 };
 
@@ -164,10 +224,11 @@ async function loadProducts() {
     products = (await api("list_products")).products || [];
     $("#product-list").innerHTML = products.map((product) => {
       const provider = product.fulfillment_provider || "internal";
+      const source = sourceFor(product);
       const typeLabel = provider === "spring"
         ? "Spring fulfillment"
         : provider === "fanvue" ? "Fanvue link · 18+"
-          : product.fulfillment_mode === "dropship" ? "AliExpress dropship" : safe(product.product_kind?.replaceAll("_", " ") || "physical");
+          : product.fulfillment_mode === "dropship" ? `${safe(source?.supplier_name || "Supplier")} dropship` : safe(product.product_kind?.replaceAll("_", " ") || "physical");
       const inventoryLabel = provider === "spring"
         ? "inventory on Spring"
         : provider === "fanvue" ? "access on Fanvue"
@@ -181,10 +242,60 @@ async function loadProducts() {
       </div><div class="admin-actions"><button data-edit="${product.id}">Edit</button><button data-publish="${product.id}">${product.published ? "Unpublish" : "Publish"}</button><button data-delete="${product.id}">Delete</button></div></article>`;
     }
     ).join("") || "<p>No products yet.</p>";
+    renderMarketplace();
   } catch (error) {
     $("#product-list").innerHTML = `<p class="form-error">${safe(error.message)}</p>`;
   }
 }
+function tiktokReadiness(product, listing) {
+  return [
+    [Boolean(product.title && product.description), "Title and description"],
+    [Boolean(product.product_images?.length), "At least one licensed product image"],
+    [Boolean(product.price_cents > 0 && product.quantity > 0), "Current price and stock"],
+    [Boolean(listing?.category_id), "TikTok category ID"],
+    [Boolean(listing?.warehouse_id), "TikTok warehouse ID"],
+    [Boolean(listing?.country_of_origin), "Country of origin"],
+    [Boolean(listing?.package_weight_grams && listing?.package_length_cm && listing?.package_width_cm && listing?.package_height_cm), "Package weight and dimensions"],
+    [Boolean(listing?.compliance_confirmed_at), "Policy review confirmed"],
+  ];
+}
+function renderMarketplace() {
+  const prepared = products.filter((product) => {
+    const listing = marketplaceFor(product);
+    return listing && listing.status !== "disabled";
+  });
+  $("#marketplace-list").innerHTML = prepared.map((product) => {
+    const listing = marketplaceFor(product);
+    const checks = tiktokReadiness(product, listing);
+    const ready = checks.every(([ok]) => ok);
+    return `<article class="admin-panel marketplace-box">
+      <span class="status-badge status-${safe(listing.status || "draft")}">${safe(listing.status || "draft")}</span>
+      <h3>${safe(product.title)}</h3>
+      <p class="field-help">${safe(product.sku)} · ${money(product.price_cents)} · ${product.quantity} available</p>
+      <ul class="readiness-list">${checks.map(([ok, label]) => `<li class="${ok ? "ok" : "missing"}">${ok ? "Ready" : "Missing"}: ${safe(label)}</li>`).join("")}</ul>
+      <div class="admin-actions"><button type="button" data-edit-tiktok="${product.id}">Edit draft</button><button type="button" data-copy-tiktok="${product.id}" ${ready ? "" : "disabled"}>Copy for Seller Center</button></div>
+      <p class="policy-fine-print">${ready ? "Ready for your final policy review and manual publishing in TikTok Seller Center." : "Complete the missing fields before publishing. Never treat a readiness check as TikTok approval."}</p>
+    </article>`;
+  }).join("") || `<div class="admin-panel"><p class="field-help">No TikTok drafts yet. Edit a physical product and enable TikTok preparation.</p></div>`;
+}
+function tiktokListingText(product) {
+  const listing = marketplaceFor(product);
+  return [
+    `TITLE: ${product.title}`,
+    `DESCRIPTION:\n${product.description}`,
+    `PRICE: ${money(product.price_cents)}`,
+    `STOCK: ${product.quantity}`,
+    `SELLER SKU: ${product.sku}`,
+    `CATEGORY ID: ${listing.category_id}`,
+    `BRAND: ${listing.brand_name || "No brand"}`,
+    `COUNTRY OF ORIGIN: ${listing.country_of_origin}`,
+    `PACKAGE: ${listing.package_weight_grams} g; ${listing.package_length_cm} x ${listing.package_width_cm} x ${listing.package_height_cm} cm`,
+    `WAREHOUSE ID: ${listing.warehouse_id}`,
+    `SHIPPING: ${product.shipping_service || "Confirm in Seller Center"}`,
+    `IMAGES:\n${(product.product_images || []).sort((a, b) => a.sort_order - b.sort_order).map((image) => image.public_url).join("\n")}`,
+  ].join("\n\n");
+}
+
 function cleanFilename(name) {
   return String(name).replace(/[^a-z0-9._-]/gi, "-");
 }
@@ -251,6 +362,7 @@ $("#product-form").onsubmit = async (event) => {
   const isSpring = kind === "spring";
   const isFanvue = kind === "fanvue";
   const isDropship = kind === "dropship";
+  const isCJ = isDropship && form.get("supplier_name") === "CJdropshipping";
   const isExternal = isSpring || isFanvue;
   const isDigital = kind === "music_download" || kind === "file_download";
   const downloadFile = form.get("download_file");
@@ -293,6 +405,16 @@ $("#product-form").onsubmit = async (event) => {
         sort_order: 0,
       });
     }
+    if (isCJ && importedCJImages.length) {
+      for (const [index, imageUrl] of importedCJImages.slice(0, 12).entries()) {
+        if (existing?.product_images?.some((image) => image.public_url === imageUrl)) continue;
+        imageRecords.push({
+          storage_path: `cj/${form.get("supplier_product_id") || productId}/${index}`,
+          public_url: imageUrl,
+          sort_order: (existing?.product_images?.length || 0) + imageRecords.length,
+        });
+      }
+    }
     await api("save_product", {
       product: {
         id: productId, title: form.get("title"), sku: form.get("sku"),
@@ -318,12 +440,27 @@ $("#product-form").onsubmit = async (event) => {
         download_mime_type: download.mime,
       },
       source: isDropship ? {
+        supplier_name: form.get("supplier_name"),
         supplier_product_url: form.get("supplier_product_url"),
         supplier_product_id: form.get("supplier_product_id") || null,
         supplier_variant: form.get("supplier_variant") || null,
+        supplier_variant_id: form.get("supplier_variant_id") || null,
+        supplier_sku: form.get("supplier_sku") || null,
         supplier_cost_cents: form.get("supplier_cost") === "" ? null : Math.round(Number(form.get("supplier_cost")) * 100),
         supplier_notes: form.get("supplier_notes") || null,
       } : null,
+      marketplace: {
+        enabled: form.get("tiktok_enabled") === "on" && (kind === "physical" || isDropship),
+        category_id: form.get("tiktok_category_id") || null,
+        warehouse_id: form.get("tiktok_warehouse_id") || null,
+        brand_name: form.get("tiktok_brand") || "No brand",
+        country_of_origin: form.get("tiktok_country_of_origin") || null,
+        package_weight_grams: form.get("tiktok_weight_grams") || null,
+        package_length_cm: form.get("tiktok_length_cm") || null,
+        package_width_cm: form.get("tiktok_width_cm") || null,
+        package_height_cm: form.get("tiktok_height_cm") || null,
+        compliance_confirmed: form.get("tiktok_compliance_confirmed") === "on",
+      },
       images: imageRecords,
     });
     resetProductForm();
@@ -347,10 +484,13 @@ function editProduct(product) {
   form.elements.fanvue_url.value = provider === "fanvue" ? (product.external_purchase_url || "") : "";
   form.elements.fanvue_preview_safe.checked = provider === "fanvue";
   const source = sourceFor(product);
+  form.elements.supplier_name.value = source?.supplier_name === "CJdropshipping" ? "CJdropshipping" : "AliExpress";
   form.elements.supplier_product_url.value = source?.supplier_product_url || "";
-  $("#open-supplier-source").href = source?.supplier_product_url || "https://www.aliexpress.com/";
+  $("#open-supplier-source").href = source?.supplier_product_url || (form.elements.supplier_name.value === "CJdropshipping" ? "https://cjdropshipping.com/" : "https://www.aliexpress.com/");
   form.elements.supplier_product_id.value = source?.supplier_product_id || "";
   form.elements.supplier_variant.value = source?.supplier_variant || "";
+  form.elements.supplier_variant_id.value = source?.supplier_variant_id || "";
+  form.elements.supplier_sku.value = source?.supplier_sku || "";
   form.elements.supplier_cost.value = source?.supplier_cost_cents == null ? "" : (source.supplier_cost_cents / 100).toFixed(2);
   form.elements.supplier_notes.value = source?.supplier_notes || "";
   form.elements.ships_from.value = product.ships_from || "China";
@@ -359,25 +499,49 @@ function editProduct(product) {
   form.elements.shipping_service.value = product.shipping_service || "AliExpress Standard Shipping";
   form.elements.delivery_preset.value = "custom";
   importedSpringImage = null;
+  importedCJImages = [];
   form.elements.price.value = (product.price_cents / 100).toFixed(2);
   form.elements.shipping_price.value = (product.shipping_price_cents / 100).toFixed(2);
   form.elements.local_pickup.checked = product.local_pickup;
   form.elements.published.checked = product.published;
+  const marketplace = marketplaceFor(product);
+  form.elements.tiktok_enabled.checked = Boolean(marketplace && marketplace.status !== "disabled");
+  form.elements.tiktok_category_id.value = marketplace?.category_id || "";
+  form.elements.tiktok_warehouse_id.value = marketplace?.warehouse_id || "";
+  form.elements.tiktok_brand.value = marketplace?.brand_name || "No brand";
+  form.elements.tiktok_country_of_origin.value = marketplace?.country_of_origin || "";
+  form.elements.tiktok_weight_grams.value = marketplace?.package_weight_grams || "";
+  form.elements.tiktok_length_cm.value = marketplace?.package_length_cm || "";
+  form.elements.tiktok_width_cm.value = marketplace?.package_width_cm || "";
+  form.elements.tiktok_height_cm.value = marketplace?.package_height_cm || "";
+  form.elements.tiktok_compliance_confirmed.checked = Boolean(marketplace?.compliance_confirmed_at);
   showKindFields();
+  showSupplierFields();
+  showTikTokFields();
   updateSearchPreview();
   scrollTo({ top: 0, behavior: "smooth" });
 }
 document.addEventListener("click", async (event) => {
-  const target = event.target.closest("[data-edit],[data-publish],[data-delete],[data-tab]");
+  const target = event.target.closest("[data-edit],[data-publish],[data-delete],[data-tab],[data-edit-tiktok],[data-copy-tiktok]");
   if (!target) return;
   if (target.dataset.tab) {
     document.querySelectorAll(".tabs button").forEach((button) => button.classList.toggle("active", button === target));
     $("#products-tab").classList.toggle("hidden", target.dataset.tab !== "products");
     $("#orders-tab").classList.toggle("hidden", target.dataset.tab !== "orders");
+    $("#marketplace-tab").classList.toggle("hidden", target.dataset.tab !== "marketplace");
   }
-  const product = products.find((item) => item.id === (target.dataset.edit || target.dataset.publish || target.dataset.delete));
+  const product = products.find((item) => item.id === (target.dataset.edit || target.dataset.publish || target.dataset.delete || target.dataset.editTiktok || target.dataset.copyTiktok));
   try {
     if (target.dataset.edit && product) editProduct(product);
+    if (target.dataset.editTiktok && product) {
+      editProduct(product);
+      document.querySelector('[data-tab="products"]').click();
+    }
+    if (target.dataset.copyTiktok && product) {
+      await navigator.clipboard.writeText(tiktokListingText(product));
+      target.textContent = "Copied";
+      setTimeout(() => { target.textContent = "Copy for Seller Center"; }, 1400);
+    }
     if (target.dataset.publish && product) { await api("toggle_publish", { product_id: product.id }); loadProducts(); }
     if (target.dataset.delete && product && confirm(`Delete “${product.title}” and its files?`)) {
       await api("delete_product", { product_id: product.id }); loadProducts();
@@ -391,15 +555,22 @@ function resetProductForm() {
   $("#product-form").elements.id.value = "";
   $("#product-kind").value = "physical";
   importedSpringImage = null;
+  importedCJImages = [];
   $("#product-form").elements.fanvue_preview_safe.checked = false;
   $("#product-form").elements.delivery_preset.value = "standard";
   $("#product-form").elements.ships_from.value = "China";
   $("#product-form").elements.delivery_min_business_days.value = "15";
   $("#product-form").elements.delivery_max_business_days.value = "30";
   $("#product-form").elements.shipping_service.value = "AliExpress Standard Shipping";
+  $("#product-form").elements.supplier_name.value = "AliExpress";
+  $("#product-form").elements.tiktok_brand.value = "No brand";
+  $("#product-form").elements.tiktok_enabled.checked = false;
+  $("#product-form").elements.tiktok_compliance_confirmed.checked = false;
   $("#open-supplier-source").href = "https://www.aliexpress.com/";
   $("#spring-import-status").textContent = "Paste a public Spring listing and import its title, price, description, and main image.";
   showKindFields();
+  showSupplierFields();
+  showTikTokFields();
   updateSearchPreview();
 }
 $("#reset-product").onclick = resetProductForm;
@@ -483,7 +654,7 @@ function renderOrders() {
                 <strong>${money(item.unit_price_cents * item.quantity)}</strong>
                 ${item.fulfillment_mode === "dropship" ? `
                   <div class="dropship-source">
-                    <h5>AliExpress fulfillment · ${safe(item.supplier_status?.replaceAll("_", " ") || "awaiting purchase")}</h5>
+                    <h5>${safe(item.supplier_name || "Supplier")} fulfillment · ${safe(item.supplier_status?.replaceAll("_", " ") || "awaiting purchase")}</h5>
                     <p><a href="${safe(item.supplier_product_url)}" target="_blank" rel="noopener">Open supplier listing ↗</a>
                       <button class="copy-button" type="button" data-copy="${safe(item.supplier_product_url)}">Copy URL</button>
                       ${item.supplier_product_id ? `<button class="copy-button" type="button" data-copy="${safe(item.supplier_product_id)}">Copy product ID</button>` : ""}
@@ -495,7 +666,7 @@ function renderOrders() {
                       <label class="field-label"><span>Supplier status</span><select data-supplier-status="${item.id}">
                         ${["awaiting_purchase","ordered","shipped","delivered","canceled"].map((value) => `<option value="${value}" ${item.supplier_status === value ? "selected" : ""}>${value.replaceAll("_", " ")}</option>`).join("")}
                       </select></label>
-                      <label class="field-label"><span>AliExpress order ID</span><input data-supplier-order="${item.id}" value="${safe(item.supplier_order_id || "")}" placeholder="Order ID"></label>
+                      <label class="field-label"><span>Supplier order ID</span><input data-supplier-order="${item.id}" value="${safe(item.supplier_order_id || "")}" placeholder="Order ID"></label>
                       <label class="field-label"><span>Tracking number</span><input data-supplier-tracking="${item.id}" value="${safe(item.supplier_tracking_number || "")}" placeholder="Tracking number"></label>
                     </div>
                     <div class="admin-actions"><button type="button" data-save-dropship="${item.id}">Save supplier fulfillment</button></div>
