@@ -529,6 +529,7 @@ document.addEventListener("click", async (event) => {
     $("#products-tab").classList.toggle("hidden", target.dataset.tab !== "products");
     $("#orders-tab").classList.toggle("hidden", target.dataset.tab !== "orders");
     $("#marketplace-tab").classList.toggle("hidden", target.dataset.tab !== "marketplace");
+    $("#characters-tab").classList.toggle("hidden", target.dataset.tab !== "characters");
   }
   const product = products.find((item) => item.id === (target.dataset.edit || target.dataset.publish || target.dataset.delete || target.dataset.editTiktok || target.dataset.copyTiktok));
   try {
@@ -736,6 +737,23 @@ document.addEventListener("click", async (event) => {
   }
 });
 
+function applyProductPrefill() {
+  const query = new URLSearchParams(location.search);
+  const form = $("#product-form");
+  const fields = { kind: "product_kind", title: "title", category: "category", description: "description" };
+  Object.entries(fields).forEach(([parameter, field]) => {
+    if (query.get(parameter) && form.elements[field]) form.elements[field].value = query.get(parameter);
+  });
+  if (query.get("kind")) {
+    if (!form.elements.quantity.value) form.elements.quantity.value = "1";
+    document.querySelector('[data-tab="products"]').click();
+    showKindFields();
+    updateSearchPreview();
+    form.scrollIntoView({ block: "start" });
+  }
+}
+
 showKindFields();
 updateSearchPreview();
 guard();
+applyProductPrefill();
