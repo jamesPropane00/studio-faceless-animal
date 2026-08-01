@@ -138,6 +138,7 @@
       navLink('store.html', 'Store') + navLink('wallet.html', 'Vault') +
       navLink('apps.html', 'Apps') + navLink('ai.html', 'AI') +
       navLink('canvas.html', 'Canvas') + navLink('world.html', 'World') +
+      navLink('live-rap-room.html', 'Live Rap Room') +
       navLink('dashboard.html', 'Dashboard') +
       '<a class="fas-nav-auth" href="/login.html">Sign In</a>';
 
