@@ -740,6 +740,9 @@ document.addEventListener("click", async (event) => {
 function applyProductPrefill() {
   const query = new URLSearchParams(location.search);
   const form = $("#product-form");
+  const requestedTab = query.get("tab");
+  const tabButton = requestedTab && document.querySelector(`[data-tab="${requestedTab}"]`);
+  if (tabButton) tabButton.click();
   const fields = { kind: "product_kind", title: "title", category: "category", description: "description" };
   Object.entries(fields).forEach(([parameter, field]) => {
     if (query.get(parameter) && form.elements[field]) form.elements[field].value = query.get(parameter);

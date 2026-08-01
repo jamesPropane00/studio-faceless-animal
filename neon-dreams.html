@@ -455,6 +455,7 @@
             <a href="#comic" class="btn btn-primary">Read The Comic</a>
             <a href="#vault" class="btn btn-ghost">Open The Vault</a>
             <a href="https://fanvue.com/neondreamsclub" class="btn btn-primary ndc-fanvue" target="_blank" rel="noopener noreferrer">Unlock Fanvue Access</a>
+            <a href="shop-admin.html?tab=characters" class="btn btn-ghost" id="ndc-admin-entry" hidden>Manage Neon Dreams</a>
           </div>
         </div>
         <div class="ndc-hero-art" aria-hidden="true">
@@ -793,6 +794,17 @@
     </section>
   </main>
   <script src="assets/script.js?v=20260607-navfix"></script>
+  <script>
+    (function () {
+      try {
+        var user = JSON.parse(localStorage.getItem('fas_user') || 'null');
+        var username = String(user && user.username || '').toLowerCase();
+        if (username === 'jdot00' || username === 'jamespropane00') {
+          document.getElementById('ndc-admin-entry').hidden = false;
+        }
+      } catch (_) {}
+    }());
+  </script>
   <script type="module" src="assets/js/neon-dreams.js?v=20260801-character-files"></script>
   <script type="module" src="assets/js/widget-hub.js"></script>
 </body>
