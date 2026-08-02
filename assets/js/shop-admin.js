@@ -288,14 +288,55 @@ async function loadProducts() {
       return `
       <article class="admin-row"><div><strong>${safe(product.title)}</strong>
         <p>${safe(product.sku)} · ${typeLabel} · ${money(product.price_cents)} · ${inventoryLabel} · ${product.published ? "published" : "hidden"}</p>
-        <p>${product.slug ? `<a href="/product/${encodeURIComponent(product.slug)}" target="_blank" rel="noopener">View product page ↗</a>` : "Product URL is created when saved"} · ${product.published ? "Live in store" : "Private draft"}</p>
-      </div><div class="admin-actions"><button data-edit="${product.id}">Edit</button>${product.fulfillment_mode === "dropship" ? `<button data-copy-codex="${product.id}">Copy Codex brief</button>` : ""}<button data-publish="${product.id}">${product.published ? "Unpublish" : "Publish"}</button><button data-delete="${product.id}">Delete</button></div></article>`;
+        <p>${product.published && product.slug ? `<a href="/product/${encodeURIComponent(product.slug)}" target="_blank" rel="noopener">Open live page ↗</a>` : "Draft preview stays private"} · ${product.published ? "Live in store" : "Private draft"}</p>
+      </div><div class="admin-actions"><button data-preview="${product.id}">${product.published ? "Preview live" : "Preview draft"}</button><button data-edit="${product.id}">Edit</button>${product.fulfillment_mode === "dropship" ? `<button data-copy-codex="${product.id}">Copy Codex brief</button>` : ""}<button data-publish="${product.id}">${product.published ? "Unpublish" : "Publish"}</button><button data-delete="${product.id}">Delete</button></div></article>`;
     }
     ).join("") || "<p>No products yet.</p>";
     renderMarketplace();
   } catch (error) {
     $("#product-list").innerHTML = `<p class="form-error">${safe(error.message)}</p>`;
   }
+}
+function previewProduct(product) {
+  const images = (product.product_images || []).sort((a, b) => a.sort_order - b.sort_order);
+  const provider = product.fulfillment_provider || "internal";
+  const external = provider === "spring" || provider === "fanvue";
+  const digital = !external && product.product_kind !== "physical";
+  const dropship = product.fulfillment_mode === "dropship";
+  const delivery = dropship
+    ? `${product.delivery_min_business_days}–${product.delivery_max_business_days} business days from ${safe(product.ships_from || "supplier")}`
+    : digital ? "Protected download after verified payment"
+      : external ? `Checkout and fulfillment through ${provider === "spring" ? "Spring" : "Fanvue"}`
+        : product.local_pickup ? "Shipping or local pickup" : "Shipping";
+  $("#admin-preview-content").innerHTML = `
+    <span class="admin-preview-status">${product.published ? "Live listing" : "Private draft preview"}</span>
+    <div class="admin-preview-grid">
+      <div class="admin-preview-gallery">${images.length
+        ? images.map((image, index) => `<img src="${safe(image.public_url)}" alt="${safe(index ? `${product.title} view ${index + 1}` : product.title)}" ${index ? 'loading="lazy"' : ""}>`).join("")
+        : `<div style="min-height:24rem;display:grid;place-items:center;color:#ffffff1c;font-size:5rem;font-weight:900">FA</div>`}</div>
+      <div class="admin-preview-copy">
+        <p class="eyebrow">${safe(product.category)} · ${dropship ? `Ships from ${safe(product.ships_from || "supplier")}` : digital ? "Digital release" : safe(product.condition)}</p>
+        <h2>${safe(product.title)}</h2>
+        <p class="admin-preview-price">${provider === "spring" ? "From " : ""}${money(product.price_cents)}</p>
+        <p class="admin-preview-description">${safe(product.description)}</p>
+        <div class="admin-preview-facts">
+          <span><strong>SKU:</strong> ${safe(product.sku)}</span>
+          <span><strong>Status:</strong> ${product.published ? "Published and public" : "Draft — visible only to admins"}</span>
+          <span><strong>Inventory:</strong> ${safe(product.quantity)} available · ${safe(product.state)}</span>
+          <span><strong>Delivery:</strong> ${delivery}</span>
+        </div>
+        <div class="admin-preview-actions" aria-label="Customer purchase button preview"><span>Add to bag</span><span>Buy now</span></div>
+        <p class="field-help" style="margin-top:.8rem">Preview only. Customer buttons are intentionally disabled inside admin.</p>
+      </div>
+    </div>`;
+  $("#admin-preview-edit").dataset.previewEdit = product.id;
+  $("#admin-product-preview").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  $("#admin-preview-edit").focus();
+}
+function closeProductPreview() {
+  $("#admin-product-preview").classList.add("hidden");
+  document.body.style.overflow = "";
 }
 function tiktokReadiness(product, listing) {
   const source = sourceFor(product);
@@ -638,8 +679,12 @@ function editProduct(product) {
   scrollTo({ top: 0, behavior: "smooth" });
 }
 document.addEventListener("click", async (event) => {
-  const target = event.target.closest("[data-edit],[data-publish],[data-delete],[data-tab],[data-edit-tiktok],[data-copy-tiktok],[data-copy-codex]");
+  const target = event.target.closest("[data-edit],[data-preview],[data-preview-edit],[data-preview-close],[data-publish],[data-delete],[data-tab],[data-edit-tiktok],[data-copy-tiktok],[data-copy-codex]");
   if (!target) return;
+  if (target.dataset.previewClose !== undefined) {
+    closeProductPreview();
+    return;
+  }
   if (target.dataset.tab) {
     document.querySelectorAll(".tabs button").forEach((button) => button.classList.toggle("active", button === target));
     $("#products-tab").classList.toggle("hidden", target.dataset.tab !== "products");
@@ -647,9 +692,14 @@ document.addEventListener("click", async (event) => {
     $("#marketplace-tab").classList.toggle("hidden", target.dataset.tab !== "marketplace");
     $("#characters-tab").classList.toggle("hidden", target.dataset.tab !== "characters");
   }
-  const product = products.find((item) => item.id === (target.dataset.edit || target.dataset.publish || target.dataset.delete || target.dataset.editTiktok || target.dataset.copyTiktok || target.dataset.copyCodex));
+  const product = products.find((item) => item.id === (target.dataset.edit || target.dataset.preview || target.dataset.previewEdit || target.dataset.publish || target.dataset.delete || target.dataset.editTiktok || target.dataset.copyTiktok || target.dataset.copyCodex));
   try {
+    if (target.dataset.preview && product) previewProduct(product);
     if (target.dataset.edit && product) editProduct(product);
+    if (target.dataset.previewEdit && product) {
+      closeProductPreview();
+      editProduct(product);
+    }
     if (target.dataset.editTiktok && product) {
       editProduct(product);
       document.querySelector('[data-tab="products"]').click();
@@ -671,6 +721,9 @@ document.addEventListener("click", async (event) => {
   } catch (error) {
     alert(error.message);
   }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !$("#admin-product-preview").classList.contains("hidden")) closeProductPreview();
 });
 function resetProductForm() {
   $("#product-form").reset();
