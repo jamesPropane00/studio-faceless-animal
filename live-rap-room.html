@@ -56,7 +56,7 @@
           <div class="field"><span class="range-label">Beat volume</span><div class="range-wrap"><input id="beat-volume" type="range" min="0" max="1.5" value=".72" step=".01"><output>72</output></div></div>
           <div class="field"><span class="range-label">Master</span><div class="range-wrap"><input id="master-volume" type="range" min="0" max="1.5" value="1" step=".01"><output>100</output></div></div>
           <label class="file-pick">Import MP3 / WAV music library<input id="beat-file" type="file" accept="audio/*" multiple></label>
-          <div class="toggle-row"><button class="mini-toggle" id="beat-play">Play Beat</button><button class="mini-toggle" id="beat-loop">Loop</button><button class="mini-toggle" id="beat-mute">Beat Mute</button></div>
+          <div class="toggle-row"><button class="mini-toggle" id="beat-play">Play Beat</button><button class="mini-toggle" id="beat-loop" aria-pressed="false">↻ Repeat</button><button class="mini-toggle" id="radio-shuffle" aria-pressed="false">⤨ Shuffle</button><button class="mini-toggle" id="beat-mute">Beat Mute</button></div>
           <div class="toggle-row"><button class="mini-toggle" id="track-prev">Previous</button><button class="mini-toggle" id="track-next">Next Track</button><button class="mini-toggle" id="clear-library">Clear</button></div>
           <button class="control-btn primary" id="station-one">Play Faceless Radio · Station One</button>
           <button class="control-btn" id="tracklist-live">Show Track List On Live</button>
@@ -163,6 +163,17 @@
     $('#popout-stage').onclick=()=>{const pop=window.open('','djfa-live-output','popup,width=560,height=1000,resizable=yes');if(!pop){alert('Allow pop-ups, then try again.');return}const stream=canvas.captureStream(30);if(mixDestination)mixDestination.stream.getAudioTracks().forEach(t=>stream.addTrack(t));pop.document.open();pop.document.write('<!doctype html><title>DJFA Live Rap Room Output</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}video{display:block;width:100%;height:100%;object-fit:contain;background:#000}</style><video id="output" autoplay playsinline></video>');pop.document.close();pop.document.getElementById('output').srcObject=stream};
     $('#record-show').onclick=()=>{if(recorder&&recorder.state==='recording'){recorder.stop();return}const stream=canvas.captureStream(30);if(mixDestination)mixDestination.stream.getAudioTracks().forEach(t=>stream.addTrack(t));recorded=[];recorder=new MediaRecorder(stream,{mimeType:MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')?'video/webm;codecs=vp9,opus':'video/webm'});recorder.ondataavailable=e=>{if(e.data.size)recorded.push(e.data)};recorder.onstop=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(recorded,{type:'video/webm'}));a.download='djfa-live-rap-room-'+Date.now()+'.webm';a.click();$('#record-show').textContent='● Record'};recorder.start(1000);$('#record-show').textContent='■ Stop Recording'};
     devices().catch(()=>{});
+  })();
+  </script>
+  <script>
+  (()=>{
+    const beat=document.querySelector('#beat-source'),repeat=document.querySelector('#beat-loop'),shuffle=document.querySelector('#radio-shuffle'),play=document.querySelector('#beat-play');
+    if(!beat||!repeat||!shuffle)return;
+    let shuffleOn=false;
+    const originalRepeat=repeat.onclick;
+    repeat.onclick=()=>{shuffleOn=false;shuffle.classList.remove('active');shuffle.setAttribute('aria-pressed','false');shuffle.textContent='⤨ Shuffle';originalRepeat?.();repeat.setAttribute('aria-pressed',String(beat.loop));repeat.textContent=beat.loop?'↻ Repeating':'↻ Repeat'};
+    shuffle.onclick=()=>{shuffleOn=!shuffleOn;beat.loop=false;repeat.classList.remove('active');repeat.setAttribute('aria-pressed','false');repeat.textContent='↻ Repeat';shuffle.classList.toggle('active',shuffleOn);shuffle.setAttribute('aria-pressed',String(shuffleOn));shuffle.textContent=shuffleOn?'⤨ Shuffling':'⤨ Shuffle'};
+    beat.onended=async()=>{const buttons=[...document.querySelectorAll('[data-track]')];if(!buttons.length)return;const active=buttons.findIndex(button=>button.parentElement?.querySelector('span')?.textContent.trim().startsWith('▶'));let next=(active+1)%buttons.length;if(shuffleOn&&buttons.length>1){do{next=Math.floor(Math.random()*buttons.length)}while(next===active)}buttons[next].click();const resume=()=>{beat.play().then(()=>{play.textContent='Pause Beat'}).catch(()=>{})};if(beat.readyState>=2)resume();else beat.addEventListener('canplay',resume,{once:true})};
   })();
   </script>
 </body>
