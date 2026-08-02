@@ -5,7 +5,8 @@
     "/profile/**",
     "/article/**",
     "/product/**",
-    "/sitemap.xml"
+    "/sitemap.xml",
+    "/google-products.xml"
   ],
   "exclude": [
     "/**/*.html",
