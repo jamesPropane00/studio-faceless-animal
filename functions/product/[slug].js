@@ -79,8 +79,7 @@ async function fetchProduct(env, slug) {
       select: fields.join(','),
       slug: `eq.${slug}`,
       published: 'eq.true',
-      state: 'in.(available,reserved)',
-      quantity: 'gt.0',
+      state: 'in.(available,reserved,sold)',
       limit: '1',
     });
     const response = await fetch(`${base}/rest/v1/products?${query}`, {
@@ -124,10 +123,36 @@ function render(product) {
   const externalUrl = springUrl || fanvueUrl;
   const digital = !externalUrl && product.product_kind !== 'physical';
   const dropship = !externalUrl && product.fulfillment_mode === 'dropship';
-  const availability = product.state === 'reserved'
-    ? 'https://schema.org/LimitedAvailability'
-    : 'https://schema.org/InStock';
+  const soldOut = !externalUrl && (product.state === 'sold' || Number(product.quantity) < 1);
+  const availability = soldOut
+    ? 'https://schema.org/OutOfStock'
+    : product.state === 'reserved'
+      ? 'https://schema.org/LimitedAvailability'
+      : 'https://schema.org/InStock';
   const price = (Number(product.price_cents || 0) / 100).toFixed(2);
+  const shippingDetails = !externalUrl && !digital ? {
+    '@type': 'OfferShippingDetails',
+    shippingRate: {
+      '@type': 'MonetaryAmount',
+      value: (Number(product.shipping_price_cents || 0) / 100).toFixed(2),
+      currency: 'USD',
+    },
+    shippingDestination: {
+      '@type': 'DefinedRegion',
+      addressCountry: 'US',
+    },
+    ...(dropship && Number(product.delivery_min_business_days) > 0 && Number(product.delivery_max_business_days) > 0 ? {
+      deliveryTime: {
+        '@type': 'ShippingDeliveryTime',
+        transitTime: {
+          '@type': 'QuantitativeValue',
+          minValue: Number(product.delivery_min_business_days),
+          maxValue: Number(product.delivery_max_business_days),
+          unitCode: 'DAY',
+        },
+      },
+    } : {}),
+  } : null;
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -149,7 +174,7 @@ function render(product) {
       : conditionUrl(product.condition),
     ...((!fanvueUrl || Number(product.price_cents) > 0) ? { offers: {
       '@type': 'Offer',
-      url: externalUrl || storeUrl,
+      url: canonical,
       priceCurrency: 'USD',
       price,
       availability,
@@ -161,6 +186,7 @@ function render(product) {
         name: 'Faceless Animal Studios',
         url: SITE_URL,
       },
+      ...(shippingDetails ? { shippingDetails } : {}),
     } } : {}),
   };
   const breadcrumbSchema = {
@@ -220,7 +246,7 @@ function render(product) {
         <p class="eyebrow">${esc(product.category)} &middot; ${fanvueUrl ? '18+ on Fanvue' : springUrl ? 'Made to order by Spring' : dropship ? `Ships from ${esc(product.ships_from)}` : digital ? 'Digital release' : esc(product.condition)}</p>
         <h1>${esc(product.title)}</h1>
         <p class="price">${fanvueUrl && Number(product.price_cents) <= 0 ? 'Exclusive access' : `${springUrl ? 'From ' : ''}$${esc(price)}`}</p>
-        <span class="status">${fanvueUrl ? 'Available through Fanvue · 18+' : springUrl ? 'Available through Spring' : product.state === 'reserved' ? 'Temporarily reserved' : Number(product.quantity) <= 3 ? `Only ${esc(product.quantity)} left` : 'Available'}</span>
+        <span class="status">${fanvueUrl ? 'Available through Fanvue · 18+' : springUrl ? 'Available through Spring' : soldOut ? 'Sold out' : product.state === 'reserved' ? 'Temporarily reserved' : Number(product.quantity) <= 3 ? `Only ${esc(product.quantity)} left` : 'Available'}</span>
         <p class="description">${esc(product.description)}</p>
         ${dropship ? `<div class="shipping-disclosure"><strong>Estimated delivery: ${esc(product.delivery_min_business_days)}&ndash;${esc(product.delivery_max_business_days)} business days</strong><span>${esc(product.shipping_service || 'Supplier shipping')} from ${esc(product.ships_from)}. Delivery timing may vary by destination, carrier processing, and customs.</span></div>` : ''}
         ${digital && product.preview_url ? `<a class="preview" href="${esc(safeUrl(product.preview_url))}" rel="noopener" target="_blank">Preview this release &rarr;</a>` : ''}
@@ -233,7 +259,9 @@ function render(product) {
         </div>
         ${externalUrl
           ? `<div class="purchase-actions"><a class="buy primary" href="${esc(externalUrl)}" target="_blank" rel="noopener">${fanvueUrl ? 'View and unlock on Fanvue (18+)' : 'Choose options and buy on Spring'}</a></div>`
-          : `<div class="purchase-actions"><a class="buy" href="${esc(addUrl)}">Add to bag</a><a class="buy primary" href="${esc(buyUrl)}">Buy now</a></div>`}
+          : soldOut
+            ? '<div class="purchase-actions"><a class="buy" href="/store">Browse available products</a></div>'
+            : `<div class="purchase-actions"><a class="buy" href="${esc(addUrl)}">Add to bag</a><a class="buy primary" href="${esc(buyUrl)}">Buy now</a></div>`}
         <p class="note">${fanvueUrl ? 'Fanvue handles sign-in, age controls, payment, content access, and customer support. This item does not use the Faceless Supply Stripe checkout.' : springUrl ? 'Spring handles product options, payment, production, shipping, returns, and customer support for this item.' : dropship ? 'This item is fulfilled by a third-party supplier. Faceless Animal Studios remains your seller and customer-service contact.' : 'Prices and inventory are verified by the server before Stripe Checkout opens.'}</p>
       </div>
     </article>

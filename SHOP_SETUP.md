@@ -100,6 +100,24 @@ For the strongest listing, write a specific title, choose an accurate category, 
 
 Migration 042 keeps the database foundation for future eBay and Facebook Marketplace connectors, but those controls stay hidden until the connectors are actually built. API credentials and automated marketplace publishing are intentionally not implemented yet. Future connector functions should use the service role, write the returned external listing ID and URL to this table, and treat Supabase product price and inventory as the source of truth.
 
+### Google Search and free Shopping listings
+
+The direct URL submitted for every item is `https://facelessanimalstudios.com/product/{slug}`. The landing page, canonical tag, Product structured data, sitemap entry, and Google product feed all use that same URL, so a Google click opens the exact product instead of the general store. Product pages remain indexable when temporarily sold out and report `OutOfStock`; unpublished or inactive products are excluded.
+
+In [Google Search Console](https://search.google.com/search-console), verify the `facelessanimalstudios.com` domain property, submit `https://facelessanimalstudios.com/sitemap.xml`, and use URL Inspection to request indexing for the most important finished product pages. Search Console submission helps discovery but does not guarantee a position or rich result.
+
+For free Google Shopping exposure, create or open [Google Merchant Center](https://merchants.google.com/), verify and claim this same domain, then add a scheduled product data source using:
+
+```text
+https://facelessanimalstudios.com/google-products.xml
+```
+
+The feed includes only published, in-stock physical products that use this site's checkout and have a price plus image. It deliberately excludes digital downloads, Fanvue, Spring/external-checkout listings, drafts, sold-out products, and products without an image. Each feed item links directly to its permanent product page and supplies matching title, description, image, price, availability, condition, identifiers, category, and U.S. shipping charge.
+
+Before asking Merchant Center for review, publish visible contact information plus accurate shipping, returns/refunds, privacy, and terms pages, and make sure those policy links are easy to find from the store. Configure the same U.S. shipping service and cost in Merchant Center that shoppers see on the site. Do not submit counterfeit, unauthorized branded, explicit/adult, prohibited, or misleading listings. Review Merchant Center's **Needs attention** tab after every feed fetch and correct the source product rather than overriding mismatched data in Google.
+
+There is no honest or technical way to guarantee the top organic position. Strong original photos, exact product identifiers (manufacturer GTIN or MPN when one exists), specific buyer-focused titles, accurate descriptions, competitive total price, reliable fulfillment, links from relevant pages, and genuine customer interest determine whether these technically eligible pages earn visibility over time. Never invent identifiers, reviews, brands, or availability.
+
 ## 9. Spring / Teespring products
 
 Choose **Spring / Teespring product** in the admin, paste a public `creator-spring.com/listing/...` URL, and press **Import details from Spring**. The secure admin function reads the public listing and fills the title, description, displayed price, product category and main image. Review the imported wording before publishing.
