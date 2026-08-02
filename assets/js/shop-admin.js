@@ -206,7 +206,7 @@ $("#import-cj").onclick = async () => {
     }
     const select = $("#cj-variant-select");
     select.innerHTML = `<option value="">Choose the exact color / size</option>${importedCJVariants.map((variant, index) =>
-      `<option value="${index}">${safe(variant.name || variant.sku || variant.id)} · ${variant.quantity} available${variant.cost_cents == null ? "" : ` · ${money(variant.cost_cents)} cost`}</option>`
+      `<option value="${index}">${safe(variant.name || variant.sku || variant.id)} · ${variant.quantity} available${variant.warehouses?.length ? ` (${safe(variant.warehouses.map((warehouse) => `${warehouse.country_code || warehouse.name}: ${warehouse.quantity}`).join(", "))})` : ""}${variant.cost_cents == null ? "" : ` · ${money(variant.cost_cents)} cost`}</option>`
     ).join("")}`;
     $("#cj-variant-control").classList.remove("hidden");
     if (importedCJVariants.length === 1) {
@@ -232,7 +232,10 @@ $("#cj-variant-select").onchange = (event) => {
   form.elements.supplier_cost.value = variant.cost_cents == null ? "" : (variant.cost_cents / 100).toFixed(2);
   form.elements.quantity.value = String(variant.quantity || 0);
   if (variant.weight_grams) form.elements.tiktok_weight_grams.value = String(variant.weight_grams);
-  $("#cj-import-status").textContent = `Mapped exactly: ${variant.name || variant.sku} · VID ${variant.id} · ${variant.quantity} available. Recheck shipping before publishing.`;
+  const warehouseText = variant.warehouses?.length
+    ? ` Warehouses: ${variant.warehouses.map((warehouse) => `${warehouse.name || warehouse.country_code}: ${warehouse.quantity}${warehouse.verified ? " verified" : " factory/unverified"}`).join(", ")}.`
+    : "";
+  $("#cj-import-status").textContent = `Mapped exactly: ${variant.name || variant.sku} · VID ${variant.id} · ${variant.quantity} available.${warehouseText} Recheck shipping before publishing.`;
 };
 
 $("#import-spring").onclick = async () => {

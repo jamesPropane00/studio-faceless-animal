@@ -234,11 +234,51 @@ Deno.serve(async (req) => {
         }
         const item = result.data;
         const variants = Array.isArray(item.variants) ? item.variants : [];
+        // Product details can omit inventory even when CJ's storefront shows stock.
+        // Pull the dedicated stock endpoint as a fallback so admins see the actual
+        // warehouse/factory split before choosing a variant.
+        let stockData: Record<string, unknown> = {};
+        try {
+          const stockEndpoint = new URL("https://developers.cjdropshipping.com/api2.0/v1/product/stock/getInventoryByPid");
+          stockEndpoint.searchParams.set("pid", String(item.pid ?? productId));
+          const stockResponse = await fetch(stockEndpoint, {
+            headers: { "CJ-Access-Token": accessToken },
+            signal: AbortSignal.timeout(20000),
+          });
+          const stockResult = await stockResponse.json();
+          if (stockResponse.ok && Number(stockResult?.code) === 200 && stockResult?.data) {
+            stockData = stockResult.data;
+          }
+        } catch {
+          // Inventory enrichment should not prevent a product draft from importing.
+        }
+        const stockByVariant = new Map<string, Record<string, unknown>[]>();
+        const variantInventories = Array.isArray(stockData.variantInventories) ? stockData.variantInventories : [];
+        for (const entry of variantInventories) {
+          const vid = String(entry?.vid ?? "").trim();
+          if (vid) stockByVariant.set(vid, Array.isArray(entry?.inventory) ? entry.inventory : []);
+        }
+        const inventoryQuantity = (locations: Record<string, unknown>[]) => locations.reduce((sum, location) => {
+          const explicitTotal = Number(location.totalInventory ?? location.totalInventoryNum);
+          const fallbackTotal = Number(location.cjInventory ?? location.cjInventoryNum) +
+            Number(location.factoryInventory ?? location.factoryInventoryNum);
+          const quantity = Number.isFinite(explicitTotal) ? explicitTotal : fallbackTotal;
+          return sum + Math.max(0, Number.isFinite(quantity) ? quantity : 0);
+        }, 0);
+        const warehouseSummary = (locations: Record<string, unknown>[]) => locations.map((location) => ({
+          country_code: cleanOptional(location.countryCode, 8),
+          name: cleanOptional(location.areaEn ?? location.countryNameEn, 120),
+          quantity: Math.max(0, Math.floor(Number(location.totalInventory ?? location.totalInventoryNum) || 0)),
+          cj_quantity: Math.max(0, Math.floor(Number(location.cjInventory ?? location.cjInventoryNum) || 0)),
+          factory_quantity: Math.max(0, Math.floor(Number(location.factoryInventory ?? location.factoryInventoryNum) || 0)),
+          verified: Number(location.verifiedWarehouse) === 1,
+        }));
         const firstVariant = variants[0] ?? {};
         const importedVariants = variants.map((variant: Record<string, unknown>) => {
-          const locations = Array.isArray(variant.inventories) ? variant.inventories : [];
-          const variantInventory = locations.reduce((sum: number, location: Record<string, unknown>) =>
-            sum + Math.max(0, Number(location.totalInventory) || 0), 0);
+          const detailLocations = Array.isArray(variant.inventories) ? variant.inventories : [];
+          const fallbackLocations = stockByVariant.get(String(variant.vid ?? "")) ?? [];
+          const locations = detailLocations.length ? detailLocations : fallbackLocations;
+          const variantInventory = inventoryQuantity(locations);
           const variantCost = Number(variant.variantSellPrice ?? item.sellPrice);
           const variantSuggestedText = String(variant.variantSugSellPrice ?? item.suggestSellPrice ?? "");
           const variantSuggestedValues = variantSuggestedText.match(/\d+(?:\.\d+)?/g)?.map(Number).filter(Number.isFinite) ?? [];
@@ -249,14 +289,16 @@ Deno.serve(async (req) => {
             cost_cents: Number.isFinite(variantCost) && variantCost >= 0 ? Math.round(variantCost * 100) : null,
             suggested_price_cents: variantSuggestedValues.length ? Math.round(Math.max(...variantSuggestedValues) * 100) : null,
             quantity: Math.max(0, Math.min(999999, Math.floor(variantInventory))),
+            warehouses: warehouseSummary(locations),
+            has_verified_inventory: locations.some((location: Record<string, unknown>) => Number(location.verifiedWarehouse) === 1),
             weight_grams: Math.round(Number(variant.variantWeight ?? item.packingWeight ?? item.productWeight) || 0) || null,
           };
         }).filter((variant: Record<string, unknown>) => variant.id && variant.sku);
-        const inventory = variants.reduce((total: number, variant: Record<string, unknown>) => {
-          const locations = Array.isArray(variant.inventories) ? variant.inventories : [];
-          return total + locations.reduce((sum: number, location: Record<string, unknown>) =>
-            sum + Math.max(0, Number(location.totalInventory) || 0), 0);
-        }, 0);
+        const inventory = importedVariants.reduce((total: number, variant: Record<string, unknown>) =>
+          total + Math.max(0, Number(variant.quantity) || 0), 0);
+        const productWarehouses = Array.isArray(stockData.inventories)
+          ? warehouseSummary(stockData.inventories)
+          : [];
         const suggestedText = String(firstVariant.variantSugSellPrice ?? item.suggestSellPrice ?? "");
         const suggestedValues = suggestedText.match(/\d+(?:\.\d+)?/g)?.map(Number).filter(Number.isFinite) ?? [];
         const suggestedPrice = suggestedValues.length ? Math.max(...suggestedValues) : null;
@@ -279,6 +321,7 @@ Deno.serve(async (req) => {
             images,
             variants_count: variants.length,
             variants: importedVariants,
+            warehouses: productWarehouses,
           },
         });
       }
