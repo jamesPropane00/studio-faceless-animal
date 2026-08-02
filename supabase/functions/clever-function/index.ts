@@ -31,10 +31,21 @@ Deno.serve(async (req) => {
     const { error: releaseError } = await admin.rpc("release_expired_shop_reservations");
     if (releaseError) throw releaseError;
     const { data: requestedProducts, error: productError } = await admin.from("products")
-      .select("id,fulfillment_provider").in("id", items.map((item: { product_id: string; quantity: number }) => item.product_id));
+      .select("id,title,fulfillment_provider,fulfillment_mode,product_sources(supplier_name,supplier_variant_id,supplier_sku)")
+      .in("id", items.map((item: { product_id: string; quantity: number }) => item.product_id));
     if (productError) throw productError;
     if ((requestedProducts ?? []).some((product) => product.fulfillment_provider !== "internal")) {
       return reply({ error: "External products must be purchased through their official product page." }, 400);
+    }
+    const unmappedCJProduct = (requestedProducts ?? []).find((product) => {
+      const source = Array.isArray(product.product_sources) ? product.product_sources[0] : product.product_sources;
+      const variantId = String(source?.supplier_variant_id ?? "").trim();
+      const supplierSku = String(source?.supplier_sku ?? "").trim();
+      return product.fulfillment_mode === "dropship" && source?.supplier_name === "CJdropshipping" &&
+        (!variantId || !supplierSku || /^PENDING(?:-|$)/i.test(variantId) || /^PENDING(?:-|$)/i.test(supplierSku));
+    });
+    if (unmappedCJProduct) {
+      return reply({ error: `${unmappedCJProduct.title} is temporarily unavailable while its exact supplier variant is verified.` }, 409);
     }
     const { data: created, error: createError } = await admin.rpc("create_shop_order", {
       p_items: items, p_fulfillment: body.fulfillment, p_customer: body.customer ?? {},

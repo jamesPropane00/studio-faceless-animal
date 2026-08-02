@@ -84,6 +84,11 @@
               <small>This is visible only in admin and paid-order fulfillment. Customers never see the supplier link.</small>
             </label>
             <div class="wide admin-actions"><a id="open-supplier-source" class="admin-button ghost" href="https://www.aliexpress.com/" target="_blank" rel="noopener">Open supplier listing</a><button type="button" id="copy-supplier-source" class="admin-button ghost">Copy source URL</button><button type="button" id="import-cj" class="admin-button ghost hidden">Import details from CJ</button><span id="cj-import-status" class="field-help"></span></div>
+            <label class="field-label wide hidden" id="cj-variant-control">
+              <span>Exact CJ variant sold by this listing</span>
+              <select id="cj-variant-select"><option value="">Choose the exact color / size</option></select>
+              <small>Required before publishing or marking the product TikTok-ready. The selected CJ VID and SKU are saved with every paid order.</small>
+            </label>
             <label class="field-label">
               <span>Shipping estimate preset</span>
               <select name="delivery_preset" id="delivery-preset">
@@ -304,7 +309,7 @@
     } catch (_) {}
   </script>
   <script src="/assets/js/env.js" onerror="void 0"></script>
-  <script type="module" src="/assets/js/shop-admin.js?v=20260801-cj-tiktok"></script>
+  <script type="module" src="/assets/js/shop-admin.js?v=20260802-variant-lock"></script>
   <script type="module" src="/assets/js/neon-dreams-admin.js?v=20260801-character-files"></script>
 </body>
 </html>

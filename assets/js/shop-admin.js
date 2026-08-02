@@ -30,6 +30,14 @@ let products = [];
 let orders = [];
 let importedSpringImage = null;
 let importedCJImages = [];
+let importedCJVariants = [];
+
+function hasExactCJMapping(source) {
+  if (!source || source.supplier_name !== "CJdropshipping") return true;
+  const variantId = String(source.supplier_variant_id || "").trim();
+  const sku = String(source.supplier_sku || "").trim();
+  return Boolean(variantId && sku && !/^PENDING(?:-|$)/i.test(variantId) && !/^PENDING(?:-|$)/i.test(sku));
+}
 
 function getWebsiteSession() {
   try { return JSON.parse(localStorage.getItem("fas_user") || localStorage.getItem("fas_member") || "null"); } catch { return null; }
@@ -115,6 +123,7 @@ function showSupplierFields() {
   const value = form.elements.supplier_product_url.value;
   $("#open-supplier-source").href = value.startsWith("https://") ? value : fallback;
   if (!value) $("#cj-import-status").textContent = isCJ ? "Paste a CJ product URL or product ID, then import." : "";
+  $("#cj-variant-control").classList.toggle("hidden", !isCJ || !importedCJVariants.length);
 }
 $("#supplier-name").onchange = showSupplierFields;
 
@@ -178,11 +187,39 @@ $("#import-cj").onclick = async () => {
     form.elements.tiktok_weight_grams.value = imported.weight_grams || "";
     form.elements.tiktok_country_of_origin.value = imported.country_of_origin || "China";
     importedCJImages = imported.images || [];
-    status.textContent = `Imported ${imported.variants_count || 0} CJ variants. Review the exact variant, price, stock, shipping and image rights before saving.`;
+    importedCJVariants = imported.variants || [];
+    if (importedCJVariants.length !== 1) {
+      form.elements.supplier_variant_id.value = "";
+      form.elements.supplier_variant.value = "";
+      form.elements.supplier_sku.value = "";
+    }
+    const select = $("#cj-variant-select");
+    select.innerHTML = `<option value="">Choose the exact color / size</option>${importedCJVariants.map((variant, index) =>
+      `<option value="${index}">${safe(variant.name || variant.sku || variant.id)} · ${variant.quantity} available${variant.cost_cents == null ? "" : ` · ${money(variant.cost_cents)} cost`}</option>`
+    ).join("")}`;
+    $("#cj-variant-control").classList.remove("hidden");
+    if (importedCJVariants.length === 1) {
+      select.value = "0";
+      select.dispatchEvent(new Event("change"));
+    }
+    status.textContent = `Imported ${imported.variants_count || 0} CJ variants. Choose the exact variant this listing will sell before publishing.`;
     updateSearchPreview();
   } catch (error) {
     status.textContent = error.message;
   }
+};
+
+$("#cj-variant-select").onchange = (event) => {
+  const variant = importedCJVariants[Number(event.target.value)];
+  if (!variant) return;
+  const form = $("#product-form");
+  form.elements.supplier_variant_id.value = variant.id || "";
+  form.elements.supplier_variant.value = variant.name || "";
+  form.elements.supplier_sku.value = variant.sku || "";
+  form.elements.supplier_cost.value = variant.cost_cents == null ? "" : (variant.cost_cents / 100).toFixed(2);
+  form.elements.quantity.value = String(variant.quantity || 0);
+  if (variant.weight_grams) form.elements.tiktok_weight_grams.value = String(variant.weight_grams);
+  $("#cj-import-status").textContent = `Mapped exactly: ${variant.name || variant.sku} · VID ${variant.id} · ${variant.quantity} available. Recheck shipping before publishing.`;
 };
 
 $("#import-spring").onclick = async () => {
@@ -239,7 +276,7 @@ async function loadProducts() {
       <article class="admin-row"><div><strong>${safe(product.title)}</strong>
         <p>${safe(product.sku)} · ${typeLabel} · ${money(product.price_cents)} · ${inventoryLabel} · ${product.published ? "published" : "hidden"}</p>
         <p>${product.slug ? `<a href="/product/${encodeURIComponent(product.slug)}" target="_blank" rel="noopener">View product page ↗</a>` : "Product URL is created when saved"} · ${product.published ? "Live in store" : "Private draft"}</p>
-      </div><div class="admin-actions"><button data-edit="${product.id}">Edit</button><button data-publish="${product.id}">${product.published ? "Unpublish" : "Publish"}</button><button data-delete="${product.id}">Delete</button></div></article>`;
+      </div><div class="admin-actions"><button data-edit="${product.id}">Edit</button>${product.fulfillment_mode === "dropship" ? `<button data-copy-codex="${product.id}">Copy Codex brief</button>` : ""}<button data-publish="${product.id}">${product.published ? "Unpublish" : "Publish"}</button><button data-delete="${product.id}">Delete</button></div></article>`;
     }
     ).join("") || "<p>No products yet.</p>";
     renderMarketplace();
@@ -248,6 +285,7 @@ async function loadProducts() {
   }
 }
 function tiktokReadiness(product, listing) {
+  const source = sourceFor(product);
   return [
     [Boolean(product.title && product.description), "Title and description"],
     [Boolean(product.product_images?.length), "At least one licensed product image"],
@@ -257,6 +295,7 @@ function tiktokReadiness(product, listing) {
     [Boolean(listing?.country_of_origin), "Country of origin"],
     [Boolean(listing?.package_weight_grams && listing?.package_length_cm && listing?.package_width_cm && listing?.package_height_cm), "Package weight and dimensions"],
     [Boolean(listing?.compliance_confirmed_at), "Policy review confirmed"],
+    [hasExactCJMapping(source), "Exact supplier variant ID and SKU"],
   ];
 }
 function renderMarketplace() {
@@ -294,6 +333,58 @@ function tiktokListingText(product) {
     `SHIPPING: ${product.shipping_service || "Confirm in Seller Center"}`,
     `IMAGES:\n${(product.product_images || []).sort((a, b) => a.sort_order - b.sort_order).map((image) => image.public_url).join("\n")}`,
   ].join("\n\n");
+}
+
+function codexProductBrief(product) {
+  const source = sourceFor(product);
+  const listing = marketplaceFor(product);
+  const readiness = listing ? tiktokReadiness(product, listing) : [];
+  return JSON.stringify({
+    purpose: "Faceless Supply CJ product verification and listing handoff",
+    storefront: {
+      id: product.id,
+      slug: product.slug,
+      title: product.title,
+      sku: product.sku,
+      description: product.description,
+      price_cents: product.price_cents,
+      quantity: product.quantity,
+      published: product.published,
+      category: product.category,
+      images: (product.product_images || []).sort((a, b) => a.sort_order - b.sort_order).map((image) => image.public_url),
+    },
+    supplier: source ? {
+      name: source.supplier_name,
+      product_url: source.supplier_product_url,
+      product_id: source.supplier_product_id,
+      exact_variant: source.supplier_variant,
+      variant_id: source.supplier_variant_id,
+      variant_sku: source.supplier_sku,
+      estimated_cost_cents: source.supplier_cost_cents,
+      notes: source.supplier_notes,
+      exact_mapping_verified: hasExactCJMapping(source),
+    } : null,
+    fulfillment: {
+      ships_from: product.ships_from,
+      shipping_service: product.shipping_service,
+      delivery_business_days: [product.delivery_min_business_days, product.delivery_max_business_days],
+      customer_shipping_cents: product.shipping_price_cents,
+    },
+    tiktok_shop: listing ? {
+      status: listing.status,
+      category_id: listing.category_id,
+      warehouse_id: listing.warehouse_id,
+      country_of_origin: listing.country_of_origin,
+      package_weight_grams: listing.package_weight_grams,
+      package_cm: [listing.package_length_cm, listing.package_width_cm, listing.package_height_cm],
+      readiness: readiness.map(([ok, label]) => ({ ok, check: label })),
+    } : { status: "not_prepared" },
+    next_steps: [
+      "Refresh the CJ import and verify live inventory, exact VID/SKU, cost, and shipping before publication.",
+      "For TikTok Shop US, verify U.S. warehouse inventory and map every customer-facing variation to its own supplier SKU.",
+      "Never expose supplier URLs or credentials outside the authenticated admin.",
+    ],
+  }, null, 2);
 }
 
 function cleanFilename(name) {
@@ -373,6 +464,15 @@ $("#product-form").onsubmit = async (event) => {
   };
   $("#product-error").textContent = "";
   try {
+    const requestedPublish = form.get("published") === "on";
+    const requestedTikTok = form.get("tiktok_enabled") === "on";
+    if (isCJ && (requestedPublish || requestedTikTok) && !hasExactCJMapping({
+      supplier_name: "CJdropshipping",
+      supplier_variant_id: form.get("supplier_variant_id"),
+      supplier_sku: form.get("supplier_sku"),
+    })) {
+      throw new Error("Import the CJ product and choose one exact variant before publishing or preparing it for TikTok Shop.");
+    }
     if (isDigital && downloadFile?.size) {
       download = {
         path: await uploadFile("product-downloads", productId, downloadFile),
@@ -500,6 +600,9 @@ function editProduct(product) {
   form.elements.delivery_preset.value = "custom";
   importedSpringImage = null;
   importedCJImages = [];
+  importedCJVariants = [];
+  $("#cj-variant-select").innerHTML = '<option value="">Choose the exact color / size</option>';
+  $("#cj-variant-control").classList.add("hidden");
   form.elements.price.value = (product.price_cents / 100).toFixed(2);
   form.elements.shipping_price.value = (product.shipping_price_cents / 100).toFixed(2);
   form.elements.local_pickup.checked = product.local_pickup;
@@ -522,7 +625,7 @@ function editProduct(product) {
   scrollTo({ top: 0, behavior: "smooth" });
 }
 document.addEventListener("click", async (event) => {
-  const target = event.target.closest("[data-edit],[data-publish],[data-delete],[data-tab],[data-edit-tiktok],[data-copy-tiktok]");
+  const target = event.target.closest("[data-edit],[data-publish],[data-delete],[data-tab],[data-edit-tiktok],[data-copy-tiktok],[data-copy-codex]");
   if (!target) return;
   if (target.dataset.tab) {
     document.querySelectorAll(".tabs button").forEach((button) => button.classList.toggle("active", button === target));
@@ -531,7 +634,7 @@ document.addEventListener("click", async (event) => {
     $("#marketplace-tab").classList.toggle("hidden", target.dataset.tab !== "marketplace");
     $("#characters-tab").classList.toggle("hidden", target.dataset.tab !== "characters");
   }
-  const product = products.find((item) => item.id === (target.dataset.edit || target.dataset.publish || target.dataset.delete || target.dataset.editTiktok || target.dataset.copyTiktok));
+  const product = products.find((item) => item.id === (target.dataset.edit || target.dataset.publish || target.dataset.delete || target.dataset.editTiktok || target.dataset.copyTiktok || target.dataset.copyCodex));
   try {
     if (target.dataset.edit && product) editProduct(product);
     if (target.dataset.editTiktok && product) {
@@ -542,6 +645,11 @@ document.addEventListener("click", async (event) => {
       await navigator.clipboard.writeText(tiktokListingText(product));
       target.textContent = "Copied";
       setTimeout(() => { target.textContent = "Copy for Seller Center"; }, 1400);
+    }
+    if (target.dataset.copyCodex && product) {
+      await navigator.clipboard.writeText(codexProductBrief(product));
+      target.textContent = "Codex brief copied";
+      setTimeout(() => { target.textContent = "Copy Codex brief"; }, 1600);
     }
     if (target.dataset.publish && product) { await api("toggle_publish", { product_id: product.id }); loadProducts(); }
     if (target.dataset.delete && product && confirm(`Delete “${product.title}” and its files?`)) {
@@ -557,6 +665,9 @@ function resetProductForm() {
   $("#product-kind").value = "physical";
   importedSpringImage = null;
   importedCJImages = [];
+  importedCJVariants = [];
+  $("#cj-variant-select").innerHTML = '<option value="">Choose the exact color / size</option>';
+  $("#cj-variant-control").classList.add("hidden");
   $("#product-form").elements.fanvue_preview_safe.checked = false;
   $("#product-form").elements.delivery_preset.value = "standard";
   $("#product-form").elements.ships_from.value = "China";

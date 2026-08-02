@@ -85,6 +85,75 @@
   clearBrowserCachesOnce();
 }());
 
+/* Keep the five primary destinations consistent, with Store first on mobile. */
+(function () {
+  'use strict';
+
+  var primaryLinks = [
+    { href: '/store', label: 'Store', matches: ['/store', '/store.html'] },
+    { href: '/directory.html', label: 'Directory', matches: ['/directory.html'] },
+    { href: '/radio.html', label: 'Radio', matches: ['/radio.html'] },
+    { href: '/tv.html', label: 'Faceless TV', matches: ['/tv.html'] },
+    { href: '/neon-dreams.html', label: 'Neon Dreams', matches: ['/neon-dreams.html'] }
+  ];
+
+  function pathFor(anchor) {
+    try { return new URL(anchor.href, location.origin).pathname.replace(/\/+$/, '') || '/'; }
+    catch (error) { return ''; }
+  }
+
+  function reorderDirectLinks(container) {
+    if (!container) return;
+    var directLinks = Array.prototype.filter.call(container.children, function (child) {
+      return child.tagName === 'A';
+    });
+    var fragment = document.createDocumentFragment();
+    primaryLinks.forEach(function (item) {
+      var found = directLinks.find(function (anchor) { return item.matches.indexOf(pathFor(anchor)) !== -1; });
+      if (!found) {
+        found = document.createElement('a');
+        found.href = item.href;
+      }
+      found.textContent = item.label;
+      fragment.appendChild(found);
+    });
+    container.insertBefore(fragment, container.firstChild);
+  }
+
+  function reorderList(container) {
+    if (!container) return;
+    var items = Array.prototype.filter.call(container.children, function (child) {
+      return child.querySelector && child.querySelector('a');
+    });
+    var fragment = document.createDocumentFragment();
+    primaryLinks.forEach(function (item) {
+      var found = items.find(function (listItem) {
+        var anchor = listItem.querySelector('a');
+        return anchor && item.matches.indexOf(pathFor(anchor)) !== -1;
+      });
+      if (!found) {
+        found = document.createElement('li');
+        var anchor = document.createElement('a');
+        anchor.href = item.href;
+        anchor.textContent = item.label;
+        found.appendChild(anchor);
+      }
+      found.querySelector('a').textContent = item.label;
+      fragment.appendChild(found);
+    });
+    container.insertBefore(fragment, container.firstChild);
+  }
+
+  function initPrimaryNavigation() {
+    reorderDirectLinks(document.querySelector('.fas-nav-primary'));
+    reorderDirectLinks(document.getElementById('mobile-menu'));
+    reorderList(document.querySelector('.navbar-links'));
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initPrimaryNavigation);
+  else initPrimaryNavigation();
+}());
+
 /* ================================================================
    CANONICAL SITE NAVIGATION — one sleek Neon-style bar everywhere.
    ================================================================ */

@@ -102,6 +102,8 @@ async function fetchProduct(env, slug) {
 function render(product) {
   const canonical = `${SITE_URL}/product/${encodeURIComponent(product.slug)}`;
   const storeUrl = `${SITE_URL}/store?product=${encodeURIComponent(product.slug)}`;
+  const addUrl = `${SITE_URL}/store?add=${encodeURIComponent(product.slug)}`;
+  const buyUrl = `${SITE_URL}/store?buy=${encodeURIComponent(product.slug)}`;
   const title = String(product.seo_title || `${product.title} | Faceless Supply`).slice(0, 70);
   const description = excerpt(
     product.meta_description || product.description ||
@@ -202,8 +204,8 @@ function render(product) {
     .shell{padding:clamp(2rem,6vw,5rem) 0 5rem}.breadcrumbs{color:var(--muted);font-size:.72rem;margin-bottom:1.2rem}.breadcrumbs a{text-decoration:none}
     .product{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:clamp(1.4rem,5vw,4rem);align-items:start}.gallery{display:grid;gap:.8rem}.gallery img{display:block;width:100%;max-height:760px;object-fit:cover;border:1px solid var(--line);background:#15131a}.empty-image{aspect-ratio:1;background:#15131a;display:grid;place-items:center;color:#ffffff18;font-size:5rem;font-weight:900}
     .copy{position:sticky;top:100px}.eyebrow{color:var(--gold);font-size:.68rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.copy h1{font-size:clamp(2.4rem,6vw,5.5rem);line-height:.9;letter-spacing:-.065em;margin:.7rem 0 1rem}.price{font-size:1.65rem;font-weight:900;color:var(--gold)}.description{color:var(--muted);line-height:1.8;white-space:pre-wrap}.facts{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:1rem 0;margin:1.5rem 0;display:grid;gap:.45rem;color:var(--muted);font-size:.78rem}.facts strong{color:#fff}.status{display:inline-flex;border:1px solid #72569c;color:#d8c6ff;padding:.38rem .6rem;font-size:.64rem;font-weight:900;text-transform:uppercase;letter-spacing:.1em}
-    .buy{display:block;text-align:center;text-decoration:none;background:linear-gradient(110deg,#7841d2,var(--purple));padding:1rem;border-radius:4px;font-weight:900;margin-top:1rem}.note{font-size:.7rem;color:var(--muted);line-height:1.6}.preview{display:inline-block;color:#d8c6ff;font-weight:800;margin:.7rem 0}.shipping-disclosure{display:grid;gap:.35rem;border:1px solid #4b3b23;background:#17130d;padding:.9rem;margin:1rem 0;color:#e9d3a1;font-size:.78rem;line-height:1.5}.shipping-disclosure span{color:var(--muted)}
-    @media(max-width:760px){.product{grid-template-columns:1fr}.copy{position:static}.top-inner,.shell{width:min(100% - 1rem,1120px)}.copy h1{font-size:clamp(2.5rem,14vw,4.5rem)}}
+    .purchase-actions{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:1rem}.buy{display:block;text-align:center;text-decoration:none;border:1px solid #5d5367;background:#151219;padding:1rem;border-radius:4px;font-weight:900}.buy.primary{border:0;background:linear-gradient(110deg,#7841d2,var(--purple))}.note{font-size:.7rem;color:var(--muted);line-height:1.6}.preview{display:inline-block;color:#d8c6ff;font-weight:800;margin:.7rem 0}.shipping-disclosure{display:grid;gap:.35rem;border:1px solid #4b3b23;background:#17130d;padding:.9rem;margin:1rem 0;color:#e9d3a1;font-size:.78rem;line-height:1.5}.shipping-disclosure span{color:var(--muted)}
+    @media(max-width:760px){.product{grid-template-columns:1fr}.copy{position:static;padding-bottom:5rem}.top-inner,.shell{width:min(100% - 1rem,1120px)}.copy h1{font-size:clamp(2.5rem,14vw,4.5rem)}.purchase-actions{position:fixed;left:0;right:0;bottom:0;z-index:8;padding:.7rem;background:#070709f2;border-top:1px solid var(--line);backdrop-filter:blur(16px)}.buy{padding:.9rem .5rem}}
   </style>
 </head>
 <body>
@@ -229,7 +231,9 @@ function render(product) {
           ${product.mpn ? `<span><strong>MPN:</strong> ${esc(product.mpn)}</span>` : ''}
           <span><strong>Delivery:</strong> ${fanvueUrl ? 'Access provided by Fanvue after its age and account checks' : springUrl ? 'Produced and shipped by Spring' : dropship ? `Ships directly from a fulfillment supplier in ${esc(product.ships_from)}` : digital ? 'Protected download after verified payment' : product.local_pickup ? 'Shipping or local pickup' : 'Shipping'}</span>
         </div>
-        <a class="buy" href="${esc(externalUrl || storeUrl)}" ${externalUrl ? 'target="_blank" rel="noopener"' : ''}>${fanvueUrl ? 'View and unlock on Fanvue (18+)' : springUrl ? 'Choose options and buy on Spring' : 'Buy securely on Faceless Supply'}</a>
+        ${externalUrl
+          ? `<div class="purchase-actions"><a class="buy primary" href="${esc(externalUrl)}" target="_blank" rel="noopener">${fanvueUrl ? 'View and unlock on Fanvue (18+)' : 'Choose options and buy on Spring'}</a></div>`
+          : `<div class="purchase-actions"><a class="buy" href="${esc(addUrl)}">Add to bag</a><a class="buy primary" href="${esc(buyUrl)}">Buy now</a></div>`}
         <p class="note">${fanvueUrl ? 'Fanvue handles sign-in, age controls, payment, content access, and customer support. This item does not use the Faceless Supply Stripe checkout.' : springUrl ? 'Spring handles product options, payment, production, shipping, returns, and customer support for this item.' : dropship ? 'This item is fulfilled by a third-party supplier. Faceless Animal Studios remains your seller and customer-service contact.' : 'Prices and inventory are verified by the server before Stripe Checkout opens.'}</p>
       </div>
     </article>

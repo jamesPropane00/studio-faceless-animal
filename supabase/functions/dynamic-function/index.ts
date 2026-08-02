@@ -21,6 +21,15 @@ const cleanOptional = (value: unknown, limit = 255) => {
   const text = String(value ?? "").trim().slice(0, limit);
   return text || null;
 };
+const exactCJMapping = (variantId: unknown, sku: unknown) => {
+  const cleanVariantId = String(variantId ?? "").trim();
+  const cleanSku = String(sku ?? "").trim();
+  return Boolean(
+    cleanVariantId && cleanSku &&
+    !/^PENDING(?:-|$)/i.test(cleanVariantId) &&
+    !/^PENDING(?:-|$)/i.test(cleanSku)
+  );
+};
 const excerpt = (value: unknown, limit = 155) => {
   const text = String(value ?? "").replace(/\s+/g, " ").trim();
   if (text.length <= limit) return text;
@@ -226,6 +235,23 @@ Deno.serve(async (req) => {
         const item = result.data;
         const variants = Array.isArray(item.variants) ? item.variants : [];
         const firstVariant = variants[0] ?? {};
+        const importedVariants = variants.map((variant: Record<string, unknown>) => {
+          const locations = Array.isArray(variant.inventories) ? variant.inventories : [];
+          const variantInventory = locations.reduce((sum: number, location: Record<string, unknown>) =>
+            sum + Math.max(0, Number(location.totalInventory) || 0), 0);
+          const variantCost = Number(variant.variantSellPrice ?? item.sellPrice);
+          const variantSuggestedText = String(variant.variantSugSellPrice ?? item.suggestSellPrice ?? "");
+          const variantSuggestedValues = variantSuggestedText.match(/\d+(?:\.\d+)?/g)?.map(Number).filter(Number.isFinite) ?? [];
+          return {
+            id: cleanOptional(variant.vid, 160),
+            name: cleanOptional(variant.variantNameEn ?? variant.variantKey, 240),
+            sku: cleanOptional(variant.variantSku ?? variant.variantKey, 160),
+            cost_cents: Number.isFinite(variantCost) && variantCost >= 0 ? Math.round(variantCost * 100) : null,
+            suggested_price_cents: variantSuggestedValues.length ? Math.round(Math.max(...variantSuggestedValues) * 100) : null,
+            quantity: Math.max(0, Math.min(999999, Math.floor(variantInventory))),
+            weight_grams: Math.round(Number(variant.variantWeight ?? item.packingWeight ?? item.productWeight) || 0) || null,
+          };
+        }).filter((variant: Record<string, unknown>) => variant.id && variant.sku);
         const inventory = variants.reduce((total: number, variant: Record<string, unknown>) => {
           const locations = Array.isArray(variant.inventories) ? variant.inventories : [];
           return total + locations.reduce((sum: number, location: Record<string, unknown>) =>
@@ -243,7 +269,7 @@ Deno.serve(async (req) => {
             description: stripHtml(item.description).slice(0, 8000),
             category: cleanOptional(item.categoryName, 160) ?? "CJ merchandise",
             product_id: String(item.pid ?? productId),
-            sku: cleanOptional(item.productSku, 160),
+            sku: cleanOptional(firstVariant.variantSku ?? item.productSku, 160),
             variant_id: cleanOptional(firstVariant.vid, 160),
             variant_name: cleanOptional(firstVariant.variantNameEn ?? firstVariant.variantKey, 240),
             cost_cents: Number.isFinite(cost) && cost >= 0 ? Math.round(cost * 100) : null,
@@ -252,6 +278,7 @@ Deno.serve(async (req) => {
             weight_grams: Math.round(Number(firstVariant.variantWeight ?? item.packingWeight ?? item.productWeight) || 0) || null,
             images,
             variants_count: variants.length,
+            variants: importedVariants,
           },
         });
       }
@@ -388,6 +415,19 @@ Deno.serve(async (req) => {
         if (sourceCost !== null && (!Number.isInteger(sourceCost) || sourceCost < 0)) {
           return reply({ error: "Supplier cost must be a valid amount." }, 400);
         }
+        const requestedVariantId = supplierName === "CJdropshipping"
+          ? cleanOptional(sourceInput.supplier_variant_id, 160) : null;
+        const requestedSupplierSku = supplierName === "CJdropshipping"
+          ? cleanOptional(sourceInput.supplier_sku, 160) : null;
+        const marketplace = body.marketplace ?? {};
+        const marketplaceEnabled = Boolean(marketplace.enabled);
+        if (
+          isDropship && supplierName === "CJdropshipping" &&
+          (Boolean(input.published) || marketplaceEnabled) &&
+          !exactCJMapping(requestedVariantId, requestedSupplierSku)
+        ) {
+          return reply({ error: "Choose one exact CJ variant with a real VID and variant SKU before publishing or preparing this product for TikTok Shop." }, 400);
+        }
         const product = {
           id, title, sku, product_kind: kind, state,
           description,
@@ -429,8 +469,8 @@ Deno.serve(async (req) => {
             (supplierName === "CJdropshipping"
               ? cjProductId(supplierUrl, null)
               : supplierUrl!.match(/\/item\/(\d+)\.html/i)?.[1] ?? null);
-          const sourceVariantId = supplierName === "CJdropshipping" ? cleanOptional(sourceInput.supplier_variant_id, 160) : null;
-          const sourceSku = supplierName === "CJdropshipping" ? cleanOptional(sourceInput.supplier_sku, 160) : null;
+          const sourceVariantId = requestedVariantId;
+          const sourceSku = requestedSupplierSku;
           const baseVariant = cleanOptional(sourceInput.supplier_variant, 240);
           const variantText = [
             baseVariant,
@@ -453,8 +493,6 @@ Deno.serve(async (req) => {
           const { error: sourceDeleteError } = await admin.from("product_sources").delete().eq("product_id", id);
           if (sourceDeleteError) throw sourceDeleteError;
         }
-        const marketplace = body.marketplace ?? {};
-        const marketplaceEnabled = Boolean(marketplace.enabled);
         if (marketplaceEnabled && (kind !== "physical" || isExternal || isFanvue)) {
           return reply({ error: "Only physical products may be prepared for TikTok Shop." }, 400);
         }
@@ -473,7 +511,8 @@ Deno.serve(async (req) => {
         const listingReady = marketplaceEnabled && Boolean(
           categoryId && warehouseId && countryOfOrigin && complianceConfirmed &&
           weight && weight > 0 && length && length > 0 && width && width > 0 && height && height > 0 &&
-          price > 0 && quantity > 0 && (images.length > 0 || (existingImageCount ?? 0) > 0)
+          price > 0 && quantity > 0 && (images.length > 0 || (existingImageCount ?? 0) > 0) &&
+          (!isDropship || supplierName !== "CJdropshipping" || exactCJMapping(requestedVariantId, requestedSupplierSku))
         );
         const { error: marketplaceError } = await admin.from("marketplace_listings").upsert({
           product_id: id,
@@ -506,8 +545,19 @@ Deno.serve(async (req) => {
 
       case "toggle_publish": {
         const { data: current, error: readError } = await admin.from("products")
-          .select("published").eq("id", String(body.product_id)).single();
+          .select("published,fulfillment_mode,product_sources(supplier_name,supplier_variant_id,supplier_sku)")
+          .eq("id", String(body.product_id)).single();
         if (readError) throw readError;
+        const source = Array.isArray(current.product_sources)
+          ? current.product_sources[0]
+          : current.product_sources;
+        if (
+          !current.published && current.fulfillment_mode === "dropship" &&
+          source?.supplier_name === "CJdropshipping" &&
+          !exactCJMapping(source.supplier_variant_id, source.supplier_sku)
+        ) {
+          return reply({ error: "This CJ draft cannot publish until you import and select one exact supplier variant with a real VID and SKU." }, 400);
+        }
         const { error } = await admin.from("products")
           .update({ published: !current.published }).eq("id", String(body.product_id));
         if (error) throw error;
