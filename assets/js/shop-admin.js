@@ -300,6 +300,23 @@ async function loadProducts() {
     $("#product-list").innerHTML = `<p class="form-error">${safe(error.message)}</p>`;
   }
 }
+
+$("#refresh-all-cj").onclick = async () => {
+  const button = $("#refresh-all-cj");
+  const status = $("#refresh-all-cj-status");
+  button.disabled = true;
+  status.textContent = "Checking every CJ product against CJ's live variant inventory...";
+  try {
+    const result = await api("refresh_all_cj_inventory");
+    const attention = (result.results || []).filter((item) => item.status !== "updated");
+    status.textContent = `CJ refresh finished: ${result.updated} updated, ${result.skipped} need an exact variant, ${result.failed} failed.${attention.length ? ` Review: ${attention.map((item) => `${item.title} (${item.reason})`).join("; ")}` : ""}`;
+    await loadProducts();
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
 function previewProduct(product) {
   const images = (product.product_images || []).sort((a, b) => a.sort_order - b.sort_order);
   const provider = product.fulfillment_provider || "internal";

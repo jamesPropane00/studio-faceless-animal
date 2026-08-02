@@ -164,6 +164,8 @@ Choose **Dropship product (AliExpress or CJ)** and then **CJdropshipping**. Past
 
 Saving or receiving a Stripe payment never spends money at CJ. Until CJ automated order creation is separately enabled and tested, use the paid-order supplier panel to open CJ, place the supplier order, and save its order ID and tracking number.
 
+Use **Refresh all CJ stock** on the Products tab before publishing CJ listings and before a major sales campaign. The refresh checks every CJ source against its exact saved VID and SKU, then updates only live supplier inventory, product availability state, and private supplier cost. It never overwrites the storefront title, description, retail price, or images. Listings without a real exact variant mapping are skipped and named in the result so an admin can edit them, import the current CJ variants, and choose the intended color/size safely.
+
 ## 13. TikTok Shop listing preparation
 
 The TikTok panel prepares physical products for Seller Center and keeps marketplace data private. Enable **Prepare this physical product for TikTok Shop**, then enter the category ID, warehouse ID, authorized brand or `No brand`, country of origin, package weight and dimensions. Confirm the policy review only after checking the exact item. The TikTok Shop tab shows missing requirements and generates copyable Seller Center listing text when the draft is ready.

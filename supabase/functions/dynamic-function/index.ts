@@ -326,6 +326,110 @@ Deno.serve(async (req) => {
         });
       }
 
+      case "refresh_all_cj_inventory": {
+        const { data: sources, error: sourceError } = await admin.from("product_sources")
+          .select("product_id,supplier_product_id,supplier_variant_id,supplier_sku,supplier_cost_cents,products(id,title,quantity,published,state)")
+          .eq("supplier_name", "CJdropshipping");
+        if (sourceError) throw sourceError;
+        const accessToken = await getCJAccessToken();
+        const inventoryQuantity = (locations: Record<string, unknown>[]) => locations.reduce((sum, location) => {
+          const explicitTotal = Number(location.totalInventory ?? location.totalInventoryNum);
+          const fallbackTotal = Number(location.cjInventory ?? location.cjInventoryNum) +
+            Number(location.factoryInventory ?? location.factoryInventoryNum);
+          const quantity = Number.isFinite(explicitTotal) ? explicitTotal : fallbackTotal;
+          return sum + Math.max(0, Number.isFinite(quantity) ? quantity : 0);
+        }, 0);
+        const refreshOne = async (source: Record<string, unknown>) => {
+          const relatedProduct = Array.isArray(source.products) ? source.products[0] : source.products;
+          const product = (relatedProduct ?? {}) as Record<string, unknown>;
+          const title = String(product.title ?? source.product_id ?? "CJ product");
+          const pid = String(source.supplier_product_id ?? "").trim();
+          const vid = String(source.supplier_variant_id ?? "").trim();
+          const sku = String(source.supplier_sku ?? "").trim();
+          if (!pid) return { title, status: "skipped", reason: "Missing CJ product ID" };
+          if (!exactCJMapping(vid, sku)) {
+            return { title, status: "skipped", reason: "Choose an exact CJ VID and SKU" };
+          }
+
+          const detailEndpoint = new URL("https://developers.cjdropshipping.com/api2.0/v1/product/query");
+          detailEndpoint.searchParams.set("pid", pid);
+          const stockEndpoint = new URL("https://developers.cjdropshipping.com/api2.0/v1/product/stock/getInventoryByPid");
+          stockEndpoint.searchParams.set("pid", pid);
+          const requestOptions = {
+            headers: { "CJ-Access-Token": accessToken },
+            signal: AbortSignal.timeout(20000),
+          };
+          const [detailResponse, stockResponse] = await Promise.all([
+            fetch(detailEndpoint, requestOptions),
+            fetch(stockEndpoint, requestOptions),
+          ]);
+          const [detailResult, stockResult] = await Promise.all([
+            detailResponse.json(),
+            stockResponse.json(),
+          ]);
+          if (!detailResponse.ok || !detailResult?.result || !detailResult?.data) {
+            throw new Error(detailResult?.message || "CJ product lookup failed");
+          }
+          const variants = Array.isArray(detailResult.data.variants) ? detailResult.data.variants : [];
+          const variant = variants.find((entry: Record<string, unknown>) => String(entry.vid ?? "") === vid);
+          if (!variant) throw new Error("Saved VID no longer exists at CJ");
+          if (String(variant.variantSku ?? variant.variantKey ?? "").trim() !== sku) {
+            throw new Error("Saved SKU no longer matches the CJ VID");
+          }
+          const stockEntries = stockResponse.ok && Number(stockResult?.code) === 200 &&
+              Array.isArray(stockResult?.data?.variantInventories)
+            ? stockResult.data.variantInventories : [];
+          const stockVariant = stockEntries.find((entry: Record<string, unknown>) => String(entry.vid ?? "") === vid);
+          const detailLocations = Array.isArray(variant.inventories) ? variant.inventories : [];
+          const stockLocations = Array.isArray(stockVariant?.inventory) ? stockVariant.inventory : [];
+          const locations = detailLocations.length ? detailLocations : stockLocations;
+          const quantity = Math.max(0, Math.min(999999, Math.floor(inventoryQuantity(locations))));
+          const { data: reservations, error: reservationError } = await admin.from("inventory_reservations")
+            .select("quantity").eq("product_id", String(source.product_id))
+            .eq("status", "active").gt("expires_at", new Date().toISOString());
+          if (reservationError) throw reservationError;
+          const reserved = (reservations ?? []).reduce((total: number, row: { quantity: number }) =>
+            total + Math.max(0, Number(row.quantity) || 0), 0);
+          const state = quantity <= 0 ? "sold" : quantity - reserved <= 0 ? "reserved" : "available";
+          const cost = Number(variant.variantSellPrice ?? detailResult.data.sellPrice);
+          const { error: productError } = await admin.from("products")
+            .update({ quantity, state }).eq("id", String(source.product_id));
+          if (productError) throw productError;
+          if (Number.isFinite(cost) && cost >= 0) {
+            const { error: costError } = await admin.from("product_sources")
+              .update({ supplier_cost_cents: Math.round(cost * 100) })
+              .eq("product_id", String(source.product_id));
+            if (costError) throw costError;
+          }
+          return { title, status: "updated", quantity, state };
+        };
+
+        const results: Record<string, unknown>[] = [];
+        const list = sources ?? [];
+        for (let index = 0; index < list.length; index += 4) {
+          const batch = await Promise.allSettled(list.slice(index, index + 4).map(refreshOne));
+          batch.forEach((result, offset) => {
+            if (result.status === "fulfilled") results.push(result.value);
+            else {
+              const source = list[index + offset] as Record<string, unknown>;
+              const relatedProduct = Array.isArray(source.products) ? source.products[0] : source.products;
+              results.push({
+                title: String((relatedProduct as Record<string, unknown> | null)?.title ?? source.product_id ?? "CJ product"),
+                status: "failed",
+                reason: result.reason instanceof Error ? result.reason.message : "CJ refresh failed",
+              });
+            }
+          });
+        }
+        return reply({
+          total: results.length,
+          updated: results.filter((result) => result.status === "updated").length,
+          skipped: results.filter((result) => result.status === "skipped").length,
+          failed: results.filter((result) => result.status === "failed").length,
+          results,
+        });
+      }
+
       case "import_spring_product": {
         const url = springUrl(body.url);
         if (!url) return reply({ error: "Paste a valid creator-spring.com product listing URL." }, 400);
