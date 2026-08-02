@@ -81,6 +81,6 @@ $("#checkout-form").onsubmit=async(e)=>{e.preventDefault();const btn=$(".checkou
      }
    }
  });
- if(error)throw new Error(data?.error||error.message);if(!data?.url)throw new Error(data?.error||"Checkout could not start.");location.assign(data.url)}
+ if(error){let message=data?.error;try{if(!message&&error.context?.json)message=(await error.context.json())?.error}catch{}throw new Error(message||error.message)}if(!data?.url)throw new Error(data?.error||"Checkout could not start.");location.assign(data.url)}
  catch(ex){err.textContent=ex.message;btn.disabled=false;btn.textContent="Secure checkout →"}};
 load();renderCart();
