@@ -187,7 +187,18 @@ $("#import-cj").onclick = async () => {
     form.elements.tiktok_weight_grams.value = imported.weight_grams || "";
     form.elements.tiktok_country_of_origin.value = imported.country_of_origin || "China";
     importedCJImages = imported.images || [];
-    importedCJVariants = imported.variants || [];
+    importedCJVariants = Array.isArray(imported.variants) && imported.variants.length
+      ? imported.variants
+      : Number(imported.variants_count) === 1 && imported.variant_id && imported.sku
+        ? [{
+          id: imported.variant_id,
+          name: imported.variant_name,
+          sku: imported.sku,
+          cost_cents: imported.cost_cents,
+          quantity: imported.quantity || 0,
+          weight_grams: imported.weight_grams,
+        }]
+        : [];
     if (importedCJVariants.length !== 1) {
       form.elements.supplier_variant_id.value = "";
       form.elements.supplier_variant.value = "";
@@ -202,7 +213,9 @@ $("#import-cj").onclick = async () => {
       select.value = "0";
       select.dispatchEvent(new Event("change"));
     }
-    status.textContent = `Imported ${imported.variants_count || 0} CJ variants. Choose the exact variant this listing will sell before publishing.`;
+    status.textContent = importedCJVariants.length
+      ? `Imported ${imported.variants_count || importedCJVariants.length} CJ variants. Choose the exact variant this listing will sell before publishing.`
+      : `CJ reports ${imported.variants_count || 0} variants, but the deployed importer did not return their exact mappings. Keep this draft private until dynamic-function is redeployed.`;
     updateSearchPreview();
   } catch (error) {
     status.textContent = error.message;
