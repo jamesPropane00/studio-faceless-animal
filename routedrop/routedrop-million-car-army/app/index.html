@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RouteDrop — Earn on the Way</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="#"><span class="mark">R</span><span>RouteDrop</span></a>
+  <nav><a href="#how">How it works</a><a href="#network">Network</a><a href="#safety">Safety</a></nav>
+  <button class="ghost" data-open="runner">Drive a route</button>
+</header>
+<main>
+<section class="hero">
+  <div>
+    <div class="eyebrow">THE ROUTE-SHARING NETWORK</div>
+    <h1>Move small stuff with cars already going that way.</h1>
+    <p>Post a local errand or earn money along a trip you already planned. RouteDrop matches useful routes—not idle fleets.</p>
+    <div class="actions"><button class="primary" data-open="send">Send an item</button><button class="secondary" data-open="runner">Post my route</button></div>
+    <div class="proof"><span>✓ Local-first</span><span>✓ Photo + PIN handoffs</span><span>✓ Drivers choose every job</span></div>
+  </div>
+  <div class="phone">
+    <div class="phone-top"><strong>Matches along your route</strong><span>Today</span></div>
+    <div class="route-line"><span>A</span><div></div><span>B</span></div>
+    <div class="job"><small>4 min detour</small><b>Store return</b><p>Warwick → Cranston</p><footer><strong>Earn $14</strong><button>View</button></footer></div>
+    <div class="job"><small>8 min detour</small><b>Marketplace pickup</b><p>Cranston → Providence</p><footer><strong>Earn $21</strong><button>View</button></footer></div>
+    <div class="job muted"><small>Vehicle mismatch</small><b>Large bookcase</b><p>Hidden automatically</p></div>
+  </div>
+</section>
+<section class="stats" id="network"><div><strong>1 route</strong><span>can unlock multiple jobs</span></div><div><strong>2-sided</strong><span>every user can send or drive</span></div><div><strong>Local density</strong><span>before national expansion</span></div></section>
+<section id="how" class="section"><div class="section-head"><span>HOW IT WORKS</span><h2>A delivery network built from everyday movement.</h2></div><div class="cards"><article><i>01</i><h3>Post the small item</h3><p>Add photos, size, pickup, destination, timing and value.</p></article><article><i>02</i><h3>Routes overlap</h3><p>The matching engine finds eligible runners with minimal detours.</p></article><article><i>03</i><h3>You choose</h3><p>Compare offers and trust profiles. The runner chooses the work; you choose the runner.</p></article><article><i>04</i><h3>Prove each handoff</h3><p>Photos, timestamps, pickup PIN and delivery PIN create a clear record.</p></article></div></section>
+<section id="safety" class="dark-section"><div><span>BUILT WITH BOUNDARIES</span><h2>Small items. Approved markets. No mystery cargo.</h2><p>The launch configuration blocks interstate jobs and restricted categories. Every market is enabled separately after legal and insurance review.</p></div><ul><li>No passengers</li><li>No hazardous or controlled goods</li><li>No full household moves</li><li>Value, weight and distance limits</li></ul></section>
+<section class="section business"><div><span>FOR LOCAL BUSINESSES</span><h2>Turn repeated pickups into a predictable route feed.</h2><p>Repair shops, resellers, print shops, boutiques and local stores can schedule recurring requests, upload batches and share tracking.</p><button class="primary" data-open="business">Create business waitlist profile</button></div><div class="dashboard"><div class="dash-head"><b>Weekly route activity</b><span>Demo</span></div><div class="bar"><i style="height:34%"></i><i style="height:58%"></i><i style="height:45%"></i><i style="height:76%"></i><i style="height:65%"></i><i style="height:88%"></i><i style="height:72%"></i></div><div class="dash-grid"><b>42<small>requests</small></b><b>91%<small>matched</small></b><b>7 min<small>median detour</small></b></div></div></section>
+<section class="cta"><h2>Build the route before building the fleet.</h2><p>This prototype demonstrates the product. Production launch requires configured markets, identity controls, insurance review and server-side security.</p><div class="actions"><button class="primary" data-open="send">Post demo request</button><button class="secondary" data-open="runner">Post demo route</button></div></section>
+</main>
+<footer><b>RouteDrop</b><span>Concept build • Local-first route-sharing marketplace</span></footer>
+
+<dialog id="modal"><form method="dialog" id="demoForm"><button class="close" value="cancel">×</button><div id="formContent"></div></form></dialog>
+<script src="app.js"></script>
+</body></html>

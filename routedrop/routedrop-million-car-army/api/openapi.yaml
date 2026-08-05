@@ -1,0 +1,27 @@
+openapi: 3.1.0
+info:
+  title: RouteDrop API
+  version: 0.1.0
+servers:
+  - url: https://api.example.com/v1
+paths:
+  /requests:
+    post:
+      summary: Create a delivery request draft
+      responses:
+        '201': {description: Created}
+  /runner-routes:
+    post:
+      summary: Create a planned runner route
+      responses:
+        '201': {description: Created}
+  /requests/{requestId}/offers:
+    post:
+      summary: Submit runner offer
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '201': {description: Created}
