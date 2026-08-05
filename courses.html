@@ -137,7 +137,6 @@
           <li><a href="ai.html">AI</a></li>
           <li><a href="canvas.html">Canvas</a></li>
           <li><a href="world.html">World</a></li>
-          <li><a href="courses.html" class="active">Knowledge Vault</a></li>
           <li><a href="dashboard.html">Dashboard</a></li>
           <li><a href="login.html" class="nav-cta">Enter The System</a></li>
         </ul>
@@ -163,7 +162,6 @@
     <a href="ai.html">AI</a>
     <a href="canvas.html">Canvas</a>
     <a href="world.html">World</a>
-    <a href="courses.html" class="active">Knowledge Vault</a>
     <a href="dashboard.html">Dashboard</a>
     <a href="login.html" class="waffle-menu-cta tv-waffle-cta">Enter The System</a>
   </div>
@@ -215,7 +213,6 @@
         <a href="tv.html">TV</a>
         <a href="news.html">News</a>
         <a href="store.html">Store</a>
-        <a href="courses.html">Knowledge Vault</a>
       </nav>
     </div>
   </footer>
@@ -247,6 +244,55 @@
         url: 'git_screening_course/Git_course.html'
       }
     ];
+
+    /* Standalone courses from the Faceless Academy course pack. */
+    var academyCourses = [
+      ['aws-cloud-practitioner.html', 'AWS Certified Cloud Practitioner CLF-C02 Prep', 'Cloud Certifications'],
+      ['azure-az-900.html', 'Microsoft Azure Fundamentals AZ-900 Prep', 'Cloud Certifications'],
+      ['comptia-a-plus.html', 'CompTIA A+ Core 1 and Core 2 Prep', 'Cybersecurity'],
+      ['comptia-network-plus.html', 'CompTIA Network+ Prep', 'Cybersecurity'],
+      ['comptia-security-plus.html', 'CompTIA Security+ Prep', 'Cybersecurity'],
+      ['cross-platform-content.html', 'TikTok, YouTube, and Rumble Cross-Platform System', 'Content Creation'],
+      ['css.html', 'CSS Screening Prep', 'Coding'],
+      ['frontend-development.html', 'Frontend Development Screening Prep', 'Coding'],
+      ['git-and-docker.html', 'Git and Docker Screening Prep', 'Coding'],
+      ['git.html', 'Git Screening Prep', 'Coding'],
+      ['google-cloud-digital-leader.html', 'Google Cloud Digital Leader Prep', 'Cloud Certifications'],
+      ['isaca-cisa.html', 'ISACA CISA Prep', 'Cybersecurity'],
+      ['isaca-cism.html', 'ISACA CISM Prep', 'Cybersecurity'],
+      ['isaca-crisc.html', 'ISACA CRISC Prep', 'Cybersecurity'],
+      ['isc2-ccsp.html', 'ISC2 CCSP Prep', 'Cybersecurity'],
+      ['isc2-cissp.html', 'ISC2 CISSP Prep', 'Cybersecurity'],
+      ['isc2-sscp.html', 'ISC2 SSCP Prep', 'Cybersecurity'],
+      ['javascript.html', 'JavaScript Screening Prep', 'Coding'],
+      ['pmp.html', 'PMP Certification Prep', 'Business'],
+      ['prince2-foundation.html', 'PRINCE2 Foundation Prep', 'Business'],
+      ['psm-1.html', 'Professional Scrum Master I Prep', 'Business'],
+      ['python.html', 'Python Screening Prep', 'Coding'],
+      ['rumble-growth.html', 'Rumble Growth System', 'Content Creation'],
+      ['software-development.html', 'Software Development Screening Prep', 'Coding'],
+      ['sql.html', 'SQL Screening Prep', 'Coding'],
+      ['survival-40-days.html', '40-Day Survival System', 'Life Skills'],
+      ['tiktok-growth.html', 'TikTok Growth System', 'Content Creation'],
+      ['typescript.html', 'TypeScript Screening Prep', 'Coding'],
+      ['youtube-growth.html', 'YouTube Growth System', 'Content Creation']
+    ].map(function(item) {
+      return {
+        id: item[0].replace('.html', ''),
+        title: item[1],
+        category: item[2],
+        description: 'Self-paced lessons, flashcards, original practice questions, progress tracking, and resource links.',
+        lessons: 'Self-paced',
+        duration: 'Complete course',
+        difficulty: 'All levels',
+        access: 'free',
+        instructor: 'Faceless Academy',
+        coverIcon: '\u{1f393}',
+        url: 'faceless_academy_complete_course_pack/' + item[0]
+      };
+    });
+
+    courses = courses.concat(academyCourses);
 
     function renderCourses() {
       var grid = document.getElementById('course-grid');
