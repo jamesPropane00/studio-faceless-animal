@@ -1,0 +1,24 @@
+GIT PRACTICE EXERCISES
+
+1. Create a folder named git-practice.
+2. Open a terminal in that folder.
+3. Run git init.
+4. Create a file named notes.txt.
+5. Run git status.
+6. Stage notes.txt.
+7. Commit it with the message: Add notes file.
+8. Create and switch to a branch named practice-feature.
+9. Add another line to notes.txt.
+10. Stage and commit the change.
+11. Switch back to main.
+12. Merge practice-feature.
+13. Run git log --oneline.
+
+SCREENING QUESTIONS TO PRACTICE
+
+- What is the difference between git add and git commit?
+- What does git status show?
+- What is a branch?
+- What does git pull do?
+- How do you unstage a file without deleting your edits?
+- Why is git revert safer than git reset on a shared branch?

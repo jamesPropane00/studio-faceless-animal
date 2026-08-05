@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Knowledge Vault — Faceless Animal Studios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css?v=20260610-index-revamp" />
+  <style>
+    :root{
+      --bg-main:#0a0b0f;--bg-card:#111118;--bg-elevated:#161620;
+      --purple:#7c3aed;--purple-bright:#a78bfa;--purple-glow:#8b5cf6;
+      --gold:#f5c451;--cyan:#21f4d0;--red:#ff2f4f;--green:#22c55e;
+      --text:#f5f5f7;--muted:#a9a9b3;--border:#2b2b38;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;font-family:'Inter',Arial,Helvetica,sans-serif;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 10%,rgba(124,58,237,.18),transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 80%,rgba(33,244,208,.08),transparent 60%),
+        radial-gradient(ellipse 50% 40% at 20% 60%,rgba(255,47,79,.06),transparent 60%),
+        #020305;
+      color:var(--text);min-height:100vh;
+    }
+
+    /* ── Vault Hero ── */
+    .vault-hero{
+      padding:60px 24px 40px;text-align:center;position:relative;overflow:hidden;
+    }
+    .vault-hero::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(139,92,246,.12),transparent);
+      pointer-events:none;
+    }
+    .vault-hero h1{
+      font-size:clamp(2rem,5vw,3.4rem);font-weight:900;margin:0;
+      background:linear-gradient(135deg,var(--cyan),var(--purple-bright));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;position:relative;
+    }
+    .vault-hero p{
+      margin:12px auto 0;max-width:620px;color:var(--muted);font-size:1.05rem;line-height:1.6;
+    }
+    .vault-hero .hero-chip{
+      display:inline-block;margin-top:18px;padding:6px 16px;
+      background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);
+      border-radius:999px;font-size:.82rem;color:var(--purple-bright);
+    }
+
+    /* ── Catalog Grid ── */
+    .catalog{max-width:1200px;margin:0 auto;padding:0 24px 80px;}
+    .catalog-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;}
+    .catalog-header h2{font-size:1.5rem;font-weight:700;margin:0;color:var(--text);}
+    .catalog-count{color:var(--muted);font-size:.9rem;}
+    .course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:22px;}
+
+    /* ── Course Card ── */
+    .course-card{
+      background:var(--bg-card);border:1px solid var(--border);border-radius:16px;
+      overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s;
+      cursor:pointer;text-decoration:none;color:inherit;display:flex;flex-direction:column;
+    }
+    .course-card:hover{
+      transform:translateY(-4px);
+      border-color:var(--purple-glow);
+      box-shadow:0 12px 40px rgba(139,92,246,.15);
+    }
+    .card-cover{
+      height:180px;background:linear-gradient(135deg,#1a1040,#0d0d2b);
+      display:flex;align-items:center;justify-content:center;
+      position:relative;overflow:hidden;
+    }
+    .card-cover::after{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse at 50% 30%,rgba(139,92,246,.2),transparent);
+    }
+    .card-cover-icon{font-size:3rem;position:relative;z-index:1;filter:drop-shadow(0 0 20px rgba(139,92,246,.4));}
+    .card-badge{
+      position:absolute;top:12px;right:12px;z-index:2;
+      padding:4px 10px;border-radius:999px;font-size:.72rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+    .badge-free{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3);}
+    .card-body{padding:18px 20px 20px;flex:1;display:flex;flex-direction:column;}
+    .card-category{font-size:.75rem;color:var(--purple-bright);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:6px;}
+    .card-body h3{font-size:1.2rem;font-weight:700;margin:0 0 8px;line-height:1.3;}
+    .card-body .card-desc{color:var(--muted);font-size:.88rem;line-height:1.5;margin:0 0 14px;flex:1;}
+    .card-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);}
+    .card-meta span{display:flex;align-items:center;gap:5px;}
+    .card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+    .card-footer .btn-enter{
+      background:var(--purple);color:#fff;border:none;padding:8px 18px;
+      border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;
+      transition:background .2s;text-decoration:none;display:inline-block;
+    }
+    .card-footer .btn-enter:hover{background:var(--purple-glow);}
+    .card-instructor{font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
+
+    /* ── Empty State ── */
+    .empty-state{
+      text-align:center;padding:60px 24px;color:var(--muted);
+      grid-column:1 / -1;
+    }
+    .empty-state .empty-icon{font-size:3rem;margin-bottom:16px;opacity:.5;}
+    .empty-state h3{color:var(--text);margin:0 0 8px;font-size:1.2rem;}
+    .empty-state p{margin:0;}
+
+    /* ── Responsive ── */
+    @media(max-width:768px){
+      .vault-hero{padding:40px 16px 30px;}
+      .course-grid{grid-template-columns:1fr;}
+      .catalog{padding:0 16px 60px;}
+    }
+  </style>
+  <link rel="stylesheet" href="assets/css/widget-hub.css" />
+</head>
+<body>
+  <nav class="navbar waffle-nav tv-waffle-nav" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="navbar-inner">
+        <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <ul class="navbar-links" role="list">
+          <li><a href="directory.html">Directory</a></li>
+          <li><a href="radio.html">Radio</a></li>
+          <li><a href="pulse.html">Pulse Stage</a></li>
+          <li><a href="chat.html">Rooms</a></li>
+          <li><a href="tv.html">TV</a></li>
+          <li><a href="phone.html">Phone</a></li>
+          <li><a href="neon-dreams.html">Neon Dreams</a></li>
+          <li><a href="news.html">News</a></li>
+          <li><a href="store.html">Store</a></li>
+          <li><a href="wallet.html">Vault</a></li>
+          <li><a href="apps.html">Apps</a></li>
+          <li><a href="ai.html">AI</a></li>
+          <li><a href="canvas.html">Canvas</a></li>
+          <li><a href="world.html">World</a></li>
+          <li><a href="courses.html" class="active">Knowledge Vault</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="login.html" class="nav-cta">Enter The System</a></li>
+        </ul>
+        <button class="nav-toggle tv-waffle-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
+    <a href="store.html">Store</a>
+    <a href="directory.html">Directory</a>
+    <a href="radio.html">Radio</a>
+    <a href="tv.html">Faceless TV</a>
+    <a href="neon-dreams.html">Neon Dreams</a>
+    <a href="pulse.html">Pulse Stage</a>
+    <a href="chat.html">Rooms</a>
+    <a href="phone.html">Phone</a>
+    <a href="news.html">News</a>
+    <a href="wallet.html">Vault</a>
+    <a href="apps.html">Apps</a>
+    <a href="ai.html">AI</a>
+    <a href="canvas.html">Canvas</a>
+    <a href="world.html">World</a>
+    <a href="courses.html" class="active">Knowledge Vault</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="login.html" class="waffle-menu-cta tv-waffle-cta">Enter The System</a>
+  </div>
+
+  <main>
+    <section class="vault-hero">
+      <h1>The Knowledge Vault</h1>
+      <p>Courses, training, and certifications from Faceless Animal Studios. Unlock skills in coding, AI, business, cybersecurity, music, and more.</p>
+      <span class="hero-chip">Free &amp; Premium Courses</span>
+    </section>
+
+    <section class="catalog" id="catalog">
+      <div class="catalog-header">
+        <h2>Available Courses</h2>
+        <span class="catalog-count" id="course-count">1 course</span>
+      </div>
+      <div class="course-grid" id="course-grid">
+        <a class="course-card" href="git_screening_course/Git_course.html">
+          <div class="card-cover">
+            <span class="card-cover-icon">&#x1f4bb;</span>
+            <span class="card-badge badge-free">Free</span>
+          </div>
+          <div class="card-body">
+            <div class="card-category">Coding</div>
+            <h3>Git Screening Crash Course</h3>
+            <p class="card-desc">Master Git essentials for technical screenings &mdash; init, commits, branches, merges, remotes, undoing changes, and real-world scenarios with practice exercises and a final quiz.</p>
+            <div class="card-meta">
+              <span>&#x1f4da; 9 Lessons</span>
+              <span>&#x23f1; ~2 Hours</span>
+              <span>&#x1f3af; Beginner</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="card-instructor">&#x1f3a7; Faceless Animal Studios</span>
+            <span class="btn-enter">Start Course &rarr;</span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p class="footer-copy">&copy; Faceless Animal Studios. All rights reserved.</p>
+      <nav class="footer-nav">
+        <a href="about.html">About</a>
+        <a href="directory.html">Directory</a>
+        <a href="radio.html">Radio</a>
+        <a href="tv.html">TV</a>
+        <a href="news.html">News</a>
+        <a href="store.html">Store</a>
+        <a href="courses.html">Knowledge Vault</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    var navToggle = document.querySelector('.nav-toggle');
+    var mobileMenu = document.getElementById('mobile-menu');
+    if (navToggle && mobileMenu) {
+      navToggle.addEventListener('click', function () {
+        var expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', String(!expanded));
+        mobileMenu.classList.toggle('open');
+      });
+    }
+
+    /* ── Dynamic course data (extensible later) ── */
+    var courses = [
+      {
+        id: 'git-screening',
+        title: 'Git Screening Crash Course',
+        category: 'Coding',
+        description: 'Master Git essentials for technical screenings — init, commits, branches, merges, remotes, undoing changes, and real-world scenarios with practice exercises and a final quiz.',
+        lessons: 9,
+        duration: '~2 Hours',
+        difficulty: 'Beginner',
+        access: 'free',
+        instructor: 'Faceless Animal Studios',
+        coverIcon: '\u{1f4bb}',
+        url: 'git_screening_course/Git_course.html'
+      }
+    ];
+
+    function renderCourses() {
+      var grid = document.getElementById('course-grid');
+      var countEl = document.getElementById('course-count');
+      if (!grid) return;
+
+      if (courses.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><div class="empty-icon">&#x1f4e6;</div><h3>No courses yet</h3><p>Check back soon — the vault is being filled.</p></div>';
+        if (countEl) countEl.textContent = '0 courses';
+        return;
+      }
+
+      if (countEl) countEl.textContent = courses.length + ' course' + (courses.length !== 1 ? 's' : '');
+
+      grid.innerHTML = courses.map(function(c) {
+        var badge = c.access === 'free'
+          ? '<span class="card-badge badge-free">Free</span>'
+          : '<span class="card-badge badge-premium">' + c.access + '</span>';
+        return '<a class="course-card" href="' + c.url + '">' +
+          '<div class="card-cover">' +
+            '<span class="card-cover-icon">' + c.coverIcon + '</span>' +
+            badge +
+          '</div>' +
+          '<div class="card-body">' +
+            '<div class="card-category">' + c.category + '</div>' +
+            '<h3>' + c.title + '</h3>' +
+            '<p class="card-desc">' + c.description + '</p>' +
+            '<div class="card-meta">' +
+              '<span>&#x1f4da; ' + c.lessons + ' Lessons</span>' +
+              '<span>&#x23f1; ' + c.duration + '</span>' +
+              '<span>&#x1f3af; ' + c.difficulty + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="card-footer">' +
+            '<span class="card-instructor">&#x1f3a7; ' + c.instructor + '</span>' +
+            '<span class="btn-enter">Start Course &rarr;</span>' +
+          '</div>' +
+        '</a>';
+      }).join('');
+    }
+
+    renderCourses();
+  </script>
+  <script type="module" src="assets/js/widget-hub.js"></script>
+  <script src="/assets/script.js?v=20260801-live-rap-room"></script>
+</body>
+</html>

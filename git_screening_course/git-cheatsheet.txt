@@ -1,0 +1,39 @@
+GIT SCREENING CHEAT SHEET
+
+START
+git init
+git clone URL
+git status
+
+SAVE WORK
+git add filename
+git add .
+git commit -m "Message"
+git log --oneline
+
+BRANCHES
+git branch
+git switch branch-name
+git switch -c new-branch
+git merge branch-name
+
+REMOTES
+git remote -v
+git pull
+git push
+git fetch
+
+UNDO
+git restore filename
+git restore --staged filename
+git revert COMMIT_ID
+
+CORE IDEAS
+Working directory = files being edited
+Staging area = changes selected for next commit
+Repository = saved history
+Commit = saved snapshot
+Branch = separate line of development
+Merge = combine branches
+Pull = fetch + integrate remote changes
+Push = upload local commits

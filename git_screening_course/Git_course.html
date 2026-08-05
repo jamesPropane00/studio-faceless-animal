@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Git Screening Crash Course</title>
+  <style>
+    :root{
+      --bg:#0b0b0f;--panel:#15151d;--panel2:#1e1e29;--text:#f5f5f7;
+      --muted:#a9a9b3;--accent:#8b5cf6;--accent2:#22c55e;--danger:#ef4444;
+      --border:#2b2b38;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#09090c,#111118);color:var(--text)}
+    header{padding:24px 18px;border-bottom:1px solid var(--border);background:rgba(10,10,15,.95);position:sticky;top:0;z-index:5}
+    header h1{margin:0;font-size:1.5rem}
+    header p{margin:8px 0 0;color:var(--muted)}
+    .wrap{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 92px)}
+    nav{padding:18px;border-right:1px solid var(--border);background:#101016}
+    nav button{width:100%;text-align:left;padding:12px;margin-bottom:8px;border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:10px;cursor:pointer}
+    nav button.active{border-color:var(--accent);background:#22163c}
+    main{padding:26px;max-width:980px}
+    .lesson{display:none}
+    .lesson.active{display:block}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px;margin:14px 0}
+    code,pre{font-family:Consolas,monospace}
+    pre{white-space:pre-wrap;background:#09090d;border:1px solid var(--border);padding:14px;border-radius:10px;overflow:auto}
+    .tip{border-left:4px solid var(--accent2);padding-left:14px}
+    .warning{border-left:4px solid var(--danger);padding-left:14px}
+    .btn{display:inline-block;background:var(--accent);color:white;text-decoration:none;border:none;padding:11px 15px;border-radius:10px;cursor:pointer;margin:6px 6px 6px 0}
+    .btn.secondary{background:var(--panel2)}
+    .progress{height:10px;background:#252531;border-radius:999px;overflow:hidden;margin-top:10px}
+    .bar{height:100%;background:var(--accent2);width:0}
+    .question{margin:18px 0}
+    label{display:block;margin:8px 0;color:#dedee7}
+    input[type="radio"]{margin-right:8px}
+    .result{font-weight:bold;margin-top:12px}
+    table{width:100%;border-collapse:collapse;margin:12px 0}
+    th,td{border:1px solid var(--border);padding:10px;text-align:left}
+    th{background:#20202a}
+    .checklist label{display:flex;gap:10px;align-items:flex-start}
+    @media(max-width:800px){
+      .wrap{grid-template-columns:1fr}
+      nav{border-right:none;border-bottom:1px solid var(--border)}
+      main{padding:18px}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Git Screening Crash Course</h1>
+  <p>Built for fast preparation: commands, concepts, practice, and a final quiz.</p>
+  <div class="progress"><div class="bar" id="progressBar"></div></div>
+</header>
+
+<div class="wrap">
+  <nav id="nav"></nav>
+  <main>
+    <section class="lesson active" data-title="1. Git Basics">
+      <h2>1. Git Basics</h2>
+      <div class="card">
+        <h3>What Git is</h3>
+        <p>Git is a version control system. It records changes to files, lets you return to older versions, and makes teamwork easier.</p>
+      </div>
+      <div class="card">
+        <h3>Three areas to remember</h3>
+        <table>
+          <tr><th>Area</th><th>Meaning</th></tr>
+          <tr><td>Working directory</td><td>The files you are currently editing.</td></tr>
+          <tr><td>Staging area</td><td>The changes selected for the next commit.</td></tr>
+          <tr><td>Repository</td><td>The saved commit history.</td></tr>
+        </table>
+      </div>
+      <div class="card tip">
+        <strong>Core flow:</strong>
+        <pre>edit files → git add → git commit</pre>
+      </div>
+    </section>
+
+    <section class="lesson" data-title="2. Start a Repository">
+      <h2>2. Start a Repository</h2>
+      <div class="card">
+        <h3>Create a new repository</h3>
+        <pre>mkdir practice-project
+cd practice-project
+git init</pre>
+        <p><code>git init</code> creates a hidden <code>.git</code> directory that stores the project history.</p>
+      </div>
+      <div class="card">
+        <h3>Check the repository</h3>
+        <pre>git status</pre>
+        <p>This is one of the most important commands. Use it whenever you are unsure what Git sees.</p>
+      </div>
+      <div class="card">
+        <h3>Configure your identity</h3>
+        <pre>git config --global user.name "Your Name"
+git config --global user.email "you@example.com"</pre>
+      </div>
+    </section>
+
+    <section class="lesson" data-title="3. Add and Commit">
+      <h2>3. Add and Commit</h2>
+      <div class="card">
+        <pre>git add filename.txt
+git add .
+git commit -m "Add initial project files"</pre>
+        <p><code>git add .</code> stages all current changes in the folder. A commit is a saved snapshot.</p>
+      </div>
+      <div class="card warning">
+        <strong>Common mistake:</strong> <code>git add</code> does not permanently save the change. The change is saved to history only after <code>git commit</code>.
+      </div>
+      <div class="card">
+        <h3>View history</h3>
+        <pre>git log
+git log --oneline</pre>
+      </div>
+    </section>
+
+    <section class="lesson" data-title="4. Branches and Merging">
+      <h2>4. Branches and Merging</h2>
+      <div class="card">
+        <pre>git branch
+git switch -c feature-login
+git switch main
+git merge feature-login</pre>
+        <p>A branch is an independent line of development. You normally create a branch, make commits, switch back to <code>main</code>, then merge it.</p>
+      </div>
+      <div class="card">
+        <h3>Older command you may see</h3>
+        <pre>git checkout -b feature-login</pre>
+        <p>This also creates and switches to a new branch.</p>
+      </div>
+      <div class="card">
+        <h3>Merge conflict basics</h3>
+        <p>A conflict happens when Git cannot automatically combine competing edits. Open the conflicted file, choose the correct content, remove the conflict markers, then run:</p>
+        <pre>git add conflicted-file.txt
+git commit</pre>
+      </div>
+    </section>
+
+    <section class="lesson" data-title="5. Remote Repositories">
+      <h2>5. Remote Repositories</h2>
+      <div class="card">
+        <pre>git clone https://example.com/repository.git
+git remote -v
+git pull
+git push</pre>
+      </div>
+      <div class="card">
+        <h3>First push from a new local repository</h3>
+        <pre>git remote add origin https://example.com/repository.git
+git branch -M main
+git push -u origin main</pre>
+      </div>
+      <div class="card tip">
+        <strong>Remember:</strong> <code>git fetch</code> downloads remote information. <code>git pull</code> downloads and integrates it into your current branch.
+      </div>
+    </section>
+
+    <section class="lesson" data-title="6. Undoing Changes">
+      <h2>6. Undoing Changes</h2>
+      <div class="card">
+        <h3>Discard an unstaged file change</h3>
+        <pre>git restore filename.txt</pre>
+      </div>
+      <div class="card">
+        <h3>Unstage a file but keep the edit</h3>
+        <pre>git restore --staged filename.txt</pre>
+      </div>
+      <div class="card">
+        <h3>Reverse a committed change safely</h3>
+        <pre>git revert COMMIT_ID</pre>
+        <p><code>git revert</code> creates a new commit that reverses an earlier one. It is safer for shared branches than rewriting history.</p>
+      </div>
+      <div class="card warning">
+        <strong>Be careful with:</strong> <code>git reset --hard</code>. It can permanently discard local work.
+      </div>
+    </section>
+
+    <section class="lesson" data-title="7. Practical Screening Scenarios">
+      <h2>7. Practical Screening Scenarios</h2>
+      <div class="card">
+        <h3>Scenario 1: Save a new file</h3>
+        <pre>git status
+git add report.txt
+git commit -m "Add report"</pre>
+      </div>
+      <div class="card">
+        <h3>Scenario 2: Work on a feature without changing main</h3>
+        <pre>git switch -c feature-dashboard
+# edit files
+git add .
+git commit -m "Build dashboard"
+git switch main
+git merge feature-dashboard</pre>
+      </div>
+      <div class="card">
+        <h3>Scenario 3: Update before pushing</h3>
+        <pre>git pull
+git push</pre>
+      </div>
+      <div class="card">
+        <h3>Scenario 4: You staged the wrong file</h3>
+        <pre>git restore --staged wrong-file.txt</pre>
+      </div>
+    </section>
+
+    <section class="lesson" data-title="8. Command Checklist">
+      <h2>8. Command Checklist</h2>
+      <div class="card checklist" id="checklist">
+        <label><input type="checkbox"> I know what <code>git status</code> shows.</label>
+        <label><input type="checkbox"> I understand staging versus committing.</label>
+        <label><input type="checkbox"> I can create and switch branches.</label>
+        <label><input type="checkbox"> I know the difference between pull and push.</label>
+        <label><input type="checkbox"> I know how to unstage a file.</label>
+        <label><input type="checkbox"> I know why revert is safer than reset on shared work.</label>
+      </div>
+      <div class="card">
+        <a class="btn" href="git-cheatsheet.txt" download>Download Git Cheat Sheet</a>
+        <a class="btn secondary" href="practice-exercises.txt" download>Download Practice Exercises</a>
+      </div>
+    </section>
+
+    <section class="lesson" data-title="9. Final Quiz">
+      <h2>9. Final Quiz</h2>
+      <div class="card" id="quiz">
+        <div class="question">
+          <p><strong>1. Which command shows changed, staged, and untracked files?</strong></p>
+          <label><input type="radio" name="q1" value="a"> git log</label>
+          <label><input type="radio" name="q1" value="b"> git status</label>
+          <label><input type="radio" name="q1" value="c"> git push</label>
+        </div>
+        <div class="question">
+          <p><strong>2. Which command stages all changes?</strong></p>
+          <label><input type="radio" name="q2" value="a"> git add .</label>
+          <label><input type="radio" name="q2" value="b"> git commit .</label>
+          <label><input type="radio" name="q2" value="c"> git merge .</label>
+        </div>
+        <div class="question">
+          <p><strong>3. Which command creates and switches to a branch?</strong></p>
+          <label><input type="radio" name="q3" value="a"> git switch -c new-branch</label>
+          <label><input type="radio" name="q3" value="b"> git push new-branch</label>
+          <label><input type="radio" name="q3" value="c"> git status new-branch</label>
+        </div>
+        <div class="question">
+          <p><strong>4. Which command unstages a file while keeping the edit?</strong></p>
+          <label><input type="radio" name="q4" value="a"> git restore --staged file.txt</label>
+          <label><input type="radio" name="q4" value="b"> git reset --hard</label>
+          <label><input type="radio" name="q4" value="c"> git clone file.txt</label>
+        </div>
+        <div class="question">
+          <p><strong>5. Which command downloads and integrates remote changes?</strong></p>
+          <label><input type="radio" name="q5" value="a"> git pull</label>
+          <label><input type="radio" name="q5" value="b"> git init</label>
+          <label><input type="radio" name="q5" value="c"> git branch</label>
+        </div>
+        <button class="btn" onclick="gradeQuiz()">Grade Quiz</button>
+        <div class="result" id="quizResult"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const lessons=[...document.querySelectorAll('.lesson')];
+const nav=document.getElementById('nav');
+let completed=JSON.parse(localStorage.getItem('gitCourseCompleted')||'[]');
+
+lessons.forEach((lesson,i)=>{
+  const b=document.createElement('button');
+  b.textContent=lesson.dataset.title;
+  if(i===0)b.classList.add('active');
+  b.onclick=()=>showLesson(i);
+  nav.appendChild(b);
+});
+
+function showLesson(i){
+  lessons.forEach((l,j)=>l.classList.toggle('active',i===j));
+  [...nav.children].forEach((b,j)=>b.classList.toggle('active',i===j));
+  if(!completed.includes(i)){completed.push(i);localStorage.setItem('gitCourseCompleted',JSON.stringify(completed));}
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function updateProgress(){
+  document.getElementById('progressBar').style.width=(completed.length/lessons.length*100)+'%';
+}
+function gradeQuiz(){
+  const answers={q1:'b',q2:'a',q3:'a',q4:'a',q5:'a'};
+  let score=0;
+  Object.entries(answers).forEach(([q,a])=>{
+    const selected=document.querySelector(`input[name="${q}"]:checked`);
+    if(selected&&selected.value===a)score++;
+  });
+  const out=document.getElementById('quizResult');
+  out.textContent=`Score: ${score}/5 ${score===5?'— You are ready.':'— Review the missed topics and try again.'}`;
+}
+updateProgress();
+</script>
+</body>
+</html>
