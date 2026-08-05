@@ -1299,6 +1299,71 @@
         width: 100%;
       }
     }
+
+    /* Featured primary navigation */
+    .primary-nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 0.42rem;
+      margin-left: auto;
+      margin-right: 0.9rem;
+    }
+
+    .primary-nav-buttons a,
+    .mobile-nav.tv-waffle-menu a.nav-featured {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0.52rem 0.72rem;
+      border: 1px solid rgba(33, 244, 208, 0.28);
+      border-radius: 9px;
+      background: linear-gradient(135deg, rgba(33, 244, 208, 0.08), rgba(124, 58, 237, 0.13));
+      color: #dffefa !important;
+      box-shadow: inset 0 0 14px rgba(33, 244, 208, 0.04), 0 0 0 rgba(33, 244, 208, 0);
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.055em;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .primary-nav-buttons a:hover,
+    .primary-nav-buttons a:focus-visible,
+    .mobile-nav.tv-waffle-menu a.nav-featured:hover,
+    .mobile-nav.tv-waffle-menu a.nav-featured:focus-visible {
+      border-color: rgba(33, 244, 208, 0.8);
+      background: linear-gradient(135deg, rgba(33, 244, 208, 0.18), rgba(124, 58, 237, 0.24));
+      box-shadow: 0 0 18px rgba(33, 244, 208, 0.2), inset 0 0 18px rgba(124, 58, 237, 0.1);
+      color: #fff !important;
+      outline: none;
+      transform: translateY(-2px);
+    }
+
+    .primary-nav-buttons a.nav-courses,
+    .mobile-nav.tv-waffle-menu a.nav-courses {
+      border-color: rgba(167, 139, 250, 0.62);
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.24), rgba(33, 244, 208, 0.1));
+      box-shadow: 0 0 14px rgba(139, 92, 246, 0.14), inset 0 0 14px rgba(139, 92, 246, 0.06);
+      color: #eee7ff !important;
+    }
+
+    .primary-nav-buttons a.nav-courses:hover,
+    .primary-nav-buttons a.nav-courses:focus-visible,
+    .mobile-nav.tv-waffle-menu a.nav-courses:hover,
+    .mobile-nav.tv-waffle-menu a.nav-courses:focus-visible {
+      border-color: rgba(167, 139, 250, 0.95);
+      box-shadow: 0 0 22px rgba(139, 92, 246, 0.32), inset 0 0 18px rgba(139, 92, 246, 0.12);
+    }
+
+    @media (max-width: 1100px) {
+      .primary-nav-buttons {
+        display: none;
+      }
+    }
   </style>
   <link rel="stylesheet" href="assets/css/widget-hub.css" />
 </head>
@@ -1307,6 +1372,14 @@
     <div class="container">
       <div class="navbar-inner">
         <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <div class="primary-nav-buttons" aria-label="Featured navigation">
+          <a href="directory.html">Directory</a>
+          <a href="radio.html">Radio</a>
+          <a href="tv.html">Faceless TV</a>
+          <a href="neon-dreams.html">Neon Dreams</a>
+          <a href="store.html">Store</a>
+          <a href="courses.html" class="nav-courses">Courses</a>
+        </div>
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
           <li><a href="radio.html">Radio</a></li>
@@ -1317,7 +1390,7 @@
           <li><a href="neon-dreams.html">Neon Dreams</a></li>
           <li><a href="news.html">News</a></li>
           <li><a href="store.html">Store</a></li>
-          <li><a href="courses.html">Knowledge Vault</a></li>
+          <li><a href="courses.html">Courses</a></li>
           <li><a href="wallet.html">Vault</a></li>
 <li><a href="apps.html">Apps</a></li>
           <li><a href="ai.html">AI</a></li>
@@ -1334,17 +1407,17 @@
   </nav>
 
   <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
-    <a href="store.html">Store</a>
-    <a href="directory.html">Directory</a>
-    <a href="radio.html">Radio</a>
-    <a href="tv.html">Faceless TV</a>
-    <a href="neon-dreams.html">Neon Dreams</a>
+    <a href="store.html" class="nav-featured">Store</a>
+    <a href="directory.html" class="nav-featured">Directory</a>
+    <a href="radio.html" class="nav-featured">Radio</a>
+    <a href="tv.html" class="nav-featured">Faceless TV</a>
+    <a href="neon-dreams.html" class="nav-featured">Neon Dreams</a>
     <a href="pulse.html">Pulse Stage</a>
     <a href="chat.html">Rooms</a>
     <a href="phone.html">Phone</a>
     <a href="news.html">News</a>
     <a href="wallet.html">Vault</a>
-    <a href="courses.html">Knowledge Vault</a>
+    <a href="courses.html" class="nav-featured nav-courses">Courses</a>
 <a href="apps.html">Apps</a>
     <a href="ai.html">AI</a>
     <a href="canvas.html">Canvas</a>
