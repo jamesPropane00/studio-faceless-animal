@@ -26,7 +26,6 @@ function statusBadge(product) {
   if (product.fulfillment_provider === 'spring') return '<span class="listing-badge">Made to order</span>';
   if (product.fulfillment_provider === 'fanvue') return '<span class="listing-badge">Exclusive</span>';
   if (product.state === 'reserved') return '<span class="listing-badge is-low">Reserved</span>';
-  if (Number(product.quantity) > 0 && Number(product.quantity) <= 3) return `<span class="listing-badge is-low">Only ${safe(product.quantity)} left</span>`;
   return '';
 }
 
