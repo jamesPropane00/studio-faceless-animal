@@ -298,6 +298,14 @@
   background: rgba(255, 255, 255, 0.075);
 }
 
+/* Floating shortcuts must never cover an open launcher. */
+body:has(#fas-app-launcher-menu.open) #fas-phone-launcher,
+body:has(#fas-app-launcher-menu.open) #fas-widget-hub {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.94);
+}
+
 .shop-navlinks {
   display: flex;
   align-items: center;
