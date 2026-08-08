@@ -340,27 +340,6 @@
       opacity: 1;
     }
 
-    .guest-link {
-      display: inline-block;
-      font-size: 0.72rem;
-      color: var(--text-3);
-      text-decoration: none;
-      padding: 0.35rem 0.6rem;
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 999px;
-      background: rgba(255,255,255,0.02);
-      transition: all 0.15s;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      font-family: var(--font-body);
-    }
-    .guest-link:hover {
-      color: var(--text-2);
-      border-color: rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.05);
-    }
-
     .hero-side {
       padding: 1.2rem;
       display: flex;
@@ -917,7 +896,7 @@
     }
 
     .signal-hero {
-      min-height: min(720px, calc(100dvh - 92px));
+      min-height: clamp(420px, 62vh, 600px);
       position: relative;
       display: grid;
       grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
@@ -979,11 +958,11 @@
     }
 
     .signal-title {
-      max-width: 9ch;
+      max-width: 11ch;
       margin: 0;
       color: #fff;
-      font-size: clamp(3rem, 10vw, 8.4rem);
-      line-height: 0.82;
+      font-size: clamp(3rem, 8vw, 7.2rem);
+      line-height: 0.86;
       font-weight: 900;
       letter-spacing: 0;
       text-transform: uppercase;
@@ -1399,7 +1378,7 @@
           <li><a href="canvas.html">Canvas</a></li>
           <li><a href="world.html">World</a></li>
           <li><a href="dashboard.html">Dashboard</a></li>
-        <li><a href="login.html" class="nav-cta">Enter The System</a></li>
+        <li><a href="login.html" class="nav-cta">Sign In</a></li>
       </ul>
         <button class="nav-toggle tv-waffle-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu">
           <span></span><span></span><span></span>
@@ -1425,30 +1404,20 @@
     <a href="canvas.html">Canvas</a>
     <a href="world.html">World</a>
     <a href="dashboard.html">Dashboard</a>
-  <a href="login.html" class="waffle-menu-cta tv-waffle-cta">Enter The System</a>
+  <a href="login.html" class="waffle-menu-cta tv-waffle-cta">Sign In</a>
   </div>
   <main>
     <div class="home-board">
       <section class="signal-hero" aria-label="Faceless Animal Studios front door">
         <div class="signal-copy">
-          <div class="signal-kicker">DJ Faceless Animal / Signal Live</div>
-          <h1 class="signal-title">Enter <span>Faceless</span></h1>
+          <h1 class="signal-title">Faceless Animal <span>Studios</span></h1>
           <p class="signal-sub">
-            TV, radio, rooms, street posts, creator channels, Neon Dreams, vault energy, and whatever else gets dragged out of the wire.
+            Music, television, radio, creator tools, apps, and the Underground Market—all connected in one independent studio.
           </p>
           <div class="signal-actions">
             <a href="login.html?focus=create" class="btn btn-start">Start Free →</a>
-            <a href="tv.html" class="btn btn-gold">Watch TV</a>
-            <a href="radio.html" class="btn btn-primary">Run Radio</a>
-            <a href="pulse.html" class="btn btn-secondary">Pulse Stage</a>
-            <button class="guest-link" id="guest-link" type="button">Continue as Guest</button>
-          </div>
-          <div class="signal-chip-row" aria-label="Featured sections">
-            <a href="news.html">Signal Wire</a>
-            <a href="directory.html">Channels</a>
-            <a href="chat.html">Rooms</a>
-            <a href="neon-dreams.html">Neon Dreams</a>
-            <a href="wallet.html">Vault</a>
+            <a href="directory.html" class="btn btn-primary">Explore</a>
+            <a href="market.html" class="btn btn-secondary">Shop Market</a>
           </div>
         </div>
 
@@ -1567,7 +1536,7 @@
           </div>
           <div class="signal-actions">
             <a href="directory.html" class="btn btn-secondary">Open Directory</a>
-            <a href="login.html" class="btn btn-gold">Enter The System</a>
+            <a href="login.html" class="btn btn-gold">Sign In</a>
           </div>
         </article>
       </section>
@@ -1600,17 +1569,6 @@
       });
     }
 
-    /* ── Guest mode ── */
-    var guestLink = document.getElementById('guest-link');
-    if (guestLink) {
-      guestLink.addEventListener('click', function() {
-        var guests = ['Listener','Beatz','Wave','Signal','Echo','Pulse','Vinyl','Riddim','Groove','Bass'];
-        var name = guests[Math.floor(Math.random() * guests.length)] + Math.floor(Math.random() * 900 + 100);
-        var session = { username: name, display: name, _guest: true, ts: Date.now() };
-        try { localStorage.setItem('fas_user', JSON.stringify(session)); } catch(e) {}
-        window.location.href = 'dashboard.html';
-      });
-    }
   </script>
   <script type="module" src="assets/js/widget-hub.js"></script>
 <script src="/assets/script.js?v=20260808-ecosystem-nav-fix"></script>
