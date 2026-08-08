@@ -2,15 +2,12 @@
   'use strict';
 
   var links = [
-    { href: 'index.html', label: 'Home' },
-    { href: 'directory.html', label: 'Directory' },
+    { href: 'directory.html', label: 'Directory', className: 'nav-directory' },
     { href: 'market.html', label: 'Market', className: 'nav-market' },
-    { href: 'tv.html', label: 'Faceless TV' },
-    { href: 'radio.html', label: 'Radio' },
-    { href: 'neon-dreams.html', label: 'Neon Dreams' },
-    { href: 'world.html', label: 'World' },
-    { href: 'courses.html', label: 'Courses', className: 'nav-courses' },
-    { href: 'apps.html', label: 'More', className: 'nav-more' }
+    { href: 'tv.html', label: 'Faceless TV', className: 'nav-tv' },
+    { href: 'radio.html', label: 'Radio', className: 'nav-radio' },
+    { href: 'neon-dreams.html', label: 'Neon Dreams Club', className: 'nav-neon-dreams' },
+    { href: 'courses.html', label: 'Courses', className: 'nav-courses' }
   ];
 
   function currentFile() {

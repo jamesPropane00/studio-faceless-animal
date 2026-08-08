@@ -29,9 +29,9 @@ PRODUCT FAMILY
 
 PRIMARY WEBSITE NAVIGATION
 
-Home | Directory | Market | Faceless TV | Radio | Neon Dreams | World | Courses | More
+Directory | Market | Faceless TV | Radio | Neon Dreams Club | Courses
 
-This replaces the earlier six-button navigation. Market is the only public storefront and commerce destination; Store and Underground Vault are retired as separate customer-facing concepts. Market contains the live shop, cart, checkout, protected admin entry, Sell, Source, Requests, Deliver, and the future Seller Network. More leads to the Apps hub for Command OS, Schedule + Budget, Signal Phone, Secure Wallet, P2P Network, Labs, and Account/Dashboard tools.
+These are the six highlighted site-wide navigation destinations. Home remains available through the Faceless Animal Studios logo, while World, Apps, RouteDrop, account tools, and utilities remain inside the waffle launcher. Market is the only public storefront and commerce destination; Store and Underground Vault are retired as separate customer-facing concepts. Market contains the live shop, cart, checkout, protected admin entry, Sell, Source, Requests, Deliver, and the future Seller Network.
 
 These six destinations must appear as visually prominent navigation buttons across the main site on desktop and mobile. Use neon glow, subtle borders, soft shadows, hover lift, pressed feedback, keyboard focus, and active-page state. Keep all existing destination URLs unless a link is incorrect.
 

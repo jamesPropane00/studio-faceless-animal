@@ -2,18 +2,18 @@
   'use strict';
 
   var primary = [
-    ['index.html', 'Home'],
-    ['directory.html', 'Directory'],
-    ['market.html', 'Market'],
-    ['tv.html', 'Faceless TV'],
-    ['radio.html', 'Radio'],
-    ['neon-dreams.html', 'Neon Dreams'],
-    ['world.html', 'World'],
-    ['courses.html', 'Courses'],
-    ['apps.html', 'More']
+    ['directory.html', 'Directory', 'nav-directory'],
+    ['market.html', 'Market', 'nav-market'],
+    ['tv.html', 'Faceless TV', 'nav-tv'],
+    ['radio.html', 'Radio', 'nav-radio'],
+    ['neon-dreams.html', 'Neon Dreams Club', 'nav-neon-dreams'],
+    ['courses.html', 'Courses', 'nav-courses']
   ];
 
   var utilities = [
+    ['index.html', 'Home'],
+    ['world.html', 'World'],
+    ['apps.html', 'More'],
     ['routedrop/routedrop-million-car-army/app/index.html', 'RouteDrop'],
     ['pulse.html', 'Pulse Stage'],
     ['chat.html', 'Rooms'],
@@ -30,11 +30,11 @@
     return (location.pathname.split('/').pop() || 'index.html').toLowerCase();
   }
 
-  function makeLink(item, compact) {
+  function makeLink(item, compact, featured) {
     var anchor = document.createElement('a');
     anchor.href = '/' + item[0];
     anchor.textContent = item[1];
-    anchor.className = 'fas-nav-link' + (compact ? ' fas-nav-link-compact' : '');
+    anchor.className = ['fas-nav-link', compact ? 'fas-nav-link-compact' : '', featured ? 'nav-featured' : '', item[2] || ''].filter(Boolean).join(' ');
     if (currentFile() === item[0].toLowerCase()) anchor.setAttribute('aria-current', 'page');
     return anchor;
   }
@@ -45,14 +45,15 @@
     if (!desktop || !launcher) return;
 
     desktop.replaceChildren();
-    primary.forEach(function (item) { desktop.appendChild(makeLink(item, true)); });
+    primary.forEach(function (item) { desktop.appendChild(makeLink(item, true, true)); });
 
     var auth = launcher.querySelector('.fas-nav-auth');
     var title = document.createElement('div');
     title.className = 'fas-launcher-title';
     title.innerHTML = '<span>Faceless ecosystem</span><small>All systems</small>';
     launcher.replaceChildren(title);
-    primary.concat(utilities).forEach(function (item) { launcher.appendChild(makeLink(item, false)); });
+    primary.forEach(function (item) { launcher.appendChild(makeLink(item, false, true)); });
+    utilities.forEach(function (item) { launcher.appendChild(makeLink(item, false, false)); });
     if (auth) launcher.appendChild(auth);
   }
 

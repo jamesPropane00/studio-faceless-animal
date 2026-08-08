@@ -78,6 +78,57 @@
   border-style: dashed;
 }
 
+/* Each core destination keeps its own signal color through canonical nav replacement. */
+.nav-directory { --fas-nav-rgb: 34, 211, 238; }
+.nav-market { --fas-nav-rgb: 33, 244, 208; }
+.nav-tv { --fas-nav-rgb: 255, 47, 79; }
+.nav-radio { --fas-nav-rgb: 245, 179, 53; }
+.nav-neon-dreams { --fas-nav-rgb: 185, 78, 255; }
+.nav-courses { --fas-nav-rgb: 99, 140, 255; }
+
+.primary-nav-buttons a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses),
+.mobile-nav.tv-waffle-menu a.nav-featured:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses),
+.shop-navlinks a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses) {
+  border-color: rgba(var(--fas-nav-rgb), 0.72);
+  background: linear-gradient(145deg, rgba(var(--fas-nav-rgb), 0.18), rgba(13, 14, 23, 0.94) 62%);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(var(--fas-nav-rgb), 0.2), inset 0 0 12px rgba(var(--fas-nav-rgb), 0.08);
+}
+
+.primary-nav-buttons a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses)::after,
+.mobile-nav.tv-waffle-menu a.nav-featured:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses)::after,
+.shop-navlinks a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses)::after {
+  content: "";
+  position: absolute;
+  right: 0.58rem;
+  bottom: 0.22rem;
+  left: 0.58rem;
+  height: 2px;
+  border-radius: 999px;
+  background: rgb(var(--fas-nav-rgb));
+  box-shadow: 0 0 9px rgba(var(--fas-nav-rgb), 0.9);
+  opacity: 0.82;
+}
+
+.primary-nav-buttons a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):hover,
+.primary-nav-buttons a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):focus-visible,
+.mobile-nav.tv-waffle-menu a.nav-featured:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):hover,
+.mobile-nav.tv-waffle-menu a.nav-featured:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):focus-visible,
+.shop-navlinks a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):hover,
+.shop-navlinks a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):focus-visible {
+  border-color: rgb(var(--fas-nav-rgb));
+  background: linear-gradient(145deg, rgba(var(--fas-nav-rgb), 0.3), rgba(35, 18, 56, 0.94));
+  box-shadow: 0 0 27px rgba(var(--fas-nav-rgb), 0.42), 0 9px 24px rgba(0, 0, 0, 0.32);
+}
+
+.primary-nav-buttons a[aria-current="page"]:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses),
+.mobile-nav.tv-waffle-menu a.nav-featured[aria-current="page"]:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses),
+.shop-navlinks a[aria-current="page"]:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses) {
+  border-color: rgb(var(--fas-nav-rgb));
+  background: linear-gradient(145deg, rgba(var(--fas-nav-rgb), 0.38), rgba(38, 17, 61, 0.95));
+  box-shadow: 0 0 30px rgba(var(--fas-nav-rgb), 0.48), inset 0 0 16px rgba(var(--fas-nav-rgb), 0.14);
+}
+
 /* The full app menu remains available from the waffle button. */
 .primary-nav-buttons + .navbar-links {
   display: none;
