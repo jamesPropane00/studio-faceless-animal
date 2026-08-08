@@ -1010,15 +1010,10 @@
 
     .signal-visual {
       min-width: 0;
-      display: grid;
-      grid-template-columns: 0.9fr 1.1fr;
-      gap: 0.75rem;
-      align-content: stretch;
+      min-height: 100%;
     }
 
-    .signal-poster,
-    .signal-stack img,
-    .signal-mini {
+    .signal-poster {
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 8px;
       background: rgba(0,0,0,0.26);
@@ -1027,12 +1022,14 @@
     }
 
     .signal-poster {
+      display: block;
+      width: 100%;
+      height: 100%;
       min-height: 100%;
       position: relative;
     }
 
     .signal-poster img,
-    .signal-stack img,
     .drop-thumb img {
       width: 100%;
       height: 100%;
@@ -1043,46 +1040,9 @@
     .signal-poster img {
       position: absolute;
       inset: 0;
+      object-position: center 22%;
+      transform: scale(1.12);
       filter: saturate(1.1) contrast(1.04);
-    }
-
-    .signal-poster strong {
-      position: absolute;
-      left: 0.8rem;
-      bottom: 0.8rem;
-      right: 0.8rem;
-      z-index: 2;
-      color: #fff;
-      font-size: 1.4rem;
-      line-height: 0.94;
-      text-transform: uppercase;
-      text-shadow: 0 12px 34px rgba(0,0,0,0.9);
-    }
-
-    .signal-stack {
-      display: grid;
-      gap: 0.75rem;
-    }
-
-    .signal-stack img {
-      aspect-ratio: 16 / 10;
-    }
-
-    .signal-mini {
-      min-height: 118px;
-      display: grid;
-      align-content: end;
-      padding: 0.85rem;
-      background:
-        radial-gradient(circle at 82% 18%, rgba(33,244,208,0.18), transparent 34%),
-        linear-gradient(135deg, rgba(255,47,79,0.16), rgba(139,92,246,0.1)),
-        rgba(0,0,0,0.25);
-    }
-
-    .signal-mini strong {
-      color: #fff;
-      font-size: 1rem;
-      text-transform: uppercase;
     }
 
     .drop-grid {
@@ -1421,19 +1381,10 @@
           </div>
         </div>
 
-        <div class="signal-visual" aria-label="Faceless visual stack">
-          <a class="signal-poster" href="neon-dreams.html">
+        <div class="signal-visual" aria-label="Faceless Animal Studios character">
+          <a class="signal-poster" href="neon-dreams.html" aria-label="Open Neon Dreams">
             <img src="assets/mascot-animal.png" alt="Faceless Animal Studios character artwork" />
-            <strong>Neon Dreams is bleeding through.</strong>
           </a>
-          <div class="signal-stack">
-            <img src="assets/boombox.png" alt="Faceless radio boombox artwork" />
-            <img src="assets/mascot.png" alt="Faceless Animal Studios mascot" />
-            <div class="signal-mini">
-              <div class="signal-tag">Tonight</div>
-              <strong>Radio, rooms, TV, posts.</strong>
-            </div>
-          </div>
         </div>
       </section>
 
