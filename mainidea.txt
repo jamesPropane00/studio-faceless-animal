@@ -33,7 +33,7 @@ Directory | Market | Faceless TV | Radio | Neon Dreams Club | Courses
 
 These are the six highlighted site-wide navigation destinations. Home remains available through the Faceless Animal Studios logo, while World, Apps, RouteDrop, account tools, and utilities remain inside the waffle launcher. Market is the only public storefront and commerce destination; Store and Underground Vault are retired as separate customer-facing concepts. Market contains the live shop, cart, checkout, protected admin entry, Sell, Source, Requests, Deliver, and the future Seller Network.
 
-These six destinations must appear as visually prominent navigation buttons across the main site on desktop and mobile. Use neon glow, subtle borders, soft shadows, hover lift, pressed feedback, keyboard focus, and active-page state. Keep all existing destination URLs unless a link is incorrect.
+These six destinations must appear as visually prominent navigation buttons across the main site and inside the waffle launcher on desktop and mobile. In the waffle launcher, organize them above the utility links as: Explore (Directory, Market), Watch & Listen (Faceless TV, Radio), and Community & Learning (Neon Dreams Club, Courses). Give each destination its own neon signal color, description, glow, subtle border, soft shadow, hover lift, pressed feedback, keyboard focus, and active-page state. Keep utility links quieter beneath a clearly separated “More from the ecosystem” heading. Keep all existing destination URLs unless a link is incorrect.
 
 Future commerce navigation can evolve toward:
 Shop | Sell | Source | Deliver | Requests | Courses

@@ -147,6 +147,157 @@
   display: none;
 }
 
+/* Canonical waffle launcher: keep the six core destinations visually distinct
+   from utilities on desktop and mobile. The ID prevents legacy menu CSS from
+   flattening or reordering this hierarchy. */
+#fas-app-launcher-menu .fas-launcher-title {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.55rem 0.58rem 0.8rem;
+}
+
+#fas-app-launcher-menu .fas-launcher-title small {
+  color: rgba(33, 244, 208, 0.74);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#fas-app-launcher-menu .fas-launcher-featured,
+#fas-app-launcher-menu .fas-launcher-more {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+#fas-app-launcher-menu .fas-launcher-featured {
+  display: grid;
+  gap: 0.72rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  border-radius: 0.9rem;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(33, 244, 208, 0.1), transparent 42%),
+    linear-gradient(160deg, rgba(21, 15, 34, 0.96), rgba(9, 9, 16, 0.94));
+  box-shadow: inset 0 0 28px rgba(139, 92, 246, 0.06), 0 0 22px rgba(0, 0, 0, 0.24);
+}
+
+#fas-app-launcher-menu .fas-launcher-cluster {
+  min-width: 0;
+}
+
+#fas-app-launcher-menu .fas-launcher-section-label {
+  margin: 0 0 0.38rem;
+  padding-left: 0.18rem;
+  color: rgba(255, 255, 255, 0.46);
+  font: 900 0.58rem/1 Inter, system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+#fas-app-launcher-menu .fas-launcher-featured-grid,
+#fas-app-launcher-menu .fas-launcher-more-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.42rem;
+}
+
+#fas-app-launcher-menu a.fas-launcher-featured-link {
+  position: relative;
+  display: grid;
+  grid-template-columns: 0.48rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  min-height: 4rem;
+  padding: 0.62rem 0.58rem;
+  border: 1px solid rgba(var(--fas-nav-rgb), 0.68);
+  border-radius: 0.72rem;
+  background: linear-gradient(140deg, rgba(var(--fas-nav-rgb), 0.19), rgba(11, 11, 19, 0.96) 64%);
+  color: #fff !important;
+  box-shadow: 0 0 14px rgba(var(--fas-nav-rgb), 0.16), inset 0 0 12px rgba(var(--fas-nav-rgb), 0.07);
+  text-decoration: none !important;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+#fas-app-launcher-menu a.fas-launcher-featured-link::after {
+  display: none;
+}
+
+#fas-app-launcher-menu .fas-launcher-signal {
+  width: 0.42rem;
+  height: 2.05rem;
+  border-radius: 999px;
+  background: rgb(var(--fas-nav-rgb));
+  box-shadow: 0 0 12px rgba(var(--fas-nav-rgb), 0.92);
+}
+
+#fas-app-launcher-menu .fas-launcher-link-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+#fas-app-launcher-menu .fas-launcher-link-copy strong {
+  overflow: hidden;
+  color: #fff;
+  font: 900 0.73rem/1.08 Inter, system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#fas-app-launcher-menu .fas-launcher-link-copy small {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.55);
+  font: 650 0.55rem/1.15 Inter, system-ui, sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#fas-app-launcher-menu .fas-launcher-arrow {
+  color: rgba(var(--fas-nav-rgb), 0.9);
+  font-size: 0.72rem;
+  transition: transform 160ms ease;
+}
+
+#fas-app-launcher-menu a.fas-launcher-featured-link:hover,
+#fas-app-launcher-menu a.fas-launcher-featured-link:focus-visible,
+#fas-app-launcher-menu a.fas-launcher-featured-link[aria-current="page"] {
+  z-index: 1;
+  transform: translateY(-2px);
+  border-color: rgb(var(--fas-nav-rgb));
+  background: linear-gradient(140deg, rgba(var(--fas-nav-rgb), 0.34), rgba(24, 13, 38, 0.97) 68%);
+  box-shadow: 0 0 26px rgba(var(--fas-nav-rgb), 0.4), inset 0 0 15px rgba(var(--fas-nav-rgb), 0.1);
+}
+
+#fas-app-launcher-menu a.fas-launcher-featured-link:hover .fas-launcher-arrow,
+#fas-app-launcher-menu a.fas-launcher-featured-link:focus-visible .fas-launcher-arrow {
+  transform: translate(2px, -2px);
+}
+
+#fas-app-launcher-menu .fas-launcher-more {
+  margin-top: 0.65rem;
+  padding: 0.66rem 0.18rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#fas-app-launcher-menu .fas-launcher-more-grid a {
+  justify-content: flex-start;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.62rem;
+  border-radius: 0.55rem;
+  color: rgba(255, 255, 255, 0.62) !important;
+  font-size: 0.65rem;
+}
+
+#fas-app-launcher-menu .fas-launcher-more-grid a:hover,
+#fas-app-launcher-menu .fas-launcher-more-grid a:focus-visible,
+#fas-app-launcher-menu .fas-launcher-more-grid a[aria-current="page"] {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.075);
+}
+
 .shop-navlinks {
   display: flex;
   align-items: center;
@@ -219,6 +370,8 @@
 @media (max-width: 520px) {
   .ecosystem-mobile-links { grid-template-columns: 1fr; }
   .ecosystem-world-nav { left: 0.5rem; right: 0.5rem; transform: none; }
+  #fas-app-launcher-menu .fas-launcher-featured-grid { grid-template-columns: 1fr; }
+  #fas-app-launcher-menu a.fas-launcher-featured-link { min-height: 3.65rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
