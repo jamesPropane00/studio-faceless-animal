@@ -85,16 +85,20 @@
   clearBrowserCachesOnce();
 }());
 
-/* Keep the five primary destinations consistent, with Store first on mobile. */
+/* Keep the nine ecosystem destinations consistent everywhere. */
 (function () {
   'use strict';
 
   var primaryLinks = [
-    { href: '/store', label: 'Store', matches: ['/store', '/store.html'] },
+    { href: '/index.html', label: 'Home', matches: ['/', '/index.html'] },
     { href: '/directory.html', label: 'Directory', matches: ['/directory.html'] },
-    { href: '/radio.html', label: 'Radio', matches: ['/radio.html'] },
+    { href: '/market.html', label: 'Market', matches: ['/market', '/market.html'] },
     { href: '/tv.html', label: 'Faceless TV', matches: ['/tv.html'] },
-    { href: '/neon-dreams.html', label: 'Neon Dreams', matches: ['/neon-dreams.html'] }
+    { href: '/radio.html', label: 'Radio', matches: ['/radio.html'] },
+    { href: '/neon-dreams.html', label: 'Neon Dreams', matches: ['/neon-dreams.html'] },
+    { href: '/world.html', label: 'World', matches: ['/world.html'] },
+    { href: '/courses.html', label: 'Courses', matches: ['/courses.html'] },
+    { href: '/apps.html', label: 'More', matches: ['/apps.html'] }
   ];
 
   function pathFor(anchor) {
@@ -181,11 +185,15 @@
     nav.innerHTML = '<div class="fas-nav-shell">' +
       '<a class="fas-nav-brand" href="/index.html"><span>FACELESS</span><b>ANIMAL</b><small>STUDIOS</small></a>' +
       '<div class="fas-nav-primary" aria-label="Primary links">' +
+        navLink('index.html', 'Home', true) +
         navLink('directory.html', 'Directory', true) +
-        navLink('radio.html', 'Radio', true) +
+        navLink('market.html', 'Market', true) +
         navLink('tv.html', 'Faceless TV', true) +
+        navLink('radio.html', 'Radio', true) +
         navLink('neon-dreams.html', 'Neon Dreams', true) +
-        navLink('store.html', 'Store', true) +
+        navLink('world.html', 'World', true) +
+        navLink('courses.html', 'Courses', true) +
+        navLink('apps.html', 'More', true) +
       '</div>' +
       '<div class="fas-nav-actions">' +
         navLink('dashboard.html', 'Dashboard', false) +
@@ -199,14 +207,17 @@
     mobile.className = 'fas-mobile-nav';
     mobile.setAttribute('role', 'navigation');
     mobile.setAttribute('aria-label', 'Full app launcher');
-    mobile.innerHTML = '<div class="fas-launcher-title"><span>All systems</span><small>Faceless Animal network</small></div>' +
-      navLink('directory.html', 'Directory') + navLink('radio.html', 'Radio') +
+    mobile.innerHTML = '<div class="fas-launcher-title"><span>Faceless ecosystem</span><small>All systems</small></div>' +
+      navLink('index.html', 'Home') + navLink('directory.html', 'Directory') +
+      navLink('market.html', 'Market') + navLink('tv.html', 'Faceless TV') +
+      navLink('radio.html', 'Radio') + navLink('neon-dreams.html', 'Neon Dreams') +
+      navLink('world.html', 'World') + navLink('courses.html', 'Courses') +
+      navLink('apps.html', 'More') + navLink('store.html', 'Underground Vault') +
+      navLink('routedrop/routedrop-million-car-army/app/index.html', 'RouteDrop') +
       navLink('pulse.html', 'Pulse Stage') + navLink('chat.html', 'Rooms') +
-      navLink('tv.html', 'Faceless TV') + navLink('phone.html', 'Phone') +
-      navLink('neon-dreams.html', 'Neon Dreams') + navLink('news.html', 'News') +
-      navLink('store.html', 'Store') + navLink('wallet.html', 'Vault') +
-      navLink('apps.html', 'Apps') + navLink('ai.html', 'AI') +
-      navLink('canvas.html', 'Canvas') + navLink('world.html', 'World') +
+      navLink('phone.html', 'Signal Phone') + navLink('news.html', 'News') +
+      navLink('wallet.html', 'Secure Wallet') + navLink('ai.html', 'AI') +
+      navLink('canvas.html', 'Canvas') +
       navLink('live-rap-room.html', 'Live Rap Room') +
       navLink('dashboard.html', 'Dashboard') +
       '<a class="fas-nav-auth" href="/login.html">Sign In</a>';
