@@ -15,7 +15,7 @@
 
   function currentFile() {
     var file = window.location.pathname.split('/').pop().toLowerCase();
-    if (!file || file === 'store') return file === 'store' ? 'store.html' : 'index.html';
+    if (!file || file === 'store') return file === 'store' ? 'market.html' : 'index.html';
     return file;
   }
 

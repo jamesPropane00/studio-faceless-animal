@@ -28,7 +28,7 @@ export async function onRequestGet(context) {
     if (profileResponse.ok) profiles = await profileResponse.json();
     if (productResponse.ok) products = await productResponse.json();
   }
-  const staticPages = ['', '/store', '/news', '/radio', '/tv', '/directory', '/network', '/ai'];
+  const staticPages = ['', '/market.html', '/news', '/radio', '/tv', '/directory', '/network', '/ai'];
   const urls = staticPages.map((path) => `<url><loc>${SITE_URL}${path}</loc></url>`);
   articles.forEach((article) => {
     if (!article.slug) return;

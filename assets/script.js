@@ -212,7 +212,7 @@
       navLink('market.html', 'Market') + navLink('tv.html', 'Faceless TV') +
       navLink('radio.html', 'Radio') + navLink('neon-dreams.html', 'Neon Dreams') +
       navLink('world.html', 'World') + navLink('courses.html', 'Courses') +
-      navLink('apps.html', 'More') + navLink('store.html', 'Underground Vault') +
+      navLink('apps.html', 'More') +
       navLink('routedrop/routedrop-million-car-army/app/index.html', 'RouteDrop') +
       navLink('pulse.html', 'Pulse Stage') + navLink('chat.html', 'Rooms') +
       navLink('phone.html', 'Signal Phone') + navLink('news.html', 'News') +

@@ -97,8 +97,8 @@ export async function onRequestGet(context) {
   );
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel>
-  <title>Faceless Supply</title>
-  <link>${SITE_URL}/store</link>
+  <title>Underground Market</title>
+  <link>${SITE_URL}/market.html</link>
   <description>Physical products available from Faceless Animal Studios.</description>
   ${eligible.map(renderItem).join('\n  ')}
 </channel></rss>`;

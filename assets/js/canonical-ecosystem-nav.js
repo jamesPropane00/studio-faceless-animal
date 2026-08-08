@@ -14,7 +14,6 @@
   ];
 
   var utilities = [
-    ['store.html', 'Underground Vault'],
     ['routedrop/routedrop-million-car-army/app/index.html', 'RouteDrop'],
     ['pulse.html', 'Pulse Stage'],
     ['chat.html', 'Rooms'],

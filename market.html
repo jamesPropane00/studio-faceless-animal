@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="The Underground Market connects shopping, independent selling, sourcing, buyer requests, and RouteDrop delivery inside Faceless Animal Studios." />
+  <meta name="description" content="Shop independent goods, studio equipment, clothing, music, limited drops, and creative releases through the Faceless Animal Studios Underground Market." />
   <title>The Underground Market — Faceless Animal Studios</title>
+  <link rel="canonical" href="https://facelessanimalstudios.com/market.html" />
   <link rel="stylesheet" href="assets/style.css?v=20260610-waffle-main" />
+  <link rel="stylesheet" href="assets/shop.css?v=20260808-market" />
   <link rel="stylesheet" href="assets/css/primary-nav.css?v=20260808-ecosystem" />
   <style>
     :root { --market-green:#21f4d0; --market-violet:#9b5cff; --market-ink:#07090f; }
@@ -32,6 +34,10 @@
     .marketplace-head h2 { margin:.2rem 0 0; font-size:clamp(1.8rem,4vw,3rem); letter-spacing:-.04em; }
     .marketplace-head p { margin:.45rem 0 0; color:#aeb0c5; }
     .marketplace-count { flex:0 0 auto; padding:.55rem .75rem; border:1px solid rgba(33,244,208,.25); border-radius:999px; color:var(--market-green); background:rgba(33,244,208,.07); font-size:.78rem; font-weight:850; }
+    .market-commerce-actions { display:flex; align-items:center; gap:.55rem; flex-wrap:wrap; }
+    .market-admin-link,.market-cart-button { min-height:42px; padding:.68rem .85rem; border:1px solid rgba(33,244,208,.32); border-radius:.7rem; color:#fff; background:rgba(33,244,208,.07); font:850 .78rem/1 system-ui,sans-serif; text-decoration:none; cursor:pointer; }
+    .market-admin-link:hover,.market-cart-button:hover { border-color:rgba(33,244,208,.72); box-shadow:0 0 18px rgba(33,244,208,.12); }
+    .market-cart-button b { min-width:1.35rem; display:inline-grid; margin-left:.35rem; padding:.2rem .35rem; place-items:center; border-radius:999px; color:#090b10; background:var(--market-green); }
     .market-tools { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,260px); gap:.75rem; margin-bottom:1rem; }
     .market-tools input,.market-tools select { width:100%; min-height:46px; padding:0 .95rem; border:1px solid rgba(255,255,255,.14); border-radius:.7rem; outline:none; color:#fff; background:#11141d; font:700 .9rem/1 system-ui,sans-serif; }
     .market-tools input:focus,.market-tools select:focus { border-color:rgba(33,244,208,.75); box-shadow:0 0 0 3px rgba(33,244,208,.1); }
@@ -55,6 +61,14 @@
     .listing-view { color:var(--market-green); font-size:.75rem; font-weight:900; white-space:nowrap; }
     .listing-status { grid-column:1/-1; padding:2.4rem 1rem; border:1px dashed rgba(255,255,255,.13); border-radius:.9rem; color:#aeb0c5; text-align:center; }
     .listing-status a { color:var(--market-green); font-weight:900; }
+    .marketplace .shop-status { padding:1.5rem 0; color:#aeb0c5; }
+    .marketplace .product-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:.85rem; }
+    .marketplace .product-card { overflow:hidden; border-color:rgba(255,255,255,.1); border-radius:.9rem; background:#11141c; }
+    .marketplace .product-card:hover { border-color:rgba(33,244,208,.55); box-shadow:0 16px 35px rgba(0,0,0,.34),0 0 24px rgba(33,244,208,.1); }
+    .marketplace .product-image { aspect-ratio:1/1; }
+    .marketplace .price { color:var(--market-green); font-size:1.2rem; }
+    .marketplace .card-actions button,.marketplace .card-actions a { border-radius:.55rem; }
+    .marketplace .card-actions button.primary,.marketplace .card-actions a.primary,.checkout-button { background:linear-gradient(110deg,#6842c2,#9b5cff); }
     .departments-head { margin:2.4rem 0 1rem; }
     .departments-head h2 { margin:.3rem 0; font-size:clamp(1.8rem,4vw,3rem); letter-spacing:-.04em; }
     .departments-head p { margin:0; color:#aeb0c5; }
@@ -67,9 +81,9 @@
     .market-card strong { margin-top:auto; padding-top:1.4rem; color:#e7dfff; }
     .market-card.is-building strong { color:#b29ccb; }
     .market-flow { margin-top:1.25rem; padding:1.4rem; border:1px solid rgba(33,244,208,.18); border-radius:1rem; color:#c9c9d8; background:rgba(8,10,16,.72); text-align:center; font-weight:800; letter-spacing:.04em; }
-    @media(max-width:1040px){.listing-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
-    @media(max-width:900px){.market-main{padding-top:1rem}.market-hero{grid-template-columns:1fr}.market-quicklook{display:none}.market-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.listing-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
-    @media(max-width:620px){.market-main{width:min(100% - 1rem,1240px)}.market-hero{padding:1.25rem;border-radius:1rem 1rem 0 0}.market-hero h1{font-size:clamp(2.25rem,12vw,3.3rem)}.marketplace{padding:.75rem;border-radius:0 0 1rem 1rem}.marketplace-head{align-items:start;flex-direction:column}.market-tools{grid-template-columns:1fr}.listing-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}.listing-copy{padding:.68rem}.listing-copy h3{font-size:.9rem}.listing-bottom{align-items:start;flex-direction:column;gap:.25rem}.listing-price{font-size:1.08rem}.market-grid{grid-template-columns:1fr}.market-card{min-height:220px}}
+    @media(max-width:1040px){.listing-grid,.marketplace .product-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+    @media(max-width:900px){.market-main{padding-top:1rem}.market-hero{grid-template-columns:1fr}.market-quicklook{display:none}.market-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.listing-grid,.marketplace .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    @media(max-width:620px){.market-main{width:min(100% - 1rem,1240px)}.market-hero{padding:1.25rem;border-radius:1rem 1rem 0 0}.market-hero h1{font-size:clamp(2.25rem,12vw,3.3rem)}.marketplace{padding:.75rem;border-radius:0 0 1rem 1rem}.marketplace-head{align-items:start;flex-direction:column}.market-commerce-actions{width:100%}.market-admin-link,.market-cart-button{flex:1}.market-tools{grid-template-columns:1fr}.listing-grid,.marketplace .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}.marketplace .product-copy{padding:.68rem}.marketplace .product-copy h3{font-size:.9rem}.marketplace .card-actions{grid-template-columns:1fr}.listing-copy{padding:.68rem}.listing-copy h3{font-size:.9rem}.listing-bottom{align-items:start;flex-direction:column;gap:.25rem}.listing-price{font-size:1.08rem}.market-grid{grid-template-columns:1fr}.market-card{min-height:220px}}
   </style>
   <script defer src="assets/js/ecosystem-nav.js?v=20260808"></script>
 </head>
@@ -88,8 +102,8 @@
       <div class="market-hero-copy">
         <p class="market-kicker">Faceless Animal Studios // Commerce Network</p>
         <h1>The Underground <span>Market</span></h1>
-        <p>Discover independent goods, studio gear, limited drops, and useful finds from the Faceless network.</p>
-        <div class="market-actions"><a class="market-action" href="#marketplace-title">Browse listings</a><a class="market-action" href="store.html">Enter the Vault</a></div>
+        <p>Discover independent goods, studio gear, limited drops, and useful finds—then buy them here without leaving the Market.</p>
+        <div class="market-actions"><a class="market-action" href="#marketplace-title">Shop live listings</a><a class="market-action" href="shop-admin.html">Open Market Admin</a></div>
       </div>
       <aside class="market-quicklook" aria-label="Market highlights">
         <strong>Market open now</strong>
@@ -99,20 +113,20 @@
 
     <section class="marketplace" aria-labelledby="marketplace-title">
       <div class="marketplace-head">
-        <div><p class="market-kicker">Live listings</p><h2 id="marketplace-title">Shop the Market</h2><p>Browse real items available through the Underground Vault.</p></div>
-        <span class="marketplace-count" id="market-listing-count">Loading listings…</span>
+        <div><p class="market-kicker">Live storefront</p><h2 id="marketplace-title">Shop the Market</h2><p>Browse products, add items to your bag, and check out securely.</p></div>
+        <div class="market-commerce-actions"><a class="market-admin-link" href="shop-admin.html">Market Admin</a><button class="market-cart-button" id="cart-open" type="button" aria-label="Open shopping bag">Bag <b id="cart-count">0</b></button></div>
       </div>
       <div class="market-tools">
-        <label><span class="sr-only">Search market listings</span><input id="market-search" type="search" placeholder="Search products, categories, brands…" autocomplete="off" /></label>
-        <label><span class="sr-only">Filter market by category</span><select id="market-category"><option value="">All categories</option></select></label>
+        <label><span class="sr-only">Search market listings</span><input id="shop-search" type="search" placeholder="Search products, categories, brands…" autocomplete="off" /></label>
+        <label><span class="sr-only">Filter market by category</span><select id="category-filter"><option value="">All categories</option></select></label>
       </div>
-      <div class="market-trust" aria-label="Marketplace benefits"><span>✓ Real listed inventory</span><span>✓ Secure checkout through the Vault</span><span>✓ Shipping and pickup details on every listing</span></div>
-      <div class="listing-grid" id="market-listings" aria-live="polite"><p class="listing-status">Loading the latest listings…</p></div>
+      <div class="market-trust" aria-label="Marketplace benefits"><span>✓ Real listed inventory</span><span>✓ Secure Stripe checkout</span><span>✓ Shipping and pickup details on every listing</span></div>
+      <div id="shop-status" class="shop-status">Loading the latest listings…</div>
+      <div class="product-grid" id="product-grid" aria-live="polite"></div>
     </section>
 
     <header class="departments-head"><p class="market-kicker">Build, source, move</p><h2>More ways to use the Market</h2><p>Commerce tools for sellers, buyers, product scouts, suppliers, and drivers.</p></header>
     <section class="market-grid" aria-label="Underground Market departments">
-      <a class="market-card" href="store.html"><small>Shop</small><h2>The Underground Vault</h2><p>Public storefront for current Faceless drops, independent goods, digital releases, and limited inventory.</p><strong>Enter the Vault →</strong></a>
       <article class="market-card is-building" id="sell"><small>Sell</small><h2>Resale Command Center</h2><p>Inventory, listings, pricing, profit, customer management, pickups, shipping, and cross-channel sales.</p><strong>Seller system coming online</strong></article>
       <article class="market-card is-building" id="source"><small>Source</small><h2>Underground Supply Network</h2><p>Verified suppliers, wholesale inventory, shared products, sourcing opportunities, and order routing.</p><strong>Supply network in development</strong></article>
       <article class="market-card is-building" id="requests"><small>Find</small><h2>Buyer Requests</h2><p>Buyers describe what they need. Sellers and product scouts compete to locate and fulfill the request.</p><strong>Demand board planned</strong></article>
@@ -121,9 +135,21 @@
     </section>
     <div class="market-flow">SHOP · SELL · SOURCE · REQUEST · DELIVER</div>
   </main>
+  <div class="modal" id="product-modal" hidden><div class="modal-backdrop" data-close-modal></div><section class="product-dialog" role="dialog" aria-modal="true" aria-label="Product detail"><button class="modal-close" data-close-modal aria-label="Close">×</button><div id="product-detail"></div></section></div>
+  <aside class="cart-drawer" id="cart-drawer" aria-hidden="true">
+    <div class="cart-head"><div><p class="eyebrow">Your selection</p><h2>Shopping bag</h2></div><button id="cart-close" aria-label="Close cart">×</button></div>
+    <div id="cart-items" class="cart-items"></div>
+    <div class="cart-checkout">
+      <fieldset id="fulfillment-options"><legend>Get your physical items</legend><label><input type="radio" name="fulfillment" value="shipping" checked /> Ship it</label><label><input type="radio" name="fulfillment" value="pickup" /> Local pickup</label></fieldset>
+      <form id="checkout-form"><input name="name" required autocomplete="name" placeholder="Full name" /><input name="email" required type="email" autocomplete="email" placeholder="Email" /><input name="phone" autocomplete="tel" placeholder="Phone (optional)" />
+        <div id="shipping-fields"><input name="line1" autocomplete="address-line1" placeholder="Street address" /><input name="line2" autocomplete="address-line2" placeholder="Apt / unit" /><div class="form-row"><input name="city" autocomplete="address-level2" placeholder="City" /><input name="state" maxlength="2" autocomplete="address-level1" placeholder="State" /></div><input name="postal_code" autocomplete="postal-code" placeholder="ZIP code" /></div>
+        <div class="cart-total"><span>Estimated total</span><strong id="cart-total">$0.00</strong></div><p id="checkout-error" class="form-error" role="alert"></p><button class="checkout-button" type="submit">Secure checkout →</button>
+      </form><p class="secure-note">Payments securely processed by Stripe. Prices and stock are rechecked before checkout.</p>
+    </div>
+  </aside><div class="drawer-shade" id="drawer-shade" hidden></div>
   <script src="assets/script.js?v=20260808-ecosystem-nav-fix"></script>
   <script src="assets/js/canonical-ecosystem-nav.js?v=1"></script>
   <script>window.__FAS_CONFIG=window.__FAS_CONFIG||{}</script><script src="/assets/js/env.js" onerror="void 0"></script>
-  <script type="module" src="/assets/js/market-products.js?v=2"></script>
+  <script type="module" src="/assets/js/shop.js?v=20260808-market"></script>
 </body>
 </html>

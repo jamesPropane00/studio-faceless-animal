@@ -100,10 +100,10 @@ async function fetchProduct(env, slug) {
 
 function render(product) {
   const canonical = `${SITE_URL}/product/${encodeURIComponent(product.slug)}`;
-  const storeUrl = `${SITE_URL}/store?product=${encodeURIComponent(product.slug)}`;
-  const addUrl = `${SITE_URL}/store?add=${encodeURIComponent(product.slug)}`;
-  const buyUrl = `${SITE_URL}/store?buy=${encodeURIComponent(product.slug)}`;
-  const title = String(product.seo_title || `${product.title} | Faceless Supply`).slice(0, 70);
+  const storeUrl = `${SITE_URL}/market.html?product=${encodeURIComponent(product.slug)}`;
+  const addUrl = `${SITE_URL}/market.html?add=${encodeURIComponent(product.slug)}`;
+  const buyUrl = `${SITE_URL}/market.html?buy=${encodeURIComponent(product.slug)}`;
+  const title = String(product.seo_title || `${product.title} | Underground Market`).slice(0, 70);
   const description = excerpt(
     product.meta_description || product.description ||
       `${product.title} from Faceless Animal Studios.`,
@@ -194,7 +194,7 @@ function render(product) {
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Faceless Animal Studios', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: 'Store', item: `${SITE_URL}/store` },
+      { '@type': 'ListItem', position: 2, name: 'Market', item: `${SITE_URL}/market.html` },
       { '@type': 'ListItem', position: 3, name: product.title, item: canonical },
     ],
   };
@@ -235,9 +235,9 @@ function render(product) {
   </style>
 </head>
 <body>
-  <header class="top"><div class="top-inner"><a class="brand" href="/">FACELESS <span>ANIMAL</span></a><a class="back" href="/store">All products &rarr;</a></div></header>
+  <header class="top"><div class="top-inner"><a class="brand" href="/">FACELESS <span>ANIMAL</span></a><a class="back" href="/market.html">All products &rarr;</a></div></header>
   <main class="shell">
-    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Studio</a> / <a href="/store">Store</a> / ${esc(product.title)}</nav>
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Studio</a> / <a href="/market.html">Market</a> / ${esc(product.title)}</nav>
     <article class="product">
       <div class="gallery">${images.length
         ? images.map((image, index) => `<img src="${esc(image)}" alt="${esc(index === 0 ? product.title : `${product.title} view ${index + 1}`)}" ${index ? 'loading="lazy"' : ''}>`).join('')
@@ -260,9 +260,9 @@ function render(product) {
         ${externalUrl
           ? `<div class="purchase-actions"><a class="buy primary" href="${esc(externalUrl)}" target="_blank" rel="noopener">${fanvueUrl ? 'View and unlock on Fanvue (18+)' : 'Choose options and buy on Spring'}</a></div>`
           : soldOut
-            ? '<div class="purchase-actions"><a class="buy" href="/store">Browse available products</a></div>'
+            ? '<div class="purchase-actions"><a class="buy" href="/market.html">Browse available products</a></div>'
             : `<div class="purchase-actions"><a class="buy" href="${esc(addUrl)}">Add to bag</a><a class="buy primary" href="${esc(buyUrl)}">Buy now</a></div>`}
-        <p class="note">${fanvueUrl ? 'Fanvue handles sign-in, age controls, payment, content access, and customer support. This item does not use the Faceless Supply Stripe checkout.' : springUrl ? 'Spring handles product options, payment, production, shipping, returns, and customer support for this item.' : dropship ? 'This item is fulfilled by a third-party supplier. Faceless Animal Studios remains your seller and customer-service contact.' : 'Prices and inventory are verified by the server before Stripe Checkout opens.'}</p>
+        <p class="note">${fanvueUrl ? 'Fanvue handles sign-in, age controls, payment, content access, and customer support. This item does not use the Underground Market Stripe checkout.' : springUrl ? 'Spring handles product options, payment, production, shipping, returns, and customer support for this item.' : dropship ? 'This item is fulfilled by a third-party supplier. Faceless Animal Studios remains your seller and customer-service contact.' : 'Prices and inventory are verified by the server before Stripe Checkout opens.'}</p>
       </div>
     </article>
   </main>
@@ -274,7 +274,7 @@ export async function onRequestGet(context) {
   const slug = cleanSlug(context.params.slug);
   const product = slug ? await fetchProduct(context.env || {}, slug) : null;
   if (!product) {
-    return new Response('<!doctype html><title>Product Not Found</title><h1>Product not found</h1><p><a href="/store">Return to the store</a></p>', {
+    return new Response('<!doctype html><title>Product Not Found</title><h1>Product not found</h1><p><a href="/market.html">Return to the Market</a></p>', {
       status: 404,
       headers: {
         'content-type': 'text/html; charset=utf-8',

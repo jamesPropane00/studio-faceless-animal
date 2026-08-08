@@ -17,7 +17,7 @@ PRODUCT FAMILY
 
 1. The Underground Market Network — the parent operating system and shared transaction network.
 2. The Underground Market — the customer-facing commerce hub. Use “Market” as the short navigation label.
-3. The Underground Vault / Faceless Supply — the first public storefront inside the Market. Keep it customer-friendly while the network powers inventory, orders, payments, and delivery behind it.
+3. The Underground Market storefront — the Market itself is the public shop. Products, search, cart, checkout, orders, and the protected Market Admin all belong to this single customer-facing destination.
 4. Resale Command Center / Underground Flip System — seller dashboard for inventory, listings, pricing, profit, customers, pickups, shipping, promotion, and duplicate-sale prevention.
 5. Underground Supply Network — supplier, wholesale, dropship, shared-inventory, sourcing, and order-routing layer.
 6. RouteDrop — pickup, local delivery, driver assignments, proof of delivery, tracking, and driver payouts.
@@ -31,14 +31,14 @@ PRIMARY WEBSITE NAVIGATION
 
 Home | Directory | Market | Faceless TV | Radio | Neon Dreams | World | Courses | More
 
-This replaces the earlier six-button navigation. Store is now represented by Market. The existing store is The Underground Vault inside the Market hub. Market contains Shop, Sell, Source, Requests, Deliver, and the future Seller Network. More leads to the Apps hub for Command OS, Schedule + Budget, Signal Phone, Secure Wallet, P2P Network, Labs, and Account/Dashboard tools.
+This replaces the earlier six-button navigation. Market is the only public storefront and commerce destination; Store and Underground Vault are retired as separate customer-facing concepts. Market contains the live shop, cart, checkout, protected admin entry, Sell, Source, Requests, Deliver, and the future Seller Network. More leads to the Apps hub for Command OS, Schedule + Budget, Signal Phone, Secure Wallet, P2P Network, Labs, and Account/Dashboard tools.
 
 These six destinations must appear as visually prominent navigation buttons across the main site on desktop and mobile. Use neon glow, subtle borders, soft shadows, hover lift, pressed feedback, keyboard focus, and active-page state. Keep all existing destination URLs unless a link is incorrect.
 
 Future commerce navigation can evolve toward:
 Shop | Sell | Source | Deliver | Requests | Courses
 
-Use “Market” as the future main commerce label when the larger hub is ready. Inside Market, offer Shop the Vault, Sell, Source, Requests, and Deliver.
+Use “Market” as the main commerce label. Inside Market, offer the live storefront, Sell, Source, Requests, Deliver, and a protected Market Admin for products and orders.
 
 CORE USER EXPERIENCE
 

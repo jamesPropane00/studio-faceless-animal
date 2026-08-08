@@ -1,54 +1,20 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Shop independent Faceless Animal Studios clothing, limited objects, digital music and downloadable creative releases.">
-  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
-  <link rel="canonical" href="https://facelessanimalstudios.com/store">
-  <meta property="og:type" content="website"><meta property="og:site_name" content="Faceless Animal Studios">
-  <meta property="og:title" content="Faceless Supply — Independent Clothing, Music & Creative Goods">
-  <meta property="og:description" content="Limited physical goods, clothing, music downloads and creative releases from Faceless Animal Studios.">
-  <meta property="og:url" content="https://facelessanimalstudios.com/store">
-  <meta name="twitter:card" content="summary">
-  <title>Faceless Supply — Faceless Animal Studios</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=20260728"><link rel="stylesheet" href="assets/shop.css?v=20260802-checkout"><link rel="stylesheet" href="assets/css/primary-nav.css?v=20260808"><script defer src="assets/js/ecosystem-nav.js?v=20260808"></script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"OnlineStore","name":"Faceless Supply","url":"https://facelessanimalstudios.com/store","description":"Independent clothing, limited physical goods, digital music and creative downloads from Faceless Animal Studios.","brand":{"@type":"Brand","name":"Faceless Animal Studios"},"sameAs":["https://facelessanimalstudios.com"]}</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,follow" />
+  <meta http-equiv="refresh" content="0;url=/market.html" />
+  <link rel="canonical" href="https://facelessanimalstudios.com/market.html" />
+  <title>Opening the Underground Market — Faceless Animal Studios</title>
+  <style>body{display:grid;min-height:100vh;margin:0;place-items:center;color:#f7f5ff;background:#07090f;font:700 1rem/1.5 system-ui,sans-serif}a{color:#21f4d0}</style>
 </head>
 <body>
-  <nav class="shop-nav">
-    <a class="shop-brand" href="index.html">FACELESS <span>ANIMAL</span><small>SUPPLY</small></a>
-    <div class="shop-navlinks" aria-label="Primary navigation"><a href="/directory.html">Directory</a><a href="/radio.html">Radio</a><a href="/tv.html">Faceless TV</a><a href="/neon-dreams.html">Neon Dreams</a><a href="/store" aria-current="page">Store</a><a href="/courses.html" class="nav-courses">Courses</a></div>
-    <a class="shop-admin-link" id="shop-admin-link" href="/shop-admin.html">Store admin</a>
-    <button class="cart-button" id="cart-open" aria-label="Open cart">Bag <b id="cart-count">0</b></button>
-  </nav>
-  <main>
-    <header class="shop-hero">
-      <div><p class="eyebrow">Independent goods · Providence, RI</p><h1>WEAR THE<br><span>SIGNAL.</span></h1>
-      <p>Small-run pieces, artifacts and one-of-one drops from the Faceless Animal world.</p></div>
-      <div class="hero-mark" aria-hidden="true">FA<span>///</span></div>
-    </header>
-    <section class="shop-shell" aria-labelledby="products-title">
-      <div class="shop-heading"><div><p class="eyebrow">Available now</p><h2 id="products-title">The supply</h2></div>
-        <div class="shop-tools"><label><span class="sr-only">Search products</span><input id="shop-search" type="search" placeholder="Search the supply…"></label>
-        <select id="category-filter" aria-label="Filter by category"><option value="">All categories</option></select></div>
-      </div>
-      <div id="shop-status" class="shop-status">Loading the supply…</div>
-      <div id="product-grid" class="product-grid"></div>
-    </section>
-  </main>
-  <div class="modal" id="product-modal" hidden><div class="modal-backdrop" data-close-modal></div><section class="product-dialog" role="dialog" aria-modal="true" aria-label="Product detail"><button class="modal-close" data-close-modal aria-label="Close">×</button><div id="product-detail"></div></section></div>
-  <aside class="cart-drawer" id="cart-drawer" aria-hidden="true"><div class="cart-head"><div><p class="eyebrow">Your selection</p><h2>Shopping bag</h2></div><button id="cart-close" aria-label="Close cart">×</button></div>
-    <div id="cart-items" class="cart-items"></div><div class="cart-checkout">
-      <fieldset id="fulfillment-options"><legend>Get your physical items</legend><label><input type="radio" name="fulfillment" value="shipping" checked> Ship it</label><label><input type="radio" name="fulfillment" value="pickup"> Local pickup</label></fieldset>
-      <form id="checkout-form"><input name="name" required autocomplete="name" placeholder="Full name"><input name="email" required type="email" autocomplete="email" placeholder="Email"><input name="phone" autocomplete="tel" placeholder="Phone (optional)">
-        <div id="shipping-fields"><input name="line1" autocomplete="address-line1" placeholder="Street address"><input name="line2" autocomplete="address-line2" placeholder="Apt / unit"><div class="form-row"><input name="city" autocomplete="address-level2" placeholder="City"><input name="state" maxlength="2" autocomplete="address-level1" placeholder="State"></div><input name="postal_code" autocomplete="postal-code" placeholder="ZIP code"></div>
-        <div class="cart-total"><span>Estimated total</span><strong id="cart-total">$0.00</strong></div><p id="checkout-error" class="form-error" role="alert"></p><button class="checkout-button" type="submit">Secure checkout →</button>
-      </form><p class="secure-note">Payments securely processed by Stripe. Prices and stock are rechecked before checkout.</p>
-    </div>
-  </aside><div class="drawer-shade" id="drawer-shade" hidden></div>
-  <footer class="shop-footer"><a class="shop-brand" href="index.html">FACELESS <span>ANIMAL</span></a><p>© 2026 Faceless Animal Studios · Built independently.</p></footer>
-  <script>window.__FAS_CONFIG=window.__FAS_CONFIG||{}</script><script src="/assets/js/env.js" onerror="void 0"></script>
-  <script type="module" src="/assets/js/shop.js?v=20260802-checkout-2"></script>
-<script src="/assets/script.js?v=20260808-ecosystem-nav-fix"></script><script src="/assets/js/canonical-ecosystem-nav.js?v=1"></script></body></html>
+  <p>The Store is now the <a id="market-link" href="/market.html">Underground Market</a>.</p>
+  <script>
+    var destination = '/market.html' + window.location.search + window.location.hash;
+    document.getElementById('market-link').href = destination;
+    window.location.replace(destination);
+  </script>
+</body>
+</html>

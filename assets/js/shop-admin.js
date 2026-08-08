@@ -265,7 +265,7 @@ function updateSearchPreview() {
   const form = $("#product-form");
   const title = String(form.elements.title.value || "").trim();
   const description = String(form.elements.description.value || "").trim();
-  $("#seo-preview-title").textContent = title ? `${title} | Faceless Supply` : "Your product title | Faceless Supply";
+  $("#seo-preview-title").textContent = title ? `${title} | Underground Market` : "Your product title | Underground Market";
   $("#seo-preview-url").textContent = `facelessanimalstudios.com/product/${slugify(title) || "your-product"}`;
   $("#seo-preview-description").textContent = excerpt(description) || "Your product description will become the search description automatically.";
 }
@@ -414,7 +414,7 @@ function codexProductBrief(product) {
   const listing = marketplaceFor(product);
   const readiness = listing ? tiktokReadiness(product, listing) : [];
   return JSON.stringify({
-    purpose: "Faceless Supply CJ product verification and listing handoff",
+    purpose: "Underground Market CJ product verification and listing handoff",
     storefront: {
       id: product.id,
       slug: product.slug,

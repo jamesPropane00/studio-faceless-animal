@@ -6,7 +6,7 @@ let products=[], cart=JSON.parse(localStorage.getItem("fas_shop_cart")||"[]");
 const productById=(id)=>products.find(p=>p.id===id);
 const productUrl=(product)=>product.slug
  ? `/product/${encodeURIComponent(product.slug)}`
- : `/store?productId=${encodeURIComponent(product.id)}`;
+ : `/market.html?productId=${encodeURIComponent(product.id)}`;
 const springUrl=(product)=>{
  try{const url=new URL(product.external_purchase_url||"");return url.protocol==="https:"&&/^[a-z0-9-]+\.creator-spring\.com$/i.test(url.hostname)&&/^\/listing\/[a-z0-9-]+\/?$/i.test(url.pathname)?url.toString():""}catch{return""}
 };
@@ -41,8 +41,8 @@ async function load(){
 function renderProducts(){
  const q=$("#shop-search").value.toLowerCase(),cat=$("#category-filter").value;
  const list=products.filter(p=>(!q||`${p.title} ${p.description} ${p.sku} ${p.brand||""} ${p.category} ${(p.search_keywords||[]).join(" ")}`.toLowerCase().includes(q))&&(!cat||p.category===cat));
- $("#product-grid").innerHTML=list.map(p=>{const external=externalUrl(p),spring=p.fulfillment_provider==="spring"&&external,fanvue=p.fulfillment_provider==="fanvue"&&external,reserved=!external&&p.state==="reserved",sold=!external&&(p.state==="sold"||p.quantity<1),low=!external&&!sold&&!reserved&&p.quantity<=3;return `<article class="product-card">
- <a class="product-image" href="${productUrl(p)}">${image(p)?`<img src="${safe(image(p))}" alt="${safe(p.title)}" loading="lazy">`:`<div class="no-image">FA</div>`}${fanvue?`<span class="badge">18+ · View on Fanvue</span>`:spring?`<span class="badge">Made to order by Spring</span>`:reserved?`<span class="badge sold">Temporarily reserved</span>`:sold?`<span class="badge sold">Sold out</span>`:low?`<span class="badge low">Only ${p.quantity} left</span>`:""}</a>
+ $("#product-grid").innerHTML=list.map(p=>{const external=externalUrl(p),spring=p.fulfillment_provider==="spring"&&external,fanvue=p.fulfillment_provider==="fanvue"&&external,reserved=!external&&p.state==="reserved",sold=!external&&(p.state==="sold"||p.quantity<1);return `<article class="product-card">
+ <a class="product-image" href="${productUrl(p)}">${image(p)?`<img src="${safe(image(p))}" alt="${safe(p.title)}" loading="lazy">`:`<div class="no-image">FA</div>`}${fanvue?`<span class="badge">18+ · View on Fanvue</span>`:spring?`<span class="badge">Made to order by Spring</span>`:reserved?`<span class="badge sold">Temporarily reserved</span>`:sold?`<span class="badge sold">Sold out</span>`:""}</a>
  <div class="product-copy"><span class="product-meta">${safe(p.category)} · ${fanvue?"Fanvue exclusive":spring?"Spring fulfillment":p.fulfillment_mode==="dropship"?`Ships from ${safe(p.ships_from)}`:p.product_kind==="physical"?safe(p.condition):"Instant download"}</span><h3><a href="${productUrl(p)}">${safe(p.title)}</a></h3><span class="price">${spring?"From ":""}${fanvue&&p.price_cents<1?"Exclusive access":money(p.price_cents)}</span>${p.fulfillment_mode==="dropship"?`<small class="delivery-estimate">Estimated delivery: ${safe(p.delivery_min_business_days)}–${safe(p.delivery_max_business_days)} business days</small>`:""}
  ${external?`<div class="card-actions spring-action"><a class="primary" href="${safe(external)}" target="_blank" rel="noopener">${fanvue?"View on Fanvue (18+) →":"Choose options on Spring →"}</a></div>`:`<div class="card-actions"><button type="button" data-add="${p.id}" ${sold?"disabled":""}>Add to bag</button><button type="button" class="primary" data-buy="${p.id}" ${sold?"disabled":""}>Buy now</button></div>`}</div></article>`}).join("")||"<p class='shop-status'>No pieces match that search.</p>";
 }
