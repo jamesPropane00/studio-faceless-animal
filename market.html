@@ -11,16 +11,47 @@
     :root { --market-green:#21f4d0; --market-violet:#9b5cff; --market-ink:#07090f; }
     * { box-sizing:border-box; }
     body { margin:0; min-height:100vh; color:#f7f5ff; background:radial-gradient(circle at 16% 5%,rgba(33,244,208,.12),transparent 30rem),radial-gradient(circle at 88% 18%,rgba(139,92,246,.18),transparent 34rem),#07090f; }
-    .market-main { width:min(1180px,calc(100% - 2rem)); margin:0 auto; padding:6rem 0 5rem; }
-    .market-hero { position:relative; padding:clamp(2rem,7vw,5rem); overflow:hidden; border:1px solid rgba(33,244,208,.25); border-radius:1.5rem; background:linear-gradient(145deg,rgba(13,18,28,.96),rgba(24,10,43,.92)); box-shadow:0 28px 80px rgba(0,0,0,.42),0 0 42px rgba(33,244,208,.08); }
+    .market-main { width:min(1240px,calc(100% - 2rem)); margin:0 auto; padding:3.2rem 0 5rem; }
+    .market-hero { position:relative; padding:clamp(2rem,5vw,4rem); overflow:hidden; border:1px solid rgba(33,244,208,.25); border-radius:1.5rem; background:linear-gradient(145deg,rgba(13,18,28,.96),rgba(24,10,43,.92)); box-shadow:0 28px 80px rgba(0,0,0,.42),0 0 42px rgba(33,244,208,.08); }
     .market-hero::after { content:"MARKET"; position:absolute; right:-.04em; bottom:-.2em; color:rgba(255,255,255,.025); font-size:clamp(6rem,18vw,15rem); font-weight:950; line-height:1; pointer-events:none; }
     .market-kicker { margin:0 0 1rem; color:var(--market-green); font-size:.75rem; font-weight:900; letter-spacing:.18em; text-transform:uppercase; }
-    .market-hero h1 { max-width:850px; margin:0; font-size:clamp(3rem,8vw,7.5rem); line-height:.86; letter-spacing:-.065em; text-transform:uppercase; }
+    .market-hero h1 { max-width:850px; margin:0; font-size:clamp(2.8rem,7vw,6.6rem); line-height:.86; letter-spacing:-.065em; text-transform:uppercase; }
     .market-hero h1 span { color:transparent; -webkit-text-stroke:1px var(--market-green); }
     .market-hero p:not(.market-kicker) { max-width:680px; margin:1.5rem 0 0; color:#b9bad0; font-size:clamp(1rem,2vw,1.2rem); line-height:1.7; }
     .market-actions { display:flex; gap:.75rem; flex-wrap:wrap; margin-top:2rem; }
     .market-action { display:inline-flex; padding:.9rem 1.1rem; border:1px solid rgba(33,244,208,.5); border-radius:.75rem; color:#fff; background:rgba(33,244,208,.1); font-weight:850; text-decoration:none; transition:transform .16s ease,box-shadow .16s ease; }
     .market-action:hover { transform:translateY(-2px); box-shadow:0 0 22px rgba(33,244,208,.2); }
+    .marketplace { margin-top:1.25rem; padding:clamp(1rem,2.5vw,1.6rem); border:1px solid rgba(255,255,255,.1); border-radius:1.25rem; background:rgba(9,11,17,.92); box-shadow:0 22px 55px rgba(0,0,0,.32); }
+    .marketplace-head { display:flex; align-items:end; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
+    .marketplace-head h2 { margin:.2rem 0 0; font-size:clamp(1.8rem,4vw,3rem); letter-spacing:-.04em; }
+    .marketplace-head p { margin:.45rem 0 0; color:#aeb0c5; }
+    .marketplace-count { flex:0 0 auto; padding:.55rem .75rem; border:1px solid rgba(33,244,208,.25); border-radius:999px; color:var(--market-green); background:rgba(33,244,208,.07); font-size:.78rem; font-weight:850; }
+    .market-tools { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,260px); gap:.75rem; margin-bottom:1rem; }
+    .market-tools input,.market-tools select { width:100%; min-height:46px; padding:0 .95rem; border:1px solid rgba(255,255,255,.14); border-radius:.7rem; outline:none; color:#fff; background:#11141d; font:700 .9rem/1 system-ui,sans-serif; }
+    .market-tools input:focus,.market-tools select:focus { border-color:rgba(33,244,208,.75); box-shadow:0 0 0 3px rgba(33,244,208,.1); }
+    .market-tools option { color:#fff; background:#11141d; }
+    .market-trust { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; color:#9ea1b6; font-size:.75rem; font-weight:750; }
+    .market-trust span { padding:.42rem .6rem; border:1px solid rgba(255,255,255,.08); border-radius:999px; background:rgba(255,255,255,.025); }
+    .listing-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.85rem; }
+    .listing-card { position:relative; display:flex; min-width:0; overflow:hidden; flex-direction:column; border:1px solid rgba(255,255,255,.1); border-radius:.9rem; background:#11141c; color:inherit; text-decoration:none; transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease; }
+    .listing-card:hover { transform:translateY(-4px); border-color:rgba(33,244,208,.55); box-shadow:0 16px 35px rgba(0,0,0,.34),0 0 24px rgba(33,244,208,.1); }
+    .listing-image { position:relative; aspect-ratio:1/1; overflow:hidden; background:radial-gradient(circle at 50% 35%,#2b3040,#11141c 70%); }
+    .listing-image img { width:100%; height:100%; display:block; object-fit:cover; transition:transform .28s ease; }
+    .listing-card:hover img { transform:scale(1.035); }
+    .listing-image .no-image { display:grid; width:100%; height:100%; place-items:center; color:rgba(255,255,255,.12); font-size:3rem; font-weight:950; }
+    .listing-badge { position:absolute; top:.65rem; left:.65rem; max-width:calc(100% - 1.3rem); padding:.38rem .55rem; border-radius:.45rem; color:#07110f; background:var(--market-green); box-shadow:0 5px 18px rgba(0,0,0,.3); font-size:.66rem; font-weight:950; text-transform:uppercase; }
+    .listing-badge.is-low { color:#160b02; background:#f8b44d; }
+    .listing-copy { display:flex; flex:1; padding:.85rem; flex-direction:column; }
+    .listing-meta { color:#9094aa; font-size:.68rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; }
+    .listing-copy h3 { margin:.45rem 0 .7rem; font-size:1rem; line-height:1.25; }
+    .listing-bottom { display:flex; align-items:end; justify-content:space-between; gap:.65rem; margin-top:auto; }
+    .listing-price { color:#fff; font-size:1.25rem; font-weight:950; }
+    .listing-view { color:var(--market-green); font-size:.75rem; font-weight:900; white-space:nowrap; }
+    .listing-status { grid-column:1/-1; padding:2.4rem 1rem; border:1px dashed rgba(255,255,255,.13); border-radius:.9rem; color:#aeb0c5; text-align:center; }
+    .listing-status a { color:var(--market-green); font-weight:900; }
+    .departments-head { margin:2.4rem 0 1rem; }
+    .departments-head h2 { margin:.3rem 0; font-size:clamp(1.8rem,4vw,3rem); letter-spacing:-.04em; }
+    .departments-head p { margin:0; color:#aeb0c5; }
     .market-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin-top:1.25rem; }
     .market-card { display:flex; min-height:250px; padding:1.4rem; flex-direction:column; border:1px solid rgba(167,139,250,.22); border-radius:1rem; background:linear-gradient(145deg,rgba(18,21,32,.94),rgba(12,13,21,.94)); color:inherit; text-decoration:none; transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease; }
     .market-card:hover { transform:translateY(-4px); border-color:rgba(33,244,208,.62); box-shadow:0 18px 38px rgba(0,0,0,.32),0 0 24px rgba(33,244,208,.1); }
@@ -30,8 +61,9 @@
     .market-card strong { margin-top:auto; padding-top:1.4rem; color:#e7dfff; }
     .market-card.is-building strong { color:#b29ccb; }
     .market-flow { margin-top:1.25rem; padding:1.4rem; border:1px solid rgba(33,244,208,.18); border-radius:1rem; color:#c9c9d8; background:rgba(8,10,16,.72); text-align:center; font-weight:800; letter-spacing:.04em; }
-    @media(max-width:900px){.market-main{padding-top:5rem}.market-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
-    @media(max-width:620px){.market-grid{grid-template-columns:1fr}.market-card{min-height:220px}}
+    @media(max-width:1040px){.listing-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+    @media(max-width:900px){.market-main{padding-top:2rem}.market-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.listing-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    @media(max-width:620px){.market-main{width:min(100% - 1rem,1240px)}.market-hero{border-radius:1rem}.marketplace{padding:.75rem;border-radius:1rem}.marketplace-head{align-items:start;flex-direction:column}.market-tools{grid-template-columns:1fr}.listing-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}.listing-copy{padding:.68rem}.listing-copy h3{font-size:.9rem}.listing-bottom{align-items:start;flex-direction:column;gap:.25rem}.listing-price{font-size:1.08rem}.market-grid{grid-template-columns:1fr}.market-card{min-height:220px}}
   </style>
   <script defer src="assets/js/ecosystem-nav.js?v=20260808"></script>
 </head>
@@ -53,6 +85,20 @@
       <div class="market-actions"><a class="market-action" href="store.html">Shop the Underground Vault</a><a class="market-action" href="routedrop/routedrop-million-car-army/app/">Open RouteDrop</a></div>
     </section>
 
+    <section class="marketplace" aria-labelledby="marketplace-title">
+      <div class="marketplace-head">
+        <div><p class="market-kicker">Live listings</p><h2 id="marketplace-title">Shop the Market</h2><p>Browse real items available through the Underground Vault.</p></div>
+        <span class="marketplace-count" id="market-listing-count">Loading listings…</span>
+      </div>
+      <div class="market-tools">
+        <label><span class="sr-only">Search market listings</span><input id="market-search" type="search" placeholder="Search products, categories, brands…" autocomplete="off" /></label>
+        <label><span class="sr-only">Filter market by category</span><select id="market-category"><option value="">All categories</option></select></label>
+      </div>
+      <div class="market-trust" aria-label="Marketplace benefits"><span>✓ Real listed inventory</span><span>✓ Secure checkout through the Vault</span><span>✓ Shipping and pickup details on every listing</span></div>
+      <div class="listing-grid" id="market-listings" aria-live="polite"><p class="listing-status">Loading the latest listings…</p></div>
+    </section>
+
+    <header class="departments-head"><p class="market-kicker">Build, source, move</p><h2>More ways to use the Market</h2><p>Commerce tools for sellers, buyers, product scouts, suppliers, and drivers.</p></header>
     <section class="market-grid" aria-label="Underground Market departments">
       <a class="market-card" href="store.html"><small>Shop</small><h2>The Underground Vault</h2><p>Public storefront for current Faceless drops, independent goods, digital releases, and limited inventory.</p><strong>Enter the Vault →</strong></a>
       <article class="market-card is-building" id="sell"><small>Sell</small><h2>Resale Command Center</h2><p>Inventory, listings, pricing, profit, customer management, pickups, shipping, and cross-channel sales.</p><strong>Seller system coming online</strong></article>
@@ -65,5 +111,7 @@
   </main>
   <script src="assets/script.js?v=20260808-ecosystem-nav-fix"></script>
   <script src="assets/js/canonical-ecosystem-nav.js?v=1"></script>
+  <script>window.__FAS_CONFIG=window.__FAS_CONFIG||{}</script><script src="/assets/js/env.js" onerror="void 0"></script>
+  <script type="module" src="/assets/js/market-products.js?v=1"></script>
 </body>
 </html>
