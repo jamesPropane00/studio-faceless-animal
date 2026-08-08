@@ -9,6 +9,7 @@
 }
 
 .primary-nav-buttons a,
+#fas-canonical-nav .fas-nav-primary a,
 .mobile-nav.tv-waffle-menu a.nav-featured,
 .shop-navlinks a {
   position: relative;
@@ -33,6 +34,8 @@
 
 .primary-nav-buttons a:hover,
 .primary-nav-buttons a:focus-visible,
+#fas-canonical-nav .fas-nav-primary a:hover,
+#fas-canonical-nav .fas-nav-primary a:focus-visible,
 .mobile-nav.tv-waffle-menu a.nav-featured:hover,
 .mobile-nav.tv-waffle-menu a.nav-featured:focus-visible,
 .shop-navlinks a:hover,
@@ -45,12 +48,14 @@
 }
 
 .primary-nav-buttons a:active,
+#fas-canonical-nav .fas-nav-primary a:active,
 .mobile-nav.tv-waffle-menu a.nav-featured:active,
 .shop-navlinks a:active {
   transform: translateY(0) scale(0.97);
 }
 
 .primary-nav-buttons a[aria-current="page"],
+#fas-canonical-nav .fas-nav-primary a[aria-current="page"],
 .mobile-nav.tv-waffle-menu a.nav-featured[aria-current="page"],
 .shop-navlinks a[aria-current="page"] {
   border-color: rgba(194, 134, 255, 0.96);
@@ -60,12 +65,14 @@
 }
 
 .primary-nav-buttons a.nav-courses,
+#fas-canonical-nav .fas-nav-primary a.nav-courses,
 .mobile-nav.tv-waffle-menu a.nav-courses,
 .shop-navlinks a.nav-courses {
   border-color: rgba(167, 139, 250, 0.68);
 }
 
 .primary-nav-buttons a.nav-market,
+#fas-canonical-nav .fas-nav-primary a.nav-market,
 .mobile-nav.tv-waffle-menu a.nav-market,
 .shop-navlinks a.nav-market {
   border-color: rgba(33, 244, 208, 0.78);
@@ -73,6 +80,7 @@
 }
 
 .primary-nav-buttons a.nav-more,
+#fas-canonical-nav .fas-nav-primary a.nav-more,
 .mobile-nav.tv-waffle-menu a.nav-more,
 .shop-navlinks a.nav-more {
   border-style: dashed;
@@ -87,6 +95,7 @@
 .nav-courses { --fas-nav-rgb: 99, 140, 255; }
 
 .primary-nav-buttons a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses),
+#fas-canonical-nav .fas-nav-primary a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses),
 .mobile-nav.tv-waffle-menu a.nav-featured:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses),
 .shop-navlinks a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses) {
   border-color: rgba(var(--fas-nav-rgb), 0.72);
@@ -96,6 +105,7 @@
 }
 
 .primary-nav-buttons a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses)::after,
+#fas-canonical-nav .fas-nav-primary a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses)::after,
 .mobile-nav.tv-waffle-menu a.nav-featured:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses)::after,
 .shop-navlinks a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses)::after {
   content: "";
@@ -112,6 +122,8 @@
 
 .primary-nav-buttons a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):hover,
 .primary-nav-buttons a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):focus-visible,
+#fas-canonical-nav .fas-nav-primary a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):hover,
+#fas-canonical-nav .fas-nav-primary a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):focus-visible,
 .mobile-nav.tv-waffle-menu a.nav-featured:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):hover,
 .mobile-nav.tv-waffle-menu a.nav-featured:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):focus-visible,
 .shop-navlinks a:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses):hover,
@@ -122,6 +134,7 @@
 }
 
 .primary-nav-buttons a[aria-current="page"]:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses),
+#fas-canonical-nav .fas-nav-primary a[aria-current="page"]:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses),
 .mobile-nav.tv-waffle-menu a.nav-featured[aria-current="page"]:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses),
 .shop-navlinks a[aria-current="page"]:is(.nav-directory,.nav-market,.nav-tv,.nav-radio,.nav-neon-dreams,.nav-courses) {
   border-color: rgb(var(--fas-nav-rgb));
@@ -210,6 +223,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .primary-nav-buttons a,
+  #fas-canonical-nav .fas-nav-primary a,
   .mobile-nav.tv-waffle-menu a.nav-featured,
   .shop-navlinks a { transition: none; }
 }
