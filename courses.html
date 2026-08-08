@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/style.css?v=20260610-index-revamp" />
+  <link rel="stylesheet" href="assets/css/primary-nav.css?v=20260808" />
+  <script defer src="assets/js/ecosystem-nav.js?v=20260808"></script>
   <style>
     :root{
       --bg-main:#0a0b0f;--bg-card:#111118;--bg-elevated:#161620;
@@ -122,6 +124,14 @@
     <div class="container">
       <div class="navbar-inner">
         <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <div class="primary-nav-buttons" aria-label="Featured navigation">
+          <a href="directory.html">Directory</a>
+          <a href="radio.html">Radio</a>
+          <a href="tv.html">Faceless TV</a>
+          <a href="neon-dreams.html">Neon Dreams</a>
+          <a href="store.html">Store</a>
+          <a href="courses.html" class="nav-courses" aria-current="page">Courses</a>
+        </div>
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
           <li><a href="radio.html">Radio</a></li>
@@ -148,11 +158,12 @@
   </nav>
 
   <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
-    <a href="store.html">Store</a>
-    <a href="directory.html">Directory</a>
-    <a href="radio.html">Radio</a>
-    <a href="tv.html">Faceless TV</a>
-    <a href="neon-dreams.html">Neon Dreams</a>
+    <a href="store.html" class="nav-featured">Store</a>
+    <a href="directory.html" class="nav-featured">Directory</a>
+    <a href="radio.html" class="nav-featured">Radio</a>
+    <a href="tv.html" class="nav-featured">Faceless TV</a>
+    <a href="neon-dreams.html" class="nav-featured">Neon Dreams</a>
+    <a href="courses.html" class="nav-featured nav-courses" aria-current="page">Courses</a>
     <a href="pulse.html">Pulse Stage</a>
     <a href="chat.html">Rooms</a>
     <a href="phone.html">Phone</a>

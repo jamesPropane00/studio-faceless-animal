@@ -1,0 +1,164 @@
+/* Site-wide featured navigation for the six primary Faceless destinations. */
+.primary-nav-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.34rem;
+  margin-left: auto;
+  padding: 0 0.45rem;
+}
+
+.primary-nav-buttons a,
+.mobile-nav.tv-waffle-menu a.nav-featured,
+.shop-navlinks a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.35rem;
+  padding: 0.54rem 0.62rem;
+  border: 1px solid rgba(33, 244, 208, 0.34);
+  border-radius: 0.7rem;
+  background: linear-gradient(135deg, rgba(13, 17, 27, 0.92), rgba(39, 18, 66, 0.76));
+  color: #e9e7ff;
+  box-shadow: 0 0 12px rgba(33, 244, 208, 0.08), inset 0 0 12px rgba(139, 92, 246, 0.06);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.035em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, color 160ms ease;
+}
+
+.primary-nav-buttons a:hover,
+.primary-nav-buttons a:focus-visible,
+.mobile-nav.tv-waffle-menu a.nav-featured:hover,
+.mobile-nav.tv-waffle-menu a.nav-featured:focus-visible,
+.shop-navlinks a:hover,
+.shop-navlinks a:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(33, 244, 208, 0.88);
+  background: linear-gradient(135deg, rgba(33, 244, 208, 0.18), rgba(124, 58, 237, 0.28));
+  color: #fff;
+  box-shadow: 0 0 20px rgba(33, 244, 208, 0.22), 0 8px 22px rgba(0, 0, 0, 0.28);
+}
+
+.primary-nav-buttons a:active,
+.mobile-nav.tv-waffle-menu a.nav-featured:active,
+.shop-navlinks a:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.primary-nav-buttons a[aria-current="page"],
+.mobile-nav.tv-waffle-menu a.nav-featured[aria-current="page"],
+.shop-navlinks a[aria-current="page"] {
+  border-color: rgba(194, 134, 255, 0.96);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.38), rgba(33, 244, 208, 0.16));
+  color: #fff;
+  box-shadow: 0 0 22px rgba(139, 92, 246, 0.3), inset 0 0 14px rgba(33, 244, 208, 0.08);
+}
+
+.primary-nav-buttons a.nav-courses,
+.mobile-nav.tv-waffle-menu a.nav-courses,
+.shop-navlinks a.nav-courses {
+  border-color: rgba(167, 139, 250, 0.68);
+}
+
+.primary-nav-buttons a.nav-market,
+.mobile-nav.tv-waffle-menu a.nav-market,
+.shop-navlinks a.nav-market {
+  border-color: rgba(33, 244, 208, 0.78);
+  background: linear-gradient(135deg, rgba(33, 244, 208, 0.2), rgba(139, 92, 246, 0.2));
+}
+
+.primary-nav-buttons a.nav-more,
+.mobile-nav.tv-waffle-menu a.nav-more,
+.shop-navlinks a.nav-more {
+  border-style: dashed;
+}
+
+/* The full app menu remains available from the waffle button. */
+.primary-nav-buttons + .navbar-links {
+  display: none;
+}
+
+.shop-navlinks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.ecosystem-mobile-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  padding-bottom: 0.7rem;
+  margin-bottom: 0.55rem;
+  border-bottom: 1px solid rgba(167, 139, 250, 0.16);
+}
+
+.ecosystem-world-nav {
+  position: fixed;
+  z-index: 100000;
+  top: 0.65rem;
+  left: 50%;
+  display: flex;
+  gap: 0.28rem;
+  max-width: calc(100vw - 1rem);
+  padding: 0.42rem;
+  overflow-x: auto;
+  transform: translateX(-50%);
+  border: 1px solid rgba(33, 244, 208, 0.3);
+  border-radius: 0.85rem;
+  background: rgba(7, 8, 14, 0.9);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.38), 0 0 18px rgba(139, 92, 246, 0.14);
+  backdrop-filter: blur(16px);
+}
+
+.ecosystem-world-nav a {
+  padding: 0.48rem 0.62rem;
+  border-radius: 0.55rem;
+  color: #dcd9f8;
+  font: 800 0.68rem/1 system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ecosystem-world-nav a:hover,
+.ecosystem-world-nav a[aria-current="page"] {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(33, 244, 208, 0.2), rgba(139, 92, 246, 0.28));
+}
+
+@media (max-width: 1180px) {
+  .primary-nav-buttons { gap: 0.34rem; padding-inline: 0.45rem; }
+  .primary-nav-buttons a { padding-inline: 0.6rem; font-size: 0.72rem; }
+}
+
+@media (max-width: 920px) {
+  .primary-nav-buttons { display: none; }
+  .mobile-nav.tv-waffle-menu a.nav-featured {
+    display: flex;
+    width: 100%;
+    margin-bottom: 0;
+    min-height: 2.8rem;
+  }
+  .shop-nav { flex-wrap: wrap; }
+  .shop-navlinks { order: 3; width: 100%; }
+  .shop-navlinks a { flex: 1 1 8.4rem; }
+}
+
+@media (max-width: 520px) {
+  .ecosystem-mobile-links { grid-template-columns: 1fr; }
+  .ecosystem-world-nav { left: 0.5rem; right: 0.5rem; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary-nav-buttons a,
+  .mobile-nav.tv-waffle-menu a.nav-featured,
+  .shop-navlinks a { transition: none; }
+}

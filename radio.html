@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/style.css?v=20260610-waffle-main" />
+  <link rel="stylesheet" href="assets/css/primary-nav.css?v=20260808" />
+  <script defer src="assets/js/ecosystem-nav.js?v=20260808"></script>
   <link rel="stylesheet" href="assets/css/widget-hub.css?v=20260611-widget-hub" />
   <link rel="stylesheet" href="assets/css/widget.css?v=20260618-widget" />
   <style>
@@ -1878,6 +1880,14 @@
     <div class="container">
       <div class="navbar-inner">
         <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+        <div class="primary-nav-buttons" aria-label="Featured navigation">
+          <a href="directory.html">Directory</a>
+          <a href="radio.html" aria-current="page">Radio</a>
+          <a href="tv.html">Faceless TV</a>
+          <a href="neon-dreams.html">Neon Dreams</a>
+          <a href="store.html">Store</a>
+          <a href="courses.html" class="nav-courses">Courses</a>
+        </div>
         <ul class="navbar-links" role="list">
           <li><a href="directory.html">Directory</a></li>
           <li><a href="radio.html" aria-current="page">Radio</a></li>
@@ -1904,15 +1914,16 @@
   </nav>
 
   <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu">
-    <a href="directory.html">Directory</a>
-    <a href="radio.html" aria-current="page">Radio</a>
+    <a href="directory.html" class="nav-featured">Directory</a>
+    <a href="radio.html" class="nav-featured" aria-current="page">Radio</a>
     <a href="pulse.html">Pulse Stage</a>
     <a href="chat.html">Rooms</a>
-    <a href="tv.html">TV</a>
+    <a href="tv.html" class="nav-featured">Faceless TV</a>
     <a href="phone.html">Phone</a>
-    <a href="neon-dreams.html">Neon Dreams</a>
+    <a href="neon-dreams.html" class="nav-featured">Neon Dreams</a>
     <a href="news.html">News</a>
-    <a href="store.html">Store</a>
+    <a href="store.html" class="nav-featured">Store</a>
+    <a href="courses.html" class="nav-featured nav-courses">Courses</a>
     <a href="wallet.html">Vault</a>
   <a href="apps.html">Apps</a>
   <a href="ai.html">AI</a>

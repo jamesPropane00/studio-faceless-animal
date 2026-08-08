@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="The Underground Market connects shopping, independent selling, sourcing, buyer requests, and RouteDrop delivery inside Faceless Animal Studios." />
+  <title>The Underground Market — Faceless Animal Studios</title>
+  <link rel="stylesheet" href="assets/style.css?v=20260610-waffle-main" />
+  <link rel="stylesheet" href="assets/css/primary-nav.css?v=20260808-ecosystem" />
+  <style>
+    :root { --market-green:#21f4d0; --market-violet:#9b5cff; --market-ink:#07090f; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:#f7f5ff; background:radial-gradient(circle at 16% 5%,rgba(33,244,208,.12),transparent 30rem),radial-gradient(circle at 88% 18%,rgba(139,92,246,.18),transparent 34rem),#07090f; }
+    .market-main { width:min(1180px,calc(100% - 2rem)); margin:0 auto; padding:6rem 0 5rem; }
+    .market-hero { position:relative; padding:clamp(2rem,7vw,5rem); overflow:hidden; border:1px solid rgba(33,244,208,.25); border-radius:1.5rem; background:linear-gradient(145deg,rgba(13,18,28,.96),rgba(24,10,43,.92)); box-shadow:0 28px 80px rgba(0,0,0,.42),0 0 42px rgba(33,244,208,.08); }
+    .market-hero::after { content:"MARKET"; position:absolute; right:-.04em; bottom:-.2em; color:rgba(255,255,255,.025); font-size:clamp(6rem,18vw,15rem); font-weight:950; line-height:1; pointer-events:none; }
+    .market-kicker { margin:0 0 1rem; color:var(--market-green); font-size:.75rem; font-weight:900; letter-spacing:.18em; text-transform:uppercase; }
+    .market-hero h1 { max-width:850px; margin:0; font-size:clamp(3rem,8vw,7.5rem); line-height:.86; letter-spacing:-.065em; text-transform:uppercase; }
+    .market-hero h1 span { color:transparent; -webkit-text-stroke:1px var(--market-green); }
+    .market-hero p:not(.market-kicker) { max-width:680px; margin:1.5rem 0 0; color:#b9bad0; font-size:clamp(1rem,2vw,1.2rem); line-height:1.7; }
+    .market-actions { display:flex; gap:.75rem; flex-wrap:wrap; margin-top:2rem; }
+    .market-action { display:inline-flex; padding:.9rem 1.1rem; border:1px solid rgba(33,244,208,.5); border-radius:.75rem; color:#fff; background:rgba(33,244,208,.1); font-weight:850; text-decoration:none; transition:transform .16s ease,box-shadow .16s ease; }
+    .market-action:hover { transform:translateY(-2px); box-shadow:0 0 22px rgba(33,244,208,.2); }
+    .market-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin-top:1.25rem; }
+    .market-card { display:flex; min-height:250px; padding:1.4rem; flex-direction:column; border:1px solid rgba(167,139,250,.22); border-radius:1rem; background:linear-gradient(145deg,rgba(18,21,32,.94),rgba(12,13,21,.94)); color:inherit; text-decoration:none; transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease; }
+    .market-card:hover { transform:translateY(-4px); border-color:rgba(33,244,208,.62); box-shadow:0 18px 38px rgba(0,0,0,.32),0 0 24px rgba(33,244,208,.1); }
+    .market-card small { color:var(--market-green); font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
+    .market-card h2 { margin:.8rem 0 .65rem; font-size:1.55rem; }
+    .market-card p { margin:0; color:#aeb0c5; line-height:1.55; }
+    .market-card strong { margin-top:auto; padding-top:1.4rem; color:#e7dfff; }
+    .market-card.is-building strong { color:#b29ccb; }
+    .market-flow { margin-top:1.25rem; padding:1.4rem; border:1px solid rgba(33,244,208,.18); border-radius:1rem; color:#c9c9d8; background:rgba(8,10,16,.72); text-align:center; font-weight:800; letter-spacing:.04em; }
+    @media(max-width:900px){.market-main{padding-top:5rem}.market-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    @media(max-width:620px){.market-grid{grid-template-columns:1fr}.market-card{min-height:220px}}
+  </style>
+  <script defer src="assets/js/ecosystem-nav.js?v=20260808"></script>
+</head>
+<body>
+  <nav class="navbar waffle-nav tv-waffle-nav" role="navigation" aria-label="Main navigation">
+    <div class="container"><div class="navbar-inner">
+      <a href="index.html" class="navbar-logo">Faceless <span>Animal</span> Studios</a>
+      <div class="primary-nav-buttons" aria-label="Primary navigation"></div>
+      <button class="nav-toggle tv-waffle-toggle" aria-label="Open app menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button>
+    </div></div>
+  </nav>
+  <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu"></div>
+
+  <main class="market-main">
+    <section class="market-hero">
+      <p class="market-kicker">Faceless Animal Studios // Commerce Network</p>
+      <h1>The Underground <span>Market</span></h1>
+      <p>Shop, sell, source, request, and deliver through one independent commerce system. The Underground Vault is open now. The wider seller and supply network is coming online in stages.</p>
+      <div class="market-actions"><a class="market-action" href="store.html">Shop the Underground Vault</a><a class="market-action" href="routedrop/routedrop-million-car-army/app/">Open RouteDrop</a></div>
+    </section>
+
+    <section class="market-grid" aria-label="Underground Market departments">
+      <a class="market-card" href="store.html"><small>Shop</small><h2>The Underground Vault</h2><p>Public storefront for current Faceless drops, independent goods, digital releases, and limited inventory.</p><strong>Enter the Vault →</strong></a>
+      <article class="market-card is-building" id="sell"><small>Sell</small><h2>Resale Command Center</h2><p>Inventory, listings, pricing, profit, customer management, pickups, shipping, and cross-channel sales.</p><strong>Seller system coming online</strong></article>
+      <article class="market-card is-building" id="source"><small>Source</small><h2>Underground Supply Network</h2><p>Verified suppliers, wholesale inventory, shared products, sourcing opportunities, and order routing.</p><strong>Supply network in development</strong></article>
+      <article class="market-card is-building" id="requests"><small>Find</small><h2>Buyer Requests</h2><p>Buyers describe what they need. Sellers and product scouts compete to locate and fulfill the request.</p><strong>Demand board planned</strong></article>
+      <a class="market-card" id="deliver" href="routedrop/routedrop-million-car-army/app/"><small>Deliver</small><h2>RouteDrop</h2><p>Post a local errand or earn money along a trip already planned through the delivery and driver network.</p><strong>Open RouteDrop →</strong></a>
+      <article class="market-card is-building" id="network"><small>Network</small><h2>Independent Seller Network</h2><p>Future home for sellers, creators, affiliates, drivers, suppliers, product scouts, and local stores.</p><strong>Network expansion planned</strong></article>
+    </section>
+    <div class="market-flow">SHOP · SELL · SOURCE · REQUEST · DELIVER</div>
+  </main>
+  <script src="assets/script.js?v=20260802-mobile-nav"></script>
+</body>
+</html>
