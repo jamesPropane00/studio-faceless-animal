@@ -14,21 +14,11 @@
     * { box-sizing:border-box; }
     body { margin:0; min-height:100vh; color:#f7f5ff; background:radial-gradient(circle at 16% 5%,rgba(33,244,208,.12),transparent 30rem),radial-gradient(circle at 88% 18%,rgba(139,92,246,.18),transparent 34rem),#07090f; }
     .market-main { width:min(1240px,calc(100% - 2rem)); margin:0 auto; padding:1.35rem 0 5rem; }
-    .market-hero { position:relative; display:grid; grid-template-columns:minmax(0,1.65fr) minmax(250px,.65fr); gap:clamp(1.4rem,4vw,3.5rem); align-items:center; padding:clamp(1.5rem,3.5vw,2.7rem); overflow:hidden; border:1px solid rgba(33,244,208,.25); border-bottom-color:rgba(255,255,255,.08); border-radius:1.35rem 1.35rem 0 0; background:linear-gradient(120deg,rgba(13,18,28,.98),rgba(24,10,43,.94)); box-shadow:0 20px 60px rgba(0,0,0,.35),0 0 38px rgba(33,244,208,.06); }
-    .market-hero::after { content:"MARKET"; position:absolute; right:-.02em; bottom:-.25em; color:rgba(255,255,255,.022); font-size:clamp(5rem,12vw,10rem); font-weight:950; line-height:1; pointer-events:none; }
-    .market-hero-copy,.market-quicklook { position:relative; z-index:1; }
+    .market-hero { position:relative; display:flex; min-height:112px; align-items:center; padding:clamp(1.25rem,3vw,2rem); overflow:hidden; border:1px solid rgba(33,244,208,.25); border-bottom-color:rgba(255,255,255,.08); border-radius:1.35rem 1.35rem 0 0; background:linear-gradient(120deg,rgba(13,18,28,.98),rgba(24,10,43,.94)); box-shadow:0 20px 60px rgba(0,0,0,.35),0 0 38px rgba(33,244,208,.06); }
+    .market-hero::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,rgba(33,244,208,.055),transparent 35%,rgba(155,92,255,.07)); pointer-events:none; }
     .market-kicker { margin:0 0 1rem; color:var(--market-green); font-size:.75rem; font-weight:900; letter-spacing:.18em; text-transform:uppercase; }
-    .market-hero h1 { max-width:760px; margin:0; font-size:clamp(2.5rem,5vw,4.8rem); line-height:.9; letter-spacing:-.06em; text-transform:uppercase; }
+    .market-hero h1 { position:relative; z-index:1; margin:0; font-size:clamp(2.25rem,5vw,4.35rem); line-height:.95; letter-spacing:-.055em; text-transform:uppercase; }
     .market-hero h1 span { color:transparent; -webkit-text-stroke:1px var(--market-green); }
-    .market-hero p:not(.market-kicker) { max-width:690px; margin:1rem 0 0; color:#b9bad0; font-size:clamp(.95rem,1.6vw,1.08rem); line-height:1.55; }
-    .market-actions { display:flex; gap:.65rem; flex-wrap:wrap; margin-top:1.35rem; }
-    .market-action { display:inline-flex; padding:.9rem 1.1rem; border:1px solid rgba(33,244,208,.5); border-radius:.75rem; color:#fff; background:rgba(33,244,208,.1); font-weight:850; text-decoration:none; transition:transform .16s ease,box-shadow .16s ease; }
-    .market-action:hover { transform:translateY(-2px); box-shadow:0 0 22px rgba(33,244,208,.2); }
-    .market-quicklook { padding:1rem; border:1px solid rgba(255,255,255,.11); border-radius:1rem; background:rgba(7,9,15,.66); backdrop-filter:blur(12px); }
-    .market-quicklook strong { display:block; margin-bottom:.65rem; color:#fff; font-size:.9rem; text-transform:uppercase; letter-spacing:.08em; }
-    .market-quicklook ul { display:grid; gap:.55rem; margin:0; padding:0; list-style:none; color:#b9bad0; font-size:.82rem; font-weight:750; }
-    .market-quicklook li { display:flex; align-items:center; gap:.5rem; }
-    .market-quicklook li::before { content:""; width:.42rem; height:.42rem; flex:0 0 auto; border-radius:50%; background:var(--market-green); box-shadow:0 0 12px rgba(33,244,208,.65); }
     .marketplace { margin-top:0; padding:clamp(1rem,2.5vw,1.6rem); border:1px solid rgba(255,255,255,.1); border-top:0; border-radius:0 0 1.25rem 1.25rem; background:rgba(9,11,17,.94); box-shadow:0 22px 55px rgba(0,0,0,.32); }
     .marketplace-head { display:flex; align-items:end; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
     .marketplace-head h2 { margin:.2rem 0 0; font-size:clamp(1.8rem,4vw,3rem); letter-spacing:-.04em; }
@@ -82,7 +72,7 @@
     .market-card.is-building strong { color:#b29ccb; }
     .market-flow { margin-top:1.25rem; padding:1.4rem; border:1px solid rgba(33,244,208,.18); border-radius:1rem; color:#c9c9d8; background:rgba(8,10,16,.72); text-align:center; font-weight:800; letter-spacing:.04em; }
     @media(max-width:1040px){.listing-grid,.marketplace .product-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
-    @media(max-width:900px){.market-main{padding-top:1rem}.market-hero{grid-template-columns:1fr}.market-quicklook{display:none}.market-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.listing-grid,.marketplace .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    @media(max-width:900px){.market-main{padding-top:1rem}.market-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.listing-grid,.marketplace .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
     @media(max-width:620px){.market-main{width:min(100% - 1rem,1240px)}.market-hero{padding:1.25rem;border-radius:1rem 1rem 0 0}.market-hero h1{font-size:clamp(2.25rem,12vw,3.3rem)}.marketplace{padding:.75rem;border-radius:0 0 1rem 1rem}.marketplace-head{align-items:start;flex-direction:column}.market-commerce-actions{width:100%}.market-admin-link,.market-cart-button{flex:1}.market-tools{grid-template-columns:1fr}.listing-grid,.marketplace .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}.marketplace .product-copy{padding:.68rem}.marketplace .product-copy h3{font-size:.9rem}.marketplace .card-actions{grid-template-columns:1fr}.listing-copy{padding:.68rem}.listing-copy h3{font-size:.9rem}.listing-bottom{align-items:start;flex-direction:column;gap:.25rem}.listing-price{font-size:1.08rem}.market-grid{grid-template-columns:1fr}.market-card{min-height:220px}}
   </style>
   <script defer src="assets/js/ecosystem-nav.js?v=20260808"></script>
@@ -98,17 +88,8 @@
   <div class="mobile-nav waffle-menu tv-waffle-menu" id="mobile-menu" role="navigation" aria-label="App menu"></div>
 
   <main class="market-main">
-    <section class="market-hero">
-      <div class="market-hero-copy">
-        <p class="market-kicker">Faceless Animal Studios // Commerce Network</p>
-        <h1>The Underground <span>Market</span></h1>
-        <p>Discover independent goods, studio gear, limited drops, and useful finds—then buy them here without leaving the Market.</p>
-        <div class="market-actions"><a class="market-action" href="#marketplace-title">Shop live listings</a><a class="market-action" href="shop-admin.html">Open Market Admin</a></div>
-      </div>
-      <aside class="market-quicklook" aria-label="Market highlights">
-        <strong>Market open now</strong>
-        <ul><li>Real products and live prices</li><li>Independent and limited inventory</li><li>Secure checkout through the Vault</li></ul>
-      </aside>
+    <section class="market-hero" aria-labelledby="market-title">
+      <h1 id="market-title">The Underground <span>Market</span></h1>
     </section>
 
     <section class="marketplace" aria-labelledby="marketplace-title">
