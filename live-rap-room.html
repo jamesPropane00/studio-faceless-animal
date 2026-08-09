@@ -235,6 +235,10 @@
         youtubePlayer.setVolume(Math.round(tvVolume*100));
         if(tvSound)youtubePlayer.playVideo();
       }
+      if(tvPlaybackKind.startsWith('tv-')){
+        const status=document.querySelector('#tv-queue-status');
+        status.textContent=status.textContent.replace(/ · (?:sound on|muted) ·/,` · ${tvSound?'sound on':'muted'} ·`);
+      }
     };
     const finishTvQueue=()=>{
       tvPlaybackKind='';
