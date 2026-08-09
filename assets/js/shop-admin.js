@@ -32,6 +32,9 @@ let importedSpringImage = null;
 let importedCJImages = [];
 let importedCJVariants = [];
 let marketIntakeLoaded = false;
+let wholesaleLots = [];
+let wholesaleLotProducts = [];
+let resellLotsLoaded = false;
 
 function hasExactCJMapping(source) {
   if (!source || source.supplier_name !== "CJdropshipping") return true;
@@ -364,6 +367,137 @@ async function loadMarketIntake() {
     $("#market-seller-list").innerHTML = `<p class="form-error">${safe(error.message)}</p>`;
   }
 }
+
+const dollarsToCents = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.round(number * 100) : null;
+};
+const listValues = (value) => String(value || "").split(",").map((item) => item.trim()).filter(Boolean);
+const lotSource = (product) => Array.isArray(product?.product_sources) ? product.product_sources[0] : product?.product_sources;
+
+function lotProductOptions(selected = "") {
+  const select = $("#lot-product");
+  select.innerHTML = `<option value="">Choose a saved physical dropship product</option>${wholesaleLotProducts.map((product) => `<option value="${product.id}" ${product.id === selected ? "selected" : ""}>${safe(product.title)} · ${safe(product.sku)} · ${money(product.price_cents)} + ${money(product.shipping_price_cents)} shipping</option>`).join("")}`;
+}
+
+function updateLotMath() {
+  const form = $("#resell-lot-form");
+  const product = wholesaleLotProducts.find((item) => item.id === form.elements.product_id.value);
+  const units = Number(form.elements.unit_count.value || 0);
+  const landed = dollarsToCents(form.elements.landed_cost.value);
+  const retailMin = dollarsToCents(form.elements.retail_min.value);
+  const retailMax = dollarsToCents(form.elements.retail_max.value);
+  if (!product || units < 2 || !retailMin || !retailMax) {
+    $("#lot-math").innerHTML = '<span class="preview-label">Opportunity math</span><strong>Choose a product and enter the lot numbers.</strong>';
+    return;
+  }
+  const buyerTotal = product.price_cents + product.shipping_price_cents;
+  const fees = Math.round(buyerTotal * Number(form.elements.fee_buffer_percent.value || 0) / 100);
+  const problemBuffer = dollarsToCents(form.elements.problem_buffer.value) || 0;
+  const spread = landed === null ? null : buyerTotal - landed - fees - problemBuffer;
+  const margin = spread === null || buyerTotal < 1 ? null : (spread / buyerTotal * 100).toFixed(1);
+  const warnings = [];
+  const source = lotSource(product);
+  if (!product.published) warnings.push("base product is still a draft");
+  if (product.quantity < 1) warnings.push("no lots are available");
+  if (!product.slug) warnings.push("base product needs a permanent URL slug");
+  if (source?.supplier_name === "CJdropshipping" && (!source.supplier_variant_id || !source.supplier_sku)) warnings.push("exact CJ VID/SKU is missing");
+  if (form.elements.freight_status.value !== "confirmed") warnings.push("freight is not confirmed");
+  $("#lot-math").innerHTML = `<span class="preview-label">Opportunity math</span><strong>Buyer pays ${money(buyerTotal)} delivered · ${money(Math.ceil(buyerTotal / units))} per unit</strong><p>Potential gross retail: ${money(units * retailMin)}–${money(units * retailMax)} · break-even at ${Math.ceil(buyerTotal / retailMin)} units at the low suggested price.</p><p>Private estimated spread after landed cost, ${money(fees)} fee buffer and ${money(problemBuffer)} problem buffer: <strong>${spread === null ? "enter landed cost" : `${money(spread)} (${margin}%)`}</strong>.</p>${warnings.length ? `<p class="form-error">Cannot safely publish yet: ${safe(warnings.join("; "))}.</p>` : ""}<small>Potential sales are illustrative and do not guarantee demand or profit.</small>`;
+}
+
+function wholesaleLotCard(lot) {
+  const product = Array.isArray(lot.products) ? lot.products[0] : lot.products;
+  const buyerTotal = Number(product?.price_cents || 0) + Number(product?.shipping_price_cents || 0);
+  const landed = lot.landed_cost_cents;
+  const feeBuffer = Math.round(buyerTotal * lot.fee_buffer_bps / 10000);
+  const spread = landed == null ? null : buyerTotal - landed - feeBuffer - lot.problem_buffer_cents;
+  return `<article class="admin-row"><div><strong>${safe(lot.lot_name)}</strong><p>${lot.unit_count.toLocaleString()} units · ${safe(lot.lot_tier)} · ${safe(lot.status)} · buyer total ${money(buyerTotal)} · ${money(Math.ceil(buyerTotal / lot.unit_count))}/unit</p><p>${safe(product?.title || "Missing product")} · ${safe(product?.sku || "")} · freight ${safe(lot.freight_status)} · warehouse ${safe(lot.warehouse_country)}</p><p>Private landed cost: ${landed == null ? "not entered" : money(landed)} · estimated buffered spread: ${spread == null ? "not available" : money(spread)}</p></div><div class="admin-actions"><button data-edit-resell-lot="${lot.id}">Edit</button><button data-delete-resell-lot="${lot.id}">Delete lot</button></div></article>`;
+}
+
+async function loadResellLots() {
+  const list = $("#resell-lot-list");
+  list.innerHTML = "<p>Loading reseller lots...</p>";
+  try {
+    const data = await marketAdminApi("list_lots");
+    wholesaleLots = data.lots || [];
+    wholesaleLotProducts = data.products || [];
+    lotProductOptions($("#resell-lot-form").elements.product_id.value);
+    list.innerHTML = wholesaleLots.map(wholesaleLotCard).join("") || "<p>No reseller lots yet. Build the first one above.</p>";
+    resellLotsLoaded = true;
+    updateLotMath();
+  } catch (error) {
+    list.innerHTML = `<p class="form-error">${safe(error.message)}</p>`;
+  }
+}
+
+function editWholesaleLot(lot) {
+  const form = $("#resell-lot-form");
+  form.elements.id.value = lot.id;
+  lotProductOptions(lot.product_id);
+  form.elements.lot_name.value = lot.lot_name;
+  form.elements.unit_count.value = lot.unit_count;
+  form.elements.lot_tier.value = lot.lot_tier;
+  form.elements.landed_cost.value = lot.landed_cost_cents == null ? "" : (lot.landed_cost_cents / 100).toFixed(2);
+  form.elements.freight_status.value = lot.freight_status;
+  form.elements.retail_min.value = (lot.suggested_retail_min_cents / 100).toFixed(2);
+  form.elements.retail_max.value = (lot.suggested_retail_max_cents / 100).toFixed(2);
+  form.elements.fee_buffer_percent.value = (lot.fee_buffer_bps / 100).toFixed(1);
+  form.elements.problem_buffer.value = (lot.problem_buffer_cents / 100).toFixed(2);
+  form.elements.warehouse_country.value = lot.warehouse_country;
+  form.elements.public_supplier_label.value = lot.public_supplier_label;
+  form.elements.opportunity_summary.value = lot.opportunity_summary || "";
+  form.elements.resale_channels.value = (lot.resale_channels || []).join(", ");
+  form.elements.included_resources.value = (lot.included_resources || []).join(", ");
+  form.elements.admin_notes.value = lot.admin_notes || "";
+  form.elements.status.value = lot.status;
+  updateLotMath();
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+$("#resell-lot-form").addEventListener("input", updateLotMath);
+$("#resell-lot-form").addEventListener("change", updateLotMath);
+$("#resell-lot-form").addEventListener("reset", () => setTimeout(() => {
+  $("#resell-lot-form").elements.id.value = "";
+  lotProductOptions();
+  updateLotMath();
+}, 0));
+$("#resell-lot-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const error = $("#resell-lot-error");
+  const button = form.querySelector('button[type="submit"]');
+  error.textContent = "";
+  button.disabled = true;
+  try {
+    const landed = form.elements.landed_cost.value ? dollarsToCents(form.elements.landed_cost.value) : null;
+    await marketAdminApi("save_lot", {
+      product_id: form.elements.product_id.value,
+      lot_name: form.elements.lot_name.value,
+      unit_count: Number(form.elements.unit_count.value),
+      lot_tier: form.elements.lot_tier.value,
+      landed_cost_cents: landed,
+      freight_status: form.elements.freight_status.value,
+      suggested_retail_min_cents: dollarsToCents(form.elements.retail_min.value),
+      suggested_retail_max_cents: dollarsToCents(form.elements.retail_max.value),
+      fee_buffer_bps: Math.round(Number(form.elements.fee_buffer_percent.value || 0) * 100),
+      problem_buffer_cents: dollarsToCents(form.elements.problem_buffer.value) || 0,
+      warehouse_country: form.elements.warehouse_country.value,
+      public_supplier_label: form.elements.public_supplier_label.value,
+      opportunity_summary: form.elements.opportunity_summary.value,
+      resale_channels: listValues(form.elements.resale_channels.value),
+      included_resources: listValues(form.elements.included_resources.value),
+      admin_notes: form.elements.admin_notes.value,
+      status: form.elements.status.value,
+    });
+    form.reset();
+    await loadResellLots();
+  } catch (saveError) {
+    error.textContent = saveError.message;
+  } finally {
+    button.disabled = false;
+  }
+});
 
 function previewProduct(product) {
   const images = (product.product_images || []).sort((a, b) => a.sort_order - b.sort_order);
@@ -758,9 +892,11 @@ document.addEventListener("click", async (event) => {
     $("#products-tab").classList.toggle("hidden", target.dataset.tab !== "products");
     $("#orders-tab").classList.toggle("hidden", target.dataset.tab !== "orders");
     $("#marketplace-tab").classList.toggle("hidden", target.dataset.tab !== "marketplace");
+    $("#resell-lots-tab").classList.toggle("hidden", target.dataset.tab !== "resell-lots");
     $("#market-intake-tab").classList.toggle("hidden", target.dataset.tab !== "market-intake");
     $("#characters-tab").classList.toggle("hidden", target.dataset.tab !== "characters");
     if (target.dataset.tab === "market-intake" && !marketIntakeLoaded) loadMarketIntake();
+    if (target.dataset.tab === "resell-lots" && !resellLotsLoaded) loadResellLots();
   }
   const product = products.find((item) => item.id === (target.dataset.edit || target.dataset.preview || target.dataset.previewEdit || target.dataset.publish || target.dataset.delete || target.dataset.editTiktok || target.dataset.copyTiktok || target.dataset.copyCodex));
   try {
@@ -790,6 +926,23 @@ document.addEventListener("click", async (event) => {
     }
   } catch (error) {
     alert(error.message);
+  }
+});
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("#refresh-resell-lots,[data-edit-resell-lot],[data-delete-resell-lot]");
+  if (!button) return;
+  if (button.id === "refresh-resell-lots") return loadResellLots();
+  const id = button.dataset.editResellLot || button.dataset.deleteResellLot;
+  const lot = wholesaleLots.find((item) => item.id === id);
+  if (!lot) return;
+  if (button.dataset.editResellLot) return editWholesaleLot(lot);
+  if (confirm(`Delete reseller lot “${lot.lot_name}”? The underlying store product will remain.`)) {
+    try {
+      await marketAdminApi("delete_lot", { id });
+      await loadResellLots();
+    } catch (error) {
+      alert(error.message);
+    }
   }
 });
 document.addEventListener("click", async (event) => {

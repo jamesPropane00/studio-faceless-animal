@@ -35,6 +35,7 @@
         <button class="admin-button active" data-tab="products">Products</button>
         <button class="admin-button ghost" data-tab="orders">Orders</button>
         <button class="admin-button ghost" data-tab="marketplace">TikTok Shop</button>
+        <button class="admin-button ghost" data-tab="resell-lots">Resell Lots</button>
         <button class="admin-button ghost" data-tab="market-intake">Market Sellers</button>
         <button class="admin-button ghost" data-tab="characters">Neon Characters</button>
       </nav>
@@ -327,6 +328,34 @@
         <div id="marketplace-list" class="admin-list"></div>
       </section>
 
+      <section id="resell-lots-tab" class="hidden">
+        <div class="admin-panel ndc-admin-intro"><div><p class="eyebrow">Earn · Resell Inventory</p><h2>Wholesale lot builder</h2><p>Turn an existing supplier-mapped dropship product into a 10, 100, 1,000, or custom-unit reseller opportunity. Prices shown to customers still come from the secure product record.</p></div><a class="admin-button ghost" href="resell-inventory.html" target="_blank" rel="noopener">View live lots</a></div>
+        <form id="resell-lot-form" class="admin-panel admin-grid">
+          <input type="hidden" name="id">
+          <label class="field-label wide"><span>Existing dropship product</span><select name="product_id" id="lot-product" required><option value="">Choose a saved physical dropship product</option></select><small>Create/import and save the exact CJ product in Products first. Its Market price, shipping price, quantity, photos, delivery window, and Stripe checkout are reused here.</small></label>
+          <label class="field-label wide"><span>Opportunity title</span><input name="lot_name" required maxlength="180" placeholder="100-Piece LED Pet Collar Reseller Lot"></label>
+          <label class="field-label"><span>Units inside one lot</span><input name="unit_count" type="number" min="2" max="100000" value="100" required></label>
+          <label class="field-label"><span>Lot tier</span><select name="lot_tier"><option value="starter">Starter</option><option value="reseller" selected>Reseller</option><option value="business">Business</option><option value="custom">Custom</option></select></label>
+          <label class="field-label"><span>Full CJ landed cost (private)</span><input name="landed_cost" type="number" min="0.01" step=".01" placeholder="Product + freight to buyer"></label>
+          <label class="field-label"><span>Freight verification</span><select name="freight_status"><option value="quote_required">Live quote required</option><option value="pending">Checking freight</option><option value="confirmed">Full freight confirmed</option></select></label>
+          <label class="field-label"><span>Suggested retail per unit — low</span><input name="retail_min" type="number" min=".01" step=".01" required placeholder="9.99"></label>
+          <label class="field-label"><span>Suggested retail per unit — high</span><input name="retail_max" type="number" min=".01" step=".01" required placeholder="14.99"></label>
+          <label class="field-label"><span>Payment/market fee buffer</span><input name="fee_buffer_percent" type="number" min="0" max="30" step=".1" value="5"></label>
+          <label class="field-label"><span>Returns/problem buffer</span><input name="problem_buffer" type="number" min="0" step=".01" value="0"></label>
+          <label class="field-label"><span>Warehouse / origin country</span><input name="warehouse_country" required placeholder="United States or China"></label>
+          <label class="field-label"><span>Public supplier label</span><input name="public_supplier_label" value="Supplier Direct" required></label>
+          <label class="field-label wide"><span>Why this lot could sell</span><textarea name="opportunity_summary" rows="3" maxlength="2000" placeholder="Who buys this item, why it is easy to resell, and what makes the unit economics useful."></textarea></label>
+          <label class="field-label wide"><span>Suggested resale channels (comma separated)</span><input name="resale_channels" placeholder="eBay, Facebook Marketplace, flea markets, local vendor events"></label>
+          <label class="field-label wide"><span>Resources actually included (comma separated)</span><input name="included_resources" placeholder="Only enter files/resources already prepared for this buyer"><small>Do not advertise a pricing sheet, CSV, images, guide, or listing copy until that resource is genuinely ready to deliver.</small></label>
+          <label class="field-label wide"><span>Private admin notes</span><textarea name="admin_notes" rows="2" placeholder="CJ agent quote, expiration, freight method, MOQ, backup source..."></textarea></label>
+          <label class="field-label wide"><span>Lot visibility</span><select name="status"><option value="draft">Draft — admin only</option><option value="published">Published — live and purchasable</option><option value="paused">Paused — hidden from buyers</option></select><small>Publishing is blocked unless the base product is published, the exact CJ variant is mapped, inventory is available, and the full landed freight cost is confirmed.</small></label>
+          <div id="lot-math" class="search-preview wide"><span class="preview-label">Opportunity math</span><strong>Choose a product and enter the lot numbers.</strong></div>
+          <p id="resell-lot-error" class="form-error wide"></p>
+          <div class="wide admin-actions"><button class="admin-button" type="submit">Save reseller lot</button><button class="admin-button ghost" type="reset" id="clear-resell-lot">Clear</button></div>
+        </form>
+        <div class="admin-panel"><div class="ndc-admin-intro"><div><h3 style="margin:0">Saved reseller lots</h3><p>Draft lots stay private. Published lots appear on the Resell Inventory page.</p></div><button type="button" id="refresh-resell-lots" class="admin-button ghost">Refresh</button></div><div id="resell-lot-list" class="admin-list"></div></div>
+      </section>
+
       <section id="market-intake-tab" class="hidden">
         <div class="admin-panel">
           <div class="ndc-admin-intro"><div><p class="eyebrow">Underground Market</p><h2>Seller approvals and intake</h2><p>Private identity, contact, and address information is shown only to authorized Market administrators.</p></div><button type="button" id="refresh-market-intake" class="admin-button ghost">Refresh queue</button></div>
@@ -389,7 +418,7 @@
     } catch (_) {}
   </script>
   <script src="/assets/js/env.js" onerror="void 0"></script>
-  <script type="module" src="/assets/js/shop-admin.js?v=20260809-market-sellers"></script>
+  <script type="module" src="/assets/js/shop-admin.js?v=20260809-resell-lots"></script>
   <script type="module" src="/assets/js/neon-dreams-admin.js?v=20260801-character-files"></script>
 </body>
 </html>
