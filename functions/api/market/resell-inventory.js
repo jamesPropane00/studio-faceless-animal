@@ -22,7 +22,9 @@ export async function onRequestGet({ env }) {
     .eq('products.published', true).gt('products.quantity', 0).in('products.state', ['available', 'reserved'])
     .order('updated_at', { ascending: false }).limit(100);
   if (error) {
-    if (error.code === '42P01') return json({ error: 'Resell Inventory is waiting for database migration 050.' }, 503);
+    if (error.code === '42P01' || error.code === 'PGRST205' || /wholesale_lots/i.test(String(error.message || ''))) {
+      return json({ error: 'Resell Inventory is waiting for database migration 050.' }, 503);
+    }
     return json({ error: 'Reseller lots could not be loaded.' }, 500);
   }
   const lots = (data || []).map((lot) => {

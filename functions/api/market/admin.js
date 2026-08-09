@@ -85,7 +85,7 @@ export async function onRequestPost(context) {
     ]);
     const error = lots.error || products.error;
     if (error) {
-      if (error.code === '42P01') return json({ error: 'Run migration 050 before managing reseller lots.' }, 503);
+      if (error.code === '42P01' || error.code === 'PGRST205' || /wholesale_lots/i.test(String(error.message || ''))) return json({ error: 'Run migration 050 before managing reseller lots.' }, 503);
       return json({ error: 'Reseller lots could not be loaded.' }, 500);
     }
     return json({ lots: lots.data || [], products: products.data || [] });
@@ -154,7 +154,7 @@ export async function onRequestPost(context) {
     }
     const { data, error } = await admin.from('wholesale_lots').upsert(record, { onConflict: 'product_id' }).select('id,status').single();
     if (error) {
-      if (error.code === '42P01') return json({ error: 'Run migration 050 before saving reseller lots.' }, 503);
+      if (error.code === '42P01' || error.code === 'PGRST205' || /wholesale_lots/i.test(String(error.message || ''))) return json({ error: 'Run migration 050 before saving reseller lots.' }, 503);
       return json({ error: error.message || 'The reseller lot could not be saved.' }, 500);
     }
     return json({ ok: true, lot: data });
