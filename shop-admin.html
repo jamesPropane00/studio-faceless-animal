@@ -35,6 +35,7 @@
         <button class="admin-button active" data-tab="products">Products</button>
         <button class="admin-button ghost" data-tab="orders">Orders</button>
         <button class="admin-button ghost" data-tab="marketplace">TikTok Shop</button>
+        <button class="admin-button ghost" data-tab="market-intake">Market Sellers</button>
         <button class="admin-button ghost" data-tab="characters">Neon Characters</button>
       </nav>
 
@@ -326,6 +327,16 @@
         <div id="marketplace-list" class="admin-list"></div>
       </section>
 
+      <section id="market-intake-tab" class="hidden">
+        <div class="admin-panel">
+          <div class="ndc-admin-intro"><div><p class="eyebrow">Underground Market</p><h2>Seller approvals and intake</h2><p>Private identity, contact, and address information is shown only to authorized Market administrators.</p></div><button type="button" id="refresh-market-intake" class="admin-button ghost">Refresh queue</button></div>
+          <p id="market-intake-status" class="field-help">Open this tab to load the private review queue.</p>
+        </div>
+        <div class="admin-panel"><h3>Seller applications</h3><div id="market-seller-list" class="admin-list"></div></div>
+        <div class="admin-panel"><h3>Items submitted for review</h3><div id="market-sell-list" class="admin-list"></div></div>
+        <div class="admin-panel"><h3>Buyer requests</h3><div id="market-request-list" class="admin-list"></div></div>
+      </section>
+
       <div id="admin-product-preview" class="admin-preview-modal hidden" role="dialog" aria-modal="true" aria-label="Product preview">
         <div class="admin-preview-backdrop" data-preview-close></div>
         <article class="admin-preview-dialog">
@@ -378,7 +389,7 @@
     } catch (_) {}
   </script>
   <script src="/assets/js/env.js" onerror="void 0"></script>
-  <script type="module" src="/assets/js/shop-admin.js?v=20260802-cj-bulk-refresh"></script>
+  <script type="module" src="/assets/js/shop-admin.js?v=20260809-market-sellers"></script>
   <script type="module" src="/assets/js/neon-dreams-admin.js?v=20260801-character-files"></script>
 </body>
 </html>

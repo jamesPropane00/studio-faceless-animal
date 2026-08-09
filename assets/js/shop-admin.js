@@ -31,6 +31,7 @@ let orders = [];
 let importedSpringImage = null;
 let importedCJImages = [];
 let importedCJVariants = [];
+let marketIntakeLoaded = false;
 
 function hasExactCJMapping(source) {
   if (!source || source.supplier_name !== "CJdropshipping") return true;
@@ -48,6 +49,18 @@ async function api(action, payload = {}) {
     body: { action, username: session.username, token: session.shop_token, ...payload },
   });
   if (error || data?.error) throw new Error(data?.error || error.message);
+  return data;
+}
+async function marketAdminApi(action, payload = {}) {
+  if (!session?.username || !session?.shop_token) throw new Error("Sign in with your website account again.");
+  const response = await fetch("/api/market/admin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ action, username: session.username, token: session.shop_token, ...payload }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.error) throw new Error(data.error || "Market administration failed.");
   return data;
 }
 async function guard() {
@@ -317,6 +330,41 @@ $("#refresh-all-cj").onclick = async () => {
     button.disabled = false;
   }
 };
+function marketSellerCard(seller) {
+  return `<article class="admin-row"><div><strong>${safe(seller.seller_code)} · @${safe(seller.seller_handle)}</strong>
+    <p>${safe(seller.status)} · ${safe(seller.account_type)} · website user @${safe(seller.username)} · applied ${new Date(seller.created_at).toLocaleString()}</p>
+    <p><strong>Legal:</strong> ${safe(seller.legal_name)}${seller.business_name ? ` · ${safe(seller.business_name)}` : ""} · DOB ${safe(seller.date_of_birth)}</p>
+    <p><strong>Contact:</strong> <a href="mailto:${safe(seller.contact_email)}">${safe(seller.contact_email)}</a> · ${safe(seller.contact_phone)}</p>
+    <p><strong>Address:</strong> ${safe(seller.address_line1)}${seller.address_line2 ? `, ${safe(seller.address_line2)}` : ""}, ${safe(seller.city)}, ${safe(seller.region)} ${safe(seller.postal_code)}</p>
+    <p>Identity: ${safe(seller.identity_status)} · Payout: ${safe(seller.payout_status)} · Terms: ${safe(seller.terms_version)}</p></div>
+    <div class="admin-actions"><select data-market-seller-status="${seller.id}">${["pending","approved","rejected","suspended","closed"].map((status) => `<option value="${status}" ${seller.status === status ? "selected" : ""}>${status}</option>`).join("")}</select><textarea data-market-seller-notes="${seller.id}" rows="3" placeholder="Private review note">${safe(seller.review_notes || "")}</textarea><button data-market-seller-save="${seller.id}">Save review</button></div></article>`;
+}
+
+function marketSellCard(item) {
+  const images = (item.market_sell_images || []).map((image) => `<a href="${safe(image.url)}" target="_blank" rel="noopener"><img src="${safe(image.url)}" alt="Private submission" style="width:70px;height:70px;object-fit:cover"></a>`).join("");
+  return `<article class="admin-row"><div><strong>${safe(item.reference_code)} · ${safe(item.item_name)}</strong><p>@${safe(item.market_seller_accounts?.seller_handle || "seller")} · ${safe(item.category)} · ${safe(item.item_condition)} · ${item.desired_price_cents === null ? "price help requested" : money(item.desired_price_cents)} · ${safe(item.selling_mode)}</p><p>${safe(item.description || "No description")}</p><p>${safe(item.contact_name)} · <a href="mailto:${safe(item.contact_email)}">${safe(item.contact_email)}</a> · ${safe(item.contact_phone || "no phone")} · ZIP ${safe(item.zip_code)}</p><div class="admin-actions">${images}</div></div><div class="admin-actions"><select data-market-sell-status="${item.id}">${["new","reviewing","needs_info","accepted","declined","converted"].map((status) => `<option value="${status}" ${item.status === status ? "selected" : ""}>${status}</option>`).join("")}</select><textarea data-market-sell-notes="${item.id}" rows="3" placeholder="Private item note">${safe(item.admin_notes || "")}</textarea><button data-market-sell-save="${item.id}">Save item</button></div></article>`;
+}
+
+function marketRequestCard(item) {
+  return `<article class="admin-row"><div><strong>${safe(item.reference_code)} · ${safe(item.product_name)}</strong><p>Budget ${money(item.maximum_budget_cents)} · ${safe(item.condition_preference)} · ${safe(item.fulfillment_preference)} · ZIP ${safe(item.zip_code)}</p><p>${safe(item.description || "No extra details")}</p><p>${safe(item.contact_name)} · <a href="mailto:${safe(item.contact_email)}">${safe(item.contact_email)}</a> · ${safe(item.contact_phone || "no phone")}</p></div><div class="admin-actions"><select data-market-request-status="${item.id}">${["new","open","matched","fulfilled","closed","rejected"].map((status) => `<option value="${status}" ${item.status === status ? "selected" : ""}>${status}</option>`).join("")}</select><textarea data-market-request-notes="${item.id}" rows="3" placeholder="Private request note">${safe(item.admin_notes || "")}</textarea><button data-market-request-save="${item.id}">Save request</button></div></article>`;
+}
+
+async function loadMarketIntake() {
+  const status = $("#market-intake-status");
+  status.textContent = "Loading the private Market review queue...";
+  try {
+    const data = await marketAdminApi("list");
+    $("#market-seller-list").innerHTML = (data.sellers || []).map(marketSellerCard).join("") || "<p>No seller applications yet.</p>";
+    $("#market-sell-list").innerHTML = (data.sell_submissions || []).map(marketSellCard).join("") || "<p>No items awaiting review.</p>";
+    $("#market-request-list").innerHTML = (data.buyer_requests || []).map(marketRequestCard).join("") || "<p>No buyer requests yet.</p>";
+    status.textContent = `${data.sellers.length} sellers · ${data.sell_submissions.length} submitted items · ${data.buyer_requests.length} buyer requests`;
+    marketIntakeLoaded = true;
+  } catch (error) {
+    status.textContent = error.message;
+    $("#market-seller-list").innerHTML = `<p class="form-error">${safe(error.message)}</p>`;
+  }
+}
+
 function previewProduct(product) {
   const images = (product.product_images || []).sort((a, b) => a.sort_order - b.sort_order);
   const provider = product.fulfillment_provider || "internal";
@@ -710,7 +758,9 @@ document.addEventListener("click", async (event) => {
     $("#products-tab").classList.toggle("hidden", target.dataset.tab !== "products");
     $("#orders-tab").classList.toggle("hidden", target.dataset.tab !== "orders");
     $("#marketplace-tab").classList.toggle("hidden", target.dataset.tab !== "marketplace");
+    $("#market-intake-tab").classList.toggle("hidden", target.dataset.tab !== "market-intake");
     $("#characters-tab").classList.toggle("hidden", target.dataset.tab !== "characters");
+    if (target.dataset.tab === "market-intake" && !marketIntakeLoaded) loadMarketIntake();
   }
   const product = products.find((item) => item.id === (target.dataset.edit || target.dataset.preview || target.dataset.previewEdit || target.dataset.publish || target.dataset.delete || target.dataset.editTiktok || target.dataset.copyTiktok || target.dataset.copyCodex));
   try {
@@ -740,6 +790,29 @@ document.addEventListener("click", async (event) => {
     }
   } catch (error) {
     alert(error.message);
+  }
+});
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("#refresh-market-intake,[data-market-seller-save],[data-market-sell-save],[data-market-request-save]");
+  if (!button) return;
+  button.disabled = true;
+  try {
+    if (button.id === "refresh-market-intake") return await loadMarketIntake();
+    if (button.dataset.marketSellerSave) {
+      const id = button.dataset.marketSellerSave;
+      await marketAdminApi("seller_status", { id, status: document.querySelector(`[data-market-seller-status="${id}"]`).value, review_notes: document.querySelector(`[data-market-seller-notes="${id}"]`).value });
+    } else if (button.dataset.marketSellSave) {
+      const id = button.dataset.marketSellSave;
+      await marketAdminApi("sell_status", { id, status: document.querySelector(`[data-market-sell-status="${id}"]`).value, admin_notes: document.querySelector(`[data-market-sell-notes="${id}"]`).value });
+    } else if (button.dataset.marketRequestSave) {
+      const id = button.dataset.marketRequestSave;
+      await marketAdminApi("request_status", { id, status: document.querySelector(`[data-market-request-status="${id}"]`).value, admin_notes: document.querySelector(`[data-market-request-notes="${id}"]`).value });
+    }
+    await loadMarketIntake();
+  } catch (error) {
+    alert(error.message);
+  } finally {
+    button.disabled = false;
   }
 });
 document.addEventListener("keydown", (event) => {

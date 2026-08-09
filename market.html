@@ -4,6 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Shop independent goods, studio equipment, clothing, music, limited drops, and creative releases through the Faceless Animal Studios Underground Market." />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="The Underground Market | Faceless Animal Studios" />
+  <meta property="og:description" content="Buy, apply to sell, find earning paths, and request hard-to-find products through the Faceless Animal network." />
+  <meta property="og:url" content="https://facelessanimalstudios.com/market.html" />
+  <meta property="og:type" content="website" />
   <title>The Underground Market — Faceless Animal Studios</title>
   <link rel="canonical" href="https://facelessanimalstudios.com/market.html" />
   <link rel="stylesheet" href="assets/style.css?v=20260610-waffle-main" />
@@ -74,6 +79,40 @@
     @media(max-width:1040px){.listing-grid,.marketplace .product-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
     @media(max-width:900px){.market-main{padding-top:1rem}.market-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.listing-grid,.marketplace .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
     @media(max-width:620px){.market-main{width:min(100% - 1rem,1240px)}.market-hero{padding:1.25rem;border-radius:1rem 1rem 0 0}.market-hero h1{font-size:clamp(2.25rem,12vw,3.3rem)}.marketplace{padding:.75rem;border-radius:0 0 1rem 1rem}.marketplace-head{align-items:start;flex-direction:column}.market-commerce-actions{width:100%}.market-admin-link,.market-cart-button{flex:1}.market-tools{grid-template-columns:1fr}.listing-grid,.marketplace .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}.marketplace .product-copy{padding:.68rem}.marketplace .product-copy h3{font-size:.9rem}.marketplace .card-actions{grid-template-columns:1fr}.listing-copy{padding:.68rem}.listing-copy h3{font-size:.9rem}.listing-bottom{align-items:start;flex-direction:column;gap:.25rem}.listing-price{font-size:1.08rem}.market-grid{grid-template-columns:1fr}.market-card{min-height:220px}}
+    .exchange-doors { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.8rem; margin:1rem 0 1.25rem; }
+    .exchange-door { display:flex; min-height:190px; padding:1.25rem; flex-direction:column; border:1px solid rgba(33,244,208,.22); border-radius:1rem; color:#fff; background:linear-gradient(150deg,rgba(14,22,30,.97),rgba(20,11,32,.95)); text-decoration:none; transition:.18s ease; }
+    .exchange-door:hover { transform:translateY(-4px); border-color:var(--market-green); box-shadow:0 16px 38px #0007,0 0 25px rgba(33,244,208,.12); }
+    .exchange-door b { color:var(--market-green); font-size:clamp(1.65rem,4vw,2.7rem); letter-spacing:-.05em; }
+    .exchange-door p { margin:.65rem 0 0; color:#afb2c7; line-height:1.5; }
+    .exchange-door span { margin-top:auto; padding-top:1rem; color:#e8dcff; font-size:.75rem; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
+    .exchange-panel { margin:1rem 0; padding:clamp(1rem,3vw,2rem); border:1px solid rgba(167,139,250,.22); border-radius:1.2rem; background:rgba(10,12,19,.94); scroll-margin-top:90px; }
+    .exchange-panel-head { display:flex; align-items:start; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
+    .exchange-panel h2 { margin:.25rem 0 .45rem; font-size:clamp(1.8rem,4vw,3rem); letter-spacing:-.045em; }
+    .exchange-panel p { color:#afb2c7; line-height:1.55; }
+    .account-status { padding:.7rem .85rem; border:1px solid rgba(33,244,208,.2); border-radius:.7rem; color:#d6fdf6; background:rgba(33,244,208,.06); font-size:.78rem; font-weight:800; }
+    .account-status.is-warning { border-color:#80652a; color:#f4d27d; background:#1a1509; }
+    .account-status.is-error { border-color:#743543; color:#ff9bad; background:#1b0b0f; }
+    .exchange-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; }
+    .exchange-field { display:grid; gap:.35rem; color:#c8c9d7; font-size:.74rem; font-weight:800; }
+    .exchange-field.wide,.exchange-choice,.exchange-submit,.exchange-message,.privacy-note { grid-column:1/-1; }
+    .exchange-field input,.exchange-field select,.exchange-field textarea { width:100%; padding:.82rem .9rem; border:1px solid rgba(255,255,255,.14); border-radius:.65rem; color:#fff; background:#11141d; font:inherit; }
+    .exchange-field textarea { min-height:115px; resize:vertical; }
+    .exchange-field input:focus,.exchange-field select:focus,.exchange-field textarea:focus { outline:0; border-color:var(--market-green); box-shadow:0 0 0 3px rgba(33,244,208,.08); }
+    .exchange-choice { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; }
+    .exchange-choice label { display:flex; gap:.5rem; padding:.8rem; border:1px solid rgba(255,255,255,.12); border-radius:.65rem; color:#d9daea; background:#10131b; font-size:.76rem; line-height:1.4; }
+    .exchange-submit { justify-self:start; padding:.85rem 1.15rem; border:0; border-radius:.7rem; color:#07110f; background:var(--market-green); font-weight:950; cursor:pointer; }
+    .exchange-submit:disabled { cursor:not-allowed; filter:grayscale(1); opacity:.55; }
+    .exchange-message { min-height:1.2rem; margin:0!important; font-size:.8rem; }
+    .exchange-message.is-success { color:#70e6ad; }.exchange-message.is-error { color:#ff8fa0; }
+    .privacy-note { margin:0!important; padding:.75rem; border-left:3px solid var(--market-violet); color:#aeb0c5!important; background:#100c17; font-size:.72rem; }
+    .seller-locked { padding:1rem; border:1px dashed #685178; border-radius:.7rem; color:#bfc0d0; }
+    .seller-locked a { color:var(--market-green); font-weight:900; }
+    .earn-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.7rem; }
+    .earn-card { padding:1rem; border:1px solid rgba(255,255,255,.1); border-radius:.7rem; color:inherit; background:#11141c; text-decoration:none; }
+    .earn-card strong { display:block; color:var(--market-green); }.earn-card p { margin:.4rem 0 0; font-size:.78rem; }
+    .market-hidden { display:none!important; }
+    @media(max-width:900px){.exchange-doors,.earn-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    @media(max-width:620px){.exchange-panel-head{align-items:start;flex-direction:column}.exchange-form,.exchange-choice{grid-template-columns:1fr}.exchange-doors{grid-template-columns:1fr 1fr;gap:.5rem}.exchange-door{min-height:165px;padding:.9rem}.earn-grid{grid-template-columns:1fr}.exchange-field{grid-column:1/-1}}
   </style>
   <script defer src="assets/js/ecosystem-nav.js?v=20260808-nav-glow"></script>
 </head>
@@ -92,7 +131,78 @@
       <h1 id="market-title">The Underground <span>Market</span></h1>
     </section>
 
-    <section class="marketplace" aria-labelledby="marketplace-title">
+    <section class="exchange-doors" aria-label="Four ways to use the Underground Market">
+      <a class="exchange-door" href="#buy"><b>BUY</b><p>Shop affordable products currently available in the Market.</p><span>Browse live inventory →</span></a>
+      <a class="exchange-door" href="#sell"><b>SELL</b><p>Apply for a verified seller account and turn your own items into money.</p><span>Start seller approval →</span></a>
+      <a class="exchange-door" href="#earn"><b>EARN</b><p>Resell inventory, fill buyer requests, or take RouteDrop opportunities.</p><span>See earning paths →</span></a>
+      <a class="exchange-door" href="#request"><b>REQUEST</b><p>Tell the network what you need, your budget, and how you want it delivered.</p><span>Post a buyer request →</span></a>
+    </section>
+
+    <section class="exchange-panel" id="sell" aria-labelledby="sell-title">
+      <div class="exchange-panel-head"><div><p class="market-kicker">Approved sellers only</p><h2 id="sell-title">Sell Your Stuff</h2><p>Your seller identity is tied to your existing Faceless Animal login. Applications are reviewed before any item can be submitted.</p></div><div id="seller-account-status" class="account-status is-warning">Checking your Market seller status…</div></div>
+      <div id="seller-signin" class="seller-locked market-hidden">You must <a href="login.html?next=market.html%23sell">sign in with your Faceless Animal account</a> before applying to sell.</div>
+      <form id="seller-application-form" class="exchange-form market-hidden">
+        <input name="website" tabindex="-1" autocomplete="off" class="market-hidden" aria-hidden="true">
+        <label class="exchange-field"><span>Seller handle</span><input name="seller_handle" minlength="3" maxlength="40" pattern="[a-zA-Z0-9][a-zA-Z0-9_-]{2,39}" required placeholder="your-market-name"></label>
+        <label class="exchange-field"><span>Account type</span><select name="account_type" required><option value="individual">Individual</option><option value="business">Business</option></select></label>
+        <label class="exchange-field"><span>Full legal name</span><input name="legal_name" autocomplete="name" required></label>
+        <label class="exchange-field"><span>Business name (if applicable)</span><input name="business_name" autocomplete="organization"></label>
+        <label class="exchange-field"><span>Date of birth (18+ required)</span><input name="date_of_birth" type="date" autocomplete="bday" required></label>
+        <label class="exchange-field"><span>Email</span><input name="contact_email" type="email" autocomplete="email" required></label>
+        <label class="exchange-field"><span>Phone</span><input name="contact_phone" type="tel" autocomplete="tel" required></label>
+        <label class="exchange-field wide"><span>Street address</span><input name="address_line1" autocomplete="address-line1" required></label>
+        <label class="exchange-field wide"><span>Apartment / unit (optional)</span><input name="address_line2" autocomplete="address-line2"></label>
+        <label class="exchange-field"><span>City</span><input name="city" autocomplete="address-level2" required></label>
+        <label class="exchange-field"><span>State</span><input name="region" maxlength="2" autocomplete="address-level1" required placeholder="RI"></label>
+        <label class="exchange-field"><span>ZIP code</span><input name="postal_code" inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{5}(-[0-9]{4})?" required></label>
+        <div class="exchange-field"><span>Country</span><input value="United States" disabled></div>
+        <label class="exchange-field wide"><span><input name="terms_accepted" type="checkbox" value="yes" required> I accept the <a href="market-seller-rules.html" target="_blank" rel="noopener">Underground Market seller rules</a> and understand approval is required before listing.</span></label>
+        <label class="exchange-field wide"><span><input name="information_certified" type="checkbox" value="yes" required> I certify that this information is accurate and that I am authorized to sell the items I submit.</span></label>
+        <p class="privacy-note">Legal name, birth date, address, email, and phone are private review information. They are never displayed on a public listing. Do not submit an SSN, tax ID, bank information, or government-ID image here. Read the <a href="market-privacy.html" target="_blank" rel="noopener">Market privacy notice</a>.</p>
+        <button class="exchange-submit">Submit seller application</button><p class="exchange-message" aria-live="polite"></p>
+      </form>
+      <div id="seller-locked" class="seller-locked market-hidden">Your seller application must be approved before you can submit an item.</div>
+      <form id="sell-item-form" class="exchange-form market-hidden" enctype="multipart/form-data">
+        <input name="website" tabindex="-1" autocomplete="off" class="market-hidden" aria-hidden="true">
+        <label class="exchange-field wide"><span>Item name</span><input name="item_name" required maxlength="180" placeholder="Example: Sony PlayStation 5 disc console"></label>
+        <label class="exchange-field"><span>Category</span><select name="category" required><option value="">Choose category</option><option>Clothing</option><option>Electronics</option><option>Gaming</option><option>Tools</option><option>Furniture</option><option>Home</option><option>Appliances</option><option>Collectibles</option><option>Business Equipment</option><option>Other</option></select></label>
+        <label class="exchange-field"><span>Condition</span><input name="item_condition" required maxlength="80" placeholder="New, like new, good, fair…"></label>
+        <label class="exchange-field"><span>Size / model (optional)</span><input name="item_size" maxlength="80"></label>
+        <label class="exchange-field"><span>Desired price (optional)</span><input name="desired_price" inputmode="decimal" placeholder="125.00"></label>
+        <label class="exchange-field wide"><span>Description</span><textarea name="description" maxlength="4000" placeholder="Include brand, model, age, flaws, accessories, dimensions, and anything a buyer should know."></textarea></label>
+        <label class="exchange-field wide"><span>Upload 1–5 photos</span><input name="photos" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple required><small>Maximum 8 MB each and 25 MB combined. Photos stay private until the item is reviewed.</small></label>
+        <div class="exchange-choice"><label><input type="radio" name="selling_mode" value="list_it" required> <span><strong>List it</strong><br>Create a Market listing after review.</span></label><label><input type="radio" name="selling_mode" value="listing_help"> <span><strong>Get selling help</strong><br>Ask for pricing and listing help.</span></label><label><input type="radio" name="selling_mode" value="sell_fast"> <span><strong>Sell fast</strong><br>Request reseller interest; availability varies.</span></label></div>
+        <label class="exchange-field"><span>Your name</span><input name="contact_name" autocomplete="name" required></label>
+        <label class="exchange-field"><span>Email</span><input name="contact_email" type="email" autocomplete="email" required></label>
+        <label class="exchange-field"><span>Phone (optional)</span><input name="contact_phone" type="tel" autocomplete="tel"></label>
+        <label class="exchange-field"><span>Item ZIP code</span><input name="zip_code" inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{5}(-[0-9]{4})?" required></label>
+        <p class="privacy-note">Submitting an item does not publish it. The Market team must review ownership, condition, category, photos, price, and policy eligibility first.</p>
+        <button class="exchange-submit">Send item for review</button><p class="exchange-message" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="exchange-panel" id="request" aria-labelledby="request-title">
+      <div class="exchange-panel-head"><div><p class="market-kicker">Demand before inventory</p><h2 id="request-title">Can't Find It?</h2><p>Post what you need and your maximum budget. The request stays private until the Market team reviews it.</p></div></div>
+      <div id="request-signin" class="seller-locked market-hidden">You must <a href="login.html?next=market.html%23request">sign in with your Faceless Animal account</a> before posting a request.</div>
+      <form id="buyer-request-form" class="exchange-form market-hidden">
+        <input name="website" tabindex="-1" autocomplete="off" class="market-hidden" aria-hidden="true">
+        <label class="exchange-field wide"><span>What are you looking for?</span><input name="product_name" maxlength="180" required placeholder="Example: PS5 under $275"></label>
+        <label class="exchange-field wide"><span>Details</span><textarea name="description" maxlength="4000" placeholder="Model, size, color, acceptable condition, distance, or other requirements."></textarea></label>
+        <label class="exchange-field"><span>Maximum budget</span><input name="maximum_budget" inputmode="decimal" required placeholder="275.00"></label>
+        <label class="exchange-field"><span>Condition</span><select name="condition_preference" required><option value="either">New or used</option><option value="new">New only</option><option value="used">Used / pre-owned</option></select></label>
+        <label class="exchange-field"><span>How can you receive it?</span><select name="fulfillment_preference" required><option value="either">Local or shipping</option><option value="local">Local pickup only</option><option value="shipping">Shipping only</option></select></label>
+        <label class="exchange-field"><span>ZIP code</span><input name="zip_code" inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{5}(-[0-9]{4})?" required></label>
+        <label class="exchange-field"><span>Your name</span><input name="contact_name" autocomplete="name" required></label>
+        <label class="exchange-field"><span>Email</span><input name="contact_email" type="email" autocomplete="email" required></label>
+        <label class="exchange-field wide"><span>Phone (optional)</span><input name="contact_phone" type="tel" autocomplete="tel"></label>
+        <p class="privacy-note">Your contact details are not posted publicly. A request is not a purchase, guarantee, or authorization to charge you.</p>
+        <button class="exchange-submit">Post request for review</button><p class="exchange-message" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="exchange-panel" id="earn"><div class="exchange-panel-head"><div><p class="market-kicker">Make money with the network</p><h2>Earn Through the Market</h2></div></div><div class="earn-grid"><div class="earn-card"><strong>Sell your own stuff</strong><p>Apply for a seller account and submit owned items.</p></div><div class="earn-card"><strong>Resell inventory</strong><p>Future opportunities from the Underground Supply Network.</p></div><div class="earn-card"><strong>Fill buyer requests</strong><p>Source items people have already asked for.</p></div><a class="earn-card" href="routedrop/routedrop-million-car-army/app/"><strong>Deliver with RouteDrop</strong><p>Explore local route-sharing opportunities.</p></a></div></section>
+
+    <section class="marketplace" id="buy" aria-labelledby="marketplace-title">
       <div class="marketplace-head">
         <div><p class="market-kicker">Live storefront</p><h2 id="marketplace-title">Shop the Market</h2><p>Browse products, add items to your bag, and check out securely.</p></div>
         <div class="market-commerce-actions"><a class="market-admin-link" href="shop-admin.html">Market Admin</a><button class="market-cart-button" id="cart-open" type="button" aria-label="Open shopping bag">Bag <b id="cart-count">0</b></button></div>
@@ -108,13 +218,14 @@
 
     <header class="departments-head"><p class="market-kicker">Build, source, move</p><h2>More ways to use the Market</h2><p>Commerce tools for sellers, buyers, product scouts, suppliers, and drivers.</p></header>
     <section class="market-grid" aria-label="Underground Market departments">
-      <article class="market-card is-building" id="sell"><small>Sell</small><h2>Resale Command Center</h2><p>Inventory, listings, pricing, profit, customer management, pickups, shipping, and cross-channel sales.</p><strong>Seller system coming online</strong></article>
+      <a class="market-card" href="store.html"><small>Shop</small><h2>The Underground Vault</h2><p>Public storefront for current Faceless drops, independent goods, digital releases, and limited inventory.</p><strong>Enter the Vault →</strong></a>
+      <a class="market-card" href="#sell"><small>Sell</small><h2>Approved Seller Intake</h2><p>Apply for a unique seller account, then submit owned items to the private review queue.</p><strong>Start seller approval →</strong></a>
       <article class="market-card is-building" id="source"><small>Source</small><h2>Underground Supply Network</h2><p>Verified suppliers, wholesale inventory, shared products, sourcing opportunities, and order routing.</p><strong>Supply network in development</strong></article>
-      <article class="market-card is-building" id="requests"><small>Find</small><h2>Buyer Requests</h2><p>Buyers describe what they need. Sellers and product scouts compete to locate and fulfill the request.</p><strong>Demand board planned</strong></article>
+      <a class="market-card" href="#request"><small>Find</small><h2>Buyer Requests</h2><p>Buyers describe what they need, their budget, condition, ZIP code, and delivery preference.</p><strong>Post a request →</strong></a>
       <a class="market-card" id="deliver" href="routedrop/routedrop-million-car-army/app/"><small>Deliver</small><h2>RouteDrop</h2><p>Post a local errand or earn money along a trip already planned through the delivery and driver network.</p><strong>Open RouteDrop →</strong></a>
       <article class="market-card is-building" id="network"><small>Network</small><h2>Independent Seller Network</h2><p>Future home for sellers, creators, affiliates, drivers, suppliers, product scouts, and local stores.</p><strong>Network expansion planned</strong></article>
     </section>
-    <div class="market-flow">SHOP · SELL · SOURCE · REQUEST · DELIVER</div>
+    <div class="market-flow">BUY · SELL · EARN · REQUEST</div>
   </main>
   <div class="modal" id="product-modal" hidden><div class="modal-backdrop" data-close-modal></div><section class="product-dialog" role="dialog" aria-modal="true" aria-label="Product detail"><button class="modal-close" data-close-modal aria-label="Close">×</button><div id="product-detail"></div></section></div>
   <aside class="cart-drawer" id="cart-drawer" aria-hidden="true">
@@ -132,5 +243,6 @@
   <script src="assets/js/canonical-ecosystem-nav.js?v=3"></script>
   <script>window.__FAS_CONFIG=window.__FAS_CONFIG||{}</script><script src="/assets/js/env.js" onerror="void 0"></script>
   <script type="module" src="/assets/js/shop.js?v=20260808-market"></script>
+  <script type="module" src="/assets/js/market-exchange.js?v=20260809-phase-one"></script>
 </body>
 </html>
