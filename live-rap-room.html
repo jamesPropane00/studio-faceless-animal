@@ -188,11 +188,89 @@
   (()=>{
     const beat=document.querySelector('#beat-source'),repeat=document.querySelector('#beat-loop'),shuffle=document.querySelector('#radio-shuffle'),play=document.querySelector('#beat-play');
     if(!beat||!repeat||!shuffle)return;
-    let shuffleOn=false;
-    const originalRepeat=repeat.onclick;
-    repeat.onclick=()=>{shuffleOn=false;shuffle.classList.remove('active');shuffle.setAttribute('aria-pressed','false');shuffle.textContent='⤨ Shuffle';originalRepeat?.();repeat.setAttribute('aria-pressed',String(beat.loop));repeat.textContent=beat.loop?'↻ Repeating':'↻ Repeat'};
-    shuffle.onclick=()=>{shuffleOn=!shuffleOn;beat.loop=false;repeat.classList.remove('active');repeat.setAttribute('aria-pressed','false');repeat.textContent='↻ Repeat';shuffle.classList.toggle('active',shuffleOn);shuffle.setAttribute('aria-pressed',String(shuffleOn));shuffle.textContent=shuffleOn?'⤨ Shuffling':'⤨ Shuffle'};
-    beat.onended=async()=>{const buttons=[...document.querySelectorAll('[data-track]')];if(!buttons.length)return;const active=buttons.findIndex(button=>button.parentElement?.querySelector('span')?.textContent.trim().startsWith('▶'));let next=(active+1)%buttons.length;if(shuffleOn&&buttons.length>1){do{next=Math.floor(Math.random()*buttons.length)}while(next===active)}buttons[next].click();const resume=()=>{beat.play().then(()=>{play.textContent='Pause Beat'}).catch(()=>{})};if(beat.readyState>=2)resume();else beat.addEventListener('canplay',resume,{once:true})};
+    const repeatModes=['off','all','one'];
+    const savedRepeat=localStorage.getItem('liveRapRepeatMode');
+    let repeatMode=repeatModes.includes(savedRepeat)?savedRepeat:'off';
+    let shuffleOn=localStorage.getItem('liveRapShuffle')==='true';
+    let shuffleBag=[];
+    let librarySize=0;
+
+    const updateControls=()=>{
+      beat.loop=repeatMode==='one';
+      repeat.classList.toggle('active',repeatMode!=='off');
+      repeat.setAttribute('aria-pressed',String(repeatMode!=='off'));
+      repeat.setAttribute('data-repeat-mode',repeatMode);
+      repeat.setAttribute('aria-label',repeatMode==='off'?'Repeat is off':repeatMode==='all'?'Repeat all tracks':'Repeat one track');
+      repeat.textContent=repeatMode==='off'?'↻ Repeat Off':repeatMode==='all'?'↻ Repeat All':'↻ Repeat One';
+      shuffle.classList.toggle('active',shuffleOn);
+      shuffle.setAttribute('aria-pressed',String(shuffleOn));
+      shuffle.textContent=shuffleOn?'⤨ Shuffle On':'⤨ Shuffle';
+      localStorage.setItem('liveRapRepeatMode',repeatMode);
+      localStorage.setItem('liveRapShuffle',String(shuffleOn));
+    };
+
+    const trackButtons=()=>[...document.querySelectorAll('[data-track]')];
+    const currentIndex=buttons=>buttons.findIndex(button=>button.parentElement?.querySelector('span')?.textContent.trim().startsWith('▶'));
+    const refillShuffleBag=(count,current)=>{
+      shuffleBag=Array.from({length:count},(_,index)=>index).filter(index=>index!==current);
+    };
+    const shuffledNext=(count,current)=>{
+      if(count<2)return current;
+      if(librarySize!==count){librarySize=count;shuffleBag=[]}
+      if(!shuffleBag.length)refillShuffleBag(count,current);
+      const position=Math.floor(Math.random()*shuffleBag.length);
+      return shuffleBag.splice(position,1)[0];
+    };
+    const resumePlayback=()=>{
+      beat.play().then(()=>{play.textContent='Pause Beat'}).catch(()=>{play.textContent='Play Beat'});
+    };
+
+    repeat.onclick=()=>{
+      repeatMode=repeatModes[(repeatModes.indexOf(repeatMode)+1)%repeatModes.length];
+      shuffleBag=[];
+      updateControls();
+    };
+    shuffle.onclick=()=>{
+      shuffleOn=!shuffleOn;
+      shuffleBag=[];
+      updateControls();
+    };
+    beat.onended=()=>{
+      const buttons=trackButtons();
+      if(!buttons.length)return;
+      const active=currentIndex(buttons);
+
+      // Native audio looping owns repeat-one. This fallback covers browsers that still emit ended.
+      if(repeatMode==='one'){
+        beat.currentTime=0;
+        resumePlayback();
+        return;
+      }
+
+      let next=-1;
+      if(shuffleOn){
+        if(buttons.length<2){
+          if(repeatMode==='all')next=active>=0?active:0;
+          else{play.textContent='Play Beat';return}
+        }
+        if(!shuffleBag.length&&repeatMode==='off'&&librarySize===buttons.length){
+          play.textContent='Play Beat';
+          return;
+        }
+        if(next<0)next=shuffledNext(buttons.length,active);
+      }else if(active+1<buttons.length){
+        next=active+1;
+      }else if(repeatMode==='all'){
+        next=0;
+      }
+
+      if(next<0){play.textContent='Play Beat';return}
+      buttons[next].click();
+      if(beat.readyState>=2)resumePlayback();
+      else beat.addEventListener('canplay',resumePlayback,{once:true});
+    };
+
+    updateControls();
   })();
   </script>
 </body>
