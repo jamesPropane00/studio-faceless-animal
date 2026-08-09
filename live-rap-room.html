@@ -54,6 +54,7 @@
             <summary><span><b>Radio &amp; Music</b><small>Station One, library and playback</small></span></summary>
             <div class="mixer-menu-content">
               <button class="control-btn primary" id="station-one">Play Faceless Radio · Station One</button>
+              <div class="youtube-note" id="station-live-status" role="status" aria-live="polite">Live song detection starts with Station One.</div>
               <div class="toggle-row"><button class="mini-toggle" id="beat-play">Play Beat</button><button class="mini-toggle" id="beat-loop" aria-pressed="false">↻ Repeat</button><button class="mini-toggle" id="radio-shuffle" aria-pressed="false">⤨ Shuffle</button></div>
               <div class="toggle-row"><button class="mini-toggle" id="track-prev">Previous</button><button class="mini-toggle" id="track-next">Next Track</button><button class="mini-toggle" id="clear-library">Clear</button></div>
               <button class="control-btn" id="tracklist-live">Show Track List On Live</button>
@@ -237,6 +238,11 @@
       }
     }));
     const trackName=t=>t.name||t.file?.name||'Station One Track';
+    const stationStatus=$('#station-live-status'),stationButton=$('#station-one');
+    let stationOneActive=false,stationRefreshTimer=null,stationRefreshPromise=null;
+    const stationTrackKey=track=>String(track?.stationId||track?.url||track?.name||'');
+    const normalizeStationTracks=tracks=>tracks.filter(track=>{const title=String(track.title||track.name||''),path=String(track.storage_path||''),src=String(track.src||'');return!/^test track\b/i.test(title)&&!/^external\/test-/i.test(path)&&!src.includes('soundhelix.com/examples/')}).map((track,index)=>{const path=String(track.storage_path||'').replace(/^\/+/,''),direct=String(track.src||'').trim(),url=path?'/api/radio-proxy?path='+encodeURIComponent(path):direct;return{name:track.title||track.name||`Station One Track ${index+1}`,url,stationId:String(track.id||path||direct),source:'station-one'}}).filter(track=>track.url);
+    const fetchStationTracks=async()=>{const response=await fetch(`/api/radio/tracks?channel=1&_=${Date.now()}`,{cache:'no-store',headers:{Accept:'application/json'}});if(!response.ok)throw new Error('Station API '+response.status);const data=await response.json();return normalizeStationTracks(Array.isArray(data.tracks)?data.tracks:[])};
     const giveRadioAudioPriority=()=>{
       video.muted=true;
       $('#video-mute').classList.add('active');
@@ -273,6 +279,23 @@
       document.querySelectorAll('[data-track]').forEach(button=>button.onclick=()=>playTrack(+button.dataset.track));
       renderLiveTrackOverlay();
     };
+    const syncStationTracks=async({announce=false}={})=>{
+      if(stationRefreshPromise)return stationRefreshPromise;
+      stationRefreshPromise=(async()=>{
+        const fresh=await fetchStationTracks(),current=musicLibrary[trackIndex]||null,currentKey=stationTrackKey(current),known=new Set(musicLibrary.filter(track=>track.source==='station-one').map(stationTrackKey)),added=fresh.filter(track=>!known.has(stationTrackKey(track))),localTracks=musicLibrary.filter(track=>track.file),currentStillExists=fresh.some(track=>stationTrackKey(track)===currentKey),keepCurrent=current&&!current.file&&!currentStillExists&&!beat.paused?[{...current,source:'station-one-stale'}]:[];
+        if(fresh.length){musicLibrary=[...fresh,...keepCurrent,...localTracks];trackIndex=current?musicLibrary.findIndex(track=>stationTrackKey(track)===currentKey):-1;if(trackIndex<0&&beat.src)trackIndex=musicLibrary.findIndex(track=>track.url===beat.getAttribute('src')||track.url===beat.src);renderLibrary()}
+        const stationCount=fresh.length;
+        stationButton.textContent=beat.paused?'Station One Ready':`Station One Live · ${stationCount} tracks`;
+        stationStatus.textContent=announce&&added.length?`${added.length} new ${added.length===1?'song':'songs'} detected: ${added.slice(0,2).map(trackName).join(', ')}`:`Live sync on · ${stationCount} radio ${stationCount===1?'song':'songs'} · checking every 20 seconds.`;
+        if(added.length)window.dispatchEvent(new CustomEvent('live-rap-room:station-updated',{detail:{added:added.length,tracks:added.map(trackName)}}));
+        return{tracks:fresh,added};
+      })().finally(()=>{stationRefreshPromise=null});
+      return stationRefreshPromise;
+    };
+    const startStationLiveSync=()=>{stationOneActive=true;clearInterval(stationRefreshTimer);stationRefreshTimer=setInterval(()=>{if(stationOneActive)syncStationTracks({announce:true}).catch(()=>{stationStatus.textContent='Live sync reconnecting · the current song will keep playing.'})},20000)};
+    const stopStationLiveSync=()=>{stationOneActive=false;clearInterval(stationRefreshTimer);stationRefreshTimer=null;stationStatus.textContent='Live song detection starts with Station One.'};
+    document.addEventListener('visibilitychange',()=>{if(stationOneActive&&!document.hidden)syncStationTracks({announce:true}).catch(()=>{})});
+    window.addEventListener('online',()=>{if(stationOneActive)syncStationTracks({announce:true}).catch(()=>{})});
     const loadTrack=index=>{
       if(!musicLibrary.length)return;
       trackIndex=(index+musicLibrary.length)%musicLibrary.length;
@@ -313,21 +336,22 @@
     };
     $('#track-prev').onclick=()=>playTrack(trackIndex<0?0:trackIndex-1);
     $('#track-next').onclick=()=>playTrack(trackIndex<0?0:trackIndex+1);
-    $('#clear-library').onclick=()=>{beat.pause();musicLibrary.filter(track=>track.file).forEach(track=>URL.revokeObjectURL(track.url));musicLibrary=[];trackIndex=-1;beat.removeAttribute('src');$('#track-name').textContent='No beat loaded';$('#beat-play').textContent='Play Beat';renderLibrary()};
+    $('#clear-library').onclick=()=>{stopStationLiveSync();beat.pause();musicLibrary.filter(track=>track.file).forEach(track=>URL.revokeObjectURL(track.url));musicLibrary=[];trackIndex=-1;beat.removeAttribute('src');$('#track-name').textContent='No beat loaded';$('#beat-play').textContent='Play Beat';stationButton.textContent='Play Faceless Radio · Station One';renderLibrary()};
     $('#station-one').onclick=async()=>{
-      const button=$('#station-one');
+      const button=stationButton;
+      if(stationOneActive&&beat.src){button.textContent='Checking Station One...';try{await syncStationTracks({announce:true})}catch(error){stationStatus.textContent='Live sync reconnecting · the current song will keep playing.'}return}
       button.textContent='Loading Station One...';
+      stationStatus.textContent='Connecting live song detection...';
+      startStationLiveSync();
       try{
-        const response=await fetch('/api/radio/tracks?channel=1',{cache:'no-store'});
-        if(!response.ok)throw new Error('Station API '+response.status);
-        const data=await response.json(),tracks=Array.isArray(data.tracks)?data.tracks:[];
-        musicLibrary=tracks.filter(track=>{const title=String(track.title||track.name||''),path=String(track.storage_path||''),src=String(track.src||'');return!/^test track\b/i.test(title)&&!/^external\/test-/i.test(path)&&!src.includes('soundhelix.com/examples/')}).map((track,index)=>{const path=String(track.storage_path||'').replace(/^\/+/,''),direct=String(track.src||'').trim(),url=path?'/api/radio-proxy?path='+encodeURIComponent(path):direct;return{name:track.title||track.name||`Station One Track ${index+1}`,url}}).filter(track=>track.url);
+        const {tracks}=await syncStationTracks();
         if(!musicLibrary.length)musicLibrary=[{name:'Biggie and Jada · DJ Faceless Animal',url:'/assets/audio/Biggie_and_Jada.mp3'}];
         const played=await playTrack(0);
-        button.textContent=played?'Station One Playing':'Retry Station One';
+        button.textContent=played?`Station One Live · ${tracks.length} tracks`:'Retry Station One';
       }catch(error){
         button.textContent='Retry Station One';
         $('#track-name').textContent='Station One load failed';
+        stationStatus.textContent='Live sync will keep retrying every 20 seconds.';
         alert('Station One could not play. Press Retry Station One to try again.');
       }
     };
