@@ -2278,6 +2278,9 @@
         rootId: 'radio-upload-widget',
         openTriggers: ['#rp-upload-launch', '#rp-stream-upload']
       });
+      if (new URLSearchParams(window.location.search).get('upload') === '1') {
+        window.setTimeout(function () { if (uw) uw.open(); }, 120);
+      }
 
       var dropZone = document.getElementById('radio-drop-zone');
       var fileInput = document.getElementById('radio-file-input');
