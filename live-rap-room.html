@@ -21,6 +21,7 @@
     .mobile-only,.mobile-bubble,.bubble-dock{display:none}.mobile-bubble{position:fixed;z-index:9999;right:16px;bottom:94px;width:62px;height:62px;border:2px solid rgba(57,245,225,.7);border-radius:50%;background:radial-gradient(circle at 30% 25%,#ff2f72,#8b5cf6 55%,#09070d);color:#fff;font:900 12px Inter;box-shadow:0 0 28px rgba(57,245,225,.32),0 12px 34px rgba(0,0,0,.5);touch-action:none;cursor:pointer}.mobile-bubble span{display:block;font-size:8px;letter-spacing:.08em}.bubble-dock{position:fixed;z-index:9998;right:14px;bottom:164px;width:min(270px,calc(100vw - 28px));padding:10px;border:1px solid rgba(57,245,225,.35);border-radius:16px;background:rgba(9,7,13,.94);box-shadow:0 20px 60px rgba(0,0,0,.55);backdrop-filter:blur(16px);grid-template-columns:1fr 1fr;gap:7px}.bubble-dock.open{display:grid}.bubble-dock .control-btn{min-height:43px}.bubble-mode .fas-canonical-nav,.bubble-mode .lr-head,.bubble-mode .lr-grid>:not(.stage-panel){display:none!important}.bubble-mode .lr-shell{padding:0;width:100%;height:100dvh}.bubble-mode .lr-grid{display:block;height:100%}.bubble-mode .stage-panel{display:block!important;padding:0;border:0;border-radius:0;height:100%;background:#000}.bubble-mode .stage-wrap{height:100%;width:auto;max-width:100%;border:0;border-radius:0}.bubble-mode .stage-tools,.bubble-mode .now-playing{display:none}.bubble-mode .mobile-bubble{display:block}
     .youtube-stage{position:absolute;z-index:2;inset:0;width:100%;height:100%;border:0;background:#000;display:none}.youtube-stage.on{display:block}.stage-badge{z-index:4}.stage-brand{position:absolute;z-index:4;right:12px;bottom:10px;padding:6px 9px;border-radius:8px;background:rgba(5,4,8,.72);color:#fff;font:900 9px Inter;letter-spacing:.08em;pointer-events:none;backdrop-filter:blur(8px)}.stage-tv-sound{display:none;position:absolute;z-index:6;left:12px;bottom:12px;min-height:38px;padding:0 13px;border:1px solid rgba(57,245,225,.55);border-radius:99px;background:rgba(5,4,8,.86);color:#fff;font:900 10px Inter;cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,.45);backdrop-filter:blur(10px)}.stage-tv-sound.on{display:block}.stage-tv-sound.active{background:rgba(57,245,225,.18);box-shadow:0 0 22px rgba(57,245,225,.2)}.sound-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:14px}.sound-pad{min-height:70px;border:1px solid rgba(255,255,255,.1);border-radius:13px;background:linear-gradient(145deg,rgba(139,92,246,.18),rgba(255,47,114,.08));color:#fff;font:900 11px Inter;cursor:pointer;touch-action:manipulation}.sound-pad:active,.sound-pad.playing{transform:scale(.96);border-color:var(--cyan);box-shadow:0 0 22px rgba(57,245,225,.25)}.library-list{display:grid;gap:6px;max-height:240px;overflow:auto}.library-track{display:flex;gap:7px;align-items:center;padding:7px;border:1px solid var(--line);border-radius:9px;background:#09070d;color:#ddd;font-size:10px}.library-track button{margin-left:auto}.tv-choice{cursor:pointer}.tv-choice:has(input:checked){border-color:rgba(57,245,225,.55);background:rgba(57,245,225,.08)}.tv-choice input{accent-color:var(--pink)}.tv-choice span{flex:1}.youtube-row{display:grid;grid-template-columns:1fr auto;gap:7px}.youtube-note{font-size:9px;line-height:1.5;color:var(--muted)}
     .live-track-overlay{display:none;position:absolute;z-index:7;left:12px;right:12px;top:64px;padding:10px 12px;border:1px solid rgba(77,169,255,.38);border-radius:10px;background:linear-gradient(135deg,rgba(2,10,30,.76),rgba(4,22,52,.64));box-shadow:0 0 22px rgba(38,137,255,.22),inset 0 0 20px rgba(25,91,180,.12);color:#b9dcff;pointer-events:none;backdrop-filter:blur(7px)}.live-track-overlay.on{display:block}.live-track-overlay strong{display:block;margin-bottom:5px;color:#79c5ff;font:900 9px Inter;letter-spacing:.15em;text-shadow:0 0 9px rgba(73,171,255,.9)}.live-track-overlay ol{display:grid;gap:3px;margin:0;padding:0;list-style:none}.live-track-overlay li{overflow:hidden;color:#9fc8f5;font:700 9px/1.3 Inter;letter-spacing:.025em;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 0 7px rgba(48,145,255,.65)}.live-track-overlay li.active{color:#e8f6ff;font-weight:900;text-shadow:0 0 9px #52b5ff}.radio-track{width:100%;min-height:38px;text-align:left;cursor:pointer}.radio-track:hover,.radio-track.active{border-color:rgba(57,245,225,.48);background:rgba(57,245,225,.08)}.radio-track span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.radio-track small{margin-left:auto;color:#69cfff;font:800 8px Inter;white-space:nowrap}
+    .mixer-panel{background:linear-gradient(165deg,rgba(17,18,27,.97),rgba(8,9,14,.98))}.mixer-nav{gap:6px;padding:8px}.mixer-menu{overflow:hidden;border:1px solid rgba(255,255,255,.075);border-radius:10px;background:rgba(255,255,255,.025)}.mixer-menu summary{position:relative;display:flex;align-items:center;min-height:47px;padding:8px 38px 8px 12px;color:#c9c6d0;cursor:pointer;list-style:none;user-select:none}.mixer-menu summary::-webkit-details-marker{display:none}.mixer-menu summary::after{content:'›';position:absolute;right:14px;top:50%;color:#777281;font:400 25px/1 Inter;transform:translateY(-50%);transition:transform .18s ease,color .18s ease}.mixer-menu summary:hover{background:rgba(255,255,255,.035);color:#fff}.mixer-menu summary span{display:grid;gap:3px}.mixer-menu summary b{font:900 10px Inter;letter-spacing:.08em;text-transform:uppercase}.mixer-menu summary small{color:#777281;font:600 8px Inter;letter-spacing:.025em}.mixer-menu[open]{border-color:rgba(57,245,225,.24);background:rgba(57,245,225,.025);box-shadow:inset 3px 0 0 rgba(57,245,225,.48)}.mixer-menu[open] summary{color:#fff;background:linear-gradient(90deg,rgba(57,245,225,.07),transparent)}.mixer-menu[open] summary::after{color:var(--cyan);transform:translateY(-50%) rotate(90deg)}.mixer-menu[open] summary small{color:#9e99a8}.mixer-menu-content{display:grid;gap:10px;padding:11px;border-top:1px solid rgba(255,255,255,.07);animation:mixer-open .16s ease-out}.mixer-menu-content .control-btn{width:100%}.compact-file-pick{min-height:44px}@keyframes mixer-open{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}@media(max-width:760px){.mixer-menu summary{min-height:52px}.mixer-menu summary b{font-size:11px}.mixer-menu summary small{font-size:9px}.mixer-menu-content{padding:12px}}
     @media(max-width:760px){.mobile-only{display:inline-flex;align-items:center;justify-content:center}}@media(max-width:600px){.sound-grid{grid-template-columns:repeat(2,1fr)}}
   </style>
 </head>
@@ -34,39 +35,69 @@
     <section class="lr-grid">
       <details class="panel chat-reader-panel"><summary>🔊 LIVE CHAT READER · READ TIKTOK CHAT ALOUD</summary><iframe class="chat-reader-frame" src="live-chat-reader.html?embed=1" title="Live Chat Reader" allow="display-capture"></iframe></details>
       <section class="panel" id="phone-mode-guide" style="grid-column:1/-1;display:none"><div class="panel-head"><strong>TikTok Safe LIVE</strong><i class="status-dot on"></i></div><div class="panel-body"><button class="control-btn primary" id="no-headset-safe">Release Mic to TikTok</button><div class="setup-card"><strong>TikTok Gaming LIVE setup</strong><ol><li>Press <b>Release Mic to TikTok</b> before starting LIVE.</li><li>In TikTok, start Gaming LIVE and choose screen sharing.</li><li>Let TikTok use the microphone and enable Device/Media audio.</li><li>This page supplies Station One, beats, videos and pads; TikTok alone captures your voice.</li></ol></div><div class="warning" id="phone-feedback-note">The browser microphone must remain fully released during TikTok LIVE. Camera-only controls are safe. Browser voice effects and Hear My Mic cannot run in this mode because they would reopen a second microphone.</div></div></section>
-      <aside class="panel side-panel">
-        <div class="panel-head"><strong>Audio mixer</strong><i class="status-dot" id="audio-status"></i></div>
-        <div class="panel-body">
-          <label class="field"><span>Microphone input</span><select id="mic-select"><option value="">Default microphone</option></select></label>
-          <label class="field"><span>Broadcast output / virtual cable</span><select id="output-select"><option value="">Off · prevents speaker feedback</option></select></label>
-          <label class="field"><span>DJ headphone output</span><select id="headphone-select"><option value="">Choose actual headphones</option></select></label>
-          <div class="toggle-row"><button class="mini-toggle" id="cue-mic">Hear My Mic</button><button class="mini-toggle" id="cue-beat">Hear Beat</button><button class="mini-toggle" id="cue-video">Hear Video</button></div>
-          <div class="field"><span class="range-label">Headphone volume</span><div class="range-wrap"><input id="cue-volume" type="range" min="0" max="1.5" value=".75" step=".01"><output>75</output></div></div>
-          <div class="toggle-row"><button class="control-btn" id="room-monitor">Rock Basement Monitor</button><button class="control-btn live" id="room-mic">Room Mic Off</button></div>
-          <div class="warning" id="room-monitor-status">Speaker monitor starts with the microphone off. Turn Room Mic on only at low volume and keep the Surface away from the speakers to prevent feedback.</div>
-          <div class="toggle-row"><button class="control-btn primary" id="bluetooth-mode">Bluetooth Direct Vocal</button><button class="control-btn" id="wired-monitor-mode">Wired Live Monitor</button></div>
-          <div class="field"><span class="range-label">Broadcast beat sync (ms)</span><div class="range-wrap"><input id="beat-sync" type="range" min="0" max="600" value="240" step="5"><output>240</output></div></div>
-          <div class="warning" id="latency-note">Bluetooth Direct Vocal lets TikTok capture your voice directly and turns delayed self-monitoring off. Beat sync aligns the music for viewers; it cannot remove Bluetooth hardware delay. Use wired headphones for true live voice monitoring.</div>
-          <div class="field"><span class="range-label">Mic volume</span><div class="range-wrap"><input id="mic-volume" type="range" min="0" max="2" value="1" step=".01"><output>100</output></div></div>
-          <div class="meter" aria-label="Microphone level"><i id="mic-meter"></i></div>
-          <div class="toggle-row"><button class="mini-toggle" id="mic-mute" aria-pressed="false">Mic Live</button><button class="mini-toggle active" id="compress-toggle">Compressor</button><button class="mini-toggle active" id="gate-toggle">Noise Gate</button></div>
-          <div class="toggle-row"><button class="mini-toggle" id="reverb-toggle">Reverb</button><button class="mini-toggle active" id="duck-toggle">Auto Duck</button><button class="mini-toggle active" id="latency-toggle">Low Latency</button></div>
-          <label class="field"><span>Voice changer</span><select id="voice-preset"><option value="clean">Clean Voice</option><option value="future">Future Auto-Tune</option><option value="robot">Robot</option><option value="deep">Deep Voice</option><option value="alien">Alien</option><option value="megaphone">Megaphone</option><option value="radio">Radio Voice</option></select></label>
-          <div class="field"><span class="range-label">Voice FX strength</span><div class="range-wrap"><input id="voice-strength" type="range" min="0" max="1" value=".7" step=".01"><output>70</output></div></div>
-          <div class="field"><span class="range-label">Vocal bass</span><div class="range-wrap"><input id="bass-gain" type="range" min="-12" max="12" value="2" step="1"><output>+2</output></div></div>
-          <div class="field"><span class="range-label">Vocal clarity</span><div class="range-wrap"><input id="presence-gain" type="range" min="-12" max="12" value="3" step="1"><output>+3</output></div></div>
-          <div class="field"><span class="range-label">Noise gate</span><div class="range-wrap"><input id="gate-level" type="range" min="1" max="35" value="10" step="1"><output>10</output></div></div>
-          <div class="field"><span class="range-label">Beat volume</span><div class="range-wrap"><input id="beat-volume" type="range" min="0" max="1.5" value=".72" step=".01"><output>72</output></div></div>
-          <div class="field"><span class="range-label">Master</span><div class="range-wrap"><input id="master-volume" type="range" min="0" max="1.5" value="1" step=".01"><output>100</output></div></div>
-          <label class="file-pick">Import MP3 / WAV music library<input id="beat-file" type="file" accept="audio/*" multiple></label>
-          <div class="toggle-row"><button class="mini-toggle" id="beat-play">Play Beat</button><button class="mini-toggle" id="beat-loop" aria-pressed="false">↻ Repeat</button><button class="mini-toggle" id="radio-shuffle" aria-pressed="false">⤨ Shuffle</button><button class="mini-toggle" id="beat-mute">Beat Mute</button></div>
-          <div class="toggle-row"><button class="mini-toggle" id="track-prev">Previous</button><button class="mini-toggle" id="track-next">Next Track</button><button class="mini-toggle" id="clear-library">Clear</button></div>
-          <button class="control-btn primary" id="station-one">Play Faceless Radio · Station One</button>
-          <button class="control-btn" id="tracklist-live">Show Track List On Live</button>
-          <div class="library-list" id="music-library"><div class="youtube-note">Imported tracks will appear here.</div></div>
-          <div class="toggle-row"><button class="mini-toggle" id="test-mic">Test Mic</button><button class="mini-toggle" id="test-output">Test Output</button><button class="mini-toggle" id="save-preset">Save Preset</button></div>
-          <div class="setup-card"><strong>Connection status</strong><div id="audio-diagnostic" style="color:var(--muted);font-size:10px;line-height:1.6">Press Start Camera + Mic to inspect your Bluetooth route.</div></div>
-          <div class="warning">For TikTok Live Studio mixed audio, select <strong>CABLE Input</strong> here and <strong>CABLE Output</strong> as TikTok’s microphone. Bluetooth can add performance delay.</div>
+      <aside class="panel side-panel mixer-panel">
+        <div class="panel-head"><strong>Live control center</strong><i class="status-dot" id="audio-status"></i></div>
+        <div class="panel-body mixer-nav">
+          <details class="mixer-menu" data-mixer-menu="quick">
+            <summary><span><b>Quick Mix</b><small>Mic, beat and master levels</small></span></summary>
+            <div class="mixer-menu-content">
+              <div class="field"><span class="range-label">Mic volume</span><div class="range-wrap"><input id="mic-volume" type="range" min="0" max="2" value="1" step=".01"><output>100</output></div></div>
+              <div class="meter" aria-label="Microphone level"><i id="mic-meter"></i></div>
+              <div class="toggle-row"><button class="mini-toggle" id="mic-mute" aria-pressed="false">Mic Live</button><button class="mini-toggle" id="beat-mute">Beat Mute</button></div>
+              <div class="field"><span class="range-label">Beat volume</span><div class="range-wrap"><input id="beat-volume" type="range" min="0" max="1.5" value=".72" step=".01"><output>72</output></div></div>
+              <div class="field"><span class="range-label">Master volume</span><div class="range-wrap"><input id="master-volume" type="range" min="0" max="1.5" value="1" step=".01"><output>100</output></div></div>
+            </div>
+          </details>
+
+          <details class="mixer-menu" data-mixer-menu="radio" open>
+            <summary><span><b>Radio &amp; Music</b><small>Station One, library and playback</small></span></summary>
+            <div class="mixer-menu-content">
+              <button class="control-btn primary" id="station-one">Play Faceless Radio · Station One</button>
+              <div class="toggle-row"><button class="mini-toggle" id="beat-play">Play Beat</button><button class="mini-toggle" id="beat-loop" aria-pressed="false">↻ Repeat</button><button class="mini-toggle" id="radio-shuffle" aria-pressed="false">⤨ Shuffle</button></div>
+              <div class="toggle-row"><button class="mini-toggle" id="track-prev">Previous</button><button class="mini-toggle" id="track-next">Next Track</button><button class="mini-toggle" id="clear-library">Clear</button></div>
+              <button class="control-btn" id="tracklist-live">Show Track List On Live</button>
+              <div class="library-list" id="music-library"><div class="youtube-note">Start Station One or import your own music.</div></div>
+              <label class="file-pick compact-file-pick">Import MP3 / WAV files<input id="beat-file" type="file" accept="audio/*" multiple></label>
+            </div>
+          </details>
+
+          <details class="mixer-menu" data-mixer-menu="voice">
+            <summary><span><b>Voice Effects</b><small>Processing, tone and voice changer</small></span></summary>
+            <div class="mixer-menu-content">
+              <div class="toggle-row"><button class="mini-toggle active" id="compress-toggle">Compressor</button><button class="mini-toggle active" id="gate-toggle">Noise Gate</button></div>
+              <div class="toggle-row"><button class="mini-toggle" id="reverb-toggle">Reverb</button><button class="mini-toggle active" id="duck-toggle">Auto Duck</button><button class="mini-toggle active" id="latency-toggle">Low Latency</button></div>
+              <label class="field"><span>Voice changer</span><select id="voice-preset"><option value="clean">Clean Voice</option><option value="future">Future Auto-Tune</option><option value="robot">Robot</option><option value="deep">Deep Voice</option><option value="alien">Alien</option><option value="megaphone">Megaphone</option><option value="radio">Radio Voice</option></select></label>
+              <div class="field"><span class="range-label">Voice FX strength</span><div class="range-wrap"><input id="voice-strength" type="range" min="0" max="1" value=".7" step=".01"><output>70</output></div></div>
+              <div class="field"><span class="range-label">Vocal bass</span><div class="range-wrap"><input id="bass-gain" type="range" min="-12" max="12" value="2" step="1"><output>+2</output></div></div>
+              <div class="field"><span class="range-label">Vocal clarity</span><div class="range-wrap"><input id="presence-gain" type="range" min="-12" max="12" value="3" step="1"><output>+3</output></div></div>
+              <div class="field"><span class="range-label">Noise gate</span><div class="range-wrap"><input id="gate-level" type="range" min="1" max="35" value="10" step="1"><output>10</output></div></div>
+            </div>
+          </details>
+
+          <details class="mixer-menu" data-mixer-menu="monitoring">
+            <summary><span><b>Monitoring &amp; Outputs</b><small>Headphones, speakers and TikTok route</small></span></summary>
+            <div class="mixer-menu-content">
+              <label class="field"><span>Microphone input</span><select id="mic-select"><option value="">Default microphone</option></select></label>
+              <label class="field"><span>Broadcast output / virtual cable</span><select id="output-select"><option value="">Off · prevents speaker feedback</option></select></label>
+              <label class="field"><span>DJ headphone output</span><select id="headphone-select"><option value="">Choose actual headphones</option></select></label>
+              <div class="toggle-row"><button class="mini-toggle" id="cue-mic">Hear My Mic</button><button class="mini-toggle" id="cue-beat">Hear Beat</button><button class="mini-toggle" id="cue-video">Hear Video</button></div>
+              <div class="field"><span class="range-label">Headphone volume</span><div class="range-wrap"><input id="cue-volume" type="range" min="0" max="1.5" value=".75" step=".01"><output>75</output></div></div>
+              <div class="toggle-row"><button class="control-btn" id="room-monitor">Rock Basement Monitor</button><button class="control-btn live" id="room-mic">Room Mic Off</button></div>
+              <div class="warning" id="room-monitor-status">Speaker monitor starts with the microphone off. Keep volume low to prevent feedback.</div>
+              <div class="toggle-row"><button class="control-btn primary" id="bluetooth-mode">Bluetooth Direct Vocal</button><button class="control-btn" id="wired-monitor-mode">Wired Live Monitor</button></div>
+              <div class="field"><span class="range-label">Broadcast beat sync (ms)</span><div class="range-wrap"><input id="beat-sync" type="range" min="0" max="600" value="240" step="5"><output>240</output></div></div>
+              <div class="warning" id="latency-note">Beat sync aligns music for viewers. Wired headphones provide the lowest voice-monitoring delay.</div>
+            </div>
+          </details>
+
+          <details class="mixer-menu" data-mixer-menu="diagnostics">
+            <summary><span><b>Diagnostics &amp; Presets</b><small>Tests, connection status and setup</small></span></summary>
+            <div class="mixer-menu-content">
+              <div class="toggle-row"><button class="mini-toggle" id="test-mic">Test Mic</button><button class="mini-toggle" id="test-output">Test Output</button><button class="mini-toggle" id="save-preset">Save Preset</button></div>
+              <div class="setup-card"><strong>Connection status</strong><div id="audio-diagnostic" style="color:var(--muted);font-size:10px;line-height:1.6">Press Start Camera + Mic to inspect your Bluetooth route.</div></div>
+              <div class="warning">For TikTok Live Studio mixed audio, select <strong>CABLE Input</strong> here and <strong>CABLE Output</strong> as TikTok’s microphone.</div>
+            </div>
+          </details>
         </div>
       </aside>
 
@@ -173,6 +204,19 @@
     $('#wired-monitor-mode').onclick=async()=>{if(!$('#headphone-select').value)return alert('Connect wired headphones and select them under DJ headphone output first.');if(!audioContext||!micStream){try{await startAudio()}catch(e){return alert('Allow microphone access to use wired voice monitoring.')}}if(headphoneMonitor.setSinkId)await headphoneMonitor.setSinkId($('#headphone-select').value).catch(()=>{});headphoneMonitor.muted=false;$('#cue-mic').classList.add('active');$('#cue-beat').classList.add('active');$('#cue-volume').value=.72;showRange($('#cue-volume'));setAudioValues();$('#wired-monitor-mode').textContent='Wired Monitor Active';$('#bluetooth-mode').textContent='Bluetooth Direct Vocal';$('#latency-note').innerHTML='<strong>Wired live monitoring is active.</strong> Your mic cue uses the shortest browser path. Keep Bluetooth disconnected for the lowest delay.'};
     $('#test-mic').onclick=async()=>{if(!audioContext)await startAudio();$('#test-mic').textContent='Speak Now...';setTimeout(()=>$('#test-mic').textContent='Test Mic',2500)};$('#test-output').onclick=async()=>{if(!audioContext)await startAudio();const o=audioContext.createOscillator(),g=audioContext.createGain();o.frequency.value=660;g.gain.setValueAtTime(.0001,audioContext.currentTime);g.gain.exponentialRampToValueAtTime(.12,audioContext.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,audioContext.currentTime+.35);o.connect(g).connect(limiter);o.start();o.stop(audioContext.currentTime+.4)};
     const presetIds=['mic-volume','beat-volume','video-volume','master-volume','cue-volume','beat-sync','bass-gain','presence-gain','gate-level','voice-strength'],presetToggles=['compress-toggle','gate-toggle','reverb-toggle','duck-toggle','latency-toggle','cue-mic','cue-beat','cue-video'];$('#save-preset').onclick=()=>{const preset={};presetIds.forEach(id=>preset[id]=$('#'+id).value);presetToggles.forEach(id=>preset[id]=$('#'+id).classList.contains('active'));localStorage.setItem('djfa-live-mixer-preset',JSON.stringify(preset));$('#save-preset').textContent='Preset Saved';setTimeout(()=>$('#save-preset').textContent='Save Preset',1600)};try{const preset=JSON.parse(localStorage.getItem('djfa-live-mixer-preset'));if(preset){presetIds.forEach(id=>{if(preset[id]!=null){$('#'+id).value=preset[id];showRange($('#'+id))}});presetToggles.forEach(id=>{if(preset[id]!=null)$('#'+id).classList.toggle('active',!!preset[id])})}}catch(e){}
+    const mixerMenus=[...document.querySelectorAll('[data-mixer-menu]')];
+    try{
+      const savedMenu=localStorage.getItem('live-rap-room-mixer-menu');
+      if(savedMenu&&mixerMenus.some(menu=>menu.dataset.mixerMenu===savedMenu))mixerMenus.forEach(menu=>menu.open=menu.dataset.mixerMenu===savedMenu);
+    }catch(error){}
+    mixerMenus.forEach(menu=>menu.addEventListener('toggle',()=>{
+      if(menu.open){
+        mixerMenus.forEach(other=>{if(other!==menu)other.open=false});
+        try{localStorage.setItem('live-rap-room-mixer-menu',menu.dataset.mixerMenu)}catch(error){}
+      }else if(!mixerMenus.some(other=>other.open)){
+        try{localStorage.removeItem('live-rap-room-mixer-menu')}catch(error){}
+      }
+    }));
     const trackName=t=>t.name||t.file?.name||'Station One Track';
     const giveRadioAudioPriority=()=>{
       video.muted=true;
