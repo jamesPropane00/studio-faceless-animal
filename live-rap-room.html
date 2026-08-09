@@ -60,6 +60,7 @@
               <div class="toggle-row"><button class="mini-toggle" id="beat-play">Play Beat</button><button class="mini-toggle" id="beat-loop" aria-pressed="false">↻ Repeat</button><button class="mini-toggle" id="radio-shuffle" aria-pressed="false">⤨ Shuffle</button></div>
               <div class="toggle-row"><button class="mini-toggle" id="track-prev">Previous</button><button class="mini-toggle" id="track-next">Next Track</button><button class="mini-toggle" id="clear-library">Clear</button></div>
               <button class="control-btn" id="tracklist-live">Show Track List On Live</button>
+              <button class="mini-toggle" id="tracklist-compact" type="button" aria-pressed="false">Use Compact 3-Song List</button>
               <label class="field"><span class="range-label">Track list opacity</span><div class="range-wrap"><input id="tracklist-opacity" type="range" min=".2" max=".95" value=".5" step=".05"><output>50</output></div></label>
               <div class="library-list" id="music-library"><div class="youtube-note">Start Station One or import your own music.</div></div>
               <label class="file-pick compact-file-pick">Import MP3 / WAV files<input id="beat-file" type="file" accept="audio/*" multiple></label>
@@ -160,7 +161,7 @@
     let voiceFxReady=false,voiceDry=null,voiceWet=null,voiceFilter=null,voiceDrive=null,voiceRing=null,voiceChorus=null,voiceLfo=null,voiceLfoDepth=null,voiceRingLfo=null,voiceRingDepth=null;
     let roomMode=false,roomCurveReady=false,roomBass=null,roomPresence=null,roomLimiter=null,sfxDirect=null,sfxBroadcast=null;
     const domain='FACELESSANIMALSTUDIOS.COM';
-    let meterLevel=0,showTrackList=false,radioAnnouncement=null,radioAlertTimer=null;
+    let meterLevel=0,showTrackList=false,compactTrackList=false,radioAnnouncement=null,radioAlertTimer=null;
     let wideMode=innerWidth>760;function setFormat(wide){wideMode=wide;canvas.width=wide?960:540;canvas.height=wide?540:960;$('#stage-wrap').classList.toggle('wide',wide);$('#format-toggle').textContent=wide?'Switch to 9:16':'Switch to 16:9'}setFormat(wideMode);
     $('#phone-live-mode').onclick=()=>{phoneMode=true;releaseMicToTikTok();setFormat(false);$('#beat-mute').classList.remove('active');$('#cue-mic').classList.remove('active');$('#cue-beat').classList.remove('active');$('#cue-video').classList.remove('active');$('#phone-mode-guide').style.display='block';$('#phone-live-mode').textContent='TikTok Safe Mode Active';$('#start-console').textContent='Start Camera Only';setAudioValues();syncNativeMedia();$('#phone-mode-guide').scrollIntoView({behavior:'smooth',block:'start'})};
     if(new URLSearchParams(location.search).get('output')==='1')document.body.classList.add('output-mode');
@@ -172,7 +173,7 @@
     function drawLiveControls(x,y,w,h){ctx.save();ctx.fillStyle='rgba(8,6,13,.94)';ctx.fillRect(x,y,w,h);ctx.strokeStyle='rgba(57,245,225,.38)';ctx.lineWidth=2;ctx.strokeRect(x+1,y+1,w-2,h-2);const pad=18;ctx.textAlign='left';ctx.fillStyle='#39f5e1';ctx.font='900 12px Inter';ctx.fillText('LIVE MIXER BOARD',x+pad,y+28);ctx.fillStyle='#fff';ctx.font='900 21px Inter';ctx.fillText('DJ FACELESS ANIMAL',x+pad,y+55);const bars=[['MIC',meterLevel/100,'#39f5e1'],['BEAT',Math.min(1,+$('#beat-volume').value/1.5),'#8b5cf6'],['VIDEO',video.muted?0:Math.min(1,+$('#video-volume').value/1.5),'#ff2f72'],['MASTER',Math.min(1,+$('#master-volume').value/1.5),'#fff']];bars.forEach((b,i)=>{const by=y+84+i*40;ctx.fillStyle='#aaa2b0';ctx.font='800 10px Inter';ctx.fillText(b[0],x+pad,by);ctx.fillStyle='rgba(255,255,255,.09)';ctx.fillRect(x+pad,by+8,w-pad*2,9);ctx.fillStyle=b[2];ctx.fillRect(x+pad,by+8,(w-pad*2)*b[1],9)});ctx.fillStyle='#ff2f72';ctx.font='900 10px Inter';ctx.fillText('LIVE SAMPLE PADS',x+pad,y+266);const pads=[$('#dj-drop-name').value||'MY DROP','AIR HORN','SIREN','APPLAUSE','DJ SHOT','BASS DROP'];pads.forEach((name,i)=>{const col=i%2,row=Math.floor(i/2),px=x+pad+col*(w/2-pad/2),py=y+280+row*44,pw=w/2-pad*1.5;ctx.fillStyle=i===0&&djDropBuffer?'rgba(57,245,225,.22)':'rgba(139,92,246,.16)';ctx.fillRect(px,py,pw,33);ctx.strokeStyle='rgba(255,255,255,.12)';ctx.strokeRect(px,py,pw,33);ctx.fillStyle='#fff';ctx.font='800 9px Inter';ctx.textAlign='center';ctx.fillText(name.toUpperCase().slice(0,15),px+pw/2,py+20)});ctx.textAlign='left';ctx.fillStyle='#9e96a9';ctx.font='800 9px Inter';ctx.fillText(beat.paused?'DECK READY':'NOW PLAYING',x+pad,y+h-46);ctx.fillStyle='#fff';ctx.font='900 12px Inter';ctx.fillText(($('#track-name').textContent||'NO BEAT LOADED').slice(0,28),x+pad,y+h-25);ctx.restore();ctx.fillStyle='rgba(5,4,8,.83)';ctx.fillRect(18,canvas.height-93,x-30,75);ctx.fillStyle='#39f5e1';ctx.font='900 12px Inter';ctx.textAlign='left';ctx.fillText('DJ FACELESS ANIMAL • LIVE RAP ROOM',36,canvas.height-65);ctx.fillStyle='#fff';ctx.font='900 27px Inter';ctx.fillText(($('#show-title').value||'LIVE FREESTYLE').toUpperCase(),36,canvas.height-32)}
      function drawTrackList(){
        if(!musicLibrary.length)return;
-       const W=canvas.width,H=canvas.height,wide=W>H,count=wide?6:8,start=Math.max(0,Math.min(trackIndex-Math.floor(count/2),Math.max(0,musicLibrary.length-count))),items=musicLibrary.slice(start,start+count),w=wide?350:W-36,x=wide?24:18,y=wide?24:66,row=wide?22:25,h=64+items.length*row,pulse=.45+Math.sin(Date.now()/220)*.12;
+       const W=canvas.width,H=canvas.height,wide=W>H,count=compactTrackList?3:(wide?6:8),start=Math.max(0,Math.min(trackIndex-Math.floor(count/2),Math.max(0,musicLibrary.length-count))),items=musicLibrary.slice(start,start+count),w=wide?350:W-36,x=wide?24:18,y=wide?24:66,row=wide?22:25,h=64+items.length*row,pulse=.45+Math.sin(Date.now()/220)*.12;
        ctx.save();
        ctx.shadowColor=`rgba(54,156,255,${pulse})`;
        ctx.shadowBlur=28;
@@ -262,7 +263,7 @@
       overlay.classList.toggle('on',showTrackList&&musicLibrary.length>0);
       list.replaceChildren();
       if(!musicLibrary.length)return;
-      const count=8,start=Math.max(0,Math.min(trackIndex-Math.floor(count/2),Math.max(0,musicLibrary.length-count)));
+      const count=compactTrackList?3:8,start=Math.max(0,Math.min(trackIndex-Math.floor(count/2),Math.max(0,musicLibrary.length-count)));
       musicLibrary.slice(start,start+count).forEach((track,index)=>{
         const item=document.createElement('li'),button=document.createElement('button'),label=document.createElement('span'),actualIndex=start+index,active=actualIndex===trackIndex;
         button.type='button';
@@ -374,6 +375,9 @@
     document.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>{scene=b.dataset.scene;youtube.classList.toggle('on',scene==='youtube');syncRadioAlertLayer();document.querySelectorAll('[data-scene]').forEach(x=>x.classList.toggle('active',x===b))});document.addEventListener('keydown',e=>{if(/input|textarea/i.test(e.target.tagName))return;const b=document.querySelectorAll('[data-scene]')[+e.key-1];if(b)b.click()});
     $('#camera-toggle').onclick=async()=>{if(!cameraStream){try{await startCamera()}catch(e){$('#retry-camera').click()}return}cameraEnabled=!cameraEnabled;cameraStream.getVideoTracks().forEach(t=>t.enabled=cameraEnabled);$('#camera-toggle').textContent=cameraEnabled?'Camera On/Off':'Turn Camera On'};$('#mirror-toggle').onclick=()=>{mirror=!mirror;$('#mirror-toggle').classList.toggle('active',mirror)};$('#format-toggle').onclick=()=>setFormat(!wideMode);
     $('#tracklist-live').onclick=()=>{showTrackList=!showTrackList;$('#tracklist-live').classList.toggle('active',showTrackList);$('#tracklist-live').textContent=showTrackList?'Hide Track List From Live':'Show Track List On Live';renderLiveTrackOverlay()};
+    const applyCompactTrackList=enabled=>{compactTrackList=Boolean(enabled);const button=$('#tracklist-compact');button.classList.toggle('active',compactTrackList);button.setAttribute('aria-pressed',String(compactTrackList));button.textContent=compactTrackList?'Compact List On · 3 Songs':'Use Compact 3-Song List';renderLiveTrackOverlay()};
+    try{applyCompactTrackList(localStorage.getItem('live-rap-room-compact-track-list')==='true')}catch(error){applyCompactTrackList(false)}
+    $('#tracklist-compact').onclick=()=>{applyCompactTrackList(!compactTrackList);try{localStorage.setItem('live-rap-room-compact-track-list',String(compactTrackList))}catch(error){}};
     const applyTrackListOpacity=value=>{const opacity=Math.max(.2,Math.min(.95,+value||.5)),control=$('#tracklist-opacity');control.value=opacity;control.nextElementSibling.value=Math.round(opacity*100);$('#live-track-overlay').style.setProperty('--track-overlay-opacity',opacity);return opacity};
     try{applyTrackListOpacity(localStorage.getItem('live-rap-room-track-opacity')||.5)}catch(error){applyTrackListOpacity(.5)}
     $('#tracklist-opacity').oninput=e=>{const opacity=applyTrackListOpacity(e.currentTarget.value);try{localStorage.setItem('live-rap-room-track-opacity',opacity)}catch(error){}};
