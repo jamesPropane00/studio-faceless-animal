@@ -1,0 +1,11 @@
+"use strict";
+const test=require("node:test"),assert=require("node:assert/strict"),{spawn}=require("node:child_process"),path=require("node:path");
+const PORT=18988,KEY="integration-test-key",base="http://127.0.0.1:"+PORT;
+const{safeUrl}=require("../server");
+let child;
+const request=(route,options={})=>fetch(base+route,options);
+test.before(async()=>{child=spawn(process.execPath,["server.js"],{cwd:path.join(__dirname,".."),env:{...process.env,PORT:String(PORT),FACELESS_OPERATOR_API_KEY:KEY,NODE_ENV:"test"},stdio:["ignore","ignore","pipe"]});for(let i=0;i<50;i++){try{if((await request("/health")).ok)return}catch{}await new Promise(r=>setTimeout(r,100))}throw Error("server did not start")});
+test.after(()=>child?.kill("SIGTERM"));
+test("health is public and control routes require auth",async()=>{assert.equal((await request("/health")).status,200);assert.equal((await request("/v1/sessions",{method:"POST"})).status,401)});
+test("MCP initializes and lists focused tools",async()=>{const h={authorization:"Bearer "+KEY,"content-type":"application/json"};let r=await request("/mcp",{method:"POST",headers:h,body:JSON.stringify({jsonrpc:"2.0",id:1,method:"initialize",params:{}})});assert.equal(r.status,200);assert.equal((await r.json()).result.serverInfo.name,"Faceless Operator — Browser Action Engine");r=await request("/mcp",{method:"POST",headers:h,body:JSON.stringify({jsonrpc:"2.0",id:2,method:"tools/list",params:{}})});assert.ok((await r.json()).result.tools.some(x=>x.name==="browser_open"))});
+test("private, metadata, and unsafe IPv6 destinations are blocked",async()=>{for(const url of ["http://127.0.0.1","http://169.254.169.254/latest/meta-data","http://[::1]"])await assert.rejects(safeUrl(url),error=>error.code==="SSRF_BLOCKED")});
