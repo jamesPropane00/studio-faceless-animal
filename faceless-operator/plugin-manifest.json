@@ -1,0 +1,12 @@
+{
+  "schema_version":"v1",
+  "name_for_human":"Faceless Operator",
+  "name_for_model":"faceless_operator",
+  "description_for_human":"Cloud browser actions from Faceless Animal Studios.",
+  "description_for_model":"Deterministic browser tool service. Use it to open, read, click, type, wait, navigate, screenshot, and close browser sessions. It contains no AI model.",
+  "auth":{"type":"service_http","authorization_type":"bearer"},
+  "api":{"type":"openapi","url":"https://facelessanimalstudios.com/faceless-operator/openapi.json"},
+  "logo_url":"https://facelessanimalstudios.com/assets/mascot-animal.png",
+  "contact_email":"support@facelessanimalstudios.com",
+  "legal_info_url":"https://facelessanimalstudios.com/terms.html"
+}
