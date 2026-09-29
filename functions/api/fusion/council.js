@@ -16,7 +16,7 @@ export async function onRequest({request,env}){
   if(!token)return json({error:"huggingface_token_unconfigured",provider:"huggingface"},503);
   let input;try{input=await request.json()}catch{return json({error:"invalid_json"},400)}
   const system=String(input?.system||"").slice(0,12000),prompt=String(input?.prompt||"").slice(0,16000);
-  const model="Qwen/Qwen2.5-7B-Instruct";
+  const model="Qwen/Qwen2.5-7B-Instruct";\n  if(input?.probe===true)return json({ok:true,provider:"huggingface",credential_configured:Boolean(token),model});
   if(!system||!prompt)return json({error:"invalid_inference_request"},400);
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
   try{
