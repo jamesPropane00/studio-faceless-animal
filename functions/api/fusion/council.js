@@ -21,6 +21,31 @@ export async function onRequest({ request, env }) {
   try {
     if (!await authorized(request)) return json({ error: "unauthorized" }, 401);
     const input = await request.json();
+    if (String(input?.model || "").startsWith("@cf/") || input?.provider === "cloudflare_workers_ai") {
+      const cfToken = env?.CF_AI_TOKEN || "";
+      const accountId = env?.CF_ACCOUNT_ID || "";
+      if (!cfToken || !accountId) return json({ error: "cloudflare_credentials_unconfigured", provider: "cloudflare_workers_ai" }, 503);
+      const system = String(input?.system || "").slice(0, 12000);
+      const prompt = String(input?.prompt || "").slice(0, 16000);
+      if (!system || !prompt) return json({ error: "invalid_inference_request" }, 400);
+      const model = "@cf/meta/llama-3.2-3b-instruct";
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 25000);
+      try {
+        const response = await fetch("https://api.cloudflare.com/client/v4/accounts/" + encodeURIComponent(accountId) + "/ai/run/" + model, {
+          method: "POST", signal: controller.signal,
+          headers: { Authorization: "Bearer " + cfToken, "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: [{ role: "system", content: system }, { role: "user", content: prompt }], temperature: 0.65, max_tokens: 1800, response_format: { type: "json_object" } }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data?.success === false) return json({ error: String(data?.errors?.[0]?.message || "cloudflare_inference_failed").slice(0, 300), provider: "cloudflare_workers_ai", model, http_status: response.status }, 502);
+        const output = String(data?.result?.response || "").trim();
+        if (!output) return json({ error: "empty_cloudflare_model_output", provider: "cloudflare_workers_ai", model }, 502);
+        return json({ provider: "cloudflare_workers_ai", model, response: output });
+      } catch (error) {
+        return json({ error: error?.name === "AbortError" ? "cloudflare_timeout" : "cloudflare_bridge_runtime_error", provider: "cloudflare_workers_ai", model }, 502);
+      } finally { clearTimeout(timer); }
+    }
     const token = env?.HF_TOKEN || env?.HUGGINGFACE_TOKEN || "";
     if (!token) return json({ error: "huggingface_token_unconfigured", provider: "huggingface" }, 503);
     const system = String(input?.system || "").slice(0, 12000);
