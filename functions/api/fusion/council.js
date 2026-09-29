@@ -39,7 +39,8 @@ export async function onRequest({ request, env }) {
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || data?.success === false) return json({ error: String(data?.errors?.[0]?.message || "cloudflare_inference_failed").slice(0, 300), provider: "cloudflare_workers_ai", model, http_status: response.status }, 502);
-        const output = String(data?.result?.response || "").trim();
+        const value = data?.result?.response;
+        const output = (value && typeof value === "object" ? JSON.stringify(value) : String(value || "")).trim();
         if (!output) return json({ error: "empty_cloudflare_model_output", provider: "cloudflare_workers_ai", model }, 502);
         return json({ provider: "cloudflare_workers_ai", model, response: output });
       } catch (error) {
