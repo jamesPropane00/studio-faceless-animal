@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "school": "Faceless Animal Studios Art School",
+  "brand_key": "faceless_animal_studios",
+  "repository": "jamesPropane00/studio-faceless-animal",
+  "ref": "main",
+  "purpose": "Teach Fusion from studio-owned creative source material while preserving provenance, authorship and historical style changes.",
+  "include_paths": ["Neon Dreams Club/","assets/","attached_assets/","world/","artifacts/studio/","artists/"],
+  "include_extensions": ["png","jpg","jpeg","gif","webp","svg","mp3","wav","m4a","aac","ogg","flac","mid","midi","mp4","mov","webm","avi","mkv","html","css","js","ts","tsx","json","md"],
+  "disciplines": {
+    "visual_art": ["composition","palette","typography","characters","masks","symbols","cover_art","atmosphere"],
+    "music": ["rhythm","arrangement","sound_design","production","performance","song_structure","sonic_motifs"],
+    "video": ["editing","pacing","framing","motion","transitions","visual_rhythm"],
+    "writing": ["lyrics","voice","imagery","narrative","recurring_phrases","themes"],
+    "worldbuilding": ["characters","lore","environments","rules","continuity","symbols"],
+    "design": ["ui","navigation","layout","interaction","information_architecture","creative_tools"]
+  },
+  "learning_contract": {
+    "states": ["INDEXED","QUEUED","ANALYZED","UNSUPPORTED","ERROR"],
+    "separate": ["raw_source","observation","inference","lesson"],
+    "require_provenance": true,
+    "preserve_history": true,
+    "dedupe_by": ["git_sha","provider_message_id","message_id","stable_fingerprint"],
+    "brand_isolation": true,
+    "continuous_scan": "incremental_by_git_sha"
+  }
+}
