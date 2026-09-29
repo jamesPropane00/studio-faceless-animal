@@ -12,9 +12,10 @@ export async function onRequest({request,env}){
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers:{"Access-Control-Allow-Methods":"POST, OPTIONS","Access-Control-Allow-Headers":"content-type,x-fusion-worker-token"}});
   if(request.method!=="POST")return json({error:"method_not_allowed"},405);
   if(!await authorized(request))return json({error:"unauthorized"},401);
+  let input;try{input=await request.json()}catch{return json({error:"invalid_json"},400)}
+  if(input?.probe_auth===true)return json({ok:true,authorized:true});
   const token=env.HF_TOKEN||env.HUGGINGFACE_TOKEN||"";
   if(!token)return json({error:"huggingface_token_unconfigured",provider:"huggingface"},503);
-  let input;try{input=await request.json()}catch{return json({error:"invalid_json"},400)}
   const system=String(input?.system||"").slice(0,12000),prompt=String(input?.prompt||"").slice(0,16000);
   const model="Qwen/Qwen2.5-7B-Instruct";\n  if(input?.probe===true)return json({ok:true,provider:"huggingface",credential_configured:Boolean(token),model});
   if(!system||!prompt)return json({error:"invalid_inference_request"},400);
